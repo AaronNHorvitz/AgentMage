@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "enforced",
+  "source_roots": [
+    "capabilities",
+    "kernel",
+    "platforms",
+    "release",
+    "shells"
+  ],
+  "source_extensions": [
+    ".js",
+    ".mjs",
+    ".rs",
+    ".swift",
+    ".ts"
+  ],
+  "approved_production_licenses": [
+    "Apache-2.0"
+  ],
+  "excluded_development_noassertion_disposition": "open-review",
+  "binary_magic": [
+    "elf",
+    "mach-o",
+    "pe"
+  ],
+  "dynamic_loader_indicators": [
+    "dlopen",
+    "libloading",
+    "LoadLibrary"
+  ],
+  "privileged_assumption_indicators": [
+    "CAP_SYS_ADMIN",
+    "docker-socket",
+    "pkexec",
+    "sudo"
+  ],
+  "required_seeded_findings": [
+    "dynamic-loader",
+    "privileged-assumption",
+    "secret-pattern",
+    "undeclared-binary",
+    "undeclared-license"
+  ],
+  "platform_status": {
+    "macos_binary_scan": "blocked-macos",
+    "macos_package_scan": "blocked-macos"
+  }
+}

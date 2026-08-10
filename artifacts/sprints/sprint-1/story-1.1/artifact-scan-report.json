@@ -1,0 +1,85 @@
+{
+  "macos_support_claim": "none",
+  "platform_status": {
+    "build_and_package": "synthetic-clean-surfaces",
+    "macos_binary_scan": "blocked-macos",
+    "macos_package_scan": "blocked-macos",
+    "shared_source_and_sbom": "scanned"
+  },
+  "schema_version": 1,
+  "seeded_cases": [
+    {
+      "observed_categories": [
+        "dynamic-loader"
+      ],
+      "seed": "dynamic-loader",
+      "status": "pass"
+    },
+    {
+      "observed_categories": [
+        "privileged-assumption"
+      ],
+      "seed": "privileged-assumption",
+      "status": "pass"
+    },
+    {
+      "observed_categories": [
+        "secret-pattern"
+      ],
+      "seed": "secret-pattern",
+      "status": "pass"
+    },
+    {
+      "observed_categories": [
+        "undeclared-binary"
+      ],
+      "seed": "undeclared-binary",
+      "status": "pass"
+    },
+    {
+      "observed_categories": [
+        "license-review",
+        "undeclared-license"
+      ],
+      "seed": "undeclared-license",
+      "status": "pass"
+    }
+  ],
+  "status": "pass-with-open-review",
+  "summary": {
+    "blocking_findings": 0,
+    "open_review_findings": 1,
+    "seeded_findings_detected": 5
+  },
+  "surfaces": [
+    {
+      "files_scanned": 12,
+      "findings": [],
+      "surface": "source"
+    },
+    {
+      "files_scanned": 1,
+      "findings": [],
+      "surface": "build-output"
+    },
+    {
+      "files_scanned": 2,
+      "findings": [],
+      "surface": "package"
+    },
+    {
+      "components_scanned": 379,
+      "files_scanned": 1,
+      "findings": [
+        {
+          "category": "license-review",
+          "path": "npm:node_modules/khroma@2.1.0",
+          "severity": "open-review",
+          "surface": "sbom"
+        }
+      ],
+      "surface": "sbom"
+    }
+  ],
+  "test_id": "S-001-ST01"
+}
