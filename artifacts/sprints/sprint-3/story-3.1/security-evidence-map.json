@@ -1,0 +1,233 @@
+{
+  "artifacts": [
+    {
+      "bytes": 65272,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "bytes": 2898,
+      "path": "schemas/configuration/agent-configuration.schema.json",
+      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+    },
+    {
+      "bytes": 4175,
+      "path": "schemas/configuration/profile-catalog.schema.json",
+      "sha256": "89b42068beb861ce636971c2751cae5a7c81b1d5e062b1ee5d3aadfc5b906a73"
+    },
+    {
+      "bytes": 5496,
+      "path": "configuration/profiles/catalog.json",
+      "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
+    },
+    {
+      "bytes": 3894,
+      "path": "configuration/profiles/capability-deltas.json",
+      "sha256": "da26c74db1dc8cd61fd4f7670391dd09b89906a88e5a9a2da593a5bddbb904d4"
+    },
+    {
+      "bytes": 13834,
+      "path": "configuration/permission-bearing-values.json",
+      "sha256": "477c3fd1888c8ec153bdeb2d5136a9850faa1bebceee7286c207029b8717db78"
+    },
+    {
+      "bytes": 377488,
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "7c8387e91035f95bcb8e5e3f45ab2b1228d14b9854800669dd8d9be18a3a711c"
+    },
+    {
+      "bytes": 997,
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "ecf6c26397cbbf0f00f8c102a34476ca9cececc0149f47c750bc0456454693b3"
+    },
+    {
+      "bytes": 316441,
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "231d5e82ded927d40beef854b67843c3e6a40fc249e30f4cfcfd5218fba42777"
+    },
+    {
+      "bytes": 8876,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json",
+      "sha256": "3e51f4850de60c16cbaefbc068955c54c89a7f35ce839b675436630c175ee2d1"
+    },
+    {
+      "bytes": 2529,
+      "path": "artifacts/sprints/sprint-3/story-3.1/profile-catalog-report.json",
+      "sha256": "c325698c04d16c6b720f68333348a4c9a15b0f0cec07d9c130bf99f59d6a054d"
+    },
+    {
+      "bytes": 5861,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
+      "sha256": "c2252133ea6e1c402901e67e71533f305ef61ecc42fa652c45144541ce3e40e7"
+    },
+    {
+      "bytes": 4346,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
+      "sha256": "d621c5d7a6d3c2032bd5086d74fab1f97ef76a33a3ef0a7f41c6faee9d880948"
+    },
+    {
+      "bytes": 3465,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
+      "sha256": "e30c1a557583290507f445fbc726dab4db3afc9d7eec2fa25663c1a81df017bb"
+    },
+    {
+      "bytes": 9914,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "sha256": "22d473ec24f61f229aef8ac32166a0925894ed5cf42b721ccafd7702d69bf3a1"
+    },
+    {
+      "bytes": 5319,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
+      "sha256": "e5d3fe83d3faa7122fd4df9803b33f0a0db5f69960125f5bfac3c89bb13be889"
+    },
+    {
+      "bytes": 5339,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
+      "sha256": "47147408621a273af2b7e97c423d744d19b8425ae6bb8457fdf0143e27e610e5"
+    },
+    {
+      "bytes": 3816,
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
+      "sha256": "c7be1f7f0740be3591a80056a2d2c2d553c7aee0c1ab9d50339a6a7e399ec5d7"
+    },
+    {
+      "bytes": 13717,
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "7c1b140d96e8a4d5a9518c914789ae4c2f188d962f24992c36ce4f65ab94c522"
+    },
+    {
+      "bytes": 2320,
+      "path": "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
+      "sha256": "c97136619b5578f5d3b0f0d17aea3c6742b2e2daa3324299815e8b8a49f857d4"
+    },
+    {
+      "bytes": 16562,
+      "path": "scripts/story_3_1_security_evidence.py",
+      "sha256": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056"
+    },
+    {
+      "bytes": 3456,
+      "path": "tests/test_story_3_1_security_evidence.py",
+      "sha256": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19"
+    }
+  ],
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_startup_activation_claim": "none",
+  "raw_configuration_persisted": false,
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "All 97 permission-bearing configuration leaves fail closed across five untrusted channels, and every unregistered catalog profile reaches startup with zero registered capabilities.",
+      "evidence": [
+        "configuration/permission-bearing-values.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json"
+      ],
+      "remaining": "Each later implemented capability, runtime, extension, and package startup path must repeat the same dependency-removal and registration refusal checks.",
+      "requirement_id": "SR-GOV-008",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "Startup and configuration-bound results retain exact configuration, dependency, executable, and policy identities.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json"
+      ],
+      "remaining": "The release manifest must record the approved review-baseline and standard versions when an actual release candidate exists.",
+      "requirement_id": "SR-GOV-009",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Configuration differences classify authority and resource changes, redact values, and reject every tested authority broadening before application.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json"
+      ],
+      "remaining": "Integrated CI must escalate security review for every changed authority, storage, network, model, runtime, extension, platform, installer, and package behavior.",
+      "requirement_id": "SR-GOV-010",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Environment, repository, child-profile, file, and model-output configuration cannot create operation authority, and no catalog capability currently registers.",
+      "evidence": [
+        "schemas/configuration/agent-configuration.schema.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json"
+      ],
+      "remaining": "The typed CapabilityGrant boundary and every concrete operation executor must still prove that only a valid grant authorizes an effect.",
+      "requirement_id": "SR-ACC-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The closed configuration accepts only a secret-provider identifier; reports retain hashes rather than keys, raw configuration values, or private paths.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json"
+      ],
+      "remaining": "Platform key-service handles, non-exportability, access instrumentation, backup/export exclusion, and product artifact scans must be implemented and exercised.",
+      "requirement_id": "SR-DAT-007",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "All current source dependencies, build tools, and clean Linux environments are locked, versioned, cryptographically hashed, inventoried, and rejected on closure drift.",
+      "evidence": [
+        "supply-chain/dependency-provenance.json",
+        "supply-chain/dependency-hashes.sha256",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json"
+      ],
+      "remaining": "Future model runtimes, parsers, conversion tools, platform SDKs, optional components, and release packages require separate admission before use.",
+      "requirement_id": "SR-SUP-003",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "Candidate runtimes and optional components remain unapproved, unregistered profiles remain blocked, and the signed-update design requires revocation and support checks.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json"
+      ],
+      "remaining": "The implemented package gate must block actual revoked, unmaintained, unverified, unsupported, and policy-excluded components at build and startup.",
+      "requirement_id": "SR-SUP-013",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Minimized configuration and startup records retain exact identities, typed outcomes, authority/resource classifications, and no raw values or private paths.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json"
+      ],
+      "remaining": "The product audit schema and complete event-coverage matrix must include access, grants, privilege, runtime, installer, integrity, and alert events.",
+      "requirement_id": "SR-OPS-002",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Migration interruption is injected before and after all three durable transitions; every scenario selects the exact old or complete new state and rollback is idempotent.",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
+        "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json"
+      ],
+      "remaining": "Product-wide recovery must execute at least 100 crash resumes across all durable state transitions and prove no repeated completed operation.",
+      "requirement_id": "SR-TST-005",
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-shared-linux-security-mapping",
+  "story_id": "3.1",
+  "summary": {
+    "demonstrated_story_scope_count": 2,
+    "mapped_requirement_count": 9,
+    "partial_story_evidence_count": 7,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 22,
+    "story_gate_complete": false
+  },
+  "task_id": "3.1.3.5"
+}

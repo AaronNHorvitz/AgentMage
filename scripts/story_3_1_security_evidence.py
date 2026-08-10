@@ -7,10 +7,15 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 import tempfile
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.component_inventory import check_artifact as check_components
 from scripts.configuration_authority_mutation_evidence import (
@@ -28,8 +33,6 @@ from scripts.configuration_schema_failure_evidence import (
 from scripts.configuration_startup_evidence import check_artifact as check_startup
 from scripts.supply_chain import check_outputs as check_supply_chain
 
-
-ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json"
 EXPECTED_REQUIREMENTS = (
     "SR-GOV-008",
@@ -63,6 +66,8 @@ EVIDENCE_PATHS = (
     "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
     "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
     "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
+    "scripts/story_3_1_security_evidence.py",
+    "tests/test_story_3_1_security_evidence.py",
 )
 MAPPINGS = {
     "SR-GOV-008": {
