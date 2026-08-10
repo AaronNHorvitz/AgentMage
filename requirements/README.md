@@ -38,7 +38,7 @@ The top-level source hash covers the complete canonical inventory. Any inventory
 - An empty allowed intersection, unknown field, malformed value, or unstructured disagreement blocks.
 - A mechanically narrowed result remains provisional until an accepted requirement-supersession decision preserves the original requirements and records the replacement.
 
-The resolver in `scripts/requirement_conflicts.py` is pure: it returns an `unchanged`, `provisional`, or `blocked` result and never edits its inputs or project files.
+The resolver in `scripts/requirement_conflicts.py` is pure: it returns an `unchanged`, `provisional`, or `blocked` result and never edits its inputs or project files. Every differing structured field remains visible in `conflicting_fields`; differences that cannot be narrowed safely also appear in `unresolved_fields` and block the result. Swapping source-document order produces the same result.
 
 ## Coverage Audit
 

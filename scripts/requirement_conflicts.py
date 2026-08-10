@@ -192,16 +192,20 @@ def resolve_conflict(
             "requires_approved_decision": False,
             "policy_id": active_policy["policy_id"],
             "sources": source_ids,
+            "conflicting_fields": [],
             "unresolved_fields": [],
             "boundary": unchanged_boundary,
         }
 
     unresolved: list[str] = []
+    conflicting: list[str] = []
     allow: dict[str, list[str]] = {}
     allow_keys = set(normalized_left["allow"]) | set(normalized_right["allow"])
     for key in sorted(allow_keys):
         left_values = set(normalized_left["allow"].get(key, []))
         right_values = set(normalized_right["allow"].get(key, []))
+        if left_values != right_values:
+            conflicting.append(f"allow.{key}")
         values = sorted(left_values & right_values)
         allow[key] = values
         if not values:
@@ -210,6 +214,8 @@ def resolve_conflict(
     deny: dict[str, list[str]] = {}
     deny_keys = set(normalized_left["deny"]) | set(normalized_right["deny"])
     for key in sorted(deny_keys):
+        if normalized_left["deny"].get(key, []) != normalized_right["deny"].get(key, []):
+            conflicting.append(f"deny.{key}")
         deny[key] = sorted(
             set(normalized_left["deny"].get(key, []))
             | set(normalized_right["deny"].get(key, []))
@@ -223,6 +229,8 @@ def resolve_conflict(
             for boundary in (normalized_left, normalized_right)
             if key in boundary["ceilings"]
         ]
+        if normalized_left["ceilings"].get(key) != normalized_right["ceilings"].get(key):
+            conflicting.append(f"ceilings.{key}")
         ceilings[key] = min(candidates)
 
     exact: dict[str, str] = {}
@@ -230,6 +238,8 @@ def resolve_conflict(
     for key in sorted(exact_keys):
         left_value = normalized_left["exact"].get(key)
         right_value = normalized_right["exact"].get(key)
+        if left_value != right_value:
+            conflicting.append(f"exact.{key}")
         if left_value is None:
             exact[key] = right_value
         elif right_value is None:
@@ -240,6 +250,8 @@ def resolve_conflict(
             unresolved.append(f"exact.{key}")
 
     source_ids = sorted({normalized_left["id"], normalized_right["id"]})
+    if normalized_left["required_controls"] != normalized_right["required_controls"]:
+        conflicting.append("required_controls")
     boundary = {
         "id": "provisional:" + "+".join(source_ids),
         "allow": allow,
@@ -256,6 +268,7 @@ def resolve_conflict(
         "requires_approved_decision": True,
         "policy_id": active_policy["policy_id"],
         "sources": source_ids,
+        "conflicting_fields": sorted(conflicting),
         "unresolved_fields": sorted(unresolved),
         "boundary": boundary,
     }

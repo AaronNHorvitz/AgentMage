@@ -80,6 +80,16 @@ class ConflictResolutionTests(unittest.TestCase):
             result["boundary"]["required_controls"], ["receipt", "sandbox"]
         )
         self.assertEqual(result["boundary"]["ceilings"]["max_bytes"], 512)
+        self.assertEqual(
+            result["conflicting_fields"],
+            [
+                "allow.actions",
+                "allow.releases",
+                "ceilings.max_bytes",
+                "deny.capabilities",
+                "required_controls",
+            ],
+        )
         self.assertEqual(result["unresolved_fields"], [])
         self.assertEqual(resolve_conflict(right, left), result)
 
@@ -98,6 +108,13 @@ class ConflictResolutionTests(unittest.TestCase):
         )
         self.assertEqual(result["boundary"]["allow"]["actions"], [])
         self.assertNotIn("authority_model", result["boundary"]["exact"])
+        self.assertEqual(
+            result["conflicting_fields"],
+            ["allow.actions", "exact.authority_model"],
+        )
+        self.assertTrue(result["requires_approved_decision"])
+        self.assertEqual(result["sources"], ["REQ-LEFT", "REQ-RIGHT"])
+        self.assertEqual(resolve_conflict(right, left), result)
 
     def test_equivalent_boundaries_need_no_decision(self) -> None:
         left = boundary("REQ-LEFT")
@@ -108,6 +125,7 @@ class ConflictResolutionTests(unittest.TestCase):
         self.assertEqual(result["status"], "unchanged")
         self.assertFalse(result["requires_approved_decision"])
         self.assertEqual(result["sources"], ["REQ-LEFT", "REQ-RIGHT"])
+        self.assertEqual(result["conflicting_fields"], [])
         self.assertEqual(result["boundary"]["id"], "equivalent:REQ-LEFT+REQ-RIGHT")
 
     def test_rejects_unknown_fields_and_invalid_ceilings(self) -> None:

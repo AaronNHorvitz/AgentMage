@@ -177,7 +177,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 - [ ] **Task 0.1.3 - Verify and close the story**
   - [x] **Sub-task 0.1.3.1:** `S-000-UT01` loads valid and malformed registries; assert canonical ordering, exact source anchors, duplicate rejection, unresolved-reference diagnostics, and zero file mutation.
-  - [ ] **Sub-task 0.1.3.2:** `S-000-UT02` feeds conflicting requirements in both document orders; assert the narrower safety/release rule wins deterministically and the conflict remains visible.
+  - [x] **Sub-task 0.1.3.2:** `S-000-UT02` feeds conflicting requirements in both document orders; assert the narrower safety/release rule wins deterministically and the conflict remains visible.
   - [ ] **Sub-task 0.1.3.3:** `S-000-UT03` changes, removes, supersedes, redirects, or substitutes a registered public product-security reference; assert freshness/integrity failure, impact-review creation, and no silent replacement of the pinned review baseline.
   - [ ] **Sub-task 0.1.3.4:** `S-000-ST01` removes, renames, weakens, or reclassifies each fixture requirement; assert additions-only and exclusion checks block closure and identify the exact changed statement.
   - [ ] **Sub-task 0.1.3.5:** `S-000-IT01` rebuilds traceability from a clean checkout; assert every normative statement resolves to requirement, issue, test, release, status, and evidence fields with no orphan.
