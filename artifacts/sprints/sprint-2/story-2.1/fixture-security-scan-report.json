@@ -28,6 +28,14 @@
     "artifact_root": "artifacts/sprints/sprint-2",
     "bytecode_caches_included": false,
     "corpus_archive_recursively_scanned": true,
+    "excluded_final_evidence_envelope": [
+      "artifacts/sprints/sprint-2/story-2.1/security-evidence-map.json",
+      "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
+      "artifacts/sprints/sprint-2/story-2.1/summary-comparison-public.pem",
+      "artifacts/sprints/sprint-2/story-2.1/summary-comparison.sig",
+      "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json"
+    ],
+    "final_evidence_envelope_verifier": "scripts/story_2_1_security_evidence.py",
     "fixture_root": "fixtures"
   },
   "seeded_cases": [

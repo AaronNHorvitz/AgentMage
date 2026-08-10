@@ -29,6 +29,14 @@ REPORT_PATH = (
     / "story-2.1"
     / "fixture-security-scan-report.json"
 )
+FINAL_EVIDENCE_ENVELOPE = (
+    "artifacts/sprints/sprint-2/story-2.1/security-evidence-map.json",
+    "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
+    "artifacts/sprints/sprint-2/story-2.1/summary-comparison-public.pem",
+    "artifacts/sprints/sprint-2/story-2.1/summary-comparison.sig",
+    "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json",
+)
+FINAL_EVIDENCE_VERIFIER = "scripts/story_2_1_security_evidence.py"
 CORPUS_PATH = ROOT / "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip"
 EXPECTED_CATEGORIES = (
     "active-formula",
@@ -155,10 +163,14 @@ def controlled_files(root: Path = ROOT) -> list[Path]:
         and "__pycache__" not in path.parts
         and path != root / "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip"
     ]
+    excluded_artifacts = {
+        root / REPORT_PATH.relative_to(ROOT),
+        *(root / path for path in FINAL_EVIDENCE_ENVELOPE),
+    }
     artifact_files = [
         path
         for path in (root / "artifacts/sprints/sprint-2").rglob("*")
-        if path.is_file() and path != root / REPORT_PATH.relative_to(ROOT)
+        if path.is_file() and path not in excluded_artifacts
     ]
     return sorted(fixture_files + artifact_files)
 
@@ -404,6 +416,8 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
             "artifact_root": "artifacts/sprints/sprint-2",
             "bytecode_caches_included": False,
             "corpus_archive_recursively_scanned": True,
+            "excluded_final_evidence_envelope": list(FINAL_EVIDENCE_ENVELOPE),
+            "final_evidence_envelope_verifier": FINAL_EVIDENCE_VERIFIER,
         },
         "metrics": metrics.as_record(),
         "findings": [item.as_record() for item in findings],
@@ -436,6 +450,11 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         failures.append("fixture security scan report identity is invalid")
     if report.get("status") != "pass" or report.get("findings") != []:
         failures.append("fixture security scan did not pass with zero findings")
+    scope = report.get("scope", {})
+    if scope.get("excluded_final_evidence_envelope") != list(
+        FINAL_EVIDENCE_ENVELOPE
+    ) or scope.get("final_evidence_envelope_verifier") != FINAL_EVIDENCE_VERIFIER:
+        failures.append("fixture security scan final-envelope boundary is invalid")
     summary = report.get("summary", {})
     if (
         summary.get("blocking_finding_count") != 0

@@ -5,6 +5,8 @@ import unittest
 
 from scripts.fixture_security_scan import (
     EXPECTED_CATEGORIES,
+    FINAL_EVIDENCE_ENVELOPE,
+    FINAL_EVIDENCE_VERIFIER,
     REPORT_PATH,
     ScanMetrics,
     build_report,
@@ -37,6 +39,16 @@ class FixtureSecurityScanTests(unittest.TestCase):
         self.assertGreater(metrics["text_payloads_scanned"], 0)
         self.assertGreater(metrics["python_modules_parsed"], 0)
         self.assertGreater(metrics["synthetic_canary_occurrences"], 0)
+
+    def test_final_evidence_envelope_has_an_explicit_independent_verifier(self) -> None:
+        scope = self.report["scope"]
+        self.assertEqual(
+            scope["excluded_final_evidence_envelope"],
+            list(FINAL_EVIDENCE_ENVELOPE),
+        )
+        self.assertEqual(
+            scope["final_evidence_envelope_verifier"], FINAL_EVIDENCE_VERIFIER
+        )
 
     def test_every_seeded_prohibited_category_is_detected(self) -> None:
         cases = seeded_cases()

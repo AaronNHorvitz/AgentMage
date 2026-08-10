@@ -1,0 +1,26 @@
+{
+  "algorithm": "Ed25519",
+  "detached_signature": {
+    "bytes": 64,
+    "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison.sig",
+    "sha256": "5c66d886dd4fd33137cbc4ab51d99901a5d9b1cd040abf0fec7bcda794af651a"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "public_key": {
+    "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison-public.pem",
+    "pem_sha256": "b3a791dc282f3f834700ca4fc3661ce24493cf849576cfc4e6928a0210a8b2f3",
+    "private_key_retained": false,
+    "test_evidence_only": true
+  },
+  "release_signature_claim": "none",
+  "schema_version": 1,
+  "signature_id": "agentmage-story-2.1-summary-ed25519-v1",
+  "signed_artifact": {
+    "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
+    "sha256": "532fe1d37a11188961457327142e25a2a1330d5d6c71791e73af8b269f38cf5d"
+  },
+  "status": "verified",
+  "verification_tool": "openssl-pkeyutl"
+}

@@ -1,0 +1,213 @@
+{
+  "artifacts": [
+    {
+      "path": "fixtures/adversarial-fixture-profile.json",
+      "sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc"
+    },
+    {
+      "path": "fixtures/corpus-profile.json",
+      "sha256": "22a547c341672710886ddd9775cf6ac8e73bee5923132ac7860bc95905de4009"
+    },
+    {
+      "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+      "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+    },
+    {
+      "path": "fixtures/corpus/v1/manifest.json",
+      "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
+    },
+    {
+      "path": "fixtures/corpus/v1/provenance-ledger.json",
+      "sha256": "6857458fd6a78272c961bc412f9c699223a4a28a94e414bcf30990110aa6b60d"
+    },
+    {
+      "path": "fixtures/expected-output-profile.json",
+      "sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85"
+    },
+    {
+      "path": "fixtures/fake-adapter-contract.json",
+      "sha256": "c0f01c3c98832b89b19c6e3e2e68be240a87b425ce3003158e440afd59cc05ce"
+    },
+    {
+      "path": "fixtures/fault-test-adapter-profile.json",
+      "sha256": "0f9218a787400c7d7915c2a144e545508d2b7cfe3360c0d99abb972c878cda1b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
+      "sha256": "4212858e26f05416ab7f436a481a865a193bf7d08364a91aac0945b2e697b1a2"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+      "sha256": "1a0334b38adf522268cffb73a55444532922d99f8e4d2a5fafa40f0c8253e3aa"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
+      "sha256": "1f7dac9229cb16ffbe8e8933af5f875424217b116790c0fa2a6a48bad0e3c59e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+      "sha256": "85d430a824f77bac418a24e09d6b7a09a28a335ad51aa219ca9cd3d44968c676"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
+      "sha256": "3f5e75c3967b91f2591d7bf572b1c957a8b11f3764a4a54434ddfc45c929032a"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
+      "sha256": "532fe1d37a11188961457327142e25a2a1330d5d6c71791e73af8b269f38cf5d"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison-public.pem",
+      "sha256": "b3a791dc282f3f834700ca4fc3661ce24493cf849576cfc4e6928a0210a8b2f3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison.sig",
+      "sha256": "5c66d886dd4fd33137cbc4ab51d99901a5d9b1cd040abf0fec7bcda794af651a"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json",
+      "sha256": "0cfabf815f197b5a20afeb58980262e6733c852c6cdbb57d2f97974f56bf4647"
+    }
+  ],
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "Deterministic unit, integration, adversarial, and recovery foundations execute over synthetic data with requirement-labeled evidence.",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Product end-to-end, release-platform, property, and later boundary suites remain incomplete.",
+      "requirement_id": "SR-TST-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Malformed and adversarial seeds plus bounded fault adapters are versioned for later fuzz targets.",
+      "evidence": [
+        "fixtures/adversarial-fixture-profile.json",
+        "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Fuzz target registration, engines, coverage, minimization, and regression retention are owned by Story 2.2 and later trust-boundary stories.",
+      "requirement_id": "SR-TST-002",
+      "story_contribution": "registered-next-story"
+    },
+    {
+      "demonstrated": "The fixture/evidence surface is recursively scanned and the independent summary comparison has a verifiable detached signature.",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Release-grade pinned SAST, SCA, secret, binary, and platform analysis with reviewed suppressions remains incomplete.",
+      "requirement_id": "SR-TST-003",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Versioned normal, boundary, malformed, hostile, oversized, cancellation, and recovery-oriented synthetic inputs fail within declared side-effect bounds.",
+      "evidence": [
+        "fixtures/corpus/v1/manifest.json",
+        "fixtures/adversarial-fixture-profile.json",
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Each future product input class must bind these fixture classes to its concrete parser and receipt behavior.",
+      "requirement_id": "SR-TST-004",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Synthetic crashes distinguish before-commit, after-commit, and uncertain completion while every adapter has explicit cleanup.",
+      "evidence": [
+        "fixtures/fault-test-adapter-profile.json",
+        "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "At least 100 real durable-transition crash resumes per applicable component remain required.",
+      "requirement_id": "SR-TST-005",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "CPU-step, memory, disk, token, file, and output budgets deterministically report exhaustion and cleanup without exhausting the host.",
+      "evidence": [
+        "fixtures/fault-test-adapter-profile.json",
+        "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Product process, GPU, context, concurrency, responsiveness, and platform resource enforcement remain incomplete.",
+      "requirement_id": "SR-TST-006",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "An independent reducer reconciles raw normalized shard results to the producer summary and the content-addressed comparison is signed.",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
+        "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every later suite and release result must retain the same raw, normalized, summary, failure, skip, environment, and tool separation.",
+      "requirement_id": "SR-TST-010",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "Synthetic fixtures declare data class, prohibited side effects, redaction expectations, and zero private input before evidence persistence.",
+      "evidence": [
+        "fixtures/expected-output-profile.json",
+        "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The product-wide pre-persistence policy gate and retention/storage decisions remain unimplemented.",
+      "requirement_id": "SR-DAT-002",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Synthetic canaries are redacted from traces and reports; private paths and credential shapes are rejected across the fixture/evidence surface.",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every future log, export, error, crash, and diagnostics path must pass typed redaction and canary tests.",
+      "requirement_id": "SR-OPS-003",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Prompt-injection, approval-bypass, grant-replay, conflict, and secret-canary fixtures are inert, versioned, and produce no unauthorized side effect in test adapters.",
+      "evidence": [
+        "fixtures/adversarial-fixture-profile.json",
+        "fixtures/corpus/v1/manifest.json",
+        "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The product policy kernel, model boundary, tool mediation, and at least 200 labeled end-to-end injections remain unimplemented.",
+      "requirement_id": "SR-AI-005",
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "schema_version": 1,
+  "signed_summary_comparison": {
+    "algorithm": "Ed25519",
+    "release_signature_claim": "none",
+    "signature_id": "agentmage-story-2.1-summary-ed25519-v1",
+    "status": "verified"
+  },
+  "status": "complete-evidence-map-blocked-macos",
+  "summary": {
+    "canonical_fixture_security_findings": 0,
+    "final_evidence_envelope_findings": 0,
+    "mapped_requirements": 10,
+    "product_requirements_complete": 0,
+    "signed_summary_verified": true,
+    "story_gate_complete": false,
+    "task_mapping_complete": true
+  },
+  "task_id": "2.1.3.5"
+}
