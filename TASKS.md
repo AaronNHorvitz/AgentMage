@@ -293,11 +293,11 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 1.1.1.6** (legacy `S-001-I06`): Add license, provenance, hash, and software-bill-of-materials generation for dependencies. Evidence: Apache-2.0 [`LICENSE`](LICENSE), deterministic [`dependency-provenance.json`](supply-chain/dependency-provenance.json), [`dependency-hashes.sha256`](supply-chain/dependency-hashes.sha256), CycloneDX 1.6 [`sbom.cdx.json`](supply-chain/sbom.cdx.json), offline generator/checker, and license/integrity/closure/status mutation tests. Missing upstream license metadata remains visible as `NOASSERTION`, not approved.
   - [x] **Sub-task 1.1.1.7** (legacy `S-001-I07`): Create a no-install diagnostic that reports missing optional components without changing the machine. Evidence: machine-readable [`optional-component-inventory.json`](architecture/optional-component-inventory.json), read-only [`no_install_diagnostic.py`](scripts/no_install_diagnostic.py), report/contract commands, fake-path and before/after mutation tests, and checks that presence remains unverified and no path or environment value is emitted. This is an internal harness, not the later native-Chat `agentmage doctor` interface.
 
-- [ ] **Task 1.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 1.1.2.1:** Repository skeleton with buildable empty modules.
-  - [ ] **Sub-task 1.1.2.2:** Architecture decision and dependency diagram.
-  - [ ] **Sub-task 1.1.2.3:** Locked dependency graph and initial software bill of materials.
-  - [ ] **Sub-task 1.1.2.4:** Clean build, lint, format-check, and test commands.
+- [x] **Task 1.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 1.1.2.1:** Repository skeleton with buildable empty modules. Evidence: [`artifact-index.json`](artifacts/sprints/sprint-1/story-1.1/artifact-index.json) binds the module inventory and package manifests; shared/Linux modules build, while the interface-only Swift module remains `BLOCKED-MACOS` and unverified.
+  - [x] **Sub-task 1.1.2.2:** Architecture decision and dependency diagram. Evidence: the artifact index binds Decision 0004 and the compile/assembly diagrams by SHA-256.
+  - [x] **Sub-task 1.1.2.3:** Locked dependency graph and initial software bill of materials. Evidence: the artifact index binds all three lock files, deterministic dependency provenance and hashes, and the CycloneDX 1.6 SBOM.
+  - [x] **Sub-task 1.1.2.4:** Clean build, lint, format-check, and test commands. Evidence: the artifact index binds the build contract, pinned toolchain, and exact `product:build`, `product:lint`, `product:format-check`, and `product:test` commands.
 
 - [ ] **Task 1.1.3 - Verify and close the story**
   - [ ] **Sub-task 1.1.3.1:** `S-001-UT01` evaluates the dependency graph with each prohibited reverse edge injected separately; assert a precise build or architecture-check failure before packaging.

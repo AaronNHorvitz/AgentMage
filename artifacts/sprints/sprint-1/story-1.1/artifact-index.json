@@ -1,0 +1,147 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "repository-skeleton",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "sha256": "e6c3963126dc4bab6309cfd31c85bd359997e3e90302314e51f4c202c27890b7"
+        },
+        {
+          "path": "architecture/module-inventory.json",
+          "sha256": "8130a4b936e0879b25a0b59191517d8ccae904e19922de41dfa460e2005e8781"
+        },
+        {
+          "path": "capabilities/read-only/Cargo.toml",
+          "sha256": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a"
+        },
+        {
+          "path": "kernel/contracts/Cargo.toml",
+          "sha256": "f40d2f8d1bd4ed0995b8714d0d3d46b58d5a2024f2b36395808ed75553a568dd"
+        },
+        {
+          "path": "kernel/engine/Cargo.toml",
+          "sha256": "9f3f14e51dce7e9423f40cf242a16f6060af4149458baf3e315bdd3a030f3af2"
+        },
+        {
+          "path": "platforms/linux/Cargo.toml",
+          "sha256": "2f527e1f328c99dfa146b94698108999d759a87438cab499d1693bd4c7101649"
+        },
+        {
+          "path": "platforms/macos/Package.swift",
+          "sha256": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948"
+        },
+        {
+          "path": "release/xtask/Cargo.toml",
+          "sha256": "a6d0e5dfb1b341e981202182fa2b21809b1b781f6f3f309d0e604fa846f8ebbe"
+        },
+        {
+          "path": "shells/host/Cargo.toml",
+          "sha256": "33afcee42069d1f15c44936e93dc496135bfe63c0aa9201ce25d2b460ba85439"
+        },
+        {
+          "path": "shells/vscode/package.json",
+          "sha256": "5c09f46372c33606f82bc48a547c9295db063bee2aa5909bf6f7e47e10f5609f"
+        }
+      ],
+      "task_id": "1.1.2.1"
+    },
+    {
+      "artifact_id": "architecture-decision-and-diagrams",
+      "files": [
+        {
+          "path": "architecture/dependency-rules.json",
+          "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
+        },
+        {
+          "path": "architecture/language-build-matrix.json",
+          "sha256": "ab25c3641ce48aeed2bec9cc07204c7115d3fdc6a547ebcfcc56353d85d72237"
+        },
+        {
+          "path": "docs/architecture/dependency-direction.md",
+          "sha256": "ec62a7f7b63793069973880ed1f083214fa7a2b14276faa5429fe711cd62d209"
+        },
+        {
+          "path": "docs/decisions/0004-language-and-build-system-architecture.md",
+          "sha256": "fafb99eb1154e119de1684c066b70fa587cd99d5d50531a3d46093bbb29c2296"
+        }
+      ],
+      "task_id": "1.1.2.2"
+    },
+    {
+      "artifact_id": "locked-dependency-graph-and-sbom",
+      "files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051"
+        },
+        {
+          "path": "package-lock.json",
+          "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+        },
+        {
+          "path": "platforms/macos/Package.resolved",
+          "sha256": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d"
+        },
+        {
+          "path": "supply-chain/dependency-hashes.sha256",
+          "sha256": "57b3bc928b6ef549f44ad8afe7570caed263776ee54746725da7b65fa074693e"
+        },
+        {
+          "path": "supply-chain/dependency-provenance.json",
+          "sha256": "dbc9c36816f725ee3a6f5a5cdc71769ddcbc1900a6a4fe8ab73879b6852d8a3e"
+        },
+        {
+          "path": "supply-chain/sbom.cdx.json",
+          "sha256": "12490208bd547e4cef94c6c76827f6a6d210f15ff703ec0f87461b5a886d13d8"
+        }
+      ],
+      "task_id": "1.1.2.3"
+    },
+    {
+      "artifact_id": "clean-development-commands",
+      "files": [
+        {
+          "path": "architecture/build-contract.json",
+          "sha256": "a6ca2ce5550bc7696e8510b8c056d883e9254d8ae2d4e691664898f9a5cf9b31"
+        },
+        {
+          "path": "package.json",
+          "sha256": "8bf4e2fe6a2fc88d38d6c74ac950a08fc362af714401d86d2e0f496e6f62b6cd"
+        },
+        {
+          "path": "rust-toolchain.toml",
+          "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
+        },
+        {
+          "path": "rustfmt.toml",
+          "sha256": "db00d320c47bf818306a7c188270fdd372488ae6288668b8ac412f0c70069387"
+        },
+        {
+          "path": "shells/vscode/eslint.config.mjs",
+          "sha256": "d3508615ce562c392a6445cfb367083751c1989eace48f65fb81b4baabefd4a0"
+        },
+        {
+          "path": "shells/vscode/tsconfig.json",
+          "sha256": "0611c22d779c7a8c8638847a8023f5642439a5b8770e723d8315c20956bacc00"
+        }
+      ],
+      "task_id": "1.1.2.4"
+    }
+  ],
+  "commands": [
+    "npm run product:build",
+    "npm run product:format-check",
+    "npm run product:lint",
+    "npm run product:test"
+  ],
+  "platform_status": {
+    "macos_build": "blocked-macos",
+    "macos_structure": "interface-only",
+    "macos_verification": "blocked-macos",
+    "shared_linux": "verified-local"
+  },
+  "schema_version": 1,
+  "status": "reviewable-blocked-macos",
+  "story_id": "1.1"
+}
