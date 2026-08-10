@@ -25,6 +25,7 @@ REQUIRED_FILES = (
     "requirements/normative-map.json",
     "requirements/policy-expectations.json",
     "requirements/registry.json",
+    "requirements/security-references.json",
     "schemas/planning/common.schema.json",
     "schemas/planning/decision-record.schema.json",
     "schemas/planning/risk-register.schema.json",
@@ -38,6 +39,7 @@ REQUIRED_FILES = (
     "schemas/planning/examples/requirement-supersession.valid.json",
     "LICENSE",
     "docs/decisions/0001-product-security-and-runtime-baseline.md",
+    "docs/decisions/0002-public-security-reference-retention.md",
 )
 CANONICAL_DOCS = (
     "README.md",

@@ -124,3 +124,17 @@ npm run schemas:check
 ```
 
 The valid examples under `schemas/planning/examples/` are executable fixtures, not production approvals or release evidence.
+
+## Public Security References
+
+`security-references.json` maps every public source cited in Section 5 of `SECURITY-REVIEW.md` to deterministic provenance metadata. Each record includes the publisher, title, version and dates when declared, source URL, retrieval date and HTTP status, SHA-256 of the exact retrieved response body, current or superseded status, and an accepted local-snapshot decision.
+
+The response hash identifies what the retrieval received; it is not necessarily an artifact hash. In particular, a publisher access-denied response is labeled as such and never treated as a copy or verification of the underlying standard. The register contains no third-party source snapshots and makes no certification or publisher-endorsement claim under [Decision 0002](../docs/decisions/0002-public-security-reference-retention.md).
+
+Run the side-effect-free, offline audit with:
+
+```bash
+npm run references:check
+```
+
+The audit rejects citation gaps, orphaned or duplicate records, order changes, malformed dates or hashes, inconsistent supersession, unapproved retention, and certification or endorsement claims. It deliberately performs no live retrieval during routine documentation or release checks.

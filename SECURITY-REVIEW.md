@@ -101,16 +101,16 @@ The project uses public, broadly applicable security and quality references. A c
 
 ### 5.3 Platforms, Operations, and Testing
 
-- [Apple Platform Security](https://support.apple.com/guide/security/welcome/web) and Apple developer guidance for signing, notarization, App Sandbox, Keychain, XPC, and security-scoped resources.
+- [Apple Platform Security](https://support.apple.com/guide/security/welcome/web) for signing, notarization, App Sandbox, Keychain, XPC, and security-scoped resources.
 - [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks) as optional operating-system hardening and compatibility references.
 - [MITRE ATT&CK](https://attack.mitre.org/) and [MITRE ATLAS](https://atlas.mitre.org/) for adversarial threat cases.
 - Language and runtime security tooling, sanitizers, fuzzers, dependency auditing, and reproducible test harnesses appropriate to each shipped component.
 
 ### 5.4 Privacy, AI Risk, Accessibility, and Retention
 
-- ISO/IEC 27001 and 27002 for general information-security management and control themes.
-- ISO/IEC 27701 for privacy-management considerations.
-- ISO/IEC 42001 and 23894 for AI management and risk considerations.
+- [ISO/IEC 27001](https://www.iso.org/standard/27001) and [ISO/IEC 27002](https://www.iso.org/standard/75652.html) for general information-security management and control themes.
+- [ISO/IEC 27701](https://www.iso.org/standard/27701) for privacy-management considerations.
+- [ISO/IEC 42001](https://www.iso.org/standard/42001) and [ISO/IEC 23894](https://www.iso.org/standard/77304.html) for AI management and risk considerations.
 - [Web Content Accessibility Guidelines 2.2](https://www.w3.org/TR/WCAG22/) for interface and generated-document accessibility.
 - Product-defined minimization, retention, export, deletion, incident, and recovery requirements verified by the `SR-*` and `RV-*` suites below.
 

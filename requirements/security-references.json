@@ -1,0 +1,579 @@
+{
+  "schema_version": 1,
+  "register_id": "agentmage-public-product-security-references",
+  "as_of": "2026-08-10",
+  "governance": {
+    "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+    "external_certification_claimed": false,
+    "publisher_endorsement_claimed": false
+  },
+  "references": [
+    {
+      "id": "PSR-001",
+      "publisher": "OWASP Foundation",
+      "title": "OWASP Application Security Verification Standard",
+      "version": "5.0.0",
+      "publication_date": "2025-05-30",
+      "effective_date": "2025-05-30",
+      "date_notes": "Version 5.0.0 release date.",
+      "source_url": "https://owasp.org/www-project-application-security-verification-standard/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "87c96dfb604556d5feee1ecba5de518ef883c7b6a6aea6f0857bd008b6292ef4",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project page is a living publication; retrieve the declared version or current page when verification requires it."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-002",
+      "publisher": "OWASP Foundation",
+      "title": "OWASP Software Assurance Maturity Model",
+      "version": "2.0",
+      "publication_date": "2020-02-03",
+      "effective_date": "2020-02-03",
+      "date_notes": "Major version 2.0 release date; the project site remains a living publication.",
+      "source_url": "https://owaspsamm.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "c3e8b8d792ee2be789be56e2d43ded8489132dc6eafd3d5ddd2a1a226373720d",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project site evolves independently of the named major release."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-003",
+      "publisher": "OWASP Foundation",
+      "title": "OWASP GenAI Security Project",
+      "version": null,
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "Living project; the cited landing page declares no single publication or effective date.",
+      "source_url": "https://genai.owasp.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "8645fd68e3567f284c4041fdd2b23d0ceabca013fa1d6a40f8e9d93e9c9e8f87",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project is a living collection rather than one versioned publication."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-004",
+      "publisher": "MITRE",
+      "title": "Common Weakness Enumeration",
+      "version": "4.20",
+      "publication_date": "2026-04-30",
+      "effective_date": "2026-04-30",
+      "date_notes": "CWE 4.20 release date.",
+      "source_url": "https://cwe.mitre.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "25e40231080a6d9e11548a59e7df9717b242989a8824d28cbbda3c3a874744f0",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The catalogue is versioned but its landing page is updated between releases."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-005",
+      "publisher": "MITRE",
+      "title": "Common Attack Pattern Enumeration and Classification",
+      "version": "3.9",
+      "publication_date": "2023-01-24",
+      "effective_date": "2023-01-24",
+      "date_notes": "CAPEC 3.9 release date.",
+      "source_url": "https://capec.mitre.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "79f35ab36a486c09acfac8857361461abcbbe2ce9b83d474b205d0e66eddb022",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The catalogue is versioned but its landing page is a living source."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-006",
+      "publisher": "Open Source Security Foundation",
+      "title": "Supply-chain Levels for Software Artifacts",
+      "version": "1.2",
+      "publication_date": "2025-11-24",
+      "effective_date": "2025-11-24",
+      "date_notes": "SLSA specification 1.2 release date.",
+      "source_url": "https://slsa.dev/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "43382a95ecf4c61e1c5aafb38a6b124960abf2806675ae917b45ab0c3eb07302",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The landing page tracks the current specification and supporting material."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-007",
+      "publisher": "Open Source Security Foundation",
+      "title": "OpenSSF Best Practices Badge Program",
+      "version": null,
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "Living criteria and badge service; no single publication or effective date is declared.",
+      "source_url": "https://www.bestpractices.dev/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "26b2dbd394db3770a91900a8b8b295b170fd4d74c0798b710c41f19c19c0ec2d",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "Criteria and badge state are maintained by a live service."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-008",
+      "publisher": "Open Source Security Foundation",
+      "title": "OpenSSF Scorecard",
+      "version": "5.5.0",
+      "publication_date": "2026-04-23",
+      "effective_date": "2026-04-23",
+      "date_notes": "Current named project release at retrieval time.",
+      "source_url": "https://securityscorecards.dev/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "8e8a440e8b3435f1b5e33e474194e57f63237f15c53f0698b9beeeebb6d5b323",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project site and checks continue to evolve after releases."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-009",
+      "publisher": "Linux Foundation",
+      "title": "Software Package Data Exchange",
+      "version": "3.0",
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "The cited project page identifies SPDX 3.0 as current but does not declare one site-wide publication or effective date.",
+      "source_url": "https://spdx.dev/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "f56309869d3beaab21bfe558f1feaa6e36a35736def514aab29524eb824a689d",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project landing page spans specifications, tools, and evolving releases."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-010",
+      "publisher": "OWASP Foundation",
+      "title": "CycloneDX",
+      "version": "1.7",
+      "publication_date": "2025-10-21",
+      "effective_date": null,
+      "date_notes": "CycloneDX 1.7 release date; no separate effective date is declared.",
+      "source_url": "https://cyclonedx.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "857753fea3d49e6f96a167cb9622e054948f868f6be28fca0e7e2dbba857d94a",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The project landing page follows the current standard and ecosystem."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-011",
+      "publisher": "The Update Framework project",
+      "title": "The Update Framework",
+      "version": "1.0.33",
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "Current specification revision at retrieval time; the landing page declares no publication or effective date.",
+      "source_url": "https://theupdateframework.io/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "c8f21b059f1bceef179a87fe78c29954d41b0c0017c90e50608644091fbf78c4",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The landing page and linked specification may be revised independently."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-012",
+      "publisher": "Apple Inc.",
+      "title": "Apple Platform Security",
+      "version": "March 2026",
+      "publication_date": "2026-03",
+      "effective_date": "2026-03",
+      "date_notes": "Edition month displayed by the publisher.",
+      "source_url": "https://support.apple.com/guide/security/welcome/web",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "4a7dbcee643aed882fd52d3d47ae37ccbe05685e48257f84fb3d97669b60d022",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "Publisher-controlled platform documentation is referenced in place and is not redistributed."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-013",
+      "publisher": "Center for Internet Security",
+      "title": "CIS Benchmarks",
+      "version": null,
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "Living catalogue containing separately versioned benchmarks.",
+      "source_url": "https://www.cisecurity.org/cis-benchmarks",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "3d945079877596de3a94bf5b25e3110a11b7ecf0aac9dcb31842a0994fe9f1b4",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "Benchmark artifacts have publisher access and reuse terms and are not redistributed."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-014",
+      "publisher": "MITRE",
+      "title": "MITRE ATT&CK",
+      "version": "19.1",
+      "publication_date": "2026-05-12",
+      "effective_date": "2026-04-28",
+      "date_notes": "The version history marks 19.1 current on April 28, 2026; the content changelog announces release 19.1 on May 12, 2026.",
+      "source_url": "https://attack.mitre.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "383e920c31f92fdbac1ce3c06c8c2fb6f6b383b15df71b933f152800c06b42b1",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The knowledge base is versioned while its public landing page remains dynamic."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-015",
+      "publisher": "MITRE",
+      "title": "MITRE ATLAS",
+      "version": null,
+      "publication_date": null,
+      "effective_date": null,
+      "date_notes": "Living knowledge base; the cited landing page declares no single version, publication date, or effective date.",
+      "source_url": "https://atlas.mitre.org/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "10f3b452bdacb376cebb720a5d2cefe99f0895a2421fa62972248d5d29e641de",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_dynamic_source",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The knowledge base is continuously maintained."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-016",
+      "publisher": "International Organization for Standardization",
+      "title": "ISO/IEC 27001:2022 Information security management systems - Requirements",
+      "version": "2022",
+      "publication_date": "2022-10",
+      "effective_date": null,
+      "date_notes": "Publication month declared by ISO; the source page declares no separate effective date.",
+      "source_url": "https://www.iso.org/standard/27001",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 403,
+      "source_sha256": "3b7b538844fd4345879e2f2f359195fa3950a5a349a3ceadfd98e25b1b5cd320",
+      "hash_scope": "Access-denied HTTP response body after redirects and decompression; not the standard artifact",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The standard is publisher-controlled and is not redistributed; the recorded response was access-denied and is not content verification."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-017",
+      "publisher": "International Organization for Standardization",
+      "title": "ISO/IEC 27002:2022 Information security controls",
+      "version": "2022",
+      "publication_date": "2022-02",
+      "effective_date": null,
+      "date_notes": "Publication month declared by ISO; corrected in March 2022; no separate effective date is declared.",
+      "source_url": "https://www.iso.org/standard/75652.html",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 403,
+      "source_sha256": "3af4b1491065155325dccf32db47ce4e8fd45e5705e7f1a5e036d996469ba20f",
+      "hash_scope": "Access-denied HTTP response body after redirects and decompression; not the standard artifact",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The standard is publisher-controlled and is not redistributed; the recorded response was access-denied and is not content verification."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-018",
+      "publisher": "International Organization for Standardization",
+      "title": "ISO/IEC 27701:2025 Privacy information management systems - Requirements and guidance",
+      "version": "2025",
+      "publication_date": "2025-10",
+      "effective_date": null,
+      "date_notes": "Publication month declared by ISO; supersedes the withdrawn 2019 edition; no separate effective date is declared.",
+      "source_url": "https://www.iso.org/standard/27701",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 403,
+      "source_sha256": "c03237823d453e82b24fb7d05f6990d0bde6edf0f80cd7d1d49f646ae78b6007",
+      "hash_scope": "Access-denied HTTP response body after redirects and decompression; not the standard artifact",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The standard is publisher-controlled and is not redistributed; the recorded response was access-denied and is not content verification."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-019",
+      "publisher": "International Organization for Standardization",
+      "title": "ISO/IEC 42001:2023 Artificial intelligence management system",
+      "version": "2023",
+      "publication_date": "2023-12",
+      "effective_date": null,
+      "date_notes": "Publication month declared by ISO; the source page declares no separate effective date.",
+      "source_url": "https://www.iso.org/standard/42001",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 403,
+      "source_sha256": "d4daf8b35f57dc6181e8fa04e69fc8b627a3a11bff45e53a7780aa5c6901ec96",
+      "hash_scope": "Access-denied HTTP response body after redirects and decompression; not the standard artifact",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The standard is publisher-controlled and is not redistributed; the recorded response was access-denied and is not content verification."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-020",
+      "publisher": "International Organization for Standardization",
+      "title": "ISO/IEC 23894:2023 Artificial intelligence - Guidance on risk management",
+      "version": "2023",
+      "publication_date": "2023-02",
+      "effective_date": null,
+      "date_notes": "Publication month declared by ISO; the source page declares no separate effective date.",
+      "source_url": "https://www.iso.org/standard/77304.html",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 403,
+      "source_sha256": "4fc07398d48cecbbdd23d9f3993755b655fcd44a4d7b177b0a369d1b4a085ea7",
+      "hash_scope": "Access-denied HTTP response body after redirects and decompression; not the standard artifact",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_reuse_restricted",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The standard is publisher-controlled and is not redistributed; the recorded response was access-denied and is not content verification."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    },
+    {
+      "id": "PSR-021",
+      "publisher": "World Wide Web Consortium",
+      "title": "Web Content Accessibility Guidelines 2.2",
+      "version": "W3C Recommendation 12 December 2024",
+      "publication_date": "2024-12-12",
+      "effective_date": "2024-12-12",
+      "date_notes": "Current Recommendation publication including accumulated errata; the original WCAG 2.2 Recommendation was published October 5, 2023.",
+      "source_url": "https://www.w3.org/TR/WCAG22/",
+      "retrieval_date": "2026-08-10",
+      "retrieval_http_status": 200,
+      "source_sha256": "6e3c5fe397257cae509a2fb4752b73062cf8cbeb92c2cec618989b17e4cf7057",
+      "hash_scope": "HTTP response body after redirects and decompression",
+      "status": "current",
+      "superseded_by": null,
+      "snapshot": {
+        "decision": "metadata_only_planning_baseline",
+        "approval_status": "accepted",
+        "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+        "local_path": null,
+        "rationale": "The canonical Recommendation remains publicly available; retain a permitted artifact only when release evidence requires it."
+      },
+      "claims": {
+        "external_certification": false,
+        "publisher_endorsement": false
+      }
+    }
+  ]
+}
