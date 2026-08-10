@@ -1,0 +1,154 @@
+{
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "implementation": "not-executed",
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "network_used": false,
+  "platform_runs": {
+    "fedora-x86_64": {
+      "base_image": "localhost/agentmage-clean-build:fedora-x86_64",
+      "command": {
+        "exit_code": 0,
+        "id": "support-policy-contract-validation",
+        "output_bytes": 78,
+        "output_sha256": "2100336d40a7d7b423542db50a03a4c66d011ba6cc6015ffe9bff6ce7044c31c",
+        "raw_output_retained": false,
+        "status": "pass"
+      },
+      "container_image_id": "sha256:b178e966595cf0dc9a44fb0dc839b20e1b214c5245784c6f8a2c2c581e724935",
+      "controls": {
+        "capabilities": "all-dropped",
+        "network": "none",
+        "no_new_privileges": true,
+        "root_filesystem": "read-only",
+        "runtime": "rootless-podman",
+        "selinux_label_sharing": "disabled",
+        "source_mount": "read-only",
+        "temporary_storage": "bounded-tmpfs"
+      },
+      "execution": {
+        "effective_gid": 10001,
+        "effective_uid": 10001,
+        "privileged": false,
+        "user_class": "standard-unprivileged"
+      },
+      "macos_support_claim": "none",
+      "platform": {
+        "architecture": "x86_64",
+        "id": "fedora-x86_64",
+        "os_id": "fedora",
+        "version_id": "44"
+      },
+      "status": "pass"
+    },
+    "ubuntu-x86_64": {
+      "base_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
+      "command": {
+        "exit_code": 0,
+        "id": "support-policy-contract-validation",
+        "output_bytes": 81,
+        "output_sha256": "9f6241cf283cf7c63e7ca9c67ccc361593c93577b82cfc188b9406f222cb4c1c",
+        "raw_output_retained": false,
+        "status": "pass"
+      },
+      "container_image_id": "sha256:fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464",
+      "controls": {
+        "capabilities": "all-dropped",
+        "network": "none",
+        "no_new_privileges": true,
+        "root_filesystem": "read-only",
+        "runtime": "rootless-podman",
+        "selinux_label_sharing": "disabled",
+        "source_mount": "read-only",
+        "temporary_storage": "bounded-tmpfs"
+      },
+      "execution": {
+        "effective_gid": 10001,
+        "effective_uid": 10001,
+        "privileged": false,
+        "user_class": "standard-unprivileged"
+      },
+      "macos_support_claim": "none",
+      "platform": {
+        "architecture": "x86_64",
+        "id": "ubuntu-x86_64",
+        "os_id": "ubuntu",
+        "version_id": "26.04"
+      },
+      "status": "pass"
+    }
+  },
+  "private_user_data_used": false,
+  "product_support_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "source": {
+    "evidence_tool_artifacts": [
+      {
+        "bytes": 13424,
+        "path": "scripts/vulnerability_support_platform_evidence.py",
+        "sha256": "7b73c9846f00711185d1cc54b536f2640a20150df7a9f7e7940c86ede486574c"
+      },
+      {
+        "bytes": 2788,
+        "path": "tests/test_vulnerability_support_platform_evidence.py",
+        "sha256": "a725d5ed6b948da1174244672bd3e0c14a8114022da91da46f8d0074b39a8b31"
+      }
+    ],
+    "implementation_artifacts": [
+      {
+        "bytes": 2156,
+        "path": ".gitignore",
+        "sha256": "5311ee0633f96df7ccfcac6cc7cee631a7c0377360c67f059925fed38dae4029"
+      },
+      {
+        "bytes": 2547,
+        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
+        "sha256": "c0c2f075d003dee24bd2b5bd26a2d2d47247d8aa8a54c6677ff6160a3e7286a8"
+      },
+      {
+        "bytes": 10934,
+        "path": "schemas/support/vulnerability-support-policy.schema.json",
+        "sha256": "0f10a8ba110124df1feb20b26f127d8ab8fa6615ac8dc7a17cc6a94417f25912"
+      },
+      {
+        "bytes": 2189,
+        "path": "scripts/validate_support_schemas.mjs",
+        "sha256": "6b7f361ddea85e351f8cafa4c548dbe7f8d799b393682077bb115eea22d7393b"
+      },
+      {
+        "bytes": 15725,
+        "path": "scripts/vulnerability_support_policy.py",
+        "sha256": "843e487c630e78ac320ce91a1a74fe8edfd307549b224e088c14c6507bb550fc"
+      },
+      {
+        "bytes": 5064,
+        "path": "support/vulnerability-support-policy.json",
+        "sha256": "b8a63600b4539f9ad58432be198d61149d8e671fca8cee6a74f0d8449fa2831c"
+      },
+      {
+        "bytes": 2085,
+        "path": "tests/test_support_schemas.mjs",
+        "sha256": "ba775a631683e72db8090812087b844023103047a6f64ee5ad53ea47deca8d2e"
+      },
+      {
+        "bytes": 4192,
+        "path": "tests/test_vulnerability_support_policy.py",
+        "sha256": "0c7749fee7750015eaa2b24f9cb5f8b11a1dbeb294b282d5df9fdf5511a78652"
+      }
+    ],
+    "revision": "27d8cdd5581e5645e317277c33f1370b2ca2c540",
+    "tree": "c4585e56b8cd1440460f786fd0a26e213d5cb96c"
+  },
+  "status": "blocked-macos",
+  "story_id": "3.2",
+  "summary": {
+    "cross_platform_task_complete": false,
+    "linux_platforms_passed": 2,
+    "linux_platforms_required": 2,
+    "shared_linux_task_complete": true
+  },
+  "task_id": "3.2.1.1"
+}
