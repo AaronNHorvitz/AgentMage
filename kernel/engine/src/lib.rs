@@ -8,6 +8,8 @@ pub mod authority;
 pub mod configuration;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Deterministic deny-first capability-grant policy evaluation.
+pub mod policy;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
 /// Stateful resource budgets and explicit sticky stop conditions.

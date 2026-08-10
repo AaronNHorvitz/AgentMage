@@ -61,7 +61,7 @@ pub enum GrantOperation {
 /// Components make ambient absolute-path authority structurally absent. The Sprint 6 path
 /// boundary performs canonical component, platform, symlink, and file-identity validation
 /// before any grant containing this candidate can become current.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GrantTarget {
     /// Approved workspace identity that owns the target.
