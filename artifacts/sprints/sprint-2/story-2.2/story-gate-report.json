@@ -1,0 +1,292 @@
+{
+  "acceptance_criteria": [
+    {
+      "criterion_id": "2.2.AC1",
+      "evidence": [
+        "fuzzing/target-registry.json",
+        "fuzzing/story-gate-policy.json",
+        "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json"
+      ],
+      "missing_or_stale_evidence_disposition": "block",
+      "ordinary_development_waiver_permitted": false,
+      "owner_gate_count": 13,
+      "registered_target_count": 12,
+      "required_evidence_fields": [
+        "target_id",
+        "boundary_implemented",
+        "target_registered",
+        "target_registry_sha256",
+        "corpus_path",
+        "corpus_sha256",
+        "resource_policy_sha256",
+        "result_path",
+        "result_sha256",
+        "result_schema_valid",
+        "result_status",
+        "regression_path",
+        "regression_replay_passed"
+      ],
+      "status": "pass"
+    },
+    {
+      "blocking_gate_result_count": 6,
+      "criterion_id": "2.2.AC2",
+      "evidence": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+      "minimized_reproducer_count": 6,
+      "non_pass_result_count": 6,
+      "secret_canary_values_recorded": false,
+      "seeded_failure_count": 6,
+      "status": "pass"
+    },
+    {
+      "all_comparisons_exact": true,
+      "clean_run_count": 2,
+      "comparison_count": 10,
+      "criterion_id": "2.2.AC3",
+      "evidence": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
+      "exact_comparison_count": 10,
+      "original_development_machine_required": false,
+      "status": "pass"
+    }
+  ],
+  "execution": {
+    "external_commands": [
+      "git-read-only"
+    ],
+    "network_calls": 0,
+    "original_development_machine_data_used": false,
+    "private_user_data_used": false
+  },
+  "independent_review": {
+    "disposition": "pass-story-scope-blocked-macos",
+    "external_human_review_claim": "none",
+    "finding_count": 0,
+    "findings": [],
+    "rereview_required": false,
+    "review_type": "automated-independent-implementation-review",
+    "reviewed_artifacts": [
+      {
+        "path": "fuzzing/target-registry.json",
+        "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+      },
+      {
+        "path": "fuzzing/toolchain-policy.json",
+        "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+      },
+      {
+        "path": "fuzzing/story-gate-policy.json",
+        "sha256": "7e03aa0aba1eec30f7b0e15407ec084c7eb4640736305ba63b24a87767e7d737"
+      },
+      {
+        "path": "fuzzing/seeds/security-failures-v1.json",
+        "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+      },
+      {
+        "path": "schemas/testing/fuzz-result.schema.json",
+        "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
+        "sha256": "fc7256ce3227a9a2981bb784e44e58eb00c29aa3ab9f0e14aa757dcfb3d23b81"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/toolchain-policy-report.json",
+        "sha256": "1ef7ec18305292fc469e3df7c5a0eab20fe4755bcbdcbc1b72f25dad0a89aeb7"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
+        "sha256": "0b64a735675f655e7abfee581d6b3a95b5439b6d53fdcb3e0294f77f662b0e9d"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
+        "sha256": "62cca78adc0f28e512c61f9c7e2b375c2e7f0d470ffd120f678df5d9bca2e918"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+        "sha256": "3416fcd4be97e2f3a5a2c100bf93685bd016c8b20212530f5cc636baefbfdea6"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
+        "sha256": "70ebb7cf0dc402251147527859e74ad7acc615533150bac6ab05e30cab8258fc"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
+        "sha256": "8ca0b5f8561d84e7b3ef94c099bb243304719e445dcb32bdb7bf6ddc3938b5f0"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json",
+        "sha256": "9647294a353402bc10ae7a8ee49cb267ddd9ef26b2519b97d5b9487d2655c9c7"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json",
+        "sha256": "66caa2f7290285e47292265b1d490924195f09f96477098d96664ae70decf8b1"
+      },
+      {
+        "path": "scripts/fuzz_target_registry.py",
+        "sha256": "56b890a452e7a2329f14f64c354725873c6e6d6e0c6e497b480603d769762b30"
+      },
+      {
+        "path": "scripts/fuzz_toolchain_policy.py",
+        "sha256": "185cf3a99b3603c975008b6f4e88d44e066934e54aa0caeca245aeb6379e563e"
+      },
+      {
+        "path": "scripts/fuzz_result_contract.py",
+        "sha256": "5d44b6a6fe6b5357e8900554bf2a838567d42d73f2c61d8cf7c7916ce9307b02"
+      },
+      {
+        "path": "scripts/fuzz_story_gate.py",
+        "sha256": "0137176f0ddef70e31bb602ae5b2ee9a57404bf949a707a501a2d1530e94b748"
+      },
+      {
+        "path": "scripts/seeded_fuzz_failures.py",
+        "sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8"
+      },
+      {
+        "path": "scripts/fuzz_baseline_reconciliation.py",
+        "sha256": "79e3c65e7359ccfe88c13f5a69e938a29323c31ec0f154a5424a44b1ef19a315"
+      },
+      {
+        "path": "scripts/story_2_2_security_evidence.py",
+        "sha256": "aba7d7af5ba109ca34ae3eb080c72b5f27bf16e821e2c5124a680f203e6e881e"
+      }
+    ],
+    "reviewed_commit": "5c342303a5c30078d0ac6e7370d77bdf5152e51c",
+    "reviewed_tree": "d3c40d6975cf2df5853a41523a6c20b19b70c979",
+    "reviewer_id": "agentmage-story-2.2-independent-gate-v1"
+  },
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "execution_performed": false,
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "product_acceptance_claim": "none",
+  "product_boundary_execution_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "5c342303a5c30078d0ac6e7370d77bdf5152e51c",
+  "reviewed_tree": "d3c40d6975cf2df5853a41523a6c20b19b70c979",
+  "schema_version": 1,
+  "status": "blocked-macos",
+  "story_id": "2.2",
+  "summary": {
+    "acceptance_criteria_failed": 0,
+    "acceptance_criteria_passed": 3,
+    "blocking_control_count": 1,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "shared_linux_foundation_complete": true,
+    "story_checkbox_complete": false
+  },
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "evidence": [
+        "TASKS.md",
+        "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json"
+      ],
+      "rationale": "Story scope, trust boundaries, exclusions, security mappings, and retained evidence are explicit.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "evidence": [
+        "tests/test_seeded_fuzz_failures.py",
+        "tests/test_fuzz_baseline_reconciliation.py"
+      ],
+      "rationale": "Positive infrastructure, malformed seeds, boundaries, errors, resource events, side effects, and reconciliation mutations are tested.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "evidence": [
+        "schemas/testing/fuzz-result.schema.json",
+        "fuzzing/target-registry.json"
+      ],
+      "rationale": "Closed schemas and registries reject missing, extra, malformed, stale, unsafe, and unsupported evidence.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "evidence": [
+        "fuzzing/story-gate-policy.json"
+      ],
+      "rationale": "The bounded fake fuzz foundation grants no product authority and ordinary development credentials cannot waive a target gate.",
+      "status": "not-applicable-no-product-authority"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json"
+      ],
+      "rationale": "Crash, hang, resource, path, secret, and authorization failures remain typed, owned, minimized, and blocking.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "rationale": "No product tool executes; normalized fake-boundary results retain exact outcome and evidence identities.",
+      "status": "not-applicable-no-product-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "evidence": [
+        "fuzzing/seeds/security-failures-v1.json",
+        "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json"
+      ],
+      "rationale": "Only bounded synthetic-public seeds and redacted hash evidence persist; no private input or real credential is used.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "rationale": "Both runs start in new empty temporary roots, copy only allowlisted inputs, and leave those inputs unchanged.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "rationale": "Independent clean-run comparison preserves every non-pass and timeout result plus target, coverage, evidence, and regression identity.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "evidence": [
+        "docs/decisions/0003-blocked-platform-lane-continuation.md"
+      ],
+      "rationale": "Shared, Linux, and fake-boundary evidence does not substitute for required macOS execution or establish macOS support.",
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "evidence": [
+        "TASKS.md",
+        "requirements/traceability-report.json"
+      ],
+      "rationale": "Task, traceability, protocol, security, policy, and reviewer-disposition records are current.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json"
+      ],
+      "rationale": "An independent gate implementation reviews the immutable evidence commit; no external-human review claim is made.",
+      "status": "pass-automated-independent-implementation-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json"
+      ],
+      "rationale": "The gate remains visibly BLOCKED-MACOS and represents no unavailable product or platform check as passing.",
+      "status": "pass-gate-reporting"
+    }
+  ]
+}
