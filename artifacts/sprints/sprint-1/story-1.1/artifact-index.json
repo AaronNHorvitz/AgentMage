@@ -5,7 +5,7 @@
       "files": [
         {
           "path": "Cargo.toml",
-          "sha256": "e6c3963126dc4bab6309cfd31c85bd359997e3e90302314e51f4c202c27890b7"
+          "sha256": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89"
         },
         {
           "path": "architecture/module-inventory.json",
@@ -21,7 +21,7 @@
         },
         {
           "path": "kernel/engine/Cargo.toml",
-          "sha256": "9f3f14e51dce7e9423f40cf242a16f6060af4149458baf3e315bdd3a030f3af2"
+          "sha256": "f0fa7de3ba5baeda84181098ef11d17df4b00d09058c38e37cfbd8399ed39a1e"
         },
         {
           "path": "platforms/linux/Cargo.toml",
@@ -73,7 +73,7 @@
       "files": [
         {
           "path": "Cargo.lock",
-          "sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051"
+          "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
         },
         {
           "path": "package-lock.json",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "6928bc2d429166b0530c8ff8f816dd7c9d358754d8d52b5ed33fd0b66b45c11c"
+          "sha256": "802b3cc161c177bf8b5f5d8e707393d6d0b285fa51fb493348c27a32f1a569e7"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "495de7a472e982194faf56b9bb51f3f23bc4c981304e567227eaaf37f70117d1"
+          "sha256": "8769297f1dc48444c25d67707c1cf3f9163e582f7081e23afbe1551890b2e593"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "068e91b41797864abc0dd5724f2d21208a42c958d45ab973d88be451ed492206"
+          "sha256": "c3d83a1d1fc49d8bb07f98306f3567709144ba6be3a7c67d4fe328ca3b28ece3"
         }
       ],
       "task_id": "1.1.2.3"
@@ -103,11 +103,11 @@
       "files": [
         {
           "path": "architecture/build-contract.json",
-          "sha256": "a6ca2ce5550bc7696e8510b8c056d883e9254d8ae2d4e691664898f9a5cf9b31"
+          "sha256": "8e93869540ef2d968a48fdb36e3befe9a0fda975eacf4f7e408c7aa3a7872699"
         },
         {
           "path": "package.json",
-          "sha256": "918a19c66bbe5691d30ce29749ce90b242fa9ed4b698bae9f7795448ffb7ede9"
+          "sha256": "7fab519354f057f938cce7a8cbf9b3c6686386b88e01b7b6ce092b4cf91709e3"
         },
         {
           "path": "rust-toolchain.toml",

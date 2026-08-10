@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Cargo.lock",
-      "sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051"
+      "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
     },
     {
       "path": "LICENSE",
@@ -10,19 +10,19 @@
     },
     {
       "path": "architecture/artifact-scan-policy.json",
-      "sha256": "d38481e605067fe141e356e3b7b497f2a04f6f042a8848c99b0b7bff01333699"
+      "sha256": "7794a91e5482976ea8ab89462df84e553a8bc0bb11ba7ede7735a3fb2ee6720d"
     },
     {
       "path": "architecture/build-contract.json",
-      "sha256": "a6ca2ce5550bc7696e8510b8c056d883e9254d8ae2d4e691664898f9a5cf9b31"
+      "sha256": "8e93869540ef2d968a48fdb36e3befe9a0fda975eacf4f7e408c7aa3a7872699"
     },
     {
       "path": "architecture/clean-build-policy.json",
-      "sha256": "6abd23cb1d74aa5707d8c7285ef2cd2dd496550dd859402f052ed9b77807ed5e"
+      "sha256": "e2758e18a4f08437adc40a6d31d45a6723f5c5b264818ea44886d8700a4c0148"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "4b932ab5bf0f6f320fffc4d8c80a12758c32c4998281a7dd7cff0468c36940eb"
+      "sha256": "d131e4254f62ef75f31caada949b2d83dbe45c83eb54cac8f81a056c7548f3ac"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -38,15 +38,15 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "486b0428788a473331f3f9c7f70497fb3e912c31c1f9f57f6ea70387ddc4a098"
+      "sha256": "57c030cb8ffacd7d7b71632d6701d9882a4d84cc62c3e8095ba4767423d5d7ac"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
-      "sha256": "f2b0f0e423fdb0d224aedb0f94f8fcef279ddcfd0c8974e8a90b7dc9ef3de6e5"
+      "sha256": "00cffc16b03b07d24b42af88dd7a6afb401c06a7b9eb49840133a521ad893795"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "f4a1b5672fbe1cad47e226e2d96578d77724637f8d83c0885b93fd578860b83f"
+      "sha256": "2cd0136356e043a7af05522783abbfe4099f6343117388ffe5aebb6edaf06b8e"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
@@ -54,7 +54,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json",
-      "sha256": "1c53945f78a1b5392df5ed1d15af7879a83f43761d19c9d638799d1080da68df"
+      "sha256": "a215c3a307c4b4054359d09669944587f4b9c6ae3b44ffd04e3507d0cf952db7"
     },
     {
       "path": "docs/decisions/0003-blocked-platform-lane-continuation.md",
@@ -78,11 +78,11 @@
     },
     {
       "path": "scripts/artifact_scanner.py",
-      "sha256": "c703c305489a851f37e2816068668391aa0da9dbb2592e0a9fc9066fc9fa7269"
+      "sha256": "615137f5696eaa629212e9dada623afd38b85948f3d62d2af6f58d49b445c469"
     },
     {
       "path": "scripts/clean_build_evidence.py",
-      "sha256": "ca8ccefd46d3036ca9a327332933ec281b38acc9685bab9569672bae26e533c1"
+      "sha256": "4dc0a37d81b9344b1cc24b6236b2179b767a23d7104e77832694ff8c021a39c9"
     },
     {
       "path": "scripts/dependency_injection.py",
@@ -98,19 +98,19 @@
     },
     {
       "path": "scripts/supply_chain.py",
-      "sha256": "661aaf0c64ace296db03086f1d5950cb892434ddf189c350667d479c3c635ffe"
+      "sha256": "b9c3429e8e75b584e1cc4045720636b4c20b692612d3f35a4c3c983ec2f2b8a7"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "6928bc2d429166b0530c8ff8f816dd7c9d358754d8d52b5ed33fd0b66b45c11c"
+      "sha256": "802b3cc161c177bf8b5f5d8e707393d6d0b285fa51fb493348c27a32f1a569e7"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "495de7a472e982194faf56b9bb51f3f23bc4c981304e567227eaaf37f70117d1"
+      "sha256": "8769297f1dc48444c25d67707c1cf3f9163e582f7081e23afbe1551890b2e593"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "068e91b41797864abc0dd5724f2d21208a42c958d45ab973d88be451ed492206"
+      "sha256": "c3d83a1d1fc49d8bb07f98306f3567709144ba6be3a7c67d4fe328ca3b28ece3"
     }
   ],
   "macos": {
@@ -311,7 +311,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "c92ca6ce4963a9932e7de990b87a2eb77b375883",
+  "source_revision": "813f63d97dfe46bf5d799454126bac2ecab4c9e3",
   "status": "complete-evidence-map-blocked-macos",
   "summary": {
     "canonical_blocking_artifact_findings": 0,

@@ -1,12 +1,12 @@
 {
   "catalog_id": "agentmage-configuration-profile-catalog-v1",
   "catalog_version": "1.0.0",
-  "loader_status": "not-implemented",
+  "loader_status": "library-implemented-product-not-registered",
   "macos_execution_status": "blocked-macos",
   "macos_support_claim": "none",
   "profiles": [
     {
-      "activation_status": "inactive-no-loader",
+      "activation_status": "inactive-no-product-registration",
       "blocked_by": [
         "product-configuration-loader"
       ],
@@ -26,7 +26,7 @@
       "profile_id": "development"
     },
     {
-      "activation_status": "inactive-no-loader",
+      "activation_status": "inactive-no-product-registration",
       "blocked_by": [
         "product-configuration-loader"
       ],
@@ -50,7 +50,7 @@
       "profile_id": "synthetic-test"
     },
     {
-      "activation_status": "inactive-no-loader",
+      "activation_status": "inactive-no-product-registration",
       "blocked_by": [
         "product-configuration-loader",
         "story-16-read-only-tools"
@@ -186,5 +186,5 @@
     }
   ],
   "schema_version": 1,
-  "status": "defined-no-product-loader"
+  "status": "defined-library-loader-no-product-registration"
 }

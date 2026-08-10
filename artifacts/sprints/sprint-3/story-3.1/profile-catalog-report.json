@@ -2,19 +2,19 @@
   "artifacts": [
     {
       "path": "schemas/configuration/profile-catalog.schema.json",
-      "sha256": "36564306fa41d13667ff5ffcc785996a3dc5c3bef51b2683b1c66add34bfeb0a"
+      "sha256": "89b42068beb861ce636971c2751cae5a7c81b1d5e062b1ee5d3aadfc5b906a73"
     },
     {
       "path": "scripts/configuration_profiles.py",
-      "sha256": "f5c0aa020b113f1104fd34867d6aaae8061068af50dd11bbda3b4a7f5ab275c1"
+      "sha256": "cf3e47ca040458a006793b48fa2c501d56f00d87933e69351af818473a8a2139"
     },
     {
       "path": "tests/test_configuration_profiles.py",
-      "sha256": "b77be294858f95f86a080ee21b7d1f3a19deb91057dc0c0b1087a62093d245ad"
+      "sha256": "2e7f4d07e9bab3aac649d799c435f5c7a5ca655c328b1179c46f8607b8072754"
     },
     {
       "path": "configuration/profiles/catalog.json",
-      "sha256": "8198f5b5752beb0beb1a8f861f4ad6f9a5087893788b13b1e64319a90d2bbbe5"
+      "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
     },
     {
       "path": "configuration/profiles/development.json",
@@ -45,7 +45,7 @@
       "sha256": "53b6d4882cdfc741b41c68ac52abd5f842941dcb8751afb50678e997a9e1a49b"
     }
   ],
-  "loader_status": "not-implemented",
+  "loader_status": "library-implemented-product-not-registered",
   "macos_execution_status": "blocked-macos",
   "macos_support_claim": "none",
   "network_used": false,

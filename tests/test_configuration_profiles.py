@@ -72,7 +72,9 @@ class ConfigurationProfilesTests(unittest.TestCase):
         missing = copy.deepcopy(catalog)
         missing["profiles"].pop()
         activation = copy.deepcopy(catalog)
-        activation["profiles"][3]["activation_status"] = "inactive-no-loader"
+        activation["profiles"][3]["activation_status"] = (
+            "inactive-no-product-registration"
+        )
         registration = copy.deepcopy(catalog)
         registration["profiles"][3]["product_registration"] = True
         for changed in (duplicate, missing, activation, registration):

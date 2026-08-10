@@ -25,10 +25,10 @@
       "const": "1.0.0"
     },
     "status": {
-      "const": "defined-no-product-loader"
+      "const": "defined-library-loader-no-product-registration"
     },
     "loader_status": {
-      "const": "not-implemented"
+      "const": "library-implemented-product-not-registered"
     },
     "profiles": {
       "type": "array",
@@ -71,7 +71,7 @@
           },
           "activation_status": {
             "enum": [
-              "inactive-no-loader",
+              "inactive-no-product-registration",
               "future-disabled"
             ]
           },
