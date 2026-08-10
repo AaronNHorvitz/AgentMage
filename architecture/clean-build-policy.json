@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "status": "enforced",
+  "test_id": "S-001-IT01",
+  "toolchains": {
+    "cargo": "1.95.0",
+    "node": "24.15.0",
+    "npm": "11.12.1",
+    "rustc": "1.95.0"
+  },
+  "download_integrity": {
+    "node_linux_x64_sha256": "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6",
+    "rustup_init_linux_x64_sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"
+  },
+  "linux_platforms": {
+    "fedora-x86_64": {
+      "base_image": "docker.io/library/fedora@sha256:89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
+      "os_id": "fedora",
+      "version_id": "44"
+    },
+    "ubuntu-x86_64": {
+      "base_image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
+      "os_id": "ubuntu",
+      "version_id": "26.04"
+    }
+  },
+  "commands": [
+    {
+      "id": "npm-clean-install",
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "network": "bootstrap-only"
+    },
+    {
+      "id": "npm-locked-tree",
+      "argv": [
+        "npm",
+        "ls",
+        "--all",
+        "--json"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "cargo-locked-tree",
+      "argv": [
+        "cargo",
+        "metadata",
+        "--locked",
+        "--offline",
+        "--format-version",
+        "1",
+        "--no-deps"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "build",
+      "argv": [
+        "npm",
+        "run",
+        "product:build"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "lint",
+      "argv": [
+        "npm",
+        "run",
+        "product:lint"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "format-check",
+      "argv": [
+        "npm",
+        "run",
+        "product:format-check"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "test",
+      "argv": [
+        "npm",
+        "run",
+        "product:test"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "sbom-build",
+      "argv": [
+        "npm",
+        "run",
+        "supply-chain:build"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "sbom-check",
+      "argv": [
+        "npm",
+        "run",
+        "supply-chain:check"
+      ],
+      "network": "disabled-by-client"
+    },
+    {
+      "id": "diagnostic",
+      "argv": [
+        "npm",
+        "run",
+        "diagnostic:check"
+      ],
+      "network": "disabled-by-client"
+    }
+  ],
+  "additional_input_paths": [
+    "architecture/clean-build-policy.json",
+    "architecture/dependency-classes.json",
+    "architecture/optional-component-inventory.json",
+    "release/clean-build/Containerfile.linux",
+    "scripts/clean_build_evidence.py",
+    "scripts/clean_standard_build.py",
+    "scripts/no_install_diagnostic.py",
+    "scripts/supply_chain.py",
+    "supply-chain/dependency-hashes.sha256",
+    "supply-chain/dependency-provenance.json",
+    "supply-chain/sbom.cdx.json"
+  ],
+  "container_controls": {
+    "capabilities": "all-dropped",
+    "host_source": "read-only-committed-archive",
+    "no_new_privileges": true,
+    "root_filesystem": "read-only",
+    "runtime": "rootless-podman",
+    "writable_storage": "fresh-tmpfs"
+  },
+  "execution_user": {
+    "gid": 10001,
+    "privileged": false,
+    "uid": 10001
+  },
+  "platform_status": {
+    "fedora": "executable",
+    "macos": "blocked-macos",
+    "ubuntu": "executable"
+  }
+}

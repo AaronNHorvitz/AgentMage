@@ -18,6 +18,8 @@
     "artifact-scan:build": "python3 scripts/artifact_scanner.py --write",
     "artifact-scan:check": "python3 scripts/artifact_scanner.py",
     "build-contract:check": "python3 scripts/build_contract.py",
+    "clean-build:check": "python3 scripts/clean_build_evidence.py",
+    "clean-build:run": "python3 scripts/clean_build_evidence.py --run-linux --source-revision HEAD",
     "dependencies:check": "python3 scripts/dependency_rules.py",
     "dependency-classes:check": "python3 scripts/dependency_classes.py",
     "dependency-injection:build": "python3 scripts/dependency_injection.py --write",

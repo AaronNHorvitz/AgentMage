@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "9eec52ae6a3401511f7ad75e553d99b0aec84cb595e6258dc0a4a3cf8c6dce78"
+          "sha256": "26ec8cdc7823380cb5264d458d981965d0d03a196fcd4aa83a45152e23e7a1dc"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "f5eb5d06338ac8195033beba101497266727aae4cf46f075f9a9afcc4fe28856"
+          "sha256": "ae68af283dff9203f78662ea2c60c0a0ea8e451d7285492b2f3de61f8fe4e1a6"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "452dbffdb87963a9ab915f110ff66481b3cf6166ac420aac7155a9b8b8dbed8b"
+          "sha256": "c22e323427852fe51ec838d9b0486222e7e134d9d13ff2cdc783b77a6e6c00d5"
         }
       ],
       "task_id": "1.1.2.3"
@@ -107,7 +107,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "0d3b616b9744010c25d24795b1a354f6029a4d5d6803e46d32895ca1570edda8"
+          "sha256": "02bee898ea0a61a2bd199aed6d5effa78fa432573af019a66078c259568a280a"
         },
         {
           "path": "rust-toolchain.toml",
