@@ -1784,6 +1784,121 @@ mod tests {
         serde_json::to_vec(&value).expect("fixture must serialize")
     }
 
+    fn schema_failure_fixture(schema: &str, failure_class: &str) -> Vec<u8> {
+        let mut value = fixture_value();
+        match failure_class {
+            "missing" => {
+                if schema == "agent-configuration" {
+                    value.as_object_mut().expect("bundle object").remove("core");
+                } else {
+                    value[schema]
+                        .as_object_mut()
+                        .expect("section object")
+                        .remove("schema_version");
+                }
+            }
+            "extra" => {
+                let object = if schema == "agent-configuration" {
+                    value.as_object_mut().expect("bundle object")
+                } else {
+                    value[schema].as_object_mut().expect("section object")
+                };
+                object.insert("unreviewed_extension".to_owned(), Value::Bool(true));
+            }
+            "wrong-type" => {
+                if schema == "agent-configuration" {
+                    value["core"] = Value::Bool(true);
+                } else {
+                    value[schema]["schema_version"] = Value::String("1".to_owned());
+                }
+            }
+            "oversized" => {
+                if schema == "agent-configuration" {
+                    let mut bytes = serde_json::to_vec(&value).expect("fixture serializes");
+                    bytes.resize(DEFAULT_MAXIMUM_BYTES + 1, b' ');
+                    return bytes;
+                }
+                match schema {
+                    "core" => value["core"]["profile_id"] = Value::String("a".repeat(129)),
+                    "platform" => {
+                        value["platform"]["adapter_id"] = Value::String("a".repeat(129));
+                    }
+                    "model" => {
+                        value["model"]["manifest_path"] = Value::String("a".repeat(1025));
+                    }
+                    "workspace" => value["workspace"]["maximum_roots"] = Value::from(33),
+                    "tool" => {
+                        value["tool"]["registry_path"] = Value::String("a".repeat(1025));
+                    }
+                    "permission" => {
+                        value["permission"]["allowed_capabilities"] = Value::Array(
+                            (0..257)
+                                .map(|index| Value::String(format!("fixture.capability-{index}")))
+                                .collect(),
+                        );
+                    }
+                    "budget" => {
+                        value["budget"]["maximum_input_bytes"] =
+                            Value::from(MAXIMUM_SCHEMA_BYTES + 1);
+                    }
+                    "logging" => {
+                        value["logging"]["maximum_event_bytes"] = Value::from(1_048_577);
+                    }
+                    "retention" => value["retention"]["receipts_days"] = Value::from(3651),
+                    "skill" => value["skill"]["maximum_enabled_skills"] = Value::from(257),
+                    "shell" => value["shell"]["shell_id"] = Value::String("a".repeat(129)),
+                    _ => panic!("unknown configuration schema"),
+                }
+            }
+            "unsupported-version" => {
+                if schema == "agent-configuration" {
+                    value["schema_version"] = Value::from(2);
+                } else {
+                    value[schema]["schema_version"] = Value::from(2);
+                }
+            }
+            "ambiguous" => {
+                let serialized = serde_json::to_string(&value).expect("fixture serializes");
+                let needle = if schema == "agent-configuration" {
+                    "{".to_owned()
+                } else {
+                    format!("\"{schema}\":{{")
+                };
+                let replacement = format!("{needle}\"schema_version\":1,");
+                let duplicated = serialized.replacen(&needle, &replacement, 1);
+                assert_ne!(duplicated, serialized, "duplicate insertion must occur");
+                return duplicated.into_bytes();
+            }
+            _ => panic!("unknown failure class"),
+        }
+        serde_json::to_vec(&value).expect("fixture must serialize")
+    }
+
+    fn expected_schema_failure(schema: &str, failure_class: &str) -> (&'static str, &'static str) {
+        match (schema, failure_class) {
+            (_, "ambiguous") => (
+                "configuration-malformed-json",
+                "configuration is malformed or contains a duplicate key",
+            ),
+            ("agent-configuration", "oversized") => (
+                "configuration-too-large",
+                "configuration exceeds the configured byte limit",
+            ),
+            ("agent-configuration", "unsupported-version") => (
+                "configuration-unsupported-version",
+                "configuration schema version is unsupported",
+            ),
+            (_, "unsupported-version" | "oversized") => (
+                "configuration-contract-violation",
+                "configuration violates a version 1 safety invariant",
+            ),
+            _ => (
+                "configuration-contract-violation",
+                "configuration does not match the closed version 1 contract",
+            ),
+        }
+    }
+
     fn fixture_value() -> Value {
         serde_json::from_slice(SYNTHETIC_PROFILE).expect("fixture must parse")
     }
@@ -1857,6 +1972,76 @@ mod tests {
                 .code(),
             "configuration-too-large"
         );
+    }
+
+    #[test]
+    fn every_configuration_schema_failure_class_is_stable_and_side_effect_free() {
+        let schemas = [
+            "agent-configuration",
+            "core",
+            "platform",
+            "model",
+            "workspace",
+            "tool",
+            "permission",
+            "budget",
+            "logging",
+            "retention",
+            "skill",
+            "shell",
+        ];
+        let failure_classes = [
+            "missing",
+            "extra",
+            "wrong-type",
+            "oversized",
+            "unsupported-version",
+            "ambiguous",
+        ];
+        let directory = temporary_directory();
+        let target = directory.join("agentmage.json");
+        fs::write(&target, STRICT_LOCAL_PROFILE).expect("baseline writes");
+        let baseline = fs::read(&target).expect("baseline reads");
+        let mut rejected = 0;
+
+        for schema in schemas {
+            for failure_class in failure_classes {
+                let invalid = schema_failure_fixture(schema, failure_class);
+                let expected = expected_schema_failure(schema, failure_class);
+                let first = manager()
+                    .load_bytes(&invalid)
+                    .expect_err("invalid schema case must fail");
+                let second = manager()
+                    .load_bytes(&invalid)
+                    .expect_err("repeat invalid schema case must fail");
+                assert_eq!(first, second, "diagnostic must be deterministic");
+                assert_eq!((first.code(), first.diagnostic()), expected);
+
+                let apply_error = manager()
+                    .apply_with_backup(&target, &invalid)
+                    .expect_err("invalid schema cannot reach configuration activation");
+                assert_eq!(apply_error, first);
+                assert_eq!(fs::read(&target).expect("target reads"), baseline);
+                assert_eq!(
+                    fs::read_dir(&directory)
+                        .expect("temporary directory reads")
+                        .count(),
+                    1,
+                    "rejection must not create a backup or temporary file"
+                );
+                rejected += 1;
+            }
+        }
+
+        assert_eq!(rejected, 72);
+        assert_eq!(
+            manager()
+                .safe_defaults()
+                .expect("manager remains usable")
+                .profile_id(),
+            "strict-local-read-only"
+        );
+        fs::remove_dir_all(directory).expect("temporary directory removes");
     }
 
     #[test]

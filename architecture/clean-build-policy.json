@@ -146,6 +146,7 @@
     "scripts/clean_standard_build.py",
     "scripts/component_inventory.py",
     "scripts/configuration_review_artifacts.py",
+    "scripts/configuration_schema_failure_evidence.py",
     "scripts/no_install_diagnostic.py",
     "scripts/update_design.py",
     "schemas/configuration/configuration-diff.schema.json",

@@ -41,6 +41,7 @@ CLIPPY_COMMAND = (
 EXPECTED_TESTS = (
     "atomic_apply_retains_backup_and_rollback_restores_exact_identity",
     "diff_is_stable_redacted_and_classifies_authority_and_resource_changes",
+    "every_configuration_schema_failure_class_is_stable_and_side_effect_free",
     "invalid_candidate_and_stale_rollback_preimage_preserve_current_file",
     "loads_canonical_profile_deterministically",
     "migrates_only_version_zero_with_fixed_non_broadening_operations",

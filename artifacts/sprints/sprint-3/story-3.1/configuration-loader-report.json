@@ -77,7 +77,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "906d1ab6d826bbf383d85de3d97449f6dbf0e9b24b10a9b7ce8ba4da46ca7914"
+      "sha256": "668f605f810485c2c11c3784806327da77ff3980a67b2fb392ac461999282365"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
@@ -113,7 +113,7 @@
     },
     {
       "path": "scripts/configuration_loader_evidence.py",
-      "sha256": "956bde2efeabe5a662c42daae5c4c980f467c49cbd1b39eafaf7f8a25fbaa298"
+      "sha256": "dae586eae15d76a19d50463e1bea712f24d20ac1bd7fc113fe3a8edb84b641b1"
     },
     {
       "path": "tests/test_configuration_loader_evidence.py",
@@ -124,7 +124,7 @@
   "summary": {
     "atomic_backup": "pass-content-addressed-private-file",
     "failed_test_count": 0,
-    "focused_test_count": 11,
+    "focused_test_count": 12,
     "migration": "pass-version-0-to-1-only",
     "redacted_diff": "pass-hash-only-values",
     "rollback": "pass-preimage-checked",
@@ -136,6 +136,7 @@
   "tests": [
     "atomic_apply_retains_backup_and_rollback_restores_exact_identity",
     "diff_is_stable_redacted_and_classifies_authority_and_resource_changes",
+    "every_configuration_schema_failure_class_is_stable_and_side_effect_free",
     "invalid_candidate_and_stale_rollback_preimage_preserve_current_file",
     "loads_canonical_profile_deterministically",
     "migrates_only_version_zero_with_fixed_non_broadening_operations",

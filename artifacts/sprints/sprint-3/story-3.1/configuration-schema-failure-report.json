@@ -1,0 +1,175 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::every_configuration_schema_failure_class_is_stable_and_side_effect_free",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    }
+  ],
+  "failure_classes": [
+    "missing",
+    "extra",
+    "wrong-type",
+    "oversized",
+    "unsupported-version",
+    "ambiguous"
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "platform_execution": "fedora-linux",
+  "private_paths_persisted": false,
+  "product_profile_activation_claim": "none",
+  "product_startup_registration_claim": "none",
+  "raw_configuration_persisted": false,
+  "schema_ids": [
+    "agent-configuration",
+    "core",
+    "platform",
+    "model",
+    "workspace",
+    "tool",
+    "permission",
+    "budget",
+    "logging",
+    "retention",
+    "skill",
+    "shell"
+  ],
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "f0fa7de3ba5baeda84181098ef11d17df4b00d09058c38e37cfbd8399ed39a1e"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "768ff57311bd3de95000fcace3de631a047a18eff1e78962f2ed09cc84f8410a"
+    },
+    {
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "668f605f810485c2c11c3784806327da77ff3980a67b2fb392ac461999282365"
+    },
+    {
+      "path": "configuration/profiles/strict-local-read-only.json",
+      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+    },
+    {
+      "path": "configuration/profiles/synthetic-test.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "schemas/configuration/common.schema.json",
+      "sha256": "d01ef7808eacd03024ad8cf96734405791a9c0f85865e0f7a0a6934b072a178d"
+    },
+    {
+      "path": "schemas/configuration/agent-configuration.schema.json",
+      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+    },
+    {
+      "path": "schemas/configuration/core.schema.json",
+      "sha256": "bf91c31b56debc34225aefc850f042975203b7679f8cd602e5de1b4cbef35697"
+    },
+    {
+      "path": "schemas/configuration/platform.schema.json",
+      "sha256": "fe7ce7edbe34fa68c69d3c8c1bc32240fd7f344af702973e854e0abcaba2e63a"
+    },
+    {
+      "path": "schemas/configuration/model.schema.json",
+      "sha256": "7a1734821222909f6146904c94018a5793bd756e1c0081093dee7e56858f7875"
+    },
+    {
+      "path": "schemas/configuration/workspace.schema.json",
+      "sha256": "d053c0e62cce239e59787d8b1e59f142c258458ec9d00f5cb6dbd9551e91975d"
+    },
+    {
+      "path": "schemas/configuration/tool.schema.json",
+      "sha256": "183b6f954807b493ad652f84a25ad78f572225fffd2f945a94e59a79d5ea3c5e"
+    },
+    {
+      "path": "schemas/configuration/permission.schema.json",
+      "sha256": "678b1c56d7f8829aa5b97af729c8ec8b3fc663c28bba240a31f70f95837dcac0"
+    },
+    {
+      "path": "schemas/configuration/budget.schema.json",
+      "sha256": "b9e31e0b7362c3ec1e1edc545ac5298c5a81d8cdabf2b44d386a5178f45c0a85"
+    },
+    {
+      "path": "schemas/configuration/logging.schema.json",
+      "sha256": "dbec9f547889c74b98fdd05a225d436bbf1fa5c77e20afd66f643857890c478b"
+    },
+    {
+      "path": "schemas/configuration/retention.schema.json",
+      "sha256": "80af0d27b524bc26af09cfd89341c0344ca6120a2cb3f4c861664a8902365f1b"
+    },
+    {
+      "path": "schemas/configuration/skill.schema.json",
+      "sha256": "50e5278074b2806bba9473850f4cf9665c5be6e840d28e01f6619d7df52ba3d0"
+    },
+    {
+      "path": "schemas/configuration/shell.schema.json",
+      "sha256": "06fc78d50e438a45b7fa3cd52aa16bf3ab8138844c8e08304281f5112c2bce42"
+    },
+    {
+      "path": "scripts/configuration_schema_failure_evidence.py",
+      "sha256": "eda8b2fa6b9a1384d7642c04302935586533ae9ddbd05af31af02f80b559fe74"
+    },
+    {
+      "path": "tests/test_configuration_schema_failure_evidence.py",
+      "sha256": "9153a6c56e03173b5744043d29ff3c303526de740dff4c8302eafac8e6f65c71"
+    }
+  ],
+  "stable_diagnostic_codes": [
+    "configuration-contract-violation",
+    "configuration-malformed-json",
+    "configuration-too-large",
+    "configuration-unsupported-version"
+  ],
+  "status": "pass-shared-linux-configuration-schema-failures",
+  "summary": {
+    "failed_test_count": 0,
+    "failure_class_count": 6,
+    "filesystem_mutation_case_count": 0,
+    "matrix_case_count": 72,
+    "partial_startup_case_count": 0,
+    "rejected_case_count": 72,
+    "schema_count": 12,
+    "skipped_test_count": 0,
+    "stable_diagnostic_case_count": 72
+  },
+  "task_id": "3.1.3.1",
+  "test": "every_configuration_schema_failure_class_is_stable_and_side_effect_free",
+  "test_id": "S-003-UT01"
+}

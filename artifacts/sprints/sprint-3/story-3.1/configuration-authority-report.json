@@ -141,7 +141,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "906d1ab6d826bbf383d85de3d97449f6dbf0e9b24b10a9b7ce8ba4da46ca7914"
+      "sha256": "668f605f810485c2c11c3784806327da77ff3980a67b2fb392ac461999282365"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
