@@ -53,6 +53,16 @@ python3 scripts/macos_model_feasibility.py verify \
 
 Transfer the complete result directory without editing it. Re-run the same `verify` command in the receiving clean checkout. Admission into `artifacts/sprints/sprint-0/` requires a separate hash-bound evidence step; raw local output is not committed directly.
 
+From the receiving checkout, build the immutable public extension bundle with:
+
+```bash
+python3 scripts/story_0_3_macos_evidence.py --write \
+  --result-dir <outside-repo>/results/gemma-4-e4b-macos-native \
+  --verification-revision HEAD
+```
+
+The importer refuses an invalid source bundle or an existing output directory. It retains the byte-identical result, replaces only the machine-local evaluation root in the admitted server log, and records hashes and sizes for the untouched external source files. The external source directory remains authoritative and must be retained.
+
 ## Required Review
 
 Confirm that the result identifies `macos-native-metal`, an Apple M5-family MacBook Pro, the exact runtime/model identities, the fixed corpus and decoder, a loopback-only listener, no active non-loopback route, all raw trials, resource samples, threshold reconciliation, and no user data. Story 0.3 remains blocked until this review and evidence admission are complete.
