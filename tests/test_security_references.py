@@ -33,6 +33,15 @@ class SecurityReferenceTests(unittest.TestCase):
         report = audit_reference_register()
 
         self.assertTrue(report["ok"], report["failures"])
+        self.assertEqual(self.baseline["schema_version"], 1)
+        self.assertEqual(
+            self.baseline["register_id"],
+            "agentmage-public-product-security-references",
+        )
+        self.assertEqual(
+            self.baseline["governance"]["decision_record"],
+            "docs/decisions/0002-public-security-reference-retention.md",
+        )
         self.assertEqual(report["reference_count"], 21)
         self.assertEqual(report["citation_count"], 21)
         self.assertEqual(

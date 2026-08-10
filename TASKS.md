@@ -158,7 +158,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 0.1.1 - Implement the bounded story**
+- [x] **Task 0.1.1 - Implement the bounded story**
   - [x] **Sub-task 0.1.1.1** (legacy `S-000-I01`): Create a machine-readable requirement registry for every `AM-*`, `AT-*`, and `CR-*` identifier.
   - [x] **Sub-task 0.1.1.2** (legacy `S-000-I02`): Record each requirement's title, source document, source heading, release, dependencies, disposition, acceptance tests, and current status.
   - [x] **Sub-task 0.1.1.3** (legacy `S-000-I03`): Define the conflict rule that preserves the narrower safety boundary or release scope until an approved decision resolves the conflict.
@@ -168,12 +168,12 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.1.7** (legacy `S-000-I07`): Add an additions-only inventory check that detects removed or weakened canonical requirements.
   - [x] **Sub-task 0.1.1.8** (legacy `S-000-I08`): Create a public product-security reference register that records publisher, title, publication and effective dates, source URL, retrieval date, SHA-256, current or superseded status, and the approved local-snapshot decision for every cited source without implying external certification or endorsement.
 
-- [ ] **Task 0.1.2 - Produce reviewable artifacts**
+- [x] **Task 0.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 0.1.2.1:** Versioned requirement registry.
   - [x] **Sub-task 0.1.2.2:** Cross-document traceability report.
   - [x] **Sub-task 0.1.2.3:** Decision and supersession templates.
   - [x] **Sub-task 0.1.2.4:** Machine-readable exclusion register.
-  - [ ] **Sub-task 0.1.2.5:** Versioned public-authority register and snapshot-retention policy.
+  - [x] **Sub-task 0.1.2.5:** Versioned public-authority register and snapshot-retention policy.
 
 - [ ] **Task 0.1.3 - Verify and close the story**
   - [ ] **Sub-task 0.1.3.1:** `S-000-UT01` loads valid and malformed registries; assert canonical ordering, exact source anchors, duplicate rejection, unresolved-reference diagnostics, and zero file mutation.
