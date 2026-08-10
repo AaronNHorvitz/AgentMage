@@ -141,6 +141,8 @@ npm run references:check
 
 The audit rejects citation gaps, orphaned or duplicate records, order changes, malformed dates or hashes, inconsistent supersession, unapproved retention, and certification or endorsement claims. It deliberately performs no live retrieval during routine documentation or release checks.
 
+`security-reference-baseline.json` pins the accepted identity, location, observed response hash, lifecycle state, and snapshot decision for each register record. A candidate removal, addition, redirect, publisher/title substitution, version or integrity change, supersession, or retention-policy change creates a deterministic blocking impact review in the audit output. The review lists required identity, control/test, evidence, and decision actions; the checker never updates the baseline. Repinning requires an accepted decision and deliberate baseline edit.
+
 ## Cross-Document Traceability
 
 `traceability-report.json` is the generated planning view across the requirement registry, normative PRD map, policy expectations, and sprint plan. It records each stable requirement's source, release, status, dependencies, acceptance-test relationships, normative statements, planned implementation stories, exclusion state, external-issue state, and current or expected evidence location.

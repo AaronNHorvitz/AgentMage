@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts.security_references import (
+    DEFAULT_BASELINE,
     DEFAULT_REGISTER,
     DEFAULT_SECURITY_REVIEW,
     audit_reference_register,
@@ -44,6 +45,7 @@ class SecurityReferenceTests(unittest.TestCase):
         )
         self.assertEqual(report["reference_count"], 21)
         self.assertEqual(report["citation_count"], 21)
+        self.assertEqual(report["impact_reviews"], [])
         self.assertEqual(
             [record["source_url"] for record in self.baseline["references"]],
             extract_reference_urls(),
@@ -161,11 +163,53 @@ class SecurityReferenceTests(unittest.TestCase):
         )
 
     def test_validation_does_not_mutate_inputs(self) -> None:
-        before = (DEFAULT_REGISTER.read_bytes(), DEFAULT_SECURITY_REVIEW.read_bytes())
+        before = (
+            DEFAULT_REGISTER.read_bytes(),
+            DEFAULT_SECURITY_REVIEW.read_bytes(),
+            DEFAULT_BASELINE.read_bytes(),
+        )
         audit_reference_register()
-        after = (DEFAULT_REGISTER.read_bytes(), DEFAULT_SECURITY_REVIEW.read_bytes())
+        after = (
+            DEFAULT_REGISTER.read_bytes(),
+            DEFAULT_SECURITY_REVIEW.read_bytes(),
+            DEFAULT_BASELINE.read_bytes(),
+        )
 
         self.assertEqual(before, after)
+
+    def test_s_000_ut03_creates_blocking_impact_reviews_for_all_reference_changes(self) -> None:
+        cases = {
+            "integrity_changed": lambda data: data["references"][0].update(
+                {"source_sha256": "0" * 64}
+            ),
+            "reference_removed": lambda data: data["references"].pop(0),
+            "status_changed": lambda data: data["references"][0].update(
+                {"status": "superseded", "superseded_by": "PSR-002"}
+            ),
+            "source_redirected": lambda data: data["references"][0].update(
+                {"source_url": "https://example.com/redirected-source"}
+            ),
+            "identity_substituted": lambda data: data["references"][0].update(
+                {"publisher": "Substitute Publisher", "title": "Substitute Source"}
+            ),
+        }
+        baseline_before = DEFAULT_BASELINE.read_bytes()
+        for expected_change, mutate in cases.items():
+            with self.subTest(change=expected_change):
+                changed = copy.deepcopy(self.baseline)
+                mutate(changed)
+                report = self.audit(changed)
+                impacts = [
+                    impact for impact in report["impact_reviews"]
+                    if impact["reference_id"] == "PSR-001"
+                ]
+                self.assertFalse(report["ok"])
+                self.assertEqual(len(impacts), 1)
+                self.assertIn(expected_change, impacts[0]["change_types"])
+                self.assertEqual(impacts[0]["status"], "required")
+                self.assertTrue(impacts[0]["silent_replacement_blocked"])
+                self.assertEqual(len(impacts[0]["required_actions"]), 3)
+        self.assertEqual(DEFAULT_BASELINE.read_bytes(), baseline_before)
 
 
 if __name__ == "__main__":

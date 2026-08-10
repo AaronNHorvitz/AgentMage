@@ -26,6 +26,7 @@ REQUIRED_FILES = (
     "requirements/policy-expectations.json",
     "requirements/registry.json",
     "requirements/security-references.json",
+    "requirements/security-reference-baseline.json",
     "requirements/traceability-report.json",
     "schemas/planning/common.schema.json",
     "schemas/planning/decision-record.schema.json",

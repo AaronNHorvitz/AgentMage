@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -16,6 +17,7 @@ from urllib.parse import urlparse
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTER: Final = ROOT / "requirements" / "security-references.json"
+DEFAULT_BASELINE: Final = ROOT / "requirements" / "security-reference-baseline.json"
 DEFAULT_SECURITY_REVIEW: Final = ROOT / "SECURITY-REVIEW.md"
 SCHEMA_VERSION: Final = 1
 SECTION_START: Final = "## 5. Public Product-Security Reference Baseline"
@@ -67,6 +69,23 @@ SNAPSHOT_FIELDS: Final = {
     "rationale",
 }
 CLAIM_FIELDS: Final = {"external_certification", "publisher_endorsement"}
+BASELINE_FIELDS: Final = {
+    "schema_version",
+    "baseline_id",
+    "decision_record",
+    "references",
+}
+BASELINE_REFERENCE_FIELDS: Final = {
+    "id",
+    "publisher",
+    "title",
+    "version",
+    "source_url",
+    "source_sha256",
+    "status",
+    "superseded_by",
+    "snapshot_decision",
+}
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -140,9 +159,143 @@ def extract_reference_urls(security_review_path: Path = DEFAULT_SECURITY_REVIEW)
     return MARKDOWN_LINK.findall(text[start:end])
 
 
+def _candidate_pin(record: dict[str, object]) -> dict[str, object]:
+    snapshot = record.get("snapshot")
+    snapshot_decision = snapshot.get("decision") if isinstance(snapshot, dict) else None
+    return {
+        "id": record.get("id"),
+        "publisher": record.get("publisher"),
+        "title": record.get("title"),
+        "version": record.get("version"),
+        "source_url": record.get("source_url"),
+        "source_sha256": record.get("source_sha256"),
+        "status": record.get("status"),
+        "superseded_by": record.get("superseded_by"),
+        "snapshot_decision": snapshot_decision,
+    }
+
+
+def _impact_review(
+    reference_id: str,
+    change_types: list[str],
+    baseline: dict[str, object] | None,
+    candidate: dict[str, object] | None,
+) -> dict[str, object]:
+    identity = json.dumps(
+        {
+            "reference_id": reference_id,
+            "change_types": sorted(change_types),
+            "baseline": baseline,
+            "candidate": candidate,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    review_id = "IR-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16].upper()
+    return {
+        "id": review_id,
+        "reference_id": reference_id,
+        "status": "required",
+        "change_types": sorted(change_types),
+        "baseline": baseline,
+        "candidate": candidate,
+        "required_actions": [
+            "verify publisher, source, version, and artifact identity",
+            "review affected requirements, controls, tests, and release evidence",
+            "record an accepted decision before updating the pinned baseline",
+        ],
+        "silent_replacement_blocked": True,
+    }
+
+
+def audit_reference_baseline(
+    references: list[object],
+    baseline_path: Path = DEFAULT_BASELINE,
+    root: Path = ROOT,
+) -> tuple[list[dict[str, object]], list[str]]:
+    """Compare candidate records with the accepted baseline and create impact reviews."""
+    failures: list[str] = []
+    try:
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [], [f"unable to load security-reference baseline: {error}"]
+    if not _field_contract(baseline, BASELINE_FIELDS, "baseline", failures):
+        return [], failures
+    assert isinstance(baseline, dict)
+    if baseline["schema_version"] != 1:
+        failures.append("baseline: unsupported schema_version")
+    if not _nonempty_string(baseline["baseline_id"]):
+        failures.append("baseline: baseline_id must be non-empty")
+    if not _repo_path_exists(baseline["decision_record"], root):
+        failures.append("baseline: decision_record must be an existing repository file")
+    pins = baseline["references"]
+    if not isinstance(pins, list):
+        failures.append("baseline: references must be an array")
+        return [], failures
+
+    baseline_by_id: dict[str, dict[str, object]] = {}
+    for index, pin in enumerate(pins):
+        location = f"baseline.references[{index}]"
+        if not _field_contract(pin, BASELINE_REFERENCE_FIELDS, location, failures):
+            continue
+        assert isinstance(pin, dict)
+        identifier = pin["id"]
+        if not isinstance(identifier, str) or REFERENCE_ID.fullmatch(identifier) is None:
+            failures.append(f"{location}: invalid id")
+            continue
+        if identifier in baseline_by_id:
+            failures.append(f"baseline: duplicate reference id {identifier}")
+            continue
+        baseline_by_id[identifier] = pin
+
+    candidate_by_id: dict[str, dict[str, object]] = {}
+    for record in references:
+        if not isinstance(record, dict) or not isinstance(record.get("id"), str):
+            continue
+        candidate_by_id[str(record["id"])] = _candidate_pin(record)
+
+    impacts: list[dict[str, object]] = []
+    all_ids = sorted(set(baseline_by_id) | set(candidate_by_id))
+    for identifier in all_ids:
+        expected = baseline_by_id.get(identifier)
+        observed = candidate_by_id.get(identifier)
+        if expected is None:
+            impacts.append(_impact_review(identifier, ["reference_added"], None, observed))
+            continue
+        if observed is None:
+            impacts.append(_impact_review(identifier, ["reference_removed"], expected, None))
+            continue
+
+        change_types: list[str] = []
+        if expected["publisher"] != observed["publisher"] or expected["title"] != observed["title"]:
+            change_types.append("identity_substituted")
+        if expected["version"] != observed["version"]:
+            change_types.append("version_changed")
+        if expected["source_url"] != observed["source_url"]:
+            change_types.append("source_redirected")
+        if expected["source_sha256"] != observed["source_sha256"]:
+            change_types.append("integrity_changed")
+        if expected["status"] != observed["status"]:
+            change_types.append("status_changed")
+        if expected["superseded_by"] != observed["superseded_by"]:
+            change_types.append("supersession_changed")
+        if expected["snapshot_decision"] != observed["snapshot_decision"]:
+            change_types.append("snapshot_decision_changed")
+        if change_types:
+            impacts.append(_impact_review(identifier, change_types, expected, observed))
+
+    for impact in impacts:
+        failures.append(
+            f"impact review required: {impact['id']} {impact['reference_id']} "
+            f"({', '.join(impact['change_types'])})"
+        )
+    return impacts, failures
+
+
 def audit_reference_register(
     register_path: Path = DEFAULT_REGISTER,
     security_review_path: Path = DEFAULT_SECURITY_REVIEW,
+    baseline_path: Path = DEFAULT_BASELINE,
     root: Path = ROOT,
 ) -> dict[str, object]:
     """Return a deterministic validation report and never mutate source files."""
@@ -154,6 +307,7 @@ def audit_reference_register(
             "ok": False,
             "citation_count": 0,
             "reference_count": 0,
+            "impact_reviews": [],
             "failures": [f"unable to load reference register: {error}"],
         }
 
@@ -302,10 +456,14 @@ def audit_reference_register(
                 f"references[{index}]: superseded_by must name a different registered reference"
             )
 
+    impacts, baseline_failures = audit_reference_baseline(references, baseline_path, root)
+    failures.extend(baseline_failures)
+
     return {
         "ok": not failures,
         "citation_count": len(citation_urls),
         "reference_count": len(references),
+        "impact_reviews": impacts,
         "failures": sorted(failures),
     }
 
@@ -314,10 +472,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--register", type=Path, default=DEFAULT_REGISTER)
     parser.add_argument("--security-review", type=Path, default=DEFAULT_SECURITY_REVIEW)
+    parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--json", action="store_true", dest="json_output")
     args = parser.parse_args(argv)
 
-    report = audit_reference_register(args.register, args.security_review)
+    report = audit_reference_register(args.register, args.security_review, args.baseline)
     if args.json_output:
         print(json.dumps(report, indent=2, sort_keys=True))
     elif report["ok"]:

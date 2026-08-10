@@ -1,0 +1,238 @@
+{
+  "baseline_id": "agentmage-public-security-reference-baseline-2026-08-10",
+  "decision_record": "docs/decisions/0002-public-security-reference-retention.md",
+  "references": [
+    {
+      "id": "PSR-001",
+      "publisher": "OWASP Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "87c96dfb604556d5feee1ecba5de518ef883c7b6a6aea6f0857bd008b6292ef4",
+      "source_url": "https://owasp.org/www-project-application-security-verification-standard/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "OWASP Application Security Verification Standard",
+      "version": "5.0.0"
+    },
+    {
+      "id": "PSR-002",
+      "publisher": "OWASP Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "c3e8b8d792ee2be789be56e2d43ded8489132dc6eafd3d5ddd2a1a226373720d",
+      "source_url": "https://owaspsamm.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "OWASP Software Assurance Maturity Model",
+      "version": "2.0"
+    },
+    {
+      "id": "PSR-003",
+      "publisher": "OWASP Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "8645fd68e3567f284c4041fdd2b23d0ceabca013fa1d6a40f8e9d93e9c9e8f87",
+      "source_url": "https://genai.owasp.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "OWASP GenAI Security Project",
+      "version": null
+    },
+    {
+      "id": "PSR-004",
+      "publisher": "MITRE",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "25e40231080a6d9e11548a59e7df9717b242989a8824d28cbbda3c3a874744f0",
+      "source_url": "https://cwe.mitre.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Common Weakness Enumeration",
+      "version": "4.20"
+    },
+    {
+      "id": "PSR-005",
+      "publisher": "MITRE",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "79f35ab36a486c09acfac8857361461abcbbe2ce9b83d474b205d0e66eddb022",
+      "source_url": "https://capec.mitre.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Common Attack Pattern Enumeration and Classification",
+      "version": "3.9"
+    },
+    {
+      "id": "PSR-006",
+      "publisher": "Open Source Security Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "43382a95ecf4c61e1c5aafb38a6b124960abf2806675ae917b45ab0c3eb07302",
+      "source_url": "https://slsa.dev/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Supply-chain Levels for Software Artifacts",
+      "version": "1.2"
+    },
+    {
+      "id": "PSR-007",
+      "publisher": "Open Source Security Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "26b2dbd394db3770a91900a8b8b295b170fd4d74c0798b710c41f19c19c0ec2d",
+      "source_url": "https://www.bestpractices.dev/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "OpenSSF Best Practices Badge Program",
+      "version": null
+    },
+    {
+      "id": "PSR-008",
+      "publisher": "Open Source Security Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "8e8a440e8b3435f1b5e33e474194e57f63237f15c53f0698b9beeeebb6d5b323",
+      "source_url": "https://securityscorecards.dev/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "OpenSSF Scorecard",
+      "version": "5.5.0"
+    },
+    {
+      "id": "PSR-009",
+      "publisher": "Linux Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "f56309869d3beaab21bfe558f1feaa6e36a35736def514aab29524eb824a689d",
+      "source_url": "https://spdx.dev/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Software Package Data Exchange",
+      "version": "3.0"
+    },
+    {
+      "id": "PSR-010",
+      "publisher": "OWASP Foundation",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "857753fea3d49e6f96a167cb9622e054948f868f6be28fca0e7e2dbba857d94a",
+      "source_url": "https://cyclonedx.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "CycloneDX",
+      "version": "1.7"
+    },
+    {
+      "id": "PSR-011",
+      "publisher": "The Update Framework project",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "c8f21b059f1bceef179a87fe78c29954d41b0c0017c90e50608644091fbf78c4",
+      "source_url": "https://theupdateframework.io/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "The Update Framework",
+      "version": "1.0.33"
+    },
+    {
+      "id": "PSR-012",
+      "publisher": "Apple Inc.",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "4a7dbcee643aed882fd52d3d47ae37ccbe05685e48257f84fb3d97669b60d022",
+      "source_url": "https://support.apple.com/guide/security/welcome/web",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Apple Platform Security",
+      "version": "March 2026"
+    },
+    {
+      "id": "PSR-013",
+      "publisher": "Center for Internet Security",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "3d945079877596de3a94bf5b25e3110a11b7ecf0aac9dcb31842a0994fe9f1b4",
+      "source_url": "https://www.cisecurity.org/cis-benchmarks",
+      "status": "current",
+      "superseded_by": null,
+      "title": "CIS Benchmarks",
+      "version": null
+    },
+    {
+      "id": "PSR-014",
+      "publisher": "MITRE",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "383e920c31f92fdbac1ce3c06c8c2fb6f6b383b15df71b933f152800c06b42b1",
+      "source_url": "https://attack.mitre.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "MITRE ATT&CK",
+      "version": "19.1"
+    },
+    {
+      "id": "PSR-015",
+      "publisher": "MITRE",
+      "snapshot_decision": "metadata_only_dynamic_source",
+      "source_sha256": "10f3b452bdacb376cebb720a5d2cefe99f0895a2421fa62972248d5d29e641de",
+      "source_url": "https://atlas.mitre.org/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "MITRE ATLAS",
+      "version": null
+    },
+    {
+      "id": "PSR-016",
+      "publisher": "International Organization for Standardization",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "3b7b538844fd4345879e2f2f359195fa3950a5a349a3ceadfd98e25b1b5cd320",
+      "source_url": "https://www.iso.org/standard/27001",
+      "status": "current",
+      "superseded_by": null,
+      "title": "ISO/IEC 27001:2022 Information security management systems - Requirements",
+      "version": "2022"
+    },
+    {
+      "id": "PSR-017",
+      "publisher": "International Organization for Standardization",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "3af4b1491065155325dccf32db47ce4e8fd45e5705e7f1a5e036d996469ba20f",
+      "source_url": "https://www.iso.org/standard/75652.html",
+      "status": "current",
+      "superseded_by": null,
+      "title": "ISO/IEC 27002:2022 Information security controls",
+      "version": "2022"
+    },
+    {
+      "id": "PSR-018",
+      "publisher": "International Organization for Standardization",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "c03237823d453e82b24fb7d05f6990d0bde6edf0f80cd7d1d49f646ae78b6007",
+      "source_url": "https://www.iso.org/standard/27701",
+      "status": "current",
+      "superseded_by": null,
+      "title": "ISO/IEC 27701:2025 Privacy information management systems - Requirements and guidance",
+      "version": "2025"
+    },
+    {
+      "id": "PSR-019",
+      "publisher": "International Organization for Standardization",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "d4daf8b35f57dc6181e8fa04e69fc8b627a3a11bff45e53a7780aa5c6901ec96",
+      "source_url": "https://www.iso.org/standard/42001",
+      "status": "current",
+      "superseded_by": null,
+      "title": "ISO/IEC 42001:2023 Artificial intelligence management system",
+      "version": "2023"
+    },
+    {
+      "id": "PSR-020",
+      "publisher": "International Organization for Standardization",
+      "snapshot_decision": "metadata_only_reuse_restricted",
+      "source_sha256": "4fc07398d48cecbbdd23d9f3993755b655fcd44a4d7b177b0a369d1b4a085ea7",
+      "source_url": "https://www.iso.org/standard/77304.html",
+      "status": "current",
+      "superseded_by": null,
+      "title": "ISO/IEC 23894:2023 Artificial intelligence - Guidance on risk management",
+      "version": "2023"
+    },
+    {
+      "id": "PSR-021",
+      "publisher": "World Wide Web Consortium",
+      "snapshot_decision": "metadata_only_planning_baseline",
+      "source_sha256": "6e3c5fe397257cae509a2fb4752b73062cf8cbeb92c2cec618989b17e4cf7057",
+      "source_url": "https://www.w3.org/TR/WCAG22/",
+      "status": "current",
+      "superseded_by": null,
+      "title": "Web Content Accessibility Guidelines 2.2",
+      "version": "W3C Recommendation 12 December 2024"
+    }
+  ],
+  "schema_version": 1
+}

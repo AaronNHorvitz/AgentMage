@@ -22,6 +22,7 @@ Some cited pages are living publications whose response bodies change without a 
 5. Material subject to publisher access or reuse constraints is not copied into the repository. An access-denied response may be recorded transparently, but it is not treated as a verified content snapshot.
 6. A future local snapshot requires an appended decision, a permitted-use review, a repository-relative path, and a hash of the retained artifact. It must not replace the public source URL or provenance record.
 7. Citation records and derived controls do not claim certification, conformance, approval, sponsorship, or endorsement by any publisher or standards body.
+8. `requirements/security-reference-baseline.json` pins the accepted review state. Any source change produces a blocking impact review; routine validation never updates that baseline.
 
 ## Consequences
 
@@ -34,4 +35,5 @@ Some cited pages are living publications whose response bodies change without a 
 
 - `npm run references:check` reports an exact one-to-one mapping between Section 5 citations and register records.
 - Tests reject malformed provenance, unapproved snapshots, inconsistent status, and certification or endorsement claims.
+- Mutation tests require an impact review for removal, integrity change, supersession, redirect, or source substitution and prove the pinned baseline is unchanged.
 - The documentation gate performs no network request and does not write or update source material.
