@@ -27,6 +27,7 @@ enum ErrorCode {
     ContractViolation,
     Io,
     Conflict,
+    AuthorityBroadening,
 }
 
 impl ErrorCode {
@@ -38,6 +39,7 @@ impl ErrorCode {
             Self::ContractViolation => "configuration-contract-violation",
             Self::Io => "configuration-io-failure",
             Self::Conflict => "configuration-state-conflict",
+            Self::AuthorityBroadening => "configuration-authority-broadening",
         }
     }
 }
@@ -381,6 +383,7 @@ pub struct ConfigurationDiff {
     before_sha256: String,
     after_sha256: String,
     changes: Vec<ConfigurationChange>,
+    authority_broadening: bool,
 }
 
 impl ConfigurationDiff {
@@ -405,9 +408,68 @@ impl ConfigurationDiff {
     /// Returns true when at least one change broadens an authority ceiling.
     #[must_use]
     pub fn broadens_authority(&self) -> bool {
-        self.changes
-            .iter()
-            .any(|change| change.impact == ChangeImpact::AuthorityBroadening)
+        self.authority_broadening
+    }
+}
+
+/// Identifies an untrusted configuration channel that may only restrict authority.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RestrictedConfigurationSource {
+    /// A candidate assembled from process environment input.
+    Environment,
+    /// A candidate supplied by a child configuration or subordinate task.
+    ChildProfile,
+    /// A candidate discovered inside a repository or workspace.
+    Repository,
+    /// A candidate proposed by model output.
+    ModelOutput,
+}
+
+impl RestrictedConfigurationSource {
+    /// Returns the stable source identifier used in bounded evidence.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Environment => "environment",
+            Self::ChildProfile => "child-profile",
+            Self::Repository => "repository",
+            Self::ModelOutput => "model-output",
+        }
+    }
+}
+
+/// A validated candidate proven not to exceed its trusted parent configuration.
+#[derive(Clone, Debug)]
+pub struct RestrictedConfigurationOutcome {
+    source: RestrictedConfigurationSource,
+    parent_sha256: String,
+    configuration: LoadedConfiguration,
+    diff: ConfigurationDiff,
+}
+
+impl RestrictedConfigurationOutcome {
+    /// Returns the untrusted channel through which the candidate arrived.
+    #[must_use]
+    pub const fn source(&self) -> RestrictedConfigurationSource {
+        self.source
+    }
+
+    /// Returns the trusted parent identity used for the authority comparison.
+    #[must_use]
+    pub fn parent_sha256(&self) -> &str {
+        &self.parent_sha256
+    }
+
+    /// Returns the validated, non-broadening candidate.
+    #[must_use]
+    pub const fn configuration(&self) -> &LoadedConfiguration {
+        &self.configuration
+    }
+
+    /// Returns the redacted difference from the parent configuration.
+    #[must_use]
+    pub const fn diff(&self) -> &ConfigurationDiff {
+        &self.diff
     }
 }
 
@@ -647,6 +709,30 @@ impl ConfigurationManager {
             before_sha256: before.sha256.clone(),
             after_sha256: after.sha256.clone(),
             changes,
+            authority_broadening: !authority_is_subset(&before.configuration, &after.configuration),
+        })
+    }
+
+    /// Loads an untrusted full candidate only when it cannot exceed its trusted parent.
+    pub fn load_restricted_candidate(
+        &self,
+        parent: &LoadedConfiguration,
+        source: RestrictedConfigurationSource,
+        candidate: &[u8],
+    ) -> Result<RestrictedConfigurationOutcome, ConfigurationError> {
+        let configuration = self.load_bytes(candidate)?;
+        if !authority_is_subset(&parent.configuration, &configuration.configuration) {
+            return Err(ConfigurationError::new(
+                ErrorCode::AuthorityBroadening,
+                "untrusted configuration candidate exceeds its parent authority",
+            ));
+        }
+        let diff = self.diff(parent, &configuration)?;
+        Ok(RestrictedConfigurationOutcome {
+            source,
+            parent_sha256: parent.sha256.clone(),
+            configuration,
+            diff,
         })
     }
 
@@ -968,6 +1054,128 @@ fn contract_error<T>() -> Result<T, ConfigurationError> {
         ErrorCode::ContractViolation,
         "configuration violates a version 1 safety invariant",
     ))
+}
+
+fn authority_is_subset(parent: &AgentConfiguration, child: &AgentConfiguration) -> bool {
+    parent.platform == child.platform
+        && parent.core.configuration_mode == child.core.configuration_mode
+        && (!parent.core.strict_local || child.core.strict_local)
+        && model_is_subset(&parent.model, &child.model)
+        && workspace_is_subset(&parent.workspace, &child.workspace)
+        && tools_are_subset(&parent.tool, &child.tool)
+        && string_values_are_subset(
+            &child.permission.allowed_capabilities,
+            &parent.permission.allowed_capabilities,
+        )
+        && budget_is_subset(&parent.budget, &child.budget)
+        && logging_is_subset(&parent.logging, &child.logging)
+        && retention_is_subset(&parent.retention, &child.retention)
+        && skills_are_subset(&parent.skill, &child.skill)
+        && parent.shell == child.shell
+}
+
+fn model_is_subset(parent: &ModelConfiguration, child: &ModelConfiguration) -> bool {
+    (!child.enabled || parent.enabled)
+        && parent.model_profile_id == child.model_profile_id
+        && parent.manifest_path == child.manifest_path
+        && parent.runtime_adapter_id == child.runtime_adapter_id
+        && parent.transport == child.transport
+        && parent.decoding.deterministic == child.decoding.deterministic
+        && parent.decoding.temperature == child.decoding.temperature
+        && parent.decoding.top_k == child.decoding.top_k
+        && parent.decoding.seed == child.decoding.seed
+        && child.decoding.maximum_context_tokens <= parent.decoding.maximum_context_tokens
+        && child.decoding.maximum_output_tokens <= parent.decoding.maximum_output_tokens
+}
+
+fn workspace_is_subset(parent: &WorkspaceConfiguration, child: &WorkspaceConfiguration) -> bool {
+    child.maximum_roots <= parent.maximum_roots
+        && symlink_policy_rank(&child.symlink_policy) <= symlink_policy_rank(&parent.symlink_policy)
+        && child.roots.iter().all(|child_root| {
+            parent.roots.iter().any(|parent_root| {
+                parent_root.root_id == child_root.root_id
+                    && parent_root.locator_kind == child_root.locator_kind
+                    && parent_root.locator == child_root.locator
+                    && access_rank(&child_root.access) <= access_rank(&parent_root.access)
+            })
+        })
+}
+
+fn tools_are_subset(parent: &ToolConfiguration, child: &ToolConfiguration) -> bool {
+    parent.registry_path == child.registry_path
+        && child.tools.iter().all(|child_tool| {
+            parent.tools.iter().any(|parent_tool| {
+                parent_tool.tool_id == child_tool.tool_id
+                    && parent_tool.version == child_tool.version
+                    && parent_tool.integrity_sha256 == child_tool.integrity_sha256
+                    && parent_tool.required_capabilities == child_tool.required_capabilities
+                    && parent_tool.side_effect_class == child_tool.side_effect_class
+                    && (!child_tool.enabled || parent_tool.enabled)
+            })
+        })
+}
+
+fn budget_is_subset(parent: &BudgetConfiguration, child: &BudgetConfiguration) -> bool {
+    child.maximum_input_bytes <= parent.maximum_input_bytes
+        && child.maximum_output_bytes <= parent.maximum_output_bytes
+        && child.maximum_file_count <= parent.maximum_file_count
+        && child.maximum_tree_depth <= parent.maximum_tree_depth
+        && child.maximum_context_tokens <= parent.maximum_context_tokens
+        && child.maximum_output_tokens <= parent.maximum_output_tokens
+        && child.maximum_operation_milliseconds <= parent.maximum_operation_milliseconds
+        && child.maximum_memory_bytes <= parent.maximum_memory_bytes
+        && child.maximum_processes <= parent.maximum_processes
+        && child.maximum_concurrency <= parent.maximum_concurrency
+}
+
+fn logging_is_subset(parent: &LoggingConfiguration, child: &LoggingConfiguration) -> bool {
+    parent.destination == child.destination
+        && logging_level_rank(&child.level) <= logging_level_rank(&parent.level)
+        && child.maximum_event_bytes <= parent.maximum_event_bytes
+}
+
+fn retention_is_subset(parent: &RetentionConfiguration, child: &RetentionConfiguration) -> bool {
+    child.sessions_days <= parent.sessions_days
+        && child.receipts_days <= parent.receipts_days
+        && child.logs_days <= parent.logs_days
+        && child.temporary_artifacts_minutes <= parent.temporary_artifacts_minutes
+        && child.backup_policy == parent.backup_policy
+}
+
+fn skills_are_subset(parent: &SkillConfiguration, child: &SkillConfiguration) -> bool {
+    child.maximum_enabled_skills <= parent.maximum_enabled_skills
+        && string_values_are_subset(&child.catalog_paths, &parent.catalog_paths)
+        && string_values_are_subset(&child.capability_ceiling, &parent.capability_ceiling)
+}
+
+fn string_values_are_subset(child: &[String], parent: &[String]) -> bool {
+    child.iter().all(|value| parent.contains(value))
+}
+
+fn access_rank(value: &str) -> u8 {
+    match value {
+        "read-only" => 1,
+        "read-write" => 2,
+        _ => u8::MAX,
+    }
+}
+
+fn symlink_policy_rank(value: &str) -> u8 {
+    match value {
+        "deny" => 0,
+        "same-root-only" => 1,
+        _ => u8::MAX,
+    }
+}
+
+fn logging_level_rank(value: &str) -> u8 {
+    match value {
+        "error" => 0,
+        "warn" => 1,
+        "info" => 2,
+        "debug" => 3,
+        _ => u8::MAX,
+    }
 }
 
 fn section_versions(value: &AgentConfiguration) -> [u32; 11] {
@@ -1368,10 +1576,24 @@ mod tests {
         ConfigurationManager::default()
     }
 
+    fn restricted_sources() -> [RestrictedConfigurationSource; 4] {
+        [
+            RestrictedConfigurationSource::Environment,
+            RestrictedConfigurationSource::ChildProfile,
+            RestrictedConfigurationSource::Repository,
+            RestrictedConfigurationSource::ModelOutput,
+        ]
+    }
+
     fn mutate(mut value: Value, path: &[&str], replacement: Value) -> Vec<u8> {
         let mut current = &mut value;
         for part in &path[..path.len() - 1] {
-            current = current.get_mut(*part).expect("fixture path must exist");
+            current = match current {
+                Value::Array(items) => items
+                    .get_mut(part.parse::<usize>().expect("array path must be numeric"))
+                    .expect("fixture array path must exist"),
+                _ => current.get_mut(*part).expect("fixture path must exist"),
+            };
         }
         current
             .as_object_mut()
@@ -1539,6 +1761,171 @@ mod tests {
                 "configuration-contract-violation"
             );
         }
+    }
+
+    #[test]
+    fn every_untrusted_channel_accepts_only_a_valid_restriction() {
+        let parent = manager()
+            .load_bytes(SYNTHETIC_PROFILE)
+            .expect("parent loads");
+        let mut child = fixture_value();
+        child["core"]["profile_id"] = Value::String("restricted-child".to_owned());
+        child["tool"]["tools"] = Value::Array(Vec::new());
+        child["permission"]["allowed_capabilities"] = Value::Array(Vec::new());
+        child["budget"]["maximum_output_bytes"] = Value::from(131_072);
+        child["logging"]["level"] = Value::String("error".to_owned());
+        child["retention"]["sessions_days"] = Value::from(7);
+        let bytes = serde_json::to_vec(&child).expect("candidate serializes");
+        for source in restricted_sources() {
+            let outcome = manager()
+                .load_restricted_candidate(&parent, source, &bytes)
+                .expect("restriction must load");
+            assert_eq!(outcome.source(), source);
+            assert_eq!(outcome.source().as_str(), source.as_str());
+            assert_eq!(outcome.parent_sha256(), parent.sha256());
+            assert!(!outcome.diff().broadens_authority());
+            assert_eq!(outcome.configuration().profile_id(), "restricted-child");
+        }
+    }
+
+    #[test]
+    fn every_untrusted_channel_rejects_capability_broadening() {
+        let parent = manager().safe_defaults().expect("parent loads");
+        let candidate = mutate(
+            serde_json::to_value(&parent.configuration).expect("parent serializes"),
+            &["permission", "allowed_capabilities"],
+            serde_json::json!(["workspace.read", "workspace.write"]),
+        );
+        for source in restricted_sources() {
+            let error = manager()
+                .load_restricted_candidate(&parent, source, &candidate)
+                .expect_err("authority broadening must fail");
+            assert_eq!(error.code(), "configuration-authority-broadening");
+            assert!(!format!("{error:?}").contains("workspace.write"));
+        }
+    }
+
+    #[test]
+    fn roots_models_tools_and_platform_identity_cannot_broaden_or_change() {
+        let strict = manager().safe_defaults().expect("strict parent loads");
+        let root_write = mutate(
+            serde_json::to_value(&strict.configuration).expect("parent serializes"),
+            &["workspace", "roots"],
+            serde_json::json!([{
+                "root_id": "user-selected-workspace",
+                "locator_kind": "platform-resolved-handle",
+                "locator": "unresolved-until-explicit-user-selection",
+                "access": "read-write",
+                "follow_mount_changes": false
+            }]),
+        );
+        let model_enabled = mutate(
+            serde_json::to_value(&strict.configuration).expect("parent serializes"),
+            &["model", "enabled"],
+            Value::Bool(true),
+        );
+        let synthetic = manager()
+            .load_bytes(SYNTHETIC_PROFILE)
+            .expect("synthetic parent loads");
+        let tool_changed = mutate(
+            fixture_value(),
+            &["tool", "tools", "0", "integrity_sha256"],
+            Value::String("2".repeat(64)),
+        );
+        let platform_changed = mutate(
+            fixture_value(),
+            &["platform", "platform_id"],
+            Value::String("ubuntu-x86_64".to_owned()),
+        );
+        for (parent, candidate) in [
+            (&strict, root_write.as_slice()),
+            (&strict, model_enabled.as_slice()),
+            (&synthetic, tool_changed.as_slice()),
+            (&synthetic, platform_changed.as_slice()),
+        ] {
+            assert_eq!(
+                manager()
+                    .load_restricted_candidate(
+                        parent,
+                        RestrictedConfigurationSource::Repository,
+                        candidate,
+                    )
+                    .expect_err("boundary broadening must fail")
+                    .code(),
+                "configuration-authority-broadening"
+            );
+        }
+    }
+
+    #[test]
+    fn resource_logging_and_retention_increases_are_rejected() {
+        let parent = manager()
+            .load_bytes(SYNTHETIC_PROFILE)
+            .expect("parent loads");
+        let candidates = [
+            mutate(
+                fixture_value(),
+                &["budget", "maximum_output_bytes"],
+                Value::from(262_145),
+            ),
+            mutate(
+                fixture_value(),
+                &["logging", "level"],
+                Value::String("debug".to_owned()),
+            ),
+            mutate(
+                fixture_value(),
+                &["retention", "sessions_days"],
+                Value::from(31),
+            ),
+        ];
+        for candidate in candidates {
+            assert_eq!(
+                manager()
+                    .load_restricted_candidate(
+                        &parent,
+                        RestrictedConfigurationSource::ChildProfile,
+                        &candidate,
+                    )
+                    .expect_err("increase must fail")
+                    .code(),
+                "configuration-authority-broadening"
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_untrusted_input_fails_before_authority_comparison() {
+        let parent = manager().safe_defaults().expect("parent loads");
+        let candidate = br#"{"permission":"private-value""#;
+        let error = manager()
+            .load_restricted_candidate(
+                &parent,
+                RestrictedConfigurationSource::ModelOutput,
+                candidate,
+            )
+            .expect_err("malformed input must fail");
+        assert_eq!(error.code(), "configuration-malformed-json");
+        assert!(!format!("{error:?}").contains("private-value"));
+        assert_eq!(
+            manager().safe_defaults().expect("parent reloads").sha256(),
+            parent.sha256()
+        );
+    }
+
+    #[test]
+    fn aggregate_diff_detects_non_capability_authority_broadening() {
+        let parent = manager().safe_defaults().expect("parent loads");
+        let candidate = mutate(
+            serde_json::to_value(&parent.configuration).expect("parent serializes"),
+            &["model", "enabled"],
+            Value::Bool(true),
+        );
+        let loaded = manager()
+            .load_bytes(&candidate)
+            .expect("candidate is valid");
+        let diff = manager().diff(&parent, &loaded).expect("diff succeeds");
+        assert!(diff.broadens_authority());
     }
 
     #[test]
