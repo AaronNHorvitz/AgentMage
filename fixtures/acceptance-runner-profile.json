@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-shared-acceptance-runner-v1",
+  "status": "synthetic-acceptance-runner-contract",
+  "run_id": "agentmage-sprint-2-shared-acceptance-v1",
+  "generated_at": "2024-01-01T00:02:00Z",
+  "case_order": [
+    {
+      "check_id": "corpus-integrity",
+      "fixture_id": "agentmage-versioned-synthetic-corpus-v1",
+      "logical_duration_ms": 10,
+      "test_id": "acceptance.corpus-integrity"
+    },
+    {
+      "check_id": "golden-integrity",
+      "fixture_id": "agentmage-expected-output-manifests-v1",
+      "logical_duration_ms": 11,
+      "test_id": "acceptance.golden-integrity"
+    },
+    {
+      "check_id": "fake-adapter-closure",
+      "fixture_id": "agentmage-fake-adapters-v1",
+      "logical_duration_ms": 12,
+      "test_id": "acceptance.fake-adapter-closure"
+    },
+    {
+      "check_id": "path-declaration-safety",
+      "fixture_id": "agentmage-path-fixtures-v1",
+      "logical_duration_ms": 13,
+      "test_id": "acceptance.path-declaration-safety"
+    },
+    {
+      "check_id": "document-structure-safety",
+      "fixture_id": "agentmage-document-fixtures-v1",
+      "logical_duration_ms": 14,
+      "test_id": "acceptance.document-structure-safety"
+    },
+    {
+      "check_id": "platform-redaction",
+      "fixture_id": "agentmage-platform-result-recorder-v1",
+      "logical_duration_ms": 15,
+      "test_id": "acceptance.platform-redaction"
+    },
+    {
+      "check_id": "result-reconciliation",
+      "fixture_id": "agentmage-test-result-bundle-v1",
+      "logical_duration_ms": 16,
+      "test_id": "acceptance.result-reconciliation"
+    }
+  ],
+  "expected_status": "pass",
+  "output_policy": {
+    "max_retained_bytes_per_case": 256,
+    "raw_output_retained": false,
+    "synthetic_canaries_redacted": true
+  },
+  "execution_contract": {
+    "external_commands": false,
+    "network": false,
+    "real_user_data": false,
+    "wall_clock_timing": false,
+    "writes_outside_explicit_output": false
+  },
+  "macos_execution_status": "blocked-macos"
+}

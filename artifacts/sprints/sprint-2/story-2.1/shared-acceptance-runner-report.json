@@ -1,0 +1,48 @@
+{
+  "execution_contract": {
+    "external_commands": false,
+    "network": false,
+    "real_user_data": false,
+    "wall_clock_timing": false,
+    "writes_outside_explicit_output": false
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "product_acceptance_claim": "none",
+  "profile": {
+    "id": "agentmage-shared-acceptance-runner-v1",
+    "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+  },
+  "raw_output_retained": false,
+  "registered_checks": [
+    "corpus-integrity",
+    "golden-integrity",
+    "fake-adapter-closure",
+    "path-declaration-safety",
+    "document-structure-safety",
+    "platform-redaction",
+    "result-reconciliation"
+  ],
+  "run": {
+    "case_count": 7,
+    "corpus": {
+      "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
+      "manifest_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
+      "version": "1.0.0"
+    },
+    "run_id": "agentmage-sprint-2-shared-acceptance-v1",
+    "run_sha256": "9b0e5d1666a67ae2eb3865c82fd6025719df9a842cc034589a25f5e5618cd89a",
+    "status_counts": {
+      "cancelled": 0,
+      "error": 0,
+      "fail": 0,
+      "pass": 7,
+      "skipped": 0
+    },
+    "total_logical_duration_ms": 91
+  },
+  "run_record_persisted": false,
+  "schema_version": 1,
+  "status": "pass",
+  "task_id": "2.1.2.2"
+}
