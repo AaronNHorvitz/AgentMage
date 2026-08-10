@@ -536,8 +536,27 @@ def memory_sample(phase: str, pid: int | None) -> dict[str, Any]:
     return {"phase": phase, "captured_at": time.time(), **read_proc_memory(pid), **read_gpu_memory()}
 
 
+def namespace_interfaces() -> list[str]:
+    try:
+        result = subprocess.run(
+            ["ip", "-j", "link", "show"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        links = json.loads(result.stdout)
+    except (FileNotFoundError, subprocess.SubprocessError, json.JSONDecodeError) as error:
+        raise FeasibilityError(f"could not inspect network namespace interfaces: {error}") from error
+    if not isinstance(links, list) or not all(isinstance(item, dict) for item in links):
+        raise FeasibilityError("network interface inventory is malformed")
+    names = [item.get("ifname") for item in links]
+    if not all(isinstance(name, str) for name in names):
+        raise FeasibilityError("network interface inventory contains an invalid name")
+    return sorted(names)
+
+
 def configure_network_evidence(required: bool) -> dict[str, Any]:
-    interfaces = sorted(path.name for path in Path("/sys/class/net").iterdir())
+    interfaces = namespace_interfaces()
     isolated = interfaces == ["lo"]
     if required and not isolated:
         raise FeasibilityError("network isolation was required but non-loopback interfaces are present")

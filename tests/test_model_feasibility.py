@@ -12,6 +12,7 @@ from scripts.model_feasibility import (
     format_citation_case,
     format_repository_case,
     malformed_trial,
+    namespace_interfaces,
     parse_json_object,
     score_chat,
     score_citation,
@@ -204,6 +205,9 @@ class ModelFeasibilityTests(unittest.TestCase):
         )
         with self.assertRaises(FeasibilityError):
             split_http_url("https://example.test/v1/chat/completions")
+
+    def test_interface_inventory_uses_network_namespace_link_table(self):
+        self.assertIn("lo", namespace_interfaces())
 
 
 if __name__ == "__main__":
