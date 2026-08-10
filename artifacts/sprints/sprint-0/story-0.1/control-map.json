@@ -1,0 +1,121 @@
+{
+  "controls": [
+    {
+      "evidence": [
+        "PRD.md",
+        "requirements/registry.json"
+      ],
+      "id": "SR-GOV-001",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "PRD.md",
+        "requirements/policy-expectations.json"
+      ],
+      "id": "SR-GOV-002",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "scripts/validate_docs.py"
+      ],
+      "id": "SR-GOV-003",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "SECURITY.md",
+        "schemas/planning/release-manifest.schema.json"
+      ],
+      "id": "SR-GOV-004",
+      "release_control_satisfied": false,
+      "status": "foundation_only"
+    },
+    {
+      "evidence": [
+        "schemas/planning/risk-register.schema.json"
+      ],
+      "id": "SR-GOV-005",
+      "release_control_satisfied": false,
+      "status": "foundation_only"
+    },
+    {
+      "evidence": [
+        "RUNTIME-BOUNDARIES.md",
+        "PRD.md"
+      ],
+      "id": "SR-GOV-006",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "SECURITY-REVIEW.md"
+      ],
+      "id": "SR-GOV-007",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "requirements/policy-expectations.json",
+        "exclusion-diff.json"
+      ],
+      "id": "SR-GOV-008",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "requirements/security-references.json",
+        "source-hashes.json"
+      ],
+      "id": "SR-GOV-009",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "requirements/security-reference-baseline.json",
+        "conflict-report.json"
+      ],
+      "id": "SR-GOV-010",
+      "release_control_satisfied": false,
+      "status": "foundation_only"
+    },
+    {
+      "evidence": [
+        "requirements/security-references.json",
+        "control-map.json"
+      ],
+      "id": "SR-SUP-001",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    },
+    {
+      "evidence": [
+        "raw-checker-output.json",
+        "TASKS.md"
+      ],
+      "id": "SR-TST-001",
+      "release_control_satisfied": false,
+      "status": "foundation_only"
+    },
+    {
+      "evidence": [
+        "raw-checker-output.json",
+        "evidence-manifest.json"
+      ],
+      "id": "SR-TST-010",
+      "release_control_satisfied": false,
+      "status": "planning_scope_pass"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Story 0.1 planning and traceability controls only",
+  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd"
+}

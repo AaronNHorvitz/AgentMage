@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "scripts/requirement_registry.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/additions_only.py",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\n  \"diagnostics\": [],\n  \"ok\": true,\n  \"schema_version\": 1\n}\n"
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/policy_expectations.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/security_references.py",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\n  \"citation_count\": 21,\n  \"failures\": [],\n  \"impact_reviews\": [],\n  \"ok\": true,\n  \"reference_count\": 21\n}\n"
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/traceability_report.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/requirement_coverage.py",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\n  \"counts\": {\n    \"by_category\": {},\n    \"diagnostics\": 0,\n    \"normative_mappings\": 26,\n    \"normative_statements\": 26,\n    \"registry_requirements\": 78\n  },\n  \"diagnostics\": [],\n  \"ok\": true,\n  \"schema_version\": 1\n}\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_additions_only",
+        "tests.test_policy_expectations",
+        "tests.test_requirement_conflicts",
+        "tests.test_requirement_coverage",
+        "tests.test_requirement_registry",
+        "tests.test_security_references",
+        "tests.test_traceability_report"
+      ],
+      "exit_code": 0,
+      "stderr": ".................................................................\n----------------------------------------------------------------------\nRan 65 tests in 0.344s\n\nOK\n",
+      "stdout": ""
+    }
+  ],
+  "environment": {
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "system": "Linux"
+  },
+  "schema_version": 1,
+  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd",
+  "summary": {
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0,
+    "total": 7
+  },
+  "tool_versions": {
+    "git": "git version 2.55.0",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  }
+}

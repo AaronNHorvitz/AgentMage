@@ -1,0 +1,23 @@
+{
+  "blocked": true,
+  "exclusion_diagnostics": [
+    {
+      "category": "removed_or_modified_checklist_entry",
+      "location": "CL-4C455878C352282281C0",
+      "message": "protected statement 'automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably.' is absent or textually modified"
+    }
+  ],
+  "fixtures": {
+    "removed_exclusion_statement": "- [ ] `DEFER` automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably.",
+    "removed_requirement_id": "CR-P2-MCP"
+  },
+  "requirement_diagnostics": [
+    {
+      "category": "removed_requirement",
+      "location": "CR-P2-MCP",
+      "message": "baseline requirement is absent from the canonical registry"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd"
+}

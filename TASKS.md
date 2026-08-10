@@ -175,13 +175,13 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.2.4:** Machine-readable exclusion register.
   - [x] **Sub-task 0.1.2.5:** Versioned public-authority register and snapshot-retention policy.
 
-- [ ] **Task 0.1.3 - Verify and close the story**
+- [x] **Task 0.1.3 - Verify and close the story**
   - [x] **Sub-task 0.1.3.1:** `S-000-UT01` loads valid and malformed registries; assert canonical ordering, exact source anchors, duplicate rejection, unresolved-reference diagnostics, and zero file mutation.
   - [x] **Sub-task 0.1.3.2:** `S-000-UT02` feeds conflicting requirements in both document orders; assert the narrower safety/release rule wins deterministically and the conflict remains visible.
   - [x] **Sub-task 0.1.3.3:** `S-000-UT03` changes, removes, supersedes, redirects, or substitutes a registered public product-security reference; assert freshness/integrity failure, impact-review creation, and no silent replacement of the pinned review baseline.
   - [x] **Sub-task 0.1.3.4:** `S-000-ST01` removes, renames, weakens, or reclassifies each fixture requirement; assert additions-only and exclusion checks block closure and identify the exact changed statement.
   - [x] **Sub-task 0.1.3.5:** `S-000-IT01` rebuilds traceability from a clean checkout; assert every normative statement resolves to requirement, issue, test, release, status, and evidence fields with no orphan.
-  - [ ] **Sub-task 0.1.3.6 - Product security evidence:** Map `SR-GOV-001` through `SR-GOV-010`, `SR-SUP-001`, `SR-TST-001`, and `SR-TST-010`; retain the registry, conflict report, exclusion diff, raw checker output, hashes, and reviewer disposition.
+  - [x] **Sub-task 0.1.3.6 - Product security evidence:** Map `SR-GOV-001` through `SR-GOV-010`, `SR-SUP-001`, `SR-TST-001`, and `SR-TST-010`; retain the registry, conflict report, exclusion diff, raw checker output, hashes, and reviewer disposition.
 
 ##### Story Acceptance Criteria
 

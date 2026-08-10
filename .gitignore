@@ -28,6 +28,16 @@ models/
 artifacts/
 review-evidence/
 
+# Reviewed public synthetic evidence is admitted one bundle at a time.
+!artifacts/
+artifacts/*
+!artifacts/sprints/
+artifacts/sprints/*
+!artifacts/sprints/sprint-0/
+artifacts/sprints/sprint-0/*
+!artifacts/sprints/sprint-0/story-0.1/
+!artifacts/sprints/sprint-0/story-0.1/**
+
 # Build, dependency, cache, and generated output
 node_modules/
 __pycache__/

@@ -1,0 +1,151 @@
+{
+  "fixture": {
+    "left": {
+      "allow": {
+        "actions": [
+          "read",
+          "search"
+        ],
+        "releases": [
+          "v0.1",
+          "v0.2"
+        ]
+      },
+      "ceilings": {
+        "max_bytes": 1024,
+        "max_network_bytes": 0
+      },
+      "deny": {
+        "capabilities": [
+          "shell"
+        ]
+      },
+      "exact": {
+        "authority_model": "capability_grant"
+      },
+      "id": "S-000-FIXTURE-LEFT",
+      "required_controls": [
+        "receipt"
+      ]
+    },
+    "right": {
+      "allow": {
+        "actions": [
+          "read"
+        ],
+        "releases": [
+          "v0.2"
+        ]
+      },
+      "ceilings": {
+        "max_bytes": 512,
+        "max_network_bytes": 0
+      },
+      "deny": {
+        "capabilities": [
+          "browser"
+        ]
+      },
+      "exact": {
+        "authority_model": "capability_grant"
+      },
+      "id": "S-000-FIXTURE-RIGHT",
+      "required_controls": [
+        "sandbox"
+      ]
+    }
+  },
+  "forward": {
+    "boundary": {
+      "allow": {
+        "actions": [
+          "read"
+        ],
+        "releases": [
+          "v0.2"
+        ]
+      },
+      "ceilings": {
+        "max_bytes": 512,
+        "max_network_bytes": 0
+      },
+      "deny": {
+        "capabilities": [
+          "browser",
+          "shell"
+        ]
+      },
+      "exact": {
+        "authority_model": "capability_grant"
+      },
+      "id": "provisional:S-000-FIXTURE-LEFT+S-000-FIXTURE-RIGHT",
+      "required_controls": [
+        "receipt",
+        "sandbox"
+      ]
+    },
+    "conflicting_fields": [
+      "allow.actions",
+      "allow.releases",
+      "ceilings.max_bytes",
+      "deny.capabilities",
+      "required_controls"
+    ],
+    "policy_id": "agentmage-requirement-conflict-v1",
+    "requires_approved_decision": true,
+    "sources": [
+      "S-000-FIXTURE-LEFT",
+      "S-000-FIXTURE-RIGHT"
+    ],
+    "status": "provisional",
+    "unresolved_fields": []
+  },
+  "order_invariant": true,
+  "reverse": {
+    "boundary": {
+      "allow": {
+        "actions": [
+          "read"
+        ],
+        "releases": [
+          "v0.2"
+        ]
+      },
+      "ceilings": {
+        "max_bytes": 512,
+        "max_network_bytes": 0
+      },
+      "deny": {
+        "capabilities": [
+          "browser",
+          "shell"
+        ]
+      },
+      "exact": {
+        "authority_model": "capability_grant"
+      },
+      "id": "provisional:S-000-FIXTURE-LEFT+S-000-FIXTURE-RIGHT",
+      "required_controls": [
+        "receipt",
+        "sandbox"
+      ]
+    },
+    "conflicting_fields": [
+      "allow.actions",
+      "allow.releases",
+      "ceilings.max_bytes",
+      "deny.capabilities",
+      "required_controls"
+    ],
+    "policy_id": "agentmage-requirement-conflict-v1",
+    "requires_approved_decision": true,
+    "sources": [
+      "S-000-FIXTURE-LEFT",
+      "S-000-FIXTURE-RIGHT"
+    ],
+    "status": "provisional",
+    "unresolved_fields": []
+  },
+  "schema_version": 1,
+  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd"
+}

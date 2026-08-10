@@ -1,0 +1,71 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "458c6b5c69f5afbec3b4d7d7c014e76e1b2199e191ac1d471d71012a1b4b4064",
+      "size": 18598
+    },
+    {
+      "path": "PRD.md",
+      "sha256": "261b595b88af110f41df3ea5929b76dd7c7fd900b1064d4f89a54f61cbb09d09",
+      "size": 47802
+    },
+    {
+      "path": "IMPLEMENTATION-PLAN.md",
+      "sha256": "97e21659c9764281b96654e2677d5b713d6c40d5f954232a824706ebf3a27b83",
+      "size": 36627
+    },
+    {
+      "path": "Agent-Scaffolding-Inventory.md",
+      "sha256": "de39501438c88e622b4a2005fd765297671d63f2fdf0552f8c3a9a8803603013",
+      "size": 225350
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "903bf66876b3107524e47a5f3cd589e8b48d89fd1155915066c67abd18d1dceb",
+      "size": 578985
+    },
+    {
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d",
+      "size": 65272
+    },
+    {
+      "path": "requirements/registry.json",
+      "sha256": "ced58f88e35c2f7e9fc1d052eb6c02ae6259603da1a43407e6a72d880e305365",
+      "size": 51759
+    },
+    {
+      "path": "requirements/normative-map.json",
+      "sha256": "decb56849c48e0022637c258d7c5289ffe1b51ace4552c8f09a9747514650750",
+      "size": 6594
+    },
+    {
+      "path": "requirements/policy-expectations.json",
+      "sha256": "566ef44837852618f4ae41e406e4045b903bfe356ffb3de928b65119b2353ef8",
+      "size": 54173
+    },
+    {
+      "path": "requirements/additions-only-baseline.json",
+      "sha256": "fd170b385bc42e3454525676dfd2bf0090fd6a9f0037408da1c4074e69298d46",
+      "size": 550600
+    },
+    {
+      "path": "requirements/security-references.json",
+      "sha256": "b71547c7f474a4212540d9d1793376b7b68ef490fa00f27845ea26fadef47cc5",
+      "size": 24682
+    },
+    {
+      "path": "requirements/security-reference-baseline.json",
+      "sha256": "89dcfb85c97253ec3a1f4ddd2ec77820eeaf9d866a7f0bbe86e1916b5c6e3dac",
+      "size": 9187
+    },
+    {
+      "path": "requirements/traceability-report.json",
+      "sha256": "36303848f5265f195d83c6d961a8df85e23dc8813e82a9bcf8d3b7a4319ef3c8",
+      "size": 152007
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd"
+}

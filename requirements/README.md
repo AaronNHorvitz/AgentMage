@@ -167,3 +167,15 @@ npm run traceability:clean
 ```
 
 The command archives committed `HEAD` into an isolated temporary checkout, runs every offline requirement and policy gate there, and verifies each normative PRD statement's complete source-to-requirement-to-planned-issue-to-test-to-release/status/evidence chain. Use `python3 scripts/verify_clean_traceability.py --revision <tree-or-commit>` to verify a different staged tree or commit without changing the working directory.
+
+## Sprint 0 Evidence
+
+The reviewed public synthetic bundle under `artifacts/sprints/sprint-0/story-0.1/` retains raw checker output, source hashes, conflict and exclusion mutation results, the required product-security control map, a concise summary, and an explicitly limited reviewer disposition. Its manifest pins every artifact by SHA-256 and byte size. Operational or private evidence remains ignored; each public bundle requires a deliberate `.gitignore` exception.
+
+Verify the retained bundle with:
+
+```bash
+npm run evidence:sprint0:check
+```
+
+The bundle is a planning-scope implementation self-review. It records that independent review was not performed and grants no product-release, certification, endorsement, or deployment approval.
