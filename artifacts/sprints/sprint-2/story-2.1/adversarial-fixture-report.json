@@ -1,0 +1,33 @@
+{
+  "authority_claim": "none",
+  "canary_reporting": "hashes-and-counts-only",
+  "preview": {
+    "canary_count": 4,
+    "canary_hashes": [
+      "a97ab2a364ff4810924143f7fce63213d5a9c0cbdfb98b04356811ceada84e56",
+      "849828259fb646529f23037aae64650a2b02fd20e129956ee50c7b9b2a20d788",
+      "a2367fc989b43479757a7b1b7855833316bc33d08bac88c5dbc1eb5f2b3f1188",
+      "c8f7f571383e64358e498829fa4a1c49e304458b9b3ea5faa39cf8ce3205da50"
+    ],
+    "category_count": 6,
+    "corpus_sha256": "597cc701088b9ccc39e4a1462e35f5d8a7111a495007e9bc3e64ee7eb7a978dd",
+    "file_count": 13,
+    "persisted": false
+  },
+  "product_security_claim": "none",
+  "profile_sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc",
+  "raw_canary_values_retained": false,
+  "schema_version": 1,
+  "side_effect_contract": {
+    "creates_real_credentials": false,
+    "executes_external_commands": false,
+    "mints_real_grant": false,
+    "overwrites_existing_destination": false,
+    "performs_tool_call": false,
+    "records_real_approval": false,
+    "uses_network": false
+  },
+  "status": "pass",
+  "task_id": "2.1.1.3",
+  "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1"
+}

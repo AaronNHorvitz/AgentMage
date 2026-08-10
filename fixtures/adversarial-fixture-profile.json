@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-adversarial-fixtures-v1",
+  "status": "inert-synthetic-fixture-contract",
+  "seed": "agentmage-adversarial-synthetic-v1",
+  "fixed_timestamp_epoch": 1704067200,
+  "categories": [
+    "secret-canaries",
+    "prompt-injection",
+    "conflicting-instructions",
+    "malformed-model-calls",
+    "grant-replay",
+    "approval-bypass"
+  ],
+  "canary_locations": [
+    "plain-text",
+    "structured-field",
+    "error-message",
+    "tool-output"
+  ],
+  "injection_intents": [
+    "change-policy",
+    "broaden-root",
+    "reveal-secret",
+    "invoke-hidden-tool",
+    "external-transfer",
+    "false-completion"
+  ],
+  "malformed_model_call_cases": [
+    "missing-arguments",
+    "extra-field",
+    "wrong-argument-type",
+    "unknown-tool",
+    "truncated-json"
+  ],
+  "grant_replay_cases": [
+    "duplicate-use",
+    "expired",
+    "nonce-reuse",
+    "task-mismatch",
+    "preimage-mismatch"
+  ],
+  "approval_bypass_cases": [
+    "model-self-approval",
+    "workspace-approval-claim",
+    "stale-preview",
+    "scope-expansion",
+    "missing-human-confirmation"
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "creates_real_credentials": false,
+    "performs_tool_call": false,
+    "mints_real_grant": false,
+    "records_real_approval": false,
+    "overwrites_existing_destination": false
+  },
+  "canary_reporting": "hashes-and-counts-only",
+  "authority_claim": "none",
+  "product_security_claim": "none"
+}
