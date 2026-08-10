@@ -1,0 +1,4777 @@
+{
+  "counts": {
+    "by_exclusion_state": {
+      "not_excluded": 66,
+      "outside_v0.1_release": 12
+    },
+    "by_kind": {
+      "acceptance_test": 33,
+      "competitive_requirement": 18,
+      "product_requirement": 27
+    },
+    "total": 78
+  },
+  "generated_from": [
+    {
+      "document": "requirements/registry.json",
+      "sha256": "ced58f88e35c2f7e9fc1d052eb6c02ae6259603da1a43407e6a72d880e305365"
+    },
+    {
+      "document": "requirements/normative-map.json",
+      "sha256": "decb56849c48e0022637c258d7c5289ffe1b51ace4552c8f09a9747514650750"
+    },
+    {
+      "document": "requirements/policy-expectations.json",
+      "sha256": "566ef44837852618f4ae41e406e4045b903bfe356ffb3de928b65119b2353ef8"
+    },
+    {
+      "document": "TASKS.md",
+      "sha256": "b360365f90443780450988af0e02a21d7f48eb26acc5175a3b006843a995a871"
+    }
+  ],
+  "report_id": "agentmage-cross-document-traceability",
+  "requirements": [
+    {
+      "acceptance_tests": [
+        "AT-AUTH-001"
+      ],
+      "dependencies": [
+        "AM-CFG-001",
+        "AM-PTH-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-5"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-AUT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 5 - Capability Grants and Policy Engine",
+              "line": 533
+            },
+            "sprint": 5,
+            "story_id": "5.1",
+            "story_title": "Capability Grants and Policy Engine"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "10. Capability Grants",
+          "line": 274,
+          "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6692860760abf9bb938d4df40ecc5f691b26980c4f703cd7250f7b745ea9ab6f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 87
+      },
+      "status": "planned",
+      "title": "Define and enforce the single-use `CapabilityGrant` contract for every authority-bearing action.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-CFG-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-3"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-CFG-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
+              "line": 399
+            },
+            "sprint": 3,
+            "story_id": "3.1",
+            "story_title": "Configuration, Versioning, and Build Integrity"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "affb202b27825c9bef86ba424923fcd5939cca35b30404d00fce9efeee89ab15",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 81
+      },
+      "status": "planned",
+      "title": "Load and validate versioned configuration without silently broadening authority.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-DATA-001",
+        "AT-CRASH-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-11"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-DAT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 11 - Encrypted Canonical Operational Store",
+              "line": 880
+            },
+            "sprint": 11,
+            "story_id": "11.1",
+            "story_title": "Encrypted Canonical Operational Store"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "12. Canonical Data and Storage",
+          "line": 290,
+          "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "12. Canonical Data and Storage",
+          "line": 303,
+          "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "12. Canonical Data and Storage",
+          "line": 305,
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "16. Evidence and Completion",
+          "line": 353,
+          "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "06cb7b7bfab5f6a91fae9394afd6e93427eb8e989302e5dfa39ede6e0c4a38e0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 88
+      },
+      "status": "planned",
+      "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-DIA-001",
+        "AT-DOC-001"
+      ],
+      "dependencies": [
+        "AM-SEC-001",
+        "AM-PRV-001",
+        "AM-MDL-003"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-15"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-DIA-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
+              "line": 1119
+            },
+            "sprint": 15,
+            "story_id": "15.1",
+            "story_title": "Diagnostics, Manual Model Selection, and Resource Control"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "56d25af7e1c3869428eef80646a4dc0b688acd0d471281cb58135ca4f4495fb4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 93
+      },
+      "status": "planned",
+      "title": "Produce a redacted local doctor response inside native Visual Studio Code Chat for model/runtime identity, offline state, platform boundary, workspace grant, capability versions, repository-map health, encrypted storage, and session recovery without exposing secrets; retain a non-user-facing diagnostic harness for automated testing.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SPEC-001",
+        "AT-DOC-001"
+      ],
+      "dependencies": [
+        "AM-TST-001",
+        "AM-TST-002"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-DOC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "17. Release Acceptance",
+          "line": 381,
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8d123966f790f64c3044807385a3c9d81d421471c30193b39386a58ad881599e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 106
+      },
+      "status": "planned",
+      "title": "Publish startup, limitation, privacy, recovery, and offline-verification instructions.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-EVD-001",
+        "AT-EVD-002"
+      ],
+      "dependencies": [
+        "AM-TOL-001",
+        "AM-GIT-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-EVD-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "16. Evidence and Completion",
+          "line": 351,
+          "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "16. Evidence and Completion",
+          "line": 353,
+          "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "3e913470dcecd60b16a4fde8ba78df06abe4d500e28ac3920b20b6ce28b8f0d0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 98
+      },
+      "status": "planned",
+      "title": "Require a receipt for every tool action and a resolvable citation for every file-grounded claim.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-EVD-003",
+        "AT-RESUME-001"
+      ],
+      "dependencies": [
+        "AM-EVD-001",
+        "AM-REP-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-EVD-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "44263ba7bf294af5e9f568723c30316a64b1515a2872a0f5059d04d3d0ca6a7a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 99
+      },
+      "status": "planned",
+      "title": "Label material claims as Observed, Derived, Inferred, or Unknown/Blocked and bind citations to source hashes and ranges so changed evidence becomes visibly stale.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-GIT-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-PTH-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-GIT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bc35d84c5471c5d9971367e773d140b786ecdda6917adc7b808758fb0365b34b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 95
+      },
+      "status": "planned",
+      "title": "Implement read-only Git status, diff, log, branch, and object inspection.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-HOF-001"
+      ],
+      "dependencies": [
+        "AM-EVD-002",
+        "AM-PRV-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-HOF-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "6. v0.1 User Experience",
+          "line": 180,
+          "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "15. Codex Handoff Boundary",
+          "line": 334,
+          "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "15. Codex Handoff Boundary",
+          "line": 336,
+          "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "16. Evidence and Completion",
+          "line": 351,
+          "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0257ca7f4b82ef4bd105638c56330d2ad5ee601093121805c060f529a1a64588",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 100
+      },
+      "status": "planned",
+      "title": "Render a local, reviewable Codex handoff packet without invoking Codex, controlling its tab, writing the clipboard, or transmitting content.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-INJ-001",
+        "AT-INS-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-TOL-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-INS-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 255,
+          "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4b6c7296404c152ef7c63183e0617b6dfe498bf35f327ec9c5874bed08d2ade8",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 96
+      },
+      "status": "planned",
+      "title": "Treat repository instructions and all workspace text as untrusted content; allow only cited or explicitly trust-gated behavioral guidance that cannot change policy, grants, roots, tools, or user intent.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-ARCH-001",
+        "AT-EVD-001"
+      ],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-1",
+          "artifacts/sprints/sprint-12",
+          "artifacts/sprints/sprint-4"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-KRN-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 1 - Repository and Package Architecture",
+              "line": 267
+            },
+            "sprint": 1,
+            "story_id": "1.1",
+            "story_title": "Repository and Package Architecture"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
+              "line": 479
+            },
+            "sprint": 4,
+            "story_id": "4.1",
+            "story_title": "Kernel Contracts and Typed Boundaries"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
+              "line": 934
+            },
+            "sprint": 12,
+            "story_id": "12.1",
+            "story_title": "Agent Runtime, Planning, and Session Behavior"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "5. Product Architecture",
+          "line": 128,
+          "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "5.1 Kernel",
+          "line": 134,
+          "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "5808b26eedffa6fce7a96190f4703efa5eab42f89f5ed78a9ebdfd57b0f0da5f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 80
+      },
+      "status": "planned",
+      "title": "Implement the interface-independent kernel boundary and typed task, tool, result, and receipt contracts.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-MODEL-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-NET-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-13"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-MDL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 13 - Model Manifest and Runtime Contract",
+              "line": 988
+            },
+            "sprint": 13,
+            "story_id": "13.1",
+            "story_title": "Model Manifest and Runtime Contract"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "8. Model Policy and Routing",
+          "line": 243,
+          "statement_sha256": "49b3d53eee47a4e94f4caaf39bbc9e12fa81af8082cc58519ad7a31ed324b482"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "8. Model Policy and Routing",
+          "line": 245,
+          "statement_sha256": "016c900f173f9cad1993965357e8ca83010ed0621f09fa7af22d21ef49c92d72"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 257,
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "14. Offline and Network Contract",
+          "line": 326,
+          "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "17. Release Acceptance",
+          "line": 373,
+          "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "72c066824e095c253625fe843ae38426d1d05d5221c55c2c40ca341994901563",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 90
+      },
+      "status": "planned",
+      "title": "Verify the same manifest-pinned Gemma 4 E4B profile through native `llama.cpp` on macOS, Fedora, and Ubuntu, and through the separately gated Docker Model Runner compatibility adapter on Linux; require contract and evaluation parity before enabling either Linux adapter.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-ROUTE-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-15"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-MDL-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
+              "line": 1119
+            },
+            "sprint": 15,
+            "story_id": "15.1",
+            "story_title": "Diagnostics, Manual Model Selection, and Resource Control"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "8. Model Policy and Routing",
+          "line": 247,
+          "statement_sha256": "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "cf67e89b311ad687a4f0d13843ade35531d6ea539247bd6a48970ef6931a9418",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 91
+      },
+      "status": "planned",
+      "title": "Use deterministic operations first and explicit user model selection; record benchmark data without automatic routing.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-MODEL-002"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-NET-001",
+        "AM-MDL-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-14"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-MDL-003",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 14 - Separate Model Installer and Importer",
+              "line": 1065
+            },
+            "sprint": 14,
+            "story_id": "14.1",
+            "story_title": "Separate Model Installer and Importer"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "line": 239,
+          "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "8. Model Policy and Routing",
+          "line": 243,
+          "statement_sha256": "49b3d53eee47a4e94f4caaf39bbc9e12fa81af8082cc58519ad7a31ed324b482"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 257,
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bf77716245c20319797fb6e9fb3ae27c61f9ace0513beaea3315791e9e33da99",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 92
+      },
+      "status": "planned",
+      "title": "Implement the separate approved-model installer/importer with hardware-fit checks, license and lineage display, resumable staging, hash verification, quarantine, atomic activation, self-test, unload, and cleanup.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-NET-001",
+        "AT-NET-002"
+      ],
+      "dependencies": [
+        "AM-SEC-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-10"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-NET-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
+              "line": 826
+            },
+            "sprint": 10,
+            "story_id": "10.1",
+            "story_title": "Strict-Local Network and Data-Residency Boundary"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "14. Offline and Network Contract",
+          "line": 326,
+          "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a3a5488f05c91727d98446b335b64314a884daf50cd97f4cbbb5c44c6c93061b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 85
+      },
+      "status": "planned",
+      "title": "Enforce offline operation and restrict the selected local inference runtime to the guarded inference path.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-PLAT-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-CFG-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-7"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-PLT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
+              "line": 640
+            },
+            "sprint": 7,
+            "story_id": "7.1",
+            "story_title": "Platform Adapter Contract and Release Manifests"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "5.1 Kernel",
+          "line": 134,
+          "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "7. Platform and Runtime",
+          "line": 186,
+          "statement_sha256": "d0b2a4077b7f4acb01eca5410fc33837919f08be0d214ded5a86b303869d18b7"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "7. Platform and Runtime",
+          "line": 188,
+          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "line": 237,
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7adddf72aa7708bf45f687ad45404a5953bd34c0f8eb81e5691759de61dd1393",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 82
+      },
+      "status": "planned",
+      "title": "Implement and package the platform-adapter boundary for Apple Silicon macOS, Fedora, and Ubuntu, with MacBook Pro M5 as the primary launch reference.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-PRIV-001",
+        "AT-PRIV-002"
+      ],
+      "dependencies": [
+        "AM-DAT-001",
+        "AM-PLT-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-11"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-PRV-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 11 - Encrypted Canonical Operational Store",
+              "line": 880
+            },
+            "sprint": 11,
+            "story_id": "11.1",
+            "story_title": "Encrypted Canonical Operational Store"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "line": 237,
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "13. Privacy, Encryption, and Retention",
+          "line": 318,
+          "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "fb88079c94f77158c98e85114c0fe3f1f29744b3b132f626ef5f0ed255867227",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 89
+      },
+      "status": "planned",
+      "title": "Classify data before persistence and enforce encryption, minimization, retention, and operating-system key storage.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-PATH-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-6"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-PTH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 6 - Canonical Workspace Paths",
+              "line": 587
+            },
+            "sprint": 6,
+            "story_id": "6.1",
+            "story_title": "Canonical Workspace Paths"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "11. Path Contract",
+          "line": 282,
+          "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9075ee87ebe3a16a3898e7d6350b5f2d60725cc16fd3aa334094484df3391797",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 86
+      },
+      "status": "planned",
+      "title": "Enforce canonical workspace-relative capability paths through the platform path adapter while generating absolute paths only for display links.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-REP-001",
+        "AT-EVD-002"
+      ],
+      "dependencies": [
+        "AM-TOL-001",
+        "AM-GIT-001",
+        "AM-INS-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-18",
+          "artifacts/sprints/sprint-19"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-REP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 18 - Pinned Repository Structure",
+              "line": 1305
+            },
+            "sprint": 18,
+            "story_id": "18.1",
+            "story_title": "Pinned Repository Structure"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
+              "line": 1355
+            },
+            "sprint": 19,
+            "story_id": "19.1",
+            "story_title": "Repository Map Coverage and Source Resolution"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "12. Canonical Data and Storage",
+          "line": 305,
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7be1f14f2a4adbd23bd8202bab7c1a9f98c4c5f5f5cd87a3d8d989d263c545db",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 97
+      },
+      "status": "planned",
+      "title": "Build a deterministic, Git-aware, policy-aware repository map with pinned Tree-sitter parsers, supported-language symbols, reliable definitions/imports/relationships, bounded cache, coverage report, and exact source citations.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SEC-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-8",
+          "artifacts/sprints/sprint-9"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-SEC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 8 - macOS Security Topology and Packaging",
+              "line": 694
+            },
+            "sprint": 8,
+            "story_id": "8.1",
+            "story_title": "macOS Security Topology and Packaging"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
+              "line": 748
+            },
+            "sprint": 9,
+            "story_id": "9.1",
+            "story_title": "Fedora and Ubuntu Security Topology"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "line": 237,
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 257,
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 259,
+          "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "60d329edad706b9a63dd417ae4e2e80b8fae5cdf69328dcb9d55a0c6ad3d3795",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 83
+      },
+      "status": "planned",
+      "title": "Implement the shared threat model and documented macOS and Linux process topologies.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SBX-001",
+        "AT-INJ-001"
+      ],
+      "dependencies": [
+        "AM-SEC-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-16",
+          "artifacts/sprints/sprint-8",
+          "artifacts/sprints/sprint-9"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-SEC-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 8 - macOS Security Topology and Packaging",
+              "line": 694
+            },
+            "sprint": 8,
+            "story_id": "8.1",
+            "story_title": "macOS Security Topology and Packaging"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
+              "line": 748
+            },
+            "sprint": 9,
+            "story_id": "9.1",
+            "story_title": "Fedora and Ubuntu Security Topology"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
+              "line": 1197
+            },
+            "sprint": 16,
+            "story_id": "16.1",
+            "story_title": "Sandboxed Read-Only Tool Protocol"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 257,
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a7fc23f5350d302c5729075d496d60c862ee54dc02e6dda15dffe28aa4cf1661",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 84
+      },
+      "status": "planned",
+      "title": "Run every file and Git tool inside the restricted platform tool worker.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-CRASH-001",
+        "AT-RESUME-001"
+      ],
+      "dependencies": [
+        "AM-DAT-001",
+        "AM-EVD-002"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-12",
+          "artifacts/sprints/sprint-22"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-SES-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
+              "line": 934
+            },
+            "sprint": 12,
+            "story_id": "12.1",
+            "story_title": "Agent Runtime, Planning, and Session Behavior"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
+              "line": 1507
+            },
+            "sprint": 22,
+            "story_id": "22.1",
+            "story_title": "Context Management and Crash-Safe Resume"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "12. Canonical Data and Storage",
+          "line": 305,
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "31acf3da6bf5827760074e6895532cb7c66f91484d97ea85d03d9fa1d8e362a2",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 101
+      },
+      "status": "planned",
+      "title": "Persist and resume one active local session without duplicating completed actions.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-TOOL-001",
+        "AT-PATH-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-PTH-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-16"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-TOL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
+              "line": 1197
+            },
+            "sprint": 16,
+            "story_id": "16.1",
+            "story_title": "Sandboxed Read-Only Tool Protocol"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6832d618c21d6f2f9c402c5b839d0cb5e40eee386c0169936b3537ac03ff1eae",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 94
+      },
+      "status": "planned",
+      "title": "Implement bounded list, read, search, metadata, and hash tools.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-PLAT-001",
+        "AT-SEC-001",
+        "AT-SBX-001",
+        "AT-INJ-001",
+        "AT-INS-001",
+        "AT-NET-001",
+        "AT-NET-002",
+        "AT-PATH-001",
+        "AT-AUTH-001",
+        "AT-DATA-001",
+        "AT-CRASH-001",
+        "AT-PRIV-001",
+        "AT-PRIV-002",
+        "AT-HOF-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-NET-001",
+        "AM-PTH-001",
+        "AM-AUT-001",
+        "AM-DAT-001",
+        "AM-PRV-001",
+        "AM-INS-001",
+        "AM-HOF-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-TST-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "7. Platform and Runtime",
+          "line": 188,
+          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "17. Release Acceptance",
+          "line": 381,
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "07f6b25f461a59af3bd070184b12d47e0f3af24d0ba853a44cf6e5975a336d5e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 104
+      },
+      "status": "planned",
+      "title": "Run the complete platform, path, sandbox, instruction-injection, network, privacy, handoff, and crash security suite.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-MODEL-001",
+        "AT-MODEL-002",
+        "AT-DIA-001",
+        "AT-ROUTE-001",
+        "AT-TOOL-001",
+        "AT-GIT-001",
+        "AT-REP-001",
+        "AT-EVD-001",
+        "AT-EVD-002",
+        "AT-EVD-003",
+        "AT-RESUME-001",
+        "AT-VSC-001",
+        "AT-VSC-002",
+        "AT-QUAL-001",
+        "AT-PERF-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001",
+        "AM-MDL-002",
+        "AM-MDL-003",
+        "AM-DIA-001",
+        "AM-TOL-001",
+        "AM-GIT-001",
+        "AM-REP-001",
+        "AM-EVD-002",
+        "AM-SES-001",
+        "AM-VSC-001",
+        "AM-VSC-002"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-TST-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "7. Platform and Runtime",
+          "line": 188,
+          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "17. Release Acceptance",
+          "line": 373,
+          "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
+        },
+        {
+          "document": "PRD.md",
+          "heading": "17. Release Acceptance",
+          "line": 381,
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a054897bd62d12b61863c02e93eeda6352e25f16cd71239869f94f34fc264494",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 105
+      },
+      "status": "planned",
+      "title": "Run the repository-map, evidence-state, model lifecycle, diagnostics, quality, latency, memory, context, and model capability suite against fixed fixtures.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001",
+        "AM-KRN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-VSC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [
+        {
+          "document": "PRD.md",
+          "heading": "9. Threat Model and Process Boundaries",
+          "line": 257,
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        }
+      ],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "dc158cb1c6d7de236441dde30060846c4c7d0db7c9c3473d5832691dffd0f992",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 102
+      },
+      "status": "planned",
+      "title": "Register AgentMage as a Visual Studio Code language-model chat provider and expose Gemma 4 E4B in the native model picker.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-002"
+      ],
+      "dependencies": [
+        "AM-VSC-001",
+        "AM-EVD-002",
+        "AM-DIA-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AM-VSC-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "d4d7c668ee1f22d51be3b6f710423dd721d972a01db2255a72ef8d8d30bd072e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 103
+      },
+      "status": "planned",
+      "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-1",
+          "artifacts/sprints/sprint-12",
+          "artifacts/sprints/sprint-4"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-ARCH-001",
+      "implementation": {
+        "derivation": "assigned_product_requirement",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 1 - Repository and Package Architecture",
+              "line": 267
+            },
+            "sprint": 1,
+            "story_id": "1.1",
+            "story_title": "Repository and Package Architecture"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
+              "line": 479
+            },
+            "sprint": 4,
+            "story_id": "4.1",
+            "story_title": "Kernel Contracts and Typed Boundaries"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
+              "line": 934
+            },
+            "sprint": 12,
+            "story_id": "12.1",
+            "story_title": "Agent Runtime, Planning, and Session Behavior"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "881b0b86b404a90db60449b02dd35b50e474f42893815efab7b948e0feceb8f7",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1441
+      },
+      "status": "planned",
+      "title": "Static and runtime dependency checks across kernel, Core Read-Only pack, and Visual Studio Code shell.",
+      "verifies_requirement_ids": [
+        "AM-KRN-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-5"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-AUTH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 5 - Capability Grants and Policy Engine",
+              "line": 533
+            },
+            "sprint": 5,
+            "story_id": "5.1",
+            "story_title": "Capability Grants and Policy Engine"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6f4196ec9f28c1817367c9e881e47db710a34a3aeffc9350c986b4465b3133b6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1451
+      },
+      "status": "planned",
+      "title": "Grant mutation, replay, expiry, nonce reuse, preimage change, task change, target change, uncertain-result retry, and child-scope tests.",
+      "verifies_requirement_ids": [
+        "AM-AUT-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-3"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-CFG-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
+              "line": 399
+            },
+            "sprint": 3,
+            "story_id": "3.1",
+            "story_title": "Configuration, Versioning, and Build Integrity"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6de1efc92a254ea03d1b079e0e688cae6b1570c9e71f0a2dae1e3fafa9354b22",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1442
+      },
+      "status": "planned",
+      "title": "Invalid, unknown, and permission-broadening configuration mutations.",
+      "verifies_requirement_ids": [
+        "AM-CFG-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-22"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-CRASH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
+              "line": 1507
+            },
+            "sprint": 22,
+            "story_id": "22.1",
+            "story_title": "Context Management and Crash-Safe Resume"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bce082393a038eb39d6c76e56edd79390344b8bcb0eb193cd4142a3afaf0aa88",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1453
+      },
+      "status": "planned",
+      "title": "Forced termination during model, file, Git, receipt, and checkpoint phases.",
+      "verifies_requirement_ids": [
+        "AM-DAT-001",
+        "AM-SES-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-11"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-DATA-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 11 - Encrypted Canonical Operational Store",
+              "line": 880
+            },
+            "sprint": 11,
+            "story_id": "11.1",
+            "story_title": "Encrypted Canonical Operational Store"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "09eeafdf4254f63b73f29e74cf35d79c12b2e48f1b3a1d3515d38e6b42ae4269",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1452
+      },
+      "status": "planned",
+      "title": "Transaction and migration invariants with crashes injected at every durable-write boundary.",
+      "verifies_requirement_ids": [
+        "AM-DAT-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-15"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-DIA-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
+              "line": 1119
+            },
+            "sprint": 15,
+            "story_id": "15.1",
+            "story_title": "Diagnostics, Manual Model Selection, and Resource Control"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "90a6319a59e0eb13ee8d0dcefcad16ec5408929935efb1790249ea4ad3a5f9c3",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1459
+      },
+      "status": "planned",
+      "title": "Redacted local doctor results rendered inside native Visual Studio Code Chat across model, runtime, offline, sandbox/helper, workspace, capability, repository-map, encrypted-store, receipt, and recovery states.",
+      "verifies_requirement_ids": [
+        "AM-DIA-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-DOC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "91088a866b596c62243a119d2866ca31a9bd6dd9e25af7a7db48a2a3bc334098",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1473
+      },
+      "status": "planned",
+      "title": "Three clean installations, one each on MacBook Pro M5, Fedora, and Ubuntu, by a reader using only published instructions.",
+      "verifies_requirement_ids": [
+        "AM-DIA-001",
+        "AM-DOC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-EVD-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "fe9dc987ba61f81ffab3eb71ef9ec5d6ac01092435c1c5e16447282a59abac18",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1464
+      },
+      "status": "planned",
+      "title": "Tool-action receipt coverage.",
+      "verifies_requirement_ids": [
+        "AM-EVD-001",
+        "AM-KRN-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-EVD-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "f1af2c30a44845bfc9bed0e6bcdafd8ea622d781c45132c498d2d8a8161aa569",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1465
+      },
+      "status": "planned",
+      "title": "File-grounded claim and citation scoring against a labeled corpus.",
+      "verifies_requirement_ids": [
+        "AM-EVD-001",
+        "AM-REP-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-EVD-003",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "03c161ccf9635ac2eb02522c6fe8de4013bfebca75d8fbc1f9f3af20d8fd5f74",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1466
+      },
+      "status": "planned",
+      "title": "Evidence-state, deterministic-derivation, citation-hash, source-range, conflict, and stale-citation scoring against a labeled corpus.",
+      "verifies_requirement_ids": [
+        "AM-EVD-002",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-GIT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "5832ea93ba32a5bde3dbfe4ae8553c1a1cfda33f188413ba117af5798384448b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1462
+      },
+      "status": "planned",
+      "title": "Read-only Git operations across clean, dirty, detached, untracked, and malformed fixture repositories.",
+      "verifies_requirement_ids": [
+        "AM-GIT-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-HOF-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "cce2ccd7a7e7e85e19220e02a10f5a9ce5bf6c47bdb47de39c959ed63baa4848",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1456
+      },
+      "status": "planned",
+      "title": "Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts.",
+      "verifies_requirement_ids": [
+        "AM-HOF-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-INJ-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "39e7b4c1b075d11462418e0f4ef18bfdd0dc5afe8ab8a7bbb05e10a339e8a50d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1446
+      },
+      "status": "planned",
+      "title": "Prompt-injection and malicious-content suite.",
+      "verifies_requirement_ids": [
+        "AM-INS-001",
+        "AM-SEC-002",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-INS-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "276de9e71bf648700e2ac7e189d0e63c4b3439ae587b4a57d401ae2f837d9255",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1447
+      },
+      "status": "planned",
+      "title": "Repository-instruction trust and precedence suite covering nested instructions, conflicts, generated text, comments, policy-change requests, hidden-tool requests, broader-root requests, external transfer, and false-completion instructions.",
+      "verifies_requirement_ids": [
+        "AM-INS-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-13"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-MODEL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 13 - Model Manifest and Runtime Contract",
+              "line": 988
+            },
+            "sprint": 13,
+            "story_id": "13.1",
+            "story_title": "Model Manifest and Runtime Contract"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "92b791e3c97fc1315332d6d932bcc304e5352da3e6d71e3525e27bf05a698cbe",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1457
+      },
+      "status": "planned",
+      "title": "Admission record, license, publisher/control, lineage, artifact, tokenizer, native GGUF hash, immutable OCI digest where applicable, runtime, acceleration, and offline response verification for Gemma 4 E4B.",
+      "verifies_requirement_ids": [
+        "AM-MDL-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-14"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-MODEL-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 14 - Separate Model Installer and Importer",
+              "line": 1065
+            },
+            "sprint": 14,
+            "story_id": "14.1",
+            "story_title": "Separate Model Installer and Importer"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7696cb983b7b8108bc27527699b017f2598d927821813cbe1e2211ee26032685",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1458
+      },
+      "status": "planned",
+      "title": "Installer/importer preflight, acquisition, cancellation, recovery, quarantine, atomic activation, self-test, load/unload, and cleanup across the supported platform matrix.",
+      "verifies_requirement_ids": [
+        "AM-MDL-003",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-10"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-NET-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
+              "line": 826
+            },
+            "sprint": 10,
+            "story_id": "10.1",
+            "story_title": "Strict-Local Network and Data-Residency Boundary"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ff8a5bb1056dd4b8842c0ff948a231b8433599fe97788c7b9bbcbded5e43b02e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1448
+      },
+      "status": "planned",
+      "title": "Packet, socket, process, container, namespace, and Domain Name System monitoring for a 60-minute offline end-to-end run after the separate model installer has exited on each supported platform and adapter.",
+      "verifies_requirement_ids": [
+        "AM-NET-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-10"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-NET-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
+              "line": 826
+            },
+            "sprint": 10,
+            "story_id": "10.1",
+            "story_title": "Strict-Local Network and Data-Residency Boundary"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ad8292b4543d131beeb4eb2d25c29c156aec8643aa36d2fb457fb4e8ce0f8a7a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1449
+      },
+      "status": "planned",
+      "title": "Reachability probes from a local-area-network peer, unrelated same-user process, ordinary container where applicable, separate network namespace, tool worker, XPC helper, extension host, and kernel.",
+      "verifies_requirement_ids": [
+        "AM-NET-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-6"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-PATH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 6 - Canonical Workspace Paths",
+              "line": 587
+            },
+            "sprint": 6,
+            "story_id": "6.1",
+            "story_title": "Canonical Workspace Paths"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9179559a6e33173f74cbb334d8e53bfd3423752e00c1ad936bdabceba972f466",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1450
+      },
+      "status": "planned",
+      "title": "Absolute path, traversal, encoding, separator, symlink, alias, stale-bookmark, case-folding, Unicode-normalization, rename-race, mount, and file-replacement attacks.",
+      "verifies_requirement_ids": [
+        "AM-PTH-001",
+        "AM-TOL-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-PERF-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4e1d612ba719c969c1c21916ce889bbdf79a1eb33f9ea70b744e237f05f9d33c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1471
+      },
+      "status": "planned",
+      "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu.",
+      "verifies_requirement_ids": [
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-7",
+          "artifacts/sprints/sprint-8",
+          "artifacts/sprints/sprint-9"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-PLAT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
+              "line": 640
+            },
+            "sprint": 7,
+            "story_id": "7.1",
+            "story_title": "Platform Adapter Contract and Release Manifests"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 8 - macOS Security Topology and Packaging",
+              "line": 694
+            },
+            "sprint": 8,
+            "story_id": "8.1",
+            "story_title": "macOS Security Topology and Packaging"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
+              "line": 748
+            },
+            "sprint": 9,
+            "story_id": "9.1",
+            "story_title": "Fedora and Ubuntu Security Topology"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "12a56f916bead89fabe3a523bdfc615129d8bb615b2da627738aaf36e7be2e57",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1443
+      },
+      "status": "planned",
+      "title": "Clean first-run packaging and platform-adapter verification on MacBook Pro M5, Fedora, and Ubuntu.",
+      "verifies_requirement_ids": [
+        "AM-PLT-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-11"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-PRIV-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 11 - Encrypted Canonical Operational Store",
+              "line": 880
+            },
+            "sprint": 11,
+            "story_id": "11.1",
+            "story_title": "Encrypted Canonical Operational Store"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6c0353a92b95bd62e85ce7e30fb74fcda1f44e77bf19ba323fbea787a9254bb8",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1454
+      },
+      "status": "planned",
+      "title": "Secret canaries in prompts, files, attachments, tool output, errors, and model responses.",
+      "verifies_requirement_ids": [
+        "AM-PRV-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-11"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-PRIV-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 11 - Encrypted Canonical Operational Store",
+              "line": 880
+            },
+            "sprint": 11,
+            "story_id": "11.1",
+            "story_title": "Encrypted Canonical Operational Store"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2571ae44791997b6c94bfdc8c0c81bc2f42af3f83b44da18055daa4c678551bb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1455
+      },
+      "status": "planned",
+      "title": "Encryption, ephemeral fallback, expiry, export, and cryptographic-erasure tests.",
+      "verifies_requirement_ids": [
+        "AM-PRV-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-QUAL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4a27634f923a1f5182805e8beae4d97eb1ea41fa091b2a011f740046ef730233",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1470
+      },
+      "status": "planned",
+      "title": "Labeled read-only repository questions, extraction tasks, schema calls, malformed-tool recovery, and adversarial completion prompts.",
+      "verifies_requirement_ids": [
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-18",
+          "artifacts/sprints/sprint-19"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-REP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 18 - Pinned Repository Structure",
+              "line": 1305
+            },
+            "sprint": 18,
+            "story_id": "18.1",
+            "story_title": "Pinned Repository Structure"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
+              "line": 1355
+            },
+            "sprint": 19,
+            "story_id": "19.1",
+            "story_title": "Repository Map Coverage and Source Resolution"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "dc0467900199dc8e1876cd7454784288ec18af03d1a52bf62048bedf9aaca5dc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1463
+      },
+      "status": "planned",
+      "title": "Deterministic repository-map construction, invalidation, coverage, rendering, source resolution, and read-only invariants across supported and unsupported fixture repositories.",
+      "verifies_requirement_ids": [
+        "AM-REP-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-22"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-RESUME-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
+              "line": 1507
+            },
+            "sprint": 22,
+            "story_id": "22.1",
+            "story_title": "Context Management and Crash-Safe Resume"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "33d35b4f9fad91ae917ccfd26b456b0ef0b9b491f2c06481ed1798fe3934b945",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1467
+      },
+      "status": "planned",
+      "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes.",
+      "verifies_requirement_ids": [
+        "AM-EVD-002",
+        "AM-SES-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-15"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-ROUTE-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
+              "line": 1119
+            },
+            "sprint": 15,
+            "story_id": "15.1",
+            "story_title": "Diagnostics, Manual Model Selection, and Resource Control"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8883e2854d6da09cb935fd6866a6475cfc8528e3b463efec4739326adbc382c5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1460
+      },
+      "status": "planned",
+      "title": "Mixed deterministic and model-assisted task suite.",
+      "verifies_requirement_ids": [
+        "AM-MDL-002",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-16",
+          "artifacts/sprints/sprint-8",
+          "artifacts/sprints/sprint-9"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-SBX-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 8 - macOS Security Topology and Packaging",
+              "line": 694
+            },
+            "sprint": 8,
+            "story_id": "8.1",
+            "story_title": "macOS Security Topology and Packaging"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
+              "line": 748
+            },
+            "sprint": 9,
+            "story_id": "9.1",
+            "story_title": "Fedora and Ubuntu Security Topology"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
+              "line": 1197
+            },
+            "sprint": 16,
+            "story_id": "16.1",
+            "story_title": "Sandboxed Read-Only Tool Protocol"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ca6ccee0e1d95ac61f13874f7a5ce4b62f5c6d8fcadec462be37f030f7d5344b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1445
+      },
+      "status": "planned",
+      "title": "Per-platform sandbox escape suite covering filesystem, process, device, environment, namespace, XPC, bookmark, and entitlement attacks.",
+      "verifies_requirement_ids": [
+        "AM-SEC-002",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-8",
+          "artifacts/sprints/sprint-9"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-SEC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 8 - macOS Security Topology and Packaging",
+              "line": 694
+            },
+            "sprint": 8,
+            "story_id": "8.1",
+            "story_title": "macOS Security Topology and Packaging"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
+              "line": 748
+            },
+            "sprint": 9,
+            "story_id": "9.1",
+            "story_title": "Fedora and Ubuntu Security Topology"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9eb29d8f9fb20fa47dbaf06fe2b62f1aa473c64eea324276f182cc1c32daf8cc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1444
+      },
+      "status": "planned",
+      "title": "Process, socket, file-permission, entitlement, environment, identity, and privilege inspection on macOS, Fedora, and Ubuntu.",
+      "verifies_requirement_ids": [
+        "AM-SEC-001",
+        "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-SPEC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2137970f3ec64877145d0cf1ed26b8c7a92181321e82df767a0daff11750b471",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1472
+      },
+      "status": "planned",
+      "title": "Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements.",
+      "verifies_requirement_ids": [
+        "AM-DOC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-16"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-TOOL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
+              "line": 1197
+            },
+            "sprint": 16,
+            "story_id": "16.1",
+            "story_title": "Sandboxed Read-Only Tool Protocol"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "38794252650831d8707836dc68ea28c8bafcab4df1a7d9a25da0eb4f68bfb321",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1461
+      },
+      "status": "planned",
+      "title": "Golden list, read, search, metadata, and hash fixtures with size and result limits.",
+      "verifies_requirement_ids": [
+        "AM-TOL-001",
+        "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-VSC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bb32b8479b7989290b47654b18c51772bac51d0652fd7c140b3ed1cab7ba4ca6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1468
+      },
+      "status": "planned",
+      "title": "Clean extension and kernel-host installation plus model discovery on MacBook Pro M5, Fedora, and Ubuntu.",
+      "verifies_requirement_ids": [
+        "AM-TST-002",
+        "AM-VSC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "AT-VSC-002",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0ad6083e55497930e94b666db4f8b5065fa06e77c6dc04fd29920cb3e624d794",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1469
+      },
+      "status": "planned",
+      "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests.",
+      "verifies_requirement_ids": [
+        "AM-TST-002",
+        "AM-VSC-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-15"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-DIA",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
+              "line": 1119
+            },
+            "sprint": 15,
+            "story_id": "15.1",
+            "story_title": "Diagnostics, Manual Model Selection, and Resource Control"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "877567aebd241067488d13afa50e8c65d634a1bee8c69cae8b2b1f15068fbdfd",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1580
+      },
+      "status": "planned",
+      "title": "Redacted runtime and capability diagnostics",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-23",
+          "artifacts/sprints/sprint-24",
+          "artifacts/sprints/sprint-25"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-EVAL",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
+              "line": 1562
+            },
+            "sprint": 23,
+            "story_id": "23.1",
+            "story_title": "Native Visual Studio Code Chat Experience"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 24 - Manual Codex Handoff Boundary",
+              "line": 1636
+            },
+            "sprint": 24,
+            "story_id": "24.1",
+            "story_title": "Manual Codex Handoff Boundary"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 25 - v0.1 Cross-Platform Release",
+              "line": 1707
+            },
+            "sprint": 25,
+            "story_id": "25.1",
+            "story_title": "v0.1 Cross-Platform Release"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a4752d14e298850fc8b80970a9617a694337e0845fe78c3b2bfac2a5cbed5f58",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1581
+      },
+      "status": "planned",
+      "title": "Gemma 4 quality, tool-recovery, context, latency, citation, and injection evaluation on reference hardware",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-20",
+          "artifacts/sprints/sprint-21"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-EVD",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 20 - Evidence-State Assignment",
+              "line": 1406
+            },
+            "sprint": 20,
+            "story_id": "20.1",
+            "story_title": "Evidence-State Assignment"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "line": 1456
+            },
+            "sprint": 21,
+            "story_id": "21.1",
+            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0a24d974a5bf7e92b9a7d065e8aa83fea965cba0073493c0a101864552a2c95b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1579
+      },
+      "status": "planned",
+      "title": "Observed, Derived, Inferred, and Unknown/Blocked answer states with resolvable and stale-aware citations",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-13"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-MDL",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 13 - Model Manifest and Runtime Contract",
+              "line": 988
+            },
+            "sprint": 13,
+            "story_id": "13.1",
+            "story_title": "Model Manifest and Runtime Contract"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2ba81cd03eb62a50e2a86677bb57b5f596e9824d7b6ce7848daaa4c0aeefc9aa",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1578
+      },
+      "status": "planned",
+      "title": "Complete approved local-model acquisition, verification, fit, lifecycle, diagnostics, cancellation, and offline proof",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-18",
+          "artifacts/sprints/sprint-19"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-REP",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 18 - Pinned Repository Structure",
+              "line": 1305
+            },
+            "sprint": 18,
+            "story_id": "18.1",
+            "story_title": "Pinned Repository Structure"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
+              "line": 1355
+            },
+            "sprint": 19,
+            "story_id": "19.1",
+            "story_title": "Repository Map Coverage and Source Resolution"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8aee25d105937eb34f8056ba5a602dc4cddba094e8d882bab7de9a56b9e7855d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1577
+      },
+      "status": "planned",
+      "title": "Deterministic, policy-aware, citation-preserving read-only repository map without required embeddings",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-17"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "not_excluded"
+      },
+      "id": "CR-P0-TRUST",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
+              "line": 1251
+            },
+            "sprint": 17,
+            "story_id": "17.1",
+            "story_title": "Read-Only Git and Untrusted Instructions"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "582027f0f14e0b7423338c3420b4a018ae1e53215f463b62980fca0ff0c0c9dc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1582
+      },
+      "status": "planned",
+      "title": "Repository, notes, issues, tool output, and imported instructions remain untrusted data unless explicitly trust-gated as non-authority guidance",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-30"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-RET",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 30 - Optional Local Semantic Retrieval",
+              "line": 1995
+            },
+            "sprint": 30,
+            "story_id": "30.1",
+            "story_title": "Optional Local Semantic Retrieval"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.2",
+      "source": {
+        "definition_sha256": "6f375865398b1dcede9bf475eb089dd721344d09bf78adcd7bc3c3219e85fd29",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1583
+      },
+      "status": "planned",
+      "title": "Optional approved local hybrid structural, lexical, embedding, and reranking retrieval with deletion and deterministic fallback",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-49"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-ROL",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 49 - Later Model Profiles and Measured Local Routing",
+              "line": 3024
+            },
+            "sprint": 49,
+            "story_id": "49.1",
+            "story_title": "Later Model Profiles and Measured Local Routing"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "Design now; staged by release",
+      "source": {
+        "definition_sha256": "4a5fe87b735489782c3420515e574d1fae492d02da2c56ae061edc4f18ccd5c3",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1587
+      },
+      "status": "planned",
+      "title": "Provider-independent allowlisted internal roles for dialogue, tools, summaries, repository maps, embeddings, reranking, patches, and claim verification",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-26",
+          "artifacts/sprints/sprint-32",
+          "artifacts/sprints/sprint-33"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-SES",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 26 - Canonical Human Knowledge Domain",
+              "line": 1785
+            },
+            "sprint": 26,
+            "story_id": "26.1",
+            "story_title": "Canonical Human Knowledge Domain"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 32 - Conversation Search and Branching",
+              "line": 2105
+            },
+            "sprint": 32,
+            "story_id": "32.1",
+            "story_title": "Conversation Search and Branching"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 33 - Private Archives and Evidence Bundles",
+              "line": 2155
+            },
+            "sprint": 33,
+            "story_id": "33.1",
+            "story_title": "Private Archives and Evidence Bundles"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.2-v0.5",
+      "source": {
+        "definition_sha256": "583e7b86716eae0ed548e57b490ad1828882977217b045ae842d4bc6da504997",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1588
+      },
+      "status": "planned",
+      "title": "Session fork, citation-preserving compaction, encrypted archive, controlled deletion, and redacted evidence bundle",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-34",
+          "artifacts/sprints/sprint-78",
+          "artifacts/sprints/sprint-79"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-SKL",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release",
+              "line": 2205
+            },
+            "sprint": 34,
+            "story_id": "34.1",
+            "story_title": "Knowledge Tasks, Declarative Skills, and v0.2 Release"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 78 - Capability Package Trust and Lifecycle",
+              "line": 4553
+            },
+            "sprint": 78,
+            "story_id": "78.1",
+            "story_title": "Capability Package Trust and Lifecycle"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 79 - Hooks, Safe Mode, and Package Recovery",
+              "line": 4602
+            },
+            "sprint": 79,
+            "story_id": "79.1",
+            "story_title": "Hooks, Safe Mode, and Package Recovery"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.2-v0.4",
+      "source": {
+        "definition_sha256": "430906671d718e2169f0e835ed21793788feea7cedff40e176632967377a5a53",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1589
+      },
+      "status": "planned",
+      "title": "Declarative, provenance-recorded, trust-gated skills before executable plugins",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-46"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-VAL",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 46 - Trusted Test and Validation Runner",
+              "line": 2859
+            },
+            "sprint": 46,
+            "story_id": "46.1",
+            "story_title": "Trusted Test and Validation Runner"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.4",
+      "source": {
+        "definition_sha256": "ca38cc59d009f00b99728710af19ad5c50327dcdcd934dbecdc820d692f6bdc1",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1586
+      },
+      "status": "planned",
+      "title": "Separately approved trusted test, lint, formatter, build, and scan templates with evidence-based receipts",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-42"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-WKT",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 42 - Git Worktrees and Remote Repository Safety",
+              "line": 2639
+            },
+            "sprint": 42,
+            "story_id": "42.1",
+            "story_title": "Git Worktrees and Remote Repository Safety"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.4",
+      "source": {
+        "definition_sha256": "47bda9c287e6d4888d64bf7d30807da367de0e2be7291520a88ce09760590785",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1585
+      },
+      "status": "planned",
+      "title": "Git worktree isolation that supplements, but is never described as, the security sandbox",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-35",
+          "artifacts/sprints/sprint-36"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P1-WRT",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 35 - Exact-Preimage Write Approval",
+              "line": 2263
+            },
+            "sprint": 35,
+            "story_id": "35.1",
+            "story_title": "Exact-Preimage Write Approval"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 36 - Atomic Write Application and Rollback",
+              "line": 2314
+            },
+            "sprint": 36,
+            "story_id": "36.1",
+            "story_title": "Atomic Write Application and Rollback"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.3",
+      "source": {
+        "definition_sha256": "4615bfd58d2bb8ebda6c82a4e35b0463083faf0f434cf328949237bdd57b687c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1584
+      },
+      "status": "planned",
+      "title": "Exact-preimage controlled-write transaction with shadow changes, one-use grant, atomic application, receipts, verification, and rollback",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-48"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P2-CLI",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 48 - Complete Local CLI and Headless Contracts",
+              "line": 2969
+            },
+            "sprint": 48,
+            "story_id": "48.1",
+            "story_title": "Complete Local CLI and Headless Contracts"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.4+",
+      "source": {
+        "definition_sha256": "0b9ba91213e4b34958a99c46db004682c5c720bd7d9d68730a64064d1a2efdb0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1591
+      },
+      "status": "planned",
+      "title": "CLI, JSON, software development kit, and Agent Client Protocol only after stable VS Code, with predeclared grants and fail-closed headless behavior",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-70"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P2-CON",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 70 - Visible Network Capability and Connector Cache",
+              "line": 4122
+            },
+            "sprint": 70,
+            "story_id": "70.1",
+            "story_title": "Visible Network Capability and Connector Cache"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v0.7+",
+      "source": {
+        "definition_sha256": "67ca76bc68d7ee8dbea816347d6dfc359316c3347a011cf454be9294c3d943cb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1592
+      },
+      "status": "planned",
+      "title": "User-initiated read-only GitHub and connector synchronization into a sensitivity-labeled local cache",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-89",
+          "artifacts/sprints/sprint-90"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P2-JOB",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 89 - Queue, Lease, and Retry Semantics",
+              "line": 5102
+            },
+            "sprint": 89,
+            "story_id": "89.1",
+            "story_title": "Queue, Lease, and Retry Semantics"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 90 - Read-Only Schedules, Notifications, and Receipts",
+              "line": 5152
+            },
+            "sprint": 90,
+            "story_id": "90.1",
+            "story_title": "Read-Only Schedules, Notifications, and Receipts"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "459ac274a77ee12ea0f6bc7aa8ecc3ac38dbf0b5321914d415c7e55fafcc1a57",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1593
+      },
+      "status": "planned",
+      "title": "Leased, idempotent, budgeted, cancellable, expiring scheduled work with read-only first release and post-run receipts",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-92",
+          "artifacts/sprints/sprint-93",
+          "artifacts/sprints/sprint-94",
+          "artifacts/sprints/sprint-95"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P2-MAG",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 92 - Agent Definitions and Registry",
+              "line": 5258
+            },
+            "sprint": 92,
+            "story_id": "92.1",
+            "story_title": "Agent Definitions and Registry"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 93 - Agent Validation, Dry Runs, and Enablement",
+              "line": 5307
+            },
+            "sprint": 93,
+            "story_id": "93.1",
+            "story_title": "Agent Validation, Dry Runs, and Enablement"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 94 - Child Authority and Isolation",
+              "line": 5358
+            },
+            "sprint": 94,
+            "story_id": "94.1",
+            "story_title": "Child Authority and Isolation"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 95 - Agent Coordination, Review, and Direction",
+              "line": 5408
+            },
+            "sprint": 95,
+            "story_id": "95.1",
+            "story_title": "Agent Coordination, Review, and Direction"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "8d015b42cbd0a8f159b2d2882bd751e72408059ddceaeac9baab63347ab45a11",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1594
+      },
+      "status": "planned",
+      "title": "Child grants, separate writable worktrees, ownership, conflicts, budgets, cancellation propagation, and attributable receipts",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-80",
+          "artifacts/sprints/sprint-81"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "CR-P2-MCP",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 80 - Read-Only MCP Identity and Manifests",
+              "line": 4653
+            },
+            "sprint": 80,
+            "story_id": "80.1",
+            "story_title": "Read-Only MCP Identity and Manifests"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 81 - MCP Request Mediation and Failure Isolation",
+              "line": 4702
+            },
+            "sprint": 81,
+            "story_id": "81.1",
+            "story_title": "MCP Request Mediation and Failure Isolation"
+          }
+        ]
+      },
+      "kind": "competitive_requirement",
+      "normative_statements": [],
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "3866411c1fff8f1b38d97623321d13f776f0244014b6fa587625b9bc70762a2f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1590
+      },
+      "status": "planned",
+      "title": "Manifested MCP and plugins fully mediated by the kernel, with identity, scopes, limits, cancellation, receipts, and a read-only first phase",
+      "verifies_requirement_ids": []
+    }
+  ],
+  "schema_version": 1
+}

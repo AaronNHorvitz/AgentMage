@@ -138,3 +138,18 @@ npm run references:check
 ```
 
 The audit rejects citation gaps, orphaned or duplicate records, order changes, malformed dates or hashes, inconsistent supersession, unapproved retention, and certification or endorsement claims. It deliberately performs no live retrieval during routine documentation or release checks.
+
+## Cross-Document Traceability
+
+`traceability-report.json` is the generated planning view across the requirement registry, normative PRD map, policy expectations, and sprint plan. It records each stable requirement's source, release, status, dependencies, acceptance-test relationships, normative statements, planned implementation stories, exclusion state, external-issue state, and current or expected evidence location.
+
+An empty external-issue list or evidence-path list is explicit planning state, not evidence that work occurred. The report uses `not_created` and `not_yet_produced` until those artifacts exist. Acceptance tests inherit a product requirement's implementation mapping only when the test has no explicit source-coverage declaration; the report labels that derivation.
+
+Generate or verify the byte-deterministic report with:
+
+```bash
+npm run traceability:build
+npm run traceability:check
+```
+
+Check mode performs no writes. Any source-document change leaves the committed report stale until it is regenerated and reviewed.
