@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/planning/change-log.schema.json",
+  "title": "AgentMage Change Log",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "change_log"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      }
+    }
+  },
+  "$defs": {
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change_id",
+        "timestamp",
+        "commit",
+        "type",
+        "summary",
+        "requirement_ids",
+        "decision_ids",
+        "files",
+        "breaking"
+      ],
+      "properties": {
+        "change_id": {
+          "type": "string",
+          "pattern": "^CHG-[0-9]{6}$"
+        },
+        "timestamp": {
+          "$ref": "common.schema.json#/$defs/dateTime"
+        },
+        "commit": {
+          "$ref": "common.schema.json#/$defs/gitCommit"
+        },
+        "type": {
+          "enum": [
+            "added",
+            "changed",
+            "deprecated",
+            "fixed",
+            "removed",
+            "security"
+          ]
+        },
+        "summary": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "requirement_ids": {
+          "$ref": "common.schema.json#/$defs/requirementSet"
+        },
+        "decision_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^ADR-[0-9]{4}$"
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/repositoryRelativePath"
+          }
+        },
+        "breaking": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

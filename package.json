@@ -10,10 +10,15 @@
     "requirements:build": "python3 scripts/requirement_registry.py",
     "requirements:test": "python3 -m unittest discover -s tests -p 'test_*.py'",
     "requirements:check": "python3 scripts/requirement_registry.py --check && npm run requirements:test",
-    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run requirements:check"
+    "schemas:validate": "node scripts/validate_planning_schemas.mjs",
+    "schemas:test": "node --test tests/test_planning_schemas.mjs",
+    "schemas:check": "npm run schemas:validate && npm run schemas:test",
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run requirements:check && npm run schemas:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
     "markdownlint-cli2": "0.23.2"
   }
 }

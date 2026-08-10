@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "record_type": "change_log",
+  "entries": [
+    {
+      "change_id": "CHG-000001",
+      "timestamp": "2026-08-10T18:00:00Z",
+      "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "type": "added",
+      "summary": "Added the canonical requirement registry.",
+      "requirement_ids": [
+        "AT-SPEC-001"
+      ],
+      "decision_ids": [
+        "ADR-0002"
+      ],
+      "files": [
+        "requirements/registry.json"
+      ],
+      "breaking": false
+    }
+  ]
+}

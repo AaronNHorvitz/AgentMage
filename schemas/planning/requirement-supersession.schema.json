@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/planning/requirement-supersession.schema.json",
+  "title": "AgentMage Requirement Supersession",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "supersession_id",
+    "status",
+    "date",
+    "original_requirement_ids",
+    "replacement_requirement_ids",
+    "preserve_original_text",
+    "rationale",
+    "impact",
+    "decision_id",
+    "approved_by",
+    "approved_at",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "requirement_supersession"
+    },
+    "supersession_id": {
+      "type": "string",
+      "pattern": "^SUP-[0-9]{4}$"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "rejected"
+      ]
+    },
+    "date": {
+      "$ref": "common.schema.json#/$defs/date"
+    },
+    "original_requirement_ids": {
+      "$ref": "common.schema.json#/$defs/requirementSet",
+      "type": "array",
+      "minItems": 1
+    },
+    "replacement_requirement_ids": {
+      "$ref": "common.schema.json#/$defs/requirementSet",
+      "type": "array",
+      "minItems": 1
+    },
+    "preserve_original_text": {
+      "const": true
+    },
+    "rationale": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "impact": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "decision_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ADR-[0-9]{4}$"
+    },
+    "approved_by": {
+      "$ref": "common.schema.json#/$defs/stringSet"
+    },
+    "approved_at": {
+      "oneOf": [
+        {
+          "$ref": "common.schema.json#/$defs/dateTime"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceArtifact"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "decision_id": {
+            "type": "string"
+          },
+          "approved_by": {
+            "type": "array",
+            "minItems": 1
+          },
+          "approved_at": {
+            "$ref": "common.schema.json#/$defs/dateTime"
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

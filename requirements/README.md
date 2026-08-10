@@ -39,3 +39,25 @@ The top-level source hash covers the complete canonical inventory. Any inventory
 - A mechanically narrowed result remains provisional until an accepted requirement-supersession decision preserves the original requirements and records the replacement.
 
 The resolver in `scripts/requirement_conflicts.py` is pure: it returns an `unchanged`, `provisional`, or `blocked` result and never edits its inputs or project files.
+
+## Planning And Release Schemas
+
+The versioned JSON Schemas in `schemas/planning/` define closed contracts for:
+
+- decision records;
+- risk registers;
+- change logs;
+- release manifests; and
+- requirement supersessions.
+
+Each contract rejects unknown fields, malformed stable identities, absolute or parent-traversing repository paths, invalid dates, and unsupported schema versions. Accepted decisions, accepted risks, accepted supersessions, and released or revoked manifests require their applicable approval or signing evidence.
+
+The validator also enforces deterministic relationships that are clearer outside JSON Schema: risk scores equal likelihood times impact, logical record identifiers are unique, change timestamps do not move backward, release IDs match versions, component and model-profile identities are unique, and original and replacement requirement sets do not overlap. Validation never fills defaults, coerces values, removes fields, or edits its inputs.
+
+Run the schema checks with:
+
+```bash
+npm run schemas:check
+```
+
+The valid examples under `schemas/planning/examples/` are executable fixtures, not production approvals or release evidence.

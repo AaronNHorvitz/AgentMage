@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "record_type": "requirement_supersession",
+  "supersession_id": "SUP-0001",
+  "status": "accepted",
+  "date": "2026-08-10",
+  "original_requirement_ids": [
+    "AM-KRN-001"
+  ],
+  "replacement_requirement_ids": [
+    "AM-CFG-001"
+  ],
+  "preserve_original_text": true,
+  "rationale": "Fixture demonstrating an approved, traceable supersession.",
+  "impact": "The replacement remains linked to the preserved original requirement.",
+  "decision_id": "ADR-0002",
+  "approved_by": [
+    "project-maintainer"
+  ],
+  "approved_at": "2026-08-10T18:00:00Z",
+  "evidence": [
+    {
+      "path": "docs/decisions/0002-example.md",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

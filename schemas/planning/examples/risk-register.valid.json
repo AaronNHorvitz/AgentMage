@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "record_type": "risk_register",
+  "updated_at": "2026-08-10T18:00:00Z",
+  "risks": [
+    {
+      "risk_id": "RISK-0001",
+      "title": "Requirement drift",
+      "description": "Canonical prose and generated traceability could diverge.",
+      "category": "delivery",
+      "likelihood": 2,
+      "impact": 4,
+      "score": 8,
+      "owner": "project-maintainer",
+      "status": "mitigating",
+      "requirement_ids": [
+        "AT-SPEC-001"
+      ],
+      "mitigations": [
+        "Run deterministic registry checks in continuous integration."
+      ],
+      "evidence": [
+        {
+          "path": "requirements/registry.json",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "review_by": "2026-09-10"
+    }
+  ]
+}

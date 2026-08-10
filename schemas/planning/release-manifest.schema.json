@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/planning/release-manifest.schema.json",
+  "title": "AgentMage Release Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "product",
+    "release_id",
+    "version",
+    "status",
+    "created_at",
+    "source_commit",
+    "platforms",
+    "components",
+    "model_profiles",
+    "documents",
+    "evidence",
+    "signer"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "release_manifest"
+    },
+    "product": {
+      "const": "AgentMage"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^agentmage-[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "version": {
+      "$ref": "common.schema.json#/$defs/semanticVersion"
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "released",
+        "revoked"
+      ]
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/dateTime"
+    },
+    "source_commit": {
+      "$ref": "common.schema.json#/$defs/gitCommit"
+    },
+    "platforms": {
+      "$ref": "common.schema.json#/$defs/stringSet",
+      "type": "array",
+      "minItems": 1
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    },
+    "model_profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/modelProfile"
+      }
+    },
+    "documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceArtifact"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceArtifact"
+      }
+    },
+    "signer": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "signature_path": {
+          "$ref": "common.schema.json#/$defs/repositoryRelativePath"
+        }
+      },
+      "required": [
+        "identity",
+        "signature_path"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "path",
+        "sha256",
+        "license"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/repositoryRelativePath"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "license": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "modelProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "model_identity",
+        "artifact_identity",
+        "runtime_identity",
+        "admission_evidence"
+      ],
+      "properties": {
+        "profile_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "model_identity": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "artifact_identity": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "runtime_identity": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "admission_evidence": {
+          "$ref": "common.schema.json#/$defs/evidenceArtifact"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "released",
+              "revoked"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "signer": {
+            "type": "object"
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

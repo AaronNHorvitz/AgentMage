@@ -162,7 +162,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.1.1** (legacy `S-000-I01`): Create a machine-readable requirement registry for every `AM-*`, `AT-*`, and `CR-*` identifier.
   - [x] **Sub-task 0.1.1.2** (legacy `S-000-I02`): Record each requirement's title, source document, source heading, release, dependencies, disposition, acceptance tests, and current status.
   - [x] **Sub-task 0.1.1.3** (legacy `S-000-I03`): Define the conflict rule that preserves the narrower safety boundary or release scope until an approved decision resolves the conflict.
-  - [ ] **Sub-task 0.1.1.4** (legacy `S-000-I04`): Define decision-record, risk-register, change-log, release-manifest, and requirement-supersession schemas.
+  - [x] **Sub-task 0.1.1.4** (legacy `S-000-I04`): Define decision-record, risk-register, change-log, release-manifest, and requirement-supersession schemas.
   - [ ] **Sub-task 0.1.1.5** (legacy `S-000-I05`): Create a coverage check that reports duplicate identifiers, unresolved dependencies, missing acceptance tests, release mismatches, and unmapped normative statements.
   - [ ] **Sub-task 0.1.1.6** (legacy `S-000-I06`): Encode all explicit exclusions, rejected defaults, and deferred items as testable policy expectations rather than prose-only notes.
   - [ ] **Sub-task 0.1.1.7** (legacy `S-000-I07`): Add an additions-only inventory check that detects removed or weakened canonical requirements.

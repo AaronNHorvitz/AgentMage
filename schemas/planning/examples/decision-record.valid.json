@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "record_type": "decision",
+  "decision_id": "ADR-0002",
+  "title": "Use a deterministic requirement registry",
+  "status": "accepted",
+  "date": "2026-08-10",
+  "owners": [
+    "project-maintainer"
+  ],
+  "context": "Stable requirement identifiers need a machine-readable authority.",
+  "decision": "Generate the registry deterministically from canonical inventory tables.",
+  "consequences": "Inventory changes require regeneration and review.",
+  "requirement_ids": [
+    "AM-KRN-001",
+    "AT-SPEC-001"
+  ],
+  "supersedes": [],
+  "approved_by": [
+    "project-maintainer"
+  ],
+  "evidence": [
+    {
+      "path": "requirements/registry.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

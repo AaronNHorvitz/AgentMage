@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "record_type": "release_manifest",
+  "product": "AgentMage",
+  "release_id": "agentmage-0.1.0",
+  "version": "0.1.0",
+  "status": "released",
+  "created_at": "2026-08-10T18:00:00Z",
+  "source_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "platforms": [
+    "fedora-x86_64"
+  ],
+  "components": [
+    {
+      "name": "agentmage-kernel",
+      "version": "0.1.0",
+      "path": "dist/agentmage-kernel",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "license": "Apache-2.0"
+    }
+  ],
+  "model_profiles": [
+    {
+      "profile_id": "gemma-4-e4b-native-linux",
+      "model_identity": "Gemma 4 E4B",
+      "artifact_identity": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "runtime_identity": "llama.cpp:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "admission_evidence": {
+        "path": "release-evidence/model-admission.json",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "documents": [
+    {
+      "path": "README.md",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "release-evidence/index.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "signer": {
+    "identity": "release-key-fixture",
+    "signature_path": "release-evidence/signatures/manifest.sig"
+  }
+}
