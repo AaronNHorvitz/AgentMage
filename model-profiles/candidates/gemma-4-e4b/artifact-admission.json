@@ -2,7 +2,7 @@
   "schema_version": 1,
   "record_type": "model_artifact_admission",
   "profile_id": "gemma-4-e4b-it",
-  "evaluated_at": "2026-08-10T08:05:00Z",
+  "evaluated_at": "2026-08-10T08:31:58Z",
   "source_admission": {
     "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
     "status": "BLOCKED"
@@ -26,13 +26,14 @@
     "multimodal_projector": {
       "file": "mmproj-F16.gguf",
       "sha256": "ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
-      "size": 990372672
+      "size": 990372672,
+      "downloaded": true
     },
     "conversion_tool": "not_reproducibly_disclosed",
     "conversion_revision": null,
     "conversion_command": null,
     "quantization_recipe": "Unsloth Dynamic 2.0 Q4_K_M label; exact command and complete environment not disclosed",
-    "downloaded": false
+    "downloaded": true
   },
   "native_runtime": {
     "project": "ggml-org/llama.cpp",
@@ -118,10 +119,6 @@
       {
         "code": "DOCKER-RUNTIME-UNAVAILABLE",
         "reason": "Docker and Docker Model Runner are not installed on the Fedora evaluation host."
-      },
-      {
-        "code": "MODEL-ARTIFACTS-NOT-LOCAL",
-        "reason": "The GGUF and multimodal projector are resolved but have not been downloaded and hash-verified locally."
       }
     ],
     "allowed_actions": [

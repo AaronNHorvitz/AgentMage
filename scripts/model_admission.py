@@ -227,6 +227,10 @@ def validate_artifact_record(record: dict[str, object]) -> list[str]:
             failures.append("multimodal projector identity mismatch")
         if gguf.get("conversion_tool") != "not_reproducibly_disclosed":
             failures.append("unknown GGUF conversion provenance must remain visible")
+        if gguf.get("downloaded") is not True:
+            failures.append("GGUF local verification state is missing")
+        if isinstance(projector, dict) and projector.get("downloaded") is not True:
+            failures.append("projector local verification state is missing")
 
     native = record["native_runtime"]
     expected_native = {
@@ -283,7 +287,6 @@ def validate_artifact_record(record: dict[str, object]) -> list[str]:
             "SOURCE-ADMISSION-BLOCKED",
             "GGUF-CONVERSION-NOT-REPRODUCIBLE",
             "DOCKER-RUNTIME-UNAVAILABLE",
-            "MODEL-ARTIFACTS-NOT-LOCAL",
         }
         if blocker_codes != expected_blockers:
             failures.append("artifact-admission blockers are incomplete")

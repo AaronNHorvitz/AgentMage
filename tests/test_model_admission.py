@@ -73,6 +73,10 @@ class ModelAdmissionTests(unittest.TestCase):
             self.artifact_record["native_runtime"]["local_state"],
             "staged_and_hash_verified",
         )
+        self.assertTrue(self.artifact_record["gguf_identity"]["downloaded"])
+        self.assertTrue(
+            self.artifact_record["gguf_identity"]["multimodal_projector"]["downloaded"]
+        )
         self.assertFalse(self.artifact_record["evaluation_host"]["docker_available"])
 
     def test_gguf_runtime_and_oci_substitutions_are_rejected(self) -> None:
