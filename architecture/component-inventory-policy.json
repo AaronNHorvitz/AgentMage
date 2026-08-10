@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task_id": "3.1.1.6",
+  "status": "enforced",
+  "sources": {
+    "clean_build_report": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+    "dependency_provenance": "supply-chain/dependency-provenance.json",
+    "dependency_classes": "architecture/dependency-classes.json",
+    "optional_components": "architecture/optional-component-inventory.json",
+    "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+    "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+    "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json"
+  },
+  "approved_build_executable_ids": [
+    "cargo",
+    "clippy-driver",
+    "node",
+    "npm",
+    "python3",
+    "rustc",
+    "rustfmt"
+  ],
+  "approved_build_platforms": [
+    "fedora-x86_64",
+    "ubuntu-x86_64"
+  ],
+  "approved_product_runtime_ids": [],
+  "approved_optional_dependency_ids": [],
+  "candidate_runtime_ids": [
+    "linux-native-llama-cpp-b10333",
+    "linux-docker-model-runner-b9879",
+    "macos-native-llama-cpp-b10333"
+  ],
+  "unapproved_component_ids": [
+    "linux-bubblewrap",
+    "linux-resource-control",
+    "linux-secret-service-client",
+    "docker-compatibility",
+    "rust-development",
+    "node-development",
+    "python-development",
+    "macos-swift-build",
+    "macos-xcode-build"
+  ],
+  "controls": {
+    "approved_records_require_version": true,
+    "approved_records_require_cryptographic_hash": true,
+    "candidate_identity_is_not_release_approval": true,
+    "presence_is_not_approval": true,
+    "mutable_runtime_tags_are_release_identities": false,
+    "unknown_components_fail_closed": true
+  },
+  "platform_status": {
+    "fedora": "verified-clean-build",
+    "ubuntu": "verified-clean-build",
+    "macos": "blocked-macos"
+  }
+}

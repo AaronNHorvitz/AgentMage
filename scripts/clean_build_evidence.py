@@ -44,6 +44,15 @@ EXPECTED_COMMANDS = (
     "sbom-check",
     "diagnostic",
 )
+EXPECTED_TOOLCHAINS = (
+    "cargo",
+    "clippy-driver",
+    "node",
+    "npm",
+    "python3",
+    "rustc",
+    "rustfmt",
+)
 EXPECTED_CONTROLS = {
     "capabilities": "all-dropped",
     "host_source": "read-only-committed-archive",
@@ -184,6 +193,20 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
             failures.append(f"clean-build command closure is invalid: {platform_id}")
         if any(item.get("status") != "pass" for item in commands):
             failures.append(f"clean-build command failed: {platform_id}")
+        toolchains = run.get("toolchains", [])
+        if tuple(item.get("id") for item in toolchains) != EXPECTED_TOOLCHAINS:
+            failures.append(f"clean-build toolchain closure is invalid: {platform_id}")
+        for toolchain in toolchains:
+            if not isinstance(toolchain.get("version"), str) or not toolchain["version"]:
+                failures.append(
+                    f"clean-build toolchain version is invalid: {platform_id}"
+                )
+            if not re.fullmatch(
+                r"[0-9a-f]{64}", toolchain.get("executable_sha256", "")
+            ):
+                failures.append(
+                    f"clean-build toolchain hash is invalid: {platform_id}"
+                )
         checks = run.get("checks", {})
         required_true = {
             "all_commands_passed",

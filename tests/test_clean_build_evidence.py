@@ -7,6 +7,7 @@ from pathlib import Path
 from scripts.clean_build_evidence import (
     EXPECTED_COMMANDS,
     EXPECTED_CONTROLS,
+    EXPECTED_TOOLCHAINS,
     build_report,
     check_report,
     normalized_sha256_id,
@@ -43,7 +44,14 @@ class CleanBuildEvidenceTests(unittest.TestCase):
                     "writable_storage": "fresh-temporary-filesystem",
                 },
                 "source": source,
-                "toolchains": [],
+                "toolchains": [
+                    {
+                        "executable_sha256": "c" * 64,
+                        "id": toolchain,
+                        "version": f"{toolchain} synthetic-version",
+                    }
+                    for toolchain in EXPECTED_TOOLCHAINS
+                ],
                 "commands": [
                     {"id": command, "status": "pass"}
                     for command in EXPECTED_COMMANDS
@@ -101,6 +109,16 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         mutated = copy.deepcopy(self.report)
         mutated["platform_runs"]["ubuntu-x86_64"]["commands"].pop()
         self.assertTrue(validate_report(mutated))
+
+    def test_missing_toolchain_or_hash_is_rejected(self) -> None:
+        missing = copy.deepcopy(self.report)
+        missing["platform_runs"]["fedora-x86_64"]["toolchains"].pop()
+        invalid_hash = copy.deepcopy(self.report)
+        invalid_hash["platform_runs"]["ubuntu-x86_64"]["toolchains"][0][
+            "executable_sha256"
+        ] = "not-a-hash"
+        self.assertTrue(validate_report(missing))
+        self.assertTrue(validate_report(invalid_hash))
 
     def test_ambient_dependency_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.report)

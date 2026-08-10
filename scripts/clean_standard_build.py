@@ -31,10 +31,12 @@ TRANSIENT_ROOTS = (
 )
 EXPECTED_TOOL_VERSIONS = {
     "cargo": re.compile(r"^cargo 1\.95\.0\b"),
+    "clippy-driver": re.compile(r"^clippy 0\.1\.95\b"),
     "node": re.compile(r"^v24\.15\.0$"),
     "npm": re.compile(r"^11\.12\.1$"),
     "python3": re.compile(r"^Python 3\."),
     "rustc": re.compile(r"^rustc 1\.95\.0\b"),
+    "rustfmt": re.compile(r"^rustfmt 1\.9\.0-stable\b"),
 }
 
 
@@ -216,7 +218,15 @@ def execute(
         }
         tools = [
             executable_record(name, environment)
-            for name in ("cargo", "node", "npm", "python3", "rustc")
+            for name in (
+                "cargo",
+                "clippy-driver",
+                "node",
+                "npm",
+                "python3",
+                "rustc",
+                "rustfmt",
+            )
         ]
         supply_before = {
             relative: sha256_bytes((work / relative).read_bytes())

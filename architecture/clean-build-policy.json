@@ -4,9 +4,11 @@
   "test_id": "S-001-IT01",
   "toolchains": {
     "cargo": "1.95.0",
+    "clippy": "0.1.95",
     "node": "24.15.0",
     "npm": "11.12.1",
-    "rustc": "1.95.0"
+    "rustc": "1.95.0",
+    "rustfmt": "1.9.0-stable"
   },
   "download_integrity": {
     "node_linux_x64_sha256": "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6",
@@ -134,11 +136,13 @@
   ],
   "additional_input_paths": [
     "architecture/clean-build-policy.json",
+    "architecture/component-inventory-policy.json",
     "architecture/dependency-classes.json",
     "architecture/optional-component-inventory.json",
     "release/clean-build/Containerfile.linux",
     "scripts/clean_build_evidence.py",
     "scripts/clean_standard_build.py",
+    "scripts/component_inventory.py",
     "scripts/no_install_diagnostic.py",
     "scripts/supply_chain.py",
     "supply-chain/dependency-hashes.sha256",
