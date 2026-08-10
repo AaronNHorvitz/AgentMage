@@ -1,0 +1,87 @@
+{
+  "clean_graphs_identical": true,
+  "clean_runs": [
+    {
+      "cargo": {
+        "command": "cargo metadata --locked --offline --format-version 1 --no-deps",
+        "exit_code": 0,
+        "output_captured": true,
+        "output_redacted": true
+      },
+      "diagnostics": [],
+      "graph_sha256": "f77db30132adab568b5f1ac400bb0f9ab5dc9e62c4f3d295de7aafee12bb2c83",
+      "locks_unchanged": true,
+      "npm": {
+        "command": "npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund",
+        "exit_code": 0,
+        "output_captured": true,
+        "output_redacted": true
+      },
+      "run_id": "clean-a",
+      "status": "pass",
+      "swift_execution": "blocked-macos"
+    },
+    {
+      "cargo": {
+        "command": "cargo metadata --locked --offline --format-version 1 --no-deps",
+        "exit_code": 0,
+        "output_captured": true,
+        "output_redacted": true
+      },
+      "diagnostics": [],
+      "graph_sha256": "f77db30132adab568b5f1ac400bb0f9ab5dc9e62c4f3d295de7aafee12bb2c83",
+      "locks_unchanged": true,
+      "npm": {
+        "command": "npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund",
+        "exit_code": 0,
+        "output_captured": true,
+        "output_redacted": true
+      },
+      "run_id": "clean-b",
+      "status": "pass",
+      "swift_execution": "blocked-macos"
+    }
+  ],
+  "macos_resolution": "blocked-macos",
+  "macos_support_claim": "none",
+  "mutation_cases": [
+    {
+      "expected_diagnostic": "npm lock version mismatch: typescript expected 5.9.3 got 5.9.4",
+      "observed_diagnostics": [
+        "lock hash mismatch: package-lock.json",
+        "npm lock version mismatch: typescript expected 5.9.3 got 5.9.4"
+      ],
+      "scenario": "substituted",
+      "status": "pass"
+    },
+    {
+      "expected_diagnostic": "missing locked npm package: node_modules/typescript",
+      "observed_diagnostics": [
+        "lock hash mismatch: package-lock.json",
+        "missing locked npm package: node_modules/typescript"
+      ],
+      "scenario": "missing",
+      "status": "pass"
+    },
+    {
+      "expected_diagnostic": "revoked dependency selected: npm:node_modules/typescript@5.9.3",
+      "observed_diagnostics": [
+        "revoked dependency selected: npm:node_modules/typescript@5.9.3"
+      ],
+      "scenario": "revoked",
+      "status": "pass"
+    },
+    {
+      "expected_diagnostic": "wrong-platform dependency: platform-macos does not support fedora-x86_64",
+      "observed_diagnostics": [
+        "wrong-platform dependency: platform-macos does not support fedora-x86_64"
+      ],
+      "scenario": "wrong-platform",
+      "status": "pass"
+    }
+  ],
+  "network_mode": "offline-command-flags",
+  "schema_version": 1,
+  "status": "pass",
+  "test_id": "S-001-UT02"
+}
