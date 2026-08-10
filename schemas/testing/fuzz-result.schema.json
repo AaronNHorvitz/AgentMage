@@ -1,0 +1,666 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/testing/fuzz-result.schema.json",
+  "title": "AgentMage Fuzz Result Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "record_id",
+    "captured_at",
+    "target",
+    "run",
+    "coverage",
+    "sanitizer",
+    "failure",
+    "minimized_reproducer",
+    "timeout_resource_event",
+    "ownership",
+    "evidence",
+    "redaction",
+    "network_used",
+    "product_fuzz_claim",
+    "macos_execution_status",
+    "macos_support_claim",
+    "record_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "fuzz-result"
+    },
+    "record_id": {
+      "type": "string",
+      "pattern": "^am-fuzz-result-[a-f0-9]{20}$"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "coverage": {
+      "$ref": "#/$defs/coverage"
+    },
+    "sanitizer": {
+      "$ref": "#/$defs/sanitizer"
+    },
+    "failure": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/failure"
+        }
+      ]
+    },
+    "minimized_reproducer": {
+      "$ref": "#/$defs/minimizedReproducer"
+    },
+    "timeout_resource_event": {
+      "$ref": "#/$defs/resourceEvent"
+    },
+    "ownership": {
+      "$ref": "#/$defs/ownership"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "redaction": {
+      "$ref": "#/$defs/redaction"
+    },
+    "network_used": {
+      "const": false
+    },
+    "product_fuzz_claim": {
+      "const": "none"
+    },
+    "macos_execution_status": {
+      "const": "blocked-macos"
+    },
+    "macos_support_claim": {
+      "const": "none"
+    },
+    "record_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "run": {
+            "type": "object",
+            "properties": {
+              "result_status": {
+                "const": "pass"
+              }
+            },
+            "required": [
+              "result_status"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "null"
+          },
+          "minimized_reproducer": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "not-required"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "failure": {
+            "$ref": "#/$defs/failure"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^FT-[A-Z0-9][A-Z0-9-]{1,62}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine_id",
+        "version",
+        "integrity"
+      ],
+      "properties": {
+        "engine_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$"
+        },
+        "integrity": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{64}|sha512-[A-Za-z0-9+/]+={0,2})$"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "boundary_class",
+        "registry_sha256",
+        "harness_sha256",
+        "corpus_sha256",
+        "dictionary_sha256",
+        "build_sha256",
+        "policy_sha256",
+        "platform_result_sha256",
+        "engine"
+      ],
+      "properties": {
+        "target_id": {
+          "$ref": "#/$defs/targetId"
+        },
+        "boundary_class": {
+          "$ref": "#/$defs/identifier"
+        },
+        "registry_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "harness_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "corpus_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "dictionary_sha256": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "build_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "policy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "platform_result_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "engine": {
+          "$ref": "#/$defs/engine"
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "seed",
+        "duration_seconds",
+        "execution_count",
+        "maximum_input_bytes",
+        "result_status"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "regression",
+            "fuzzing",
+            "minimization"
+          ]
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "duration_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "execution_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_input_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "result_status": {
+          "enum": [
+            "pass",
+            "crash",
+            "hang",
+            "timeout",
+            "resource-exhaustion",
+            "path-escape",
+            "secret-leak",
+            "authorization-bypass",
+            "error",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "features_covered",
+        "new_features",
+        "corpus_entry_count",
+        "coverage_sha256",
+        "unavailable_reason"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "edge",
+            "line",
+            "branch",
+            "deterministic-oracle"
+          ]
+        },
+        "features_covered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_features": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "corpus_entry_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "coverage_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "unavailable_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "sanitizer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "triggered",
+        "finding_count",
+        "state_sha256"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "triggered": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "failure_class",
+        "crash_signature",
+        "raw_input_sha256",
+        "stack_sha256",
+        "normalized_top_frames",
+        "raw_input_retained"
+      ],
+      "properties": {
+        "failure_class": {
+          "enum": [
+            "crash",
+            "hang",
+            "timeout",
+            "resource-exhaustion",
+            "path-escape",
+            "secret-leak",
+            "authorization-bypass",
+            "error",
+            "cancelled"
+          ]
+        },
+        "crash_signature": {
+          "$ref": "#/$defs/sha256"
+        },
+        "raw_input_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "stack_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalized_top_frames": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "raw_input_retained": {
+          "const": false
+        }
+      }
+    },
+    "minimizedReproducer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "original_sha256",
+        "minimized_sha256",
+        "path",
+        "bytes",
+        "failure_signature_preserved",
+        "raw_private_input_retained"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not-required",
+            "minimized",
+            "unminimized",
+            "blocked-sensitive"
+          ]
+        },
+        "original_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minimized_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/relativePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "failure_signature_preserved": {
+          "type": "boolean"
+        },
+        "raw_private_input_retained": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "minimized"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "original_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "minimized_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "path": {
+                "$ref": "#/$defs/relativePath"
+              },
+              "bytes": {
+                "type": "integer"
+              },
+              "failure_signature_preserved": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "resourceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "limit",
+        "observed",
+        "unit",
+        "host_exhausted"
+      ],
+      "properties": {
+        "event": {
+          "enum": [
+            "none",
+            "input-timeout",
+            "run-timeout",
+            "memory",
+            "disk",
+            "output",
+            "cpu"
+          ]
+        },
+        "limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "observed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "bytes",
+            "seconds",
+            "steps"
+          ]
+        },
+        "host_exhausted": {
+          "const": false
+        }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "severity",
+        "disposition",
+        "duplicate_of",
+        "risk_decision"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/identifier"
+        },
+        "severity": {
+          "enum": [
+            "informational",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "pass",
+            "fix-required",
+            "quarantined-blocking",
+            "accepted-risk",
+            "duplicate",
+            "cancelled"
+          ]
+        },
+        "duplicate_of": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "risk_decision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^ADR-[0-9]{4}$"
+        }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "secret_canary_values_recorded",
+        "private_paths_recorded",
+        "raw_payload_recorded",
+        "redaction_count"
+      ],
+      "properties": {
+        "secret_canary_values_recorded": {
+          "const": false
+        },
+        "private_paths_recorded": {
+          "const": false
+        },
+        "raw_payload_recorded": {
+          "const": false
+        },
+        "redaction_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -25,6 +25,7 @@ export const TEMPLATE_TYPES = Object.freeze([
 export const TEST_RECORD_TYPES = Object.freeze([
   "platform-result",
   "fixture-provenance-ledger",
+  "fuzz-result",
 ]);
 
 function readJson(relativePath) {
@@ -203,6 +204,13 @@ export function validateTestingFixtures() {
       ledger,
       validators,
     ),
+  });
+  const fuzzResult = readJson(
+    "schemas/testing/examples/fuzz-result.valid.json",
+  );
+  results.push({
+    recordType: "fuzz-result",
+    ...validateTestingRecord("fuzz-result", fuzzResult, validators),
   });
   return results;
 }

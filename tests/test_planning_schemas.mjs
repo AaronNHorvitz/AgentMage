@@ -203,16 +203,17 @@ test("unknown planning record types fail explicitly", () => {
   );
 });
 
-test("platform results and the fixture ledger satisfy their testing schemas", () => {
+test("platform, provenance, and fuzz results satisfy their testing schemas", () => {
   const results = validateTestingFixtures();
-  assert.equal(results.length, 3);
+  assert.equal(results.length, 4);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true],
+    [true, true, true, true],
   );
   assert.deepEqual(TEST_RECORD_TYPES, [
     "platform-result",
     "fixture-provenance-ledger",
+    "fuzz-result",
   ]);
 });
 
@@ -254,6 +255,20 @@ test("testing schemas reject weakened platform and provenance controls", () => {
       ledger,
       testingValidators,
     ).valid,
+    false,
+  );
+
+  const fuzzResult = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/testing/examples/fuzz-result.valid.json"),
+      "utf8",
+    ),
+  );
+  fuzzResult.failure = null;
+  fuzzResult.redaction.secret_canary_values_recorded = true;
+  fuzzResult.unreviewed_extension = true;
+  assert.equal(
+    validateTestingRecord("fuzz-result", fuzzResult, testingValidators).valid,
     false,
   );
 });

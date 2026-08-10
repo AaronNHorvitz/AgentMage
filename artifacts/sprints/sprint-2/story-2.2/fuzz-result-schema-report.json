@@ -1,0 +1,35 @@
+{
+  "additional_properties_permitted": false,
+  "canonical_example": {
+    "path": "schemas/testing/examples/fuzz-result.valid.json",
+    "record_sha256": "f50406c7292023c0b3b94a677b4f28c628b278c8bba384e873af0cfa7583ffdd",
+    "sha256": "b8e065ab1f630b805c212ec4a38c6701e99efcba4069d20394b463c0fb8d8ac1"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "non_pass_failure_required": true,
+  "private_values_retained": false,
+  "product_fuzz_claim": "none",
+  "required_contract_field_count": 11,
+  "required_contract_fields": [
+    "seed",
+    "coverage",
+    "sanitizer-state",
+    "crash-signature",
+    "minimized-reproducer",
+    "timeout-resource-event",
+    "owner",
+    "severity",
+    "disposition",
+    "evidence-hash",
+    "redaction"
+  ],
+  "schema": {
+    "draft": "2020-12",
+    "path": "schemas/testing/fuzz-result.schema.json",
+    "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
+  },
+  "schema_version": 1,
+  "status": "pass-result-contract-recorded",
+  "task_id": "2.2.1.3"
+}

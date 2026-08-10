@@ -1,0 +1,109 @@
+{
+  "captured_at": "2024-01-01T00:10:00Z",
+  "coverage": {
+    "corpus_entry_count": 7,
+    "coverage_sha256": "e8cdf560641e3537004d1f82ddd34db789baab1f547dbde033afc3b2b0d8d52e",
+    "features_covered": 7,
+    "kind": "deterministic-oracle",
+    "new_features": 1,
+    "unavailable_reason": null
+  },
+  "evidence": [
+    {
+      "path": "fuzzing/target-registry.json",
+      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+    },
+    {
+      "path": "fuzzing/toolchain-policy.json",
+      "sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5"
+    }
+  ],
+  "failure": {
+    "crash_signature": "bacd47b5afdd7867b3d25e461d7c118f9024546f78633919a8a057557a494311",
+    "failure_class": "path-escape",
+    "normalized_top_frames": [
+      "fake_path_boundary::resolve"
+    ],
+    "raw_input_retained": false,
+    "raw_input_sha256": "4fe3126efc257db2cf43139b8b6de828df9fda1c82912f278a4ed3bd484c49af",
+    "stack_sha256": null
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "minimized_reproducer": {
+    "bytes": 19,
+    "failure_signature_preserved": true,
+    "minimized_sha256": "e5a2252714dd36086635cba51d97279742b39fb9128e797424d22e806de3ecc5",
+    "original_sha256": "4fe3126efc257db2cf43139b8b6de828df9fda1c82912f278a4ed3bd484c49af",
+    "path": "fuzzing/regressions/FT-PATH-001/e5a2252714dd36086635cba51d97279742b39fb9128e797424d22e806de3ecc5.bin",
+    "raw_private_input_retained": false,
+    "status": "minimized"
+  },
+  "network_used": false,
+  "ownership": {
+    "disposition": "fix-required",
+    "duplicate_of": null,
+    "owner": "kernel-path-boundary",
+    "risk_decision": null,
+    "severity": "high"
+  },
+  "product_fuzz_claim": "none",
+  "record_id": "am-fuzz-result-e8cdf560641e3537004d",
+  "record_sha256": "f50406c7292023c0b3b94a677b4f28c628b278c8bba384e873af0cfa7583ffdd",
+  "record_type": "fuzz-result",
+  "redaction": {
+    "private_paths_recorded": false,
+    "raw_payload_recorded": false,
+    "redaction_count": 0,
+    "secret_canary_values_recorded": false
+  },
+  "run": {
+    "duration_seconds": 60,
+    "execution_count": 7,
+    "maximum_input_bytes": 4096,
+    "mode": "fuzzing",
+    "result_status": "path-escape",
+    "seed": 2201001
+  },
+  "sanitizer": {
+    "enabled": [
+      "deterministic-security-oracle"
+    ],
+    "finding_count": 1,
+    "state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
+    "triggered": [
+      "path-escape-oracle"
+    ]
+  },
+  "schema_version": 1,
+  "target": {
+    "boundary_class": "paths",
+    "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+    "corpus_sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75",
+    "dictionary_sha256": [
+      "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+      "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+      "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+      "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+      "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+      "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+    ],
+    "engine": {
+      "engine_id": "agentmage-bounded-fake-fuzzer",
+      "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+      "version": "1.0.0"
+    },
+    "harness_sha256": "5d44b6a6fe6b5357e8900554bf2a838567d42d73f2c61d8cf7c7916ce9307b02",
+    "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+    "policy_sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5",
+    "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+    "target_id": "FT-PATH-001"
+  },
+  "timeout_resource_event": {
+    "event": "none",
+    "host_exhausted": false,
+    "limit": null,
+    "observed": null,
+    "unit": null
+  }
+}
