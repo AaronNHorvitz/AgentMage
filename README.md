@@ -176,6 +176,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Model Provenance and Admission Policy](./MODEL-PROVENANCE-POLICY.md) - origin, lineage, license, artifact, runtime, quality, and fallback admission rules.
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
+- [Machine-Readable Requirement Registry](./requirements/registry.json) - deterministic inventory of every canonical `AM-*`, `AT-*`, and `CR-*` identifier.
 - [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.
 - [Apache License 2.0](./LICENSE) - permissions and conditions for use, modification, and distribution.
 
@@ -188,4 +189,4 @@ npm ci --ignore-scripts
 npm run docs:check
 ```
 
-The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.
+The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, the generated requirement registry, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.

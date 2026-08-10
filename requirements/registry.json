@@ -1,0 +1,329 @@
+{
+  "counts": {
+    "by_kind": {
+      "acceptance_test": 33,
+      "competitive_requirement": 18,
+      "product_requirement": 27
+    },
+    "total": 78
+  },
+  "requirements": [
+    {
+      "id": "AM-AUT-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-CFG-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-DAT-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-DIA-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-DOC-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-EVD-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-EVD-002",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-GIT-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-HOF-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-INS-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-KRN-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-MDL-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-MDL-002",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-MDL-003",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-NET-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-PLT-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-PRV-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-PTH-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-REP-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-SEC-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-SEC-002",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-SES-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-TOL-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-TST-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-TST-002",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-VSC-001",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AM-VSC-002",
+      "kind": "product_requirement"
+    },
+    {
+      "id": "AT-ARCH-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-AUTH-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-CFG-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-CRASH-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-DATA-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-DIA-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-DOC-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-EVD-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-EVD-002",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-EVD-003",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-GIT-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-HOF-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-INJ-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-INS-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-MODEL-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-MODEL-002",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-NET-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-NET-002",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-PATH-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-PERF-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-PLAT-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-PRIV-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-PRIV-002",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-QUAL-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-REP-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-RESUME-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-ROUTE-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-SBX-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-SEC-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-SPEC-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-TOOL-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-VSC-001",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "AT-VSC-002",
+      "kind": "acceptance_test"
+    },
+    {
+      "id": "CR-P0-DIA",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P0-EVAL",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P0-EVD",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P0-MDL",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P0-REP",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P0-TRUST",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-RET",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-ROL",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-SES",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-SKL",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-VAL",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-WKT",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P1-WRT",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P2-CLI",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P2-CON",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P2-JOB",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P2-MAG",
+      "kind": "competitive_requirement"
+    },
+    {
+      "id": "CR-P2-MCP",
+      "kind": "competitive_requirement"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "document": "Agent-Scaffolding-Inventory.md",
+    "sha256": "de39501438c88e622b4a2005fd765297671d63f2fdf0552f8c3a9a8803603013"
+  }
+}

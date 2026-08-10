@@ -30,6 +30,8 @@ review-evidence/
 
 # Build, dependency, cache, and generated output
 node_modules/
+__pycache__/
+*.pyc
 target/
 build/
 dist/

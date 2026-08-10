@@ -20,6 +20,7 @@ REQUIRED_FILES = (
     "SECURITY.md",
     "MODEL-PROVENANCE-POLICY.md",
     "RUNTIME-BOUNDARIES.md",
+    "requirements/registry.json",
     "LICENSE",
     "docs/decisions/0001-product-security-and-runtime-baseline.md",
 )

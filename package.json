@@ -7,7 +7,10 @@
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
     "docs:mermaid": "python3 scripts/check_mermaid.py",
     "docs:validate": "python3 scripts/validate_docs.py",
-    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate"
+    "requirements:build": "python3 scripts/requirement_registry.py",
+    "requirements:test": "python3 -m unittest discover -s tests -p 'test_*.py'",
+    "requirements:check": "python3 scripts/requirement_registry.py --check && npm run requirements:test",
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run requirements:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
