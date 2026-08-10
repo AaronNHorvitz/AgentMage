@@ -20,6 +20,7 @@ from scripts.model_feasibility import (
     score_tool,
     split_http_url,
     verify_native_inputs,
+    validate_result_directory,
     write_results,
 )
 
@@ -222,6 +223,17 @@ class ModelFeasibilityTests(unittest.TestCase):
             manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual([item["path"] for item in manifest["files"]], ["results.json", "server.log"])
             self.assertTrue(all(len(item["sha256"]) == 64 for item in manifest["files"]))
+
+    def test_result_directory_rejects_a_manifest_hash_substitution(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "results.json").write_text("{}\n", encoding="utf-8")
+            (output / "manifest.json").write_text(
+                json.dumps({"files": [{"path": "results.json", "sha256": "0" * 64, "size_bytes": 3}]}),
+                encoding="utf-8",
+            )
+            failures = validate_result_directory(output)
+            self.assertTrue(any("hash mismatch" in failure for failure in failures))
 
     def test_http_endpoint_parser_is_loopback_http_only(self):
         self.assertEqual(

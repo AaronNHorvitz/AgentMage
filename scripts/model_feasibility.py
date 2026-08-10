@@ -996,6 +996,169 @@ def write_results(output_dir: Path, result: dict[str, Any]) -> None:
     (output_dir / "manifest.json").write_bytes(canonical_json(manifest))
 
 
+def revision_file(revision: str, relative: str) -> bytes:
+    try:
+        result = subprocess.run(
+            ["git", "show", f"{revision}:{relative}"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError) as error:
+        raise FeasibilityError(f"cannot read {relative} from source revision") from error
+    return result.stdout
+
+
+def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: dict[str, Any]) -> list[str]:
+    failures: list[str] = []
+    required = {
+        "schema_version",
+        "record_type",
+        "runner_transform_version",
+        "runner_sha256",
+        "source_revision",
+        "adapter_id",
+        "corpus_id",
+        "corpus_version",
+        "corpus_sha256",
+        "started_at_epoch",
+        "completed_at_epoch",
+        "data_classification",
+        "contains_user_data",
+        "status",
+        "identities",
+        "runtime_settings",
+        "cases",
+        "metrics",
+        "threshold_results",
+        "memory_samples",
+        "network_evidence",
+    }
+    if set(result) != required:
+        failures.append("result top-level fields do not match the schema")
+        return failures
+    if result["schema_version"] != RESULT_SCHEMA_VERSION:
+        failures.append("result schema version is unsupported")
+    if result["record_type"] != "model_feasibility_adapter_result":
+        failures.append("result record type is incorrect")
+    if result["runner_transform_version"] != "1.0.1":
+        failures.append("runner transform version is not admitted")
+    if result["adapter_id"] != NATIVE_ADAPTER:
+        failures.append("result adapter identity is incorrect")
+    if result["corpus_id"] != corpus["corpus_id"] or result["corpus_version"] != corpus["version"]:
+        failures.append("result corpus identity is incorrect")
+    if result["corpus_sha256"] != sha256_file(DEFAULT_CORPUS):
+        failures.append("result corpus hash does not match the fixed corpus")
+    if result["data_classification"] != "public_synthetic_only" or result["contains_user_data"] is not False:
+        failures.append("result data classification is not public synthetic only")
+    if not isinstance(result["started_at_epoch"], (int, float)) or not isinstance(result["completed_at_epoch"], (int, float)) or result["completed_at_epoch"] < result["started_at_epoch"]:
+        failures.append("result timestamps are invalid")
+
+    revision = result["source_revision"]
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        failures.append("result source revision is not immutable")
+    elif not isinstance(result["runner_sha256"], str) or result["runner_sha256"] != hashlib.sha256(
+        revision_file(revision, "scripts/model_feasibility.py")
+    ).hexdigest():
+        failures.append("runner hash does not match its source revision")
+
+    try:
+        expected_identities = {
+            "model": admission["gguf_identity"]["sha256"],
+            "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
+            "runtime": admission["native_runtime"]["llama_server_sha256"],
+        }
+    except (KeyError, TypeError):
+        failures.append("artifact admission identities cannot be resolved")
+    else:
+        if result["identities"] != expected_identities:
+            failures.append("result artifact identities do not match admission")
+
+    settings = result["runtime_settings"]
+    expected_settings = {
+        "context_tokens": corpus["decoder"]["operational_context_tokens"],
+        "gpu_layers": "all",
+        "device": "Vulkan0",
+        "parallel_slots": 1,
+        "batch_size": 2048,
+        "micro_batch_size": 512,
+        "offline": True,
+        "host": "127.0.0.1",
+        "port": 18081,
+        "decoder": corpus["decoder"],
+    }
+    if settings != expected_settings:
+        failures.append("runtime settings differ from the admitted native contract")
+
+    cases = result["cases"]
+    expected_case_ids = [case["id"] for case in corpus["cases"]]
+    if not isinstance(cases, list) or [case.get("case_id") for case in cases if isinstance(case, dict)] != expected_case_ids:
+        failures.append("result case order or membership is incomplete")
+        return failures
+    for case, expected_case in zip(cases, corpus["cases"]):
+        if case.get("trials_expected") != expected_case["trials"]:
+            failures.append(f"case {case.get('case_id')} expected-trial count changed")
+        recomputed = case_passed(case)
+        if case.get("case_id") == "NET-001":
+            recomputed = recomputed and result["network_evidence"].get("isolated") is True
+        if case.get("passed") is not recomputed:
+            failures.append(f"case {case.get('case_id')} pass state does not reconcile")
+
+    recomputed_metrics = aggregate_metrics(cases, result["memory_samples"], result["network_evidence"])
+    if result["metrics"] != recomputed_metrics:
+        failures.append("aggregate metrics do not reconcile with raw trials")
+    recomputed_thresholds = compare_thresholds(recomputed_metrics, corpus["global_thresholds"])
+    if result["threshold_results"] != recomputed_thresholds:
+        failures.append("threshold decisions do not reconcile with aggregate metrics")
+    expected_status = "PASS" if all(case["passed"] for case in cases) and all(
+        item["passed"] for item in recomputed_thresholds.values()
+    ) else "FAIL"
+    if result["status"] != expected_status:
+        failures.append("overall result status does not reconcile")
+    return failures
+
+
+def validate_result_directory(
+    result_dir: Path,
+    corpus_path: Path = DEFAULT_CORPUS,
+    admission_path: Path = DEFAULT_ADMISSION,
+) -> list[str]:
+    failures: list[str] = []
+    try:
+        manifest = read_json(result_dir / "manifest.json")
+        result = read_json(result_dir / "results.json")
+        corpus = load_corpus(corpus_path)
+        admission = read_json(admission_path)
+    except (OSError, json.JSONDecodeError, FeasibilityError, ValueError) as error:
+        return [f"cannot load result bundle: {error}"]
+    entries = manifest.get("files")
+    if not isinstance(entries, list):
+        failures.append("result manifest files must be an array")
+    else:
+        expected_names = sorted(path.name for path in result_dir.iterdir() if path.is_file() and path.name != "manifest.json")
+        observed_names = [entry.get("path") for entry in entries if isinstance(entry, dict)]
+        if observed_names != expected_names:
+            failures.append("result manifest membership or order is invalid")
+        for entry in entries:
+            if not isinstance(entry, dict):
+                failures.append("result manifest contains a malformed entry")
+                continue
+            path = result_dir / str(entry.get("path"))
+            try:
+                content = path.read_bytes()
+            except OSError as error:
+                failures.append(f"cannot read result artifact {path.name}: {error}")
+                continue
+            if entry.get("sha256") != hashlib.sha256(content).hexdigest():
+                failures.append(f"result artifact hash mismatch: {path.name}")
+            if entry.get("size_bytes") != len(content):
+                failures.append(f"result artifact size mismatch: {path.name}")
+    if manifest.get("adapter_id") != result.get("adapter_id") or manifest.get("corpus_id") != result.get("corpus_id"):
+        failures.append("result manifest identity does not reconcile")
+    failures.extend(validate_result(result, corpus, admission))
+    return failures
+
+
 def run_native(args: argparse.Namespace) -> int:
     corpus = load_corpus(args.corpus)
     failures = validate_corpus(corpus)
@@ -1178,6 +1341,10 @@ def parser() -> argparse.ArgumentParser:
     native.add_argument("--admission", type=Path, default=DEFAULT_ADMISSION)
     native.add_argument("--port", type=int, default=18081)
     native.add_argument("--require-isolated-network", action="store_true")
+    verify = subparsers.add_parser("verify", help="Recompute and verify an emitted result bundle")
+    verify.add_argument("--result-dir", type=Path, required=True)
+    verify.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    verify.add_argument("--admission", type=Path, default=DEFAULT_ADMISSION)
     return value
 
 
@@ -1186,6 +1353,14 @@ def main() -> int:
     try:
         if args.command == "native-linux":
             return run_native(args)
+        if args.command == "verify":
+            failures = validate_result_directory(args.result_dir, args.corpus, args.admission)
+            if failures:
+                for failure in failures:
+                    print(f"- {failure}", file=sys.stderr)
+                return 1
+            print(f"Validated model feasibility result bundle: {args.result_dir}")
+            return 0
         raise FeasibilityError(f"unsupported command: {args.command}")
     except (FeasibilityError, OSError, KeyError, TypeError, ValueError) as error:
         print(f"Model feasibility run failed: {error}", file=sys.stderr)
