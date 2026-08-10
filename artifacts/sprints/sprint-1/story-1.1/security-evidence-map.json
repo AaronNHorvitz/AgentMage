@@ -14,11 +14,11 @@
     },
     {
       "path": "architecture/build-contract.json",
-      "sha256": "8e93869540ef2d968a48fdb36e3befe9a0fda975eacf4f7e408c7aa3a7872699"
+      "sha256": "ca340931775a8d20f3d334cf79a245f78b9ea86f9018368b06cc066706e39a29"
     },
     {
       "path": "architecture/clean-build-policy.json",
-      "sha256": "13c38a20e97303eab42aa8212fac210eb1387e366a0687b6c50e1347ad7fce8c"
+      "sha256": "c763929587b9fb4aba91ace47fb827f1d3430602f4ad3bb81c9a6daa7f5e3cd6"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -38,7 +38,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "1b5dfd0dab2f020e1f7d7de31198aa54e97dd9eb8c7e7086066917991261ec3e"
+      "sha256": "f4e35cac03950efb385cdce02e98a5409f3773bdcf7d4857e39912a461a018fa"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
@@ -46,7 +46,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "49ed1b19dd6f72855920e347d0709e85924594c0d54eb90386f6ee11d37537c8"
+      "sha256": "96e4da5d5d319f98cfe0176fb9fa7983584e37eb41c8e7ca8b2ac40c9de2e297"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
@@ -102,15 +102,15 @@
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "30a240f1c01847dc95c0407baf48a2b6e5a84eb74637516cd3845e60c94f34a2"
+      "sha256": "8ccfc7d51a9fca1fff44f3be048d1d4b3cacec9812314f5c61a964bfa14c5e75"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "4050996226450e418dedfa132ed68ec85c1f0433c35ced39e5db1ab9a4481f23"
+      "sha256": "a668e1b1f2ffc53f2434e401722f04806222425e8608e0e537ed20a6e3ed1887"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "42bf85f1af1410e47a51731eebb55632b5bf631df1bb191a1e5bcc8ae43113d1"
+      "sha256": "bb9db72ffde7ac08b82417569701e8d3202cdb7637aba2ade2fd03ee97ee1415"
     }
   ],
   "macos": {
@@ -311,7 +311,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "2358b91ebcc5bfcf6d6bf30f9b4e1ed741a9113c",
+  "source_revision": "f1fae4e8ac0b1d73dbbb67923102175b9719b107",
   "status": "complete-evidence-map-blocked-macos",
   "summary": {
     "canonical_blocking_artifact_findings": 0,

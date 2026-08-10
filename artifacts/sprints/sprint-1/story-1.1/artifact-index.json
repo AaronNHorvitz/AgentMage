@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "30a240f1c01847dc95c0407baf48a2b6e5a84eb74637516cd3845e60c94f34a2"
+          "sha256": "8ccfc7d51a9fca1fff44f3be048d1d4b3cacec9812314f5c61a964bfa14c5e75"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "4050996226450e418dedfa132ed68ec85c1f0433c35ced39e5db1ab9a4481f23"
+          "sha256": "a668e1b1f2ffc53f2434e401722f04806222425e8608e0e537ed20a6e3ed1887"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "42bf85f1af1410e47a51731eebb55632b5bf631df1bb191a1e5bcc8ae43113d1"
+          "sha256": "bb9db72ffde7ac08b82417569701e8d3202cdb7637aba2ade2fd03ee97ee1415"
         }
       ],
       "task_id": "1.1.2.3"
@@ -103,11 +103,11 @@
       "files": [
         {
           "path": "architecture/build-contract.json",
-          "sha256": "8e93869540ef2d968a48fdb36e3befe9a0fda975eacf4f7e408c7aa3a7872699"
+          "sha256": "ca340931775a8d20f3d334cf79a245f78b9ea86f9018368b06cc066706e39a29"
         },
         {
           "path": "package.json",
-          "sha256": "c5b158dd3a55c1f7c347783009236b5df5741a1b66f8cab05560f362519f4fb5"
+          "sha256": "8b4f7eb3ce44f451a185f63c249e097c1463b698dd03f27ab5e2578d99b70341"
         },
         {
           "path": "rust-toolchain.toml",
