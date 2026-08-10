@@ -300,7 +300,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 1.1.2.4:** Clean build, lint, format-check, and test commands. Evidence: the artifact index binds the build contract, pinned toolchain, and exact `product:build`, `product:lint`, `product:format-check`, and `product:test` commands.
 
 - [ ] **Task 1.1.3 - Verify and close the story**
-  - [ ] **Sub-task 1.1.3.1:** `S-001-UT01` evaluates the dependency graph with each prohibited reverse edge injected separately; assert a precise build or architecture-check failure before packaging.
+  - [x] **Sub-task 1.1.3.1:** `S-001-UT01` evaluates the dependency graph with each prohibited reverse edge injected separately; assert a precise build or architecture-check failure before packaging. Evidence: [`dependency-injection-report.json`](artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json) injects all 32 prohibited edges among source-bearing modules independently and records the exact source/target rejection from the fail-closed architecture checker.
   - [ ] **Sub-task 1.1.3.2:** `S-001-UT02` resolves locked manifests twice in clean environments and with one substituted, missing, revoked, and wrong-platform dependency; assert identical approved graphs and fail-closed substitutions.
   - [ ] **Sub-task 1.1.3.3:** `S-001-ST01` scans source, build output, packages, and SBOMs for undeclared binaries, licenses, secrets, dynamic loaders, and privileged assumptions; assert every seeded violation is reported.
   - [ ] **Sub-task 1.1.3.4:** `S-001-IT01` executes documented build, lint, format, test, SBOM, and diagnostic commands as a clean standard user on each reference platform; assert no ambient development dependency is used.

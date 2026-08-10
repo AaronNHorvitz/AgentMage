@@ -85,6 +85,15 @@ EXPECTED_CATEGORY_CONSTRAINTS = {
     "platform-adapters": {"capability-packs", "shells"},
     "capability-packs": {"platform-adapters", "shells"},
 }
+COMPILE_MODULE_IDS = (
+    "kernel-contracts",
+    "kernel-engine",
+    "platform-linux",
+    "platform-macos",
+    "capability-read-only",
+    "shell-host",
+    "shell-vscode",
+)
 
 
 def load_rules(path: Path = RULES_PATH) -> dict[str, Any]:
@@ -175,8 +184,11 @@ def validate_rules(rules: Any, inventory: Any) -> list[str]:
             failures.append(f"{module_id} allowed imports do not match the accepted architecture")
         if declared_set != EXPECTED_IMPORTS[module_id]:
             failures.append(f"{module_id} declared imports do not match the accepted architecture")
-        if not declared_set <= allowed_set:
-            failures.append(f"{module_id} declares an import outside its allowlist")
+        for target in sorted(declared_set - allowed_set):
+            failures.append(
+                f"prohibited import edge: {module_id} -> {target}; "
+                f"outside its allowlist"
+            )
         if assembly_set != EXPECTED_ASSEMBLY_INPUTS[module_id]:
             failures.append(f"{module_id} assembly inputs do not match the accepted architecture")
         if policy.get("layer") != EXPECTED_LAYERS[module_id]:
@@ -223,6 +235,16 @@ def validate_rules(rules: Any, inventory: Any) -> list[str]:
     if cycle:
         failures.append("compile dependency cycle: " + " -> ".join(cycle))
     return failures
+
+
+def prohibited_compile_edges() -> list[tuple[str, str]]:
+    """Return every source-module edge outside the accepted compile allowlists."""
+    return [
+        (source, target)
+        for source in COMPILE_MODULE_IDS
+        for target in COMPILE_MODULE_IDS
+        if source != target and target not in EXPECTED_IMPORTS[source]
+    ]
 
 
 def main() -> int:

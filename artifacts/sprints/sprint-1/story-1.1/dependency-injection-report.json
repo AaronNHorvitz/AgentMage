@@ -1,0 +1,392 @@
+{
+  "case_count": 32,
+  "cases": [
+    {
+      "case_id": "S-001-UT01-001",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> kernel-engine; outside its allowlist",
+        "compile dependency cycle: kernel-contracts -> kernel-engine -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-002",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> platform-linux; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> platform-linux (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-contracts -> platform-linux -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-003",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> platform-macos; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> platform-macos (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-contracts -> platform-macos -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-004",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> capability-read-only (kernel cannot import capability-packs)",
+        "compile dependency cycle: capability-read-only -> kernel-contracts -> capability-read-only"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-005",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> shell-host; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> shell-host (kernel cannot import shells)",
+        "compile dependency cycle: capability-read-only -> kernel-contracts -> shell-host -> capability-read-only"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-006",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> shell-vscode (kernel cannot import shells)",
+        "compile dependency cycle: kernel-contracts -> shell-vscode -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-007",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> platform-linux; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> platform-linux (kernel cannot import platform-adapters)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-008",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> platform-macos; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> platform-macos (kernel cannot import platform-adapters)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-009",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> capability-read-only (kernel cannot import capability-packs)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-010",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> shell-host; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> shell-host (kernel cannot import shells)",
+        "compile dependency cycle: kernel-engine -> shell-host -> kernel-engine"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-011",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> shell-vscode (kernel cannot import shells)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-012",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> kernel-engine; outside its allowlist"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-013",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> platform-macos; outside its allowlist"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-014",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: platform-linux -> capability-read-only (platform-adapters cannot import capability-packs)"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-015",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> shell-host; outside its allowlist",
+        "prohibited reverse edge: platform-linux -> shell-host (platform-adapters cannot import shells)",
+        "compile dependency cycle: platform-linux -> shell-host -> platform-linux"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-016",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: platform-linux -> shell-vscode (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-017",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> kernel-engine; outside its allowlist"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-018",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> platform-linux; outside its allowlist"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-019",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: platform-macos -> capability-read-only (platform-adapters cannot import capability-packs)"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-020",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> shell-host; outside its allowlist",
+        "prohibited reverse edge: platform-macos -> shell-host (platform-adapters cannot import shells)",
+        "compile dependency cycle: platform-macos -> shell-host -> platform-macos"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-021",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: platform-macos -> shell-vscode (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-022",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> kernel-engine; outside its allowlist"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-023",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> platform-linux; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> platform-linux (capability-packs cannot import platform-adapters)"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-024",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> platform-macos; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> platform-macos (capability-packs cannot import platform-adapters)"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-025",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> shell-host; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> shell-host (capability-packs cannot import shells)",
+        "compile dependency cycle: capability-read-only -> shell-host -> capability-read-only"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-026",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> shell-vscode (capability-packs cannot import shells)"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-027",
+      "expected_diagnostic": "prohibited import edge: shell-host -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-host declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-host -> shell-vscode; outside its allowlist"
+      ],
+      "source": "shell-host",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-028",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> kernel-engine; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-029",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> platform-linux; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-030",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> platform-macos; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-031",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> capability-read-only; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-032",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> shell-host; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "shell-host"
+    }
+  ],
+  "macos_support_claim": "none",
+  "schema_version": 1,
+  "scope": "platform-neutral-static-architecture-check",
+  "status": "pass",
+  "test_id": "S-001-UT01"
+}
