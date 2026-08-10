@@ -243,6 +243,28 @@ mod tests {
         StopConditionKind, TaskId, WorkPacket, WorkPacketId, WorkPacketState,
     };
 
+    const BUDGET_RESOURCES: [BudgetResource; 10] = [
+        BudgetResource::PlanSteps,
+        BudgetResource::ToolCalls,
+        BudgetResource::ToolCallDepth,
+        BudgetResource::ModelCalls,
+        BudgetResource::InputBytes,
+        BudgetResource::OutputBytes,
+        BudgetResource::ElapsedMilliseconds,
+        BudgetResource::MemoryBytes,
+        BudgetResource::DiskBytes,
+        BudgetResource::ProcessCount,
+    ];
+
+    const SIGNALABLE_CONDITIONS: [StopConditionKind; 6] = [
+        StopConditionKind::UserDecisionRequired,
+        StopConditionKind::PolicyDenied,
+        StopConditionKind::Error,
+        StopConditionKind::Cancelled,
+        StopConditionKind::DeadlineReached,
+        StopConditionKind::UncertainResult,
+    ];
+
     fn stop_conditions() -> Vec<StopCondition> {
         [
             StopConditionKind::AcceptanceSatisfied,
@@ -368,6 +390,90 @@ mod tests {
     }
 
     #[test]
+    fn every_budget_resource_enforces_all_numeric_boundaries() {
+        for (index, resource) in BUDGET_RESOURCES.into_iter().enumerate() {
+            let mut bounded_packet = packet(WorkPacketState::Active);
+            bounded_packet.budgets = vec![BudgetLimit { resource, limit: 2 }];
+            let mut controller = RunController::new(&bounded_packet).expect("valid exact budget");
+
+            assert_eq!(
+                controller.consume(resource, 0),
+                RunDecision::Continue {
+                    resource,
+                    used: 0,
+                    remaining: 2,
+                },
+                "zero boundary for {resource:?}"
+            );
+            assert_eq!(
+                controller.consume(resource, 1),
+                RunDecision::Continue {
+                    resource,
+                    used: 1,
+                    remaining: 1,
+                },
+                "below-limit boundary for {resource:?}"
+            );
+            assert_eq!(
+                controller.consume(resource, 1),
+                RunDecision::Continue {
+                    resource,
+                    used: 2,
+                    remaining: 0,
+                },
+                "exact boundary for {resource:?}"
+            );
+            let exceeded = RunStopReason::BudgetExceeded {
+                resource,
+                limit: 2,
+                attempted_total: 3,
+            };
+            assert_eq!(
+                controller.consume(resource, 1),
+                RunDecision::Stop { reason: exceeded },
+                "over-limit boundary for {resource:?}"
+            );
+            assert_eq!(controller.usage(resource), Some(2));
+
+            let declared_elsewhere = BUDGET_RESOURCES[(index + 1) % BUDGET_RESOURCES.len()];
+            let mut undeclared_packet = packet(WorkPacketState::Active);
+            undeclared_packet.budgets = vec![BudgetLimit {
+                resource: declared_elsewhere,
+                limit: 1,
+            }];
+            let mut undeclared =
+                RunController::new(&undeclared_packet).expect("valid alternate budget");
+            assert_eq!(
+                undeclared.consume(resource, 1),
+                RunDecision::Stop {
+                    reason: RunStopReason::BudgetNotDeclared { resource }
+                },
+                "undeclared boundary for {resource:?}"
+            );
+            assert_eq!(undeclared.usage(resource), None);
+
+            let mut overflow_packet = packet(WorkPacketState::Active);
+            overflow_packet.budgets = vec![BudgetLimit {
+                resource,
+                limit: u64::MAX,
+            }];
+            let mut overflow = RunController::new(&overflow_packet).expect("valid maximum budget");
+            assert!(matches!(
+                overflow.consume(resource, u64::MAX),
+                RunDecision::Continue { remaining: 0, .. }
+            ));
+            assert_eq!(
+                overflow.consume(resource, 1),
+                RunDecision::Stop {
+                    reason: RunStopReason::CounterOverflow { resource }
+                },
+                "overflow boundary for {resource:?}"
+            );
+            assert_eq!(overflow.usage(resource), Some(u64::MAX));
+        }
+    }
+
+    #[test]
     fn undeclared_resource_and_overflow_fail_closed_before_mutation() {
         let mut controller = RunController::new(&packet(WorkPacketState::Active))
             .expect("active fixture must start");
@@ -434,6 +540,61 @@ mod tests {
         assert_eq!(
             deadline.signal(StopConditionKind::AcceptanceSatisfied),
             Err(RunControlError::DirectCompletionSignalProhibited)
+        );
+    }
+
+    #[test]
+    fn every_stop_condition_has_one_exact_typed_path() {
+        for condition in SIGNALABLE_CONDITIONS {
+            let mut candidate = packet(WorkPacketState::Active);
+            if condition == StopConditionKind::DeadlineReached {
+                candidate.stop_conditions.push(StopCondition {
+                    kind: condition,
+                    description: "Synthetic declared deadline".to_owned(),
+                });
+            }
+            let mut controller = RunController::new(&candidate).expect("valid stop contract");
+            let expected = RunDecision::Stop {
+                reason: RunStopReason::Condition(condition),
+            };
+            assert_eq!(
+                controller.signal(condition),
+                Ok(expected),
+                "signal path for {condition:?}"
+            );
+            assert_eq!(controller.signal(StopConditionKind::Error), Ok(expected));
+            assert_eq!(
+                controller.stop_reason(),
+                Some(RunStopReason::Condition(condition))
+            );
+        }
+
+        let mut accounting = RunController::new(&packet(WorkPacketState::Active))
+            .expect("valid accounting contract");
+        assert_eq!(
+            accounting.signal(StopConditionKind::BudgetExhausted),
+            Err(RunControlError::DirectBudgetSignalProhibited)
+        );
+        assert!(matches!(
+            accounting.consume(BudgetResource::PlanSteps, 3),
+            RunDecision::Stop {
+                reason: RunStopReason::BudgetExceeded { .. }
+            }
+        ));
+
+        let mut completion = RunController::new(&packet(WorkPacketState::Active))
+            .expect("valid completion contract");
+        assert_eq!(
+            completion.signal(StopConditionKind::AcceptanceSatisfied),
+            Err(RunControlError::DirectCompletionSignalProhibited)
+        );
+        assert_eq!(
+            completion
+                .accept_completion(&completed_packet())
+                .expect("evidence-bound completion"),
+            RunDecision::Stop {
+                reason: RunStopReason::Condition(StopConditionKind::AcceptanceSatisfied)
+            }
         );
     }
 

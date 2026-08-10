@@ -1162,6 +1162,75 @@ mod tests {
     }
 
     #[test]
+    fn history_rejects_every_revision_failure_without_mutation() {
+        let mut wrong_initial = packet(WorkPacketState::Draft);
+        wrong_initial.revision = 2;
+        assert_eq!(
+            WorkPacketHistory::new(wrong_initial),
+            Err(WorkPacketHistoryError::InvalidInitialRevision { actual: 2 })
+        );
+
+        let mut invalid_initial = packet(WorkPacketState::Draft);
+        invalid_initial.objective.clear();
+        assert!(matches!(
+            WorkPacketHistory::new(invalid_initial),
+            Err(WorkPacketHistoryError::InvalidPacket { .. })
+        ));
+
+        let initial = packet(WorkPacketState::Draft);
+        let mut history = WorkPacketHistory::new(initial.clone()).expect("valid history");
+
+        let mut invalid_candidate = packet(WorkPacketState::Validated);
+        invalid_candidate.revision = 2;
+        invalid_candidate.objective.clear();
+        assert!(matches!(
+            history.append_revision(invalid_candidate),
+            Err(WorkPacketHistoryError::InvalidPacket { .. })
+        ));
+
+        let mut wrong_task = packet(WorkPacketState::Validated);
+        wrong_task.revision = 2;
+        wrong_task.task_id = TaskId::from_raw("task-elsewhere");
+        assert_eq!(
+            history.append_revision(wrong_task),
+            Err(WorkPacketHistoryError::IdentityChanged { field: "task_id" })
+        );
+
+        let mut repeated = packet(WorkPacketState::Validated);
+        repeated.revision = 1;
+        assert_eq!(
+            history.append_revision(repeated),
+            Err(WorkPacketHistoryError::RevisionOutOfSequence {
+                expected: 2,
+                actual: 1,
+            })
+        );
+
+        let mut illegal = packet(WorkPacketState::Active);
+        illegal.revision = 2;
+        let Err(WorkPacketHistoryError::IllegalTransition { issue }) =
+            history.append_revision(illegal)
+        else {
+            panic!("draft-to-active transition must fail");
+        };
+        assert_eq!(issue.code, "packet.transition.illegal");
+        assert_eq!(history.revisions(), [initial]);
+
+        let mut exhausted_packet = packet(WorkPacketState::Active);
+        exhausted_packet.revision = u32::MAX;
+        let mut exhausted = WorkPacketHistory {
+            revisions: vec![exhausted_packet],
+        };
+        let mut candidate = packet(WorkPacketState::Blocked);
+        candidate.revision = u32::MAX;
+        assert_eq!(
+            exhausted.append_revision(candidate),
+            Err(WorkPacketHistoryError::RevisionExhausted)
+        );
+        assert_eq!(exhausted.revisions().len(), 1);
+    }
+
+    #[test]
     fn plan_adaptation_is_deterministic_sequential_and_revision_bound() {
         let candidate = packet(WorkPacketState::Validated);
         let plan_id = PlanId::from_raw("plan-0001");
@@ -1235,6 +1304,44 @@ mod tests {
             validate_completion(&wrong_state)
                 .iter()
                 .any(|finding| finding.code == "packet.completion.state")
+        );
+
+        let mut duplicate_claim = packet(WorkPacketState::Completed);
+        duplicate_claim
+            .completion_evidence
+            .push(duplicate_claim.completion_evidence[0].clone());
+        let duplicate_issues = validate_packet(&duplicate_claim);
+        assert!(
+            duplicate_issues
+                .iter()
+                .any(|finding| finding.code == "packet.completion_evidence.duplicate_check")
+        );
+        assert!(
+            validate_completion(&duplicate_claim)
+                .iter()
+                .any(|finding| finding.code == "packet.completion.acceptance_evidence")
+        );
+
+        let mut unknown_claim = packet(WorkPacketState::Completed);
+        unknown_claim.completion_evidence[0].acceptance_check = "Unknown check".to_owned();
+        assert!(
+            validate_packet(&unknown_claim)
+                .iter()
+                .any(|finding| finding.code == "packet.completion_evidence.unknown_check")
+        );
+
+        let mut empty_claim = packet(WorkPacketState::Completed);
+        empty_claim.completion_evidence[0].evidence.clear();
+        let empty_issues = validate_completion(&empty_claim);
+        assert!(
+            empty_issues
+                .iter()
+                .any(|finding| finding.code == "packet.completion.acceptance_evidence")
+        );
+        assert!(
+            empty_issues
+                .iter()
+                .any(|finding| finding.code == "packet.completion.required_evidence")
         );
     }
 }
