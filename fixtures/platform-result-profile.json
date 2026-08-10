@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-platform-result-recorder-v1",
+  "status": "synthetic-platform-result-contract",
+  "allowlist_version": "platform-environment-v1",
+  "allowed_environment_fields": [
+    "os_family",
+    "distribution_id",
+    "distribution_version",
+    "architecture",
+    "kernel_release",
+    "python_implementation",
+    "python_version",
+    "text_encoding",
+    "privilege_class",
+    "containerized",
+    "continuous_integration"
+  ],
+  "forbidden_environment_fields": [
+    "hostname",
+    "username",
+    "uid",
+    "gid",
+    "home_directory",
+    "working_directory",
+    "executable_path",
+    "environment_variables",
+    "ip_address",
+    "mac_address",
+    "hardware_serial",
+    "timezone",
+    "locale_region"
+  ],
+  "required_result_identities": [
+    "build",
+    "fixture_set",
+    "model",
+    "runtime",
+    "policy"
+  ],
+  "hash_algorithm": "sha256-canonical-json",
+  "synthetic_runs": [
+    {
+      "captured_at": "2024-01-01T00:00:00Z",
+      "environment": {
+        "architecture": "x86_64",
+        "containerized": false,
+        "continuous_integration": false,
+        "distribution_id": "fedora",
+        "distribution_version": "44",
+        "kernel_release": "6.14.0-fixture.fc44.x86_64",
+        "os_family": "linux",
+        "privilege_class": "standard-user",
+        "python_implementation": "cpython",
+        "python_version": "3.14.6",
+        "text_encoding": "utf-8"
+      },
+      "result": {
+        "build": {
+          "id": "synthetic-build-v1",
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "fixture_set": {
+          "id": "synthetic-fixtures-v1",
+          "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "model": {
+          "id": "fake-model-v1",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "policy": {
+          "id": "synthetic-policy-v1",
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "result_id": "synthetic-fedora-result",
+        "runtime": {
+          "id": "fake-inference-runtime-v1",
+          "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "status": "pass"
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:00:01Z",
+      "environment": {
+        "architecture": "aarch64",
+        "containerized": true,
+        "continuous_integration": true,
+        "distribution_id": "ubuntu",
+        "distribution_version": "26.04",
+        "kernel_release": "6.17.0-fixture-generic",
+        "os_family": "linux",
+        "privilege_class": "standard-user",
+        "python_implementation": "cpython",
+        "python_version": "3.14.6",
+        "text_encoding": "utf-8"
+      },
+      "result": {
+        "build": {
+          "id": "synthetic-build-v1",
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "fixture_set": {
+          "id": "synthetic-fixtures-v1",
+          "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "model": {
+          "id": "fake-model-v1",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "policy": {
+          "id": "synthetic-policy-v1",
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "result_id": "synthetic-ubuntu-result",
+        "runtime": {
+          "id": "fake-inference-runtime-v1",
+          "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "status": "fail"
+      }
+    }
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "writes_environment": false,
+    "reads_secret_stores": false,
+    "persists_ambient_environment_values": false
+  },
+  "macos_execution_status": "blocked-macos"
+}

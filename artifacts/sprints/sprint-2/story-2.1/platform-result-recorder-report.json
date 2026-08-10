@@ -1,0 +1,161 @@
+{
+  "allowlist": {
+    "allowed_environment_fields": [
+      "os_family",
+      "distribution_id",
+      "distribution_version",
+      "architecture",
+      "kernel_release",
+      "python_implementation",
+      "python_version",
+      "text_encoding",
+      "privilege_class",
+      "containerized",
+      "continuous_integration"
+    ],
+    "forbidden_environment_fields": [
+      "hostname",
+      "username",
+      "uid",
+      "gid",
+      "home_directory",
+      "working_directory",
+      "executable_path",
+      "environment_variables",
+      "ip_address",
+      "mac_address",
+      "hardware_serial",
+      "timezone",
+      "locale_region"
+    ],
+    "version": "platform-environment-v1"
+  },
+  "ambient_environment_values_recorded": false,
+  "current_host_record_persisted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "profile": {
+    "id": "agentmage-platform-result-recorder-v1",
+    "sha256": "bf82a978ac768da55c08b439846395eed75dc57e4fa49f3f268b5dab7d0a2730"
+  },
+  "schema_version": 1,
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "persists_ambient_environment_values": false,
+    "reads_secret_stores": false,
+    "uses_network": false,
+    "writes_environment": false
+  },
+  "status": "pass",
+  "synthetic_record_set": {
+    "record_count": 2,
+    "records": [
+      {
+        "captured_at": "2024-01-01T00:00:00Z",
+        "environment": {
+          "architecture": "x86_64",
+          "containerized": false,
+          "continuous_integration": false,
+          "distribution_id": "fedora",
+          "distribution_version": "44",
+          "kernel_release": "6.14.0-fixture.fc44.x86_64",
+          "os_family": "linux",
+          "privilege_class": "standard-user",
+          "python_implementation": "cpython",
+          "python_version": "3.14.6",
+          "text_encoding": "utf-8"
+        },
+        "macos_support_claim": "none",
+        "record_id": "am-platform-result-f6a1b123edf99ed18c41",
+        "record_sha256": "eff18cc95359ecef036d00a92ecdbf6e00fff6af58bee66ab0a1397a02572357",
+        "record_type": "platform-result-environment",
+        "redaction": {
+          "allowlist_version": "platform-environment-v1",
+          "ambient_environment_values_recorded": false,
+          "forbidden_field_count": 13,
+          "private_paths_recorded": false,
+          "secret_store_values_recorded": false
+        },
+        "result": {
+          "build": {
+            "id": "synthetic-build-v1",
+            "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "fixture_set": {
+            "id": "synthetic-fixtures-v1",
+            "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "model": {
+            "id": "fake-model-v1",
+            "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "policy": {
+            "id": "synthetic-policy-v1",
+            "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "result_id": "synthetic-fedora-result",
+          "runtime": {
+            "id": "fake-inference-runtime-v1",
+            "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "status": "pass"
+        },
+        "schema_version": 1
+      },
+      {
+        "captured_at": "2024-01-01T00:00:01Z",
+        "environment": {
+          "architecture": "aarch64",
+          "containerized": true,
+          "continuous_integration": true,
+          "distribution_id": "ubuntu",
+          "distribution_version": "26.04",
+          "kernel_release": "6.17.0-fixture-generic",
+          "os_family": "linux",
+          "privilege_class": "standard-user",
+          "python_implementation": "cpython",
+          "python_version": "3.14.6",
+          "text_encoding": "utf-8"
+        },
+        "macos_support_claim": "none",
+        "record_id": "am-platform-result-58624ba099c71cdd0512",
+        "record_sha256": "277a2122d3bf5d6ca889d3b8ec968bbbb3231b54d377dac10255117cda21ddbd",
+        "record_type": "platform-result-environment",
+        "redaction": {
+          "allowlist_version": "platform-environment-v1",
+          "ambient_environment_values_recorded": false,
+          "forbidden_field_count": 13,
+          "private_paths_recorded": false,
+          "secret_store_values_recorded": false
+        },
+        "result": {
+          "build": {
+            "id": "synthetic-build-v1",
+            "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "fixture_set": {
+            "id": "synthetic-fixtures-v1",
+            "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "model": {
+            "id": "fake-model-v1",
+            "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "policy": {
+            "id": "synthetic-policy-v1",
+            "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "result_id": "synthetic-ubuntu-result",
+          "runtime": {
+            "id": "fake-inference-runtime-v1",
+            "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "status": "fail"
+        },
+        "schema_version": 1
+      }
+    ],
+    "sha256": "9b3fd4a8f8b6dbf03becdd4ff61743788f052f127647a184356212fdde3fc666"
+  },
+  "task_id": "2.1.1.7"
+}
