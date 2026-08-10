@@ -1,0 +1,1286 @@
+{
+  "counts": {
+    "by_kind": {
+      "deferred": 30,
+      "rejected_default": 11,
+      "release_deferred": 18,
+      "v0.1_exclusion": 14
+    },
+    "total": 73
+  },
+  "expectations": [
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-0FD98E760399539B",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11B. Secretary and Administrative Operations",
+        "line": 764,
+        "statement_sha256": "0fd98e760399539bff73304544c691b541696c04671143339330ffcc00f9ebb1"
+      },
+      "statement": "unattended scheduling, mass correspondence, automatic recipient selection, automatic records disposition, and silent changes to approved minutes or final documents.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-10AEFB26E6303706",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 806,
+        "statement_sha256": "10aefb26e63037061f49350e41ddae79c469743726dfd8ba08b3b0b97000ba62"
+      },
+      "statement": "automatic commit, push, pull-request creation, issue editing, review submission, merge, reset, checkout-discard, and force operations.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-171DACDF3AF11C52",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
+        "line": 827,
+        "statement_sha256": "171dacdf3af11c52b359efcf379108f321d8313f3e26093eecfe8c4b37ea32f1"
+      },
+      "statement": "automatic issue or pull-request publication, review submission, merge, release, branch deletion, and force push.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-1EE9A477398CB139",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 306,
+        "statement_sha256": "1ee9a477398cb139b205f0a255a6a16687b616c711210271f96b1c812ecd85fc"
+      },
+      "statement": "self-created agents, recursive agent spawning, self-modifying agent definitions, automatic permission expansion, and unsupervised agent swarms.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-282FF7F99952AE77",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2A. AgentMage Session Behavior",
+        "line": 232,
+        "statement_sha256": "282ff7f99952ae7769f93aeacce8a74ba8fe93779613a31fa445cc87f49cd021"
+      },
+      "statement": "automatic multi-agent swarms, uncontrolled delegation, and shared writes by multiple agents.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-286D7957E613C583",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "26. External Connectors and Model Context Protocol",
+        "line": 1204,
+        "statement_sha256": "286d7957e613c5833bb9768753341310551d79748314b3f9906a0c3ab4f921a7"
+      },
+      "statement": "Model Context Protocol servers until local filesystem, Git, documents, and memory are reliable.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-3D8DAB6C5AD08603",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "24. Queues, Jobs, and Controlled Retries",
+        "line": 1159,
+        "statement_sha256": "3d8dab6c5ad08603776be8802faf93d319d51112bb2eaee1d6979f179d312406"
+      },
+      "statement": "autonomous schedulers and unattended background jobs.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-3D9970E0528EEA74",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "25. Browser and Web Access",
+        "line": 1184,
+        "statement_sha256": "3d9970e0528eea749ada6499e1c31b5a033b3dfc4ee1c8ad377780c602485692"
+      },
+      "statement": "silent form submission, file upload, email send, messaging platform message send, or external publication.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-3F419926417A2107",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "12. Shell and Process Runner",
+        "line": 782,
+        "statement_sha256": "3f419926417a2107436e14535be729ed2457aa773d834cd1d2c6c3da879ca1d4"
+      },
+      "statement": "unrestricted shell access.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-424AC94B71D0F351",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1072,
+        "statement_sha256": "424ac94b71d0f351a663b87f702f5e2c39f689dfaf9480c222f326afe1be40e1"
+      },
+      "statement": "automatic execution of macros, spreadsheet formulas, notebook cells, embedded scripts, or document attachments.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-5E6F362E6EBBE86D",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "26A. Plugins, Hooks, and Capability Packages",
+        "line": 1235,
+        "statement_sha256": "5e6f362e6ebbe86debdb99752cb28670c90a7b5be7d1b27adb6e27c98af2cbef"
+      },
+      "statement": "executing unsigned or unapproved packages and packages that request broader authority than the active task.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-6631960004E689A3",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "25. Browser and Web Access",
+        "line": 1178,
+        "statement_sha256": "6631960004e689a3a9d74dd2e1ff4c374792ee74bcd2347da5275f48c5df0694"
+      },
+      "statement": "browser automation from the first offline release.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-68E8B38BB68C06C3",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27B. Local Desktop Application",
+        "line": 1309,
+        "statement_sha256": "68e8b38bb68c06c3f22cdcb04c56b6f137ccd10f73c862f051da2f5ac7e65b92"
+      },
+      "statement": "Windows and Intel Mac support until the Apple Silicon macOS, Fedora, and Ubuntu implementation passes the complete offline, security, storage, and recovery suites.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-6AF6812FDF1B1023",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11A. Executive Assistant and Chief-of-Staff Functions",
+        "line": 739,
+        "statement_sha256": "6af6812fdf1b10237d8cdf4a9a967722ac20523e5b1c5f25324dd1dcf815520b"
+      },
+      "statement": "automatic acceptance of invitations, sending correspondence, making commitments, changing calendars, contacting people, or presenting a recommendation as the user's decision.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-6CF8FE2D56E3B356",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 170,
+        "statement_sha256": "6cf8fe2d56e3b3566f36e61d1f79bdfedf81ad84de726019676664cd965a10a9"
+      },
+      "statement": "automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-6F05013BB4695FCA",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 879,
+        "statement_sha256": "6f05013bb4695fca450a693633d9cb1ec412ccc6ed0db1a5fb547ab688c6c6ed"
+      },
+      "statement": "automatic reviews, automatic fixes, automatic issue or pull-request updates, automatic merges, automatic releases, branch deletion, repository administration, secret changes, ruleset changes, and force pushes until each action has a separately approved policy and proven rollback path.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-78410C6B9A2ECF21",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "14B. Coding Assistance and Controlled Change Development",
+        "line": 966,
+        "statement_sha256": "78410c6b9a2ecf2115cb192588ef45963abec31db1c04f7a4bd68553cb76477d"
+      },
+      "statement": "automatic broad refactors, dependency upgrades, migrations, commits, pushes, releases, deployments, or fixes applied without exact user review.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-89FFCDE12FB8565B",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "14. Codebase Understanding and Editing",
+        "line": 899,
+        "statement_sha256": "89ffcde12fb8565bd45592d950e1f7cbd62b3d26a3147eb5c068a4d46f28867e"
+      },
+      "statement": "broad repository rewrites and autonomous refactoring.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-9860B103254E8A07",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "9. Retrieval and Grounded Context",
+        "line": 571,
+        "statement_sha256": "9860b103254e8a0754f4d73ab80e48388b23128a933416210f63219ba5a3727d"
+      },
+      "statement": "a graph database; use Markdown links and SQLite indexes first.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-9C3C0366CC815E2D",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "28. Specialized Workflow Skills",
+        "line": 1354,
+        "statement_sha256": "9c3c0366cc815e2d86a9b0654ca38262d820f7d0ffc830bd9b247e54675f2760"
+      },
+      "statement": "large agent swarms and automatic parallel delegation.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-9D37446DE88DDFA2",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 257,
+        "statement_sha256": "9d37446de88ddfa2019476cab00a435af98dcfab23217398abe26163d6d9ba6a"
+      },
+      "statement": "unbounded tree search, repeated self-debate, large model councils, and autonomous recursive planning until controlled evaluations show a reliable benefit.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-9FC0826B61C933FE",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "9. Retrieval and Grounded Context",
+        "line": 572,
+        "statement_sha256": "9fc0826b61c933fed6d25ed309f951709c45e7911169f7fbe4b9cd4621f06faf"
+      },
+      "statement": "a large vector database until measured retrieval failures justify it.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-B46D2CDC1FF6E1B3",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "21. Database and Structured-Data Tools",
+        "line": 1099,
+        "statement_sha256": "b46d2cdc1ff6e1b3d39a97d23448884bda5b5720022daec591df5dce5b92e7dc"
+      },
+      "statement": "live external database access until access, policy, environment, and audit requirements are approved.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-DDC19DDFF135783A",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1071,
+        "statement_sha256": "ddc19ddff135783a7642916d9e9be3450faef8cc711e94cce1ff0a30e4f66469"
+      },
+      "statement": "database dumps, Parquet, Avro, compressed archives, email files, Outlook data files, and proprietary binary formats until a real task requires them.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-DF5208847CDAB9BF",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "20. Images, Screenshots, and Visual Verification",
+        "line": 1084,
+        "statement_sha256": "df5208847cdab9bf2dafc20f51d74fd25345d257c8c77435588c8c58bc1721c9"
+      },
+      "statement": "image generation in the first contingency release.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-E22250B4E0C51D21",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "24A. Notifications and User-Controlled Scheduled Work",
+        "line": 1172,
+        "statement_sha256": "e22250b4e0c51d21cfa07f7f7eb24174053802ba37ab3bacaa77fda44bc23251"
+      },
+      "statement": "any recurring task that sends messages, publishes changes, modifies remote systems, or writes outside agent-owned state without a separately approved mechanism.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-E3A1E4904F454459",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 210,
+        "statement_sha256": "e3a1e4904f454459ad241deeaf831addc1c21174a05bdab1b9f6dcad080015d2"
+      },
+      "statement": "autonomous self-improvement, self-modifying prompts, unlimited loops, and unsupervised background work.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-F8E52B24375E0271",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "26. External Connectors and Model Context Protocol",
+        "line": 1219,
+        "statement_sha256": "f8e52b24375e0271442f92a9a134f61e811cc4791c54b943e1b83a680fbd5895"
+      },
+      "statement": "automatic plugin installation and connector discovery from untrusted sources.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-FE95B34F0A95BFBA",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "4. Tool Protocol and Registry",
+        "line": 341,
+        "statement_sha256": "fe95b34f0a95bfbae1eff46be1c7cb112159a3b209107a0b9ed00ab15790a48d"
+      },
+      "statement": "automatic installation of tools or packages.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_until_formally_promoted",
+      "id": "PX-DEF-FFF6167311EBBFBA",
+      "kind": "deferred",
+      "promotion_rule": "accepted_decision_and_appended_stable_backlog",
+      "scope": "until_promoted",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "5. Permissions, Approval, and Safety",
+        "line": 373,
+        "statement_sha256": "fff6167311ebbfba0be0389303999abde6a556999d813697fad1bf10e1b2a33e"
+      },
+      "statement": "access to live databases, document repositories, archive services, downstream services, cloud platforms, messaging, email, calendars, and source-control hosting.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-22FBE483892BF9D4",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 85,
+        "statement_sha256": "22fbe483892bf9d4f0655fd0872e802b105456764a3ceba6d4cb3bd2902cf34f"
+      },
+      "statement": "A claim of external certification, customer approval, or managed-environment approval that has not been independently granted.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-32EE6E69FCCADE25",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 84,
+        "statement_sha256": "32ee6e69fccade2566f3ae46b5d4038a97452c6e30a5b5d9f2b18d12a927a39d"
+      },
+      "statement": "A public model marketplace, arbitrary provider endpoint, automatically installed plugin ecosystem, or unrestricted Model Context Protocol client.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-35D761D60CBEAC8F",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 87,
+        "statement_sha256": "35d761d60cbeac8f19dbcb3249344139700d8e2b4a7ee08cc52e65b397a96ad6"
+      },
+      "statement": "A defense against hostile root or administrator access, a compromised operating-system account or kernel, or physical access to an unlocked workstation.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-43189B76CFE082B7",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 80,
+        "statement_sha256": "43189b76cfe082b71e13af88d7b88cd40cdbcd2ac55b1533072a50a01e4c24e1"
+      },
+      "statement": "A bridge that invokes Codex, controls or populates its tab, writes a handoff to the clipboard, or submits content on the user's behalf.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-671F4236763B39DC",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 81,
+        "statement_sha256": "671f4236763b39dcc8e764fc9e3d5115b35b9011b64bf6a1a38417d6e14ecd1f"
+      },
+      "statement": "A scheduler or unattended background worker.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-7A0156253401F3D7",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 79,
+        "statement_sha256": "7a0156253401f3d720bbf4eec671a4d1c01c4dfdd876a649341498b35b06e168"
+      },
+      "statement": "A frontier-model transfer mechanism.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-7C8D6457DC0FF1E0",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 78,
+        "statement_sha256": "7c8d6457dc0ff1e059687385bf4afc6e13d8d3aa18db2ef1c7280234637a105f"
+      },
+      "statement": "A browser, email, calendar, messaging, database, or GitHub connector.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-8389B2E223F7A3AE",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 74,
+        "statement_sha256": "8389b2e223f7a3ae8c311b6e058f789f1c9b5cf371197a6ca6a285724d3a0686"
+      },
+      "statement": "A cloud assistant or hosted service.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-8FC52FECC0347A66",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 86,
+        "statement_sha256": "8fc52fecc0347a66ab5770df903656b610899809de72bbbda9572b66d4735a80"
+      },
+      "statement": "Approval to process sensitive, regulated, confidential, personal, financial, credential, or customer-controlled data under a profile that has not been explicitly supported and tested.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-A14448DFF969D65F",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 82,
+        "statement_sha256": "a14448dff969d65f2261fb8e9a6b38f98f1b463562a057215374c8d29d1cf9bd"
+      },
+      "statement": "A multi-agent system.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-B8DC5E3A93C4636D",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 75,
+        "statement_sha256": "b8dc5e3a93c4636d5104a2d9785c83bbf0cb3aaaca5e26a4cc4a905b5e255c8e"
+      },
+      "statement": "A coding agent that changes files.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-C09DBFE6AC8E80CB",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 76,
+        "statement_sha256": "c09dbfe6ac8e80cb04a5586a50751bb1cf98c866cae469215f2eb2f99e738b86"
+      },
+      "statement": "An Obsidian assistant.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-CF2749ACF143494E",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 77,
+        "statement_sha256": "cf2749acf143494ecfc5d0048d4c507f7d23b453c28f4c2d03eb5aabfcaa280d"
+      },
+      "statement": "A desktop application or complete command-line product.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "absent_or_denied_in_v0.1",
+      "id": "PX-EXC-E64902474DBD2352",
+      "kind": "v0.1_exclusion",
+      "promotion_rule": "new_release_requirement_and_gate",
+      "scope": "v0.1",
+      "source": {
+        "document": "PRD.md",
+        "heading": "4. Non-Goals",
+        "line": 83,
+        "statement_sha256": "e64902474dbd23529208c47e192370c15c4f087eac07d49582133e1acc83246c"
+      },
+      "statement": "A semantic/vector code index, remote embedding service, or language-server write surface.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-2BC8A48EBB87B674",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1063,
+        "statement_sha256": "2bc8a48ebb87b674fc6e837b31ae1ba852e35cc46ffaf373322093ccffabd15f"
+      },
+      "statement": "Plain text (`.txt`), Markdown (`.md`), JSON (`.json`), Excel (`.xlsx`), comma-separated value (`.csv`), Word (`.docx`), and Portable Document Format (`.pdf`) support.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-43A61BE11832CE2E",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1064,
+        "statement_sha256": "43a61be11832ce2e019e7bdad527642a79510dc65bb0b2a242d63fea30d6b33d"
+      },
+      "statement": "File metadata, source hashes, bounded extraction, citations, and safe sidecar output for every supported format.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-5A678FC0EBCF938F",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
+        "line": 1042,
+        "statement_sha256": "5a678fc0ebcf938fed1c213663e2b0828c1bbeb4188a699b42b694beacb2b708"
+      },
+      "statement": "Support bounded filtering, sorting, matching, duplicate detection, missing-value checks, and comparison between two workbook or comma-separated value sources.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-799DC60CCE98432B",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
+        "line": 1044,
+        "statement_sha256": "799dc60cce98432b642e63242c3760216f6019f03b9dddd3b7e3c690c118846d"
+      },
+      "statement": "Prevent spreadsheet formula injection when generating comma-separated value output.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-7ABDACA7FD3FE945",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
+        "line": 1043,
+        "statement_sha256": "7abdaca7fd3fe9458cf322af6c2d1b7e2cddc06fcd7f4b409a474b8a4dddb0b1"
+      },
+      "statement": "Preserve the original workbook or comma-separated value file and write any normalized table or comparison to a separate output file.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-815A3C0C5CCA3F34",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10C. Local Conversation Library and Exact-Point Resume",
+        "line": 643,
+        "statement_sha256": "815a3c0c5cca3f345b5f33462471eb5a5402e0db1b87a07fde8d9ddc58c01fc4"
+      },
+      "statement": "Resume from a selected historical turn by creating a visible local branch from that checkpoint, preserving the original conversation unchanged.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-8A7D678428FBA1FB",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10D. Human-Readable Memory Files and Frontier Interoperability",
+        "line": 671,
+        "statement_sha256": "8a7d678428fba1fb22a126281ff8950d2febcb520367972be9871d662473e644"
+      },
+      "statement": "frontier edit rules that treat all returned content as untrusted input and prohibit direct changes to canonical operational or knowledge state.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-8E1A039A68F23129",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1069,
+        "statement_sha256": "8e1a039a68f231291a9af48fa2e72172d33b37d66e18005c32980b2daa121407"
+      },
+      "statement": "log-file support for timestamped text, JSON Lines, stack traces, and bounded event summaries.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-924C214F60F5E934",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
+        "line": 1040,
+        "statement_sha256": "924c214f60f5e934318229b5fd8dea3baa7648bc1939097e07d255ecc8db0ddc"
+      },
+      "statement": "Support Excel workbooks (`.xlsx`) and comma-separated value files (`.csv`) as read-only inputs.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-9371CDC6D70B9C30",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1067,
+        "statement_sha256": "9371cdc6d70b9c30366be305da087b221345f6dfee1452b10831b1f4aea55edd"
+      },
+      "statement": "YAML (`.yaml` or `.yml`) parsing for configuration, agent, and skill files, with secret redaction.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-A2FAF022F4A01035",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 151,
+        "statement_sha256": "a2faf022f4a0103589881cff684e296c50914f9efd2ad1ef6e9a9e8b71c71d31"
+      },
+      "statement": "a benchmark-gated task router that can recommend or select among enabled profiles only after v0.1 records sufficient task-class evidence.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-BE126C92A5FD84CC",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 164,
+        "statement_sha256": "be126c92a5fd84ccfb868b1f9ec41c57f03bf929325ec51855a39e5d54f444d8"
+      },
+      "statement": "a measured fallback chain that activates only after benchmark gates pass and the user enables automatic routing.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-C4C3E1636C637C51",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10D. Human-Readable Memory Files and Frontier Interoperability",
+        "line": 670,
+        "statement_sha256": "c4c3e1636c637c51add93754c140443c5b4766948e4faa6aae3495709eab3d5d"
+      },
+      "statement": "an `AGENTMAGE-FRONTIER.md` instruction file for the v0.5 Frontier Consultation pack.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-D5CAA0416B03A530",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1066,
+        "statement_sha256": "d5caa0416b03a5300397d8dc10d048b9fa9deeaae70c96510a63d05cf20dc47f"
+      },
+      "statement": "Hypertext Markup Language (`.html`) and Extensible Markup Language (`.xml`) parsing for saved web pages, exports, and structured data.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-E6A7906FCC3AE23D",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1068,
+        "statement_sha256": "e6a7906fcc3ae23d6b742fe3720f316d5945e857b165fdf7c89fe95d228e701f"
+      },
+      "statement": "Jupyter Notebook (`.ipynb`) extraction for Markdown, code, outputs, and execution metadata without executing cells.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-EFE12F4C76E28FDD",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1070,
+        "statement_sha256": "efe12f4c76e28fdd6c6650fea7ef53d2666e925e54b8ccc57f84a4bc2b1596d3"
+      },
+      "statement": "image and screenshot metadata, local visual inspection, and optional local optical character recognition after approval.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-F165618F8DC0ECD4",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19A. File-Type Priority",
+        "line": 1065,
+        "statement_sha256": "f165618f8dc0ecd48f024ff517b8b9ea07688cf82125d07a779c51000954e772"
+      },
+      "statement": "PowerPoint (`.pptx`) slide, speaker-note, hyperlink, and image-caption extraction for meeting presentations.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-F2C11A53F12BB3BC",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
+        "line": 1041,
+        "statement_sha256": "f2c11a53f12bb3bcb403ec8594b5291259636bb52198ca707631d4381d612647"
+      },
+      "statement": "Show workbook names, worksheet names, row and column counts, headers, formulas, displayed values, dates, hyperlinks, hidden rows or columns, and source hashes.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-09EE04BAD8139CAA",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1604,
+        "statement_sha256": "09ee04bad8139caaa849849076373960a320e805782ba22bdbdf926919969738"
+      },
+      "statement": "Reject automatic Codex invocation, tab control, prompt population, clipboard transfer, endpoint transfer, or submission; only the user may move a reviewed handoff between the separate interfaces.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-1ED029D3264626FA",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1601,
+        "statement_sha256": "1ed029d3264626fa5406916556f319496f04cb79c5f106852c60d1d2cb600ecc"
+      },
+      "statement": "Reject every Model Context Protocol server, plugin, hook, client, or alternate endpoint that bypasses kernel policy, grants, limits, cancellation, classification, or receipts.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-355DB4257FA3F6E6",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1605,
+        "statement_sha256": "355db4257fa3f6e6d571ab0a5814f69c9da536d4672883c9f102010cce18a8e3"
+      },
+      "statement": "Reject messaging bots, schedules, background writes, shell execution, publication, and remote state changes in early releases; later support requires its own threat model, gates, and receipts.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-439040090EC23E76",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1603,
+        "statement_sha256": "439040090ec23e768fa933c9ae9efd2f8eff683b1f10e2ffe6734f75f1f9f6e4"
+      },
+      "statement": "Reject silent fallback from a local model or runtime to any cloud model, hosted provider, remote endpoint, or external service.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-4F926E18258FF624",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1598,
+        "statement_sha256": "4f926e18258ff624c4834c735457eb9f90643771d345a2bfbcb9105830556460"
+      },
+      "statement": "Reject unrestricted, \"yolo,\" blanket, wildcard, or approve-everything tool execution in every interface and operating mode.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-859156473E18C1F4",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1602,
+        "statement_sha256": "859156473e18c1f4609a8ee7b9c9cdf3a0b53143b8805f7444d8eac710a92d90"
+      },
+      "statement": "Reject remote semantic indexing, remote embedding, remote reranking, or source upload while the product or session is represented as local mode.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-C9B8FDA1CCFA7C00",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1608,
+        "statement_sha256": "c9b8fda1ccfa7c00e2392ae5be747bb21bac22c75f8d9993e674cf799987b32d"
+      },
+      "statement": "Never describe path checks, data directories, pending changes, shadow change sets, Git branches, or Git worktrees as the security sandbox; only the documented operating-system-enforced isolation boundary may carry that name.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-CBFA0E75460245B1",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1599,
+        "statement_sha256": "cbfa0e75460245b1895e7d1c4d8e9590ed822f8ac3139e072551c05871adfa75"
+      },
+      "statement": "Treat repository configuration as untrusted data and reject arbitrary executable repository configuration, setup scripts, hooks, tasks, or commands unless separately inspected and granted.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-E3C0AED933B9FCC4",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1607,
+        "statement_sha256": "e3c0aed933b9fcc4317bcd39834ff4fff2fe569ca4a52cd60f42ae4845cb2dcd"
+      },
+      "statement": "Reject any model, embedding, reranker, tokenizer, conversion, runtime, or derived artifact that violates the project's non-Chinese and non-Chinese-derived model-origin policy.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-FE1BC84FFC496580",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1600,
+        "statement_sha256": "fe1bc84ffc496580dbc116e103977b070a49e3b81dcde8051ef4a0b1b12169cd"
+      },
+      "statement": "Reject automatic download, installation, enabling, updating, or execution of public plugins, skills, hooks, agent packages, models, or capability bundles.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "denied_by_default",
+      "id": "PX-REJ-FE26328997A78481",
+      "kind": "rejected_default",
+      "promotion_rule": "source_specific_gate_or_never",
+      "scope": "all_applicable_releases",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35A. Explicitly Rejected Defaults",
+        "line": 1606,
+        "statement_sha256": "fe26328997a78481fbe0a19b5b9dc9c2edb4cf415b2d3d8330a9617f77637f5b"
+      },
+      "statement": "Reject a broad provider or model marketplace as a first-release objective; expose only approved, manifest-pinned profiles that passed the complete review and evaluation process.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    }
+  ],
+  "schema_version": 1,
+  "sources": [
+    {
+      "document": "PRD.md",
+      "sha256": "261b595b88af110f41df3ea5929b76dd7c7fd900b1064d4f89a54f61cbb09d09"
+    },
+    {
+      "document": "Agent-Scaffolding-Inventory.md",
+      "sha256": "de39501438c88e622b4a2005fd765297671d63f2fdf0552f8c3a9a8803603013"
+    }
+  ],
+  "test_contract": {
+    "allowed_results": [
+      "absent",
+      "disabled",
+      "denied_before_effect"
+    ],
+    "id": "PX-TEST-001",
+    "probe": "attempt_or_detect_scoped_capability_claim_or_default",
+    "prohibited_results": [
+      "authority_granted",
+      "capability_activated",
+      "policy_silently_broadened",
+      "state_or_external_side_effect"
+    ],
+    "required_evidence": [
+      "source_identity",
+      "probe_result",
+      "side_effect_assertion",
+      "promotion_or_gate_state"
+    ]
+  }
+}

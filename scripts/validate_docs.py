@@ -22,6 +22,7 @@ REQUIRED_FILES = (
     "RUNTIME-BOUNDARIES.md",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",
+    "requirements/policy-expectations.json",
     "requirements/registry.json",
     "schemas/planning/common.schema.json",
     "schemas/planning/decision-record.schema.json",

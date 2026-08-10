@@ -63,6 +63,26 @@ npm run requirements:check
 
 Use `python3 scripts/requirement_coverage.py --json` for a deterministic machine-readable report. A PRD edit that changes a mapped normative line requires a reviewed mapping update; the checker never silently relocates or guesses a mapping.
 
+## Policy Expectations
+
+`policy-expectations.json` is the generated, machine-readable policy register for all structured exclusions and deferrals in the canonical PRD and inventory:
+
+- every v0.1 non-goal in PRD Section 4;
+- every inventory `DEFER` item;
+- every inventory `ROADMAP` item excluded until its target release; and
+- every rejected default in inventory Section 35A.
+
+Every record has a content-derived stable ID, exact source hash and location, enforcement scope, expected result, promotion rule, status, and `PX-TEST-001` test contract. The shared contract permits only absence, disabled state, or denial before effect and requires evidence that authority, activation, silent policy broadening, and state or external side effects did not occur.
+
+Generate or verify the register with:
+
+```bash
+npm run policy:build
+npm run policy:check
+```
+
+Canonical category counts are deliberate review boundaries. Adding, removing, or reclassifying a non-goal, `DEFER`, `ROADMAP`, or rejected-default row blocks generation until the category-count change and regenerated expectations are explicitly reviewed.
+
 ## Planning And Release Schemas
 
 The versioned JSON Schemas in `schemas/planning/` define closed contracts for:
