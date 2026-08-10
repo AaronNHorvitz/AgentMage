@@ -20,6 +20,7 @@ REQUIRED_FILES = (
     "SECURITY.md",
     "MODEL-PROVENANCE-POLICY.md",
     "RUNTIME-BOUNDARIES.md",
+    "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",
     "requirements/policy-expectations.json",

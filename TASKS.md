@@ -165,7 +165,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.1.4** (legacy `S-000-I04`): Define decision-record, risk-register, change-log, release-manifest, and requirement-supersession schemas.
   - [x] **Sub-task 0.1.1.5** (legacy `S-000-I05`): Create a coverage check that reports duplicate identifiers, unresolved dependencies, missing acceptance tests, release mismatches, and unmapped normative statements.
   - [x] **Sub-task 0.1.1.6** (legacy `S-000-I06`): Encode all explicit exclusions, rejected defaults, and deferred items as testable policy expectations rather than prose-only notes.
-  - [ ] **Sub-task 0.1.1.7** (legacy `S-000-I07`): Add an additions-only inventory check that detects removed or weakened canonical requirements.
+  - [x] **Sub-task 0.1.1.7** (legacy `S-000-I07`): Add an additions-only inventory check that detects removed or weakened canonical requirements.
   - [ ] **Sub-task 0.1.1.8** (legacy `S-000-I08`): Create a public product-security reference register that records publisher, title, publication and effective dates, source URL, retrieval date, SHA-256, current or superseded status, and the approved local-snapshot decision for every cited source without implying external certification or endorsement.
 
 - [ ] **Task 0.1.2 - Produce reviewable artifacts**

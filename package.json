@@ -4,6 +4,8 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
+    "additions:check": "python3 scripts/additions_only.py",
+    "additions:update": "python3 scripts/additions_only.py --update",
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
     "docs:mermaid": "python3 scripts/check_mermaid.py",
     "docs:validate": "python3 scripts/validate_docs.py",
@@ -12,7 +14,7 @@
     "requirements:build": "python3 scripts/requirement_registry.py",
     "requirements:coverage": "python3 scripts/requirement_coverage.py",
     "requirements:test": "python3 -m unittest discover -s tests -p 'test_*.py'",
-    "requirements:check": "python3 scripts/requirement_registry.py --check && npm run policy:check && npm run requirements:coverage && npm run requirements:test",
+    "requirements:check": "python3 scripts/requirement_registry.py --check && npm run additions:check && npm run policy:check && npm run requirements:coverage && npm run requirements:test",
     "schemas:validate": "node scripts/validate_planning_schemas.mjs",
     "schemas:test": "node --test tests/test_planning_schemas.mjs",
     "schemas:check": "npm run schemas:validate && npm run schemas:test",

@@ -83,6 +83,26 @@ npm run policy:check
 
 Canonical category counts are deliberate review boundaries. Adding, removing, or reclassifying a non-goal, `DEFER`, `ROADMAP`, or rejected-default row blocks generation until the category-count change and regenerated expectations are explicitly reviewed.
 
+## Additions-Only Baseline
+
+`additions-only-baseline.json` preserves the original semantic content of every stable `AM-*`, `AT-*`, and `CR-*` record and every tagged checklist entry in the canonical inventory. Checkbox completion is operational status and does not change an entry's semantic identity.
+
+The checker allows new requirements, new checklist entries, and added dependency or acceptance-test coverage. It blocks:
+
+- removal of a baseline requirement;
+- changes to a requirement's kind, title, release, or disposition;
+- removal of a baseline dependency or acceptance test;
+- movement of a requirement to another canonical document or heading; and
+- removal, wording changes, movement, or policy-label changes for baseline checklist entries.
+
+Run the side-effect-free check with:
+
+```bash
+npm run additions:check
+```
+
+After an additions-only review, `npm run additions:update` appends newly discovered requirements and checklist entries to the protected baseline. It refuses to write if any prior entry was removed or changed. The baseline must not be regenerated or edited to hide a failure; supersession preserves the original requirement and adds its approved replacement.
+
 ## Planning And Release Schemas
 
 The versioned JSON Schemas in `schemas/planning/` define closed contracts for:
