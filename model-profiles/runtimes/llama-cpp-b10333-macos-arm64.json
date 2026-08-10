@@ -1,0 +1,39 @@
+{
+  "adapter_id": "macos-native-metal",
+  "architecture": "arm64",
+  "artifact": {
+    "download_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10333/llama-b10333-bin-macos-arm64.tar.gz",
+    "name": "llama-b10333-bin-macos-arm64.tar.gz",
+    "sha256": "e5d67c5264107e3c14d3bf2aee349365bb2b85ae99bb077a0cb974a1c4c2741a",
+    "size_bytes": 11015270
+  },
+  "critical_files": {
+    "libggml_metal": {
+      "relative_path": "llama-b10333/libggml-metal.0.19.0.dylib",
+      "sha256": "5cac42dbd02198b55bd03365132b757f87553462bf07b2273116b2226b5e4670",
+      "size_bytes": 884456
+    },
+    "llama_cli": {
+      "relative_path": "llama-b10333/llama-cli",
+      "sha256": "b4cd2feb131d1f96895a9551e2f47e6510d90f63c3b998ee974eda9d6e132a13",
+      "size_bytes": 49960
+    },
+    "llama_server": {
+      "relative_path": "llama-b10333/llama-server",
+      "sha256": "d3bce60d45758268a90e0fca82ce5a22d5c35ecb92a06d1c544ed68ec2efa769",
+      "size_bytes": 33472
+    }
+  },
+  "decision": {
+    "execution_status": "NOT_RUN",
+    "hardware_status": "BLOCKED_REQUIRED_MACBOOK_PRO_M5",
+    "linux_evidence_substituted": false,
+    "release_approval": false
+  },
+  "platform": "macOS",
+  "project": "ggml-org/llama.cpp",
+  "record_type": "macos_native_runtime_admission",
+  "release": "b10333",
+  "schema_version": 1,
+  "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4"
+}
