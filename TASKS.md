@@ -209,7 +209,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.2.2.4:** Document and run one local command that reproduces the documentation gate from a clean checkout.
 
 - [ ] **Task 0.2.3 - Verify and close the story**
-  - [ ] **Sub-task 0.2.3.1:** Seed broken links, malformed Mermaid, unresolved stable IDs, a prohibited deployment claim, and synthetic secret signatures independently; assert every case blocks while the unmodified repository passes.
+  - [x] **Sub-task 0.2.3.1:** Seed broken links, malformed Mermaid, unresolved stable IDs, a prohibited deployment claim, and synthetic secret signatures independently; assert every case blocks while the unmodified repository passes.
   - [ ] **Sub-task 0.2.3.2:** Compare all canonical documents against the accepted decision; assert license, model, runtime, platform, interface, handoff, support, and release boundaries agree.
   - [ ] **Sub-task 0.2.3.3 - Product security evidence:** Map `SR-GOV-003`/`SR-GOV-004`/`SR-GOV-006`/`SR-GOV-009`/`SR-GOV-010`, `SR-SUP-001`/`SR-SUP-003`/`SR-SUP-006`/`SR-SUP-010`, and `SR-TST-001`; retain policy hashes, lint output, mutation-test output, workflow identity, and decision record.
 
