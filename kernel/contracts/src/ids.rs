@@ -64,6 +64,10 @@ define_identifier!(EvidenceId, "Stable identity for one evidence record.");
 define_identifier!(ReceiptId, "Stable identity for one operation receipt.");
 define_identifier!(ErrorId, "Stable identity for one typed contract error.");
 define_identifier!(
+    CancellationId,
+    "Stable identity for one cancellation request and propagation tree."
+);
+define_identifier!(
     CorrelationId,
     "Stable identity joining one request and its derived records."
 );

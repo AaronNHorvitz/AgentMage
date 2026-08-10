@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Interface-independent contracts shared across AgentMage components.
 
+mod boundary;
 mod common;
 mod evidence;
 mod ids;
@@ -9,14 +10,17 @@ mod serialization;
 mod task;
 mod tool;
 
+pub use boundary::{
+    BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
+};
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,
     SchemaReference, ValidationIssue, ValidationSeverity,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use ids::{
-    ActionId, CorrelationId, ErrorId, EvidenceId, PlanId, PlanStepId, ReceiptId, SchemaId,
-    SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
+    ActionId, CancellationId, CorrelationId, ErrorId, EvidenceId, PlanId, PlanStepId, ReceiptId,
+    SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,

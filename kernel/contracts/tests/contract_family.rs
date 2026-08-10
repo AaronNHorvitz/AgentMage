@@ -1,6 +1,7 @@
 use agentmage_kernel_contracts::{
-    Action, ActionId, ActionKind, ActionState, BudgetLimit, BudgetResource,
-    CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, CorrelationId, DataSensitivity,
+    Action, ActionId, ActionKind, ActionState, BoundaryFailure, BoundaryKind, BoundaryOutcomeKind,
+    BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+    CancellationSignal, ContractError, ContractPayload, CorrelationId, DataSensitivity,
     ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference, OperationOutcome, Plan,
     PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Receipt, ReceiptId,
     RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
@@ -225,6 +226,33 @@ fn complete_contract_family_preserves_linked_identities() {
         receipt_sha256: "5".repeat(64),
         occurred_at: "2026-08-10T00:00:00Z".to_owned(),
     };
+    let cancellation = CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("cancel-0001"),
+        correlation_id: correlation_id.clone(),
+        task_id: task_id.clone(),
+        reason: CancellationReason::PolicyDenied,
+        requested_by: BoundaryKind::Kernel,
+    };
+    let boundary_failure = BoundaryFailure {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        correlation_id: correlation_id.clone(),
+        task_id: task_id.clone(),
+        origin: BoundaryKind::Kernel,
+        route: vec![BoundaryKind::Kernel],
+        outcome: BoundaryOutcomeKind::Cancelled,
+        error: ContractError {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            error_id: ErrorId::from_raw("error-cancelled"),
+            code: "fixture.cancelled".to_owned(),
+            category: ErrorCategory::Cancellation,
+            message: "Synthetic cancellation".to_owned(),
+            field_path: Vec::new(),
+            retry: RetryDisposition::AfterUserDecision,
+            caused_by: None,
+        },
+        cancellation: Some(cancellation.clone()),
+    };
 
     assert_round_trip(&task);
     assert_round_trip(&packet);
@@ -236,6 +264,8 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_round_trip(&result.evidence[0]);
     assert_round_trip(result.error.as_ref().expect("fixture error"));
     assert_round_trip(&receipt);
+    assert_round_trip(&cancellation);
+    assert_round_trip(&boundary_failure);
 
     assert_eq!(packet.task_id, task.task_id);
     assert_eq!(plan.plan_id, packet.plan_id.expect("fixture plan identity"));
