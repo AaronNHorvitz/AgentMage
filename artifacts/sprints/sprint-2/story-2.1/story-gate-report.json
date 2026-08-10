@@ -1,0 +1,220 @@
+{
+  "acceptance_criteria": [
+    {
+      "complete_cross_product": true,
+      "criterion_id": "2.1.AC1",
+      "evidence": "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json",
+      "fixture_count": 84,
+      "input_class_count": 12,
+      "prohibited_side_effect_count": 0,
+      "prohibited_side_effects_declared": true,
+      "scenario_count": 7,
+      "status": "pass"
+    },
+    {
+      "checked_corpus_match": true,
+      "corpus_reproduction_runs": 2,
+      "corpus_runs_byte_identical": true,
+      "criterion_id": "2.1.AC2",
+      "current_host_data_used": false,
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json"
+      ],
+      "original_development_machine_required": false,
+      "private_user_data_used": false,
+      "status": "pass",
+      "summary_exact_match": true
+    }
+  ],
+  "execution": {
+    "external_commands": [
+      "git-read-only"
+    ],
+    "network_calls": 0,
+    "original_development_machine_data_used": false,
+    "private_user_data_used": false
+  },
+  "independent_review": {
+    "disposition": "pass-story-scope-blocked-macos",
+    "external_human_review_claim": "none",
+    "finding_count": 0,
+    "findings": [],
+    "rereview_required": false,
+    "review_type": "automated-independent-implementation-review",
+    "reviewed_artifacts": [
+      {
+        "path": "fixtures/corpus-profile.json",
+        "sha256": "22a547c341672710886ddd9775cf6ac8e73bee5923132ac7860bc95905de4009"
+      },
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+        "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+      },
+      {
+        "path": "fixtures/corpus/v1/manifest.json",
+        "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
+      },
+      {
+        "path": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "sha256": "1a0334b38adf522268cffb73a55444532922d99f8e4d2a5fafa40f0c8253e3aa"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json",
+        "sha256": "dc86aaec23a3dbed8c78395a04636742dc5c3e8eefd10327d05946d5d986bad8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
+        "sha256": "3f5e75c3967b91f2591d7bf572b1c957a8b11f3764a4a54434ddfc45c929032a"
+      },
+      {
+        "path": "scripts/later_input_fixture_matrix.py",
+        "sha256": "b960c1c4e18a3b2c86f6c09c9dcc3a7b8700b05cad979a3bed5152a9de5aa20b"
+      },
+      {
+        "path": "scripts/story_2_1_verification.py",
+        "sha256": "8e169ed13ab991158e64d8bcdc9cc2322cbe0426cbef383eeda0f6f410af2a68"
+      }
+    ],
+    "reviewed_commit": "bee933d341bbeeb74f307ce9940c304f8c989b17",
+    "reviewed_tree": "2cab53347c18799c631c2879a7da60e3d91d83b0",
+    "reviewer_id": "agentmage-story-2.1-independent-gate-v1"
+  },
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "execution_performed": false,
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "bee933d341bbeeb74f307ce9940c304f8c989b17",
+  "reviewed_tree": "2cab53347c18799c631c2879a7da60e3d91d83b0",
+  "schema_version": 1,
+  "status": "blocked-macos",
+  "story_id": "2.1",
+  "summary": {
+    "acceptance_criteria_failed": 0,
+    "acceptance_criteria_passed": 2,
+    "blocking_control_count": 1,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "shared_linux_foundation_complete": true,
+    "story_checkbox_complete": false
+  },
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "evidence": [
+        "TASKS.md",
+        "artifacts/sprints/sprint-2/story-2.1/security-evidence-map.json"
+      ],
+      "rationale": "Story scope, dependencies, exclusions, controls, and retained evidence are recorded.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "evidence": [
+        "tests",
+        "fixtures/story-2.1/later-input-class-fixtures-v1.json"
+      ],
+      "rationale": "Positive, invalid, boundary, cancellation, dependency-failure, and exact-side-effect cases cover the fixture harness.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "evidence": [
+        "scripts/later_input_fixture_matrix.py",
+        "schemas/testing"
+      ],
+      "rationale": "Story-owned contracts reject missing, extra, malformed, oversized, stale, and unsupported fixture evidence.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "evidence": [
+        "fixtures/fake-adapter-contract.json"
+      ],
+      "rationale": "This story creates inert test fixtures and adapters; it enables no product authority-bearing behavior.",
+      "status": "not-applicable-no-authority"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json"
+      ],
+      "rationale": "Unavailable identity, path, network, resource, evidence, and recovery states fail closed in the test foundation.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json"
+      ],
+      "rationale": "No product tool executes; synthetic receipt fixtures cover all declared outcome classes for later stories.",
+      "status": "not-applicable-no-product-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json"
+      ],
+      "rationale": "Only minimized synthetic-public fixture data persists; private data and real credentials are prohibited.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json"
+      ],
+      "rationale": "Generation uses new temporary destinations and never reads or writes user-owned files.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json"
+      ],
+      "rationale": "Independent reduction preserves failures, skips, retries, flakes, quarantine, cancellation, timeout, and environment identities.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "evidence": [
+        "docs/decisions/0003-blocked-platform-lane-continuation.md"
+      ],
+      "rationale": "Shared and Linux evidence does not substitute for unexecuted macOS checks or establish macOS support.",
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "evidence": [
+        "TASKS.md",
+        "requirements/traceability-report.json"
+      ],
+      "rationale": "Story documentation, profiles, manifests, security mappings, and evidence indexes are current.",
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json"
+      ],
+      "rationale": "A separately implemented reducer and gate verifier review the immutable commit; no external-human review claim is made.",
+      "status": "pass-automated-independent-implementation-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json"
+      ],
+      "rationale": "The gate remains visibly BLOCKED-MACOS and represents no unavailable check as passing.",
+      "status": "pass-gate-reporting"
+    }
+  ]
+}

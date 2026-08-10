@@ -50,7 +50,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
-      "sha256": "dfa0361809abafb126b7f3a3f6ef059edb23bcfb46231d59152a6f57c8fdf0f2"
+      "sha256": "ff8b8bb8a819f89e44955df302d7d299848cd579e0a17291274e3bd4ba172053"
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json",
@@ -59,6 +59,10 @@
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
       "sha256": "3f5e75c3967b91f2591d7bf572b1c957a8b11f3764a4a54434ddfc45c929032a"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json",
+      "sha256": "9362363b2eef6c04209175db7d502f3abea02e954db22c8a2fec6fc7c9468d6d"
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
@@ -89,7 +93,8 @@
       "evidence": [
         "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
         "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
-        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json"
+        "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json"
       ],
       "product_requirement_status": "not-complete",
       "remaining": "Product end-to-end, release-platform, property, and later boundary suites remain incomplete.",
@@ -159,7 +164,8 @@
       "evidence": [
         "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
         "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
-        "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json"
+        "artifacts/sprints/sprint-2/story-2.1/summary-comparison-signature.json",
+        "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json"
       ],
       "product_requirement_status": "not-complete",
       "remaining": "Every later suite and release result must retain the same raw, normalized, summary, failure, skip, environment, and tool separation.",
