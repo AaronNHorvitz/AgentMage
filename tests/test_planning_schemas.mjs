@@ -6,14 +6,19 @@ import { fileURLToPath } from "node:url";
 
 import {
   RECORD_TYPES,
+  TEST_RECORD_TYPES,
   TEMPLATE_TYPES,
   createPlanningValidators,
+  createTestingValidators,
   validatePlanningRecord,
   validatePlanningTemplates,
+  validateTestingFixtures,
+  validateTestingRecord,
 } from "../scripts/validate_planning_schemas.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const validators = createPlanningValidators();
+const testingValidators = createTestingValidators();
 
 function fixture(recordType) {
   const fixturePath = path.join(
@@ -195,5 +200,67 @@ test("unknown planning record types fail explicitly", () => {
   assert.throws(
     () => validatePlanningRecord("unknown-record", {}, validators),
     /unknown planning record type/,
+  );
+});
+
+test("platform results and the fixture ledger satisfy their testing schemas", () => {
+  const results = validateTestingFixtures();
+  assert.equal(results.length, 3);
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    [true, true, true],
+  );
+  assert.deepEqual(TEST_RECORD_TYPES, [
+    "platform-result",
+    "fixture-provenance-ledger",
+  ]);
+});
+
+test("testing schemas reject weakened platform and provenance controls", () => {
+  const platformReport = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+      ),
+      "utf8",
+    ),
+  );
+  const platformRecord = structuredClone(
+    platformReport.synthetic_record_set.records[0],
+  );
+  platformRecord.environment.hostname = "fixture-host";
+  platformRecord.macos_support_claim = "supported";
+  assert.equal(
+    validateTestingRecord(
+      "platform-result",
+      platformRecord,
+      testingValidators,
+    ).valid,
+    false,
+  );
+
+  const ledger = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "fixtures/corpus/v1/provenance-ledger.json"),
+      "utf8",
+    ),
+  );
+  ledger.controls.acyclic = false;
+  ledger.scope.private_user_data = true;
+  assert.equal(
+    validateTestingRecord(
+      "fixture-provenance-ledger",
+      ledger,
+      testingValidators,
+    ).valid,
+    false,
+  );
+});
+
+test("unknown testing record types fail explicitly", () => {
+  assert.throws(
+    () => validateTestingRecord("unknown-record", {}, testingValidators),
+    /unknown testing record type/,
   );
 });

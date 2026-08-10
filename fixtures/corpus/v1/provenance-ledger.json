@@ -1,0 +1,638 @@
+{
+  "contracts": [
+    {
+      "contract_id": "agentmage-fake-adapters-v1",
+      "contract_kind": "fake-adapters",
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
+        "sha256": "87f55101e959d78ebb6e32932ab0dc26eb2a3d7c375403f35c78c207707d4b5a"
+      },
+      "implementation": {
+        "path": "fixtures/fake_adapters.py",
+        "sha256": "8c15a54095e67a5ad354ec8f8e79a9abee2902cb38e25ac8be9decf2e1ed6403"
+      },
+      "profile": {
+        "path": "fixtures/fake-adapter-contract.json",
+        "sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244"
+      }
+    },
+    {
+      "contract_id": "agentmage-platform-result-recorder-v1",
+      "contract_kind": "platform-results",
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      },
+      "implementation": {
+        "path": "scripts/platform_result_recorder.py",
+        "sha256": "b87cdcc57dd9c906d10f4013c4b2046cbe3925af02a3b07d11c528ef4ee5a0fd"
+      },
+      "profile": {
+        "path": "fixtures/platform-result-profile.json",
+        "sha256": "bf82a978ac768da55c08b439846395eed75dc57e4fa49f3f268b5dab7d0a2730"
+      }
+    },
+    {
+      "contract_id": "agentmage-test-result-bundle-v1",
+      "contract_kind": "test-result-bundles",
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/test-result-bundle-report.json",
+        "sha256": "0cc74f8cf02ace0eb7842436ebcc8ddc699f2c976e9b6490073d04c7bc81f349"
+      },
+      "implementation": {
+        "path": "scripts/test_result_bundle.py",
+        "sha256": "3532216f328f413a8e5e22b10d0c1dd0937e15d10e14872b9e094aeb57de86c9"
+      },
+      "profile": {
+        "path": "fixtures/test-result-bundle-profile.json",
+        "sha256": "b9de6a5526078f02ab8b9c5c880f6591ffb586b6aee117ef8fc732b2ac33bc60"
+      }
+    },
+    {
+      "contract_id": "agentmage-shared-acceptance-runner-v1",
+      "contract_kind": "acceptance-runner",
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
+        "sha256": "b2e37902000b7110ce0a233b1d60cd7a007cfed0187c46c9d76108a5452b8810"
+      },
+      "implementation": {
+        "path": "scripts/shared_acceptance_runner.py",
+        "sha256": "e21eba7459ce645c1aea41b3a4a42ab2199ccb2da1a3227fe3b886a3ff828b90"
+      },
+      "profile": {
+        "path": "fixtures/acceptance-runner-profile.json",
+        "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+      }
+    }
+  ],
+  "controls": {
+    "acyclic": true,
+    "all_artifact_hashes_verified": true,
+    "no_dangling_edges": true,
+    "platform_records_schema_valid": true,
+    "raw_environment_values_retained": false,
+    "unique_artifact_paths": true,
+    "unique_edge_ids": true,
+    "unique_node_ids": true
+  },
+  "corpus": {
+    "archive": {
+      "bytes": 41280,
+      "entry_count": 77,
+      "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+      "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+    },
+    "assembler": {
+      "path": "scripts/versioned_corpus.py",
+      "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+    },
+    "corpus_id": "agentmage-versioned-synthetic-corpus-v1",
+    "corpus_version": "1.0.0",
+    "evidence_report": {
+      "path": "artifacts/sprints/sprint-2/story-2.1/versioned-corpus-report.json",
+      "sha256": "32e8080e73e5a06b6e8b86ac4b732b11a31db70d2088f3a827537574b5b60535"
+    },
+    "manifest": {
+      "path": "fixtures/corpus/v1/manifest.json",
+      "self_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
+      "sha256": "630465e2651c00c4c4fe4dc775be2c4eea448f3f8e882622df07ab675f09be90"
+    },
+    "profile": {
+      "path": "fixtures/corpus-profile.json",
+      "sha256": "bbc3ff084b794443f7bfe9c2a427969bf00d5c6ad72bd84196e31304aa0d9086"
+    }
+  },
+  "generated_at": "2024-01-01T00:03:00Z",
+  "golden_manifests": [
+    {
+      "archive_path": "golden/derived-task-count.json",
+      "evidence_state": "Derived",
+      "manifest_id": "agentmage-expected-derived-task-count-v1",
+      "sha256": "dd7a5c1ffbb2ca858b3143e7298e19088b51b430c26a5ad1da6454ca98ec033e"
+    },
+    {
+      "archive_path": "golden/inferred-testing-preference.json",
+      "evidence_state": "Inferred",
+      "manifest_id": "agentmage-expected-inferred-testing-preference-v1",
+      "sha256": "ff365c8f0bc9290fbe9007e1f54213f7fa857a750afa6d9e66f8bfc2e9c89cb6"
+    },
+    {
+      "archive_path": "golden/observed-bounded-read.json",
+      "evidence_state": "Observed",
+      "manifest_id": "agentmage-expected-observed-bounded-read-v1",
+      "sha256": "b3b188d39544f1ffbbc09c81092b2e2d79af4b363dfa112f69238c7f42f10e0b"
+    },
+    {
+      "archive_path": "golden/unknown-adjacent-workspace.json",
+      "evidence_state": "Unknown/Blocked",
+      "manifest_id": "agentmage-expected-unknown-adjacent-workspace-v1",
+      "sha256": "db929cab58eed1feaec23964e27aa67265786ea4cbec6c2b18deffcb337212ca"
+    }
+  ],
+  "ledger_id": "agentmage-fixture-provenance-ledger-v1",
+  "ledger_sha256": "f4a9cdff1ef9e02814750fedb71ce607cceda3a742d0bc93ee4beb8911f70640",
+  "ledger_version": "1.0.0",
+  "lineage": {
+    "edges": [
+      {
+        "edge_id": "edge-acceptance-consumes-corpus",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "consumes",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-acceptance-consumes-fake-adapters",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "consumes",
+        "to_node": "report-fake-adapters"
+      },
+      {
+        "edge_id": "edge-acceptance-consumes-platform-results",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "consumes",
+        "to_node": "report-platform-results"
+      },
+      {
+        "edge_id": "edge-acceptance-consumes-result-bundles",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "consumes",
+        "to_node": "report-result-bundles"
+      },
+      {
+        "edge_id": "edge-acceptance-runner-implementation-report",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "produces",
+        "to_node": "report-acceptance-runner"
+      },
+      {
+        "edge_id": "edge-acceptance-runner-profile-implementation",
+        "from_node": "profile-acceptance-runner",
+        "relation": "configures",
+        "to_node": "implementation-acceptance-runner"
+      },
+      {
+        "edge_id": "edge-adversarial-generator-archive",
+        "from_node": "generator-adversarial",
+        "relation": "contributes-to",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-adversarial-generator-report",
+        "from_node": "generator-adversarial",
+        "relation": "produces",
+        "to_node": "report-adversarial"
+      },
+      {
+        "edge_id": "edge-adversarial-profile-generator",
+        "from_node": "profile-adversarial",
+        "relation": "configures",
+        "to_node": "generator-adversarial"
+      },
+      {
+        "edge_id": "edge-base-generator-archive",
+        "from_node": "generator-base",
+        "relation": "contributes-to",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-base-generator-report",
+        "from_node": "generator-base",
+        "relation": "produces",
+        "to_node": "report-base"
+      },
+      {
+        "edge_id": "edge-base-profile-generator",
+        "from_node": "profile-base",
+        "relation": "configures",
+        "to_node": "generator-base"
+      },
+      {
+        "edge_id": "edge-corpus-assembler-archive",
+        "from_node": "assembler-corpus",
+        "relation": "produces",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-corpus-manifest-archive",
+        "from_node": "manifest-corpus",
+        "relation": "describes",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-corpus-profile-assembler",
+        "from_node": "profile-corpus",
+        "relation": "configures",
+        "to_node": "assembler-corpus"
+      },
+      {
+        "edge_id": "edge-corpus-report-manifest",
+        "from_node": "report-corpus",
+        "relation": "verifies",
+        "to_node": "manifest-corpus"
+      },
+      {
+        "edge_id": "edge-documents-generator-archive",
+        "from_node": "generator-documents",
+        "relation": "contributes-to",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-documents-generator-report",
+        "from_node": "generator-documents",
+        "relation": "produces",
+        "to_node": "report-documents"
+      },
+      {
+        "edge_id": "edge-documents-profile-generator",
+        "from_node": "profile-documents",
+        "relation": "configures",
+        "to_node": "generator-documents"
+      },
+      {
+        "edge_id": "edge-fake-adapters-implementation-report",
+        "from_node": "implementation-fake-adapters",
+        "relation": "produces",
+        "to_node": "report-fake-adapters"
+      },
+      {
+        "edge_id": "edge-fake-adapters-profile-implementation",
+        "from_node": "profile-fake-adapters",
+        "relation": "configures",
+        "to_node": "implementation-fake-adapters"
+      },
+      {
+        "edge_id": "edge-golden-generator-archive",
+        "from_node": "generator-golden",
+        "relation": "contributes-to",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-golden-generator-report",
+        "from_node": "generator-golden",
+        "relation": "produces",
+        "to_node": "report-golden"
+      },
+      {
+        "edge_id": "edge-golden-profile-generator",
+        "from_node": "profile-golden",
+        "relation": "configures",
+        "to_node": "generator-golden"
+      },
+      {
+        "edge_id": "edge-paths-generator-archive",
+        "from_node": "generator-paths",
+        "relation": "contributes-to",
+        "to_node": "archive-corpus"
+      },
+      {
+        "edge_id": "edge-paths-generator-report",
+        "from_node": "generator-paths",
+        "relation": "produces",
+        "to_node": "report-paths"
+      },
+      {
+        "edge_id": "edge-paths-profile-generator",
+        "from_node": "profile-paths",
+        "relation": "configures",
+        "to_node": "generator-paths"
+      },
+      {
+        "edge_id": "edge-platform-results-implementation-report",
+        "from_node": "implementation-platform-results",
+        "relation": "produces",
+        "to_node": "report-platform-results"
+      },
+      {
+        "edge_id": "edge-platform-results-profile-implementation",
+        "from_node": "profile-platform-results",
+        "relation": "configures",
+        "to_node": "implementation-platform-results"
+      },
+      {
+        "edge_id": "edge-result-bundles-implementation-report",
+        "from_node": "implementation-result-bundles",
+        "relation": "produces",
+        "to_node": "report-result-bundles"
+      },
+      {
+        "edge_id": "edge-result-bundles-profile-implementation",
+        "from_node": "profile-result-bundles",
+        "relation": "configures",
+        "to_node": "implementation-result-bundles"
+      }
+    ],
+    "nodes": [
+      {
+        "artifact_role": "archive",
+        "node_id": "archive-corpus",
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+        "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "assembler-corpus",
+        "path": "scripts/versioned_corpus.py",
+        "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+      },
+      {
+        "artifact_role": "generator",
+        "node_id": "generator-adversarial",
+        "path": "scripts/adversarial_fixture_generator.py",
+        "sha256": "053a2f16bc7919f3d97425f76470b34cd026430925b37e417ddd302ae8af2d2a"
+      },
+      {
+        "artifact_role": "generator",
+        "node_id": "generator-base",
+        "path": "scripts/fixture_generator.py",
+        "sha256": "0b61463bc170a9f76e2497d836a883af21456497640e8f4810d6ce2280b807d9"
+      },
+      {
+        "artifact_role": "generator",
+        "node_id": "generator-documents",
+        "path": "scripts/document_fixture_generator.py",
+        "sha256": "8a7c8c3824e6b88801f47b29f5c0e209de35201038bd7f0770e52fe626960638"
+      },
+      {
+        "artifact_role": "generator",
+        "node_id": "generator-golden",
+        "path": "scripts/expected_output_manifests.py",
+        "sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13"
+      },
+      {
+        "artifact_role": "generator",
+        "node_id": "generator-paths",
+        "path": "scripts/path_fixture_generator.py",
+        "sha256": "48894669061956708d5e526cf4b4f196dd304d7a757d32f2c66d7788562f2c94"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "implementation-acceptance-runner",
+        "path": "scripts/shared_acceptance_runner.py",
+        "sha256": "e21eba7459ce645c1aea41b3a4a42ab2199ccb2da1a3227fe3b886a3ff828b90"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "implementation-fake-adapters",
+        "path": "fixtures/fake_adapters.py",
+        "sha256": "8c15a54095e67a5ad354ec8f8e79a9abee2902cb38e25ac8be9decf2e1ed6403"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "implementation-platform-results",
+        "path": "scripts/platform_result_recorder.py",
+        "sha256": "b87cdcc57dd9c906d10f4013c4b2046cbe3925af02a3b07d11c528ef4ee5a0fd"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "implementation-result-bundles",
+        "path": "scripts/test_result_bundle.py",
+        "sha256": "3532216f328f413a8e5e22b10d0c1dd0937e15d10e14872b9e094aeb57de86c9"
+      },
+      {
+        "artifact_role": "manifest",
+        "node_id": "manifest-corpus",
+        "path": "fixtures/corpus/v1/manifest.json",
+        "sha256": "630465e2651c00c4c4fe4dc775be2c4eea448f3f8e882622df07ab675f09be90"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-acceptance-runner",
+        "path": "fixtures/acceptance-runner-profile.json",
+        "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-adversarial",
+        "path": "fixtures/adversarial-fixture-profile.json",
+        "sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-base",
+        "path": "fixtures/generator-profile.json",
+        "sha256": "80a368b6b0f100ce8bddd9c668d744c594a0be6bfbcacd173f1e05b2c5bafc9e"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-corpus",
+        "path": "fixtures/corpus-profile.json",
+        "sha256": "bbc3ff084b794443f7bfe9c2a427969bf00d5c6ad72bd84196e31304aa0d9086"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-documents",
+        "path": "fixtures/document-fixture-profile.json",
+        "sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-fake-adapters",
+        "path": "fixtures/fake-adapter-contract.json",
+        "sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-golden",
+        "path": "fixtures/expected-output-profile.json",
+        "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-paths",
+        "path": "fixtures/path-fixture-profile.json",
+        "sha256": "be4812c8be1a35eae561bb3d4c8e9e8741f3eaf4d10502b098e33a4142aa2655"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-platform-results",
+        "path": "fixtures/platform-result-profile.json",
+        "sha256": "bf82a978ac768da55c08b439846395eed75dc57e4fa49f3f268b5dab7d0a2730"
+      },
+      {
+        "artifact_role": "profile",
+        "node_id": "profile-result-bundles",
+        "path": "fixtures/test-result-bundle-profile.json",
+        "sha256": "b9de6a5526078f02ab8b9c5c880f6591ffb586b6aee117ef8fc732b2ac33bc60"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-acceptance-runner",
+        "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
+        "sha256": "b2e37902000b7110ce0a233b1d60cd7a007cfed0187c46c9d76108a5452b8810"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-adversarial",
+        "path": "artifacts/sprints/sprint-2/story-2.1/adversarial-fixture-report.json",
+        "sha256": "3868268d6946c99b22891d8f3bce673e8cb0bfcc6991629d86fd7df0058dcbf4"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-base",
+        "path": "artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json",
+        "sha256": "9561e0c2b9f6af0f9ee2c86d99df71143f0b36827be5569433f8daf4d4ecfd6f"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-corpus",
+        "path": "artifacts/sprints/sprint-2/story-2.1/versioned-corpus-report.json",
+        "sha256": "32e8080e73e5a06b6e8b86ac4b732b11a31db70d2088f3a827537574b5b60535"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-documents",
+        "path": "artifacts/sprints/sprint-2/story-2.1/document-fixture-report.json",
+        "sha256": "19afe1b0cbc9a942753c8c7531b81f82133553793605223f59a991bd8b960430"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-fake-adapters",
+        "path": "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
+        "sha256": "87f55101e959d78ebb6e32932ab0dc26eb2a3d7c375403f35c78c207707d4b5a"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-golden",
+        "path": "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json",
+        "sha256": "987bcf00ffa8555bcae45f040662e8f0c94627f2161b13940755d456177f8eec"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-paths",
+        "path": "artifacts/sprints/sprint-2/story-2.1/path-fixture-report.json",
+        "sha256": "51f0db31866afed8405f0380a74e32de2ae83471fc72a6062ae90ea1e78362be"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-platform-results",
+        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-result-bundles",
+        "path": "artifacts/sprints/sprint-2/story-2.1/test-result-bundle-report.json",
+        "sha256": "0cc74f8cf02ace0eb7842436ebcc8ddc699f2c976e9b6490073d04c7bc81f349"
+      }
+    ]
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "schema_version": 1,
+  "scope": {
+    "external_paths": false,
+    "fixture_classification": "repository-controlled-synthetic-only",
+    "private_user_data": false,
+    "real_credentials": false,
+    "root_fixture_contract_count": 10,
+    "root_fixture_contracts_complete": true
+  },
+  "source_families": [
+    {
+      "archive_entries": {
+        "count": 39,
+        "set_sha256": "c9bd2038a1c7c94f3061df32003097012cdaf5dbb1d6ea443087924b6b14c30d"
+      },
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json",
+        "sha256": "9561e0c2b9f6af0f9ee2c86d99df71143f0b36827be5569433f8daf4d4ecfd6f"
+      },
+      "family": "base",
+      "generator": {
+        "path": "scripts/fixture_generator.py",
+        "sha256": "0b61463bc170a9f76e2497d836a883af21456497640e8f4810d6ce2280b807d9"
+      },
+      "namespace": "base",
+      "profile": {
+        "id": "agentmage-synthetic-corpus-v1",
+        "path": "fixtures/generator-profile.json",
+        "sha256": "80a368b6b0f100ce8bddd9c668d744c594a0be6bfbcacd173f1e05b2c5bafc9e"
+      }
+    },
+    {
+      "archive_entries": {
+        "count": 11,
+        "set_sha256": "2d3e6ee1e4380b79230fac18ab8a871a1571ed02099b77cbf3efc5fde853f73e"
+      },
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/path-fixture-report.json",
+        "sha256": "51f0db31866afed8405f0380a74e32de2ae83471fc72a6062ae90ea1e78362be"
+      },
+      "family": "paths",
+      "generator": {
+        "path": "scripts/path_fixture_generator.py",
+        "sha256": "48894669061956708d5e526cf4b4f196dd304d7a757d32f2c66d7788562f2c94"
+      },
+      "namespace": "paths",
+      "profile": {
+        "id": "agentmage-path-fixtures-v1",
+        "path": "fixtures/path-fixture-profile.json",
+        "sha256": "be4812c8be1a35eae561bb3d4c8e9e8741f3eaf4d10502b098e33a4142aa2655"
+      }
+    },
+    {
+      "archive_entries": {
+        "count": 13,
+        "set_sha256": "811f2d221de593f1f855dd334ea9d6a0e09b90c85758110fe03c903e8a9930c8"
+      },
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/adversarial-fixture-report.json",
+        "sha256": "3868268d6946c99b22891d8f3bce673e8cb0bfcc6991629d86fd7df0058dcbf4"
+      },
+      "family": "adversarial",
+      "generator": {
+        "path": "scripts/adversarial_fixture_generator.py",
+        "sha256": "053a2f16bc7919f3d97425f76470b34cd026430925b37e417ddd302ae8af2d2a"
+      },
+      "namespace": "adversarial",
+      "profile": {
+        "id": "agentmage-adversarial-fixtures-v1",
+        "path": "fixtures/adversarial-fixture-profile.json",
+        "sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc"
+      }
+    },
+    {
+      "archive_entries": {
+        "count": 10,
+        "set_sha256": "2c371ed2164a83713295de3c0b0c83052dae92f334b36b3358ab04d82edfb34b"
+      },
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/document-fixture-report.json",
+        "sha256": "19afe1b0cbc9a942753c8c7531b81f82133553793605223f59a991bd8b960430"
+      },
+      "family": "documents",
+      "generator": {
+        "path": "scripts/document_fixture_generator.py",
+        "sha256": "8a7c8c3824e6b88801f47b29f5c0e209de35201038bd7f0770e52fe626960638"
+      },
+      "namespace": "documents",
+      "profile": {
+        "id": "agentmage-document-fixtures-v1",
+        "path": "fixtures/document-fixture-profile.json",
+        "sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425"
+      }
+    },
+    {
+      "archive_entries": {
+        "count": 4,
+        "set_sha256": "7712affaa870e1128e359568f260eb4c019353712959596be4b29642618f44ef"
+      },
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json",
+        "sha256": "987bcf00ffa8555bcae45f040662e8f0c94627f2161b13940755d456177f8eec"
+      },
+      "family": "golden",
+      "generator": {
+        "path": "scripts/expected_output_manifests.py",
+        "sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13"
+      },
+      "namespace": "golden",
+      "profile": {
+        "id": "agentmage-expected-output-manifests-v1",
+        "path": "fixtures/expected-output-profile.json",
+        "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+      }
+    }
+  ],
+  "status": "verified-synthetic-provenance"
+}

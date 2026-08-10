@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/testing/platform-result.schema.json",
+  "title": "AgentMage Platform Result Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "record_id",
+    "captured_at",
+    "environment",
+    "result",
+    "redaction",
+    "macos_support_claim",
+    "record_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "platform-result-environment"
+    },
+    "record_id": {
+      "type": "string",
+      "pattern": "^am-platform-result-[a-f0-9]{20}$"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "result": {
+      "$ref": "#/$defs/result"
+    },
+    "redaction": {
+      "$ref": "#/$defs/redaction"
+    },
+    "macos_support_claim": {
+      "const": "none"
+    },
+    "record_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architecture",
+        "containerized",
+        "continuous_integration",
+        "distribution_id",
+        "distribution_version",
+        "kernel_release",
+        "os_family",
+        "privilege_class",
+        "python_implementation",
+        "python_version",
+        "text_encoding"
+      ],
+      "properties": {
+        "architecture": {
+          "$ref": "#/$defs/identifier"
+        },
+        "containerized": {
+          "type": "boolean"
+        },
+        "continuous_integration": {
+          "type": "boolean"
+        },
+        "distribution_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "distribution_version": {
+          "$ref": "#/$defs/version"
+        },
+        "kernel_release": {
+          "$ref": "#/$defs/version"
+        },
+        "os_family": {
+          "const": "linux"
+        },
+        "privilege_class": {
+          "enum": [
+            "standard-user",
+            "privileged"
+          ]
+        },
+        "python_implementation": {
+          "$ref": "#/$defs/identifier"
+        },
+        "python_version": {
+          "$ref": "#/$defs/version"
+        },
+        "text_encoding": {
+          "$ref": "#/$defs/version"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build",
+        "fixture_set",
+        "model",
+        "runtime",
+        "policy",
+        "result_id",
+        "status"
+      ],
+      "properties": {
+        "build": {
+          "$ref": "#/$defs/identity"
+        },
+        "fixture_set": {
+          "$ref": "#/$defs/identity"
+        },
+        "model": {
+          "$ref": "#/$defs/identity"
+        },
+        "runtime": {
+          "$ref": "#/$defs/identity"
+        },
+        "policy": {
+          "$ref": "#/$defs/identity"
+        },
+        "result_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "skipped",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowlist_version",
+        "ambient_environment_values_recorded",
+        "forbidden_field_count",
+        "private_paths_recorded",
+        "secret_store_values_recorded"
+      ],
+      "properties": {
+        "allowlist_version": {
+          "const": "platform-environment-v1"
+        },
+        "ambient_environment_values_recorded": {
+          "const": false
+        },
+        "forbidden_field_count": {
+          "const": 13
+        },
+        "private_paths_recorded": {
+          "const": false
+        },
+        "secret_store_values_recorded": {
+          "const": false
+        }
+      }
+    }
+  }
+}

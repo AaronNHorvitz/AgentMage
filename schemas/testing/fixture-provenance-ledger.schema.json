@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/testing/fixture-provenance-ledger.schema.json",
+  "title": "AgentMage Fixture Provenance Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ledger_id",
+    "ledger_version",
+    "status",
+    "generated_at",
+    "scope",
+    "corpus",
+    "source_families",
+    "contracts",
+    "golden_manifests",
+    "lineage",
+    "controls",
+    "macos_execution_status",
+    "macos_support_claim",
+    "ledger_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "ledger_id": {
+      "const": "agentmage-fixture-provenance-ledger-v1"
+    },
+    "ledger_version": {
+      "const": "1.0.0"
+    },
+    "status": {
+      "const": "verified-synthetic-provenance"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "corpus": {
+      "$ref": "#/$defs/corpus"
+    },
+    "source_families": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/sourceFamily"
+      }
+    },
+    "contracts": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/contract"
+      }
+    },
+    "golden_manifests": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/goldenManifest"
+      }
+    },
+    "lineage": {
+      "$ref": "#/$defs/lineage"
+    },
+    "controls": {
+      "$ref": "#/$defs/controls"
+    },
+    "macos_execution_status": {
+      "const": "blocked-macos"
+    },
+    "macos_support_claim": {
+      "const": "none"
+    },
+    "ledger_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,95}$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "identifiedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture_classification",
+        "root_fixture_contract_count",
+        "root_fixture_contracts_complete",
+        "private_user_data",
+        "real_credentials",
+        "external_paths"
+      ],
+      "properties": {
+        "fixture_classification": {
+          "const": "repository-controlled-synthetic-only"
+        },
+        "root_fixture_contract_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "root_fixture_contracts_complete": {
+          "const": true
+        },
+        "private_user_data": {
+          "const": false
+        },
+        "real_credentials": {
+          "const": false
+        },
+        "external_paths": {
+          "const": false
+        }
+      }
+    },
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "corpus_id",
+        "corpus_version",
+        "profile",
+        "assembler",
+        "archive",
+        "manifest",
+        "evidence_report"
+      ],
+      "properties": {
+        "corpus_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "corpus_version": {
+          "const": "1.0.0"
+        },
+        "profile": {
+          "$ref": "#/$defs/artifact"
+        },
+        "assembler": {
+          "$ref": "#/$defs/artifact"
+        },
+        "archive": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "bytes",
+            "entry_count"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/repositoryPath"
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "entry_count": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "self_sha256"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/repositoryPath"
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "self_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        },
+        "evidence_report": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "sourceFamily": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "namespace",
+        "profile",
+        "generator",
+        "evidence_report",
+        "archive_entries"
+      ],
+      "properties": {
+        "family": {
+          "enum": [
+            "base",
+            "paths",
+            "adversarial",
+            "documents",
+            "golden"
+          ]
+        },
+        "namespace": {
+          "$ref": "#/$defs/identifier"
+        },
+        "profile": {
+          "$ref": "#/$defs/identifiedArtifact"
+        },
+        "generator": {
+          "$ref": "#/$defs/artifact"
+        },
+        "evidence_report": {
+          "$ref": "#/$defs/artifact"
+        },
+        "archive_entries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "set_sha256"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "set_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_id",
+        "contract_kind",
+        "profile",
+        "implementation",
+        "evidence_report"
+      ],
+      "properties": {
+        "contract_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "contract_kind": {
+          "enum": [
+            "fake-adapters",
+            "platform-results",
+            "test-result-bundles",
+            "acceptance-runner",
+            "fault-test-adapters"
+          ]
+        },
+        "profile": {
+          "$ref": "#/$defs/artifact"
+        },
+        "implementation": {
+          "$ref": "#/$defs/artifact"
+        },
+        "evidence_report": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "goldenManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_id",
+        "evidence_state",
+        "archive_path",
+        "sha256"
+      ],
+      "properties": {
+        "manifest_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "evidence_state": {
+          "enum": [
+            "Observed",
+            "Derived",
+            "Inferred",
+            "Unknown/Blocked"
+          ]
+        },
+        "archive_path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/edge"
+          }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "artifact_role",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "node_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "artifact_role": {
+          "enum": [
+            "profile",
+            "generator",
+            "implementation",
+            "archive",
+            "manifest",
+            "evidence-report"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge_id",
+        "from_node",
+        "to_node",
+        "relation"
+      ],
+      "properties": {
+        "edge_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "from_node": {
+          "$ref": "#/$defs/identifier"
+        },
+        "to_node": {
+          "$ref": "#/$defs/identifier"
+        },
+        "relation": {
+          "enum": [
+            "configures",
+            "produces",
+            "contributes-to",
+            "describes",
+            "verifies",
+            "consumes"
+          ]
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "all_artifact_hashes_verified",
+        "unique_node_ids",
+        "unique_artifact_paths",
+        "unique_edge_ids",
+        "no_dangling_edges",
+        "acyclic",
+        "platform_records_schema_valid",
+        "raw_environment_values_retained"
+      ],
+      "properties": {
+        "all_artifact_hashes_verified": {
+          "const": true
+        },
+        "unique_node_ids": {
+          "const": true
+        },
+        "unique_artifact_paths": {
+          "const": true
+        },
+        "unique_edge_ids": {
+          "const": true
+        },
+        "no_dangling_edges": {
+          "const": true
+        },
+        "acyclic": {
+          "const": true
+        },
+        "platform_records_schema_valid": {
+          "const": true
+        },
+        "raw_environment_values_retained": {
+          "const": false
+        }
+      }
+    }
+  }
+}

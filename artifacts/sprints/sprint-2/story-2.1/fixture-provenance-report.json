@@ -1,0 +1,37 @@
+{
+  "all_artifact_hashes_verified": true,
+  "fixture_classification": "repository-controlled-synthetic-only",
+  "ledger": {
+    "contract_count": 4,
+    "edge_count": 31,
+    "node_count": 32,
+    "path": "fixtures/corpus/v1/provenance-ledger.json",
+    "self_sha256": "f4a9cdff1ef9e02814750fedb71ce607cceda3a742d0bc93ee4beb8911f70640",
+    "sha256": "78875a1f9bcae04e54aaae8a35ed026f45366a007fe2e8939f0610724d5acb3d",
+    "source_family_count": 5
+  },
+  "lineage_graph_acyclic": true,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "platform_records": {
+    "count": 2,
+    "raw_environment_values_retained": false,
+    "record_set_sha256": "9b3fd4a8f8b6dbf03becdd4ff61743788f052f127647a184356212fdde3fc666",
+    "schema_valid": true
+  },
+  "product_support_claim": "none",
+  "root_fixture_contracts_complete": true,
+  "schema_version": 1,
+  "schemas": {
+    "fixture_provenance_ledger": {
+      "path": "schemas/testing/fixture-provenance-ledger.schema.json",
+      "sha256": "0916a6e44fa41f27ffaca9929b57a67163d9c563e0a4ace230ad45950e5a57c9"
+    },
+    "platform_result": {
+      "path": "schemas/testing/platform-result.schema.json",
+      "sha256": "b82aa9db229b44d95cda0a6ddc9cf1ec97eedc17ecc655cbcf07b3a68564605a"
+    }
+  },
+  "status": "pass",
+  "task_id": "2.1.2.3"
+}

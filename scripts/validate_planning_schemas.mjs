@@ -22,6 +22,11 @@ export const TEMPLATE_TYPES = Object.freeze([
   "requirement-supersession",
 ]);
 
+export const TEST_RECORD_TYPES = Object.freeze([
+  "platform-result",
+  "fixture-provenance-ledger",
+]);
+
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
 }
@@ -54,6 +59,24 @@ export function createPlanningValidators() {
   return Object.fromEntries(
     RECORD_TYPES.map((recordType) => {
       const schema = readJson(`schemas/planning/${recordType}.schema.json`);
+      return [recordType, ajv.compile(schema)];
+    }),
+  );
+}
+
+export function createTestingValidators() {
+  const ajv = new Ajv2020({
+    allErrors: true,
+    coerceTypes: false,
+    removeAdditional: false,
+    strict: true,
+    useDefaults: false,
+  });
+  addFormats(ajv);
+
+  return Object.fromEntries(
+    TEST_RECORD_TYPES.map((recordType) => {
+      const schema = readJson(`schemas/testing/${recordType}.schema.json`);
       return [recordType, ajv.compile(schema)];
     }),
   );
@@ -145,6 +168,45 @@ export function validatePlanningRecord(recordType, data, validators) {
   };
 }
 
+export function validateTestingRecord(recordType, data, validators) {
+  const validator = validators[recordType];
+  if (!validator) {
+    throw new Error(`unknown testing record type: ${recordType}`);
+  }
+  const valid = validator(data);
+  return {
+    valid,
+    schemaErrors: valid
+      ? []
+      : (validator.errors ?? []).map((error) =>
+        `${error.instancePath || "/"} ${error.message}`,
+      ),
+  };
+}
+
+export function validateTestingFixtures() {
+  const validators = createTestingValidators();
+  const platformReport = readJson(
+    "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+  );
+  const results = platformReport.synthetic_record_set.records.map(
+    (record, index) => ({
+      recordType: `platform-result[${index}]`,
+      ...validateTestingRecord("platform-result", record, validators),
+    }),
+  );
+  const ledger = readJson("fixtures/corpus/v1/provenance-ledger.json");
+  results.push({
+    recordType: "fixture-provenance-ledger",
+    ...validateTestingRecord(
+      "fixture-provenance-ledger",
+      ledger,
+      validators,
+    ),
+  });
+  return results;
+}
+
 export function validatePlanningFixtures() {
   const validators = createPlanningValidators();
   const results = [];
@@ -176,22 +238,30 @@ export function validatePlanningTemplates() {
 }
 
 function main() {
-  const results = [
+  const planningResults = [
     ...validatePlanningFixtures(),
     ...validatePlanningTemplates(),
   ];
+  const testingResults = validateTestingFixtures();
+  const results = [...planningResults, ...testingResults];
   const failures = results.filter((result) => !result.valid);
   if (failures.length > 0) {
     for (const failure of failures) {
       console.error(`${failure.recordType}: validation failed`);
-      for (const error of [...failure.schemaErrors, ...failure.semanticErrors]) {
+      for (const error of [
+        ...failure.schemaErrors,
+        ...(failure.semanticErrors ?? []),
+      ]) {
         console.error(`- ${error}`);
       }
     }
     return 1;
   }
 
-  console.log(`Validated ${results.length} planning schema fixture(s) and template(s).`);
+  console.log(
+    `Validated ${planningResults.length} planning and `
+      + `${testingResults.length} testing schema fixture(s).`,
+  );
   return 0;
 }
 
