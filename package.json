@@ -12,6 +12,8 @@
     "docs:clean-check": "npm ci --ignore-scripts && npm run docs:check",
     "evidence:sprint0:build": "python3 scripts/sprint0_evidence.py --write --source-revision HEAD",
     "evidence:sprint0:check": "python3 scripts/sprint0_evidence.py",
+    "evidence:story0.2:build": "python3 scripts/story_0_2_evidence.py --write --source-revision HEAD",
+    "evidence:story0.2:check": "python3 scripts/story_0_2_evidence.py",
     "policy:build": "python3 scripts/policy_expectations.py",
     "policy:check": "python3 scripts/policy_expectations.py --check",
     "references:check": "python3 scripts/security_references.py",
