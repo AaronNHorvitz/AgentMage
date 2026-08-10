@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/support/emergency-disable-policy.schema.json",
+  "title": "AgentMage local emergency disable policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "fixture_status",
+    "policy",
+    "signing",
+    "installation",
+    "entries",
+    "evaluation",
+    "receipt_policy",
+    "recovery",
+    "claims"
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$",
+      "minLength": 1,
+      "maxLength": 512
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "local-emergency-disable-policy"
+    },
+    "fixture_status": {
+      "const": "synthetic-contract-fixture-not-activatable"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_id",
+        "policy_sequence",
+        "issued_at",
+        "not_before",
+        "expires_at",
+        "payload_sha256",
+        "advisory_id"
+      ],
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "policy_sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "not_before": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "advisory_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trust_root_id",
+        "algorithm",
+        "threshold",
+        "authorized_signer_key_ids",
+        "detached_signatures",
+        "verify_before_activation"
+      ],
+      "properties": {
+        "trust_root_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "algorithm": {
+          "const": "ed25519"
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "authorized_signer_key_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "detached_signatures": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signer_key_id", "path", "sha256"],
+            "properties": {
+              "signer_key_id": {
+                "$ref": "#/$defs/identifier"
+              },
+              "path": {
+                "$ref": "#/$defs/relativePath"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        },
+        "verify_before_activation": {
+          "const": true
+        }
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "acquisition_authority",
+        "local_trust_root_required",
+        "sequence_must_increase",
+        "atomic_activation_required",
+        "durable_staging_required",
+        "prior_valid_policy_retained_until_postcheck",
+        "automatic_checks",
+        "background_downloads",
+        "remote_trigger",
+        "remote_control",
+        "network_allowed",
+        "workstation_data_transmitted"
+      ],
+      "properties": {
+        "mode": {
+          "const": "user-selected-local-bundle"
+        },
+        "acquisition_authority": {
+          "const": "outside-agentmage-runtime"
+        },
+        "local_trust_root_required": {
+          "const": true
+        },
+        "sequence_must_increase": {
+          "const": true
+        },
+        "atomic_activation_required": {
+          "const": true
+        },
+        "durable_staging_required": {
+          "const": true
+        },
+        "prior_valid_policy_retained_until_postcheck": {
+          "const": true
+        },
+        "automatic_checks": {
+          "const": false
+        },
+        "background_downloads": {
+          "const": false
+        },
+        "remote_trigger": {
+          "const": false
+        },
+        "remote_control": {
+          "const": false
+        },
+        "network_allowed": {
+          "const": false
+        },
+        "workstation_data_transmitted": {
+          "const": false
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entry_id",
+          "subject_kind",
+          "subject_id",
+          "subject_sha256",
+          "effect",
+          "reason_code",
+          "advisory_id"
+        ],
+        "properties": {
+          "entry_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "subject_kind": {
+            "enum": [
+              "model-artifact",
+              "runtime",
+              "component",
+              "capability",
+              "release-version"
+            ]
+          },
+          "subject_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "subject_sha256": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effect": {
+            "const": "block"
+          },
+          "reason_code": {
+            "enum": [
+              "compromised",
+              "revoked",
+              "unmaintained",
+              "unsupported",
+              "policy-excluded"
+            ]
+          },
+          "advisory_id": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoints",
+        "exact_kind_and_id_match_required",
+        "declared_hash_must_match",
+        "block_precedence",
+        "no_match_effect",
+        "invalid_candidate_effect",
+        "unreadable_active_policy_effect",
+        "may_create_authority"
+      ],
+      "properties": {
+        "checkpoints": {
+          "type": "array",
+          "const": [
+            "product-startup-admission",
+            "model-load",
+            "runtime-load",
+            "component-load",
+            "capability-registration",
+            "work-acceptance"
+          ]
+        },
+        "exact_kind_and_id_match_required": {
+          "const": true
+        },
+        "declared_hash_must_match": {
+          "const": true
+        },
+        "block_precedence": {
+          "const": "before-ordinary-authority-evaluation"
+        },
+        "no_match_effect": {
+          "const": "continue-without-creating-authority"
+        },
+        "invalid_candidate_effect": {
+          "const": "reject-and-preserve-active-policy"
+        },
+        "unreadable_active_policy_effect": {
+          "const": "local-safe-mode-block-model-and-capability-registration"
+        },
+        "may_create_authority": {
+          "const": false
+        }
+      }
+    },
+    "receipt_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_fields", "prohibited_fields", "raw_values_retained"],
+      "properties": {
+        "required_fields": {
+          "type": "array",
+          "const": [
+            "policy-id",
+            "policy-sequence",
+            "policy-payload-sha256",
+            "subject-kind",
+            "subject-id",
+            "subject-sha256-if-declared",
+            "matched-entry-id-if-any",
+            "outcome",
+            "reason-code",
+            "advisory-id"
+          ]
+        },
+        "prohibited_fields": {
+          "type": "array",
+          "const": [
+            "prompt",
+            "user-file-content",
+            "credential",
+            "private-key",
+            "environment-value",
+            "unrelated-path"
+          ]
+        },
+        "raw_values_retained": {
+          "const": false
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "newer_signed_policy_required",
+        "explicit_subject_unblock_required",
+        "expiration_silently_unblocks",
+        "deletion_silently_unblocks",
+        "downgrade_allowed",
+        "remote_unblock_allowed"
+      ],
+      "properties": {
+        "newer_signed_policy_required": {
+          "const": true
+        },
+        "explicit_subject_unblock_required": {
+          "const": true
+        },
+        "expiration_silently_unblocks": {
+          "const": false
+        },
+        "deletion_silently_unblocks": {
+          "const": false
+        },
+        "downgrade_allowed": {
+          "const": false
+        },
+        "remote_unblock_allowed": {
+          "const": false
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "production_signer",
+        "production_trust_root",
+        "implemented_installer",
+        "implemented_startup_hook",
+        "product_activation",
+        "macos_support"
+      ],
+      "properties": {
+        "production_signer": {
+          "const": false
+        },
+        "production_trust_root": {
+          "const": false
+        },
+        "implemented_installer": {
+          "const": false
+        },
+        "implemented_startup_hook": {
+          "const": false
+        },
+        "product_activation": {
+          "const": false
+        },
+        "macos_support": {
+          "const": false
+        }
+      }
+    }
+  }
+}

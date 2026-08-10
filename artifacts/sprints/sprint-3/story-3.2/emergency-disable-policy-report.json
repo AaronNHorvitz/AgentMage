@@ -1,0 +1,159 @@
+{
+  "formal_schema_validation": {
+    "canonical_record_count": 1,
+    "engine": "ajv-draft-2020-12",
+    "node_mutation_test_count": 4,
+    "status": "pass"
+  },
+  "implemented_installer_claim": "none",
+  "implemented_startup_hook_claim": "none",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "negative_results": [
+    {
+      "advisory_id": null,
+      "matched_entry_id": null,
+      "outcome": "continue-without-authority",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "no-match",
+      "subject_id": "gemma-model-fixture",
+      "subject_kind": "model-artifact",
+      "subject_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    {
+      "advisory_id": null,
+      "matched_entry_id": null,
+      "outcome": "continue-without-authority",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "no-match",
+      "subject_id": "unknown-component",
+      "subject_kind": "component",
+      "subject_sha256": null
+    }
+  ],
+  "network_used": false,
+  "policy_identity": {
+    "fixture_status": "synthetic-contract-fixture-not-activatable",
+    "sha256": "fa98f8aa21d7786acde02d2bec0fafca7c3890ddaad0e4372313fca6e1f34fbf"
+  },
+  "private_user_data_used": false,
+  "product_activation_claim": "none",
+  "production_signer_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "bytes": 4056,
+      "path": "docs/decisions/0007-local-emergency-disablement.md",
+      "sha256": "602d386e7ae1c019813cea134cfdb2d567d51ccec54e743e5015d97d724f7226"
+    },
+    {
+      "bytes": 10229,
+      "path": "schemas/support/emergency-disable-policy.schema.json",
+      "sha256": "dbf1a9879fcb9e2d5dc7e8fb6e8492603d41c47d789bfa4a7a3eb9e65ac1d4af"
+    },
+    {
+      "bytes": 4696,
+      "path": "schemas/support/examples/emergency-disable-policy.valid.json",
+      "sha256": "fa98f8aa21d7786acde02d2bec0fafca7c3890ddaad0e4372313fca6e1f34fbf"
+    },
+    {
+      "bytes": 1530,
+      "path": "scripts/validate_emergency_disable_schema.mjs",
+      "sha256": "a80c69ab886205a8cef0b0d58533d447a3317a03bcf471e53eebde777b9cd93b"
+    },
+    {
+      "bytes": 15069,
+      "path": "scripts/emergency_disable_policy.py",
+      "sha256": "67d4f7ec8a2155495b12d55f342cfcf5e6fd1d6213077eced41363438d9f66bd"
+    },
+    {
+      "bytes": 1939,
+      "path": "tests/test_emergency_disable_schema.mjs",
+      "sha256": "6ce565a19db4e68d7001826fd1b55f9b89f71f64cf875db41a062702805c9011"
+    },
+    {
+      "bytes": 4318,
+      "path": "tests/test_emergency_disable_policy.py",
+      "sha256": "36507134b379df44dfa1636433e4bc28b46f4c78193906b07d44c67bc0968964"
+    }
+  ],
+  "status": "pass-contract-definition-product-integration-pending",
+  "story_id": "3.2",
+  "subject_results": [
+    {
+      "advisory_id": "am-sa-0002-fixture",
+      "matched_entry_id": "block-model-fixture",
+      "outcome": "blocked",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "compromised",
+      "subject_id": "gemma-model-fixture",
+      "subject_kind": "model-artifact",
+      "subject_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "advisory_id": "am-sa-0002-fixture",
+      "matched_entry_id": "block-runtime-fixture",
+      "outcome": "blocked",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "revoked",
+      "subject_id": "llama-cpp-runtime-fixture",
+      "subject_kind": "runtime",
+      "subject_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "advisory_id": "am-sa-0002-fixture",
+      "matched_entry_id": "block-component-fixture",
+      "outcome": "blocked",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "unmaintained",
+      "subject_id": "parser-component-fixture",
+      "subject_kind": "component",
+      "subject_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    {
+      "advisory_id": "am-sa-0002-fixture",
+      "matched_entry_id": "block-capability-fixture",
+      "outcome": "blocked",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "policy-excluded",
+      "subject_id": "workspace.read",
+      "subject_kind": "capability",
+      "subject_sha256": null
+    },
+    {
+      "advisory_id": "am-sa-0002-fixture",
+      "matched_entry_id": "block-version-fixture",
+      "outcome": "blocked",
+      "policy_id": "agentmage-emergency-policy-fixture",
+      "policy_payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_sequence": 7,
+      "reason_code": "unsupported",
+      "subject_id": "agentmage-0.1.0",
+      "subject_kind": "release-version",
+      "subject_sha256": null
+    }
+  ],
+  "summary": {
+    "blocked_subject_count": 5,
+    "hash_mismatch_blocked_count": 0,
+    "network_authority_count": 0,
+    "subject_class_count": 5,
+    "unknown_subject_blocked_count": 0,
+    "workstation_data_field_count": 0
+  },
+  "task_id": "3.2.1.3"
+}

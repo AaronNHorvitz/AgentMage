@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "local-emergency-disable-policy",
+  "fixture_status": "synthetic-contract-fixture-not-activatable",
+  "policy": {
+    "policy_id": "agentmage-emergency-policy-fixture",
+    "policy_sequence": 7,
+    "issued_at": "2026-08-10T00:00:00Z",
+    "not_before": "2026-08-10T00:00:00Z",
+    "expires_at": "2027-01-01T00:00:00Z",
+    "payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "advisory_id": "am-sa-0002-fixture"
+  },
+  "signing": {
+    "trust_root_id": "agentmage-emergency-root-v1-fixture",
+    "algorithm": "ed25519",
+    "threshold": 1,
+    "authorized_signer_key_ids": [
+      "agentmage-emergency-key-1-fixture"
+    ],
+    "detached_signatures": [
+      {
+        "signer_key_id": "agentmage-emergency-key-1-fixture",
+        "path": "signatures/emergency-policy.ed25519",
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    ],
+    "verify_before_activation": true
+  },
+  "installation": {
+    "mode": "user-selected-local-bundle",
+    "acquisition_authority": "outside-agentmage-runtime",
+    "local_trust_root_required": true,
+    "sequence_must_increase": true,
+    "atomic_activation_required": true,
+    "durable_staging_required": true,
+    "prior_valid_policy_retained_until_postcheck": true,
+    "automatic_checks": false,
+    "background_downloads": false,
+    "remote_trigger": false,
+    "remote_control": false,
+    "network_allowed": false,
+    "workstation_data_transmitted": false
+  },
+  "entries": [
+    {
+      "entry_id": "block-model-fixture",
+      "subject_kind": "model-artifact",
+      "subject_id": "gemma-model-fixture",
+      "subject_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "effect": "block",
+      "reason_code": "compromised",
+      "advisory_id": "am-sa-0002-fixture"
+    },
+    {
+      "entry_id": "block-runtime-fixture",
+      "subject_kind": "runtime",
+      "subject_id": "llama-cpp-runtime-fixture",
+      "subject_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "effect": "block",
+      "reason_code": "revoked",
+      "advisory_id": "am-sa-0002-fixture"
+    },
+    {
+      "entry_id": "block-component-fixture",
+      "subject_kind": "component",
+      "subject_id": "parser-component-fixture",
+      "subject_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "effect": "block",
+      "reason_code": "unmaintained",
+      "advisory_id": "am-sa-0002-fixture"
+    },
+    {
+      "entry_id": "block-capability-fixture",
+      "subject_kind": "capability",
+      "subject_id": "workspace.read",
+      "subject_sha256": null,
+      "effect": "block",
+      "reason_code": "policy-excluded",
+      "advisory_id": "am-sa-0002-fixture"
+    },
+    {
+      "entry_id": "block-version-fixture",
+      "subject_kind": "release-version",
+      "subject_id": "agentmage-0.1.0",
+      "subject_sha256": null,
+      "effect": "block",
+      "reason_code": "unsupported",
+      "advisory_id": "am-sa-0002-fixture"
+    }
+  ],
+  "evaluation": {
+    "checkpoints": [
+      "product-startup-admission",
+      "model-load",
+      "runtime-load",
+      "component-load",
+      "capability-registration",
+      "work-acceptance"
+    ],
+    "exact_kind_and_id_match_required": true,
+    "declared_hash_must_match": true,
+    "block_precedence": "before-ordinary-authority-evaluation",
+    "no_match_effect": "continue-without-creating-authority",
+    "invalid_candidate_effect": "reject-and-preserve-active-policy",
+    "unreadable_active_policy_effect": "local-safe-mode-block-model-and-capability-registration",
+    "may_create_authority": false
+  },
+  "receipt_policy": {
+    "required_fields": [
+      "policy-id",
+      "policy-sequence",
+      "policy-payload-sha256",
+      "subject-kind",
+      "subject-id",
+      "subject-sha256-if-declared",
+      "matched-entry-id-if-any",
+      "outcome",
+      "reason-code",
+      "advisory-id"
+    ],
+    "prohibited_fields": [
+      "prompt",
+      "user-file-content",
+      "credential",
+      "private-key",
+      "environment-value",
+      "unrelated-path"
+    ],
+    "raw_values_retained": false
+  },
+  "recovery": {
+    "newer_signed_policy_required": true,
+    "explicit_subject_unblock_required": true,
+    "expiration_silently_unblocks": false,
+    "deletion_silently_unblocks": false,
+    "downgrade_allowed": false,
+    "remote_unblock_allowed": false
+  },
+  "claims": {
+    "production_signer": false,
+    "production_trust_root": false,
+    "implemented_installer": false,
+    "implemented_startup_hook": false,
+    "product_activation": false,
+    "macos_support": false
+  }
+}
