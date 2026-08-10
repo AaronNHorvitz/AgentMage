@@ -119,6 +119,51 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             with self.subTest(rule=required_rule):
                 self.assertIn(required_rule, policy)
 
+    def test_runtime_boundaries_cover_platforms_processes_sockets_and_lifecycle(self) -> None:
+        boundaries = (ROOT / "RUNTIME-BOUNDARIES.md").read_text(encoding="utf-8")
+
+        for heading in (
+            "## 2. Trust Boundaries and Data Flow",
+            "## 3. Process Inventory",
+            "## 4. Privilege and Installation",
+            "### macOS",
+            "### Fedora and Ubuntu",
+            "## 5. Local IPC and Socket Inventory",
+            "## 6. Lifecycle",
+            "## 7. Runtime Parity Gate",
+            "## 8. Reviewer Evidence",
+        ):
+            self.assertIn(heading, boundaries)
+        for process in (
+            "Visual Studio Code extension",
+            "Native bridge",
+            "AgentMage kernel",
+            "Sandboxed tool worker",
+            "Native model service",
+            "Docker Model Runner",
+            "Model installer/importer",
+            "Review verifier",
+        ):
+            self.assertIn(f"| {process} |", boundaries)
+        for connection in (
+            "VS Code extension to bridge/kernel",
+            "Kernel to tool worker",
+            "Kernel to native model adapter",
+            "Kernel adapter to Docker Model Runner",
+        ):
+            self.assertIn(f"| {connection} |", boundaries)
+        for required_boundary in (
+            "an unavailable mandatory control blocks the profile",
+            "Native `llama.cpp` is the security-reference inference adapter",
+            "Docker Model Runner's API is unauthenticated",
+            "remains `BLOCKED` unless",
+            "Offline startup verifies package, platform, policy, workspace, storage",
+            "No AgentMage process silently persists as a system-wide daemon",
+            "Neither adapter may borrow another adapter's result",
+        ):
+            with self.subTest(boundary=required_boundary):
+                self.assertIn(required_boundary, boundaries)
+
 
 if __name__ == "__main__":
     unittest.main()
