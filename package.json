@@ -69,6 +69,8 @@
     "fuzz-gates:check": "python3 scripts/fuzz_story_gate.py",
     "kernel-contract-package:build": "python3 scripts/kernel_contract_package.py --write",
     "kernel-contract-package:check": "python3 scripts/kernel_contract_package.py",
+    "kernel-contract-reference:build": "python3 scripts/kernel_contract_reference.py --write",
+    "kernel-contract-reference:check": "python3 scripts/kernel_contract_reference.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
