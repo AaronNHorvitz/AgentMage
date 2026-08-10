@@ -20,6 +20,7 @@ REQUIRED_FILES = (
     "SECURITY.md",
     "MODEL-PROVENANCE-POLICY.md",
     "RUNTIME-BOUNDARIES.md",
+    "architecture/language-build-matrix.json",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",
@@ -56,6 +57,8 @@ REQUIRED_FILES = (
     "LICENSE",
     "docs/decisions/0001-product-security-and-runtime-baseline.md",
     "docs/decisions/0002-public-security-reference-retention.md",
+    "docs/decisions/0003-blocked-platform-lane-continuation.md",
+    "docs/decisions/0004-language-and-build-system-architecture.md",
 )
 CANONICAL_DOCS = (
     "README.md",

@@ -285,7 +285,7 @@ The owning sprint performs the first complete execution possible for its boundar
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 1.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 1.1.1.1** (legacy `S-001-I01`): Select and record implementation languages and build systems through an architecture decision supported on Apple Silicon macOS, Fedora, and Ubuntu.
+  - [x] **Sub-task 1.1.1.1** (legacy `S-001-I01`): Select and record implementation languages and build systems through an architecture decision supported on Apple Silicon macOS, Fedora, and Ubuntu. Evidence: accepted [`Decision 0004`](docs/decisions/0004-language-and-build-system-architecture.md), machine-readable [`language-build-matrix.json`](architecture/language-build-matrix.json), fail-closed validator, and mutation tests. This records architecture support only; macOS implementation and execution remain `BLOCKED-MACOS` under Decision 0003.
   - [ ] **Sub-task 1.1.1.2** (legacy `S-001-I02`): Create top-level modules for kernel contracts, platform adapters, capability packs, shells, fixtures, packaging, documentation, and release tooling.
   - [ ] **Sub-task 1.1.1.3** (legacy `S-001-I03`): Define dependency direction rules that forbid kernel imports from capability packs or shells.
   - [ ] **Sub-task 1.1.1.4** (legacy `S-001-I04`): Create package manifests, lock files, formatting rules, lint rules, test discovery, and reproducible development commands.
