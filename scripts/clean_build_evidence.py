@@ -250,11 +250,20 @@ def _rootless_podman() -> bool:
     return result.returncode == 0 and result.stdout.strip() == "true"
 
 
+def normalized_sha256_id(value: str) -> str:
+    candidate = value.strip()
+    if re.fullmatch(r"[0-9a-f]{64}", candidate):
+        candidate = f"sha256:{candidate}"
+    if not SHA256_ID.fullmatch(candidate):
+        raise OSError("clean-build image identity is not a SHA-256 value")
+    return candidate
+
+
 def _image_id(tag: str) -> str:
     result = _run(["podman", "image", "inspect", tag, "--format", "{{.Id}}"], ROOT, 60)
-    if result.returncode != 0 or not SHA256_ID.fullmatch(result.stdout.strip()):
+    if result.returncode != 0:
         raise OSError("could not resolve clean-build image identity")
-    return result.stdout.strip()
+    return normalized_sha256_id(result.stdout)
 
 
 def run_platform(

@@ -8,6 +8,7 @@ from scripts.clean_build_evidence import (
     EXPECTED_COMMANDS,
     EXPECTED_CONTROLS,
     build_report,
+    normalized_sha256_id,
     validate_policy,
     validate_report,
 )
@@ -106,6 +107,14 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         mutated["macos"]["status"] = "pass"
         mutated["summary"]["cross_platform_task_complete"] = True
         self.assertTrue(validate_report(mutated))
+
+    def test_bare_podman_image_id_is_normalized(self) -> None:
+        value = "c" * 64
+        self.assertEqual(normalized_sha256_id(value), f"sha256:{value}")
+
+    def test_non_sha256_image_id_is_rejected(self) -> None:
+        with self.assertRaises(OSError):
+            normalized_sha256_id("latest")
 
 
 if __name__ == "__main__":
