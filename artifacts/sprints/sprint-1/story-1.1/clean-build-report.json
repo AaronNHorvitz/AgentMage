@@ -37,8 +37,8 @@
           "exit_code": 0,
           "id": "npm-clean-install",
           "network": "bootstrap-only",
-          "output": "\nadded 361 packages in 5s\n",
-          "output_sha256": "45653209ffc0238ea21e6ba3f66cafacf926e5f1088527cff4b7e152567ec218",
+          "output": "\nadded 361 packages in 4s\n",
+          "output_sha256": "4c0a914758b5768b487154fb789434cf4410e721e44876b055d08c8313ff7bce",
           "status": "pass"
         },
         {
@@ -81,8 +81,8 @@
           "exit_code": 0,
           "id": "build",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:build\n> cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell\n\n   Compiling agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n   Compiling agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n   Compiling agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n   Compiling agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n   Compiling agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n   Compiling agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n",
-          "output_sha256": "93c4d87274feb55b026d7e40a70b07b06613c7db728425efb6569bb3b00ce38d",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:build\n> cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell\n\n   Compiling agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n   Compiling agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n   Compiling agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n   Compiling agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n   Compiling agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n   Compiling agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n",
+          "output_sha256": "510278513537d00a22b557380a14645363b00398d7c792bebd87b87ae3d2d318",
           "status": "pass"
         },
         {
@@ -94,8 +94,8 @@
           "exit_code": 0,
           "id": "lint",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:lint\n> cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell\n\n    Checking agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n    Checking agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n    Checking agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n    Checking agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n    Checking agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n    Checking agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s\n\n> @agentmage/vscode-shell@0.0.0 lint\n> eslint src test\n\n",
-          "output_sha256": "254bc3f514b9400947345f246f03d2bd9933a7257b78b93c74e45f453b247113",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:lint\n> cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell\n\n    Checking agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n    Checking agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n    Checking agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n    Checking agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n    Checking agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n    Checking agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s\n\n> @agentmage/vscode-shell@0.0.0 lint\n> eslint src test\n\n",
+          "output_sha256": "ee1897ccb99a4ab7824ddbd6aa19a2d260c32ff6cf878db3cf73fe081e125aeb",
           "status": "pass"
         },
         {
@@ -120,8 +120,8 @@
           "exit_code": 0,
           "id": "test",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:test\n> cargo test --workspace --locked && npm run test --workspace @agentmage/vscode-shell\n\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_capability_read_only-ce1489583db741d6)\n\nrunning 1 test\ntest tests::capability_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_host-76b1eef5769ddb45)\n\nrunning 1 test\ntest tests::host_scaffold_has_no_runtime_behavior ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_contracts-e06498e1d0de440f)\n\nrunning 1 test\ntest tests::component_identity_is_stable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_engine-971e6809de930cb4)\n\nrunning 1 test\ntest tests::dependency_points_toward_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_platform_linux-63c2a52fee7709aa)\n\nrunning 1 test\ntest tests::adapter_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_xtask-a6724014ad2ab3f7)\n\nrunning 1 test\ntest tests::scaffold_exposes_no_release_action ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_capability_read_only\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_contracts\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_engine\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_platform_linux\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\n> @agentmage/vscode-shell@0.0.0 test\n> npm run build && node --test \"dist/test/*.test.js\"\n\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n\u2714 shell scaffold exposes only declared interface authority (0.626177ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 29.335319\n",
-          "output_sha256": "a19795fb2fdd5c64dc7abe82c38a6ca6f5d94e5bd7f2c80d7fef7ed6c1ed9b73",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:test\n> cargo test --workspace --locked && npm run test --workspace @agentmage/vscode-shell\n\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_capability_read_only-ce1489583db741d6)\n\nrunning 1 test\ntest tests::capability_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_host-76b1eef5769ddb45)\n\nrunning 1 test\ntest tests::host_scaffold_has_no_runtime_behavior ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_contracts-e06498e1d0de440f)\n\nrunning 1 test\ntest tests::component_identity_is_stable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_engine-971e6809de930cb4)\n\nrunning 1 test\ntest tests::dependency_points_toward_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_platform_linux-63c2a52fee7709aa)\n\nrunning 1 test\ntest tests::adapter_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_xtask-a6724014ad2ab3f7)\n\nrunning 1 test\ntest tests::scaffold_exposes_no_release_action ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_capability_read_only\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_contracts\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_engine\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_platform_linux\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\n> @agentmage/vscode-shell@0.0.0 test\n> npm run build && node --test \"dist/test/*.test.js\"\n\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n\u2714 shell scaffold exposes only declared interface authority (0.607987ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 28.270022\n",
+          "output_sha256": "5a1a7bb5c5e0989a312d7da2f1819e6d6ba04817a38ac84bd27b33fd9ab6053c",
           "status": "pass"
         },
         {
@@ -190,8 +190,8 @@
         "version_id": "44"
       },
       "source": {
-        "input_sha256": "2f7f236e556a1ffc6ab069bd3e2c0a5eb48110d3bdda6d0b58ec54dd13d03171",
-        "revision": "006dfdc64710b46ba57ee2afc23bb26803209b73"
+        "input_sha256": "f1a664d897e6a5aaff67685f3f2718d448ed880d6e6578db4f25e734787548d8",
+        "revision": "c92ca6ce4963a9932e7de990b87a2eb77b375883"
       },
       "status": "pass",
       "toolchains": [
@@ -289,8 +289,8 @@
           "exit_code": 0,
           "id": "build",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:build\n> cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell\n\n   Compiling agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n   Compiling agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n   Compiling agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n   Compiling agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n   Compiling agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n   Compiling agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n",
-          "output_sha256": "b2460006c0ef04f74ab45b56107deefc78432e7fa283543a39f836f43f11f0a7",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:build\n> cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell\n\n   Compiling agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n   Compiling agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n   Compiling agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n   Compiling agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n   Compiling agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n   Compiling agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n",
+          "output_sha256": "680175df975eb7cf726ea6058c337fb52a388ddd6c86e5439204bfed76b69607",
           "status": "pass"
         },
         {
@@ -302,8 +302,8 @@
           "exit_code": 0,
           "id": "lint",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:lint\n> cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell\n\n    Checking agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n    Checking agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n    Checking agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n    Checking agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n    Checking agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n    Checking agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s\n\n> @agentmage/vscode-shell@0.0.0 lint\n> eslint src test\n\n",
-          "output_sha256": "8758e9062f365e3cc6df1430e503b0ff89b835e860689d2c3ee1ce92fec71b03",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:lint\n> cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell\n\n    Checking agentmage-kernel-contracts v0.0.0 (<ISOLATED_PATH>/kernel/contracts)\n    Checking agentmage-xtask v0.0.0 (<ISOLATED_PATH>/release/xtask)\n    Checking agentmage-kernel-engine v0.0.0 (<ISOLATED_PATH>/kernel/engine)\n    Checking agentmage-capability-read-only v0.0.0 (<ISOLATED_PATH>/capabilities/read-only)\n    Checking agentmage-platform-linux v0.0.0 (<ISOLATED_PATH>/platforms/linux)\n    Checking agentmage-host v0.0.0 (<ISOLATED_PATH>/shells/host)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s\n\n> @agentmage/vscode-shell@0.0.0 lint\n> eslint src test\n\n",
+          "output_sha256": "ed5a4117dd375469d4fc953a22ec1e545af9282b8f0160369fa8bd4f10b2df6c",
           "status": "pass"
         },
         {
@@ -328,8 +328,8 @@
           "exit_code": 0,
           "id": "test",
           "network": "disabled-by-client",
-          "output": "\n> agentmage-planning-docs@0.0.0 product:test\n> cargo test --workspace --locked && npm run test --workspace @agentmage/vscode-shell\n\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_capability_read_only-ce1489583db741d6)\n\nrunning 1 test\ntest tests::capability_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_host-76b1eef5769ddb45)\n\nrunning 1 test\ntest tests::host_scaffold_has_no_runtime_behavior ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_contracts-e06498e1d0de440f)\n\nrunning 1 test\ntest tests::component_identity_is_stable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_engine-971e6809de930cb4)\n\nrunning 1 test\ntest tests::dependency_points_toward_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_platform_linux-63c2a52fee7709aa)\n\nrunning 1 test\ntest tests::adapter_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_xtask-a6724014ad2ab3f7)\n\nrunning 1 test\ntest tests::scaffold_exposes_no_release_action ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_capability_read_only\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_contracts\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_engine\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_platform_linux\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\n> @agentmage/vscode-shell@0.0.0 test\n> npm run build && node --test \"dist/test/*.test.js\"\n\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n\u2714 shell scaffold exposes only declared interface authority (0.6054ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 32.952681\n",
-          "output_sha256": "98aba0976167c0abd18d1c8cb80583019399ca6e894310654f2c5fffb3385f04",
+          "output": "\n> agentmage-planning-docs@0.0.0 product:test\n> cargo test --workspace --locked && npm run test --workspace @agentmage/vscode-shell\n\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_capability_read_only-ce1489583db741d6)\n\nrunning 1 test\ntest tests::capability_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_host-76b1eef5769ddb45)\n\nrunning 1 test\ntest tests::host_scaffold_has_no_runtime_behavior ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_contracts-e06498e1d0de440f)\n\nrunning 1 test\ntest tests::component_identity_is_stable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_kernel_engine-971e6809de930cb4)\n\nrunning 1 test\ntest tests::dependency_points_toward_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/lib.rs (<ISOLATED_PATH>/debug/deps/agentmage_platform_linux-63c2a52fee7709aa)\n\nrunning 1 test\ntest tests::adapter_depends_only_on_contracts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running unittests src/main.rs (<ISOLATED_PATH>/debug/deps/agentmage_xtask-a6724014ad2ab3f7)\n\nrunning 1 test\ntest tests::scaffold_exposes_no_release_action ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_capability_read_only\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_contracts\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_kernel_engine\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests agentmage_platform_linux\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\n> @agentmage/vscode-shell@0.0.0 test\n> npm run build && node --test \"dist/test/*.test.js\"\n\n\n> @agentmage/vscode-shell@0.0.0 build\n> tsc --project tsconfig.json\n\n\u2714 shell scaffold exposes only declared interface authority (0.618803ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 27.795179\n",
+          "output_sha256": "bb0ea0058cc3f0f94ccfd7fdffab6dc77ebd87ffc24dd3928ea4d2c1018a1cfc",
           "status": "pass"
         },
         {
@@ -398,8 +398,8 @@
         "version_id": "26.04"
       },
       "source": {
-        "input_sha256": "2f7f236e556a1ffc6ab069bd3e2c0a5eb48110d3bdda6d0b58ec54dd13d03171",
-        "revision": "006dfdc64710b46ba57ee2afc23bb26803209b73"
+        "input_sha256": "f1a664d897e6a5aaff67685f3f2718d448ed880d6e6578db4f25e734787548d8",
+        "revision": "c92ca6ce4963a9932e7de990b87a2eb77b375883"
       },
       "status": "pass",
       "toolchains": [
@@ -433,8 +433,8 @@
   },
   "schema_version": 1,
   "source": {
-    "input_sha256": "2f7f236e556a1ffc6ab069bd3e2c0a5eb48110d3bdda6d0b58ec54dd13d03171",
-    "revision": "006dfdc64710b46ba57ee2afc23bb26803209b73"
+    "input_sha256": "f1a664d897e6a5aaff67685f3f2718d448ed880d6e6578db4f25e734787548d8",
+    "revision": "c92ca6ce4963a9932e7de990b87a2eb77b375883"
   },
   "status": "blocked-macos",
   "summary": {
