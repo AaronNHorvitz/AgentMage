@@ -1,0 +1,7 @@
+sqlite_header="SQLite format 3\x00"
+begin="BEGIN"
+commit="COMMIT"
+rollback="ROLLBACK"
+select="SELECT"
+pragma="PRAGMA"
+null="NULL"

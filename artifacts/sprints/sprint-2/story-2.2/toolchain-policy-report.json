@@ -1,0 +1,22 @@
+{
+  "budgets_recorded": true,
+  "crash_deduplication_recorded": true,
+  "dictionary_count": 6,
+  "engine_count": 3,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_calls_during_fuzz_execution": 0,
+  "policy": {
+    "path": "fuzzing/toolchain-policy.json",
+    "self_sha256": "7b343d3318bc62c528dc8972e32a501af9c5504b969207fff9f35973372c8934",
+    "sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5",
+    "version": "1.0.0"
+  },
+  "product_fuzz_execution_claim": "none",
+  "regression_retention_recorded": true,
+  "schema_version": 1,
+  "seed_corpus_count": 3,
+  "status": "pass-pinned-policy-recorded",
+  "task_id": "2.2.1.2",
+  "tools_installed_by_task": false
+}

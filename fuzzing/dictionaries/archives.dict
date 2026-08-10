@@ -1,0 +1,7 @@
+zip_local="PK\x03\x04"
+zip_central="PK\x01\x02"
+zip_end="PK\x05\x06"
+tar_ustar="ustar"
+parent="../"
+absolute="/synthetic"
+large_size="4294967295"

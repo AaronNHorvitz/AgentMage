@@ -1,0 +1,8 @@
+blob="blob "
+tree="tree "
+commit="commit "
+tag="tag "
+head="HEAD"
+ref="refs/heads/synthetic"
+nul="\x00"
+pkt_flush="0000"

@@ -1,0 +1,200 @@
+{
+  "crash_deduplication": {
+    "all_distinct_input_hashes_retained": true,
+    "cross_target_deduplication_permitted": false,
+    "signature_algorithm": "sha256-canonical-json",
+    "signature_fields": [
+      "target_id",
+      "failure_class",
+      "sanitizer",
+      "normalized_top_frames"
+    ],
+    "volatile_values_removed": [
+      "absolute-path",
+      "address",
+      "process-id",
+      "thread-id",
+      "timestamp"
+    ]
+  },
+  "dictionaries": [
+    {
+      "path": "fuzzing/dictionaries/common.dict",
+      "sha256": "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273"
+    },
+    {
+      "path": "fuzzing/dictionaries/structured.dict",
+      "sha256": "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b"
+    },
+    {
+      "path": "fuzzing/dictionaries/paths.dict",
+      "sha256": "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce"
+    },
+    {
+      "path": "fuzzing/dictionaries/git.dict",
+      "sha256": "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef"
+    },
+    {
+      "path": "fuzzing/dictionaries/sqlite.dict",
+      "sha256": "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176"
+    },
+    {
+      "path": "fuzzing/dictionaries/archives.dict",
+      "sha256": "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+    }
+  ],
+  "engines": [
+    {
+      "applies_to": [
+        "rust",
+        "native-ffi"
+      ],
+      "engine_id": "rust-libfuzzer",
+      "installation_status": "recorded-not-installed",
+      "runner": {
+        "crate_sha256": "5acfd01930e49823e58c30dd8012d3338a620377d7c7d4cc140ca4b2169400e2",
+        "install_command": "cargo install cargo-fuzz --version 0.13.2 --locked",
+        "license": "MIT OR Apache-2.0",
+        "name": "cargo-fuzz",
+        "version": "0.13.2"
+      },
+      "sanitizers": [
+        {
+          "name": "address",
+          "required": true,
+          "scope": "every-rust-fuzz-run"
+        },
+        {
+          "name": "leak",
+          "required": true,
+          "scope": "linux-address-sanitizer-runs"
+        },
+        {
+          "name": "undefined",
+          "required": true,
+          "scope": "each-added-c-or-cpp-ffi-target"
+        }
+      ],
+      "toolchain": {
+        "channel": "nightly-2026-08-01",
+        "channel_manifest_sha256": "f4b63db200deb36a120b27ae085140637ee04af1254891308799225e5afbe8bf",
+        "components": [
+          "cargo",
+          "rustc",
+          "rust-std"
+        ],
+        "target": "x86_64-unknown-linux-gnu"
+      }
+    },
+    {
+      "applies_to": [
+        "typescript",
+        "javascript"
+      ],
+      "engine_id": "typescript-jazzer-js",
+      "installation_status": "recorded-not-installed",
+      "runner": {
+        "license": "Apache-2.0",
+        "minimum_node": "14.0.0",
+        "minimum_npm": "7.0.0",
+        "name": "@jazzer.js/core",
+        "npm_integrity": "sha512-w90xGs5qMOE9KA5AV7OrosTWIOvMaeH5YSSnMr14FNAg2n0kalkurZMwlboz9G3+SccMp4n6QkKExq3b7r1VAQ==",
+        "version": "4.0.0"
+      },
+      "sanitizers": [
+        {
+          "name": "command-injection",
+          "required": true
+        },
+        {
+          "name": "path-traversal",
+          "required": true
+        },
+        {
+          "name": "server-side-request-forgery",
+          "required": true
+        }
+      ]
+    },
+    {
+      "applies_to": [
+        "empty-boundary-baseline",
+        "fake-boundary-baseline"
+      ],
+      "engine_id": "agentmage-bounded-fake-fuzzer",
+      "installation_status": "repository-provided",
+      "product_coverage_claim": "none",
+      "runner": {
+        "name": "agentmage-standard-library-baseline",
+        "runtime": "python>=3.11",
+        "third_party_dependencies": [],
+        "version": "1.0.0"
+      },
+      "sanitizers": [
+        {
+          "name": "deterministic-security-oracle",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "execution_network_policy": "offline",
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "minimization": {
+    "maximum_reproducer_bytes": 4096,
+    "must_preserve_failure_signature": true,
+    "required_for_every_non_pass_input": true,
+    "timeout_during_minimization_disposition": "non-pass-unminimized"
+  },
+  "minimum_durations_seconds": {
+    "continuous_integration_changed_target": 300,
+    "local_changed_target": 60,
+    "regression_replay": 1,
+    "scheduled_full_target": 3600
+  },
+  "policy_id": "agentmage-fuzz-toolchain-policy-v1",
+  "policy_sha256": "7b343d3318bc62c528dc8972e32a501af9c5504b969207fff9f35973372c8934",
+  "policy_version": "1.0.0",
+  "product_fuzz_execution_claim": "none",
+  "regression_retention": {
+    "deletion_requires_reviewed_disposition": true,
+    "failed_replay_disposition": "block",
+    "minimum_fixed_release_count": 2,
+    "path_template": "fuzzing/regressions/<target-id>/<sha256>.bin",
+    "raw_private_input_permitted": false,
+    "replay_on_every_target_change": true,
+    "synthetic_minimized_reproducer_permitted": true
+  },
+  "resource_limits": {
+    "host_resource_exhaustion_permitted": false,
+    "maximum_artifact_bytes": 1048576,
+    "maximum_corpus_bytes_per_target": 67108864,
+    "maximum_input_bytes": 4096,
+    "maximum_parallel_jobs_per_target": 1,
+    "maximum_resident_memory_mib": 1024,
+    "per_input_timeout_seconds": 5
+  },
+  "schema_version": 1,
+  "seed_corpora": [
+    {
+      "path": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+      "sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75"
+    },
+    {
+      "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+      "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+    },
+    {
+      "path": "fixtures/corpus/v1/manifest.json",
+      "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
+    }
+  ],
+  "status": "pinned-tools-recorded-not-installed",
+  "target_registry": {
+    "path": "fuzzing/target-registry.json",
+    "registry_version": "1.0.0",
+    "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+  },
+  "tool_acquisition_separate_from_execution": true
+}
