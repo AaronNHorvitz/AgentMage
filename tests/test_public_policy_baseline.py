@@ -164,6 +164,34 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             with self.subTest(boundary=required_boundary):
                 self.assertIn(required_boundary, boundaries)
 
+    def test_accepted_baseline_decision_is_complete_and_independently_recorded(self) -> None:
+        decision = (
+            ROOT / "docs" / "decisions" / "0001-product-security-and-runtime-baseline.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("| Status | Accepted |", decision)
+        self.assertIn("| Date | 2026-08-10 |", decision)
+        self.assertIn("An external planning audit remains outside this repository.", decision)
+        self.assertIn(
+            "AgentMage incorporates only independently evaluated product findings",
+            decision,
+        )
+        self.assertIn("Existing stable identifiers remain unchanged.", decision)
+        for item in range(1, 13):
+            self.assertIn(f"{item}.", decision)
+        for governed_file in (
+            "MODEL-PROVENANCE-POLICY.md",
+            "SECURITY.md",
+            "RUNTIME-BOUNDARIES.md",
+        ):
+            self.assertIn(governed_file, decision)
+        for prohibited_import_marker in (
+            "Findings Critical:",
+            "Delivery-and-Federal-Security Audit",
+            "Claude's remediation plan",
+        ):
+            self.assertNotIn(prohibited_import_marker, decision)
+
 
 if __name__ == "__main__":
     unittest.main()
