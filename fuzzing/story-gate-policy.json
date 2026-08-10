@@ -1,0 +1,297 @@
+{
+  "current_blocked_gate_count": 13,
+  "current_readiness": [
+    {
+      "blocking_target_ids": [
+        "FT-CONFIG-001",
+        "FT-MANIFEST-001"
+      ],
+      "sprint": 3,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-CONFIG-001",
+        "FT-MANIFEST-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-FFI-001"
+      ],
+      "sprint": 4,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-FFI-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-GRANT-001"
+      ],
+      "sprint": 5,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-GRANT-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-PATH-001"
+      ],
+      "sprint": 6,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-PATH-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-IPC-001"
+      ],
+      "sprint": 8,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-IPC-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-IPC-001"
+      ],
+      "sprint": 9,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-IPC-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-SQLITE-001"
+      ],
+      "sprint": 11,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-SQLITE-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-MODEL-OUTPUT-001"
+      ],
+      "sprint": 13,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-MODEL-OUTPUT-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-TEXT-001"
+      ],
+      "sprint": 16,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-TEXT-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-GIT-001"
+      ],
+      "sprint": 17,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-GIT-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ],
+      "sprint": 18,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ],
+      "sprint": 19,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ]
+    },
+    {
+      "blocking_target_ids": [
+        "FT-ARCHIVE-001"
+      ],
+      "sprint": 33,
+      "status": "blocked-boundary-not-implemented",
+      "target_ids": [
+        "FT-ARCHIVE-001"
+      ]
+    }
+  ],
+  "current_ready_gate_count": 0,
+  "evaluation_contract": {
+    "boundary_implementation_required": true,
+    "external_risk_decision_validator": "future-release-governance-boundary",
+    "failed_timed_out_cancelled_or_skipped_disposition": "block",
+    "missing_or_stale_evidence_disposition": "block",
+    "normal_development_waiver_permitted": false,
+    "registration_required": true,
+    "regression_path_required": true,
+    "regression_replay_required": true,
+    "resource_policy_required": true,
+    "result_status_required": "pass",
+    "schema_valid_result_required": true,
+    "versioned_corpus_required": true
+  },
+  "inputs": {
+    "result_schema": {
+      "path": "schemas/testing/fuzz-result.schema.json",
+      "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
+    },
+    "target_registry": {
+      "path": "fuzzing/target-registry.json",
+      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+    },
+    "toolchain_policy": {
+      "path": "fuzzing/toolchain-policy.json",
+      "sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5"
+    }
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "owner_gates": [
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 3,
+      "target_count": 2,
+      "target_ids": [
+        "FT-CONFIG-001",
+        "FT-MANIFEST-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 4,
+      "target_count": 1,
+      "target_ids": [
+        "FT-FFI-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 5,
+      "target_count": 1,
+      "target_ids": [
+        "FT-GRANT-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 6,
+      "target_count": 1,
+      "target_ids": [
+        "FT-PATH-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 8,
+      "target_count": 1,
+      "target_ids": [
+        "FT-IPC-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 9,
+      "target_count": 1,
+      "target_ids": [
+        "FT-IPC-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 11,
+      "target_count": 1,
+      "target_ids": [
+        "FT-SQLITE-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 13,
+      "target_count": 1,
+      "target_ids": [
+        "FT-MODEL-OUTPUT-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 16,
+      "target_count": 1,
+      "target_ids": [
+        "FT-TEXT-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 17,
+      "target_count": 1,
+      "target_ids": [
+        "FT-GIT-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 18,
+      "target_count": 1,
+      "target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 19,
+      "target_count": 1,
+      "target_ids": [
+        "FT-REPOSITORY-PARSER-001"
+      ]
+    },
+    {
+      "gate_requirement": "all-targets-pass",
+      "sprint": 33,
+      "target_count": 1,
+      "target_ids": [
+        "FT-ARCHIVE-001"
+      ]
+    }
+  ],
+  "policy_id": "agentmage-fuzz-story-gate-policy-v1",
+  "policy_sha256": "edef72ed99e9e9ab64706654699381b0213b9ed3c8570d4296c30b00ae7b3e06",
+  "policy_version": "1.0.0",
+  "product_boundary_execution_claim": "none",
+  "required_evidence_fields": [
+    "target_id",
+    "boundary_implemented",
+    "target_registered",
+    "target_registry_sha256",
+    "corpus_path",
+    "corpus_sha256",
+    "resource_policy_sha256",
+    "result_path",
+    "result_sha256",
+    "result_schema_valid",
+    "result_status",
+    "regression_path",
+    "regression_replay_passed"
+  ],
+  "schema_version": 1,
+  "status": "enforced-registration-and-execution-policy"
+}

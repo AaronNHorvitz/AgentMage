@@ -1,0 +1,22 @@
+{
+  "current_blocked_gate_count": 13,
+  "current_ready_gate_count": 0,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "normal_development_waiver_permitted": false,
+  "owner_gate_count": 13,
+  "policy": {
+    "path": "fuzzing/story-gate-policy.json",
+    "self_sha256": "edef72ed99e9e9ab64706654699381b0213b9ed3c8570d4296c30b00ae7b3e06",
+    "sha256": "373c70490944a6ceea58131a51a59e9703f45649a35c85b7f0919a410ba9fa06",
+    "version": "1.0.0"
+  },
+  "product_boundary_execution_claim": "none",
+  "registered_target_count": 12,
+  "required_evidence_field_count": 13,
+  "schema_version": 1,
+  "seeded_gate_mutations_required": true,
+  "status": "pass-fail-closed-gate-policy",
+  "target_gate_assignment_count": 14,
+  "task_id": "2.2.1.4"
+}
