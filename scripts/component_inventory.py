@@ -13,9 +13,20 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from scripts.clean_build_evidence import validate_report as validate_clean_build_report
-from scripts.no_install_diagnostic import validate_inventory as validate_optional_inventory
-from scripts.supply_chain import validate_documents as validate_supply_chain_documents
+try:
+    from scripts.clean_build_evidence import (
+        validate_report as validate_clean_build_report,
+    )
+    from scripts.no_install_diagnostic import (
+        validate_inventory as validate_optional_inventory,
+    )
+    from scripts.supply_chain import (
+        validate_documents as validate_supply_chain_documents,
+    )
+except ModuleNotFoundError:
+    from clean_build_evidence import validate_report as validate_clean_build_report
+    from no_install_diagnostic import validate_inventory as validate_optional_inventory
+    from supply_chain import validate_documents as validate_supply_chain_documents
 
 
 ROOT = Path(__file__).resolve().parents[1]
