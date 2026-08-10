@@ -6,8 +6,10 @@ import unittest
 from pathlib import Path
 
 from scripts.fallback_disposition import (
+    DEFAULT_RECORD,
     FallbackDispositionError,
     build_record,
+    load_record,
     validate_record,
     write_record,
 )
@@ -23,6 +25,11 @@ class FallbackDispositionTests(unittest.TestCase):
         self.assertEqual(self.record["decision"]["status"], "REJECTED")
         self.assertFalse(self.record["decision"]["candidate_enabled"])
         self.assertEqual(self.record["state"]["candidate_state"], "REJECTED_DISABLED")
+
+    def test_committed_record_is_valid_and_matches_the_generated_decision(self) -> None:
+        committed = load_record(DEFAULT_RECORD)
+        self.assertEqual(validate_record(committed), [])
+        self.assertEqual(committed, build_record(committed["decision_source_revision"]))
 
     def test_identity_or_threshold_binding_changes_are_rejected(self) -> None:
         changed = copy.deepcopy(self.record)
