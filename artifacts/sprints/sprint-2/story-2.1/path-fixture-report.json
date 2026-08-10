@@ -1,0 +1,24 @@
+{
+  "macos_bookmark_claim": "synthetic-record-only",
+  "preview": {
+    "corpus_sha256": "d7f880455f1e58fe275530508eadaf826d644dbabef4faeb1d0bac34303fbd33",
+    "entry_count": 12,
+    "persisted": false,
+    "scenario_count": 7,
+    "symlink_count": 2
+  },
+  "product_path_safety_claim": "none",
+  "profile_sha256": "be4812c8be1a35eae561bb3d4c8e9e8741f3eaf4d10502b098e33a4142aa2655",
+  "schema_version": 1,
+  "side_effect_contract": {
+    "creates_platform_bookmark": false,
+    "executes_external_commands": false,
+    "overwrites_existing_destination": false,
+    "performs_mount_operation": false,
+    "uses_network": false,
+    "writes_outside_requested_destination": false
+  },
+  "status": "pass",
+  "task_id": "2.1.1.2",
+  "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1"
+}

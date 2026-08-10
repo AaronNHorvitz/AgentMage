@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-path-fixtures-v1",
+  "status": "synthetic-portable-fixture-contract",
+  "seed": "agentmage-path-fixtures-synthetic-v1",
+  "fixed_timestamp_epoch": 1704067200,
+  "scenario_types": [
+    "path-traversal",
+    "symlink-escape",
+    "case-collision",
+    "unicode-normalization",
+    "mount-change",
+    "file-replacement",
+    "stale-bookmark"
+  ],
+  "traversal_inputs": [
+    "../outside/forbidden.txt",
+    "nested/../../outside/forbidden.txt",
+    "..\\outside\\forbidden.txt",
+    "%2e%2e/outside/forbidden.txt",
+    "/synthetic-absolute/forbidden.txt"
+  ],
+  "symlink_fixtures": [
+    {
+      "path": "sandbox/allowed/workspace/link-out",
+      "target": "../../outside/forbidden.txt"
+    },
+    {
+      "path": "sandbox/allowed/workspace/linked-outside",
+      "target": "../../outside"
+    }
+  ],
+  "case_collision_logical_paths": [
+    "Notes/Case.md",
+    "Notes/case.md"
+  ],
+  "unicode_collision_logical_paths": [
+    "Notes/caf\u00e9.md",
+    "Notes/cafe\u0301.md"
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "performs_mount_operation": false,
+    "creates_platform_bookmark": false,
+    "writes_outside_requested_destination": false,
+    "overwrites_existing_destination": false
+  },
+  "macos_bookmark_claim": "synthetic-record-only",
+  "product_path_safety_claim": "none"
+}
