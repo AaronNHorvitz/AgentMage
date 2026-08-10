@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "fixture_status": "synthetic-signed-patch-verification-corpus",
+  "production_keys_used": false,
+  "private_user_data_used": false,
+  "cases": [
+    {
+      "case_id": "valid",
+      "metadata_path": "cases/valid.json",
+      "expected_outcome": "verified-can-proceed"
+    },
+    {
+      "case_id": "wrong-signer",
+      "metadata_path": "cases/wrong-signer.json",
+      "expected_outcome": "blocked-wrong-signer"
+    },
+    {
+      "case_id": "downgrade",
+      "metadata_path": "cases/downgrade.json",
+      "expected_outcome": "blocked-downgrade"
+    },
+    {
+      "case_id": "corrupt",
+      "metadata_path": "cases/valid.json",
+      "corrupt_artifact_id": "agentmage-package",
+      "expected_outcome": "blocked-artifact-corrupt"
+    },
+    {
+      "case_id": "mismatched",
+      "metadata_path": "cases/mismatched.json",
+      "expected_outcome": "blocked-platform-mismatch"
+    },
+    {
+      "case_id": "interrupted",
+      "metadata_path": "cases/valid.json",
+      "transaction_mode": "interrupt-after-stage",
+      "expected_outcome": "interrupted-prior-preserved"
+    },
+    {
+      "case_id": "revoked",
+      "metadata_path": "cases/revoked.json",
+      "expected_outcome": "blocked-revoked-release"
+    },
+    {
+      "case_id": "unsupported-version",
+      "metadata_path": "cases/unsupported-version.json",
+      "expected_outcome": "blocked-unsupported-metadata-version"
+    },
+    {
+      "case_id": "migration-failure",
+      "metadata_path": "cases/migration-failure.json",
+      "migration_outcome": "fail",
+      "expected_outcome": "blocked-migration-failure"
+    },
+    {
+      "case_id": "rollback",
+      "metadata_path": "cases/valid.json",
+      "transaction_mode": "postcheck-failure-rollback",
+      "expected_outcome": "rollback-complete-prior-restored"
+    }
+  ]
+}

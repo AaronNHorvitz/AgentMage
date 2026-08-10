@@ -1,0 +1,281 @@
+{
+  "cases": [
+    {
+      "actual_outcome": "verified-can-proceed",
+      "case_id": "valid",
+      "expected_outcome": "verified-can-proceed",
+      "metadata_path": "cases/valid.json",
+      "metadata_sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-wrong-signer",
+      "case_id": "wrong-signer",
+      "expected_outcome": "blocked-wrong-signer",
+      "metadata_path": "cases/wrong-signer.json",
+      "metadata_sha256": "1201c2b006852e473852e60cd19b504793d63cf712e78f80347a164f18d6e743",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-downgrade",
+      "case_id": "downgrade",
+      "expected_outcome": "blocked-downgrade",
+      "metadata_path": "cases/downgrade.json",
+      "metadata_sha256": "7c5ce5826dfb41d22d49114a18964041d4b2f977fe133e510ca84d6082fc7b07",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-artifact-corrupt",
+      "case_id": "corrupt",
+      "expected_outcome": "blocked-artifact-corrupt",
+      "metadata_path": "cases/valid.json",
+      "metadata_sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-platform-mismatch",
+      "case_id": "mismatched",
+      "expected_outcome": "blocked-platform-mismatch",
+      "metadata_path": "cases/mismatched.json",
+      "metadata_sha256": "7bac68b1ae4c8af7638d168e4d90145ef53f7346c0e47c0a054e5373aa709541",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "interrupted-prior-preserved",
+      "case_id": "interrupted",
+      "expected_outcome": "interrupted-prior-preserved",
+      "metadata_path": "cases/valid.json",
+      "metadata_sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-revoked-release",
+      "case_id": "revoked",
+      "expected_outcome": "blocked-revoked-release",
+      "metadata_path": "cases/revoked.json",
+      "metadata_sha256": "8db73006178c70b64afd9161976920b6b88b6101fbe5a88364ca86996c238414",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-unsupported-metadata-version",
+      "case_id": "unsupported-version",
+      "expected_outcome": "blocked-unsupported-metadata-version",
+      "metadata_path": "cases/unsupported-version.json",
+      "metadata_sha256": "58e50e4d6aedd810dcd2565b3417a5c9600d9626835d1e0af39e884adcc47fc7",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "blocked-migration-failure",
+      "case_id": "migration-failure",
+      "expected_outcome": "blocked-migration-failure",
+      "metadata_path": "cases/migration-failure.json",
+      "metadata_sha256": "05d87941254b3e3fa43bb5b8d1b8fc5a45efbe8aa39ad76adacdf17ec2341696",
+      "raw_output_retained": false,
+      "status": "pass"
+    },
+    {
+      "actual_outcome": "rollback-complete-prior-restored",
+      "case_id": "rollback",
+      "expected_outcome": "rollback-complete-prior-restored",
+      "metadata_path": "cases/valid.json",
+      "metadata_sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3",
+      "raw_output_retained": false,
+      "status": "pass"
+    }
+  ],
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_activation_claim": "none",
+  "product_verifier_claim": "none",
+  "production_signer_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "bytes": 16261,
+      "path": "scripts/manual_patch_verifier.py",
+      "sha256": "ced083c8840fd22599222703be62f54e61a2ddd5d0dc6d3a853ba215ff52dc1e"
+    },
+    {
+      "bytes": 3562,
+      "path": "tests/test_manual_patch_verifier.py",
+      "sha256": "f2a9bb225567f40e533a8bbfeac10a6e37ec147b234fd9250cb504aa728b703d"
+    },
+    {
+      "bytes": 95,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/advisory.md",
+      "sha256": "2f220694572a2536be14b4cafa36c941396a60c986adbb580159dafbffde17c4"
+    },
+    {
+      "bytes": 48,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/authority-delta.json",
+      "sha256": "54f5c4db512775b9722b9abd168aa48876d4ea1ee8672f32c164f8b596a08c9f"
+    },
+    {
+      "bytes": 41,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/capability-delta.json",
+      "sha256": "16227468e9eadbd6cebc70930814149f7c5290a3f41cd1129b5ac5fb79ecd579"
+    },
+    {
+      "bytes": 33,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/component-inventory.json",
+      "sha256": "681d3b9fbcd29547f0b662771a594ea1b8abfcddf598ec8b94b242ae595863ad"
+    },
+    {
+      "bytes": 74,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/configuration.json",
+      "sha256": "fe9ad2705cef7fdfd1bdaf725c38b19813c514f6f179f046eea423e995e1934c"
+    },
+    {
+      "bytes": 51,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/cryptographic-bom.json",
+      "sha256": "af2c0fe15e90eeb7e4244a9cd7a1060ba6bbd66e563d68160cfb517ed3db11a4"
+    },
+    {
+      "bytes": 29,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/model-bom.json",
+      "sha256": "8d5028e5be2c1d58151282a13156907f255ae53c5db42f5af37629374c023c87"
+    },
+    {
+      "bytes": 128,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/provenance.json",
+      "sha256": "64d2577593786e145ec488bf5a498883d4c345f4dbafbd945bd7447af939b206"
+    },
+    {
+      "bytes": 69,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/release-manifest.json",
+      "sha256": "01b3a7e0111a751734d921eb962d3e9ea83b4922747975c66fe5008e5e3686bf"
+    },
+    {
+      "bytes": 78,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/rollback.json",
+      "sha256": "37bb052d32371ac8b56fd4fee4834892c3f50c0159d885106d8373737432cfcf"
+    },
+    {
+      "bytes": 77,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/sbom.cdx.json",
+      "sha256": "d99f188ab82ed45d00bfa40cad4860ab2dcb42d172eff7f746e9b083778b8ef7"
+    },
+    {
+      "bytes": 117,
+      "path": "fixtures/support/manual-patch/artifacts/packages/agentmage-0.1.1-fedora-x86_64.tar.zst",
+      "sha256": "039b9524fea98289933c0137885722f79de469ae7f555ebdb5072d56fd6287aa"
+    },
+    {
+      "bytes": 117,
+      "path": "fixtures/support/manual-patch/artifacts/prior/agentmage-0.1.0.tar.zst",
+      "sha256": "22305f5f6d135aafd06f4b2d1cd94225db413ca5155859d369f3f8dd92073dc7"
+    },
+    {
+      "bytes": 6607,
+      "path": "fixtures/support/manual-patch/cases/downgrade.json",
+      "sha256": "7c5ce5826dfb41d22d49114a18964041d4b2f977fe133e510ca84d6082fc7b07"
+    },
+    {
+      "bytes": 6633,
+      "path": "fixtures/support/manual-patch/cases/migration-failure.json",
+      "sha256": "05d87941254b3e3fa43bb5b8d1b8fc5a45efbe8aa39ad76adacdf17ec2341696"
+    },
+    {
+      "bytes": 6608,
+      "path": "fixtures/support/manual-patch/cases/mismatched.json",
+      "sha256": "7bac68b1ae4c8af7638d168e4d90145ef53f7346c0e47c0a054e5373aa709541"
+    },
+    {
+      "bytes": 6634,
+      "path": "fixtures/support/manual-patch/cases/revoked.json",
+      "sha256": "8db73006178c70b64afd9161976920b6b88b6101fbe5a88364ca86996c238414"
+    },
+    {
+      "bytes": 6617,
+      "path": "fixtures/support/manual-patch/cases/unsupported-version.json",
+      "sha256": "58e50e4d6aedd810dcd2565b3417a5c9600d9626835d1e0af39e884adcc47fc7"
+    },
+    {
+      "bytes": 6603,
+      "path": "fixtures/support/manual-patch/cases/valid.json",
+      "sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3"
+    },
+    {
+      "bytes": 6597,
+      "path": "fixtures/support/manual-patch/cases/wrong-signer.json",
+      "sha256": "1201c2b006852e473852e60cd19b504793d63cf712e78f80347a164f18d6e743"
+    },
+    {
+      "bytes": 1827,
+      "path": "fixtures/support/manual-patch/cases.json",
+      "sha256": "607b569c5d8c8598e79649f2b02d4c1633b3aa7a69b1fb6f9e70aad38e6f8458"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/downgrade.sig",
+      "sha256": "f09078b05c87cca754fc169cc23935fdce153e06bcb31100ccaac3d997b8faa9"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/migration-failure.sig",
+      "sha256": "92aaf9399591b9283f74046c55f1eddb46d6d20bd5da9e5bff607a9b0ffbcd5b"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/mismatched.sig",
+      "sha256": "9091fce5bc7e71c501bfbb1b8eb8e3da65e991abaf7cc4dcf159ca3fbced31cc"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/revoked.sig",
+      "sha256": "f8ae842bcec768497701e0bcbedf14d469ad047b92316ed264f702c618396b1a"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/unsupported-version.sig",
+      "sha256": "bdd5c00a9c8551d823813e404981a397c6dbb622387f7a16e478cdf94da687ac"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/valid.sig",
+      "sha256": "035a6a58c37287d06ef699e3b38eb81db75dbdff3d722aabbe670acdc82a1112"
+    },
+    {
+      "bytes": 64,
+      "path": "fixtures/support/manual-patch/signatures/wrong-signer.sig",
+      "sha256": "9c8508521c16d06bdf342adbfde396d401bc75db921ab909d5cf6d8bbd380ce4"
+    },
+    {
+      "bytes": 113,
+      "path": "fixtures/support/manual-patch/trust/authorized-public.pem",
+      "sha256": "54889a0cdab91ab6c27a8649883a31ac2d42ffed3c01ef47993c954ff17eab8b"
+    },
+    {
+      "bytes": 113,
+      "path": "fixtures/support/manual-patch/trust/wrong-public.pem",
+      "sha256": "979df52427849b4010d8647ec967c770a4d6dc5a9d1d4d4a1994987eb7b2bac2"
+    }
+  ],
+  "status": "pass-synthetic-verification-no-product-activation",
+  "story_id": "3.2",
+  "summary": {
+    "network_authority_count": 0,
+    "passed_case_count": 10,
+    "prior_state_failure_count": 0,
+    "required_case_count": 10,
+    "signature_verified_case_count": 8
+  },
+  "task_id": "3.2.2.1",
+  "verification_engine": {
+    "executable_sha256": "0469f12d909da7bd5401e584f7c0d3f19db10270c21cd238823d08227bcf8c00",
+    "path": "/usr/bin/openssl",
+    "version": "OpenSSL 3.5.7 9 Jun 2026 (Library: OpenSSL 3.5.7 9 Jun 2026)"
+  }
+}
