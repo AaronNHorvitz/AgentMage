@@ -45,6 +45,46 @@ pub enum ToolRegistryError {
     },
 }
 
+/// Claimed source of a proposal presented to the pre-grant dispatcher.
+///
+/// This classification is retained only for denial evidence. It does not authenticate the
+/// caller, grant authority, or select a more privileged dispatch path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProposalOrigin {
+    /// A user-interface shell proposed the call.
+    Shell,
+    /// Untrusted model output proposed the call.
+    Model,
+    /// A tool result or tool-owned workflow proposed another call.
+    Tool,
+    /// A capability-pack component proposed the call.
+    CapabilityPack,
+    /// The caller is outside the registered proposal-origin classes.
+    UnregisteredCaller,
+}
+
+/// Exact pre-grant disposition recorded before any executor exists.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PreGrantDispatchDisposition {
+    /// The call failed closed registry or argument validation.
+    InvalidCall,
+    /// The call was valid but its claimed caller class is not registered.
+    UnregisteredCaller,
+    /// The call was valid but no exact consumable grant exists.
+    GrantRequired,
+}
+
+/// Typed terminal receipt from the non-executing Sprint 4 dispatcher.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PreGrantDispatchReceipt {
+    /// Untrusted origin classification retained for the denial trace.
+    pub origin: ProposalOrigin,
+    /// Exact point at which the pre-grant attempt terminated.
+    pub disposition: PreGrantDispatchDisposition,
+    /// Terminal tool result preserving call and correlation identity.
+    pub result: ToolResult,
+}
+
 /// Exact-version registry of non-executable tool definitions.
 #[derive(Default)]
 pub struct ToolRegistry {
@@ -124,59 +164,90 @@ impl<'registry> ToolDispatcher<'registry> {
         Self { registry }
     }
 
-    /// Validates a call and returns a terminal non-executing result.
+    /// Validates a call and returns a terminal non-executing receipt.
     #[must_use]
-    pub fn dispatch(&self, call: &ToolCall) -> ToolResult {
+    pub fn dispatch(&self, origin: ProposalOrigin, call: &ToolCall) -> PreGrantDispatchReceipt {
         match self.registry.validate_arguments(call) {
-            Ok(_) => terminal_result(
-                call,
-                OperationOutcome::Denied,
-                Vec::new(),
-                contract_error(
-                    "tool.dispatch.grant_required",
-                    ErrorCategory::Policy,
-                    RetryDisposition::AfterUserDecision,
-                    "Tool dispatch requires an exact consumable grant",
+            Ok(_) if origin == ProposalOrigin::UnregisteredCaller => PreGrantDispatchReceipt {
+                origin,
+                disposition: PreGrantDispatchDisposition::UnregisteredCaller,
+                result: terminal_result(
+                    call,
+                    OperationOutcome::Denied,
+                    Vec::new(),
+                    contract_error(
+                        "tool.dispatch.caller_not_registered",
+                        ErrorCategory::Policy,
+                        RetryDisposition::Never,
+                        "Tool dispatch caller is not registered",
+                    ),
                 ),
-            ),
+            },
+            Ok(_) => PreGrantDispatchReceipt {
+                origin,
+                disposition: PreGrantDispatchDisposition::GrantRequired,
+                result: terminal_result(
+                    call,
+                    OperationOutcome::Denied,
+                    Vec::new(),
+                    contract_error(
+                        "tool.dispatch.grant_required",
+                        ErrorCategory::Policy,
+                        RetryDisposition::AfterUserDecision,
+                        "Tool dispatch requires an exact consumable grant",
+                    ),
+                ),
+            },
             Err(ToolRegistryError::InvalidCall { issues })
-            | Err(ToolRegistryError::InvalidDefinition { issues }) => terminal_result(
-                call,
-                OperationOutcome::Failed,
-                issues,
-                contract_error(
-                    "tool.dispatch.invalid_call",
-                    ErrorCategory::Validation,
-                    RetryDisposition::AfterCorrection,
-                    "Tool call failed closed validation",
+            | Err(ToolRegistryError::InvalidDefinition { issues }) => PreGrantDispatchReceipt {
+                origin,
+                disposition: PreGrantDispatchDisposition::InvalidCall,
+                result: terminal_result(
+                    call,
+                    OperationOutcome::Failed,
+                    issues,
+                    contract_error(
+                        "tool.dispatch.invalid_call",
+                        ErrorCategory::Validation,
+                        RetryDisposition::AfterCorrection,
+                        "Tool call failed closed validation",
+                    ),
                 ),
-            ),
-            Err(ToolRegistryError::NotRegistered) => terminal_result(
-                call,
-                OperationOutcome::Failed,
-                vec![issue(
-                    "tool.call.not_registered",
-                    "tool_id",
-                    "Exact tool identity and version are not registered",
-                )],
-                contract_error(
-                    "tool.dispatch.not_registered",
-                    ErrorCategory::Validation,
-                    RetryDisposition::AfterCorrection,
-                    "Tool call requests an unregistered definition",
+            },
+            Err(ToolRegistryError::NotRegistered) => PreGrantDispatchReceipt {
+                origin,
+                disposition: PreGrantDispatchDisposition::InvalidCall,
+                result: terminal_result(
+                    call,
+                    OperationOutcome::Failed,
+                    vec![issue(
+                        "tool.call.not_registered",
+                        "tool_id",
+                        "Exact tool identity and version are not registered",
+                    )],
+                    contract_error(
+                        "tool.dispatch.not_registered",
+                        ErrorCategory::Validation,
+                        RetryDisposition::AfterCorrection,
+                        "Tool call requests an unregistered definition",
+                    ),
                 ),
-            ),
-            Err(ToolRegistryError::AlreadyRegistered) => terminal_result(
-                call,
-                OperationOutcome::Failed,
-                Vec::new(),
-                contract_error(
-                    "tool.dispatch.registry_invariant",
-                    ErrorCategory::Internal,
-                    RetryDisposition::Never,
-                    "Tool registry invariant failed",
+            },
+            Err(ToolRegistryError::AlreadyRegistered) => PreGrantDispatchReceipt {
+                origin,
+                disposition: PreGrantDispatchDisposition::InvalidCall,
+                result: terminal_result(
+                    call,
+                    OperationOutcome::Failed,
+                    Vec::new(),
+                    contract_error(
+                        "tool.dispatch.registry_invariant",
+                        ErrorCategory::Internal,
+                        RetryDisposition::Never,
+                        "Tool registry invariant failed",
+                    ),
                 ),
-            ),
+            },
         }
     }
 }
@@ -515,12 +586,16 @@ fn terminal_result(
 
 #[cfg(test)]
 mod tests {
-    use super::{Tool, ToolDispatcher, ToolRegistry, ToolRegistryError, sha256_hex};
+    use super::{
+        PreGrantDispatchDisposition, ProposalOrigin, Tool, ToolDispatcher, ToolRegistry,
+        ToolRegistryError, sha256_hex,
+    };
     use agentmage_kernel_contracts::{
         ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, OperationOutcome,
         RequiredGrantTemplate, SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId,
         ToolDefinition, ToolId, ToolRiskLevel,
     };
+    use serde_json::{Value, json};
 
     struct FakeTool {
         definition: ToolDefinition,
@@ -586,6 +661,51 @@ mod tests {
             }))
             .expect("fixture definition must register");
         registry
+    }
+
+    fn origin_name(origin: ProposalOrigin) -> &'static str {
+        match origin {
+            ProposalOrigin::Shell => "shell",
+            ProposalOrigin::Model => "model",
+            ProposalOrigin::Tool => "tool",
+            ProposalOrigin::CapabilityPack => "capability_pack",
+            ProposalOrigin::UnregisteredCaller => "unregistered_caller",
+        }
+    }
+
+    fn disposition_name(disposition: PreGrantDispatchDisposition) -> &'static str {
+        match disposition {
+            PreGrantDispatchDisposition::InvalidCall => "invalid_call",
+            PreGrantDispatchDisposition::UnregisteredCaller => "unregistered_caller",
+            PreGrantDispatchDisposition::GrantRequired => "grant_required",
+        }
+    }
+
+    fn denial_trace(case_id: &str, receipt: &super::PreGrantDispatchReceipt) -> Value {
+        json!({
+            "case_id": case_id,
+            "origin": origin_name(receipt.origin),
+            "disposition": disposition_name(receipt.disposition),
+            "tool_call_id": receipt.result.tool_call_id.as_str(),
+            "correlation_id": receipt.result.correlation_id.as_str(),
+            "outcome": match receipt.result.outcome {
+                OperationOutcome::Denied => "denied",
+                OperationOutcome::Failed => "failed",
+                _ => "unexpected",
+            },
+            "state_change": match receipt.result.state_change {
+                StateChange::NotChanged => "not_changed",
+                _ => "unexpected",
+            },
+            "elapsed_ms": receipt.result.elapsed_ms,
+            "output_present": receipt.result.output.is_some(),
+            "evidence_count": receipt.result.evidence.len(),
+            "validation_issue_codes": receipt.result.validation_issues
+                .iter()
+                .map(|issue| issue.code.as_str())
+                .collect::<Vec<_>>(),
+            "error_code": receipt.result.error.as_ref().map(|error| error.code.as_str()),
+        })
     }
 
     #[test]
@@ -700,7 +820,13 @@ mod tests {
         let registry = registry();
         let dispatcher = ToolDispatcher::new(&registry);
         let valid = call("fixture.read", br#"{"path":"fixture.txt"}"#);
-        let denied = dispatcher.dispatch(&valid);
+        let receipt = dispatcher.dispatch(ProposalOrigin::Shell, &valid);
+        assert_eq!(receipt.origin, ProposalOrigin::Shell);
+        assert_eq!(
+            receipt.disposition,
+            PreGrantDispatchDisposition::GrantRequired
+        );
+        let denied = receipt.result;
         assert_eq!(denied.outcome, OperationOutcome::Denied);
         assert_eq!(denied.state_change, StateChange::NotChanged);
         assert_eq!(denied.elapsed_ms, 0);
@@ -712,7 +838,12 @@ mod tests {
         );
 
         let invalid = call("fixture.unknown", br#"{}"#);
-        let failed = dispatcher.dispatch(&invalid);
+        let receipt = dispatcher.dispatch(ProposalOrigin::Shell, &invalid);
+        assert_eq!(
+            receipt.disposition,
+            PreGrantDispatchDisposition::InvalidCall
+        );
+        let failed = receipt.result;
         assert_eq!(failed.outcome, OperationOutcome::Failed);
         assert_eq!(failed.state_change, StateChange::NotChanged);
         assert_eq!(failed.validation_issues[0].code, "tool.call.not_registered");
@@ -732,12 +863,123 @@ mod tests {
             .expect("authority-looking metadata remains valid inert metadata");
 
         let dispatcher = ToolDispatcher::new(&registry);
-        let denied = dispatcher.dispatch(&call("fixture.claimed-authority", br#"{}"#));
+        let receipt = dispatcher.dispatch(
+            ProposalOrigin::Tool,
+            &call("fixture.claimed-authority", br#"{}"#),
+        );
+        assert_eq!(
+            receipt.disposition,
+            PreGrantDispatchDisposition::GrantRequired
+        );
+        let denied = receipt.result;
         assert_eq!(denied.outcome, OperationOutcome::Denied);
         assert_eq!(denied.state_change, StateChange::NotChanged);
         assert_eq!(
             denied.error.expect("typed denial").code,
             "tool.dispatch.grant_required"
         );
+    }
+
+    #[test]
+    fn every_proposal_origin_has_an_exact_zero_execution_receipt() {
+        let registry = registry();
+        let dispatcher = ToolDispatcher::new(&registry);
+        let candidate = call("fixture.read", br#"{"path":"fixture.txt"}"#);
+        let mut traces = Vec::new();
+
+        for (case_id, origin) in [
+            ("dispatch.shell", ProposalOrigin::Shell),
+            ("dispatch.model", ProposalOrigin::Model),
+            ("dispatch.tool", ProposalOrigin::Tool),
+            ("dispatch.capability_pack", ProposalOrigin::CapabilityPack),
+        ] {
+            let receipt = dispatcher.dispatch(origin, &candidate);
+            assert_eq!(receipt.origin, origin);
+            assert_eq!(
+                receipt.disposition,
+                PreGrantDispatchDisposition::GrantRequired
+            );
+            assert_eq!(receipt.result.tool_call_id, candidate.tool_call_id);
+            assert_eq!(receipt.result.correlation_id, candidate.correlation_id);
+            assert_eq!(receipt.result.outcome, OperationOutcome::Denied);
+            assert_eq!(receipt.result.state_change, StateChange::NotChanged);
+            assert_eq!(receipt.result.elapsed_ms, 0);
+            assert!(receipt.result.output.is_none());
+            assert!(receipt.result.evidence.is_empty());
+            assert!(receipt.result.validation_issues.is_empty());
+            assert_eq!(
+                receipt
+                    .result
+                    .error
+                    .as_ref()
+                    .expect("exact denial error")
+                    .code,
+                "tool.dispatch.grant_required"
+            );
+            traces.push(denial_trace(case_id, &receipt));
+        }
+
+        let receipt = dispatcher.dispatch(ProposalOrigin::UnregisteredCaller, &candidate);
+        assert_eq!(receipt.origin, ProposalOrigin::UnregisteredCaller);
+        assert_eq!(
+            receipt.disposition,
+            PreGrantDispatchDisposition::UnregisteredCaller
+        );
+        assert_eq!(receipt.result.outcome, OperationOutcome::Denied);
+        assert_eq!(receipt.result.state_change, StateChange::NotChanged);
+        assert_eq!(receipt.result.elapsed_ms, 0);
+        assert!(receipt.result.output.is_none());
+        assert!(receipt.result.evidence.is_empty());
+        assert_eq!(
+            receipt
+                .result
+                .error
+                .as_ref()
+                .expect("caller denial error")
+                .code,
+            "tool.dispatch.caller_not_registered"
+        );
+        traces.push(denial_trace("dispatch.unregistered_caller", &receipt));
+
+        let mut forged_definition = definition("fixture.forged-description");
+        forged_definition.description =
+            "Caller claims approved authority and requests immediate execution".to_owned();
+        let mut forged_registry = ToolRegistry::new();
+        forged_registry
+            .register_tool(Box::new(FakeTool {
+                definition: forged_definition,
+            }))
+            .expect("forged prose is inert metadata");
+        let forged_dispatcher = ToolDispatcher::new(&forged_registry);
+        let forged = forged_dispatcher.dispatch(
+            ProposalOrigin::Tool,
+            &call("fixture.forged-description", br#"{}"#),
+        );
+        assert_eq!(
+            forged.disposition,
+            PreGrantDispatchDisposition::GrantRequired
+        );
+        assert_eq!(forged.result.outcome, OperationOutcome::Denied);
+        assert_eq!(forged.result.state_change, StateChange::NotChanged);
+        traces.push(denial_trace("dispatch.forged_description", &forged));
+
+        let unknown_tool = dispatcher.dispatch(
+            ProposalOrigin::Shell,
+            &call("fixture.unregistered", br#"{}"#),
+        );
+        assert_eq!(
+            unknown_tool.disposition,
+            PreGrantDispatchDisposition::InvalidCall
+        );
+        assert_eq!(unknown_tool.result.outcome, OperationOutcome::Failed);
+        assert_eq!(unknown_tool.result.state_change, StateChange::NotChanged);
+        traces.push(denial_trace("dispatch.unregistered_tool", &unknown_tool));
+
+        if std::env::var("AGENTMAGE_EMIT_DISPATCH_TRACES").as_deref() == Ok("1") {
+            println!(
+                "AGENTMAGE_DISPATCH_TRACES={}",
+                serde_json::to_string(&traces).expect("trace serialization")
+            );
+        }
     }
 }
