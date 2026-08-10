@@ -3,13 +3,20 @@ from __future__ import annotations
 import copy
 import unittest
 
-from scripts.model_disposition import build_record, validate_record
+from scripts.model_disposition import build_record, load_record, validate_record
 
 
 class ModelDispositionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.record = build_record("HEAD")
+
+    def test_committed_disposition_reconciles_with_bound_evidence(self) -> None:
+        committed = load_record()
+        self.assertEqual(validate_record(committed), [])
+        self.assertEqual(committed["decision"]["status"], "REJECTED")
+        self.assertFalse(committed["decision"]["candidate_enabled"])
+        self.assertEqual(committed["fallback"]["state"], "EVALUATION_REQUIRED_DISABLED")
 
     def test_generated_rejection_reconciles_with_raw_evidence(self) -> None:
         self.assertEqual(validate_record(copy.deepcopy(self.record)), [])
