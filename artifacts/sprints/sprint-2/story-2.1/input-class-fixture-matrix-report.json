@@ -1,0 +1,48 @@
+{
+  "acceptance_criterion": "2.1.AC1",
+  "all_prohibited_side_effect_counts": 0,
+  "coverage": {
+    "complete_cross_product": true,
+    "fixture_count": 84,
+    "input_class_count": 12,
+    "scenario_count": 7
+  },
+  "fixture_set": {
+    "path": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+    "self_sha256": "0f4a0b5290598070d60556f496dc6f0efd39b317f786a022f1f8e6d848d9344d",
+    "sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75",
+    "version": "1.0.0"
+  },
+  "input_classes": [
+    "manifests",
+    "configuration",
+    "ipc-messages",
+    "model-output",
+    "capability-grants",
+    "paths",
+    "text-encodings",
+    "git-objects",
+    "repository-parsers",
+    "sqlite-imports",
+    "archives",
+    "ffi-boundaries"
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "original_machine_data_used": false,
+  "private_user_data_used": false,
+  "product_input_support_claim": "none",
+  "prohibited_side_effects_declared_per_fixture": true,
+  "scenarios": [
+    "normal",
+    "boundary",
+    "malformed",
+    "hostile",
+    "oversized",
+    "cancellation",
+    "recovery"
+  ],
+  "schema_version": 1,
+  "status": "pass-shared-fixture-foundation",
+  "story_id": "2.1"
+}

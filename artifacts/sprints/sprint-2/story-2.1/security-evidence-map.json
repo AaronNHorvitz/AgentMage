@@ -33,6 +33,10 @@
       "sha256": "0f9218a787400c7d7915c2a144e545508d2b7cfe3360c0d99abb972c878cda1b"
     },
     {
+      "path": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+      "sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75"
+    },
+    {
       "path": "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
       "sha256": "4212858e26f05416ab7f436a481a865a193bf7d08364a91aac0945b2e697b1a2"
     },
@@ -46,7 +50,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
-      "sha256": "85d430a824f77bac418a24e09d6b7a09a28a335ad51aa219ca9cd3d44968c676"
+      "sha256": "dfa0361809abafb126b7f3a3f6ef059edb23bcfb46231d59152a6f57c8fdf0f2"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json",
+      "sha256": "dc86aaec23a3dbed8c78395a04636742dc5c3e8eefd10327d05946d5d986bad8"
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
@@ -115,7 +123,8 @@
       "evidence": [
         "fixtures/corpus/v1/manifest.json",
         "fixtures/adversarial-fixture-profile.json",
-        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json"
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json"
       ],
       "product_requirement_status": "not-complete",
       "remaining": "Each future product input class must bind these fixture classes to its concrete parser and receipt behavior.",
