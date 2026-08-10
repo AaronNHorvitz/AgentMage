@@ -69,13 +69,17 @@ pub enum WorkPacketState {
 }
 
 /// Resource measured by one declared work-packet budget.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum BudgetResource {
     /// Number of plan steps attempted.
     PlanSteps,
     /// Number of deterministic tool calls attempted.
     ToolCalls,
+    /// Maximum nested deterministic tool-call depth.
+    ToolCallDepth,
     /// Number of local model calls attempted.
     ModelCalls,
     /// Total bytes admitted as operation input.
@@ -84,6 +88,12 @@ pub enum BudgetResource {
     OutputBytes,
     /// Logical elapsed-time budget in milliseconds.
     ElapsedMilliseconds,
+    /// Peak memory accounting in bytes when supplied by the platform boundary.
+    MemoryBytes,
+    /// Scratch and retained-output disk accounting in bytes.
+    DiskBytes,
+    /// Child-process count when supplied by the platform boundary.
+    ProcessCount,
 }
 
 /// One explicit upper bound carried by a descriptive work packet.
@@ -97,7 +107,9 @@ pub struct BudgetLimit {
 }
 
 /// Reason a bounded run must stop before proposing another action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum StopConditionKind {
     /// All acceptance checks have verified evidence.

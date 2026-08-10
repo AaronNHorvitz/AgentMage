@@ -4,13 +4,23 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, EvidenceReference, Plan, PlanId, PlanState, PlanStep, PlanStepId,
-    PlanStepState, ValidationIssue, ValidationSeverity, WorkPacket, WorkPacketState,
+    PlanStepState, StopConditionKind, ValidationIssue, ValidationSeverity, WorkPacket,
+    WorkPacketState,
 };
 
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_TEXT_BYTES: usize = 4_096;
 const MAX_LIST_ITEMS: usize = 128;
 const MAX_EVIDENCE_ITEMS: usize = 256;
+const REQUIRED_STOP_CONDITIONS: [StopConditionKind; 7] = [
+    StopConditionKind::AcceptanceSatisfied,
+    StopConditionKind::UserDecisionRequired,
+    StopConditionKind::PolicyDenied,
+    StopConditionKind::Error,
+    StopConditionKind::Cancelled,
+    StopConditionKind::BudgetExhausted,
+    StopConditionKind::UncertainResult,
+];
 
 /// Error returned when a packet revision cannot enter immutable history.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -600,6 +610,19 @@ fn validate_stop_conditions(packet: &WorkPacket, issues: &mut Vec<ValidationIssu
             ));
         }
     }
+    for required in REQUIRED_STOP_CONDITIONS {
+        if !packet
+            .stop_conditions
+            .iter()
+            .any(|condition| condition.kind == required)
+        {
+            issues.push(issue(
+                "packet.stop_condition.required",
+                "stop_conditions",
+                "A mandatory safety stop condition is absent",
+            ));
+        }
+    }
 }
 
 fn validate_completion_entries(packet: &WorkPacket, issues: &mut Vec<ValidationIssue>) {
@@ -971,6 +994,26 @@ mod tests {
                 StopCondition {
                     kind: StopConditionKind::UserDecisionRequired,
                     description: "Stop before any unapproved action".to_owned(),
+                },
+                StopCondition {
+                    kind: StopConditionKind::PolicyDenied,
+                    description: "Stop on policy denial".to_owned(),
+                },
+                StopCondition {
+                    kind: StopConditionKind::Error,
+                    description: "Stop on a typed error".to_owned(),
+                },
+                StopCondition {
+                    kind: StopConditionKind::Cancelled,
+                    description: "Stop when cancellation is requested".to_owned(),
+                },
+                StopCondition {
+                    kind: StopConditionKind::BudgetExhausted,
+                    description: "Stop before exceeding a resource budget".to_owned(),
+                },
+                StopCondition {
+                    kind: StopConditionKind::UncertainResult,
+                    description: "Stop when an effect cannot be established".to_owned(),
                 },
             ],
             rollback: RollbackPlan {

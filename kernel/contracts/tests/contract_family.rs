@@ -67,10 +67,36 @@ fn complete_contract_family_preserves_linked_identities() {
             resource: BudgetResource::ToolCalls,
             limit: 1,
         }],
-        stop_conditions: vec![StopCondition {
-            kind: StopConditionKind::AcceptanceSatisfied,
-            description: "Stop after the observation is evidenced".to_owned(),
-        }],
+        stop_conditions: vec![
+            StopCondition {
+                kind: StopConditionKind::AcceptanceSatisfied,
+                description: "Stop after the observation is evidenced".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::UserDecisionRequired,
+                description: "Stop for a new user decision".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::PolicyDenied,
+                description: "Stop on policy denial".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::Error,
+                description: "Stop on a typed error".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::Cancelled,
+                description: "Stop on cancellation".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::BudgetExhausted,
+                description: "Stop on budget exhaustion".to_owned(),
+            },
+            StopCondition {
+                kind: StopConditionKind::UncertainResult,
+                description: "Stop on an uncertain result".to_owned(),
+            },
+        ],
         rollback: RollbackPlan {
             reversible: true,
             description: "No state change is permitted".to_owned(),

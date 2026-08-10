@@ -4,6 +4,8 @@
 
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Stateful resource budgets and explicit sticky stop conditions.
+pub mod run_control;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
 /// Bounded work-packet validation, revision history, and plan adaptation.
