@@ -1,0 +1,80 @@
+{
+  "fixture_identity": {
+    "sha256": "d3b836a36b0a4ddb033f00414f34ab52fb7cd21c2672cd1b07f1546e9d4d8f48",
+    "status": "synthetic-contract-fixture-not-releasable"
+  },
+  "formal_schema_validation": {
+    "canonical_record_count": 1,
+    "engine": "ajv-draft-2020-12",
+    "node_mutation_test_count": 4,
+    "status": "pass"
+  },
+  "implemented_activation_claim": "none",
+  "implemented_verifier_claim": "none",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "production_signer_claim": "none",
+  "releasable_package_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "bytes": 2634,
+      "path": "architecture/signed-update-design.json",
+      "sha256": "678e7c5036ae25d6367c902975695d21766a3c9b0b8e47383fd7f0e80c3955b5"
+    },
+    {
+      "bytes": 2171,
+      "path": "architecture/rollback-design.json",
+      "sha256": "891d9db9981582d5a6ded9d73ceb83eb2556811a5313637cb20183670d185c96"
+    },
+    {
+      "bytes": 5064,
+      "path": "support/vulnerability-support-policy.json",
+      "sha256": "b8a63600b4539f9ad58432be198d61149d8e671fca8cee6a74f0d8449fa2831c"
+    },
+    {
+      "bytes": 14186,
+      "path": "schemas/support/signed-manual-patch-metadata.schema.json",
+      "sha256": "8c40a7017be9c00c4e69841df65cf1f69ebbb09ed5f7c1d38744229a5a7d8d98"
+    },
+    {
+      "bytes": 6638,
+      "path": "schemas/support/examples/signed-manual-patch-metadata.valid.json",
+      "sha256": "d3b836a36b0a4ddb033f00414f34ab52fb7cd21c2672cd1b07f1546e9d4d8f48"
+    },
+    {
+      "bytes": 1636,
+      "path": "scripts/validate_manual_patch_schema.mjs",
+      "sha256": "9c30286a6b72296f7e98aa70b62fffaec24bc83efd25188fb205186c880e452c"
+    },
+    {
+      "bytes": 14658,
+      "path": "scripts/manual_patch_metadata.py",
+      "sha256": "3cb442d4a60f717ac7f98ee7e266be3f781755023a312508c0fd5eee1a7ba683"
+    },
+    {
+      "bytes": 1775,
+      "path": "tests/test_manual_patch_schema.mjs",
+      "sha256": "7a904b7b966300c8836b0998266d52f6e9c1f116085cb4176b36434240589c7f"
+    },
+    {
+      "bytes": 4248,
+      "path": "tests/test_manual_patch_metadata.py",
+      "sha256": "b2b6503a1aded9ce1c4129f376e93a2861031431089f81054e64506093b3e756"
+    }
+  ],
+  "status": "pass-contract-definition",
+  "story_id": "3.2",
+  "summary": {
+    "artifact_checksum_count": 10,
+    "authorized_signer_count": 1,
+    "detached_signature_count": 1,
+    "network_authority_count": 0,
+    "release_sequence_increase": 1
+  },
+  "task_id": "3.2.1.2"
+}

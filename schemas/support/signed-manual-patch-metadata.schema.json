@@ -1,0 +1,580 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/support/signed-manual-patch-metadata.schema.json",
+  "title": "AgentMage signed manual patch metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "metadata_version",
+    "fixture_status",
+    "release",
+    "current_release_precondition",
+    "platform",
+    "signing",
+    "artifacts",
+    "provenance",
+    "prerequisites",
+    "schema_impact",
+    "rollback",
+    "revocation",
+    "support",
+    "advisory",
+    "delivery",
+    "activation",
+    "claims"
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "artifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "path", "sha256", "bytes"],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "enum": [
+            "package",
+            "release-manifest",
+            "provenance",
+            "sbom",
+            "cryptographic-bom",
+            "model-bom",
+            "component-inventory",
+            "configuration",
+            "capability-delta",
+            "authority-delta"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "signed-manual-patch-metadata"
+    },
+    "metadata_version": {
+      "const": 1
+    },
+    "fixture_status": {
+      "const": "synthetic-contract-fixture-not-releasable"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "semantic_version",
+        "release_sequence",
+        "source_commit",
+        "release_manifest_sha256"
+      ],
+      "properties": {
+        "release_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "semantic_version": {
+          "type": "string",
+          "pattern": "^0\\.[0-9]+\\.[0-9]+$"
+        },
+        "release_sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "release_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "current_release_precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "semantic_version",
+        "release_sequence",
+        "package_sha256",
+        "configuration_sha256"
+      ],
+      "properties": {
+        "release_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "semantic_version": {
+          "type": "string",
+          "pattern": "^0\\.[0-9]+\\.[0-9]+$"
+        },
+        "release_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "package_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "minimum_version", "runtime_adapter"],
+      "properties": {
+        "os": {
+          "enum": ["fedora", "ubuntu", "macos"]
+        },
+        "architecture": {
+          "enum": ["x86_64", "aarch64"]
+        },
+        "minimum_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "runtime_adapter": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trust_root_id",
+        "algorithm",
+        "threshold",
+        "authorized_signer_key_ids",
+        "detached_signatures",
+        "verify_before_extraction"
+      ],
+      "properties": {
+        "trust_root_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "algorithm": {
+          "const": "ed25519"
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "authorized_signer_key_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "detached_signatures": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signer_key_id", "signature_path", "signature_sha256"],
+            "properties": {
+              "signer_key_id": {
+                "$ref": "#/$defs/identifier"
+              },
+              "signature_path": {
+                "$ref": "#/$defs/relativePath"
+              },
+              "signature_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        },
+        "verify_before_extraction": {
+          "const": true
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/artifactIdentity"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statement_path",
+        "statement_sha256",
+        "builder_identity",
+        "build_recipe_sha256",
+        "clean_build_report_sha256",
+        "source_commit",
+        "synthetic_values"
+      ],
+      "properties": {
+        "statement_path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "statement_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "builder_identity": {
+          "$ref": "#/$defs/identifier"
+        },
+        "build_recipe_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "clean_build_report_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "synthetic_values": {
+          "const": true
+        }
+      }
+    },
+    "prerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_release_must_match",
+        "platform_must_match",
+        "local_trust_root_required",
+        "minimum_free_bytes",
+        "administrator_required",
+        "user_selected_local_bundle"
+      ],
+      "properties": {
+        "current_release_must_match": {
+          "const": true
+        },
+        "platform_must_match": {
+          "const": true
+        },
+        "local_trust_root_required": {
+          "const": true
+        },
+        "minimum_free_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "administrator_required": {
+          "const": false
+        },
+        "user_selected_local_bundle": {
+          "const": true
+        }
+      }
+    },
+    "schema_impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_from",
+        "configuration_to",
+        "data_schema_changed",
+        "migration_required",
+        "migration_id",
+        "reversible",
+        "later_user_data_overwrite_allowed"
+      ],
+      "properties": {
+        "configuration_from": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "configuration_to": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "data_schema_changed": {
+          "type": "boolean"
+        },
+        "migration_required": {
+          "type": "boolean"
+        },
+        "migration_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversible": {
+          "type": "boolean"
+        },
+        "later_user_data_overwrite_allowed": {
+          "const": false
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "design_id",
+        "target_release_id",
+        "target_package_sha256",
+        "target_supported",
+        "target_revoked",
+        "exact_active_precondition_required",
+        "reverse_migration_required",
+        "rollback_instructions_path",
+        "rollback_instructions_sha256"
+      ],
+      "properties": {
+        "design_id": {
+          "const": "ADR-0006"
+        },
+        "target_release_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "target_package_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "target_supported": {
+          "const": true
+        },
+        "target_revoked": {
+          "const": false
+        },
+        "exact_active_precondition_required": {
+          "const": true
+        },
+        "reverse_migration_required": {
+          "type": "boolean"
+        },
+        "rollback_instructions_path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "rollback_instructions_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata_sequence",
+        "expires_at",
+        "revoked_signer_key_ids",
+        "revoked_artifact_sha256",
+        "revoked_release_ids",
+        "local_policy_check_required"
+      ],
+      "properties": {
+        "metadata_sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revoked_signer_key_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "revoked_artifact_sha256": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "revoked_release_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "local_policy_check_required": {
+          "const": true
+        }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_release_state",
+        "target_support_end",
+        "current_release_state_after_patch",
+        "support_policy_id"
+      ],
+      "properties": {
+        "target_release_state": {
+          "enum": ["supported", "security-fixes-only"]
+        },
+        "target_support_end": {
+          "type": "string",
+          "format": "date"
+        },
+        "current_release_state_after_patch": {
+          "enum": ["supported", "security-fixes-only", "end-of-support", "revoked"]
+        },
+        "support_policy_id": {
+          "const": "AM-VSP-001"
+        }
+      }
+    },
+    "advisory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["advisory_id", "path", "sha256"],
+      "properties": {
+        "advisory_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "acquisition_authority",
+        "automatic_update_checks",
+        "background_downloads",
+        "remote_trigger",
+        "remote_control",
+        "transaction_network_allowed"
+      ],
+      "properties": {
+        "mode": {
+          "const": "user-initiated-local-import"
+        },
+        "acquisition_authority": {
+          "const": "outside-agentmage-runtime"
+        },
+        "automatic_update_checks": {
+          "const": false
+        },
+        "background_downloads": {
+          "const": false
+        },
+        "remote_trigger": {
+          "const": false
+        },
+        "remote_control": {
+          "const": false
+        },
+        "transaction_network_allowed": {
+          "const": false
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verify_before_staging",
+        "atomic_activation_required",
+        "prior_release_preserved_until_postcheck",
+        "durable_receipt_each_transition",
+        "explicit_user_approval_required"
+      ],
+      "properties": {
+        "verify_before_staging": {
+          "const": true
+        },
+        "atomic_activation_required": {
+          "const": true
+        },
+        "prior_release_preserved_until_postcheck": {
+          "const": true
+        },
+        "durable_receipt_each_transition": {
+          "const": true
+        },
+        "explicit_user_approval_required": {
+          "const": true
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "production_signer",
+        "releasable_package",
+        "implemented_verifier",
+        "implemented_activation",
+        "macos_support"
+      ],
+      "properties": {
+        "production_signer": {
+          "const": false
+        },
+        "releasable_package": {
+          "const": false
+        },
+        "implemented_verifier": {
+          "const": false
+        },
+        "implemented_activation": {
+          "const": false
+        },
+        "macos_support": {
+          "const": false
+        }
+      }
+    }
+  }
+}

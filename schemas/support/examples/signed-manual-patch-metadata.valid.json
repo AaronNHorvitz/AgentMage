@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "record_type": "signed-manual-patch-metadata",
+  "metadata_version": 1,
+  "fixture_status": "synthetic-contract-fixture-not-releasable",
+  "release": {
+    "release_id": "agentmage-0.1.1",
+    "semantic_version": "0.1.1",
+    "release_sequence": 2,
+    "source_commit": "1111111111111111111111111111111111111111",
+    "release_manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "current_release_precondition": {
+    "release_id": "agentmage-0.1.0",
+    "semantic_version": "0.1.0",
+    "release_sequence": 1,
+    "package_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "configuration_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "platform": {
+    "os": "fedora",
+    "architecture": "x86_64",
+    "minimum_version": "44",
+    "runtime_adapter": "llama-cpp-native"
+  },
+  "signing": {
+    "trust_root_id": "agentmage-release-root-v1-fixture",
+    "algorithm": "ed25519",
+    "threshold": 1,
+    "authorized_signer_key_ids": [
+      "agentmage-release-key-1-fixture"
+    ],
+    "detached_signatures": [
+      {
+        "signer_key_id": "agentmage-release-key-1-fixture",
+        "signature_path": "signatures/patch-metadata.ed25519",
+        "signature_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    ],
+    "verify_before_extraction": true
+  },
+  "artifacts": [
+    {
+      "artifact_id": "agentmage-package",
+      "kind": "package",
+      "path": "packages/agentmage-0.1.1-fedora-x86_64.tar.zst",
+      "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "bytes": 1000000
+    },
+    {
+      "artifact_id": "release-manifest",
+      "kind": "release-manifest",
+      "path": "metadata/release-manifest.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "bytes": 4096
+    },
+    {
+      "artifact_id": "provenance",
+      "kind": "provenance",
+      "path": "metadata/provenance.json",
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "bytes": 8192
+    },
+    {
+      "artifact_id": "sbom",
+      "kind": "sbom",
+      "path": "metadata/sbom.cdx.json",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "bytes": 16384
+    },
+    {
+      "artifact_id": "cryptographic-bom",
+      "kind": "cryptographic-bom",
+      "path": "metadata/cryptographic-bom.json",
+      "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "bytes": 4096
+    },
+    {
+      "artifact_id": "model-bom",
+      "kind": "model-bom",
+      "path": "metadata/model-bom.json",
+      "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "bytes": 4096
+    },
+    {
+      "artifact_id": "component-inventory",
+      "kind": "component-inventory",
+      "path": "metadata/component-inventory.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 8192
+    },
+    {
+      "artifact_id": "configuration",
+      "kind": "configuration",
+      "path": "metadata/configuration.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bytes": 4096
+    },
+    {
+      "artifact_id": "capability-delta",
+      "kind": "capability-delta",
+      "path": "metadata/capability-delta.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "bytes": 2048
+    },
+    {
+      "artifact_id": "authority-delta",
+      "kind": "authority-delta",
+      "path": "metadata/authority-delta.json",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "bytes": 2048
+    }
+  ],
+  "provenance": {
+    "statement_path": "metadata/provenance.json",
+    "statement_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "builder_identity": "agentmage-clean-release-builder-fixture",
+    "build_recipe_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "clean_build_report_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "source_commit": "1111111111111111111111111111111111111111",
+    "synthetic_values": true
+  },
+  "prerequisites": {
+    "current_release_must_match": true,
+    "platform_must_match": true,
+    "local_trust_root_required": true,
+    "minimum_free_bytes": 2000000,
+    "administrator_required": false,
+    "user_selected_local_bundle": true
+  },
+  "schema_impact": {
+    "configuration_from": 1,
+    "configuration_to": 1,
+    "data_schema_changed": false,
+    "migration_required": false,
+    "migration_id": null,
+    "reversible": true,
+    "later_user_data_overwrite_allowed": false
+  },
+  "rollback": {
+    "design_id": "ADR-0006",
+    "target_release_id": "agentmage-0.1.0",
+    "target_package_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "target_supported": true,
+    "target_revoked": false,
+    "exact_active_precondition_required": true,
+    "reverse_migration_required": false,
+    "rollback_instructions_path": "metadata/rollback.json",
+    "rollback_instructions_sha256": "abababababababababababababababababababababababababababababababab"
+  },
+  "revocation": {
+    "metadata_sequence": 7,
+    "expires_at": "2027-01-01T00:00:00Z",
+    "revoked_signer_key_ids": [],
+    "revoked_artifact_sha256": [],
+    "revoked_release_ids": [],
+    "local_policy_check_required": true
+  },
+  "support": {
+    "target_release_state": "supported",
+    "target_support_end": "2027-01-01",
+    "current_release_state_after_patch": "security-fixes-only",
+    "support_policy_id": "AM-VSP-001"
+  },
+  "advisory": {
+    "advisory_id": "am-sa-0001-fixture",
+    "path": "metadata/advisory.md",
+    "sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "delivery": {
+    "mode": "user-initiated-local-import",
+    "acquisition_authority": "outside-agentmage-runtime",
+    "automatic_update_checks": false,
+    "background_downloads": false,
+    "remote_trigger": false,
+    "remote_control": false,
+    "transaction_network_allowed": false
+  },
+  "activation": {
+    "verify_before_staging": true,
+    "atomic_activation_required": true,
+    "prior_release_preserved_until_postcheck": true,
+    "durable_receipt_each_transition": true,
+    "explicit_user_approval_required": true
+  },
+  "claims": {
+    "production_signer": false,
+    "releasable_package": false,
+    "implemented_verifier": false,
+    "implemented_activation": false,
+    "macos_support": false
+  }
+}
