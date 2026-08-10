@@ -1,0 +1,247 @@
+{
+  "clean_environment": {
+    "ambient_environment_values_read": false,
+    "fresh_empty_directory_per_profile": true,
+    "private_paths_persisted": false,
+    "startup_directory_writes": 0
+  },
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "configuration::tests::every_profile_startup_from_clean_environment_matches_declared_authority_and_evidence",
+        "--locked",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    }
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "platform_execution": "fedora-linux",
+  "product_startup_activation_claim": "none",
+  "release_readiness_claim": "none",
+  "result_bundles": [
+    {
+      "activation_status": "inactive-no-product-registration",
+      "configuration_sha256": "9b114a8b3cdd59a4920f1fc01ffa36ebe5cb60dbec5d4648ad18281a4df07c28",
+      "declared_capabilities": [],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "development",
+      "record_sha256": "7f2be8ff0512fc5a7b620c5793fe98fd34d06679581a5a8e736c6451cd8d3e08",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "inactive-no-product-registration",
+      "configuration_sha256": "36603a37d6637e1a88d9c1f0c2e33221de200a29d43960f92dec4b75c3534378",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "synthetic-test",
+      "record_sha256": "c28b822baf67dc508b3d47450d971143b8609fb7d30fa35f3ca135333e2d124c",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "inactive-no-product-registration",
+      "configuration_sha256": "32206f515520df253feeb053cbd6ccba03c0a1edb1ff3abbe63d7d4df40c59ea",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "strict-local-read-only",
+      "record_sha256": "347b67abe29e5543685ef90e88baecc792199faca08272aeb4f38bf6f0b97507",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "future-disabled",
+      "configuration_sha256": "2d60fccf6971040e67c956c59c274219196d0a66b51f181c7516f5d796d28353",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "knowledge",
+      "record_sha256": "08318fb1586b91535c9b778c5a2843b8b40ca0b01b05698aee673679c8b278eb",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "future-disabled",
+      "configuration_sha256": "07e4f9e5d19f89bc824c6a402fcb30afeff9a59090f3c8128814f2d7c2ab6056",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "write",
+      "record_sha256": "8c692f44edb3ec2758f6bbce44b2e48439a6f7fff98974d922ee8897f799cc44",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "future-disabled",
+      "configuration_sha256": "c632d5469062362cba8d2def2945174fe67714c8adee524dba3a4fbffec81a72",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "coding",
+      "record_sha256": "f41d26cc06f8f0fc693762bd3ea3a66087a6ad832e60c997c96e1b0532c4fcbb",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    },
+    {
+      "activation_status": "future-disabled",
+      "configuration_sha256": "013d95bc66c132f862b081fa26f9c5346ae3db02106d62cbb7c90de182887766",
+      "declared_capabilities": [
+        "workspace.read"
+      ],
+      "dependency_sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41",
+      "executable_sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720",
+      "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+      "profile_id": "later-network",
+      "record_sha256": "4603c8ce276e6d0909cd23afdb8f2db7c33d4c599f5a03d985288b1bc6579597",
+      "record_type": "profile-startup-verification-result",
+      "registered_capabilities": [],
+      "schema_version": 1,
+      "startup_status": "blocked-as-declared"
+    }
+  ],
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "702e0fbb88f6cfaae97475e6d876e0907a8819e205bcfcc87a46825e1fd8ea00"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "768ff57311bd3de95000fcace3de631a047a18eff1e78962f2ed09cc84f8410a"
+    },
+    {
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+    },
+    {
+      "path": "configuration/profiles/catalog.json",
+      "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
+    },
+    {
+      "path": "configuration/profiles/development.json",
+      "sha256": "14526c971a612f3db8e52ec681da7f60d3d59b800510138a0eb8a5d461df6633"
+    },
+    {
+      "path": "configuration/profiles/synthetic-test.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "configuration/profiles/strict-local-read-only.json",
+      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+    },
+    {
+      "path": "configuration/profiles/knowledge.json",
+      "sha256": "88a0c9b1bb20146fcfa651e30589fc26e6692843b600f5f8024765749421dc37"
+    },
+    {
+      "path": "configuration/profiles/write.json",
+      "sha256": "a30524787a9398aea2d3d6c6201537f43789ed2986f29cd24c45c1ff7bd2e76c"
+    },
+    {
+      "path": "configuration/profiles/coding.json",
+      "sha256": "337877eb03511ba6cdaf9d34de4b5ad682bfe91c377422c11279a541f15c54d8"
+    },
+    {
+      "path": "configuration/profiles/later-network.json",
+      "sha256": "53b6d4882cdfc741b41c68ac52abd5f842941dcb8751afb50678e997a9e1a49b"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "db861b7798526312f5d8df1cef0bcca6bb89a4a2b4190f5f33031853ebcf9e41"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "b662249eba51e1a41ac177db320890224daea0dc6020826eb0f9f886af153720"
+    },
+    {
+      "path": "scripts/configuration_startup_evidence.py",
+      "sha256": "7e3c2632dcf4332c3bff2c9c2fb79b0821c7d065149a6f73c2156f24102c3bca"
+    },
+    {
+      "path": "tests/test_configuration_startup_evidence.py",
+      "sha256": "1d4d0da59d6a19f357a45fb084259754291f7bb996dd95d6cb821c43911dbbec"
+    }
+  ],
+  "status": "pass-shared-linux-clean-profile-startup-verification",
+  "summary": {
+    "artifact_identity_mismatch_count": 0,
+    "clean_environment_count": 7,
+    "current_foundation_profile_count": 3,
+    "declared_capability_mismatch_count": 0,
+    "early_product_registration_count": 0,
+    "failed_test_count": 0,
+    "future_disabled_profile_count": 4,
+    "profile_count": 7,
+    "registered_capability_count": 0,
+    "skipped_test_count": 0
+  },
+  "task_id": "3.1.3.4",
+  "test_id": "S-003-IT01",
+  "tests": [
+    "every_profile_startup_from_clean_environment_matches_declared_authority_and_evidence"
+  ]
+}

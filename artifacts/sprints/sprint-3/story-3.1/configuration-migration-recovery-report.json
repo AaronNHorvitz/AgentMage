@@ -75,7 +75,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "1a4234612c92b8815385f679a206ba6b588c73caca4f2c835f3f4125e78da748"
+      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
     },
     {
       "path": "fixtures/configuration/migration/v0.valid.json",

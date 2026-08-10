@@ -369,6 +369,12 @@ impl LoadedConfiguration {
     pub fn canonical_bytes(&self) -> &[u8] {
         &self.canonical_bytes
     }
+
+    /// Returns the validated effective capability declaration.
+    #[must_use]
+    pub fn allowed_capabilities(&self) -> &[String] {
+        &self.configuration.permission.allowed_capabilities
+    }
 }
 
 /// Classifies whether a configuration change expands or restricts effective scope.
@@ -583,6 +589,189 @@ impl ConfigurationBoundResult {
     }
 
     /// Returns deterministic canonical JSON containing identities but no raw configuration.
+    #[must_use]
+    pub fn canonical_bytes(&self) -> &[u8] {
+        &self.canonical_bytes
+    }
+}
+
+/// Catalog state controlling whether a profile can participate in startup.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ProfileActivationStatus {
+    /// A current foundation profile that has no product startup registration.
+    InactiveNoProductRegistration,
+    /// A future profile retained only as a disabled definition.
+    FutureDisabled,
+}
+
+impl ProfileActivationStatus {
+    /// Returns the stable catalog value.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::InactiveNoProductRegistration => "inactive-no-product-registration",
+            Self::FutureDisabled => "future-disabled",
+        }
+    }
+}
+
+/// One profile declaration read from the closed startup catalog.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProfileStartupDeclaration {
+    profile_id: String,
+    activation_status: ProfileActivationStatus,
+    product_registration: bool,
+    declared_capabilities: Vec<String>,
+}
+
+impl ProfileStartupDeclaration {
+    /// Creates a declaration that will be validated against the configuration at startup.
+    pub fn new(
+        profile_id: &str,
+        activation_status: ProfileActivationStatus,
+        product_registration: bool,
+        declared_capabilities: &[String],
+    ) -> Result<Self, ConfigurationError> {
+        if !identifier(profile_id)
+            || declared_capabilities.iter().any(|item| !identifier(item))
+            || !strictly_sorted_unique(declared_capabilities)
+        {
+            return contract_error();
+        }
+        Ok(Self {
+            profile_id: profile_id.to_owned(),
+            activation_status,
+            product_registration,
+            declared_capabilities: declared_capabilities.to_vec(),
+        })
+    }
+}
+
+/// Hash-only identities for the dependency, executable, and policy startup evidence.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StartupArtifactIdentities {
+    dependency_sha256: String,
+    executable_sha256: String,
+    policy_sha256: String,
+}
+
+impl StartupArtifactIdentities {
+    /// Hashes three non-empty bounded evidence artifacts without retaining their content.
+    pub fn from_artifacts(
+        dependency_evidence: &[u8],
+        executable_evidence: &[u8],
+        policy_evidence: &[u8],
+    ) -> Result<Self, ConfigurationError> {
+        if [dependency_evidence, executable_evidence, policy_evidence]
+            .iter()
+            .any(|item| item.is_empty() || item.len() > DEFAULT_MAXIMUM_BYTES)
+        {
+            return contract_error();
+        }
+        Ok(Self {
+            dependency_sha256: sha256(dependency_evidence),
+            executable_sha256: sha256(executable_evidence),
+            policy_sha256: sha256(policy_evidence),
+        })
+    }
+}
+
+#[derive(Serialize)]
+struct StartupResultIdentityMaterial<'a> {
+    schema_version: u32,
+    record_type: &'static str,
+    profile_id: &'a str,
+    activation_status: &'a str,
+    startup_status: &'static str,
+    declared_capabilities: &'a [String],
+    registered_capabilities: &'a [String],
+    configuration_sha256: &'a str,
+    dependency_sha256: &'a str,
+    executable_sha256: &'a str,
+    policy_sha256: &'a str,
+}
+
+/// A minimized startup-verification result bound to configuration and build evidence.
+#[derive(Clone, Debug, Serialize)]
+pub struct ProfileStartupResult {
+    schema_version: u32,
+    record_type: &'static str,
+    profile_id: String,
+    activation_status: String,
+    startup_status: &'static str,
+    declared_capabilities: Vec<String>,
+    registered_capabilities: Vec<String>,
+    configuration_sha256: String,
+    dependency_sha256: String,
+    executable_sha256: String,
+    policy_sha256: String,
+    record_sha256: String,
+    #[serde(skip)]
+    canonical_bytes: Vec<u8>,
+}
+
+impl ProfileStartupResult {
+    /// Returns the exact profile identity.
+    #[must_use]
+    pub fn profile_id(&self) -> &str {
+        &self.profile_id
+    }
+
+    /// Returns the catalog activation state.
+    #[must_use]
+    pub fn activation_status(&self) -> &str {
+        &self.activation_status
+    }
+
+    /// Returns the bounded startup disposition.
+    #[must_use]
+    pub fn startup_status(&self) -> &str {
+        self.startup_status
+    }
+
+    /// Returns capabilities declared by the exact catalog entry and configuration.
+    #[must_use]
+    pub fn declared_capabilities(&self) -> &[String] {
+        &self.declared_capabilities
+    }
+
+    /// Returns capabilities actually registered by this startup boundary.
+    #[must_use]
+    pub fn registered_capabilities(&self) -> &[String] {
+        &self.registered_capabilities
+    }
+
+    /// Returns the canonical configuration identity.
+    #[must_use]
+    pub fn configuration_sha256(&self) -> &str {
+        &self.configuration_sha256
+    }
+
+    /// Returns the dependency-provenance artifact identity.
+    #[must_use]
+    pub fn dependency_sha256(&self) -> &str {
+        &self.dependency_sha256
+    }
+
+    /// Returns the executable-evidence artifact identity.
+    #[must_use]
+    pub fn executable_sha256(&self) -> &str {
+        &self.executable_sha256
+    }
+
+    /// Returns the startup-policy artifact identity.
+    #[must_use]
+    pub fn policy_sha256(&self) -> &str {
+        &self.policy_sha256
+    }
+
+    /// Returns the identity of all minimized result fields.
+    #[must_use]
+    pub fn record_sha256(&self) -> &str {
+        &self.record_sha256
+    }
+
+    /// Returns deterministic canonical JSON without raw configuration or private paths.
     #[must_use]
     pub fn canonical_bytes(&self) -> &[u8] {
         &self.canonical_bytes
@@ -1157,6 +1346,70 @@ impl ConfigurationManager {
         )
     }
 
+    /// Executes a clean startup verification without activating an unregistered profile.
+    pub fn verify_profile_startup(
+        &self,
+        clean_root: &Path,
+        configuration_input: &[u8],
+        declaration: &ProfileStartupDeclaration,
+        artifacts: &StartupArtifactIdentities,
+    ) -> Result<ProfileStartupResult, ConfigurationError> {
+        require_clean_directory(clean_root)?;
+        let configuration = self.load_bytes(configuration_input)?;
+        if configuration.profile_id() != declaration.profile_id
+            || configuration.allowed_capabilities() != declaration.declared_capabilities
+            || declaration.product_registration
+        {
+            return Err(ConfigurationError::new(
+                ErrorCode::ContractViolation,
+                "profile startup declaration does not match inactive catalog authority",
+            ));
+        }
+        let registered_capabilities = Vec::new();
+        let activation_status = declaration.activation_status.as_str().to_owned();
+        let identity = StartupResultIdentityMaterial {
+            schema_version: 1,
+            record_type: "profile-startup-verification-result",
+            profile_id: configuration.profile_id(),
+            activation_status: &activation_status,
+            startup_status: "blocked-as-declared",
+            declared_capabilities: &declaration.declared_capabilities,
+            registered_capabilities: &registered_capabilities,
+            configuration_sha256: configuration.sha256(),
+            dependency_sha256: &artifacts.dependency_sha256,
+            executable_sha256: &artifacts.executable_sha256,
+            policy_sha256: &artifacts.policy_sha256,
+        };
+        let identity_bytes = serde_json::to_vec(&identity).map_err(|_| {
+            ConfigurationError::new(
+                ErrorCode::ContractViolation,
+                "profile startup result identity could not be serialized",
+            )
+        })?;
+        let mut result = ProfileStartupResult {
+            schema_version: 1,
+            record_type: "profile-startup-verification-result",
+            profile_id: configuration.profile_id().to_owned(),
+            activation_status,
+            startup_status: "blocked-as-declared",
+            declared_capabilities: declaration.declared_capabilities.clone(),
+            registered_capabilities,
+            configuration_sha256: configuration.sha256().to_owned(),
+            dependency_sha256: artifacts.dependency_sha256.clone(),
+            executable_sha256: artifacts.executable_sha256.clone(),
+            policy_sha256: artifacts.policy_sha256.clone(),
+            record_sha256: sha256(&identity_bytes),
+            canonical_bytes: Vec::new(),
+        };
+        result.canonical_bytes = serde_json::to_vec(&result).map_err(|_| {
+            ConfigurationError::new(
+                ErrorCode::ContractViolation,
+                "profile startup result could not be serialized",
+            )
+        })?;
+        Ok(result)
+    }
+
     /// Atomically applies a valid configuration after retaining a content-addressed backup.
     pub fn apply_with_backup(
         &self,
@@ -1707,6 +1960,32 @@ fn identifier(value: &str) -> bool {
     }) && value.as_bytes()[0].is_ascii_lowercase()
 }
 
+fn strictly_sorted_unique(values: &[String]) -> bool {
+    values.windows(2).all(|pair| pair[0] < pair[1])
+}
+
+fn require_clean_directory(path: &Path) -> Result<(), ConfigurationError> {
+    let metadata = fs::symlink_metadata(path).map_err(|_| {
+        ConfigurationError::new(ErrorCode::Io, "startup environment could not be inspected")
+    })?;
+    if !metadata.file_type().is_dir() || metadata.file_type().is_symlink() {
+        return Err(ConfigurationError::new(
+            ErrorCode::ContractViolation,
+            "startup environment is not a regular directory",
+        ));
+    }
+    let mut entries = fs::read_dir(path).map_err(|_| {
+        ConfigurationError::new(ErrorCode::Io, "startup environment could not be read")
+    })?;
+    if entries.next().is_some() {
+        return Err(ConfigurationError::new(
+            ErrorCode::ContractViolation,
+            "startup environment is not clean",
+        ));
+    }
+    Ok(())
+}
+
 fn relative_path(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 1024
@@ -2135,6 +2414,21 @@ mod tests {
 
     const SYNTHETIC_PROFILE: &[u8] =
         include_bytes!("../../../configuration/profiles/synthetic-test.json");
+    const DEVELOPMENT_PROFILE: &[u8] =
+        include_bytes!("../../../configuration/profiles/development.json");
+    const STRICT_LOCAL_READ_ONLY_PROFILE: &[u8] =
+        include_bytes!("../../../configuration/profiles/strict-local-read-only.json");
+    const KNOWLEDGE_PROFILE: &[u8] =
+        include_bytes!("../../../configuration/profiles/knowledge.json");
+    const WRITE_PROFILE: &[u8] = include_bytes!("../../../configuration/profiles/write.json");
+    const CODING_PROFILE: &[u8] = include_bytes!("../../../configuration/profiles/coding.json");
+    const LATER_NETWORK_PROFILE: &[u8] =
+        include_bytes!("../../../configuration/profiles/later-network.json");
+    const PROFILE_CATALOG: &[u8] = include_bytes!("../../../configuration/profiles/catalog.json");
+    const DEPENDENCY_PROVENANCE: &[u8] =
+        include_bytes!("../../../supply-chain/dependency-provenance.json");
+    const EXECUTABLE_EVIDENCE: &[u8] =
+        include_bytes!("../../../artifacts/sprints/sprint-1/story-1.1/clean-build-report.json");
     const MIGRATION_V0_PROFILE: &[u8] =
         include_bytes!("../../../fixtures/configuration/migration/v0.valid.json");
     const MIGRATION_V1_EXPECTED: &[u8] =
@@ -2162,6 +2456,19 @@ mod tests {
             RestrictedConfigurationSource::Repository,
             RestrictedConfigurationSource::ModelOutput,
         ]
+    }
+
+    fn profile_bytes(profile_id: &str) -> &'static [u8] {
+        match profile_id {
+            "development" => DEVELOPMENT_PROFILE,
+            "synthetic-test" => SYNTHETIC_PROFILE,
+            "strict-local-read-only" => STRICT_LOCAL_READ_ONLY_PROFILE,
+            "knowledge" => KNOWLEDGE_PROFILE,
+            "write" => WRITE_PROFILE,
+            "coding" => CODING_PROFILE,
+            "later-network" => LATER_NETWORK_PROFILE,
+            _ => panic!("unexpected profile fixture"),
+        }
     }
 
     fn signed_parent(input: &[u8]) -> VerifiedParentProfile {
@@ -3250,6 +3557,156 @@ mod tests {
         );
         assert!(!defaults.configuration.model.enabled);
         assert!(!defaults.configuration.shell.network_access);
+    }
+
+    #[test]
+    fn every_profile_startup_from_clean_environment_matches_declared_authority_and_evidence() {
+        let catalog: Value = serde_json::from_slice(PROFILE_CATALOG).expect("catalog parses");
+        let profiles = catalog["profiles"]
+            .as_array()
+            .expect("profiles are an array");
+        assert_eq!(profiles.len(), 7);
+        let artifacts = StartupArtifactIdentities::from_artifacts(
+            DEPENDENCY_PROVENANCE,
+            EXECUTABLE_EVIDENCE,
+            PROFILE_CATALOG,
+        )
+        .expect("startup artifacts are bounded");
+        let mut observed_profiles = BTreeSet::new();
+
+        for profile in profiles {
+            let profile_id = profile["profile_id"].as_str().expect("profile id exists");
+            let activation_status = match profile["activation_status"]
+                .as_str()
+                .expect("activation status exists")
+            {
+                "inactive-no-product-registration" => {
+                    ProfileActivationStatus::InactiveNoProductRegistration
+                }
+                "future-disabled" => ProfileActivationStatus::FutureDisabled,
+                _ => panic!("unexpected activation status"),
+            };
+            let declared_capabilities = profile["effective_capabilities"]
+                .as_array()
+                .expect("effective capabilities exist")
+                .iter()
+                .map(|item| item.as_str().expect("capability is a string").to_owned())
+                .collect::<Vec<_>>();
+            let product_registration = profile["product_registration"]
+                .as_bool()
+                .expect("product registration is boolean");
+            assert!(!product_registration);
+            let declaration = ProfileStartupDeclaration::new(
+                profile_id,
+                activation_status,
+                product_registration,
+                &declared_capabilities,
+            )
+            .expect("catalog declaration is valid");
+            let clean_root = temporary_directory();
+            let configuration = manager()
+                .load_bytes(profile_bytes(profile_id))
+                .expect("profile configuration loads");
+            let result = manager()
+                .verify_profile_startup(
+                    &clean_root,
+                    profile_bytes(profile_id),
+                    &declaration,
+                    &artifacts,
+                )
+                .expect("clean startup verification succeeds");
+            let repeated = manager()
+                .verify_profile_startup(
+                    &clean_root,
+                    profile_bytes(profile_id),
+                    &declaration,
+                    &artifacts,
+                )
+                .expect("startup verification repeats deterministically");
+
+            assert!(observed_profiles.insert(result.profile_id().to_owned()));
+            assert_eq!(result.profile_id(), profile_id);
+            assert_eq!(result.activation_status(), activation_status.as_str());
+            assert_eq!(result.startup_status(), "blocked-as-declared");
+            assert_eq!(result.declared_capabilities(), declared_capabilities);
+            assert!(result.registered_capabilities().is_empty());
+            assert_eq!(result.configuration_sha256(), configuration.sha256());
+            assert_eq!(result.dependency_sha256(), sha256(DEPENDENCY_PROVENANCE));
+            assert_eq!(result.executable_sha256(), sha256(EXECUTABLE_EVIDENCE));
+            assert_eq!(result.policy_sha256(), sha256(PROFILE_CATALOG));
+            assert!(sha256_text(result.record_sha256()));
+            assert_eq!(result.canonical_bytes(), repeated.canonical_bytes());
+            assert!(
+                !String::from_utf8_lossy(result.canonical_bytes())
+                    .contains(clean_root.to_string_lossy().as_ref())
+            );
+            println!(
+                "agentmage-startup-result:{}",
+                String::from_utf8_lossy(result.canonical_bytes())
+            );
+            assert!(
+                fs::read_dir(&clean_root)
+                    .expect("clean root reads")
+                    .next()
+                    .is_none()
+            );
+            fs::remove_dir_all(clean_root).expect("clean root removes");
+        }
+        assert_eq!(observed_profiles.len(), 7);
+
+        let clean_root = temporary_directory();
+        fs::write(clean_root.join("ambient-state"), b"synthetic").expect("dirty marker writes");
+        let empty = Vec::new();
+        let development = ProfileStartupDeclaration::new(
+            "development",
+            ProfileActivationStatus::InactiveNoProductRegistration,
+            false,
+            &empty,
+        )
+        .expect("development declaration builds");
+        assert!(
+            manager()
+                .verify_profile_startup(&clean_root, DEVELOPMENT_PROFILE, &development, &artifacts,)
+                .is_err()
+        );
+        fs::remove_dir_all(clean_root).expect("dirty root removes");
+
+        let clean_root = temporary_directory();
+        let early_registration = ProfileStartupDeclaration::new(
+            "development",
+            ProfileActivationStatus::InactiveNoProductRegistration,
+            true,
+            &empty,
+        )
+        .expect("synthetic early registration declaration builds");
+        assert!(
+            manager()
+                .verify_profile_startup(
+                    &clean_root,
+                    DEVELOPMENT_PROFILE,
+                    &early_registration,
+                    &artifacts,
+                )
+                .is_err()
+        );
+        let undeclared = vec!["workspace.read".to_owned()];
+        let mismatched = ProfileStartupDeclaration::new(
+            "development",
+            ProfileActivationStatus::InactiveNoProductRegistration,
+            false,
+            &undeclared,
+        )
+        .expect("synthetic mismatch declaration builds");
+        assert!(
+            manager()
+                .verify_profile_startup(&clean_root, DEVELOPMENT_PROFILE, &mismatched, &artifacts,)
+                .is_err()
+        );
+        assert!(
+            StartupArtifactIdentities::from_artifacts(b"", EXECUTABLE_EVIDENCE, PROFILE_CATALOG,)
+                .is_err()
+        );
+        fs::remove_dir_all(clean_root).expect("clean root removes");
     }
 
     #[test]

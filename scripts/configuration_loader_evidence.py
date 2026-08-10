@@ -71,12 +71,15 @@ RESULT_TESTS = (
 RECOVERY_TESTS = (
     "migration_interruptions_select_valid_state_and_rollback_is_repeatable",
 )
+STARTUP_TESTS = (
+    "every_profile_startup_from_clean_environment_matches_declared_authority_and_evidence",
+)
 TEST_COMMAND = (
     *TEST_COMMAND_BASE,
     "--",
     *(
         argument
-        for name in (*AUTHORITY_TESTS, *RESULT_TESTS, *RECOVERY_TESTS)
+        for name in (*AUTHORITY_TESTS, *RESULT_TESTS, *RECOVERY_TESTS, *STARTUP_TESTS)
         for argument in ("--skip", name)
     ),
 )
