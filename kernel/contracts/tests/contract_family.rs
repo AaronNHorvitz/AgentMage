@@ -56,6 +56,17 @@ where
     }
 }
 
+fn fixture_entry<T>(name: &str, value: &T) -> serde_json::Value
+where
+    T: VersionedContract,
+{
+    let bytes = to_canonical_json(value).expect("fixture must serialize");
+    serde_json::json!({
+        "canonical_json": String::from_utf8(bytes).expect("contract JSON must be UTF-8"),
+        "name": name,
+    })
+}
+
 #[test]
 fn complete_contract_family_preserves_linked_identities() {
     let session_id = SessionId::from_raw("session-0001");
@@ -299,6 +310,33 @@ fn complete_contract_family_preserves_linked_identities() {
             content: "Describe the fixture".to_owned(),
         }],
     };
+
+    if std::env::var_os("AGENTMAGE_EMIT_CONTRACT_FIXTURES").as_deref()
+        == Some(std::ffi::OsStr::new("1"))
+    {
+        let fixtures = vec![
+            fixture_entry("action", &action),
+            fixture_entry("boundary_failure", &boundary_failure),
+            fixture_entry("cancellation_signal", &cancellation),
+            fixture_entry(
+                "contract_error",
+                result.error.as_ref().expect("fixture error"),
+            ),
+            fixture_entry("evidence_reference", &result.evidence[0]),
+            fixture_entry("plan", &plan),
+            fixture_entry("prompt", &prompt),
+            fixture_entry("receipt", &receipt),
+            fixture_entry("task", &task),
+            fixture_entry("tool_call", &call),
+            fixture_entry("tool_definition", &tool),
+            fixture_entry("tool_result", &result),
+            fixture_entry("work_packet", &packet),
+        ];
+        println!(
+            "AGENTMAGE_CONTRACT_FIXTURES={}",
+            serde_json::to_string(&fixtures).expect("fixture bundle must serialize")
+        );
+    }
 
     assert_round_trip(&task);
     assert_round_trip(&packet);

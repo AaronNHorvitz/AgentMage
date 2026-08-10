@@ -71,6 +71,8 @@
     "kernel-contract-package:check": "python3 scripts/kernel_contract_package.py",
     "kernel-contract-reference:build": "python3 scripts/kernel_contract_reference.py --write",
     "kernel-contract-reference:check": "python3 scripts/kernel_contract_reference.py",
+    "kernel-contract-fixtures:build": "python3 scripts/kernel_contract_fixtures.py --write",
+    "kernel-contract-fixtures:check": "python3 scripts/kernel_contract_fixtures.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
