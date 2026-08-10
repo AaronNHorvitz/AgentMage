@@ -67,6 +67,8 @@
     "evidence:story3.1-security:build": "python3 scripts/story_3_1_security_evidence.py --write",
     "evidence:story3.1-security:check": "python3 scripts/story_3_1_security_evidence.py",
     "fuzz-gates:check": "python3 scripts/fuzz_story_gate.py",
+    "kernel-contract-package:build": "python3 scripts/kernel_contract_package.py --write",
+    "kernel-contract-package:check": "python3 scripts/kernel_contract_package.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
