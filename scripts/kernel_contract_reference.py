@@ -256,7 +256,7 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
         },
         "limitations": [
             "The reference describes frozen wire schema version 1, not a product release.",
-            "Golden serialization and compatibility fixtures remain Task 4.1.2.3.",
+            "The published golden fixtures cover wire schema version 1 only.",
             "No macOS build or execution evidence is claimed.",
             "No CapabilityGrant or positive execution path exists in this package.",
         ],

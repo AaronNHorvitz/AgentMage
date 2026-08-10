@@ -7,6 +7,12 @@ whose identity and verification result are recorded in the
 [`kernel-contract-package-report.json`](../../artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json)
 artifact.
 
+The reproducible wire examples are published in the
+[`version 1 fixture manifest`](../../fixtures/contracts/v1/manifest.json), with
+version rejection and parser behavior recorded in the
+[`compatibility record`](../../fixtures/contracts/compatibility.json). Each
+fixture is hash-bound in the manifest and verified against the frozen package.
+
 Cargo package version `0.0.0` and wire schema version `1` are separate
 identities. This is a source-contract review package, not a supported product
 release or a crates.io publication. Linux source-package verification has
@@ -236,8 +242,11 @@ does not silently relabel an existing package artifact.
    non-authoritative.
 9. Preserve task, correlation, error, cancellation, and route context across
    boundaries.
-10. Reproduce the golden success and failure fixtures before claiming schema
-    compatibility.
+10. Reproduce the success fixtures in the
+    [`version 1 manifest`](../../fixtures/contracts/v1/manifest.json) and the
+    failure behavior in the
+    [`compatibility record`](../../fixtures/contracts/compatibility.json)
+    before claiming schema compatibility.
 
 ## Public Symbol Index
 
@@ -266,7 +275,7 @@ an implementation can distinguish wire types from helpers and identifiers.
 
 ## Scope Limits
 
-This reference does not claim published JSON Schema files, golden wire fixtures,
-cross-version compatibility, durable receipt storage, capability grants,
+This reference does not claim published JSON Schema files, cross-version
+compatibility or migration, durable receipt storage, capability grants,
 production tools, process termination, a model adapter, a product binary, or
 macOS verification. Those claims remain gated by their numbered tasks.
