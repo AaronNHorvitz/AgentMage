@@ -1,0 +1,56 @@
+{
+  "data_classification": "public_synthetic_metadata_only",
+  "docker_adapter_production_status": "BLOCKED",
+  "evidence_date": "2026-08-10",
+  "guarded_topology": {
+    "exposed_transport": "mode_0600_authenticated_unix_domain_socket",
+    "feasibility_status": "PASS",
+    "fresh_in_memory_token": true,
+    "non_dumpable_processes": true,
+    "private_network_only_loopback": true,
+    "private_network_routes": 0,
+    "private_network_tcp_listeners": 0,
+    "raw_dmr_transport": "private_tmpfs_unix_domain_socket"
+  },
+  "limitations": [
+    "The LAN probe used a separate rootless network namespace against the host's private non-loopback address, not a second physical workstation.",
+    "The exact DMR binary and filesystem came from the pinned image, but this feasibility guard did not run the binary as an OCI workload.",
+    "The guard is evaluation-only Python and is not the future signed AgentMage kernel adapter.",
+    "The rejected model profiles remained unloaded; the guarded request exercised the DMR model-inventory API only."
+  ],
+  "probe_results": {
+    "emulated_lan_peer": {
+      "observed": "ConnectionRefusedError",
+      "passed": true
+    },
+    "guarded_kernel_adapter": {
+      "observed": "HTTP_200",
+      "passed": true
+    },
+    "separate_user_and_network_namespace": {
+      "observed": "PermissionError",
+      "passed": true
+    },
+    "tool_container": {
+      "observed": "HTTP_401",
+      "passed": true
+    },
+    "unrelated_same_user_process": {
+      "observed": "HTTP_401",
+      "passed": true
+    }
+  },
+  "production_support_claim": false,
+  "record_type": "story_0_3_dmr_reachability_disposition",
+  "release_approval": false,
+  "required_follow_up": [
+    "Replace the evaluation-only Python guard with the signed compiled kernel adapter and short-lived authenticated session contract.",
+    "Re-run the matrix with the exact production OCI topology and resource limits.",
+    "Run the later release probe from a separately administered physical LAN peer in addition to the non-loopback namespace peer.",
+    "Keep Docker Model Runner unavailable until model, adapter, topology, and independent review gates all pass."
+  ],
+  "result_source_revision": "e96765d50976f52ee0eda15b4fc6056fe4b6ab9c",
+  "schema_version": 1,
+  "task_0_3_3_2_status": "COMPLETE",
+  "verification_revision": "d9e56a4e3bbde3f94d96ad6addc3d8f47182f768"
+}

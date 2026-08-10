@@ -1,0 +1,92 @@
+{
+  "data_classification": "public_synthetic_metadata_only",
+  "deployment": {
+    "fresh_in_memory_token": true,
+    "guard_transport": "mode_0600_authenticated_unix_domain_socket",
+    "mode": "exact_image_rootfs_binary_in_private_user_mount_network_namespace",
+    "production_support_claim": false,
+    "raw_transport": "private_tmpfs_unix_domain_socket",
+    "supervisor_and_dmr_dumpable": false
+  },
+  "dmr_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+  "limitations": [
+    "The LAN probe used a separate rootless network namespace against the host's private non-loopback address, not a second physical workstation.",
+    "The exact DMR binary and filesystem came from the pinned image, but this feasibility guard did not run the binary as an OCI workload.",
+    "The guard is evaluation-only Python and is not the future signed AgentMage kernel adapter.",
+    "The rejected model profiles remained unloaded; the guarded request exercised the DMR model-inventory API only."
+  ],
+  "private_network_isolated": true,
+  "probe_image_digest": "sha256:ff71127c215572121f1991bacf17f39ec5fcfd2de1f1c01a595835495bb9adfc",
+  "probes": {
+    "emulated_lan_peer": {
+      "expected": "CONNECTION_REFUSED",
+      "observed": "ConnectionRefusedError",
+      "passed": true,
+      "physical_peer_used": false,
+      "process_exit": 0,
+      "target": "private_non_loopback_host_address:12434"
+    },
+    "guarded_kernel_adapter": {
+      "expected": "HTTP_200",
+      "model_inventory_is_json_array": true,
+      "observed": "HTTP_200",
+      "passed": true
+    },
+    "separate_user_and_network_namespace": {
+      "expected": "HTTP_401_OR_FILESYSTEM_DENIAL",
+      "observed": "PermissionError",
+      "passed": true,
+      "process_exit": 1
+    },
+    "tool_container": {
+      "expected": "HTTP_401",
+      "observed": "HTTP_401",
+      "passed": true,
+      "process_exit": 0
+    },
+    "unrelated_same_user_process": {
+      "expected": "HTTP_401_AND_RAW_NAMESPACE_HIDDEN",
+      "observed": "HTTP_401",
+      "passed": true,
+      "proc_root_access_denied": true,
+      "raw_socket_visible_outside_private_mount": false,
+      "rootless_podman_exec_succeeded": false
+    }
+  },
+  "record_type": "dmr_guarded_reachability_probe",
+  "runner_sha256": "0fafe8ea135312ed73a07711bc00b83ef831c20e2fafcc21fb218ee1ec3b8390",
+  "runtime": {
+    "dmr_dumpable": false,
+    "guard_socket_mode": "0o600",
+    "private_network_after": {
+      "interfaces": [
+        {
+          "name": "lo",
+          "rx_bytes": 0,
+          "tx_bytes": 0
+        }
+      ],
+      "route_count": 0,
+      "tcp_listener_count": 0
+    },
+    "private_network_before": {
+      "interfaces": [
+        {
+          "name": "lo",
+          "rx_bytes": 0,
+          "tx_bytes": 0
+        }
+      ],
+      "route_count": 0,
+      "tcp_listener_count": 0
+    },
+    "raw_socket_location": "private_tmpfs_only",
+    "schema_version": 1,
+    "supervisor_dumpable": false
+  },
+  "schema_version": 1,
+  "source_revision": "e96765d50976f52ee0eda15b4fc6056fe4b6ab9c",
+  "status": "PASS",
+  "supervisor_exit": 0,
+  "supervisor_stderr_empty": true
+}

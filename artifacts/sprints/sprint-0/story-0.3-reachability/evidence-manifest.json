@@ -1,0 +1,35 @@
+{
+  "bundle_id": "sprint-0-story-0.3-guarded-dmr-reachability-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "dmr-server.log",
+      "sha256": "a027a5e941aa71ba3957e837758d15c08607cdb72cdc4d09131fdb5d50f19243",
+      "size": 1777
+    },
+    {
+      "path": "raw-reachability-result.json",
+      "sha256": "97939147c8a2ac950b935afdf52fc8c78f6dee6495820cef3f5bdd5e1b6da494",
+      "size": 3150
+    },
+    {
+      "path": "reachability-disposition.json",
+      "sha256": "6cc79e2a20b57f846eea09925b0a4e665780a663fc082841ac62d79b6ddb9062",
+      "size": 2380
+    },
+    {
+      "path": "runtime-state.json",
+      "sha256": "244028037eb319a6773168b4f02403531493cdcd3cf04da42e17619b7a6df24d",
+      "size": 551
+    },
+    {
+      "path": "summary.md",
+      "sha256": "f6eb4742390cf46611e3ea5821e456a45ccc4702f7dafac325d7d24ef719fd88",
+      "size": 1733
+    }
+  ],
+  "result_source_revision": "e96765d50976f52ee0eda15b4fc6056fe4b6ab9c",
+  "schema_version": 1,
+  "scope": "Sub-task 0.3.3.2 guarded DMR feasibility reachability matrix",
+  "verification_revision": "d9e56a4e3bbde3f94d96ad6addc3d8f47182f768"
+}

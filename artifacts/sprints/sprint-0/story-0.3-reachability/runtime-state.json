@@ -1,0 +1,29 @@
+{
+  "dmr_dumpable": false,
+  "guard_socket_mode": "0o600",
+  "private_network_after": {
+    "interfaces": [
+      {
+        "name": "lo",
+        "rx_bytes": 0,
+        "tx_bytes": 0
+      }
+    ],
+    "route_count": 0,
+    "tcp_listener_count": 0
+  },
+  "private_network_before": {
+    "interfaces": [
+      {
+        "name": "lo",
+        "rx_bytes": 0,
+        "tx_bytes": 0
+      }
+    ],
+    "route_count": 0,
+    "tcp_listener_count": 0
+  },
+  "raw_socket_location": "private_tmpfs_only",
+  "schema_version": 1,
+  "supervisor_dumpable": false
+}

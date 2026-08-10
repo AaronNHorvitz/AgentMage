@@ -1,0 +1,18 @@
+time=2026-08-10T11:19:45.266Z level=INFO msg=LLAMA_SERVER_PATH path=/app
+time=2026-08-10T11:19:45.266Z level=INFO msg="Successfully initialized store" component=model-manager
+time=2026-08-10T11:19:45.266Z level=INFO msg="Logs endpoint enabled at /logs" dir=/tmp/model-runner-logs
+time=2026-08-10T11:19:45.266Z level=INFO msg="Metrics endpoint enabled at /metrics"
+time=2026-08-10T11:19:45.267Z level=WARN msg="Backend installation failed for" backend=mlx error="MLX is only available on macOS ARM64"
+time=2026-08-10T11:19:45.267Z level=WARN msg="Backend installation failed for" backend=vllm error="vLLM binary not found"
+time=2026-08-10T11:19:45.274Z level=WARN msg="sglang package not found. Install with: uv pip install sglang"
+time=2026-08-10T11:19:45.274Z level=WARN msg="Backend installation failed for" backend=sglang error="sglang package not installed"
+time=2026-08-10T11:19:45.282Z level=INFO msg="Failed to ensure latest llama.cpp" error="llama.cpp auto-updated is disabled"
+time=2026-08-10T11:19:45.296Z level=INFO msg="installed llama-server" gpuSupport=false
+time=2026-08-10T11:19:45.313Z level=INFO msg="Listing available models" component=model-manager
+time=2026-08-10T11:19:45.313Z level=INFO msg="successfully listed models" component=model-manager count=0
+time=2026-08-10T11:19:45.317Z level=INFO msg="Listing available models" component=model-manager
+time=2026-08-10T11:19:45.317Z level=INFO msg="successfully listed models" component=model-manager count=0
+time=2026-08-10T11:19:45.873Z level=INFO msg="Shutdown signal received"
+time=2026-08-10T11:19:45.873Z level=INFO msg="Shutting down the server"
+time=2026-08-10T11:19:45.873Z level=INFO msg="Waiting for the scheduler to stop"
+time=2026-08-10T11:19:45.873Z level=INFO msg="Docker Model Runner stopped"

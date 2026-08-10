@@ -5,13 +5,18 @@ import unittest
 from pathlib import Path
 
 from scripts.story_0_3_reachability_evidence import (
+    DEFAULT_OUTPUT,
     ReachabilityEvidenceError,
+    check_bundle,
     sanitize_log,
     write_bundle,
 )
 
 
 class Story03ReachabilityEvidenceTests(unittest.TestCase):
+    def test_committed_guarded_reachability_bundle_is_valid(self) -> None:
+        self.assertEqual(check_bundle(DEFAULT_OUTPUT), [])
+
     def test_log_sanitizer_accepts_public_dmr_diagnostics(self) -> None:
         self.assertEqual(
             sanitize_log("time=now level=INFO msg=ready socket=/tmp/model-runner.sock\n"),
