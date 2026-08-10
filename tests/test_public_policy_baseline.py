@@ -77,6 +77,48 @@ class PublicPolicyBaselineTests(unittest.TestCase):
         ):
             self.assertIn(linked_policy, policy)
 
+    def test_model_provenance_policy_covers_admission_and_revocation(self) -> None:
+        policy = (ROOT / "MODEL-PROVENANCE-POLICY.md").read_text(encoding="utf-8")
+
+        for heading in (
+            "## 2. Authority and Change Control",
+            "## 3. Covered Supply Chain",
+            "## 4. Origin and Lineage Rule",
+            "## 5. Required Admission Record",
+            "## 6. Runtime Parity",
+            "## 7. Initial and Fallback Profiles",
+            "## 8. Re-Review Triggers",
+        ):
+            self.assertIn(heading, policy)
+        for category in (
+            "Identity",
+            "Ownership and origin",
+            "License",
+            "Artifacts",
+            "Transformation",
+            "Runtime",
+            "Resources",
+            "Quality",
+            "Security",
+            "Decision",
+        ):
+            self.assertIn(f"| {category} |", policy)
+        for required_rule in (
+            "Unknown, contradictory, stale, or unverifiable evidence produces `BLOCKED`",
+            "does not create new provenance",
+            "never serve as release identity",
+            "pinned by immutable OCI digest",
+            "pinned by GGUF and supporting-file hashes",
+            "same approved model profile",
+            "initial candidate, not a pre-approved dependency",
+            "named fallback candidate",
+            "AgentMage never switches to it automatically",
+            "vulnerability, compromise, revocation",
+            "Admission expires and the profile is disabled or quarantined",
+        ):
+            with self.subTest(rule=required_rule):
+                self.assertIn(required_rule, policy)
+
 
 if __name__ == "__main__":
     unittest.main()
