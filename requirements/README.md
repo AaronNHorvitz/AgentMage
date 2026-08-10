@@ -95,6 +95,8 @@ The checker allows new requirements, new checklist entries, and added dependency
 - movement of a requirement to another canonical document or heading; and
 - removal, wording changes, movement, or policy-label changes for baseline checklist entries.
 
+Diagnostics identify the protected requirement ID or quote the exact protected checklist statement, including its prior heading or policy label when that context changed.
+
 Run the side-effect-free check with:
 
 ```bash

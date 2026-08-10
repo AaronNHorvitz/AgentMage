@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import copy
+import io
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 
 from scripts.additions_only import (
@@ -16,6 +18,13 @@ from scripts.additions_only import (
     parse_checklist,
     render,
     update_baseline,
+)
+from scripts.policy_expectations import (
+    DEFAULT_OUTPUT as DEFAULT_POLICY_OUTPUT,
+    DEFAULT_PRD,
+    PolicyExpectationError,
+    build_policy_registry,
+    check_policy_registry,
 )
 
 
@@ -76,6 +85,39 @@ class AdditionsOnlyTests(unittest.TestCase):
                 self.assertIn(
                     "weakened_or_changed_requirement",
                     self.categories(diagnostics),
+                )
+
+    def test_s_000_st01_requirement_remove_rename_weaken_and_reclassify_are_exact(self) -> None:
+        baseline_id = self.registry["requirements"][0]["id"]
+        cases = {
+            "remove": lambda records: records.pop(0),
+            "rename": lambda records: records[0].update({"id": "AM-RENAMED-001"}),
+            "weaken": lambda records: records[0].update(
+                {"title": "Optionally perform the protected behavior."}
+            ),
+            "reclassify": lambda records: records[0].update(
+                {"kind": "competitive_requirement", "disposition": "optional"}
+            ),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(mutation=name):
+                changed = copy.deepcopy(self.registry)
+                mutate(changed["requirements"])
+                diagnostics = audit_additions_only(
+                    self.baseline,
+                    changed,
+                    DEFAULT_INVENTORY,
+                )
+                self.assertTrue(diagnostics)
+                self.assertTrue(
+                    any(diagnostic.location == baseline_id for diagnostic in diagnostics)
+                )
+                self.assertTrue(
+                    any(
+                        baseline_id in diagnostic.location
+                        or baseline_id in diagnostic.message
+                        for diagnostic in diagnostics
+                    )
                 )
 
     def test_removed_dependency_or_acceptance_test_is_blocked(self) -> None:
@@ -146,6 +188,49 @@ class AdditionsOnlyTests(unittest.TestCase):
                     }
                     & set(self.categories(diagnostics))
                 )
+
+    def test_s_000_st01_exclusion_mutations_block_both_gates_with_exact_statement(self) -> None:
+        source = DEFAULT_INVENTORY.read_text(encoding="utf-8")
+        original = next(
+            line for line in source.splitlines() if line.startswith("- [ ] `DEFER`")
+        )
+        statement = original.split("`DEFER`", 1)[1].strip()
+        mutations = {
+            "remove": source.replace(original, "", 1),
+            "rename": source.replace(original, original + " Renamed.", 1),
+            "weaken": source.replace(original, original + " Unless convenient.", 1),
+            "reclassify": source.replace(
+                original,
+                original.replace("`DEFER`", "`BUILD`"),
+                1,
+            ),
+        }
+        for name, changed_source in mutations.items():
+            with self.subTest(mutation=name), tempfile.TemporaryDirectory() as temp_dir:
+                inventory = Path(temp_dir) / DEFAULT_INVENTORY.name
+                inventory.write_text(changed_source, encoding="utf-8")
+                diagnostics = audit_additions_only(
+                    self.baseline,
+                    self.registry,
+                    inventory,
+                )
+                self.assertTrue(diagnostics)
+                self.assertTrue(
+                    any(statement in diagnostic.message for diagnostic in diagnostics)
+                )
+
+                if name in {"remove", "reclassify"}:
+                    with self.assertRaisesRegex(PolicyExpectationError, "counts changed"):
+                        build_policy_registry(DEFAULT_PRD, inventory)
+                else:
+                    with redirect_stderr(io.StringIO()):
+                        self.assertFalse(
+                            check_policy_registry(
+                                DEFAULT_PRD,
+                                inventory,
+                                DEFAULT_POLICY_OUTPUT,
+                            )
+                        )
 
     def test_new_checklist_entry_is_allowed_and_update_only_appends_it(self) -> None:
         source = DEFAULT_INVENTORY.read_text(encoding="utf-8")

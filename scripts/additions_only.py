@@ -262,13 +262,17 @@ def audit_additions_only(
         if same_statement is not None:
             category = "moved_or_reclassified_checklist_entry"
             message = (
-                "checklist statement remains but its heading or policy label changed "
+                f"protected statement {prior.get('statement')!r} remains but its "
+                "heading or policy label changed "
                 f"to {same_statement['source']['heading']!r}/"
                 f"{same_statement['label']!r}"
             )
         else:
             category = "removed_or_modified_checklist_entry"
-            message = "baseline checklist statement is absent or textually modified"
+            message = (
+                f"protected statement {prior.get('statement')!r} is absent or "
+                "textually modified"
+            )
         diagnostics.append(Diagnostic(category, identifier, message))
 
     return sorted(set(diagnostics))
