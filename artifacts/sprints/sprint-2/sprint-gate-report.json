@@ -110,11 +110,11 @@
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-        "sha256": "ac4ae3624ec429e462752d7df82feb7570d220f9b0ae3a519c14214c08bbd355"
+        "sha256": "e78b2fb202b0b105f08917255cec95ad169830a5dae536dff5949dc62c3c7d96"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json",
-        "sha256": "c9e7c6f4c06a36da3dee67e760207319544b6ec2842aee70a404df1864af503d"
+        "sha256": "c6bef4efe0c3d70f4b71bdde7e2136bb296b721f92e3e4a33d6e1c83586303f0"
       },
       {
         "path": "scripts/story_2_1_gate.py",
@@ -122,11 +122,11 @@
       },
       {
         "path": "scripts/story_2_2_gate.py",
-        "sha256": "126000b69a17818f7c9a6c5624de96c12010082109977f93d77982a693d81a1e"
+        "sha256": "72d144c100f58d2318bde0d36dba543e8c7c0aae3c1666f70d4b265ed0e5a1ca"
       }
     ],
-    "reviewed_commit": "bf5305c3c5223c3707f2c6da5dc2fdd675e40c9d",
-    "reviewed_tree": "8963e753a244b639a4798b50574f5dd8d739d116",
+    "reviewed_commit": "99599b8e6ed8d23fd6ef9aca89d9c37d446be7f5",
+    "reviewed_tree": "57068cad97567e12e6ad8064926db40857642eb0",
     "reviewer_id": "agentmage-sprint-2-independent-gate-v1"
   },
   "macos": {
@@ -137,8 +137,8 @@
   },
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "bf5305c3c5223c3707f2c6da5dc2fdd675e40c9d",
-  "reviewed_tree": "8963e753a244b639a4798b50574f5dd8d739d116",
+  "reviewed_commit": "99599b8e6ed8d23fd6ef9aca89d9c37d446be7f5",
+  "reviewed_tree": "57068cad97567e12e6ad8064926db40857642eb0",
   "schema_version": 1,
   "sprint_id": 2,
   "status": "blocked-macos",
