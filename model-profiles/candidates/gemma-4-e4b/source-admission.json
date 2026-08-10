@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "record_type": "model_source_admission",
+  "profile_id": "gemma-4-e4b-it",
+  "evaluated_at": "2026-08-10T08:02:00Z",
+  "policy": {
+    "path": "MODEL-PROVENANCE-POLICY.md",
+    "sha256": "b991c59f11e208a7451c1867e581dd099452c37a771cadcbd450a160a77cc202"
+  },
+  "identity": {
+    "canonical_model": "google/gemma-4-E4B-it",
+    "upstream_revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "base_model": "google/gemma-4-E4B",
+    "base_revision": "411aa17b749aa952df1359d2dcea73917a544d9a",
+    "variant": "instruction-tuned E4B",
+    "architecture": "Gemma4ForConditionalGeneration",
+    "model_type": "gemma4"
+  },
+  "ownership_and_origin": {
+    "developer": "Google DeepMind",
+    "publisher": "Google",
+    "publisher_namespace": "google",
+    "publisher_region": "us",
+    "control_disposition": "permitted_non_chinese_supplier",
+    "weight_lineage": "Google Gemma 4 E4B base model instruction-tuned into Google Gemma 4 E4B IT",
+    "synthetic_training_lineage": "not_disclosed_to_required_depth",
+    "lineage_complete_under_policy": false
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "model_card_disposition": "apache-2.0",
+    "canonical_url": "https://ai.google.dev/gemma/apache_2",
+    "page_sha256_at_evaluation": "13e8c567a4c4492544fbb7ce0c78e922841a51e51853d667ae092985e487a109",
+    "redistribution_review": "source_license_verified_artifact_not_yet_admitted"
+  },
+  "source_artifacts": {
+    "model_card": {
+      "url": "https://huggingface.co/google/gemma-4-E4B-it/resolve/ee0ef6023621cff504d758262d4e04895a5af4a2/README.md",
+      "sha256": "b21e4f69614ccd77baa2f3797d05311040dee07b989cb9f0d25111aa4b605b2c",
+      "size": 27956
+    },
+    "config": {
+      "url": "https://huggingface.co/google/gemma-4-E4B-it/resolve/ee0ef6023621cff504d758262d4e04895a5af4a2/config.json",
+      "sha256": "33b10c02df3c2e8536cf323d29d53262aaa2f4d11dbe19bc729373fbe90295d4",
+      "size": 5145
+    },
+    "source_weights": {
+      "path": "model.safetensors",
+      "sha256": "cfbd3d2f1cd71bd471c37fe2bf8546d5028d41e5736f64e1ca6c6b8893125503",
+      "size": 15992595884,
+      "downloaded": false
+    },
+    "chat_template": {
+      "path": "chat_template.jinja",
+      "sha256": "0a2c8073c878ab1da004bee933a998606537bbb62016310352c7285c3f01c5b5",
+      "size": 18569
+    },
+    "generation_config": {
+      "path": "generation_config.json",
+      "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de",
+      "size": 208
+    },
+    "processor_config": {
+      "path": "processor_config.json",
+      "sha256": "32bdf45d2ad4cc29a0822ddd157a182de76644f0419a6228d151495256e9813c",
+      "size": 1689
+    }
+  },
+  "tokenizer": {
+    "class": "GemmaTokenizer",
+    "processor_class": "Gemma4Processor",
+    "tokenizer_json_sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
+    "tokenizer_json_size": 32169626,
+    "tokenizer_config_sha256": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633",
+    "tokenizer_config_size": 3082,
+    "vocabulary_size": 262144,
+    "tool_call_grammar_declared": true,
+    "system_role_declared": true
+  },
+  "context_contract": {
+    "declared_tokens": 131072,
+    "model_card_label": "128K",
+    "config_field": "text_config.max_position_embeddings",
+    "sliding_window_tokens": 512,
+    "operational_limit": null,
+    "operational_limit_status": "requires_runtime_evaluation"
+  },
+  "known_limitations": [
+    "Training-data quality, coverage, and bias can limit responses.",
+    "Open-ended and highly complex tasks may be challenging.",
+    "Language ambiguity, nuance, sarcasm, and figurative language may be misunderstood.",
+    "Generated factual statements may be incorrect or outdated.",
+    "Common-sense reasoning can fail.",
+    "Harmful, privacy-impacting, biased, or otherwise unsuitable output remains possible.",
+    "Declared context capacity is not an AgentMage operational context approval.",
+    "Function-calling declarations require corpus validation in every runtime adapter."
+  ],
+  "source_evidence": [
+    {
+      "id": "google-gemma4-model-card",
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "publisher": "Google",
+      "supports": [
+        "developer",
+        "license",
+        "architecture",
+        "context",
+        "capabilities",
+        "limitations"
+      ]
+    },
+    {
+      "id": "google-huggingface-model-revision",
+      "url": "https://huggingface.co/google/gemma-4-E4B-it/tree/ee0ef6023621cff504d758262d4e04895a5af4a2",
+      "publisher": "Google",
+      "supports": [
+        "immutable_source_revision",
+        "base_model",
+        "license",
+        "tokenizer",
+        "configuration"
+      ]
+    },
+    {
+      "id": "google-gemma4-license",
+      "url": "https://ai.google.dev/gemma/apache_2",
+      "publisher": "Google",
+      "supports": [
+        "license_text"
+      ]
+    }
+  ],
+  "decision": {
+    "status": "BLOCKED",
+    "scope": "source admission for quarantined feasibility evaluation",
+    "blockers": [
+      {
+        "code": "LINEAGE-SYNTHETIC-SOURCES-UNVERIFIED",
+        "reason": "The first-party model card describes broad training-data categories but does not disclose synthetic-training sources deeply enough to prove the policy's non-derivation condition.",
+        "remediation": "Obtain sufficient first-party lineage evidence or record an approved policy decision that preserves the product's origin constraint."
+      }
+    ],
+    "allowed_actions": [
+      "offline metadata validation",
+      "quarantined synthetic-data feasibility evaluation after artifact admission"
+    ],
+    "prohibited_actions": [
+      "AgentMage profile activation",
+      "processing user or private data",
+      "release representation",
+      "automatic fallback"
+    ],
+    "reviewer": "automated implementation self-review",
+    "independent_review_performed": false,
+    "release_approval": false
+  }
+}

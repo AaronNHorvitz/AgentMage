@@ -26,7 +26,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "06174d9a02db5276f72dfe5d8306f6319c2596e502c0504564712aeffc8c2423"
+      "sha256": "b14ca9bdba468578d06cd90495cea7f89da3eb4c9a42c07e7bf70bbc8a615ff8"
     }
   ],
   "report_id": "agentmage-cross-document-traceability",
