@@ -153,6 +153,31 @@ class ModelFeasibilityTests(unittest.TestCase):
         case["trials"][0]["exact"] = False
         self.assertFalse(case_passed(case))
 
+    def test_resource_and_network_cases_require_measured_outcomes(self):
+        memory = {
+            "case_id": "MEM-001",
+            "trials_expected": 1,
+            "trials_completed": 1,
+            "trials": [{"swap_growth_bytes": 0, "unload_returns_to_bounded_baseline": True}],
+        }
+        network = {
+            "case_id": "NET-001",
+            "trials_expected": 1,
+            "trials_completed": 1,
+            "trials": [{
+                "dns_queries": 0,
+                "outbound_connection_attempts": 0,
+                "egress_bytes": 0,
+                "undeclared_listeners": 0,
+            }],
+        }
+        self.assertTrue(case_passed(memory))
+        self.assertTrue(case_passed(network))
+        memory["trials"][0]["swap_growth_bytes"] = 1
+        network["trials"][0]["dns_queries"] = 1
+        self.assertFalse(case_passed(memory))
+        self.assertFalse(case_passed(network))
+
     def test_native_input_verification_requires_exact_hash_and_size(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

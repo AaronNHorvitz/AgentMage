@@ -41,7 +41,7 @@ SYSTEM_PROMPT: Final = (
 NATIVE_ADAPTER: Final = "linux-native-vulkan"
 DOCKER_ADAPTER: Final = "linux-docker-model-runner-cuda"
 RESULT_SCHEMA_VERSION: Final = 1
-RUNNER_TRANSFORM_VERSION: Final = "1.0.0"
+RUNNER_TRANSFORM_VERSION: Final = "1.0.1"
 
 
 class FeasibilityError(RuntimeError):
@@ -74,6 +74,23 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def source_revision() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError) as error:
+        raise FeasibilityError(f"could not resolve runner source revision: {error}") from error
+    revision = result.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise FeasibilityError("runner source revision is not an immutable commit")
+    return revision
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -942,8 +959,6 @@ def compare_thresholds(metrics: dict[str, Any], thresholds: dict[str, Any]) -> d
 def case_passed(case: dict[str, Any]) -> bool:
     case_id = case["case_id"]
     trials = case["trials"]
-    if case_id in {"MEM-001", "NET-001"}:
-        return case["trials_completed"] == case["trials_expected"]
     if len(trials) != case["trials_expected"]:
         return False
     predicates = {
@@ -957,6 +972,8 @@ def case_passed(case: dict[str, Any]) -> bool:
         "CONTEXT-001": lambda item: item["endpoint_fact_recall"] == 1 and item["within_input_limit"],
         "CONTEXT-002": lambda item: item["terminal_state"] == "blocked_context_limit" and item["inference_request_count"] == 0 and item["model_substitution"] is False,
         "PERF-001": lambda item: item["complete"],
+        "MEM-001": lambda item: item["swap_growth_bytes"] == 0 and item["unload_returns_to_bounded_baseline"],
+        "NET-001": lambda item: item["dns_queries"] == 0 and item["outbound_connection_attempts"] == 0 and item["egress_bytes"] == 0 and item["undeclared_listeners"] == 0,
     }
     return all(predicates[case_id](item) for item in trials)
 
@@ -1000,7 +1017,11 @@ def run_native(args: argparse.Namespace) -> int:
     )
     cases: list[dict[str, Any]] = []
     memory = [memory_sample("idle", None)]
-    network["counters_start"] = read_network_counters()
+    network_samples = [{
+        "phase": "startup",
+        "counters": read_network_counters(),
+        "listeners": listener_ports(),
+    }]
     started = time.time()
     try:
         server.start()
@@ -1027,40 +1048,91 @@ def run_native(args: argparse.Namespace) -> int:
                 memory.extend(memory_sample("8192_token_context", server.pid) for _ in range(3))
             if case["id"] == "CANCEL-001":
                 memory.extend(memory_sample("cancelled_generation", server.pid) for _ in range(3))
-        memory_case = next(case for case in corpus["cases"] if case["id"] == "MEM-001")
-        cases.append({
-            "case_id": "MEM-001",
-            "category": "memory",
-            "trials_expected": memory_case["trials"],
-            "trials_completed": memory_case["trials"],
-            "trials": [{"sample_set": index + 1} for index in range(memory_case["trials"])],
-        })
-        listeners = listener_ports()
-        network["listeners"] = listeners
-        network["undeclared_listeners"] = [port for port in listeners if port != args.port]
-        network_case = next(case for case in corpus["cases"] if case["id"] == "NET-001")
-        cases.append({
-            "case_id": "NET-001",
-            "category": "zero_egress",
-            "trials_expected": network_case["trials"],
-            "trials_completed": network_case["trials"],
-            "trials": [{"sample_set": index + 1} for index in range(network_case["trials"])],
+        network_samples.append({
+            "phase": "model_loaded_after_corpus",
+            "counters": read_network_counters(),
+            "listeners": listener_ports(),
         })
     finally:
         server.stop()
-    memory.extend(memory_sample("model_unloaded", None) for _ in range(3))
-    network["counters"] = read_network_counters()
+    unloaded_samples = [memory_sample("model_unloaded", None) for _ in range(3)]
+    memory.extend(unloaded_samples)
+    network_samples.append({
+        "phase": "shutdown",
+        "counters": read_network_counters(),
+        "listeners": listener_ports(),
+    })
+    network["samples"] = network_samples
+    network["counters"] = network_samples[-1]["counters"]
+    network["undeclared_listeners"] = sorted({
+        port
+        for sample in network_samples
+        for port in sample["listeners"]
+        if port != args.port
+    })
+
+    idle = memory[0]
+    memory_trials = []
+    for index, sample in enumerate(unloaded_samples, start=1):
+        initial_swap = idle.get("swap_free_bytes")
+        observed_swap = sample.get("swap_free_bytes")
+        swap_growth = None
+        if isinstance(initial_swap, int) and isinstance(observed_swap, int):
+            swap_growth = max(0, initial_swap - observed_swap)
+        gpu_bounded = (
+            isinstance(idle.get("gpu_used_bytes"), int)
+            and isinstance(sample.get("gpu_used_bytes"), int)
+            and sample["gpu_used_bytes"] <= idle["gpu_used_bytes"] + 64 * 1024 * 1024
+        )
+        system_bounded = (
+            isinstance(idle.get("system_available_bytes"), int)
+            and isinstance(sample.get("system_available_bytes"), int)
+            and sample["system_available_bytes"] >= idle["system_available_bytes"] - 512 * 1024 * 1024
+        )
+        memory_trials.append({
+            "sample_set": index,
+            "swap_growth_bytes": swap_growth,
+            "unload_returns_to_bounded_baseline": gpu_bounded and system_bounded,
+        })
+    memory_case = next(case for case in corpus["cases"] if case["id"] == "MEM-001")
+    cases.append({
+        "case_id": "MEM-001",
+        "category": "memory",
+        "trials_expected": memory_case["trials"],
+        "trials_completed": len(memory_trials),
+        "trials": memory_trials,
+    })
+
+    network_trials = []
+    for sample in network_samples:
+        counters = sample["counters"]
+        network_trials.append({
+            "phase": sample["phase"],
+            "dns_queries": sum(value for key, value in counters.items() if key.startswith("agentmage_dns") and key.endswith("_packets")),
+            "outbound_connection_attempts": sum(value for key, value in counters.items() if key.startswith("agentmage_egress") and key.endswith("_packets")),
+            "egress_bytes": sum(value for key, value in counters.items() if key.startswith("agentmage_egress") and key.endswith("_bytes")),
+            "undeclared_listeners": len([port for port in sample["listeners"] if port != args.port]),
+        })
+    network_case = next(case for case in corpus["cases"] if case["id"] == "NET-001")
+    cases.append({
+        "case_id": "NET-001",
+        "category": "zero_egress",
+        "trials_expected": network_case["trials"],
+        "trials_completed": len(network_trials),
+        "trials": network_trials,
+    })
     metrics = aggregate_metrics(cases, memory, network)
     threshold_results = compare_thresholds(metrics, corpus["global_thresholds"])
     for case in cases:
+        case["passed"] = case_passed(case)
         if case["case_id"] == "NET-001":
-            case["passed"] = bool(network["isolated"] and not network["undeclared_listeners"] and metrics["post_install_egress_bytes"] == 0)
-        else:
-            case["passed"] = case_passed(case)
+            case["passed"] = case["passed"] and network["isolated"]
     result = {
         "schema_version": RESULT_SCHEMA_VERSION,
         "record_type": "model_feasibility_adapter_result",
         "runner_transform_version": RUNNER_TRANSFORM_VERSION,
+        "runner_sha256": sha256_file(Path(__file__)),
+        "source_revision": source_revision(),
         "adapter_id": NATIVE_ADAPTER,
         "corpus_id": corpus["corpus_id"],
         "corpus_version": corpus["version"],
