@@ -5,8 +5,10 @@ import unittest
 from pathlib import Path
 
 from scripts.story_0_3_security_evidence import (
+    DEFAULT_OUTPUT,
     Story03SecurityEvidenceError,
     build_bundle,
+    check_bundle,
     protocol_map,
     reviewer_disposition,
     validate_inputs,
@@ -46,6 +48,9 @@ class Story03SecurityEvidenceTests(unittest.TestCase):
             output = Path(temporary)
             with self.assertRaises(Story03SecurityEvidenceError):
                 write_bundle(output, "HEAD")
+
+    def test_committed_evidence_bundle_is_valid(self) -> None:
+        self.assertEqual(check_bundle(DEFAULT_OUTPUT), [])
 
 
 if __name__ == "__main__":

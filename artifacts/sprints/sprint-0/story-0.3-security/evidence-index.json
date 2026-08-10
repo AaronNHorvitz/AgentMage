@@ -1,0 +1,151 @@
+{
+  "index_signature_status": "NOT_SIGNED_NO_RELEASE_SIGNING_IDENTITY",
+  "record_type": "story_0_3_security_evidence_index",
+  "records": [
+    {
+      "evidence_id": "model_policy",
+      "path": "MODEL-PROVENANCE-POLICY.md",
+      "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad",
+      "size": 8634,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "fixed_corpus",
+      "path": "model-profiles/evaluation/corpus-v1.json",
+      "sha256": "32d569140326b72981688c7430ce182c2d25310cff3817eedd06ffb5d43954ac",
+      "size": 12102,
+      "supports": [
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "e4b_source_admission",
+      "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
+      "sha256": "1bc1df87d5b8da35378248a16c838ac727b16afd10d9bce85650b151151deefb",
+      "size": 5931,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "e4b_artifact_admission",
+      "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+      "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1",
+      "size": 6213,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "e4b_decision",
+      "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
+      "sha256": "8389942d3cbe439940a7ec82d55aaa5c8a5b75aeb80bc1e35ddeee4def597488",
+      "size": 17210,
+      "supports": [
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "fallback_source_admission",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
+      "sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+      "size": 6204,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "fallback_artifact_admission",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+      "sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
+      "size": 6888,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "fallback_evaluation_plan",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/evaluation-plan.json",
+      "sha256": "785e5b1ac8ba9dba83800c4d88358e5bbcae9d2ac8d7c82d602fcd5eeec779a8",
+      "size": 1459,
+      "supports": [
+        "RV-13",
+        "RV-14"
+      ]
+    },
+    {
+      "evidence_id": "fallback_decision",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
+      "sha256": "ee8bcb66d02ec0ca4ba23cd6e5543358170b26cc8c36d8b48d28ffe993ba51aa",
+      "size": 17393,
+      "supports": [
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "e4b_native_manifest",
+      "path": "artifacts/sprints/sprint-0/story-0.3/evidence-manifest.json",
+      "sha256": "3ac2c3dad2aa8f56ce33ca0846f95582c5515b40d0360cd6cd96e33c680f1215",
+      "size": 994,
+      "supports": [
+        "RV-06",
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "e4b_dmr_manifest",
+      "path": "artifacts/sprints/sprint-0/story-0.3-dmr/evidence-manifest.json",
+      "sha256": "4b100f23ae47c7062089d2ec19dd3c8486d4ed8e25c0888a41d37987f9995d38",
+      "size": 1255,
+      "supports": [
+        "RV-06",
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "fallback_manifest",
+      "path": "artifacts/sprints/sprint-0/story-0.3-fallback/evidence-manifest.json",
+      "sha256": "099e8bf520e5b8155b06eebf0dc1c55c047b96275e14455d1db5e3262c3ed135",
+      "size": 1385,
+      "supports": [
+        "RV-06",
+        "RV-13",
+        "RV-14",
+        "RV-16"
+      ]
+    },
+    {
+      "evidence_id": "substitution_manifest",
+      "path": "artifacts/sprints/sprint-0/story-0.3-substitution/evidence-manifest.json",
+      "sha256": "12e3f8582cabe73f5f63a5acf33d48bea263ec7e9d328bfe4c6cb326c32a513a",
+      "size": 736,
+      "supports": [
+        "RV-13"
+      ]
+    },
+    {
+      "evidence_id": "reachability_manifest",
+      "path": "artifacts/sprints/sprint-0/story-0.3-reachability/evidence-manifest.json",
+      "sha256": "88625d20040bba708604bad6066e4a4199da0cb5ee71cac317f6c564edb02f02",
+      "size": 1133,
+      "supports": [
+        "RV-06"
+      ]
+    }
+  ],
+  "release_signature_claim": false,
+  "schema_version": 1,
+  "verification_revision": "f2cc16f9c6dc788ced9544fbb9e1fedc8c516d5b"
+}

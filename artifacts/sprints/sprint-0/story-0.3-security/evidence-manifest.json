@@ -1,0 +1,35 @@
+{
+  "bundle_id": "sprint-0-story-0.3-product-security-feasibility-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "control-map.json",
+      "sha256": "288138bdad42b03272d6704812daa4de6e0c6f0cb1901268d6b3e550df23e189",
+      "size": 8977
+    },
+    {
+      "path": "evidence-index.json",
+      "sha256": "9d4ba6c2d704448a9f46fad0cb905960333dc320a6d686b02e189b2bba2bf35e",
+      "size": 4532
+    },
+    {
+      "path": "raw-checker-output.json",
+      "sha256": "74007990dc484b53304e3bcbd4b71aea661e1d6d12cb350eb5b91ac351022d25",
+      "size": 300
+    },
+    {
+      "path": "reviewer-disposition.json",
+      "sha256": "decd3216e6c7364c222624e0e28c3acdccaa4c47e55f37b81f10acce49e1981c",
+      "size": 745
+    },
+    {
+      "path": "summary.md",
+      "sha256": "4cebc890c76baae0f2b5d2cc7b513f5b23105e44bf57046e94596be514026a33",
+      "size": 1621
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Sub-task 0.3.3.3 feasibility portions of RV-06, RV-13, RV-14, and RV-16",
+  "signature_status": "NOT_SIGNED_NO_RELEASE_SIGNING_IDENTITY",
+  "verification_revision": "f2cc16f9c6dc788ced9544fbb9e1fedc8c516d5b"
+}

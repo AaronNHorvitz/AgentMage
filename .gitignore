@@ -49,6 +49,8 @@ artifacts/sprints/sprint-0/*
 !artifacts/sprints/sprint-0/story-0.3-substitution/**
 !artifacts/sprints/sprint-0/story-0.3-reachability/
 !artifacts/sprints/sprint-0/story-0.3-reachability/**
+!artifacts/sprints/sprint-0/story-0.3-security/
+!artifacts/sprints/sprint-0/story-0.3-security/**
 
 # Build, dependency, cache, and generated output
 node_modules/

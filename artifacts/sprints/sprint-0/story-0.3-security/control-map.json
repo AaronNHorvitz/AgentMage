@@ -1,0 +1,210 @@
+{
+  "protocols": {
+    "RV-06": {
+      "completed": [
+        "All four retained Linux adapter results record zero post-install egress bytes under their declared isolated topology.",
+        "The guarded DMR probe admits only its authenticated path and denies the same-user, tool-container, separate-namespace, and non-loopback peer probes.",
+        "The private guarded DMR namespace records only loopback, zero routes, zero TCP listeners, and zero interface bytes."
+      ],
+      "feasibility_execution_status": "COMPLETE",
+      "feasibility_result": "PASS",
+      "full_protocol_status": "NOT_COMPLETE",
+      "observations": [
+        {
+          "adapter_id": "linux-native-vulkan",
+          "cancellation_max_seconds": 0.05699600395746529,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.68863858,
+          "minimum_generation_tokens_per_second": 163.11670347666941,
+          "post_install_egress_bytes": 0,
+          "result_id": "e4b_native",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-docker-model-runner-cuda",
+          "cancellation_max_seconds": 0.05109885096317157,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.15563780147058826,
+          "minimum_generation_tokens_per_second": 171.0973951553184,
+          "post_install_egress_bytes": 0,
+          "result_id": "e4b_dmr",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-native-vulkan",
+          "cancellation_max_seconds": 0.06286299700150266,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 4.4535649444444445,
+          "minimum_generation_tokens_per_second": 58.993757822652015,
+          "post_install_egress_bytes": 0,
+          "result_id": "fallback_native",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-docker-model-runner-cuda",
+          "cancellation_max_seconds": 0.051212918013334274,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.177242375,
+          "minimum_generation_tokens_per_second": 91.29810290008933,
+          "post_install_egress_bytes": 0,
+          "result_id": "fallback_dmr",
+          "status": "FAIL"
+        }
+      ],
+      "reachability_status": "PASS",
+      "remaining": [
+        "Run the integrated product for at least 60 minutes under packet, DNS, socket, process, and firewall observation.",
+        "Exercise repository mapping, tools, crash recovery, diagnostics, extension-host, and tool-worker paths after they exist.",
+        "Repeat from a separately administered physical LAN peer and attribute unrelated editor and operating-system traffic."
+      ]
+    },
+    "RV-13": {
+      "completed": [
+        "Source, license, publisher/control, lineage, tokenizer, context, GGUF, conversion, quantization, native runtime, and OCI identities are hash-bound for E4B and the 12B fallback.",
+        "Sixteen one-field substitutions across both profiles were quarantined before admission-decision evaluation with zero inference invocations.",
+        "The same fixed corpus ran through native Linux and DMR compatibility paths for both candidates, and runtime differences remain visible."
+      ],
+      "feasibility_execution_status": "COMPLETE",
+      "feasibility_result": "COMPLETE_WITH_REJECTED_CANDIDATES",
+      "full_protocol_status": "NOT_COMPLETE",
+      "inference_invocations_after_substitution": 0,
+      "remaining": [
+        "No model identity is approved or enabled; both evaluated candidates are rejected and retain admission blockers.",
+        "Run the complete protocol on the MacBook Pro M5 and future production adapters.",
+        "Perform independent provenance review and signed release-manifest verification for any replacement candidate."
+      ],
+      "substitution_scenarios": 16,
+      "substitution_status": "PASS"
+    },
+    "RV-14": {
+      "adapter_results": [
+        {
+          "failed_cases": [
+            "REPO-001",
+            "CITE-001",
+            "TOOL-001"
+          ],
+          "failed_thresholds": [
+            "citation_precision",
+            "citation_recall",
+            "tool_call_valid_rate"
+          ],
+          "result_id": "e4b_native",
+          "status": "FAIL"
+        },
+        {
+          "failed_cases": [
+            "CITE-001",
+            "TOOL-001"
+          ],
+          "failed_thresholds": [
+            "citation_recall",
+            "tool_call_valid_rate"
+          ],
+          "result_id": "e4b_dmr",
+          "status": "FAIL"
+        },
+        {
+          "failed_cases": [
+            "CITE-001",
+            "TOOL-001",
+            "TOOL-002"
+          ],
+          "failed_thresholds": [
+            "citation_recall",
+            "tool_call_valid_rate"
+          ],
+          "result_id": "fallback_native",
+          "status": "FAIL"
+        },
+        {
+          "failed_cases": [
+            "REPO-001",
+            "TOOL-001",
+            "TOOL-002",
+            "CONTEXT-001",
+            "PERF-001"
+          ],
+          "failed_thresholds": [
+            "citation_precision",
+            "repository_fact_accuracy",
+            "schema_valid_rate",
+            "tool_call_valid_rate",
+            "unsupported_action_rate"
+          ],
+          "result_id": "fallback_dmr",
+          "status": "FAIL"
+        }
+      ],
+      "completed": [
+        "All four available Linux runs retain every fixed trial, metric, failed case, and unchanged threshold.",
+        "Mandatory citation, tool-call, grounding, schema, and unsupported-action failures remain visible and produced rejected decisions.",
+        "Malformed-output refusal, cancellation, context, performance, memory, and egress outcomes remain independently inspectable."
+      ],
+      "feasibility_execution_status": "COMPLETE",
+      "feasibility_result": "NEGATIVE_RESULTS_RETAINED",
+      "full_protocol_status": "NOT_COMPLETE",
+      "remaining": [
+        "Run future approved candidates across the complete repeated uncertainty, conflicting-evidence, stale-citation, and false-completion release corpus.",
+        "Complete the MacBook Pro M5 run and independent evidence-integrity review."
+      ]
+    },
+    "RV-16": {
+      "completed": [
+        "Every available adapter result records bounded cancellation, context behavior, throughput, time to first token, GPU/system-memory fractions, swap growth, and unload behavior.",
+        "All four runs pass cancellation, memory-fraction, zero-swap-growth, malformed-output, and zero-egress thresholds; the fallback DMR context and performance-completion case failures remain visible."
+      ],
+      "feasibility_execution_status": "COMPLETE",
+      "feasibility_result": "COMPLETE_WITH_RETAINED_FAILURES",
+      "full_protocol_status": "NOT_COMPLETE",
+      "observations": [
+        {
+          "adapter_id": "linux-native-vulkan",
+          "cancellation_max_seconds": 0.05699600395746529,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.68863858,
+          "minimum_generation_tokens_per_second": 163.11670347666941,
+          "post_install_egress_bytes": 0,
+          "result_id": "e4b_native",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-docker-model-runner-cuda",
+          "cancellation_max_seconds": 0.05109885096317157,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.15563780147058826,
+          "minimum_generation_tokens_per_second": 171.0973951553184,
+          "post_install_egress_bytes": 0,
+          "result_id": "e4b_dmr",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-native-vulkan",
+          "cancellation_max_seconds": 0.06286299700150266,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 4.4535649444444445,
+          "minimum_generation_tokens_per_second": 58.993757822652015,
+          "post_install_egress_bytes": 0,
+          "result_id": "fallback_native",
+          "status": "FAIL"
+        },
+        {
+          "adapter_id": "linux-docker-model-runner-cuda",
+          "cancellation_max_seconds": 0.051212918013334274,
+          "maximum_swap_growth_bytes": 0,
+          "maximum_time_to_first_token_seconds": 0.177242375,
+          "minimum_generation_tokens_per_second": 91.29810290008933,
+          "post_install_egress_bytes": 0,
+          "result_id": "fallback_dmr",
+          "status": "FAIL"
+        }
+      ],
+      "remaining": [
+        "Exercise oversized repositories/files/results, deep trees, full disk, low memory, GPU loss, rapid requests, process termination, and sleep/wake in the integrated product.",
+        "Verify scratch cleanup, state recovery, and endpoint responsiveness across every product phase."
+      ]
+    }
+  },
+  "record_type": "story_0_3_reviewer_protocol_control_map",
+  "schema_version": 1
+}

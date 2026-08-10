@@ -1,0 +1,21 @@
+{
+  "docker_adapter_production_status": "BLOCKED",
+  "e4b_status": "REJECTED_DISABLED",
+  "evidence_date": "2026-08-10",
+  "fallback_status": "REJECTED_DISABLED",
+  "feasibility_protocols": {
+    "RV-06": "COMPLETE",
+    "RV-13": "COMPLETE_WITH_REJECTED_CANDIDATES",
+    "RV-14": "COMPLETE_NEGATIVE",
+    "RV-16": "COMPLETE_WITH_RETAINED_FAILURES"
+  },
+  "full_protocols_complete": false,
+  "independent_review_performed": false,
+  "macos_evidence_substituted": false,
+  "record_type": "story_0_3_security_reviewer_disposition",
+  "release_approval": false,
+  "schema_version": 1,
+  "story_0_3_status": "BLOCKED_REQUIRED_MAC_HARDWARE",
+  "task_0_3_3_3_status": "COMPLETE",
+  "verification_revision": "f2cc16f9c6dc788ced9544fbb9e1fedc8c516d5b"
+}

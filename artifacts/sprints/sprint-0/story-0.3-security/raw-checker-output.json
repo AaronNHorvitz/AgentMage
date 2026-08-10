@@ -1,0 +1,11 @@
+{
+  "evidence_record_count": 14,
+  "feasibility_protocols_complete": true,
+  "full_protocols_complete": false,
+  "input_validation_failures": [],
+  "protocol_count": 4,
+  "record_type": "story_0_3_security_raw_checker_output",
+  "release_approval": false,
+  "schema_version": 1,
+  "status": "PASS"
+}
