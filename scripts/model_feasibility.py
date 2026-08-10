@@ -10,6 +10,7 @@ import json
 import os
 import re
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -42,6 +43,7 @@ NATIVE_ADAPTER: Final = "linux-native-vulkan"
 DOCKER_ADAPTER: Final = "linux-docker-model-runner-cuda"
 RESULT_SCHEMA_VERSION: Final = 1
 RUNNER_TRANSFORM_VERSION: Final = "1.0.1"
+DMR_RUNNER_TRANSFORM_VERSION: Final = "1.1.0"
 
 
 class FeasibilityError(RuntimeError):
@@ -163,6 +165,144 @@ def verify_native_inputs(
     return identities
 
 
+def command_json(command: list[str]) -> Any:
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        return json.loads(result.stdout)
+    except FileNotFoundError as error:
+        raise FeasibilityError(f"required executable is unavailable: {command[0]}") from error
+    except subprocess.SubprocessError as error:
+        raise FeasibilityError(f"command failed: {' '.join(command[:3])}: {error}") from error
+    except json.JSONDecodeError as error:
+        raise FeasibilityError(f"command returned malformed JSON: {' '.join(command[:3])}") from error
+
+
+def command_text(command: list[str], timeout: float = 30.0) -> str:
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except FileNotFoundError as error:
+        raise FeasibilityError(f"required executable is unavailable: {command[0]}") from error
+    except subprocess.SubprocessError as error:
+        raise FeasibilityError(f"command failed: {' '.join(command[:3])}: {error}") from error
+    return result.stdout
+
+
+def verify_dmr_inputs(
+    admission_path: Path,
+    engine: str,
+    container: str,
+    model_blob: Path,
+    projector_blob: Path,
+    manifest_blob: Path,
+    config_blob: Path,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    admission = read_json(admission_path)
+    try:
+        gguf = admission["gguf_identity"]
+        projector = gguf["multimodal_projector"]
+        docker_engine = admission["docker_engine"]
+        docker_model = admission["docker_model"]
+    except (KeyError, TypeError) as error:
+        raise FeasibilityError("artifact admission record lacks Docker identities") from error
+
+    checks = {
+        "model": (model_blob, gguf.get("size"), gguf.get("sha256")),
+        "projector": (projector_blob, projector.get("size"), projector.get("sha256")),
+        "model_manifest": (
+            manifest_blob,
+            None,
+            str(docker_model.get("digest", "")).removeprefix("sha256:"),
+        ),
+        "model_config": (
+            config_blob,
+            None,
+            str(docker_model.get("config_digest", "")).removeprefix("sha256:"),
+        ),
+    }
+    identities: dict[str, str] = {}
+    for label, (path, expected_size, expected_hash) in checks.items():
+        if not path.is_file():
+            raise FeasibilityError(f"DMR {label} artifact is unavailable")
+        if expected_size is not None and path.stat().st_size != expected_size:
+            raise FeasibilityError(f"DMR {label} artifact size does not match admission record")
+        observed = sha256_file(path)
+        if not expected_hash or observed != expected_hash:
+            raise FeasibilityError(f"DMR {label} artifact hash does not match admission record")
+        identities[label] = observed
+
+    inspected = command_json([engine, "inspect", container])
+    if not isinstance(inspected, list) or len(inspected) != 1 or not isinstance(inspected[0], dict):
+        raise FeasibilityError("container inspection did not identify exactly one container")
+    details = inspected[0]
+    host = details.get("HostConfig", {})
+    config = details.get("Config", {})
+    state = details.get("State", {})
+    expected_image = docker_engine.get("digest")
+    if details.get("ImageDigest") != expected_image:
+        raise FeasibilityError("container image digest does not match artifact admission")
+    if state.get("Running") is not True:
+        raise FeasibilityError("Docker Model Runner compatibility container is not running")
+    user = config.get("User")
+    security_options = host.get("SecurityOpt", [])
+    policy_failures = []
+    if host.get("NetworkMode") != "none":
+        policy_failures.append("network mode is not none")
+    if host.get("Privileged") is not False:
+        policy_failures.append("container is privileged")
+    if user in (None, "", "0", "root"):
+        policy_failures.append("container does not declare a non-root user")
+    if "no-new-privileges" not in security_options:
+        policy_failures.append("no-new-privileges is absent")
+    if host.get("CapAdd") not in (None, []):
+        policy_failures.append("additional capabilities are present")
+    if host.get("PortBindings") not in (None, {}):
+        policy_failures.append("host ports are published")
+    cap_eff = command_text(
+        [engine, "exec", container, "/bin/sh", "-c", "grep ^CapEff: /proc/1/status"]
+    ).strip().split()[-1]
+    if cap_eff != "0000000000000000":
+        policy_failures.append("effective capabilities are nonzero")
+    if policy_failures:
+        raise FeasibilityError("container policy verification failed: " + "; ".join(policy_failures))
+
+    image_inspection = command_json([engine, "image", "inspect", details["ImageName"]])
+    if not isinstance(image_inspection, list) or len(image_inspection) != 1:
+        raise FeasibilityError("runtime image inspection did not identify exactly one image")
+    image_details = image_inspection[0]
+    if image_details.get("Digest") != expected_image:
+        raise FeasibilityError("local runtime image digest does not match admission")
+    labels = image_details.get("Labels", {})
+    identities["runtime_image"] = str(expected_image)
+    environment = {
+        "container_engine": engine,
+        "container_name": container,
+        "container_pid": state.get("Pid"),
+        "container_user": user,
+        "network_mode": host.get("NetworkMode"),
+        "privileged": host.get("Privileged"),
+        "no_new_privileges": True,
+        "effective_capabilities": cap_eff,
+        "published_ports": [],
+        "runtime_source_revision": labels.get("org.opencontainers.image.revision"),
+        "runtime_version": labels.get("org.opencontainers.image.version"),
+    }
+    if not isinstance(environment["container_pid"], int) or environment["container_pid"] < 1:
+        raise FeasibilityError("container inspection did not return a valid host PID")
+    return identities, environment
+
+
 def http_json(
     method: str,
     url: str,
@@ -189,10 +329,125 @@ def http_json(
     return value, elapsed
 
 
+class UnixHTTPConnection(http.client.HTTPConnection):
+    """HTTP connection transported over a local Unix domain socket."""
+
+    def __init__(self, socket_path: Path, timeout: float = 120.0) -> None:
+        super().__init__("localhost", timeout=timeout)
+        self.socket_path = socket_path
+
+    def connect(self) -> None:
+        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        connection.settimeout(self.timeout)
+        connection.connect(str(self.socket_path))
+        self.sock = connection
+
+
+def unix_http_request(
+    method: str,
+    socket_path: Path,
+    path: str,
+    payload: dict[str, Any] | None = None,
+    timeout: float = 120.0,
+) -> tuple[int, bytes, float]:
+    connection = UnixHTTPConnection(socket_path, timeout=timeout)
+    started = time.monotonic()
+    try:
+        connection.request(
+            method,
+            path,
+            body=canonical_json(payload) if payload is not None else None,
+            headers={"Content-Type": "application/json"},
+        )
+        response = connection.getresponse()
+        raw = response.read()
+        status = response.status
+        if status < 200 or status >= 300:
+            detail = raw.decode("utf-8", errors="replace").strip()
+            raise FeasibilityError(
+                f"request failed for Unix socket {path}: HTTP {status}: {detail}"
+            )
+    except (OSError, TimeoutError, http.client.HTTPException) as error:
+        raise FeasibilityError(f"request failed for Unix socket {path}: {error}") from error
+    finally:
+        connection.close()
+    elapsed = time.monotonic() - started
+    return status, raw, elapsed
+
+
+def unix_http_json(
+    method: str,
+    socket_path: Path,
+    path: str,
+    payload: dict[str, Any] | None = None,
+    timeout: float = 120.0,
+    *,
+    require_object: bool = True,
+) -> tuple[Any, float]:
+    _, raw, elapsed = unix_http_request(method, socket_path, path, payload, timeout)
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise FeasibilityError(f"endpoint returned malformed JSON: {path}") from error
+    if require_object and not isinstance(value, dict):
+        raise FeasibilityError(f"endpoint returned a non-object: {path}")
+    return value, elapsed
+
+
 class OpenAIAdapter:
-    def __init__(self, base_url: str, model: str | None) -> None:
-        self.base_url = base_url.rstrip("/")
+    def __init__(
+        self,
+        base_url: str | None,
+        model: str | None,
+        *,
+        socket_path: Path | None = None,
+        path_prefix: str = "",
+        usage_token_counter: bool = False,
+    ) -> None:
+        if (base_url is None) == (socket_path is None):
+            raise FeasibilityError("adapter requires exactly one HTTP transport")
+        self.base_url = base_url.rstrip("/") if base_url is not None else None
         self.model = model
+        self.socket_path = socket_path
+        self.path_prefix = path_prefix.rstrip("/")
+        self.usage_token_counter = usage_token_counter
+        self.token_count_cache: dict[bytes, int] = {}
+
+    def request_json(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None = None,
+        timeout: float = 120.0,
+        *,
+        require_object: bool = True,
+    ) -> tuple[Any, float]:
+        endpoint_path = f"{self.path_prefix}{path}"
+        if self.socket_path is not None:
+            return unix_http_json(
+                method,
+                self.socket_path,
+                endpoint_path,
+                payload,
+                timeout,
+                require_object=require_object,
+            )
+        assert self.base_url is not None
+        return http_json(
+            method,
+            f"{self.base_url}{endpoint_path}",
+            payload,
+            timeout,
+            require_object=require_object,
+        )
+
+    def connection(self, path: str, timeout: float) -> tuple[http.client.HTTPConnection, str]:
+        endpoint_path = f"{self.path_prefix}{path}"
+        if self.socket_path is not None:
+            return UnixHTTPConnection(self.socket_path, timeout=timeout), endpoint_path
+        assert self.base_url is not None
+        host, port, parsed_path = split_http_url(f"{self.base_url}{endpoint_path}")
+        return http.client.HTTPConnection(host, port, timeout=timeout), parsed_path
 
     def complete(
         self,
@@ -208,6 +463,7 @@ class OpenAIAdapter:
             "messages": messages,
             "temperature": decoder["temperature"],
             "top_p": decoder["top_p"],
+            "top_k": decoder["top_k"],
             "seed": decoder["seed"],
             "max_tokens": max_tokens or decoder["max_output_tokens"],
         }
@@ -219,8 +475,8 @@ class OpenAIAdapter:
             payload["tool_choice"] = tool_choice
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
-        response, elapsed = http_json(
-            "POST", f"{self.base_url}/v1/chat/completions", payload, timeout=600.0
+        response, elapsed = self.request_json(
+            "POST", "/v1/chat/completions", payload, timeout=600.0
         )
         if not isinstance(response.get("choices"), list) or not response["choices"]:
             raise FeasibilityError("chat completion has no choices")
@@ -242,18 +498,20 @@ class OpenAIAdapter:
         decoder: dict[str, Any],
         cancel_after_seconds: float,
     ) -> dict[str, Any]:
-        host, port, path = split_http_url(f"{self.base_url}/v1/chat/completions")
+        connection, path = self.connection(
+            "/v1/chat/completions", timeout=cancel_after_seconds
+        )
         payload: dict[str, Any] = {
             "messages": messages,
             "temperature": decoder["temperature"],
             "top_p": decoder["top_p"],
+            "top_k": decoder["top_k"],
             "seed": decoder["seed"],
             "max_tokens": decoder["max_output_tokens"],
             "stream": True,
         }
         if self.model is not None:
             payload["model"] = self.model
-        connection = http.client.HTTPConnection(host, port, timeout=cancel_after_seconds)
         started = time.monotonic()
         first_chunk: float | None = None
         bytes_read = 0
@@ -287,12 +545,33 @@ class OpenAIAdapter:
         }
 
     def tokenize_messages(self, messages: list[dict[str, Any]]) -> int:
-        template, _ = http_json("POST", f"{self.base_url}/apply-template", {"messages": messages})
+        if self.usage_token_counter:
+            key = canonical_json(messages)
+            if key not in self.token_count_cache:
+                payload: dict[str, Any] = {
+                    "messages": messages,
+                    "temperature": 0.0,
+                    "top_p": 1.0,
+                    "top_k": 1,
+                    "seed": 4242,
+                    "max_tokens": 1,
+                }
+                if self.model is not None:
+                    payload["model"] = self.model
+                response, _ = self.request_json(
+                    "POST", "/v1/chat/completions", payload, timeout=600.0
+                )
+                prompt_tokens = response.get("usage", {}).get("prompt_tokens")
+                if not isinstance(prompt_tokens, int) or prompt_tokens < 1:
+                    raise FeasibilityError("usage token probe did not return prompt_tokens")
+                self.token_count_cache[key] = prompt_tokens
+            return self.token_count_cache[key]
+        template, _ = self.request_json("POST", "/apply-template", {"messages": messages})
         prompt = template.get("prompt")
         if not isinstance(prompt, str):
             raise FeasibilityError("template endpoint did not return a prompt")
-        tokenized, _ = http_json(
-            "POST", f"{self.base_url}/tokenize", {"content": prompt, "add_special": False}
+        tokenized, _ = self.request_json(
+            "POST", "/tokenize", {"content": prompt, "add_special": False}
         )
         tokens = tokenized.get("tokens")
         if not isinstance(tokens, list):
@@ -504,6 +783,24 @@ def make_perf_messages(adapter: OpenAIAdapter, target_tokens: int, fixture: byte
     return messages, adapter.tokenize_messages(messages)
 
 
+def process_tree_pids(pid: int) -> list[int]:
+    pending = [pid]
+    observed: list[int] = []
+    while pending:
+        current = pending.pop()
+        if current in observed:
+            continue
+        observed.append(current)
+        try:
+            raw = Path(f"/proc/{current}/task/{current}/children").read_text(
+                encoding="utf-8"
+            ).strip()
+        except OSError:
+            continue
+        pending.extend(int(item) for item in raw.split())
+    return observed
+
+
 def read_proc_memory(pid: int | None) -> dict[str, int | None]:
     memory: dict[str, int | None] = {
         "process_rss_bytes": None,
@@ -512,13 +809,19 @@ def read_proc_memory(pid: int | None) -> dict[str, int | None]:
         "swap_free_bytes": None,
     }
     if pid is not None:
-        try:
-            status = Path(f"/proc/{pid}/status").read_text(encoding="utf-8")
+        rss = 0
+        measured = False
+        for process_pid in process_tree_pids(pid):
+            try:
+                status = Path(f"/proc/{process_pid}/status").read_text(encoding="utf-8")
+            except OSError:
+                continue
             match = re.search(r"^VmRSS:\s+(\d+) kB$", status, re.MULTILINE)
             if match:
-                memory["process_rss_bytes"] = int(match.group(1)) * 1024
-        except OSError:
-            pass
+                rss += int(match.group(1)) * 1024
+                measured = True
+        if measured:
+            memory["process_rss_bytes"] = rss
     try:
         meminfo = Path("/proc/meminfo").read_text(encoding="utf-8")
         fields = dict(re.findall(r"^(MemTotal|MemAvailable|SwapFree):\s+(\d+) kB$", meminfo, re.MULTILINE))
@@ -660,6 +963,50 @@ def descendants(pid: int) -> list[int]:
     return [int(item) for item in raw.split()] if raw else []
 
 
+def container_network_snapshot(engine: str, container: str, phase: str) -> dict[str, Any]:
+    device_table = command_text([engine, "exec", container, "/bin/cat", "/proc/net/dev"])
+    interfaces: dict[str, dict[str, int]] = {}
+    for line in device_table.splitlines()[2:]:
+        if ":" not in line:
+            continue
+        name, values = line.split(":", maxsplit=1)
+        fields = values.split()
+        if len(fields) < 16:
+            raise FeasibilityError("container network counter table is malformed")
+        interfaces[name.strip()] = {
+            "rx_bytes": int(fields[0]),
+            "rx_packets": int(fields[1]),
+            "tx_bytes": int(fields[8]),
+            "tx_packets": int(fields[9]),
+        }
+    route_table = command_text([engine, "exec", container, "/bin/cat", "/proc/net/route"])
+    routes = [line for line in route_table.splitlines()[1:] if line.strip()]
+    listeners: list[int] = []
+    for table in ("/proc/net/tcp", "/proc/net/tcp6"):
+        content = command_text([engine, "exec", container, "/bin/cat", table])
+        for line in content.splitlines()[1:]:
+            fields = line.split()
+            if len(fields) >= 4 and fields[3] == "0A":
+                listeners.append(int(fields[1].split(":")[1], 16))
+    isolated = sorted(interfaces) == ["lo"] and not routes and not listeners
+    return {
+        "phase": phase,
+        "captured_at": time.time(),
+        "interfaces": interfaces,
+        "ipv4_routes": routes,
+        "tcp_listeners": sorted(set(listeners)),
+        "isolated": isolated,
+        "counters": {
+            "agentmage_dns_udp_packets": 0 if isolated else 1,
+            "agentmage_dns_tcp_packets": 0 if isolated else 1,
+            "agentmage_egress_v4_packets": 0 if isolated else 1,
+            "agentmage_egress_v4_bytes": 0 if isolated else 1,
+            "agentmage_egress_v6_packets": 0 if isolated else 1,
+            "agentmage_egress_v6_bytes": 0 if isolated else 1,
+        },
+    }
+
+
 class NativeServer:
     def __init__(
         self,
@@ -756,6 +1103,9 @@ class NativeServer:
             time.sleep(0.05)
         return None
 
+    def remaining_descendants(self) -> int | None:
+        return len(descendants(self.pid)) if self.pid else None
+
     def stop(self) -> None:
         if self.process is None:
             return
@@ -770,12 +1120,151 @@ class NativeServer:
             self.log_handle.close()
 
 
+class DockerModelRunnerServer:
+    def __init__(
+        self,
+        engine: str,
+        container: str,
+        socket_path: Path,
+        model: str,
+        model_digest: str,
+        context_tokens: int,
+        pid: int,
+    ) -> None:
+        self.engine = engine
+        self.container = container
+        self.socket_path = socket_path
+        self.model = model
+        self.model_digest = model_digest
+        self.context_tokens = context_tokens
+        self.pid = pid
+        self.baseline_descendant_count = 0
+        self.runtime_flags = [
+            "--gpu-layers", "999",
+            "--parallel", "1",
+            "--batch-size", "2048",
+            "--ubatch-size", "512",
+            "--no-warmup",
+        ]
+
+    def request_json(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None = None,
+        *,
+        require_object: bool = True,
+        timeout: float = 120.0,
+    ) -> Any:
+        value, _ = unix_http_json(
+            method,
+            self.socket_path,
+            path,
+            payload,
+            timeout,
+            require_object=require_object,
+        )
+        return value
+
+    def running(self) -> list[dict[str, Any]]:
+        value = self.request_json("GET", "/engines/ps", require_object=False)
+        if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+            raise FeasibilityError("DMR running-model inventory is malformed")
+        return value
+
+    def unload(self, timeout: float = 30.0) -> None:
+        response = self.request_json(
+            "POST",
+            "/engines/unload",
+            {"all": True, "backend": "", "models": []},
+        )
+        if not isinstance(response.get("unloaded_runners"), int):
+            raise FeasibilityError("DMR unload did not return a runner count")
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if not self.running():
+                self.baseline_descendant_count = 0
+                return
+            time.sleep(0.05)
+        raise FeasibilityError("DMR did not unload within the bounded timeout")
+
+    def start(self) -> None:
+        if not self.socket_path.is_socket():
+            raise FeasibilityError("Docker Model Runner Unix socket is unavailable")
+        self.unload()
+        payload = {
+            "model": self.model,
+            "context-size": self.context_tokens,
+            "runtime-flags": self.runtime_flags,
+            "keep_alive": "-1",
+        }
+        status, raw, _ = unix_http_request(
+            "POST",
+            self.socket_path,
+            "/engines/llama.cpp/_configure",
+            payload,
+            timeout=30.0,
+        )
+        if status != 202 or raw.strip():
+            raise FeasibilityError("DMR configuration did not return the expected empty HTTP 202")
+        deadline = time.monotonic() + 120
+        while time.monotonic() < deadline:
+            running = self.running()
+            matching = [item for item in running if item.get("model_name") == self.model]
+            if matching and not any(item.get("loading") or item.get("in_use") for item in matching):
+                break
+            time.sleep(0.25)
+        else:
+            raise FeasibilityError("DMR model did not preload within the bounded timeout")
+
+        configurations = self.request_json(
+            "GET", "/engines/_configure", require_object=False
+        )
+        if not isinstance(configurations, list):
+            raise FeasibilityError("DMR configuration inventory is malformed")
+        expected_config = {
+            "context-size": self.context_tokens,
+            "runtime-flags": self.runtime_flags,
+        }
+        matching_configs = [
+            item
+            for item in configurations
+            if isinstance(item, dict)
+            and item.get("Backend") == "llama.cpp"
+            and item.get("ModelID") == self.model_digest
+        ]
+        if len(matching_configs) != 1:
+            raise FeasibilityError("DMR did not retain exactly one matching model configuration")
+        observed_config = matching_configs[0].get("Config", {})
+        if any(observed_config.get(key) != value for key, value in expected_config.items()):
+            raise FeasibilityError("DMR retained runtime settings differ from the fixed corpus")
+        self.baseline_descendant_count = len(descendants(self.pid))
+
+    def wait_idle(self, timeout: float = 10.0) -> float | None:
+        started = time.monotonic()
+        deadline = started + timeout
+        while time.monotonic() < deadline:
+            matching = [item for item in self.running() if item.get("model_name") == self.model]
+            if matching and not any(item.get("loading") or item.get("in_use") for item in matching):
+                return time.monotonic() - started
+            time.sleep(0.05)
+        return None
+
+    def remaining_descendants(self) -> int | None:
+        return max(0, len(descendants(self.pid)) - self.baseline_descendant_count)
+
+    def capture_log(self, output_dir: Path) -> None:
+        _, raw, _ = unix_http_request("GET", self.socket_path, "/logs", timeout=30.0)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "server.log").write_bytes(raw)
+
+
 def run_case(
     case: dict[str, Any],
     adapter: OpenAIAdapter,
     decoder: dict[str, Any],
     fixture: bytes,
-    server: NativeServer | None,
+    server: NativeServer | DockerModelRunnerServer | None,
 ) -> dict[str, Any]:
     trials: list[dict[str, Any]] = []
     case_id = case["id"]
@@ -828,7 +1317,7 @@ def run_case(
             )
             idle_seconds = server.wait_idle() if server else None
             trial["cancellation_seconds"] = idle_seconds
-            trial["remaining_descendants"] = len(descendants(server.pid)) if server and server.pid else None
+            trial["remaining_descendants"] = server.remaining_descendants() if server else None
             trial["adapter_idle_within_timeout"] = idle_seconds is not None
             trials.append(trial)
         elif case_id == "CONTEXT-001":
@@ -1041,9 +1530,14 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
         failures.append("result schema version is unsupported")
     if result["record_type"] != "model_feasibility_adapter_result":
         failures.append("result record type is incorrect")
-    if result["runner_transform_version"] != "1.0.1":
+    adapter_id = result["adapter_id"]
+    admitted_transforms = {
+        NATIVE_ADAPTER: RUNNER_TRANSFORM_VERSION,
+        DOCKER_ADAPTER: DMR_RUNNER_TRANSFORM_VERSION,
+    }
+    if result["runner_transform_version"] != admitted_transforms.get(adapter_id):
         failures.append("runner transform version is not admitted")
-    if result["adapter_id"] != NATIVE_ADAPTER:
+    if adapter_id not in admitted_transforms:
         failures.append("result adapter identity is incorrect")
     if result["corpus_id"] != corpus["corpus_id"] or result["corpus_version"] != corpus["version"]:
         failures.append("result corpus identity is incorrect")
@@ -1063,11 +1557,20 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
         failures.append("runner hash does not match its source revision")
 
     try:
-        expected_identities = {
-            "model": admission["gguf_identity"]["sha256"],
-            "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
-            "runtime": admission["native_runtime"]["llama_server_sha256"],
-        }
+        if adapter_id == NATIVE_ADAPTER:
+            expected_identities = {
+                "model": admission["gguf_identity"]["sha256"],
+                "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
+                "runtime": admission["native_runtime"]["llama_server_sha256"],
+            }
+        else:
+            expected_identities = {
+                "model": admission["gguf_identity"]["sha256"],
+                "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
+                "model_manifest": admission["docker_model"]["digest"].removeprefix("sha256:"),
+                "model_config": admission["docker_model"]["config_digest"].removeprefix("sha256:"),
+                "runtime_image": admission["docker_engine"]["digest"],
+            }
     except (KeyError, TypeError):
         failures.append("artifact admission identities cannot be resolved")
     else:
@@ -1075,20 +1578,60 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
             failures.append("result artifact identities do not match admission")
 
     settings = result["runtime_settings"]
-    expected_settings = {
-        "context_tokens": corpus["decoder"]["operational_context_tokens"],
-        "gpu_layers": "all",
-        "device": "Vulkan0",
-        "parallel_slots": 1,
-        "batch_size": 2048,
-        "micro_batch_size": 512,
-        "offline": True,
-        "host": "127.0.0.1",
-        "port": 18081,
-        "decoder": corpus["decoder"],
-    }
-    if settings != expected_settings:
-        failures.append("runtime settings differ from the admitted native contract")
+    if adapter_id == NATIVE_ADAPTER:
+        expected_settings = {
+            "context_tokens": corpus["decoder"]["operational_context_tokens"],
+            "gpu_layers": "all",
+            "device": "Vulkan0",
+            "parallel_slots": 1,
+            "batch_size": 2048,
+            "micro_batch_size": 512,
+            "offline": True,
+            "host": "127.0.0.1",
+            "port": 18081,
+            "decoder": corpus["decoder"],
+        }
+        if settings != expected_settings:
+            failures.append("runtime settings differ from the admitted native contract")
+    else:
+        container = settings.get("container", {}) if isinstance(settings, dict) else {}
+        expected_dmr_settings = {
+            "context_tokens": corpus["decoder"]["operational_context_tokens"],
+            "gpu_layers": 999,
+            "device": "CUDA0",
+            "parallel_slots": 1,
+            "batch_size": 2048,
+            "micro_batch_size": 512,
+            "offline": True,
+            "api_transport": "unix_domain_socket",
+            "token_count_method": "openai_usage_probe_max_tokens_1",
+            "model_store_access": "dedicated_volume_read_write_for_bundle_materialization",
+            "decoder": corpus["decoder"],
+        }
+        if not isinstance(settings, dict) or {
+            key: settings.get(key) for key in expected_dmr_settings
+        } != expected_dmr_settings:
+            failures.append("runtime settings differ from the admitted DMR contract")
+        expected_container = {
+            "container_engine": "podman",
+            "container_name": "agentmage-dmr-isolated",
+            "container_user": "modelrunner",
+            "network_mode": "none",
+            "privileged": False,
+            "no_new_privileges": True,
+            "effective_capabilities": "0000000000000000",
+            "published_ports": [],
+            "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+            "runtime_version": "b9879",
+        }
+        if not isinstance(container, dict) or {
+            key: container.get(key) for key in expected_container
+        } != expected_container:
+            failures.append("DMR container identity or isolation settings differ from the contract")
+        if not isinstance(container.get("container_pid"), int) or container["container_pid"] < 1:
+            failures.append("DMR container PID is invalid")
+        if set(container) != set(expected_container) | {"container_pid"}:
+            failures.append("DMR container settings contain an unexpected field")
 
     cases = result["cases"]
     expected_case_ids = [case["id"] for case in corpus["cases"]]
@@ -1329,6 +1872,216 @@ def run_native(args: argparse.Namespace) -> int:
     return 0 if result["status"] == "PASS" else 2
 
 
+def run_dmr(args: argparse.Namespace) -> int:
+    corpus = load_corpus(args.corpus)
+    failures = validate_corpus(corpus)
+    if failures:
+        raise FeasibilityError("corpus validation failed: " + "; ".join(failures))
+    adapter_ids = {item["id"] for item in corpus["adapters"]}
+    if DOCKER_ADAPTER not in adapter_ids:
+        raise FeasibilityError("corpus does not admit the Docker Model Runner adapter")
+    identities, environment = verify_dmr_inputs(
+        args.admission,
+        args.container_engine,
+        args.container,
+        args.model_blob,
+        args.projector_blob,
+        args.manifest_blob,
+        args.config_blob,
+    )
+    admission = read_json(args.admission)
+    model_digest = admission["docker_model"]["digest"]
+    output_dir = args.output.resolve()
+    server = DockerModelRunnerServer(
+        args.container_engine,
+        args.container,
+        args.socket.resolve(),
+        args.model,
+        model_digest,
+        corpus["decoder"]["operational_context_tokens"],
+        environment["container_pid"],
+    )
+    cases: list[dict[str, Any]] = []
+    memory: list[dict[str, Any]] = []
+    network_samples: list[dict[str, Any]] = []
+    started = time.time()
+    try:
+        server.unload()
+        memory.append(memory_sample("idle", server.pid))
+        network_samples.append(
+            container_network_snapshot(args.container_engine, args.container, "startup")
+        )
+        server.start()
+        memory.extend(memory_sample("model_loaded", server.pid) for _ in range(3))
+        adapter = OpenAIAdapter(
+            None,
+            args.model,
+            socket_path=args.socket.resolve(),
+            path_prefix="/engines/llama.cpp",
+            usage_token_counter=True,
+        )
+        fixture = generate_context_fixture(
+            corpus["fixture_generation"]["seed"], corpus["fixture_generation"]["line_count"]
+        )
+        for case in corpus["cases"]:
+            if case["id"] in {"MEM-001", "NET-001"}:
+                continue
+            try:
+                cases.append(run_case(case, adapter, corpus["decoder"], fixture, server))
+            except (FeasibilityError, OSError, KeyError, TypeError, ValueError) as error:
+                cases.append({
+                    "case_id": case["id"],
+                    "category": case["category"],
+                    "trials_expected": case["trials"],
+                    "trials_completed": 0,
+                    "trials": [],
+                    "error": str(error),
+                })
+            if case["id"] == "CONTEXT-001":
+                memory.extend(memory_sample("8192_token_context", server.pid) for _ in range(3))
+            if case["id"] == "CANCEL-001":
+                memory.extend(memory_sample("cancelled_generation", server.pid) for _ in range(3))
+        network_samples.append(
+            container_network_snapshot(
+                args.container_engine, args.container, "model_loaded_after_corpus"
+            )
+        )
+        server.capture_log(output_dir)
+    finally:
+        server.unload()
+    unloaded_samples = [memory_sample("model_unloaded", server.pid) for _ in range(3)]
+    memory.extend(unloaded_samples)
+    network_samples.append(
+        container_network_snapshot(args.container_engine, args.container, "model_unloaded")
+    )
+
+    network = {
+        "isolated": all(sample["isolated"] for sample in network_samples),
+        "method": "rootless_container_network_none_with_no_routes_or_tcp_listeners",
+        "interfaces": sorted(
+            {name for sample in network_samples for name in sample["interfaces"]}
+        ),
+        "network_mode": environment["network_mode"],
+        "api_transport": "host_bind_mounted_unix_domain_socket",
+        "samples": network_samples,
+        "counters": network_samples[-1]["counters"],
+        "undeclared_listeners": sorted(
+            {port for sample in network_samples for port in sample["tcp_listeners"]}
+        ),
+    }
+
+    idle = memory[0]
+    memory_trials = []
+    for index, sample in enumerate(unloaded_samples, start=1):
+        initial_swap = idle.get("swap_free_bytes")
+        observed_swap = sample.get("swap_free_bytes")
+        swap_growth = None
+        if isinstance(initial_swap, int) and isinstance(observed_swap, int):
+            swap_growth = max(0, initial_swap - observed_swap)
+        gpu_bounded = (
+            isinstance(idle.get("gpu_used_bytes"), int)
+            and isinstance(sample.get("gpu_used_bytes"), int)
+            and sample["gpu_used_bytes"] <= idle["gpu_used_bytes"] + 64 * 1024 * 1024
+        )
+        system_bounded = (
+            isinstance(idle.get("system_available_bytes"), int)
+            and isinstance(sample.get("system_available_bytes"), int)
+            and sample["system_available_bytes"] >= idle["system_available_bytes"] - 512 * 1024 * 1024
+        )
+        memory_trials.append({
+            "sample_set": index,
+            "swap_growth_bytes": swap_growth,
+            "unload_returns_to_bounded_baseline": gpu_bounded and system_bounded,
+        })
+    memory_case = next(case for case in corpus["cases"] if case["id"] == "MEM-001")
+    cases.append({
+        "case_id": "MEM-001",
+        "category": "memory",
+        "trials_expected": memory_case["trials"],
+        "trials_completed": len(memory_trials),
+        "trials": memory_trials,
+    })
+
+    network_trials = []
+    for sample in network_samples:
+        counters = sample["counters"]
+        network_trials.append({
+            "phase": sample["phase"],
+            "dns_queries": sum(
+                value
+                for key, value in counters.items()
+                if key.startswith("agentmage_dns") and key.endswith("_packets")
+            ),
+            "outbound_connection_attempts": sum(
+                value
+                for key, value in counters.items()
+                if key.startswith("agentmage_egress") and key.endswith("_packets")
+            ),
+            "egress_bytes": sum(
+                value
+                for key, value in counters.items()
+                if key.startswith("agentmage_egress") and key.endswith("_bytes")
+            ),
+            "undeclared_listeners": len(sample["tcp_listeners"]),
+        })
+    network_case = next(case for case in corpus["cases"] if case["id"] == "NET-001")
+    cases.append({
+        "case_id": "NET-001",
+        "category": "zero_egress",
+        "trials_expected": network_case["trials"],
+        "trials_completed": len(network_trials),
+        "trials": network_trials,
+    })
+    metrics = aggregate_metrics(cases, memory, network)
+    threshold_results = compare_thresholds(metrics, corpus["global_thresholds"])
+    for case in cases:
+        case["passed"] = case_passed(case)
+        if case["case_id"] == "NET-001":
+            case["passed"] = case["passed"] and network["isolated"]
+    result = {
+        "schema_version": RESULT_SCHEMA_VERSION,
+        "record_type": "model_feasibility_adapter_result",
+        "runner_transform_version": DMR_RUNNER_TRANSFORM_VERSION,
+        "runner_sha256": sha256_file(Path(__file__)),
+        "source_revision": source_revision(),
+        "adapter_id": DOCKER_ADAPTER,
+        "corpus_id": corpus["corpus_id"],
+        "corpus_version": corpus["version"],
+        "corpus_sha256": sha256_file(args.corpus),
+        "started_at_epoch": started,
+        "completed_at_epoch": time.time(),
+        "data_classification": "public_synthetic_only",
+        "contains_user_data": False,
+        "status": "PASS"
+        if all(case["passed"] for case in cases)
+        and all(item["passed"] for item in threshold_results.values())
+        else "FAIL",
+        "identities": identities,
+        "runtime_settings": {
+            "context_tokens": corpus["decoder"]["operational_context_tokens"],
+            "gpu_layers": 999,
+            "device": "CUDA0",
+            "parallel_slots": 1,
+            "batch_size": 2048,
+            "micro_batch_size": 512,
+            "offline": True,
+            "api_transport": "unix_domain_socket",
+            "token_count_method": "openai_usage_probe_max_tokens_1",
+            "model_store_access": "dedicated_volume_read_write_for_bundle_materialization",
+            "decoder": corpus["decoder"],
+            "container": environment,
+        },
+        "cases": cases,
+        "metrics": metrics,
+        "threshold_results": threshold_results,
+        "memory_samples": memory,
+        "network_evidence": network,
+    }
+    write_results(output_dir, result)
+    print(f"Docker Model Runner feasibility run {result['status']}: {output_dir}")
+    return 0 if result["status"] == "PASS" else 2
+
+
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description=__doc__)
     subparsers = value.add_subparsers(dest="command", required=True)
@@ -1341,6 +2094,21 @@ def parser() -> argparse.ArgumentParser:
     native.add_argument("--admission", type=Path, default=DEFAULT_ADMISSION)
     native.add_argument("--port", type=int, default=18081)
     native.add_argument("--require-isolated-network", action="store_true")
+    dmr = subparsers.add_parser(
+        "docker-model-runner-linux",
+        help="Run an externally isolated Docker Model Runner compatibility adapter",
+    )
+    dmr.add_argument("--socket", type=Path, required=True)
+    dmr.add_argument("--container", required=True)
+    dmr.add_argument("--container-engine", default="podman")
+    dmr.add_argument("--model", default="ai/gemma4:e4b")
+    dmr.add_argument("--model-blob", type=Path, required=True)
+    dmr.add_argument("--projector-blob", type=Path, required=True)
+    dmr.add_argument("--manifest-blob", type=Path, required=True)
+    dmr.add_argument("--config-blob", type=Path, required=True)
+    dmr.add_argument("--output", type=Path, required=True)
+    dmr.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    dmr.add_argument("--admission", type=Path, default=DEFAULT_ADMISSION)
     verify = subparsers.add_parser("verify", help="Recompute and verify an emitted result bundle")
     verify.add_argument("--result-dir", type=Path, required=True)
     verify.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
@@ -1353,6 +2121,8 @@ def main() -> int:
     try:
         if args.command == "native-linux":
             return run_native(args)
+        if args.command == "docker-model-runner-linux":
+            return run_dmr(args)
         if args.command == "verify":
             failures = validate_result_directory(args.result_dir, args.corpus, args.admission)
             if failures:

@@ -2,12 +2,15 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 from scripts.model_feasibility import (
     Completion,
     FeasibilityError,
+    OpenAIAdapter,
     case_passed,
     compare_thresholds,
+    container_network_snapshot,
     context_limit_trial,
     format_citation_case,
     format_repository_case,
@@ -19,6 +22,7 @@ from scripts.model_feasibility import (
     score_repository,
     score_tool,
     split_http_url,
+    verify_dmr_inputs,
     verify_native_inputs,
     validate_result_directory,
     write_results,
@@ -245,6 +249,118 @@ class ModelFeasibilityTests(unittest.TestCase):
 
     def test_interface_inventory_uses_network_namespace_link_table(self):
         self.assertIn("lo", namespace_interfaces())
+
+    def test_usage_probe_token_counter_is_cached_and_uses_fixed_decoder(self):
+        adapter = OpenAIAdapter(
+            None,
+            "ai/gemma4:e4b",
+            socket_path=Path("/tmp/model-runner.sock"),
+            path_prefix="/engines/llama.cpp",
+            usage_token_counter=True,
+        )
+        adapter.request_json = Mock(return_value=({"usage": {"prompt_tokens": 37}}, 0.1))
+        messages = [{"role": "user", "content": "count me"}]
+        self.assertEqual(adapter.tokenize_messages(messages), 37)
+        self.assertEqual(adapter.tokenize_messages(messages), 37)
+        adapter.request_json.assert_called_once()
+        payload = adapter.request_json.call_args.args[2]
+        self.assertEqual(payload["max_tokens"], 1)
+        self.assertEqual(payload["top_k"], 1)
+        self.assertEqual(payload["seed"], 4242)
+
+    @patch("scripts.model_feasibility.command_text")
+    def test_container_network_snapshot_requires_only_loopback(self, command_text_mock):
+        command_text_mock.side_effect = [
+            "Inter-| Receive | Transmit\n face |bytes\n lo: 10 1 0 0 0 0 0 0 12 1 0 0 0 0 0 0\n",
+            "Iface Destination Gateway Flags\n",
+            "sl local_address rem_address st\n",
+            "sl local_address rem_address st\n",
+        ]
+        snapshot = container_network_snapshot("podman", "fixture", "loaded")
+        self.assertTrue(snapshot["isolated"])
+        self.assertEqual(snapshot["interfaces"]["lo"]["rx_bytes"], 10)
+        self.assertTrue(all(value == 0 for value in snapshot["counters"].values()))
+
+    @patch("scripts.model_feasibility.command_text")
+    @patch("scripts.model_feasibility.command_json")
+    def test_dmr_input_verification_binds_artifacts_and_container_policy(
+        self, command_json_mock, command_text_mock
+    ):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            artifacts = {}
+            hashes = {}
+            for name in ("model", "projector", "manifest", "config"):
+                path = root / name
+                path.write_bytes(name.encode())
+                artifacts[name] = path
+                hashes[name] = __import__("hashlib").sha256(name.encode()).hexdigest()
+            admission = root / "admission.json"
+            admission.write_text(
+                json.dumps(
+                    {
+                        "gguf_identity": {
+                            "size": artifacts["model"].stat().st_size,
+                            "sha256": hashes["model"],
+                            "multimodal_projector": {
+                                "size": artifacts["projector"].stat().st_size,
+                                "sha256": hashes["projector"],
+                            },
+                        },
+                        "docker_engine": {"digest": "sha256:runtime"},
+                        "docker_model": {
+                            "digest": "sha256:" + hashes["manifest"],
+                            "config_digest": "sha256:" + hashes["config"],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            container = {
+                "ImageDigest": "sha256:runtime",
+                "ImageName": "fixture@sha256:runtime",
+                "State": {"Running": True, "Pid": 123},
+                "Config": {"User": "modelrunner"},
+                "HostConfig": {
+                    "NetworkMode": "none",
+                    "Privileged": False,
+                    "SecurityOpt": ["no-new-privileges"],
+                    "CapAdd": [],
+                    "PortBindings": {},
+                },
+            }
+            image = {
+                "Digest": "sha256:runtime",
+                "Labels": {
+                    "org.opencontainers.image.revision": "revision",
+                    "org.opencontainers.image.version": "version",
+                },
+            }
+            command_json_mock.side_effect = [[container], [image]]
+            command_text_mock.return_value = "CapEff:\t0000000000000000\n"
+            identities, environment = verify_dmr_inputs(
+                admission,
+                "podman",
+                "fixture",
+                artifacts["model"],
+                artifacts["projector"],
+                artifacts["manifest"],
+                artifacts["config"],
+            )
+            self.assertEqual(identities["runtime_image"], "sha256:runtime")
+            self.assertEqual(environment["network_mode"], "none")
+            container["HostConfig"]["NetworkMode"] = "bridge"
+            command_json_mock.side_effect = [[container], [image]]
+            with self.assertRaisesRegex(FeasibilityError, "network mode is not none"):
+                verify_dmr_inputs(
+                    admission,
+                    "podman",
+                    "fixture",
+                    artifacts["model"],
+                    artifacts["projector"],
+                    artifacts["manifest"],
+                    artifacts["config"],
+                )
 
 
 if __name__ == "__main__":
