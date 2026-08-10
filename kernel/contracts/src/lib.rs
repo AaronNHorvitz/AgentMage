@@ -5,6 +5,7 @@
 mod boundary;
 mod common;
 mod evidence;
+mod grant;
 mod ids;
 mod prompt;
 mod serialization;
@@ -19,9 +20,13 @@ pub use common::{
     SchemaReference, ValidationIssue, ValidationSeverity,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
+pub use grant::{
+    CapabilityGrant, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+};
 pub use ids::{
-    ActionId, CancellationId, CorrelationId, ErrorId, EvidenceId, PlanId, PlanStepId, PromptId,
-    ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
+    ActionId, ActorId, CancellationId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
+    PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId,
+    WorkPacketId, WorkspaceId,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use serialization::{

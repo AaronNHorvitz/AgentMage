@@ -61,6 +61,10 @@ define_identifier!(
 );
 define_identifier!(ToolId, "Stable identity for one registered tool contract.");
 define_identifier!(ToolCallId, "Stable identity for one tool-call attempt.");
+define_identifier!(ActorId, "Stable pseudonymous identity for one local actor.");
+define_identifier!(GrantId, "Stable identity for one capability grant.");
+define_identifier!(GrantNonce, "Single-grant nonce used to prevent replay.");
+define_identifier!(WorkspaceId, "Stable identity for one approved workspace.");
 define_identifier!(EvidenceId, "Stable identity for one evidence record.");
 define_identifier!(ReceiptId, "Stable identity for one operation receipt.");
 define_identifier!(ErrorId, "Stable identity for one typed contract error.");

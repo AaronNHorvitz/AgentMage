@@ -39,6 +39,7 @@ macro_rules! impl_versioned_contract {
 impl_versioned_contract!(
     crate::Action,
     crate::BoundaryFailure,
+    crate::CapabilityGrant,
     crate::CancellationSignal,
     crate::ContractError,
     crate::EvidenceReference,

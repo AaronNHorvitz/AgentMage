@@ -1,14 +1,16 @@
 use agentmage_kernel_contracts::{
-    Action, ActionId, ActionKind, ActionState, BoundaryFailure, BoundaryKind, BoundaryOutcomeKind,
-    BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
-    CancellationSignal, ContractError, ContractPayload, CorrelationId, DataSensitivity,
-    ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference, OperationOutcome, Plan,
-    PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage,
-    PromptRole, Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan,
-    SchemaId, SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task,
-    TaskId, TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
-    WorkPacketState, from_json, to_canonical_json,
+    Action, ActionId, ActionKind, ActionState, ActorId, BoundaryFailure, BoundaryKind,
+    BoundaryOutcomeKind, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId,
+    CancellationReason, CancellationSignal, CapabilityGrant, ContractError, ContractPayload,
+    CorrelationId, DataSensitivity, ErrorCategory, ErrorId, EvidenceId, EvidenceKind,
+    EvidenceReference, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect,
+    GrantStatus, GrantTarget, OperationOutcome, Plan, PlanId, PlanState, PlanStep, PlanStepId,
+    PlanStepState, Prompt, PromptId, PromptMessage, PromptRole, Receipt, ReceiptId,
+    RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
+    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId,
+    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue, ValidationSeverity,
+    VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, from_json,
+    to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -79,6 +81,7 @@ fn complete_contract_family_preserves_linked_identities() {
     let call_id = ToolCallId::from_raw("call-0001");
     let correlation_id = CorrelationId::from_raw("correlation-0001");
     let evidence_id = EvidenceId::from_raw("evidence-0001");
+    let grant_id = GrantId::from_raw("grant-0001");
 
     let validation_issue = ValidationIssue {
         code: "fixture.warning".to_owned(),
@@ -223,6 +226,45 @@ fn complete_contract_family_preserves_linked_identities() {
             sha256: "2".repeat(64),
         },
     };
+    let grant = CapabilityGrant {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        grant_id,
+        revision: 1,
+        actor_id: ActorId::from_raw("actor-local-0001"),
+        session_id: session_id.clone(),
+        task_id: task_id.clone(),
+        action_id: Some(action_id.clone()),
+        action_kind: Some(ActionKind::DeterministicTool),
+        operation: GrantOperation::WorkspaceRead,
+        tool_id: Some(tool_id.clone()),
+        tool_version: Some(tool.tool_version.clone()),
+        targets: vec![GrantTarget {
+            workspace_id: WorkspaceId::from_raw("workspace-0001"),
+            path_components: vec!["fixtures".to_owned(), "input.txt".to_owned()],
+        }],
+        argument_sha256: call.arguments.sha256.clone(),
+        preimages: vec![GrantPreimage {
+            target_index: 0,
+            content_sha256: "7".repeat(64),
+            observed_revision: Some("fixture-v1".to_owned()),
+        }],
+        expected_side_effects: vec![GrantSideEffect {
+            operation: GrantOperation::WorkspaceRead,
+            target_indexes: vec![0],
+            details_sha256: "8".repeat(64),
+        }],
+        rollback_description: "No state change is permitted".to_owned(),
+        issued_at_epoch_ms: 1_786_320_000_000,
+        expires_at_epoch_ms: 1_786_320_060_000,
+        nonce: GrantNonce::from_raw("nonce-0001"),
+        use_limit: 1,
+        use_count: 0,
+        parent_grant_id: Some(GrantId::from_raw("grant-parent-0001")),
+        parent_grant_sha256: Some("9".repeat(64)),
+        preview_sha256: "a".repeat(64),
+        policy_sha256: "b".repeat(64),
+        status: GrantStatus::Issued,
+    };
     let evidence = EvidenceReference {
         schema_version: CONTRACT_SCHEMA_VERSION,
         evidence_id,
@@ -317,6 +359,7 @@ fn complete_contract_family_preserves_linked_identities() {
         let fixtures = vec![
             fixture_entry("action", &action),
             fixture_entry("boundary_failure", &boundary_failure),
+            fixture_entry("capability_grant", &grant),
             fixture_entry("cancellation_signal", &cancellation),
             fixture_entry(
                 "contract_error",
@@ -351,6 +394,7 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_round_trip(&cancellation);
     assert_round_trip(&boundary_failure);
     assert_round_trip(&prompt);
+    assert_round_trip(&grant);
     assert_embedded_grant_field_is_rejected(&plan);
     assert_embedded_grant_field_is_rejected(&prompt);
     assert_embedded_grant_field_is_rejected(&tool);
@@ -374,6 +418,17 @@ fn complete_contract_family_preserves_linked_identities() {
     );
     assert_optional_keys_are_required(&receipt, &["tool_call_id", "error"]);
     assert_optional_keys_are_required(&boundary_failure, &["cancellation"]);
+    assert_optional_keys_are_required(
+        &grant,
+        &[
+            "action_id",
+            "action_kind",
+            "tool_id",
+            "tool_version",
+            "parent_grant_id",
+            "parent_grant_sha256",
+        ],
+    );
 
     assert_eq!(packet.task_id, task.task_id);
     assert_eq!(plan.plan_id, packet.plan_id.expect("fixture plan identity"));
