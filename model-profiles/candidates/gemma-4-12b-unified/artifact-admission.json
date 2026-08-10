@@ -1,0 +1,161 @@
+{
+  "decision": {
+    "allowed_actions": [
+      "native runtime binary self-test",
+      "remote immutable metadata inspection",
+      "quarantined artifact acquisition and synthetic-data evaluation"
+    ],
+    "blockers": [
+      {
+        "code": "SOURCE-ADMISSION-BLOCKED",
+        "reason": "The bound source-admission record remains blocked on synthetic-training lineage evidence."
+      },
+      {
+        "code": "SELECTED-GGUF-CONVERSION-NOT-REPRODUCIBLE",
+        "reason": "The selected GGUF identity matches the Docker model layers exactly, but its complete conversion and quantization command, tool revision, and environment are not disclosed."
+      },
+      {
+        "code": "FALLBACK-ARTIFACTS-NOT-STAGED",
+        "reason": "The selected native GGUF, projector, and Docker model artifact have not yet been acquired and hash-verified locally."
+      },
+      {
+        "code": "DOCKER-ENGINE-NOT-VERIFIED",
+        "reason": "Docker Engine is not installed on the Fedora evaluation host; an isolated exact-image compatibility run under rootless Podman remains an explicitly limited substitute."
+      }
+    ],
+    "independent_review_performed": false,
+    "prohibited_actions": [
+      "AgentMage profile activation",
+      "model inference before local artifact hash verification",
+      "Docker support claim",
+      "release representation",
+      "automatic fallback"
+    ],
+    "release_approval": false,
+    "status": "BLOCKED"
+  },
+  "docker_engine": {
+    "architecture": "amd64",
+    "compatibility_container_engine": "Podman 5.8.4",
+    "created": "2026-07-09T10:50:38.746465485Z",
+    "cuda_version": "13.3.0",
+    "digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "endpoint_contract": "unauthenticated local API requiring separate isolation proof",
+    "local_state": "exact_image_staged_previous_candidate_only",
+    "operating_system": "linux",
+    "repository": "docker.io/docker/model-runner",
+    "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+    "runtime_version": "b9879",
+    "tag_observed": "v1.2.6-cuda"
+  },
+  "docker_model": {
+    "artifact_type": "application/vnd.cncf.model.manifest.v1+json",
+    "config_digest": "sha256:fd55c7a19127c5a1a3c7dd6d52388ac193653bfa366235dea4588c735cc12967",
+    "digest": "sha256:50b48bb3c9659db6d9615fe9ec91b6d2e6da64f333135987ea12e6965dbd84f6",
+    "license_layer_digest": "sha256:c6cd762f51def4540aad6b219f491fb1b8f08baa5f23e2264ab86a3aba183036",
+    "local_state": "remote_immutable_metadata_resolved_not_staged",
+    "manifest_annotation_repository": "unsloth/gemma-4-12b-it-GGUF",
+    "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+    "model_layer_digest": "sha256:90fd944d227e9d9b68e7e2c7d5b57b79d4c66ed521b0919fbbd932cf834f6f8e",
+    "projector_layer_digest": "sha256:91f086971e56d7a7d8d39e271873fccdb49541bd259d6e02c401a4f1cb7a219e",
+    "repository": "docker.io/ai/gemma4",
+    "tag_observed": "12B"
+  },
+  "evaluated_at": "2026-08-10T10:35:00Z",
+  "evaluation_host": {
+    "architecture": "x86_64",
+    "cpu": "13th Gen Intel Core i9-13900KF",
+    "docker_available": false,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_memory_mib": 24564,
+    "logical_cpus": 32,
+    "memory_bytes": 67143954432,
+    "operating_system": "Fedora Kinoite 44",
+    "podman_available": true,
+    "podman_version": "5.8.4"
+  },
+  "native_runtime": {
+    "asset": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
+    "asset_sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5",
+    "asset_size": 32521550,
+    "backend": "Vulkan",
+    "build_toolchain": "GNU 11.4.0 for Linux x86_64",
+    "llama_cli_sha256": "988611a4c80c615052627544c52a6c78fedbba70ab9359132663e043b508bf74",
+    "llama_server_sha256": "1d374fdb717832ec01d4829eff9feb46dfc83b7ccbb9d867c15315dbd8aa4bbe",
+    "local_state": "staged_and_hash_verified",
+    "project": "ggml-org/llama.cpp",
+    "release": "b10333",
+    "reported_version": "10333 (08659901c)",
+    "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+    "vulkan_library_sha256": "b3b35bc2b16f46db1db5eaf5543e85e6b94533cdab1d79c6d67c8bb6d2e42351"
+  },
+  "official_qat_gguf": {
+    "base_model": "google/gemma-4-12B-it-qat-q4_0-unquantized",
+    "file": "gemma-4-12b-it-qat-q4_0.gguf",
+    "projector_file": "mmproj-gemma-4-12b-it-qat-q4_0.gguf",
+    "projector_sha256": "cb018338a7538a9814d994bfe54644c71eb7ed54e31eae2f721e45fd3c260da7",
+    "projector_size": 175115616,
+    "repository": "google/gemma-4-12B-it-qat-q4_0-gguf",
+    "revision": "29d097773436b69ff9feafd636ab4cf873786537",
+    "selected_for_cross_adapter_evaluation": false,
+    "sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+    "size": 6975879296
+  },
+  "profile_id": "gemma-4-12b-unified-it",
+  "record_type": "model_artifact_admission",
+  "schema_version": 1,
+  "selected_gguf_identity": {
+    "base_model": "google/gemma-4-12B-it",
+    "conversion_command": null,
+    "conversion_revision": null,
+    "conversion_tool": "not_reproducibly_disclosed",
+    "downloaded": false,
+    "file": "gemma-4-12b-it-UD-Q4_K_XL.gguf",
+    "multimodal_projector": {
+      "downloaded": false,
+      "file": "mmproj-F16.gguf",
+      "sha256": "91f086971e56d7a7d8d39e271873fccdb49541bd259d6e02c401a4f1cb7a219e",
+      "size": 175115840
+    },
+    "quantization": "UD-Q4_K_XL",
+    "quantization_recipe": "Unsloth Dynamic 2.0 UD-Q4_K_XL label; exact command and complete environment not disclosed",
+    "repository": "unsloth/gemma-4-12b-it-GGUF",
+    "revision": "fc034cfff751157913579611efad8462ac1be606",
+    "sha256": "90fd944d227e9d9b68e7e2c7d5b57b79d4c66ed521b0919fbbd932cf834f6f8e",
+    "size": 7366423360
+  },
+  "source_admission": {
+    "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
+    "status": "BLOCKED"
+  },
+  "source_evidence": [
+    {
+      "id": "google-official-qat-gguf-revision",
+      "url": "https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf/tree/29d097773436b69ff9feafd636ab4cf873786537"
+    },
+    {
+      "id": "selected-unsloth-gguf-revision",
+      "url": "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/tree/fc034cfff751157913579611efad8462ac1be606"
+    },
+    {
+      "id": "llama-cpp-release",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b10333"
+    },
+    {
+      "id": "docker-model-tag",
+      "url": "https://hub.docker.com/r/ai/gemma4/tags"
+    },
+    {
+      "id": "docker-model-runner-engine",
+      "url": "https://hub.docker.com/r/docker/model-runner/tags"
+    }
+  ],
+  "source_identity": {
+    "downloaded": false,
+    "repository": "google/gemma-4-12B-it",
+    "revision": "707f0a3b8a3c7ad586ed01e27eafbad8a27dd0f7",
+    "weights_path": "model.safetensors",
+    "weights_sha256": "5a84cb313260ac447237b890387116dfa8682e49a6b44bc585ae8353abbff18d",
+    "weights_size": 23919549408
+  }
+}

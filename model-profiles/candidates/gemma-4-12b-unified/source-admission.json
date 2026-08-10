@@ -1,0 +1,166 @@
+{
+  "context_contract": {
+    "config_field": "text_config.max_position_embeddings",
+    "declared_tokens": 262144,
+    "model_card_label": "256K",
+    "operational_limit": null,
+    "operational_limit_status": "requires_runtime_evaluation",
+    "sliding_window_tokens": 1024
+  },
+  "decision": {
+    "allowed_actions": [
+      "offline metadata validation",
+      "quarantined synthetic-data feasibility evaluation after artifact admission"
+    ],
+    "blockers": [
+      {
+        "code": "LINEAGE-SYNTHETIC-SOURCES-UNVERIFIED",
+        "reason": "The first-party model card describes broad training-data categories but does not disclose synthetic-training sources deeply enough to prove the policy's non-derivation condition.",
+        "remediation": "Obtain sufficient first-party lineage evidence or record an approved policy decision that preserves the product's origin constraint."
+      }
+    ],
+    "independent_review_performed": false,
+    "prohibited_actions": [
+      "AgentMage profile activation",
+      "processing user or private data",
+      "release representation",
+      "automatic fallback"
+    ],
+    "release_approval": false,
+    "reviewer": "automated implementation self-review",
+    "scope": "source admission for quarantined fallback feasibility evaluation",
+    "status": "BLOCKED"
+  },
+  "evaluated_at": "2026-08-10T10:30:00Z",
+  "identity": {
+    "architecture": "Gemma4UnifiedForConditionalGeneration",
+    "base_model": "google/gemma-4-12B",
+    "base_revision": "023679ed352de9bb66cc873c9009ce3482585c08",
+    "canonical_model": "google/gemma-4-12B-it",
+    "model_type": "gemma4_unified",
+    "upstream_revision": "707f0a3b8a3c7ad586ed01e27eafbad8a27dd0f7",
+    "variant": "instruction-tuned 12B Unified"
+  },
+  "known_limitations": [
+    "Training-data quality, coverage, and bias can limit responses.",
+    "Open-ended and highly complex tasks may be challenging.",
+    "Language ambiguity, nuance, sarcasm, and figurative language may be misunderstood.",
+    "Generated factual statements may be incorrect or outdated.",
+    "Common-sense reasoning can fail.",
+    "Harmful, privacy-impacting, biased, or otherwise unsuitable output remains possible.",
+    "Declared context capacity is not an AgentMage operational context approval.",
+    "Function-calling declarations require corpus validation in every runtime adapter."
+  ],
+  "license": {
+    "canonical_url": "https://ai.google.dev/gemma/apache_2",
+    "model_card_disposition": "apache-2.0",
+    "page_sha256_at_evaluation": "b8de152b2bd70ffd439af78244a73295d3eb73b87442886f7b35484cfb35b4ab",
+    "redistribution_review": "source_license_verified_artifact_not_yet_admitted",
+    "spdx": "Apache-2.0"
+  },
+  "ownership_and_origin": {
+    "control_disposition": "permitted_non_chinese_supplier",
+    "developer": "Google DeepMind",
+    "lineage_complete_under_policy": false,
+    "publisher": "Google",
+    "publisher_namespace": "google",
+    "publisher_region": "us",
+    "synthetic_training_lineage": "not_disclosed_to_required_depth",
+    "weight_lineage": "Google Gemma 4 12B base model instruction-tuned into Google Gemma 4 12B Unified IT"
+  },
+  "policy": {
+    "path": "MODEL-PROVENANCE-POLICY.md",
+    "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad"
+  },
+  "profile_id": "gemma-4-12b-unified-it",
+  "record_type": "model_source_admission",
+  "schema_version": 1,
+  "source_artifacts": {
+    "chat_template": {
+      "path": "chat_template.jinja",
+      "sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+      "size": 18683
+    },
+    "config": {
+      "sha256": "478c46e8d2c52d5c2d85bf67e3b3e8c90e7c9d91086cee27e3c267907e936bd9",
+      "size": 4423,
+      "url": "https://huggingface.co/google/gemma-4-12B-it/resolve/707f0a3b8a3c7ad586ed01e27eafbad8a27dd0f7/config.json"
+    },
+    "generation_config": {
+      "path": "generation_config.json",
+      "sha256": "a8349d9bd64cc5841297fcb5002f0fdc4749c473c8f1b10ea337f9ce4ee7014e",
+      "size": 260
+    },
+    "model_card": {
+      "sha256": "04a06469e3d83b941eaa776a3647b8690b5a7cc5c833af2381e5345bb1bb45c0",
+      "size": 28484,
+      "url": "https://huggingface.co/google/gemma-4-12B-it/resolve/707f0a3b8a3c7ad586ed01e27eafbad8a27dd0f7/README.md"
+    },
+    "processor_config": {
+      "path": "processor_config.json",
+      "sha256": "6b938e76555b3e9946890770e1abcd442a4718f34041a58e8139dc8ad34545c9",
+      "size": 1382
+    },
+    "source_weights": {
+      "downloaded": false,
+      "path": "model.safetensors",
+      "sha256": "5a84cb313260ac447237b890387116dfa8682e49a6b44bc585ae8353abbff18d",
+      "size": 23919549408
+    }
+  },
+  "source_evidence": [
+    {
+      "id": "google-gemma4-model-card",
+      "publisher": "Google",
+      "supports": [
+        "developer",
+        "license",
+        "architecture",
+        "context",
+        "capabilities",
+        "limitations"
+      ],
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4"
+    },
+    {
+      "id": "google-huggingface-model-revision",
+      "publisher": "Google",
+      "supports": [
+        "immutable_source_revision",
+        "base_model",
+        "license",
+        "tokenizer",
+        "configuration"
+      ],
+      "url": "https://huggingface.co/google/gemma-4-12B-it/tree/707f0a3b8a3c7ad586ed01e27eafbad8a27dd0f7"
+    },
+    {
+      "id": "google-gemma4-license",
+      "publisher": "Google",
+      "supports": [
+        "license_text"
+      ],
+      "url": "https://ai.google.dev/gemma/apache_2"
+    },
+    {
+      "id": "google-gemma4-release-history",
+      "publisher": "Google",
+      "supports": [
+        "release_identity",
+        "release_date"
+      ],
+      "url": "https://ai.google.dev/gemma/docs/releases"
+    }
+  ],
+  "tokenizer": {
+    "class": "GemmaTokenizer",
+    "processor_class": "Gemma4Processor",
+    "system_role_declared": true,
+    "tokenizer_config_sha256": "a62f4e85a47c0c136edaaa3a4f591fd6783717299a9def47e5ad03a49f6a5eb9",
+    "tokenizer_config_size": 3089,
+    "tokenizer_json_sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
+    "tokenizer_json_size": 32169626,
+    "tool_call_grammar_declared": true,
+    "vocabulary_size": 262144
+  }
+}

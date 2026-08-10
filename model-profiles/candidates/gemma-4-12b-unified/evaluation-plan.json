@@ -1,0 +1,39 @@
+{
+  "admission": {
+    "artifact_path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+    "artifact_sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
+    "artifact_status": "BLOCKED",
+    "source_path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
+    "source_sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+    "source_status": "BLOCKED"
+  },
+  "adapters": [
+    "linux-native-vulkan",
+    "linux-docker-model-runner-cuda",
+    "macos-native-metal"
+  ],
+  "candidate_state": "EVALUATION_REQUIRED_DISABLED",
+  "corpus": {
+    "path": "model-profiles/evaluation/corpus-v1.json",
+    "sha256": "32d569140326b72981688c7430ce182c2d25310cff3817eedd06ffb5d43954ac",
+    "threshold_change_authorized": false,
+    "version": "1.0.0"
+  },
+  "created_at": "2026-08-10T10:40:00Z",
+  "data_classification": "public_synthetic_only",
+  "profile_id": "gemma-4-12b-unified-it",
+  "record_type": "fallback_model_evaluation_plan",
+  "schema_version": 1,
+  "state": {
+    "activation_authorized": false,
+    "automatic_switch": false,
+    "evaluation_complete": false,
+    "independent_review_performed": false,
+    "release_approval": false
+  },
+  "trigger_disposition": {
+    "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
+    "sha256": "8389942d3cbe439940a7ec82d55aaa5c8a5b75aeb80bc1e35ddeee4def597488",
+    "status": "REJECTED"
+  }
+}
