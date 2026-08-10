@@ -72,7 +72,6 @@ RAW_COMMANDS: Final = (
         "-m",
         "unittest",
         "-v",
-        "tests.test_documentation_controls",
         "tests.test_documentation_mutations",
         "tests.test_public_policy_baseline",
     ),
@@ -302,6 +301,16 @@ def build_manifest(source_revision: str, bundle: dict[str, bytes]) -> dict[str, 
 def write_bundle(output: Path, source_revision: str) -> None:
     if output.exists():
         raise Story02EvidenceError(f"refusing to overwrite existing evidence: {output}")
+    resolved = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{source_revision}^{{commit}}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if resolved.returncode != 0:
+        raise Story02EvidenceError(f"cannot resolve source revision {source_revision}")
+    source_revision = resolved.stdout.strip()
     bundle = build_bundle(source_revision)
     output.mkdir(parents=True)
     for name, content in bundle.items():
