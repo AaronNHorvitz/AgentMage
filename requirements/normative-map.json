@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "source": {
+    "document": "PRD.md",
+    "end_heading": "18. v0.1 Requirement Traceability",
+    "release": "v0.1",
+    "start_heading": "5. Product Architecture"
+  },
+  "mappings": [
+    {
+      "heading": "5. Product Architecture",
+      "line": 128,
+      "requirement_ids": [
+        "AM-KRN-001"
+      ],
+      "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
+    },
+    {
+      "heading": "5.1 Kernel",
+      "line": 134,
+      "requirement_ids": [
+        "AM-KRN-001",
+        "AM-PLT-001"
+      ],
+      "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+    },
+    {
+      "heading": "6. v0.1 User Experience",
+      "line": 180,
+      "requirement_ids": [
+        "AM-HOF-001"
+      ],
+      "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
+    },
+    {
+      "heading": "7. Platform and Runtime",
+      "line": 186,
+      "requirement_ids": [
+        "AM-PLT-001"
+      ],
+      "statement_sha256": "d0b2a4077b7f4acb01eca5410fc33837919f08be0d214ded5a86b303869d18b7"
+    },
+    {
+      "heading": "7. Platform and Runtime",
+      "line": 188,
+      "requirement_ids": [
+        "AM-PLT-001",
+        "AM-TST-001",
+        "AM-TST-002"
+      ],
+      "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+    },
+    {
+      "heading": "7.2 Fedora and Ubuntu Runtime",
+      "line": 237,
+      "requirement_ids": [
+        "AM-PLT-001",
+        "AM-PRV-001",
+        "AM-SEC-001"
+      ],
+      "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+    },
+    {
+      "heading": "7.2 Fedora and Ubuntu Runtime",
+      "line": 239,
+      "requirement_ids": [
+        "AM-MDL-003"
+      ],
+      "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
+    },
+    {
+      "heading": "8. Model Policy and Routing",
+      "line": 243,
+      "requirement_ids": [
+        "AM-MDL-001",
+        "AM-MDL-003"
+      ],
+      "statement_sha256": "49b3d53eee47a4e94f4caaf39bbc9e12fa81af8082cc58519ad7a31ed324b482"
+    },
+    {
+      "heading": "8. Model Policy and Routing",
+      "line": 245,
+      "requirement_ids": [
+        "AM-MDL-001"
+      ],
+      "statement_sha256": "016c900f173f9cad1993965357e8ca83010ed0621f09fa7af22d21ef49c92d72"
+    },
+    {
+      "heading": "8. Model Policy and Routing",
+      "line": 247,
+      "requirement_ids": [
+        "AM-MDL-002"
+      ],
+      "statement_sha256": "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7"
+    },
+    {
+      "heading": "9. Threat Model and Process Boundaries",
+      "line": 255,
+      "requirement_ids": [
+        "AM-INS-001"
+      ],
+      "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
+    },
+    {
+      "heading": "9. Threat Model and Process Boundaries",
+      "line": 257,
+      "requirement_ids": [
+        "AM-MDL-001",
+        "AM-MDL-003",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-VSC-001"
+      ],
+      "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+    },
+    {
+      "heading": "9. Threat Model and Process Boundaries",
+      "line": 259,
+      "requirement_ids": [
+        "AM-SEC-001"
+      ],
+      "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
+    },
+    {
+      "heading": "10. Capability Grants",
+      "line": 274,
+      "requirement_ids": [
+        "AM-AUT-001"
+      ],
+      "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
+    },
+    {
+      "heading": "11. Path Contract",
+      "line": 282,
+      "requirement_ids": [
+        "AM-PTH-001"
+      ],
+      "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
+    },
+    {
+      "heading": "12. Canonical Data and Storage",
+      "line": 290,
+      "requirement_ids": [
+        "AM-DAT-001"
+      ],
+      "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
+    },
+    {
+      "heading": "12. Canonical Data and Storage",
+      "line": 303,
+      "requirement_ids": [
+        "AM-DAT-001"
+      ],
+      "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
+    },
+    {
+      "heading": "12. Canonical Data and Storage",
+      "line": 305,
+      "requirement_ids": [
+        "AM-DAT-001",
+        "AM-REP-001",
+        "AM-SES-001"
+      ],
+      "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+    },
+    {
+      "heading": "13. Privacy, Encryption, and Retention",
+      "line": 318,
+      "requirement_ids": [
+        "AM-PRV-001"
+      ],
+      "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
+    },
+    {
+      "heading": "14. Offline and Network Contract",
+      "line": 326,
+      "requirement_ids": [
+        "AM-MDL-001",
+        "AM-NET-001"
+      ],
+      "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+    },
+    {
+      "heading": "15. Codex Handoff Boundary",
+      "line": 334,
+      "requirement_ids": [
+        "AM-HOF-001"
+      ],
+      "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
+    },
+    {
+      "heading": "15. Codex Handoff Boundary",
+      "line": 336,
+      "requirement_ids": [
+        "AM-HOF-001"
+      ],
+      "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
+    },
+    {
+      "heading": "16. Evidence and Completion",
+      "line": 351,
+      "requirement_ids": [
+        "AM-EVD-001",
+        "AM-HOF-001"
+      ],
+      "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+    },
+    {
+      "heading": "16. Evidence and Completion",
+      "line": 353,
+      "requirement_ids": [
+        "AM-DAT-001",
+        "AM-EVD-001"
+      ],
+      "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+    },
+    {
+      "heading": "17. Release Acceptance",
+      "line": 373,
+      "requirement_ids": [
+        "AM-MDL-001",
+        "AM-TST-002"
+      ],
+      "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
+    },
+    {
+      "heading": "17. Release Acceptance",
+      "line": 381,
+      "requirement_ids": [
+        "AM-DOC-001",
+        "AM-TST-001",
+        "AM-TST-002"
+      ],
+      "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+    }
+  ]
+}

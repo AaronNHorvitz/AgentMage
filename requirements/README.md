@@ -40,6 +40,29 @@ The top-level source hash covers the complete canonical inventory. Any inventory
 
 The resolver in `scripts/requirement_conflicts.py` is pure: it returns an `unchanged`, `provisional`, or `blocked` result and never edits its inputs or project files.
 
+## Coverage Audit
+
+`normative-map.json` maps explicit normative statements in PRD Sections 5 through 17 to the v0.1 `AM-*` backlog. A normative source line is any non-table, non-code line in that scope containing `must`, `cannot`, `never`, `required`, or fail-closed wording. Each mapping pins the current heading, line, and SHA-256 of the exact source line and names one or more product requirements.
+
+The side-effect-free audit in `scripts/requirement_coverage.py` reports and blocks:
+
+- duplicate stable identifiers;
+- unresolved product dependencies;
+- missing, unresolved, or unassigned acceptance tests;
+- incompatible dependency, acceptance-test, or normative-mapping releases;
+- unmapped normative PRD statements;
+- stale or duplicate statement mappings; and
+- mappings to missing or non-product requirement records.
+
+Run the audit alone or as part of the full requirement gate:
+
+```bash
+npm run requirements:coverage
+npm run requirements:check
+```
+
+Use `python3 scripts/requirement_coverage.py --json` for a deterministic machine-readable report. A PRD edit that changes a mapped normative line requires a reviewed mapping update; the checker never silently relocates or guesses a mapping.
+
 ## Planning And Release Schemas
 
 The versioned JSON Schemas in `schemas/planning/` define closed contracts for:
