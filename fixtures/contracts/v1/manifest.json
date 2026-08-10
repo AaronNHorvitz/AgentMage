@@ -1,0 +1,140 @@
+{
+  "compatibility_record": {
+    "path": "fixtures/contracts/compatibility.json",
+    "sha256": "10c7787727fdfcdde05d60d5bee026541e9140c39d75dd55639c741761ceb8ee"
+  },
+  "contract_schema_version": 1,
+  "fixture_set": "kernel-contracts-v1",
+  "frozen_package_sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd",
+  "generated_oversized_case": {
+    "expected_error_code": "contract.size.exceeded",
+    "persisted": false,
+    "size_bytes": 1048577
+  },
+  "generator_revision": "46af6d894fefe8b2c2198a686f6f560f2090871d",
+  "invalid_fixtures": [
+    {
+      "expected_error_code": "contract.version.unsupported",
+      "path": "fixtures/contracts/compatibility/task.v0.unsupported.json",
+      "sha256": "51649163f16b321da8daa6e6c721c20ed6d7606219f45ab34aed8fcfe123d496",
+      "size_bytes": 209
+    },
+    {
+      "expected_error_code": "contract.field.duplicate",
+      "path": "fixtures/contracts/compatibility/task.v1.duplicate-field.json",
+      "sha256": "5f56d275ffe4f8129889080e022cc1b7f53258182970fa47dc17e4bc586613e6",
+      "size_bytes": 226
+    },
+    {
+      "expected_error_code": "contract.parse.eof",
+      "path": "fixtures/contracts/compatibility/task.v1.malformed.json",
+      "sha256": "0bf31c45e5eb8e7df61cea9bee4c2f9d3be49d332387337de9250add2a3981fc",
+      "size_bytes": 208
+    },
+    {
+      "expected_error_code": "contract.field.missing",
+      "path": "fixtures/contracts/compatibility/task.v1.missing-field.json",
+      "sha256": "4db75a7ce7a28ea5ed1ce1399c5b67eb01a88f6261a4b2d205853f11cc36914f",
+      "size_bytes": 165
+    },
+    {
+      "expected_error_code": "contract.parse.syntax",
+      "path": "fixtures/contracts/compatibility/task.v1.trailing-value.json",
+      "sha256": "f96c4e4effbd81d6399631d9bd58fe48371af9e3f61f6e658903384ba46ff7c8",
+      "size_bytes": 211
+    },
+    {
+      "expected_error_code": "contract.field.unknown",
+      "path": "fixtures/contracts/compatibility/task.v1.unknown-field.json",
+      "sha256": "1f5fa144a09d618e264c9870ba76a3244a2458737c0ec5aab723550ffc2f589b",
+      "size_bytes": 245
+    },
+    {
+      "expected_error_code": "contract.version.unsupported",
+      "path": "fixtures/contracts/compatibility/task.v2.unsupported.json",
+      "sha256": "6e647188ddee409985f2a1e94c3b5ed42b3fc0078d008aad5425cd007a9f6826",
+      "size_bytes": 209
+    }
+  ],
+  "schema_version": 1,
+  "valid_fixtures": [
+    {
+      "contract": "action",
+      "path": "fixtures/contracts/v1/valid/action.json",
+      "sha256": "7a50be821be0010d36d780ca78c83126ca792b4079b535f77cf002fea0c8becc",
+      "size_bytes": 233
+    },
+    {
+      "contract": "boundary_failure",
+      "path": "fixtures/contracts/v1/valid/boundary_failure.json",
+      "sha256": "ea21d9bd4356669adb4ca568cab5f0403ee7364c572a3cfa9c47eb12bb8b43a5",
+      "size_bytes": 521
+    },
+    {
+      "contract": "cancellation_signal",
+      "path": "fixtures/contracts/v1/valid/cancellation_signal.json",
+      "sha256": "af1ef5a0338b4f0b420c29dad1102c733bb04dbfc536e2c73fcb596fc8946acf",
+      "size_bytes": 159
+    },
+    {
+      "contract": "contract_error",
+      "path": "fixtures/contracts/v1/valid/contract_error.json",
+      "sha256": "5a2258caa4cc6cfc6b3df41b4211ad93b3a0ba0c4219144a8b94b328fa8729dd",
+      "size_bytes": 180
+    },
+    {
+      "contract": "evidence_reference",
+      "path": "fixtures/contracts/v1/valid/evidence_reference.json",
+      "sha256": "0d58d4250aabe0d5317df92a24b55b80800f89b320349a1ceebcea3d15bbe9df",
+      "size_bytes": 268
+    },
+    {
+      "contract": "plan",
+      "path": "fixtures/contracts/v1/valid/plan.json",
+      "sha256": "3ddc09f8d6d1252fabfb4f81f7315fa1acfbdd93e30e0d4693a50ac360c47d38",
+      "size_bytes": 272
+    },
+    {
+      "contract": "prompt",
+      "path": "fixtures/contracts/v1/valid/prompt.json",
+      "sha256": "15ae6b59d4bb10d45e173275d4f908f46120d266833bcf38b66dd673078fb062",
+      "size_bytes": 221
+    },
+    {
+      "contract": "receipt",
+      "path": "fixtures/contracts/v1/valid/receipt.json",
+      "sha256": "c1800905bd645ea7adbd0b648e621bd789bdd5f77406a5282d0812025983c692",
+      "size_bytes": 990
+    },
+    {
+      "contract": "task",
+      "path": "fixtures/contracts/v1/valid/task.json",
+      "sha256": "d1bc39b9357fc520a094ff982935ad2790cc82de7a58935ab8178c456f06fd10",
+      "size_bytes": 209
+    },
+    {
+      "contract": "tool_call",
+      "path": "fixtures/contracts/v1/valid/tool_call.json",
+      "sha256": "13e2ceb0330f573625865e4d89e0b0f9450e9ed8716422dd4b45eeab0467aaf3",
+      "size_bytes": 439
+    },
+    {
+      "contract": "tool_definition",
+      "path": "fixtures/contracts/v1/valid/tool_definition.json",
+      "sha256": "e0e6da815b3af1f9cf6df54d6b55a133927c329a0b86138cb6a2fb058bb53079",
+      "size_bytes": 650
+    },
+    {
+      "contract": "tool_result",
+      "path": "fixtures/contracts/v1/valid/tool_result.json",
+      "sha256": "c9545c0d1fbcbe77700dda85e63750650edd81140617105afe96d71c9df4042b",
+      "size_bytes": 784
+    },
+    {
+      "contract": "work_packet",
+      "path": "fixtures/contracts/v1/valid/work_packet.json",
+      "sha256": "53d5d1402261f44559e0bad94c3209fd43fff1ac702a9ee9eb830a93800ab33f",
+      "size_bytes": 1364
+    }
+  ]
+}

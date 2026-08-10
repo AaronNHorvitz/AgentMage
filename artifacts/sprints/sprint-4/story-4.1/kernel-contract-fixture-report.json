@@ -1,0 +1,45 @@
+{
+  "artifact_id": "golden-contract-serialization-and-compatibility-fixtures",
+  "canonical_byte_stability": "pass",
+  "compatibility_rejection": "pass",
+  "generated_oversized_case_count": 1,
+  "generator_revision": "46af6d894fefe8b2c2198a686f6f560f2090871d",
+  "generator_sources": [
+    {
+      "path": "kernel/contracts/tests/contract_family.rs",
+      "sha256": "257b11aacbaf8f646d6d4e2f5078f56a1c357fcb21f7ae8a892473221a67645e"
+    },
+    {
+      "path": "fixtures/contracts/fixture_verifier.rs",
+      "sha256": "8c9c8ba8e28b5f6ce41272c459fc2c29b371cad93bfd582d2f247b439affeb07"
+    },
+    {
+      "path": "scripts/kernel_contract_fixtures.py",
+      "sha256": "57aae8f5194fc40b8f6d2ea6d70a8b87bed8467382d804889f5a0d75dcdc9baf"
+    },
+    {
+      "path": "tests/test_kernel_contract_fixtures.py",
+      "sha256": "a5f925a3ddf6d82cd76d0fa360f10656d457bc4174f61993fc80d08c098db671"
+    }
+  ],
+  "invalid_fixture_count": 7,
+  "limitations": [
+    "Only wire schema version 1 is supported.",
+    "Version 0 and version 2 fixtures prove rejection, not migration support.",
+    "The oversized case is generated in memory and is not retained as a 1 MiB file.",
+    "No macOS execution evidence or positive authority path is claimed."
+  ],
+  "manifest_sha256": "4bd8db1a10d2a034899dd2733a0b8461d82f2f01ac5d1019257d8906bf595396",
+  "network_authority": "none",
+  "platform_status": {
+    "linux_fixture_verification": "verified-local",
+    "macos_fixture_verification": "blocked-macos",
+    "macos_implementation_claim": "none"
+  },
+  "positive_execution_authority": "none",
+  "public_parser_round_trip": "pass",
+  "schema_version": 1,
+  "status": "pass-linux-golden-corpus",
+  "task_id": "4.1.2.3",
+  "valid_fixture_count": 13
+}

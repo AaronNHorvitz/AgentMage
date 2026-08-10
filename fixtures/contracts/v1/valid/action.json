@@ -1,0 +1,1 @@
+{"schema_version":1,"action_id":"action-0001","task_id":"task-0001","plan_step_id":"step-0001","kind":"deterministic_tool","description":"Request one bounded fixture read","expected_effects":["read-only-observation"],"state":"ready"}
