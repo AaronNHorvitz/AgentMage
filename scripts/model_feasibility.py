@@ -102,6 +102,17 @@ def read_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def admitted_gguf_identity(admission: dict[str, Any]) -> dict[str, Any]:
+    candidates = [
+        admission[name]
+        for name in ("gguf_identity", "selected_gguf_identity")
+        if name in admission
+    ]
+    if len(candidates) != 1 or not isinstance(candidates[0], dict):
+        raise FeasibilityError("artifact admission must select exactly one GGUF identity")
+    return candidates[0]
+
+
 def strip_json_fence(text: str) -> str:
     stripped = text.strip()
     match = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", stripped, re.DOTALL | re.IGNORECASE)
@@ -142,7 +153,7 @@ def verify_native_inputs(
 ) -> dict[str, str]:
     admission = read_json(admission_path)
     try:
-        gguf = admission["gguf_identity"]
+        gguf = admitted_gguf_identity(admission)
         projector = gguf["multimodal_projector"]
         native = admission["native_runtime"]
     except (KeyError, TypeError) as error:
@@ -210,7 +221,7 @@ def verify_dmr_inputs(
 ) -> tuple[dict[str, str], dict[str, Any]]:
     admission = read_json(admission_path)
     try:
-        gguf = admission["gguf_identity"]
+        gguf = admitted_gguf_identity(admission)
         projector = gguf["multimodal_projector"]
         docker_engine = admission["docker_engine"]
         docker_model = admission["docker_model"]
@@ -1577,16 +1588,17 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
         failures.append("runner hash does not match its source revision")
 
     try:
+        gguf = admitted_gguf_identity(admission)
         if adapter_id == NATIVE_ADAPTER:
             expected_identities = {
-                "model": admission["gguf_identity"]["sha256"],
-                "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
+                "model": gguf["sha256"],
+                "projector": gguf["multimodal_projector"]["sha256"],
                 "runtime": admission["native_runtime"]["llama_server_sha256"],
             }
         else:
             expected_identities = {
-                "model": admission["gguf_identity"]["sha256"],
-                "projector": admission["gguf_identity"]["multimodal_projector"]["sha256"],
+                "model": gguf["sha256"],
+                "projector": gguf["multimodal_projector"]["sha256"],
                 "model_manifest": admission["docker_model"]["digest"].removeprefix("sha256:"),
                 "model_config": admission["docker_model"]["config_digest"].removeprefix("sha256:"),
                 "runtime_image": admission["docker_engine"]["digest"],

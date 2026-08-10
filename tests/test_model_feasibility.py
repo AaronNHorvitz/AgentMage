@@ -8,6 +8,7 @@ from scripts.model_feasibility import (
     Completion,
     FeasibilityError,
     OpenAIAdapter,
+    admitted_gguf_identity,
     case_passed,
     compare_thresholds,
     container_network_snapshot,
@@ -44,6 +45,17 @@ def completion(content="", *, tool_calls=None):
 
 
 class ModelFeasibilityTests(unittest.TestCase):
+    def test_admission_selects_one_original_or_fallback_gguf_identity(self):
+        original = {"gguf_identity": {"sha256": "original"}}
+        fallback = {"selected_gguf_identity": {"sha256": "fallback"}}
+        self.assertEqual(admitted_gguf_identity(original)["sha256"], "original")
+        self.assertEqual(admitted_gguf_identity(fallback)["sha256"], "fallback")
+
+        with self.assertRaisesRegex(FeasibilityError, "exactly one GGUF"):
+            admitted_gguf_identity({})
+        with self.assertRaisesRegex(FeasibilityError, "exactly one GGUF"):
+            admitted_gguf_identity({**original, **fallback})
+
     def test_parse_json_object_accepts_plain_and_fenced_objects(self):
         self.assertEqual(parse_json_object('{"answer": 42}'), {"answer": 42})
         self.assertEqual(parse_json_object('```json\n{"answer": 42}\n```'), {"answer": 42})
@@ -217,6 +229,35 @@ class ModelFeasibilityTests(unittest.TestCase):
             paths["model"].write_bytes(b"changed")
             with self.assertRaises(FeasibilityError):
                 verify_native_inputs(admission, paths["runtime"], paths["model"], paths["projector"])
+
+    def test_native_input_verification_accepts_explicit_fallback_selection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = root / "model"
+            projector = root / "projector"
+            runtime = root / "runtime"
+            for path in (model, projector, runtime):
+                path.write_bytes(path.name.encode())
+            digest = lambda path: __import__("hashlib").sha256(path.read_bytes()).hexdigest()
+            admission = root / "admission.json"
+            admission.write_text(
+                json.dumps(
+                    {
+                        "selected_gguf_identity": {
+                            "size": model.stat().st_size,
+                            "sha256": digest(model),
+                            "multimodal_projector": {
+                                "size": projector.stat().st_size,
+                                "sha256": digest(projector),
+                            },
+                        },
+                        "native_runtime": {"llama_server_sha256": digest(runtime)},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            identities = verify_native_inputs(admission, runtime, model, projector)
+            self.assertEqual(identities["model"], digest(model))
 
     def test_result_manifest_hashes_every_emitted_file(self):
         with tempfile.TemporaryDirectory() as temporary:
