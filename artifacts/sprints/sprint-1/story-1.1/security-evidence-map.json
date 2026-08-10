@@ -18,7 +18,7 @@
     },
     {
       "path": "architecture/clean-build-policy.json",
-      "sha256": "e2758e18a4f08437adc40a6d31d45a6723f5c5b264818ea44886d8700a4c0148"
+      "sha256": "fb07649b7fcbabbbbb8bd7ab834c376b9aac6c00841bea4698a4e3da3443810f"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -38,7 +38,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "6222824221b83fb55f907075d93cd276a8434796524202ac0f060284c5b20098"
+      "sha256": "bc4eb10bf8ecd59545b9fbe2062bf7a5fdebf2fbca989246a5b2d7ffc8b9e30d"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
@@ -46,7 +46,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "15a3ea96000f4e5628b06f79bd65f1f3b04e73bb04af3035cae61202b79df4f6"
+      "sha256": "baa5748299d1f47a0d4c20887c997c5670bc14eb22067256d93c2c0bd4629163"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
@@ -82,7 +82,7 @@
     },
     {
       "path": "scripts/clean_build_evidence.py",
-      "sha256": "4dc0a37d81b9344b1cc24b6236b2179b767a23d7104e77832694ff8c021a39c9"
+      "sha256": "003391b7f468020d3ed535a207ce4e3de996c8a771e6546bfc8c99ec0f7406ce"
     },
     {
       "path": "scripts/dependency_injection.py",
@@ -102,15 +102,15 @@
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "a7b458c3c4c30194dfb090830803c029f124753e11b2de269f9dbaa795fe53fe"
+      "sha256": "7d928e36fbcad140c79737f64b78d0fedc93b7b937251f54abe66cf58efe0c0b"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "ee83a1de1f5d9ee740312af0ab510f8273f18d5d9fa559d0a5efc139258171f4"
+      "sha256": "ccafcdf1247cb6372f65e1ae928293c4d43f7216a6cc99a90e5ed4dba65e6cd2"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "53c0bf34a7b8ace94184104cdf9a143431f059eaa8d7234061d8b026fdb2dd6c"
+      "sha256": "143e7e6ba15e744c9992094d053ad9bd3468162589cbf24ebc695de31379b854"
     }
   ],
   "macos": {
@@ -311,7 +311,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "467b5050c9a7075786e2adbaafee6f9a2aa1d416",
+  "source_revision": "282a9427ad6911b7eedcf069a57bf68555d1088e",
   "status": "complete-evidence-map-blocked-macos",
   "summary": {
     "canonical_blocking_artifact_findings": 0,

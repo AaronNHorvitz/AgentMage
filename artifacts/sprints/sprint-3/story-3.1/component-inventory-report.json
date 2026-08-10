@@ -1,0 +1,376 @@
+{
+  "approved_inventory": {
+    "build_environments": [
+      {
+        "approval_scope": "build-and-test-only",
+        "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
+        "component_id": "build-environment:fedora-x86_64",
+        "platform": "fedora-x86_64",
+        "sha256": "b178e966595cf0dc9a44fb0dc839b20e1b214c5245784c6f8a2c2c581e724935",
+        "version": "Fedora Linux 44 (Container Image)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
+        "component_id": "build-environment:ubuntu-x86_64",
+        "platform": "ubuntu-x86_64",
+        "sha256": "fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464",
+        "version": "Ubuntu 26.04 LTS"
+      }
+    ],
+    "build_executables": [
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:cargo",
+        "executable_id": "cargo",
+        "platform": "fedora-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:clippy-driver",
+        "executable_id": "clippy-driver",
+        "platform": "fedora-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "clippy 0.1.95 (59807616e1 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:node",
+        "executable_id": "node",
+        "platform": "fedora-x86_64",
+        "sha256": "d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c",
+        "version": "v24.15.0"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:npm",
+        "executable_id": "npm",
+        "platform": "fedora-x86_64",
+        "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+        "version": "11.12.1"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:python3",
+        "executable_id": "python3",
+        "platform": "fedora-x86_64",
+        "sha256": "7af874aca05879e1823cd820913b42fb8d8b994738a05ec39ce4256d85b03861",
+        "version": "Python 3.14.6"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:rustc",
+        "executable_id": "rustc",
+        "platform": "fedora-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:rustfmt",
+        "executable_id": "rustfmt",
+        "platform": "fedora-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "rustfmt 1.9.0-stable (59807616e1 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:cargo",
+        "executable_id": "cargo",
+        "platform": "ubuntu-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:clippy-driver",
+        "executable_id": "clippy-driver",
+        "platform": "ubuntu-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "clippy 0.1.95 (59807616e1 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:node",
+        "executable_id": "node",
+        "platform": "ubuntu-x86_64",
+        "sha256": "d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c",
+        "version": "v24.15.0"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:npm",
+        "executable_id": "npm",
+        "platform": "ubuntu-x86_64",
+        "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+        "version": "11.12.1"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:python3",
+        "executable_id": "python3",
+        "platform": "ubuntu-x86_64",
+        "sha256": "b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700",
+        "version": "Python 3.14.4"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:rustc",
+        "executable_id": "rustc",
+        "platform": "ubuntu-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:rustfmt",
+        "executable_id": "rustfmt",
+        "platform": "ubuntu-x86_64",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "version": "rustfmt 1.9.0-stable (59807616e1 2026-04-14)"
+      }
+    ],
+    "optional_dependencies": [],
+    "packages": {
+      "all_cryptographic_hashes_present": true,
+      "all_versions_present": true,
+      "classifications": {
+        "development": 371,
+        "production": 29
+      },
+      "component_count": 400,
+      "ecosystems": {
+        "cargo": 27,
+        "npm": 370,
+        "npm-workspace": 2,
+        "swift-workspace": 1
+      },
+      "identity_set_sha256": "d4cb0929d3a13dca72d99fcaa7ff1f7b5b56a63db4c3d650d1a49578d6df9d72",
+      "source": "supply-chain/dependency-provenance.json"
+    },
+    "product_runtimes": []
+  },
+  "controls": {
+    "approved_records_require_cryptographic_hash": true,
+    "approved_records_require_version": true,
+    "candidate_identity_is_not_release_approval": true,
+    "mutable_runtime_tags_are_release_identities": false,
+    "presence_is_not_approval": true,
+    "unknown_components_fail_closed": true
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "non_approved_inventory": {
+    "presence_only_components": [
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "required-runtime-prerequisite",
+        "component_id": "linux-bubblewrap",
+        "executable": "bwrap",
+        "platforms": [
+          "linux"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "required-runtime-prerequisite",
+        "component_id": "linux-resource-control",
+        "executable": "systemd-run",
+        "platforms": [
+          "linux"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "required-runtime-prerequisite",
+        "component_id": "linux-secret-service-client",
+        "executable": "secret-tool",
+        "platforms": [
+          "linux"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "optional-compatibility",
+        "component_id": "docker-compatibility",
+        "executable": "docker",
+        "platforms": [
+          "linux",
+          "macos"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "development-only",
+        "component_id": "rust-development",
+        "executable": "cargo",
+        "platforms": [
+          "all"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "development-only",
+        "component_id": "node-development",
+        "executable": "node",
+        "platforms": [
+          "all"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "development-only",
+        "component_id": "python-development",
+        "executable": "python3",
+        "platforms": [
+          "all"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "maintainer-platform-build",
+        "component_id": "macos-swift-build",
+        "executable": "swift",
+        "platforms": [
+          "macos"
+        ],
+        "sha256": null,
+        "version": null
+      },
+      {
+        "approval_status": "presence-only-not-approved",
+        "classification": "maintainer-platform-build",
+        "component_id": "macos-xcode-build",
+        "executable": "xcodebuild",
+        "platforms": [
+          "macos"
+        ],
+        "sha256": null,
+        "version": null
+      }
+    ],
+    "runtime_candidates": [
+      {
+        "approval_status": "candidate-not-approved",
+        "component_id": "linux-native-llama-cpp-b10333",
+        "critical_sha256": {
+          "llama-cli": "988611a4c80c615052627544c52a6c78fedbba70ab9359132663e043b508bf74",
+          "llama-server": "1d374fdb717832ec01d4829eff9feb46dfc83b7ccbb9d867c15315dbd8aa4bbe",
+          "vulkan-library": "b3b35bc2b16f46db1db5eaf5543e85e6b94533cdab1d79c6d67c8bb6d2e42351"
+        },
+        "platform": "linux-x86_64",
+        "sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5",
+        "source_revision": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+        "version": "b10333"
+      },
+      {
+        "approval_status": "candidate-not-approved",
+        "component_id": "linux-docker-model-runner-b9879",
+        "platform": "linux-x86_64",
+        "sha256": "bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+        "source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+        "version": "b9879"
+      },
+      {
+        "approval_status": "candidate-not-approved",
+        "component_id": "macos-native-llama-cpp-b10333",
+        "critical_sha256": {
+          "libggml-metal": "5cac42dbd02198b55bd03365132b757f87553462bf07b2273116b2226b5e4670",
+          "llama-cli": "b4cd2feb131d1f96895a9551e2f47e6510d90f63c3b998ee974eda9d6e132a13",
+          "llama-server": "d3bce60d45758268a90e0fca82ce5a22d5c35ecb92a06d1c544ed68ec2efa769"
+        },
+        "platform": "macos-arm64",
+        "sha256": "e5d67c5264107e3c14d3bf2aee349365bb2b85ae99bb077a0cb974a1c4c2741a",
+        "source_revision": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+        "version": "b10333"
+      }
+    ]
+  },
+  "optional_dependency_activation_claim": "none",
+  "platform_execution": [
+    "fedora-x86_64",
+    "ubuntu-x86_64"
+  ],
+  "product_runtime_activation_claim": "none",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "architecture/component-inventory-policy.json",
+      "sha256": "a1066e112c6648060e446e7ae42bfe1ba007d1c8c575d29dfa74409f50d2deb1"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "baa5748299d1f47a0d4c20887c997c5670bc14eb22067256d93c2c0bd4629163"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "ccafcdf1247cb6372f65e1ae928293c4d43f7216a6cc99a90e5ed4dba65e6cd2"
+    },
+    {
+      "path": "architecture/dependency-classes.json",
+      "sha256": "d131e4254f62ef75f31caada949b2d83dbe45c83eb54cac8f81a056c7548f3ac"
+    },
+    {
+      "path": "architecture/optional-component-inventory.json",
+      "sha256": "ba0f6b7fb07c4c3e60aebc6f9ab9aac9dd181055e1a7dc00e12d181ba435ecc5"
+    },
+    {
+      "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+      "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1"
+    },
+    {
+      "path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+      "sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed"
+    },
+    {
+      "path": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json",
+      "sha256": "fe56353423aadb79c6885fe106f559db5f0427d8c8ae8a9ac9e4ddcde5d2af5e"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "143e7e6ba15e744c9992094d053ad9bd3468162589cbf24ebc695de31379b854"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "7d928e36fbcad140c79737f64b78d0fedc93b7b937251f54abe66cf58efe0c0b"
+    },
+    {
+      "path": "scripts/component_inventory.py",
+      "sha256": "73361826fd97b972aecde0f7ac4d90ff1aaf533b293cca0075df26333bcc8fce"
+    },
+    {
+      "path": "tests/test_component_inventory.py",
+      "sha256": "2144d8317a65566e56060678a2dd89f256a923964f972b0540500b603935add4"
+    }
+  ],
+  "status": "pass-shared-linux-versioned-hashed-component-inventory",
+  "summary": {
+    "approved_build_environment_count": 2,
+    "approved_build_executable_count": 14,
+    "approved_component_count": 416,
+    "approved_optional_dependency_count": 0,
+    "approved_package_count": 400,
+    "approved_product_runtime_count": 0,
+    "approved_records_missing_hash_count": 0,
+    "approved_records_missing_version_count": 0,
+    "candidate_runtime_count": 3,
+    "presence_only_unapproved_component_count": 9
+  },
+  "task_id": "3.1.1.6"
+}
