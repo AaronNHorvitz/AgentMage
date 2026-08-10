@@ -81,13 +81,21 @@ def validate_record(record: dict[str, object]) -> list[str]:
     if not isinstance(identity, dict):
         failures.append("model identity must be an object")
     else:
-        if identity.get("canonical_model") != "google/gemma-4-E4B-it":
-            failures.append("canonical model is not the first-party Google profile")
+        expected_identity = {
+            "canonical_model": "google/gemma-4-E4B-it",
+            "upstream_revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+            "base_model": "google/gemma-4-E4B",
+            "base_revision": "411aa17b749aa952df1359d2dcea73917a544d9a",
+            "variant": "instruction-tuned E4B",
+            "architecture": "Gemma4ForConditionalGeneration",
+            "model_type": "gemma4",
+        }
+        for field, expected in expected_identity.items():
+            if identity.get(field) != expected:
+                failures.append(f"model identity mismatch: {field}")
         for field in ("upstream_revision", "base_revision"):
             if not COMMIT.fullmatch(str(identity.get(field, ""))):
                 failures.append(f"{field} is not an immutable revision")
-        if identity.get("base_model") != "google/gemma-4-E4B":
-            failures.append("declared base-model lineage is missing")
 
     origin = record["ownership_and_origin"]
     if not isinstance(origin, dict):
