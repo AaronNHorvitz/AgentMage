@@ -1,8 +1,19 @@
 //! Capability-grant authority contracts.
 
 use crate::{
-    ActionId, ActionKind, ActorId, GrantId, GrantNonce, SessionId, TaskId, ToolId, WorkspaceId,
+    ActionId, ActionKind, ActorId, DataSensitivity, GrantId, GrantNonce, SessionId, TaskId, ToolId,
+    WorkspaceId,
 };
+
+/// Authority role assigned to one grant record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GrantClass {
+    /// Parent scope created from an explicit workspace-selection decision.
+    SessionRead,
+    /// Exact single-use operation derived within a current parent scope.
+    Operation,
+}
 
 /// Closed operation class authorized by one exact grant.
 ///
@@ -116,6 +127,8 @@ pub struct CapabilityGrant {
     pub grant_id: GrantId,
     /// Monotonically increasing immutable grant-state revision.
     pub revision: u32,
+    /// Whether this record is a session-read parent or derived operation grant.
+    pub grant_class: GrantClass,
     /// Exact local actor identity whose decision created the authority.
     pub actor_id: ActorId,
     /// Owning local session.
@@ -138,6 +151,10 @@ pub struct CapabilityGrant {
     pub tool_version: Option<String>,
     /// Ordered candidate workspace-relative targets.
     pub targets: Vec<GrantTarget>,
+    /// Ordered target subtrees explicitly excluded from the session and all children.
+    pub excluded_targets: Vec<GrantTarget>,
+    /// Data handling class shown when the workspace scope was approved.
+    pub sensitivity: DataSensitivity,
     /// Lowercase SHA-256 digest of canonical operation arguments.
     pub argument_sha256: String,
     /// Exact target states required immediately before execution.
@@ -173,10 +190,12 @@ pub struct CapabilityGrant {
 #[cfg(test)]
 mod tests {
     use super::{
-        CapabilityGrant, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+        CapabilityGrant, GrantClass, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
+        GrantTarget,
     };
     use crate::{
-        ActionId, ActionKind, ActorId, GrantId, GrantNonce, SessionId, TaskId, ToolId, WorkspaceId,
+        ActionId, ActionKind, ActorId, DataSensitivity, GrantId, GrantNonce, SessionId, TaskId,
+        ToolId, WorkspaceId,
     };
 
     fn grant() -> CapabilityGrant {
@@ -184,6 +203,7 @@ mod tests {
             schema_version: 1,
             grant_id: GrantId::from_raw("grant-0001"),
             revision: 1,
+            grant_class: GrantClass::Operation,
             actor_id: ActorId::from_raw("actor-local-0001"),
             session_id: SessionId::from_raw("session-0001"),
             task_id: TaskId::from_raw("task-0001"),
@@ -196,6 +216,11 @@ mod tests {
                 workspace_id: WorkspaceId::from_raw("workspace-0001"),
                 path_components: vec!["fixtures".to_owned(), "input.txt".to_owned()],
             }],
+            excluded_targets: vec![GrantTarget {
+                workspace_id: WorkspaceId::from_raw("workspace-0001"),
+                path_components: vec!["fixtures".to_owned(), "private".to_owned()],
+            }],
+            sensitivity: DataSensitivity::Ephemeral,
             argument_sha256: "1".repeat(64),
             preimages: vec![GrantPreimage {
                 target_index: 0,
@@ -236,7 +261,7 @@ mod tests {
         let grant = grant();
         let value = serde_json::to_value(&grant).expect("grant fixture must encode");
         let object = value.as_object().expect("grant must be an object");
-        assert_eq!(object.len(), 26);
+        assert_eq!(object.len(), 29);
 
         for key in object.keys() {
             let mut candidate = value.clone();

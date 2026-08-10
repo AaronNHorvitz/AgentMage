@@ -21,7 +21,8 @@ pub use common::{
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use grant::{
-    CapabilityGrant, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    CapabilityGrant, GrantClass, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
+    GrantTarget,
 };
 pub use ids::{
     ActionId, ActorId, CancellationId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
