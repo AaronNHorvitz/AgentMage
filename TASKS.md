@@ -189,7 +189,7 @@ The owning sprint performs the first complete execution possible for its boundar
 - [x] **Story AC 0.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can navigate any v0.1 requirement to its source heading, implementation sprint, acceptance test, exclusion state, and current evidence without manual reconstruction.
 - [x] **Story AC 0.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every public product-security reference is either linked as a current live source or retained as an approved hash-pinned snapshot with provenance; neither state is represented as publisher certification, endorsement, or approval of AgentMage.
 
-#### [ ] Story 0.2 - Public Policy, License, and Documentation Controls
+#### [x] Story 0.2 - Public Policy, License, and Documentation Controls
 
 **User-facing value:** As a user, maintainer, or reviewer, I need the project's license, vulnerability process, model-admission rules, runtime boundaries, and documentation checks to be explicit before implementation so that foundational assumptions cannot drift silently.
 
@@ -215,9 +215,9 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 0.2.AC1:** Given a clean checkout, when the documented local documentation command and continuous-integration workflow run, then Markdown, Mermaid, links, secrets, claims, identifiers, and cross-document assertions all pass with identical blocking semantics.
-- [ ] **Story AC 0.2.AC2:** Given any release artifact or model profile, when its license, support state, provenance, runtime, or vulnerability path is reviewed, then one current public document states the controlling rule and links to its evidence owner.
-- [ ] **Story AC 0.2.AC3:** Given seeded policy drift or sensitive material, when documentation validation runs, then the exact file and rule are reported without printing the sensitive value and the gate fails.
+- [x] **Story AC 0.2.AC1:** Given a clean checkout, when the documented local documentation command and continuous-integration workflow run, then Markdown, Mermaid, links, secrets, claims, identifiers, and cross-document assertions all pass with identical blocking semantics.
+- [x] **Story AC 0.2.AC2:** Given any release artifact or model profile, when its license, support state, provenance, runtime, or vulnerability path is reviewed, then one current public document states the controlling rule and links to its evidence owner.
+- [x] **Story AC 0.2.AC3:** Given seeded policy drift or sensitive material, when documentation validation runs, then the exact file and rule are reported without printing the sensitive value and the gate fails.
 
 #### [ ] Story 0.3 - Gemma 4 E4B and Runtime Feasibility Decision
 
