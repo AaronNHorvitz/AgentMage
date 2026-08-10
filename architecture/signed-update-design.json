@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "record_type": "signed-manual-update-design",
+  "decision_id": "ADR-0005",
+  "status": "accepted-design-not-implemented",
+  "delivery": {
+    "mode": "user-initiated-local-import",
+    "acquisition_authority": "outside-agentmage-runtime",
+    "automatic_update_checks": false,
+    "background_downloads": false,
+    "remote_triggers": false,
+    "remote_control": false
+  },
+  "trusted_metadata": {
+    "format_version": 1,
+    "detached_signatures_required": true,
+    "signature_algorithm_identifier_required": true,
+    "signer_key_ids_required": true,
+    "signature_threshold_required": true,
+    "local_trust_root_required": true,
+    "verify_before_extraction": true,
+    "expiration_and_support_state_required": true,
+    "revocation_state_required": true
+  },
+  "required_identities": [
+    "release-id",
+    "semantic-version",
+    "release-sequence",
+    "source-commit",
+    "package-sha256",
+    "configuration-sha256",
+    "component-inventory-sha256",
+    "sbom-sha256",
+    "cryptographic-bom-sha256",
+    "model-bom-sha256",
+    "platform-and-architecture",
+    "signer-key-ids"
+  ],
+  "required_change_records": [
+    "compatibility-range",
+    "prerequisites",
+    "capability-delta",
+    "authority-delta",
+    "data-and-schema-impact",
+    "migration-identity",
+    "rollback-design-identity",
+    "support-state",
+    "revocations",
+    "advisory-and-release-notes"
+  ],
+  "version_policy": {
+    "upgrade_only": true,
+    "release_sequence_must_increase": true,
+    "downgrade_rejected": true,
+    "current_release_precondition_required": true,
+    "platform_compatibility_required": true,
+    "unknown_or_revoked_signer_rejected": true,
+    "unknown_component_rejected": true
+  },
+  "transaction": {
+    "states": [
+      "idle",
+      "local-bundle-selected",
+      "metadata-verified",
+      "package-verified",
+      "compatibility-verified",
+      "staged",
+      "user-approved",
+      "activated",
+      "post-activation-verified",
+      "complete"
+    ],
+    "atomic_activation_required": true,
+    "previous_release_preserved_until_verified": true,
+    "durable_receipt_each_transition": true,
+    "interruption_selects_prior-or-complete-new_release": true,
+    "network_allowed": false
+  },
+  "implementation_status": {
+    "metadata_verifier": "not-implemented",
+    "package_stager": "not-implemented",
+    "activation_transaction": "not-implemented",
+    "automatic_update_client": "prohibited"
+  },
+  "platform_status": {
+    "shared_design": "accepted",
+    "fedora_execution": "not-run",
+    "ubuntu_execution": "not-run",
+    "macos_execution": "blocked-macos"
+  }
+}

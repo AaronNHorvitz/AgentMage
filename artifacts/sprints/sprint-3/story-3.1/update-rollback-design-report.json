@@ -1,0 +1,79 @@
+{
+  "automatic_update_checks": false,
+  "background_downloads": false,
+  "decisions": [
+    "ADR-0005",
+    "ADR-0006"
+  ],
+  "delivery_mode": "user-initiated-local-import",
+  "implementation_claim": "none",
+  "later_user_data_overwrite_allowed": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "platform_execution_claim": "none",
+  "remote_triggers": false,
+  "rollback_requires_local_user_approval": true,
+  "rollback_states": [
+    "idle",
+    "rollback-requested",
+    "preconditions-verified",
+    "target-reverified",
+    "recovery-plan-rendered",
+    "user-approved",
+    "staged",
+    "activated",
+    "post-rollback-verified",
+    "complete"
+  ],
+  "rollback_to_revoked_or_unsupported_target": false,
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "SECURITY.md",
+      "sha256": "2b61b47e54dfc9c05c9b8691f2a9e676d66f0af642683d84a44771ae6a2afbdc"
+    },
+    {
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "path": "architecture/signed-update-design.json",
+      "sha256": "678e7c5036ae25d6367c902975695d21766a3c9b0b8e47383fd7f0e80c3955b5"
+    },
+    {
+      "path": "architecture/rollback-design.json",
+      "sha256": "891d9db9981582d5a6ded9d73ceb83eb2556811a5313637cb20183670d185c96"
+    },
+    {
+      "path": "docs/decisions/0005-signed-manual-update-design.md",
+      "sha256": "6904d831291cc73d801b7d15e3486de378127931703d3dac75bba9f9ab8b4667"
+    },
+    {
+      "path": "docs/decisions/0006-update-rollback-design.md",
+      "sha256": "0c6c7dbdd3e8b4c1d3dfd99b15d36007d5c7ffc36092c8da5de591be5940e341"
+    },
+    {
+      "path": "scripts/update_design.py",
+      "sha256": "fc058a9bde30a4c7b5b75d04a6fa3b834f84c9aa7d4520f3617f006a0f8e20d3"
+    },
+    {
+      "path": "tests/test_update_design.py",
+      "sha256": "3b6947a5d89a0d1c833e822df7343e3808e85cba010d220be6ad81148963c899"
+    }
+  ],
+  "status": "pass-shared-signed-update-and-rollback-design",
+  "task_id": "3.1.1.7",
+  "update_identity_count": 12,
+  "update_states": [
+    "idle",
+    "local-bundle-selected",
+    "metadata-verified",
+    "package-verified",
+    "compatibility-verified",
+    "staged",
+    "user-approved",
+    "activated",
+    "post-activation-verified",
+    "complete"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "record_type": "signed-update-rollback-design",
+  "decision_id": "ADR-0006",
+  "status": "accepted-design-not-implemented",
+  "initiation": {
+    "mode": "local-user-approved-transaction",
+    "remote_trigger": false,
+    "automatic_remote_policy": false,
+    "silent_rollback": false
+  },
+  "eligibility": {
+    "exact_active_release_precondition": true,
+    "exact_active_configuration_precondition": true,
+    "target_was_previously_verified": true,
+    "target_signature_and_hashes_reverified": true,
+    "target_support_active": true,
+    "target_not_revoked": true,
+    "schema_compatibility_verified": true,
+    "backup_identity_verified": true,
+    "downgrade_exception_allowed": false
+  },
+  "transaction": {
+    "states": [
+      "idle",
+      "rollback-requested",
+      "preconditions-verified",
+      "target-reverified",
+      "recovery-plan-rendered",
+      "user-approved",
+      "staged",
+      "activated",
+      "post-rollback-verified",
+      "complete"
+    ],
+    "atomic_activation_required": true,
+    "durable_receipt_each_transition": true,
+    "interruption_selects_current-or-complete-prior_release": true,
+    "network_allowed": false
+  },
+  "data_policy": {
+    "binary_and_configuration_rollback_separate": true,
+    "later_user_data_overwrite_allowed": false,
+    "blind_database_restore_allowed": false,
+    "migration_reverse_plan_required": true,
+    "unrecoverable_schema_change_blocks_rollback": true,
+    "preserve_bounded_failure_evidence": true
+  },
+  "failure_policy": {
+    "stale_precondition_blocks_before_write": true,
+    "revoked_or_unsupported_target_blocks": true,
+    "signature_or_hash_mismatch_blocks": true,
+    "uncertain_result_requires_reconciliation": true,
+    "failed_postcheck_enters_local_safe_mode": true,
+    "remote_kill_switch": false
+  },
+  "implementation_status": {
+    "rollback_verifier": "not-implemented",
+    "rollback_transaction": "not-implemented",
+    "migration_reversal": "not-implemented"
+  },
+  "platform_status": {
+    "shared_design": "accepted",
+    "fedora_execution": "not-run",
+    "ubuntu_execution": "not-run",
+    "macos_execution": "blocked-macos"
+  }
+}
