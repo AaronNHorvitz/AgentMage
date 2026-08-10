@@ -1,0 +1,159 @@
+{
+  "artifact_id": "versioned-kernel-contract-package",
+  "direct_dependencies": [
+    {
+      "features": [
+        "derive"
+      ],
+      "name": "serde",
+      "version": "=1.0.229"
+    },
+    {
+      "name": "serde_json",
+      "version": "=1.0.151"
+    }
+  ],
+  "limitations": [
+    "This is an unpublished source-contract review package, not a product release.",
+    "Cargo version 0.0.0 and wire contract schema version 1 are separate identities.",
+    "No macOS build or execution evidence is claimed.",
+    "The package contains no CapabilityGrant implementation or positive execution path."
+  ],
+  "members": [
+    {
+      "executable": false,
+      "path": ".cargo_vcs_info.json",
+      "sha256": "e055ba17c5d63f033c3eac612499cb318d71985721373fab2a424c5bd2702a69",
+      "size_bytes": 110
+    },
+    {
+      "executable": false,
+      "path": "Cargo.lock",
+      "sha256": "3c2a57f2e19bcecb44233d4e3f87fc6a2e888f2a7a612bdb47d57d989b0052ef",
+      "size_bytes": 2683
+    },
+    {
+      "executable": false,
+      "path": "Cargo.toml",
+      "sha256": "f88df159e8146047c19bf9946cf1688681e2eeb94d781d3ac4144c5c7d27ba83",
+      "size_bytes": 1165
+    },
+    {
+      "executable": false,
+      "path": "Cargo.toml.orig",
+      "sha256": "a271593cde3691c01f46d4c096e327ecc1a8e2db7e19497fe322e1d18f3b9324",
+      "size_bytes": 355
+    },
+    {
+      "executable": false,
+      "path": "LICENSE",
+      "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+      "size_bytes": 11357
+    },
+    {
+      "executable": false,
+      "path": "README.md",
+      "sha256": "7bfb1783bde9ccbbb10512d1906d89507c8e5ac3404676c2f747c34b0250f843",
+      "size_bytes": 220
+    },
+    {
+      "executable": false,
+      "path": "rust-toolchain.toml",
+      "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
+      "size_bytes": 86
+    },
+    {
+      "executable": false,
+      "path": "src/boundary.rs",
+      "sha256": "168043f5df0684f812f6125330f8b030b85e36091bd60e82e7bc2e1003d91d00",
+      "size_bytes": 4295
+    },
+    {
+      "executable": false,
+      "path": "src/common.rs",
+      "sha256": "2b7528bf9bd46f01bf0526dcad2e0c21fe198a3ab0676189088c7ad352c834ab",
+      "size_bytes": 5093
+    },
+    {
+      "executable": false,
+      "path": "src/evidence.rs",
+      "sha256": "dca0a5f4f9bbc7938f4cc64a63f99f4e32c770030f25a4d198822ed9c90f245b",
+      "size_bytes": 3997
+    },
+    {
+      "executable": false,
+      "path": "src/ids.rs",
+      "sha256": "a818809cf3efd0dba7259cda4fb341c9fda568bdd23e0a8a451221ecd55d9235",
+      "size_bytes": 2938
+    },
+    {
+      "executable": false,
+      "path": "src/lib.rs",
+      "sha256": "48cbdbfa00e6fa1c81e0fd75c0e04bf08cc5c23c6ef63726b5672e6d54318e96",
+      "size_bytes": 1639
+    },
+    {
+      "executable": false,
+      "path": "src/prompt.rs",
+      "sha256": "96501179eff279f87e75b06e2c94b0c6c6b7b288d535b04fe47326ac72d5850a",
+      "size_bytes": 2895
+    },
+    {
+      "executable": false,
+      "path": "src/serialization.rs",
+      "sha256": "260c37984a6da0a4253c891ae53b3687de19341ff27402fcafd8072a1733242d",
+      "size_bytes": 9672
+    },
+    {
+      "executable": false,
+      "path": "src/task.rs",
+      "sha256": "58e445fd29bc0ed2a4bceabfb6d4f1a1978614ec42e1de2a0a80efb7f687966b",
+      "size_bytes": 14404
+    },
+    {
+      "executable": false,
+      "path": "src/tool.rs",
+      "sha256": "febc36eb24380a5e57c26154e5ba8df18cb21c86a43694a4143d1af54538d7bb",
+      "size_bytes": 6703
+    },
+    {
+      "executable": false,
+      "path": "tests/contract_family.rs",
+      "sha256": "933b8686647ab6ed424a07bd4e0c06d12bc3914bcdab2467d16e7864a58a359f",
+      "size_bytes": 12721
+    }
+  ],
+  "package": {
+    "cargo_version": "0.0.0",
+    "contract_schema_version": 1,
+    "format": "cargo-source-crate",
+    "license": "Apache-2.0",
+    "name": "agentmage-kernel-contracts",
+    "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
+    "publish": false,
+    "sha256": "c982a2e07db86ec741f295a9fbe4d36926f21122b5a2e2afff235de42c11c27b",
+    "size_bytes": 20286,
+    "source_path": "kernel/contracts",
+    "source_revision": "8d212b433a38a7d6243518681865744c7c5370b8"
+  },
+  "platform_status": {
+    "linux_source_package": "verified-local",
+    "macos_implementation_claim": "none",
+    "macos_source_package": "blocked-macos"
+  },
+  "schema_version": 1,
+  "status": "pass-linux-source-package",
+  "task_id": "4.1.2.1",
+  "verification": {
+    "commands": [
+      "cargo test --locked --offline --all-targets",
+      "cargo clippy --locked --offline --all-targets -- -D warnings"
+    ],
+    "execution_authority": "none",
+    "network_authority": "none",
+    "offline": true,
+    "package_clippy": "pass",
+    "package_test": "pass",
+    "unsafe_rust": "forbidden"
+  }
+}
