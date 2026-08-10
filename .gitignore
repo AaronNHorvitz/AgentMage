@@ -45,6 +45,8 @@ artifacts/sprints/sprint-0/*
 !artifacts/sprints/sprint-0/story-0.3-dmr/**
 !artifacts/sprints/sprint-0/story-0.3-fallback/
 !artifacts/sprints/sprint-0/story-0.3-fallback/**
+!artifacts/sprints/sprint-0/story-0.3-substitution/
+!artifacts/sprints/sprint-0/story-0.3-substitution/**
 
 # Build, dependency, cache, and generated output
 node_modules/

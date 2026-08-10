@@ -1,0 +1,27 @@
+{
+  "files": [
+    {
+      "path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+      "sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
+      "size": 6888
+    },
+    {
+      "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
+      "sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+      "size": 6204
+    },
+    {
+      "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+      "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1",
+      "size": 6213
+    },
+    {
+      "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
+      "sha256": "1bc1df87d5b8da35378248a16c838ac727b16afd10d9bce85650b151151deefb",
+      "size": 5931
+    }
+  ],
+  "record_type": "model_substitution_source_hashes",
+  "schema_version": 1,
+  "verification_revision": "aa9f795354f5a7c9cc40cb01425bef0caac0dabb"
+}

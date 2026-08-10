@@ -1,0 +1,370 @@
+{
+  "categories_per_profile": [
+    "license",
+    "lineage",
+    "tokenizer",
+    "context",
+    "gguf",
+    "model_oci_digest",
+    "runtime_oci_digest",
+    "runtime_build"
+  ],
+  "data_classification": "public_metadata_only",
+  "evidence_date": "2026-08-10",
+  "execution_contract": {
+    "actual_model_process_started": false,
+    "failure_stage": "admission_identity_validation_before_decision_or_inference",
+    "mutation_cardinality": "exactly_one_field_per_scenario"
+  },
+  "inference_invocation_count": 0,
+  "passed_count": 16,
+  "profiles_tested": [
+    "gemma-4-e4b-it",
+    "gemma-4-12b-unified-it"
+  ],
+  "record_type": "model_substitution_negative_test_report",
+  "scenario_count": 16,
+  "scenarios": [
+    {
+      "admission_decision_evaluated": false,
+      "category": "license",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "license.spdx"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "license.spdx",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:license",
+      "substitution_detected": true,
+      "validation_failures": [
+        "Apache-2.0 source-license disposition is missing"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "lineage",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "identity.base_revision"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "identity.base_revision",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:lineage",
+      "substitution_detected": true,
+      "validation_failures": [
+        "model identity mismatch: base_revision"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "tokenizer",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "tokenizer.tokenizer_json_sha256"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "tokenizer.tokenizer_json_sha256",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:tokenizer",
+      "substitution_detected": true,
+      "validation_failures": [
+        "tokenizer field tokenizer_json_sha256 does not match the admitted identity"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "context",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "context_contract.declared_tokens"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "context_contract.declared_tokens",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:context",
+      "substitution_detected": true,
+      "validation_failures": [
+        "declared 128K context contract is missing"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "gguf",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "gguf_identity.sha256"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "gguf_identity.sha256",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:gguf",
+      "substitution_detected": true,
+      "validation_failures": [
+        "GGUF identity mismatch: sha256",
+        "Docker model layer does not match GGUF identity"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "model_oci_digest",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "docker_model.digest"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "docker_model.digest",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:model_oci_digest",
+      "substitution_detected": true,
+      "validation_failures": [
+        "Docker model digest substitution detected"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "runtime_oci_digest",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "docker_engine.digest"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "docker_engine.digest",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:runtime_oci_digest",
+      "substitution_detected": true,
+      "validation_failures": [
+        "Docker engine digest substitution detected"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "runtime_build",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "native_runtime.source_commit"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "native_runtime.source_commit",
+      "passed": true,
+      "profile_id": "gemma-4-e4b-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-e4b-it:runtime_build",
+      "substitution_detected": true,
+      "validation_failures": [
+        "native runtime identity mismatch: source_commit"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "license",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "license.spdx"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "license.spdx",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:license",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback Apache-2.0 source-license disposition is missing"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "lineage",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "identity.base_revision"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "identity.base_revision",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:lineage",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback source identity changed"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "tokenizer",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "tokenizer.tokenizer_json_sha256"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "tokenizer.tokenizer_json_sha256",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:tokenizer",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback tokenizer identity changed: tokenizer_json_sha256"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "context",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "context_contract.declared_tokens"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "context_contract.declared_tokens",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "source",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:context",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback context contract changed or overstates evaluation"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "gguf",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "selected_gguf_identity.sha256"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "selected_gguf_identity.sha256",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:gguf",
+      "substitution_detected": true,
+      "validation_failures": [
+        "selected fallback GGUF hash changed",
+        "fallback Docker model layer differs from selected GGUF"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "model_oci_digest",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "docker_model.digest"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "docker_model.digest",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:model_oci_digest",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback Docker model digest substitution detected"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "runtime_oci_digest",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "docker_engine.digest"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "docker_engine.digest",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:runtime_oci_digest",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback DMR image digest substitution detected"
+      ],
+      "visible_refusal": true
+    },
+    {
+      "admission_decision_evaluated": false,
+      "category": "runtime_build",
+      "changed_field_count": 1,
+      "changed_paths": [
+        "native_runtime.source_commit"
+      ],
+      "gate_result": "QUARANTINED_SUBSTITUTION",
+      "inference_invocations": 0,
+      "mutated_path": "native_runtime.source_commit",
+      "passed": true,
+      "profile_id": "gemma-4-12b-unified-it",
+      "record_kind": "artifact",
+      "refusal_code": "MODEL-IDENTITY-SUBSTITUTION",
+      "scenario_id": "gemma-4-12b-unified-it:runtime_build",
+      "substitution_detected": true,
+      "validation_failures": [
+        "fallback native runtime identity changed"
+      ],
+      "visible_refusal": true
+    }
+  ],
+  "schema_version": 1,
+  "status": "PASS",
+  "verification_revision": "aa9f795354f5a7c9cc40cb01425bef0caac0dabb"
+}

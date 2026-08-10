@@ -6,9 +6,11 @@ import unittest
 from pathlib import Path
 
 from scripts.model_substitution import (
+    DEFAULT_OUTPUT,
     ModelSubstitutionError,
     PROFILES,
     build_report,
+    check_bundle,
     changed_paths,
     read_json,
     run_scenario,
@@ -18,6 +20,9 @@ from scripts.model_substitution import (
 
 
 class ModelSubstitutionTests(unittest.TestCase):
+    def test_committed_substitution_evidence_is_valid(self) -> None:
+        self.assertEqual(check_bundle(DEFAULT_OUTPUT), [])
+
     def test_every_declared_one_field_substitution_is_refused_before_inference(self) -> None:
         report = build_report("HEAD")
         self.assertEqual(report["status"], "PASS")

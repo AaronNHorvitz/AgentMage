@@ -1,0 +1,24 @@
+{
+  "bundle_id": "sprint-0-story-0.3-model-substitution-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "raw-checker-output.json",
+      "sha256": "3f1264489f485b61c31743326c2e736635faeb0c3f6d648848fcb761525cfdc6",
+      "size": 12010
+    },
+    {
+      "path": "source-hashes.json",
+      "sha256": "61e18dcf7cc52b74d0bac00b8a7dc9a3602377557b3c790a0eee6d2a0fc35080",
+      "size": 959
+    },
+    {
+      "path": "summary.md",
+      "sha256": "4dfc25344bf3faf2a72dbe3be85b0f9b4910c975951dbc2a22765671c43f5c6e",
+      "size": 908
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Sub-task 0.3.3.1 one-field admission substitution refusal",
+  "verification_revision": "aa9f795354f5a7c9cc40cb01425bef0caac0dabb"
+}
