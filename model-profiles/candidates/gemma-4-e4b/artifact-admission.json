@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "record_type": "model_artifact_admission",
+  "profile_id": "gemma-4-e4b-it",
+  "evaluated_at": "2026-08-10T08:05:00Z",
+  "source_admission": {
+    "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
+    "status": "BLOCKED"
+  },
+  "source_identity": {
+    "repository": "google/gemma-4-E4B-it",
+    "revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "weights_path": "model.safetensors",
+    "weights_sha256": "cfbd3d2f1cd71bd471c37fe2bf8546d5028d41e5736f64e1ca6c6b8893125503",
+    "weights_size": 15992595884,
+    "downloaded": false
+  },
+  "gguf_identity": {
+    "repository": "unsloth/gemma-4-E4B-it-GGUF",
+    "revision": "bfc15c382204943c3a8fff0c750b94ae2364d7a3",
+    "base_model": "google/gemma-4-E4B-it",
+    "file": "gemma-4-E4B-it-Q4_K_M.gguf",
+    "quantization": "Q4_K_M",
+    "sha256": "85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+    "size": 4977171584,
+    "multimodal_projector": {
+      "file": "mmproj-F16.gguf",
+      "sha256": "ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
+      "size": 990372672
+    },
+    "conversion_tool": "not_reproducibly_disclosed",
+    "conversion_revision": null,
+    "conversion_command": null,
+    "quantization_recipe": "Unsloth Dynamic 2.0 Q4_K_M label; exact command and complete environment not disclosed",
+    "downloaded": false
+  },
+  "native_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "release": "b10333",
+    "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+    "asset": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
+    "asset_sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5",
+    "asset_size": 32521550,
+    "backend": "Vulkan",
+    "llama_cli_sha256": "988611a4c80c615052627544c52a6c78fedbba70ab9359132663e043b508bf74",
+    "llama_server_sha256": "1d374fdb717832ec01d4829eff9feb46dfc83b7ccbb9d867c15315dbd8aa4bbe",
+    "vulkan_library_sha256": "b3b35bc2b16f46db1db5eaf5543e85e6b94533cdab1d79c6d67c8bb6d2e42351",
+    "reported_version": "10333 (08659901c)",
+    "build_toolchain": "GNU 11.4.0 for Linux x86_64",
+    "local_state": "staged_and_hash_verified",
+    "local_path_policy": "outside_repository_evaluation_data_root"
+  },
+  "docker_engine": {
+    "repository": "docker.io/docker/model-runner",
+    "tag_observed": "v1.2.6-cuda",
+    "digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "architecture": "amd64",
+    "operating_system": "linux",
+    "cuda_version": "13.3.0",
+    "created": "2026-07-09T10:50:38.746465485Z",
+    "local_state": "docker_not_installed",
+    "endpoint_contract": "unauthenticated local API requiring separate isolation proof"
+  },
+  "docker_model": {
+    "repository": "docker.io/ai/gemma4",
+    "tag_observed": "e4b",
+    "digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "artifact_type": "application/vnd.cncf.model.manifest.v1+json",
+    "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+    "config_digest": "sha256:034b7a797c86d734dfbc975cc1e1b8487268bf172bc19813b5bb8bc31de5bcc5",
+    "model_layer_digest": "sha256:85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+    "projector_layer_digest": "sha256:ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
+    "manifest_annotation_repository": "unsloth/gemma-4-E4B-it-GGUF",
+    "local_state": "resolved_remotely_not_pulled"
+  },
+  "evaluation_host": {
+    "operating_system": "Fedora Kinoite 44",
+    "architecture": "x86_64",
+    "cpu": "13th Gen Intel Core i9-13900KF",
+    "logical_cpus": 32,
+    "memory_bytes": 67143954432,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_memory_mib": 24564,
+    "driver": "610.43.03",
+    "native_runtime_device_probe": "Vulkan0: NVIDIA GeForce RTX 4090 (24564 MiB)",
+    "docker_available": false,
+    "llama_cpp_system_install_available": false
+  },
+  "source_evidence": [
+    {
+      "id": "llama-cpp-release",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b10333"
+    },
+    {
+      "id": "unsloth-gguf-revision",
+      "url": "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/tree/bfc15c382204943c3a8fff0c750b94ae2364d7a3"
+    },
+    {
+      "id": "docker-model-tag",
+      "url": "https://hub.docker.com/r/ai/gemma4/tags"
+    },
+    {
+      "id": "docker-model-runner-engine",
+      "url": "https://hub.docker.com/r/docker/model-runner/tags"
+    }
+  ],
+  "decision": {
+    "status": "BLOCKED",
+    "blockers": [
+      {
+        "code": "SOURCE-ADMISSION-BLOCKED",
+        "reason": "The bound source-admission record remains blocked on synthetic-training lineage evidence."
+      },
+      {
+        "code": "GGUF-CONVERSION-NOT-REPRODUCIBLE",
+        "reason": "The third-party GGUF identity is exact, but its complete conversion and quantization command, tool revision, and environment are not disclosed."
+      },
+      {
+        "code": "DOCKER-RUNTIME-UNAVAILABLE",
+        "reason": "Docker and Docker Model Runner are not installed on the Fedora evaluation host."
+      },
+      {
+        "code": "MODEL-ARTIFACTS-NOT-LOCAL",
+        "reason": "The GGUF and multimodal projector are resolved but have not been downloaded and hash-verified locally."
+      }
+    ],
+    "allowed_actions": [
+      "native runtime binary self-test",
+      "remote immutable metadata inspection",
+      "quarantined artifact acquisition and synthetic-data evaluation"
+    ],
+    "prohibited_actions": [
+      "AgentMage profile activation",
+      "model inference before local artifact hash verification",
+      "Docker support claim",
+      "release representation",
+      "automatic fallback"
+    ],
+    "independent_review_performed": false,
+    "release_approval": false
+  }
+}

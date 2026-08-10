@@ -16,10 +16,14 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 DEFAULT_RECORD: Final = (
     ROOT / "model-profiles" / "candidates" / "gemma-4-e4b" / "source-admission.json"
 )
+DEFAULT_ARTIFACT_RECORD: Final = (
+    ROOT / "model-profiles" / "candidates" / "gemma-4-e4b" / "artifact-admission.json"
+)
 POLICY: Final = ROOT / "MODEL-PROVENANCE-POLICY.md"
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 COMMIT: Final = re.compile(r"^[0-9a-f]{40}$")
 ALLOWED_SOURCE_HOSTS: Final = {"ai.google.dev", "huggingface.co"}
+OCI_DIGEST: Final = re.compile(r"^sha256:[0-9a-f]{64}$")
 EXPECTED_TOKENIZER_HASHES: Final = {
     "tokenizer_json_sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
     "tokenizer_config_sha256": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633",
@@ -167,10 +171,136 @@ def validate_record(record: dict[str, object]) -> list[str]:
     return failures
 
 
+def validate_artifact_record(record: dict[str, object]) -> list[str]:
+    failures: list[str] = []
+    required = {
+        "schema_version",
+        "record_type",
+        "profile_id",
+        "evaluated_at",
+        "source_admission",
+        "source_identity",
+        "gguf_identity",
+        "native_runtime",
+        "docker_engine",
+        "docker_model",
+        "evaluation_host",
+        "source_evidence",
+        "decision",
+    }
+    if set(record) != required:
+        failures.append("artifact-admission top-level fields do not match the schema")
+        return failures
+    if record["schema_version"] != 1 or record["record_type"] != "model_artifact_admission":
+        failures.append("unsupported artifact-admission schema identity")
+    if record["profile_id"] != "gemma-4-e4b-it":
+        failures.append("artifact profile identity does not match source admission")
+
+    source = record["source_identity"]
+    if not isinstance(source, dict):
+        failures.append("source artifact identity must be an object")
+    else:
+        expected_source = {
+            "revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+            "weights_sha256": "cfbd3d2f1cd71bd471c37fe2bf8546d5028d41e5736f64e1ca6c6b8893125503",
+        }
+        for field, expected in expected_source.items():
+            if source.get(field) != expected:
+                failures.append(f"source identity mismatch: {field}")
+
+    gguf = record["gguf_identity"]
+    if not isinstance(gguf, dict):
+        failures.append("GGUF identity must be an object")
+    else:
+        expected_gguf = {
+            "revision": "bfc15c382204943c3a8fff0c750b94ae2364d7a3",
+            "sha256": "85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+            "size": 4977171584,
+        }
+        for field, expected in expected_gguf.items():
+            if gguf.get(field) != expected:
+                failures.append(f"GGUF identity mismatch: {field}")
+        projector = gguf.get("multimodal_projector")
+        if not isinstance(projector, dict) or projector.get("sha256") != (
+            "ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51"
+        ):
+            failures.append("multimodal projector identity mismatch")
+        if gguf.get("conversion_tool") != "not_reproducibly_disclosed":
+            failures.append("unknown GGUF conversion provenance must remain visible")
+
+    native = record["native_runtime"]
+    expected_native = {
+        "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+        "asset_sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5",
+        "llama_cli_sha256": "988611a4c80c615052627544c52a6c78fedbba70ab9359132663e043b508bf74",
+        "llama_server_sha256": "1d374fdb717832ec01d4829eff9feb46dfc83b7ccbb9d867c15315dbd8aa4bbe",
+    }
+    if not isinstance(native, dict):
+        failures.append("native runtime identity must be an object")
+    else:
+        for field, expected in expected_native.items():
+            if native.get(field) != expected:
+                failures.append(f"native runtime identity mismatch: {field}")
+
+    docker_engine = record["docker_engine"]
+    docker_model = record["docker_model"]
+    expected_digests = {
+        "Docker engine": (
+            docker_engine,
+            "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+        ),
+        "Docker model": (
+            docker_model,
+            "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+        ),
+    }
+    for label, (value, expected) in expected_digests.items():
+        if not isinstance(value, dict) or not OCI_DIGEST.fullmatch(str(value.get("digest", ""))):
+            failures.append(f"{label} digest is not immutable")
+        elif value.get("digest") != expected:
+            failures.append(f"{label} digest substitution detected")
+    if isinstance(docker_model, dict) and docker_model.get("model_layer_digest") != (
+        "sha256:" + str(gguf.get("sha256", ""))
+    ):
+        failures.append("Docker model layer does not match GGUF identity")
+
+    host = record["evaluation_host"]
+    if not isinstance(host, dict) or host.get("docker_available") is not False:
+        failures.append("local Docker unavailability is not recorded")
+    if isinstance(host, dict) and "RTX 4090" not in str(host.get("gpu", "")):
+        failures.append("evaluation GPU identity is missing")
+
+    decision = record["decision"]
+    if not isinstance(decision, dict):
+        failures.append("artifact admission decision must be an object")
+    else:
+        if decision.get("status") != "BLOCKED":
+            failures.append("incomplete artifact admission must remain BLOCKED")
+        blocker_codes = {
+            item.get("code") for item in decision.get("blockers", []) if isinstance(item, dict)
+        }
+        expected_blockers = {
+            "SOURCE-ADMISSION-BLOCKED",
+            "GGUF-CONVERSION-NOT-REPRODUCIBLE",
+            "DOCKER-RUNTIME-UNAVAILABLE",
+            "MODEL-ARTIFACTS-NOT-LOCAL",
+        }
+        if blocker_codes != expected_blockers:
+            failures.append("artifact-admission blockers are incomplete")
+        if decision.get("independent_review_performed") is not False:
+            failures.append("artifact admission overstates independent review")
+        if decision.get("release_approval") is not False:
+            failures.append("artifact admission overstates release approval")
+        if "AgentMage profile activation" not in decision.get("prohibited_actions", []):
+            failures.append("blocked artifact admission does not prohibit activation")
+    return failures
+
+
 def main() -> int:
     try:
         record = load_record()
-        failures = validate_record(record)
+        artifact_record = load_record(DEFAULT_ARTIFACT_RECORD)
+        failures = validate_record(record) + validate_artifact_record(artifact_record)
     except (OSError, json.JSONDecodeError, ValueError) as error:
         print(f"Model source-admission validation failed: {error}", file=sys.stderr)
         return 1
@@ -179,7 +309,7 @@ def main() -> int:
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         return 1
-    print("Validated blocked Gemma 4 E4B source-admission record.")
+    print("Validated blocked Gemma 4 E4B source and artifact admission records.")
     return 0
 
 

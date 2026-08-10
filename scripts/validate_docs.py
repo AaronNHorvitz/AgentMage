@@ -33,6 +33,7 @@ REQUIRED_FILES = (
     "scripts/story_0_2_evidence.py",
     "scripts/model_admission.py",
     "model-profiles/candidates/gemma-4-e4b/source-admission.json",
+    "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "artifacts/sprints/sprint-0/story-0.1/evidence-manifest.json",
     "artifacts/sprints/sprint-0/story-0.1/summary.md",
     "artifacts/sprints/sprint-0/story-0.2/evidence-manifest.json",

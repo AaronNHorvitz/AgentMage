@@ -3,12 +3,18 @@ from __future__ import annotations
 import copy
 import unittest
 
-from scripts.model_admission import load_record, validate_record
+from scripts.model_admission import (
+    DEFAULT_ARTIFACT_RECORD,
+    load_record,
+    validate_artifact_record,
+    validate_record,
+)
 
 
 class ModelAdmissionTests(unittest.TestCase):
     def setUp(self) -> None:
         self.record = load_record()
+        self.artifact_record = load_record(DEFAULT_ARTIFACT_RECORD)
 
     def test_committed_source_admission_is_valid_and_blocked(self) -> None:
         self.assertEqual(validate_record(self.record), [])
@@ -59,6 +65,37 @@ class ModelAdmissionTests(unittest.TestCase):
 
         self.assertTrue(any("BLOCKED decision" in item for item in failures))
         self.assertTrue(any("prohibit activation" in item for item in failures))
+
+    def test_committed_artifact_admission_is_exact_and_blocked(self) -> None:
+        self.assertEqual(validate_artifact_record(self.artifact_record), [])
+        self.assertEqual(self.artifact_record["decision"]["status"], "BLOCKED")
+        self.assertEqual(
+            self.artifact_record["native_runtime"]["local_state"],
+            "staged_and_hash_verified",
+        )
+        self.assertFalse(self.artifact_record["evaluation_host"]["docker_available"])
+
+    def test_gguf_runtime_and_oci_substitutions_are_rejected(self) -> None:
+        mutations = {
+            "GGUF identity": lambda value: value["gguf_identity"].update(
+                {"sha256": "1" * 64}
+            ),
+            "native runtime identity": lambda value: value["native_runtime"].update(
+                {"source_commit": "2" * 40}
+            ),
+            "Docker engine digest substitution": lambda value: value["docker_engine"].update(
+                {"digest": "sha256:" + ("3" * 64)}
+            ),
+            "Docker model digest substitution": lambda value: value["docker_model"].update(
+                {"digest": "sha256:" + ("4" * 64)}
+            ),
+        }
+        for expected, mutate in mutations.items():
+            with self.subTest(identity=expected):
+                changed = copy.deepcopy(self.artifact_record)
+                mutate(changed)
+                failures = validate_artifact_record(changed)
+                self.assertTrue(any(expected in item for item in failures), failures)
 
 
 if __name__ == "__main__":

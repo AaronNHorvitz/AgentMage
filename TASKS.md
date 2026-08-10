@@ -227,7 +227,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 - [ ] **Task 0.3.1 - Admit candidate artifacts for evaluation**
   - [x] **Sub-task 0.3.1.1:** Verify the first-party Gemma 4 E4B model card, Apache-2.0 disposition, publisher/control, lineage, tokenizer, context contract, and known limitations under `MODEL-PROVENANCE-POLICY.md`.
-  - [ ] **Sub-task 0.3.1.2:** Resolve and record immutable source, GGUF, conversion/quantization, native runtime-build, Docker engine-image, and `ai/gemma4:e4b` model-image digests; never use a mutable tag as release identity.
+  - [x] **Sub-task 0.3.1.2:** Resolve and record immutable source, GGUF, conversion/quantization, native runtime-build, Docker engine-image, and `ai/gemma4:e4b` model-image digests; never use a mutable tag as release identity.
   - [ ] **Sub-task 0.3.1.3:** Create one versioned corpus for native macOS, native Linux, and Docker Model Runner adapters covering ordinary chat, repository tasks, citations, tool schemas, malformed output recovery, cancellation, context limits, latency, memory, and zero egress.
 
 - [ ] **Task 0.3.2 - Execute the feasibility spike and decide**
