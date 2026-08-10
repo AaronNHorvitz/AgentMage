@@ -1,0 +1,214 @@
+{
+  "adapter_count": 7,
+  "adapters": [
+    {
+      "id": "fake-model",
+      "operations": [
+        "generate"
+      ]
+    },
+    {
+      "id": "fake-tool",
+      "operations": [
+        "invoke"
+      ]
+    },
+    {
+      "id": "fake-inference-runtime",
+      "operations": [
+        "start",
+        "infer",
+        "stop"
+      ]
+    },
+    {
+      "id": "fake-connector",
+      "operations": [
+        "list",
+        "read"
+      ]
+    },
+    {
+      "id": "fake-clock",
+      "operations": [
+        "now",
+        "advance"
+      ]
+    },
+    {
+      "id": "fake-secret-store",
+      "operations": [
+        "store",
+        "load",
+        "delete"
+      ]
+    },
+    {
+      "id": "crash-injector",
+      "operations": [
+        "checkpoint"
+      ]
+    }
+  ],
+  "baseline_trace": {
+    "event_count": 13,
+    "events": [
+      {
+        "adapter_id": "fake-model",
+        "committed": false,
+        "mode": "success",
+        "operation": "generate",
+        "reason": null,
+        "request_sha256": "4e9a097a36d76f4bf701931f10b1f82f587e8a597514aaa2910a7504058aecb1",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-tool",
+        "committed": false,
+        "mode": "success",
+        "operation": "invoke",
+        "reason": null,
+        "request_sha256": "cbda5107b56e6ef81adde2f569e6e994a9e834b6eaa4836c25b68c239e8dd86b",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-inference-runtime",
+        "committed": true,
+        "mode": "success",
+        "operation": "start",
+        "reason": null,
+        "request_sha256": "1425a066423f76065ea39be394cfb0bd47aade4466d2df7e13a3a043201ddba3",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-inference-runtime",
+        "committed": false,
+        "mode": "success",
+        "operation": "infer",
+        "reason": null,
+        "request_sha256": "483ddb293149ae286ef355d291a7b223b79035c2af61dc30ea84000936bfc4b8",
+        "sequence": 2,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-inference-runtime",
+        "committed": true,
+        "mode": "success",
+        "operation": "stop",
+        "reason": null,
+        "request_sha256": "5359579cc62de8b34114eaf670858967b53735fc1ec16d4ceb55f237a19708c1",
+        "sequence": 3,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-connector",
+        "committed": false,
+        "mode": "success",
+        "operation": "list",
+        "reason": null,
+        "request_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-connector",
+        "committed": false,
+        "mode": "success",
+        "operation": "read",
+        "reason": null,
+        "request_sha256": "1b55c068b67e43ff3ba66bcf818426adb69c9f493000e80994c580a5e23ffd47",
+        "sequence": 2,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-clock",
+        "committed": false,
+        "mode": "success",
+        "operation": "now",
+        "reason": null,
+        "request_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-clock",
+        "committed": false,
+        "mode": "success",
+        "operation": "advance",
+        "reason": null,
+        "request_sha256": "0a83743df76ef1aa1031491a04e8d73d358199e39c9e9aa435a047477797f1f1",
+        "sequence": 2,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-secret-store",
+        "committed": true,
+        "mode": "success",
+        "operation": "store",
+        "reason": null,
+        "request_sha256": "3b806988b7a19a727efc61c96175f811606a989f6cffaa901d4b2e73aee75b01",
+        "sequence": 1,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-secret-store",
+        "committed": false,
+        "mode": "success",
+        "operation": "load",
+        "reason": null,
+        "request_sha256": "a578c27c54839cd19a54ef2f359e286cab985a2cd09411aebe337e1a6212919e",
+        "sequence": 2,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "fake-secret-store",
+        "committed": true,
+        "mode": "success",
+        "operation": "delete",
+        "reason": null,
+        "request_sha256": "a578c27c54839cd19a54ef2f359e286cab985a2cd09411aebe337e1a6212919e",
+        "sequence": 3,
+        "status": "succeeded"
+      },
+      {
+        "adapter_id": "crash-injector",
+        "committed": false,
+        "mode": "success",
+        "operation": "checkpoint",
+        "reason": null,
+        "request_sha256": "0ceb0b38eb0775f27147b7d9569fdb80a4a86078c6ec22f22929d585cca3647a",
+        "sequence": 1,
+        "status": "succeeded"
+      }
+    ],
+    "raw_secret_retained": false,
+    "trace_sha256": "c21fd274c1b11af5808a105dd742426cff6e5d32d9fe954c334d7d80d4eabd22"
+  },
+  "contract_sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244",
+  "mode_count": 8,
+  "modes": [
+    "success",
+    "denial",
+    "malformed-result",
+    "cancellation",
+    "timeout",
+    "crash-before-commit",
+    "crash-after-commit",
+    "uncertain-result"
+  ],
+  "platform_support_claim": "none",
+  "product_adapter_claim": "none",
+  "schema_version": 1,
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "persists_state": false,
+    "reads_real_workspace": false,
+    "stores_real_secret": false,
+    "uses_network": false
+  },
+  "status": "pass",
+  "task_id": "2.1.1.4"
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "contract_id": "agentmage-fake-adapters-v1",
+  "status": "test-only",
+  "modes": [
+    "success",
+    "denial",
+    "malformed-result",
+    "cancellation",
+    "timeout",
+    "crash-before-commit",
+    "crash-after-commit",
+    "uncertain-result"
+  ],
+  "adapters": [
+    {
+      "id": "fake-model",
+      "operations": [
+        "generate"
+      ]
+    },
+    {
+      "id": "fake-tool",
+      "operations": [
+        "invoke"
+      ]
+    },
+    {
+      "id": "fake-inference-runtime",
+      "operations": [
+        "start",
+        "infer",
+        "stop"
+      ]
+    },
+    {
+      "id": "fake-connector",
+      "operations": [
+        "list",
+        "read"
+      ]
+    },
+    {
+      "id": "fake-clock",
+      "operations": [
+        "now",
+        "advance"
+      ]
+    },
+    {
+      "id": "fake-secret-store",
+      "operations": [
+        "store",
+        "load",
+        "delete"
+      ]
+    },
+    {
+      "id": "crash-injector",
+      "operations": [
+        "checkpoint"
+      ]
+    }
+  ],
+  "fixed_clock_epoch": 1704067200,
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "reads_real_workspace": false,
+    "persists_state": false,
+    "stores_real_secret": false
+  },
+  "product_adapter_claim": "none",
+  "platform_support_claim": "none"
+}
