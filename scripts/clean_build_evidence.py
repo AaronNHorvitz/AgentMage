@@ -292,7 +292,11 @@ def run_platform(
         ROOT,
     )
     if build.returncode != 0:
-        raise OSError(f"clean-build image setup failed for {platform_id}")
+        combined = "\n".join((build.stdout, build.stderr)).replace(
+            str(source_root), "<COMMITTED_SOURCE>"
+        )
+        detail = " | ".join(combined.strip().splitlines()[-5:]) or "unknown"
+        raise OSError(f"clean-build image setup failed for {platform_id}: {detail}")
     image_id = _image_id(tag)
     run = _run(
         [
