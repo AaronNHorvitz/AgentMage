@@ -41,6 +41,36 @@ class RequirementCoverageTests(unittest.TestCase):
 
         self.assertIn("duplicate_identifier", self.categories(report))
 
+    def test_s_000_ut01_reports_noncanonical_order_and_stale_source_anchors(self) -> None:
+        reordered = copy.deepcopy(self.registry)
+        reordered["requirements"][0], reordered["requirements"][1] = (
+            reordered["requirements"][1],
+            reordered["requirements"][0],
+        )
+        reordered_report = build_coverage_report(reordered, self.normative_map, ROOT)
+        self.assertIn("noncanonical_order", self.categories(reordered_report))
+
+        stale = copy.deepcopy(self.registry)
+        stale["source"]["sha256"] = "0" * 64
+        stale["requirements"][0]["source"]["line"] = 1
+        stale["requirements"][1]["source"]["heading"] = "Wrong heading"
+        stale["requirements"][2]["source"]["definition_sha256"] = "0" * 64
+        stale_report = build_coverage_report(stale, self.normative_map, ROOT)
+        self.assertGreaterEqual(self.categories(stale_report).count("stale_source_anchor"), 4)
+
+    def test_s_000_ut01_rejects_malformed_registry_documents(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "registry.json"
+            path.write_text("[]\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "expected a JSON object"):
+                load_json(path)
+
+        malformed = copy.deepcopy(self.registry)
+        malformed["schema_version"] = 999
+        malformed["requirements"] = {}
+        report = build_coverage_report(malformed, self.normative_map, ROOT)
+        self.assertIn("malformed_registry", self.categories(report))
+
     def test_reports_unresolved_dependencies(self) -> None:
         mutated = copy.deepcopy(self.registry)
         product = next(

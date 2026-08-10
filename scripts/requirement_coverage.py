@@ -121,8 +121,16 @@ def add(
 def audit_registry(
     registry: dict[str, object],
     diagnostics: list[Diagnostic],
+    root: Path = ROOT,
 ) -> dict[str, dict[str, object]]:
     """Audit duplicate IDs, references, tests, and release compatibility."""
+    if registry.get("schema_version") != 2:
+        add(
+            diagnostics,
+            "malformed_registry",
+            "schema_version",
+            "expected supported schema version 2",
+        )
     requirements = registry.get("requirements")
     if not isinstance(requirements, list):
         add(diagnostics, "malformed_registry", "requirements", "expected an array")
@@ -130,6 +138,13 @@ def audit_registry(
 
     records = [record for record in requirements if isinstance(record, dict)]
     ids = [record.get("id") for record in records if isinstance(record.get("id"), str)]
+    if ids != sorted(ids):
+        add(
+            diagnostics,
+            "noncanonical_order",
+            "requirements",
+            "requirement records must be ordered by stable identifier",
+        )
     for identifier, count in sorted(Counter(ids).items()):
         if count > 1:
             add(
@@ -222,7 +237,117 @@ def audit_registry(
                 "acceptance test is not assigned to a product requirement",
             )
 
+    audit_source_anchors(root, registry, records, diagnostics)
+
     return by_id
+
+
+def audit_source_anchors(
+    root: Path,
+    registry: dict[str, object],
+    records: list[dict[str, object]],
+    diagnostics: list[Diagnostic],
+) -> None:
+    """Verify that registry source lines and hashes resolve exactly."""
+    source = registry.get("source")
+    if not isinstance(source, dict):
+        add(diagnostics, "malformed_registry", "source", "expected an object")
+        return
+    document = source.get("document")
+    expected_document_hash = source.get("sha256")
+    if not isinstance(document, str) or not document:
+        add(
+            diagnostics,
+            "malformed_registry",
+            "source.document",
+            "expected a non-empty document path",
+        )
+        return
+    path = root / document
+    try:
+        source_bytes = path.read_bytes()
+        text = source_bytes.decode("utf-8")
+    except (OSError, UnicodeError) as error:
+        add(
+            diagnostics,
+            "stale_source_anchor",
+            document,
+            f"canonical source cannot be read: {error}",
+        )
+        return
+    actual_document_hash = hashlib.sha256(source_bytes).hexdigest()
+    if expected_document_hash != actual_document_hash:
+        add(
+            diagnostics,
+            "stale_source_anchor",
+            document,
+            "canonical source hash does not match the registry",
+        )
+
+    lines = text.splitlines()
+    headings: list[str] = []
+    current_heading = ""
+    for line in lines:
+        heading_match = HEADING.match(line)
+        if heading_match:
+            current_heading = heading_match.group(2)
+        headings.append(current_heading)
+
+    for record in records:
+        identifier = record.get("id")
+        location = str(identifier) if isinstance(identifier, str) else "requirements"
+        anchor = record.get("source")
+        if not isinstance(anchor, dict):
+            add(
+                diagnostics,
+                "malformed_registry",
+                location,
+                "source anchor must be an object",
+            )
+            continue
+        if anchor.get("document") != document:
+            add(
+                diagnostics,
+                "stale_source_anchor",
+                location,
+                "source document differs from the registry authority",
+            )
+        line_number = anchor.get("line")
+        if (
+            isinstance(line_number, bool)
+            or not isinstance(line_number, int)
+            or not 1 <= line_number <= len(lines)
+        ):
+            add(
+                diagnostics,
+                "stale_source_anchor",
+                location,
+                "source line is outside the canonical document",
+            )
+            continue
+        source_line = lines[line_number - 1]
+        actual_hash = hashlib.sha256((source_line + "\n").encode("utf-8")).hexdigest()
+        if anchor.get("definition_sha256") != actual_hash:
+            add(
+                diagnostics,
+                "stale_source_anchor",
+                location,
+                "definition hash does not match the anchored source line",
+            )
+        if anchor.get("heading") != headings[line_number - 1]:
+            add(
+                diagnostics,
+                "stale_source_anchor",
+                location,
+                "source heading does not match the anchored source line",
+            )
+        if isinstance(identifier, str) and not source_line.startswith(f"| `{identifier}` |"):
+            add(
+                diagnostics,
+                "stale_source_anchor",
+                location,
+                "anchored source line does not define the requirement identifier",
+            )
 
 
 def audit_normative_map(
@@ -351,7 +476,7 @@ def build_coverage_report(
 ) -> dict[str, object]:
     """Build one deterministic, side-effect-free coverage report."""
     diagnostics: list[Diagnostic] = []
-    by_id = audit_registry(registry, diagnostics)
+    by_id = audit_registry(registry, diagnostics, root)
     normative_count = audit_normative_map(
         root,
         normative_map,
