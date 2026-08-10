@@ -18,7 +18,7 @@
     },
     {
       "path": "architecture/clean-build-policy.json",
-      "sha256": "fb07649b7fcbabbbbb8bd7ab834c376b9aac6c00841bea4698a4e3da3443810f"
+      "sha256": "13c38a20e97303eab42aa8212fac210eb1387e366a0687b6c50e1347ad7fce8c"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -38,7 +38,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "bc4eb10bf8ecd59545b9fbe2062bf7a5fdebf2fbca989246a5b2d7ffc8b9e30d"
+      "sha256": "1b5dfd0dab2f020e1f7d7de31198aa54e97dd9eb8c7e7086066917991261ec3e"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
@@ -46,7 +46,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "baa5748299d1f47a0d4c20887c997c5670bc14eb22067256d93c2c0bd4629163"
+      "sha256": "49ed1b19dd6f72855920e347d0709e85924594c0d54eb90386f6ee11d37537c8"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
@@ -102,15 +102,15 @@
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "7d928e36fbcad140c79737f64b78d0fedc93b7b937251f54abe66cf58efe0c0b"
+      "sha256": "30a240f1c01847dc95c0407baf48a2b6e5a84eb74637516cd3845e60c94f34a2"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "ccafcdf1247cb6372f65e1ae928293c4d43f7216a6cc99a90e5ed4dba65e6cd2"
+      "sha256": "4050996226450e418dedfa132ed68ec85c1f0433c35ced39e5db1ab9a4481f23"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "143e7e6ba15e744c9992094d053ad9bd3468162589cbf24ebc695de31379b854"
+      "sha256": "42bf85f1af1410e47a51731eebb55632b5bf631df1bb191a1e5bcc8ae43113d1"
     }
   ],
   "macos": {
@@ -311,7 +311,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "282a9427ad6911b7eedcf069a57bf68555d1088e",
+  "source_revision": "2358b91ebcc5bfcf6d6bf30f9b4e1ed741a9113c",
   "status": "complete-evidence-map-blocked-macos",
   "summary": {
     "canonical_blocking_artifact_findings": 0,
