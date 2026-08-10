@@ -6,6 +6,8 @@
 pub mod authority;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Kernel-only session and operation grant issuance.
+pub mod grants;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
 /// Stateful resource budgets and explicit sticky stop conditions.

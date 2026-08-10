@@ -169,9 +169,9 @@ pub struct CapabilityGrant {
     pub expires_at_epoch_ms: u64,
     /// Exact anti-replay nonce.
     pub nonce: GrantNonce,
-    /// Maximum successful admission count; operation grants must later require one.
+    /// Maximum kernel-authorized admissions or child derivations.
     pub use_limit: u32,
-    /// Number of uses already atomically consumed in this state revision.
+    /// Number of admissions or derivations already atomically consumed in this revision.
     pub use_count: u32,
     /// Optional parent grant identity for derived authority.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
