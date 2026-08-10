@@ -395,13 +395,15 @@ The owning sprint performs the first complete execution possible for its boundar
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 2.AC1:** Recreating the corpus yields identical expected hashes where determinism is required.
-- [ ] **Sprint AC 2.AC2:** A deliberately corrupted fixture is detected before test execution.
-- [ ] **Sprint AC 2.AC3:** Fake tools and models can simulate success, denial, malformed output, cancellation, timeout, crash, and uncertain completion.
-- [ ] **Sprint AC 2.AC4:** Test results identify the exact fixture, platform, build, model, runtime, and policy versions.
-- [ ] **Sprint AC 2.AC5:** No fixture contains a real credential or private user file.
+- [x] **Sprint AC 2.AC1:** Recreating the corpus yields identical expected hashes where determinism is required. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently confirms two byte-identical corpus regenerations against checked artifacts and two clean fake-boundary runs with all ten reconciliation comparisons exact.
+- [x] **Sprint AC 2.AC2:** A deliberately corrupted fixture is detected before test execution. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) confirms both archive and manifest mutations are detected before use, with no corrupt artifact persisted.
+- [x] **Sprint AC 2.AC3:** Fake tools and models can simulate success, denial, malformed output, cancellation, timeout, crash, and uncertain completion. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) verifies the complete seven-adapter by eight-mode matrix: 56 typed cases, all expected outcomes matched, all cleanup passed, and all 56 post-close calls rejected.
+- [x] **Sprint AC 2.AC4:** Test results identify the exact fixture, platform, build, model, runtime, and policy versions. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) retains both synthetic Linux result identities with exact fixture, distribution/version/architecture, build, model, runtime, policy, record, and content hashes while recording no ambient environment values.
+- [x] **Sprint AC 2.AC5:** No fixture contains a real credential or private user file. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently requires the recursive fixture/security scan to retain zero blocking findings and no raw sensitive values or network calls while all six seeded prohibited-content categories remain detectable.
 
 **Gate decision:** Sprint 2 is PASS only when Stories 2.1 and 2.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current gate evidence:** All five sprint criteria and the shared/Linux foundation pass. Sprint 2 remains `BLOCKED-MACOS`; [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) aggregates both story gates from pushed evidence commit `d628b91caefacd15256fd4ec3008e4a208070004`, leaves both story and sprint checkboxes open, preserves `G-DOD-10` as the sole shared gate blocker, and prohibits macOS evidence substitution or unsupported product/release claims.
 ### [ ] Sprint 3 - Configuration, Versioning, and Build Integrity
 
 **Timebox:** Two weeks.

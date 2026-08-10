@@ -1,0 +1,244 @@
+{
+  "acceptance_criteria": [
+    {
+      "checked_corpus_match": true,
+      "corpus_reproduction_run_count": 2,
+      "corpus_runs_byte_identical": true,
+      "criterion_id": "2.AC1",
+      "evidence": [
+        "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "fake_boundary_clean_run_count": 2,
+      "fake_boundary_comparisons_exact": true,
+      "status": "pass"
+    },
+    {
+      "archive_mutation_detected_before_use": true,
+      "corrupt_artifact_persisted": false,
+      "criterion_id": "2.AC2",
+      "evidence": "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+      "manifest_mutation_detected_before_use": true,
+      "status": "pass"
+    },
+    {
+      "adapter_count": 7,
+      "all_cleanup_passed": true,
+      "all_typed_outcomes_matched": true,
+      "criterion_id": "2.AC3",
+      "evidence": "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
+      "matrix_case_count": 56,
+      "mode_count": 8,
+      "status": "pass"
+    },
+    {
+      "ambient_environment_values_recorded": false,
+      "criterion_id": "2.AC4",
+      "evidence": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+      "result_identities": [
+        {
+          "build_id": "synthetic-build-v1",
+          "build_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "fixture_id": "synthetic-fixtures-v1",
+          "fixture_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "model_id": "fake-model-v1",
+          "model_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "platform_architecture": "x86_64",
+          "platform_distribution": "fedora",
+          "platform_version": "44",
+          "policy_id": "synthetic-policy-v1",
+          "policy_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "record_id": "am-platform-result-f6a1b123edf99ed18c41",
+          "record_sha256": "eff18cc95359ecef036d00a92ecdbf6e00fff6af58bee66ab0a1397a02572357",
+          "runtime_id": "fake-inference-runtime-v1",
+          "runtime_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        {
+          "build_id": "synthetic-build-v1",
+          "build_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "fixture_id": "synthetic-fixtures-v1",
+          "fixture_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "model_id": "fake-model-v1",
+          "model_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "platform_architecture": "aarch64",
+          "platform_distribution": "ubuntu",
+          "platform_version": "26.04",
+          "policy_id": "synthetic-policy-v1",
+          "policy_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "record_id": "am-platform-result-58624ba099c71cdd0512",
+          "record_sha256": "277a2122d3bf5d6ca889d3b8ec968bbbb3231b54d377dac10255117cda21ddbd",
+          "runtime_id": "fake-inference-runtime-v1",
+          "runtime_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      ],
+      "result_identity_count": 2,
+      "status": "pass"
+    },
+    {
+      "blocking_finding_count": 0,
+      "criterion_id": "2.AC5",
+      "evidence": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+      "network_calls_performed": 0,
+      "raw_sensitive_values_retained": false,
+      "seeded_categories_detected": 6,
+      "seeded_category_count": 6,
+      "status": "pass"
+    }
+  ],
+  "independent_review": {
+    "disposition": "pass-shared-linux-foundation-blocked-macos",
+    "external_human_review_claim": "none",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_artifacts": [
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
+        "sha256": "1a0334b38adf522268cffb73a55444532922d99f8e4d2a5fafa40f0c8253e3aa"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
+        "sha256": "4212858e26f05416ab7f436a481a865a193bf7d08364a91aac0945b2e697b1a2"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json",
+        "sha256": "9362363b2eef6c04209175db7d502f3abea02e954db22c8a2fec6fc7c9468d6d"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
+        "sha256": "70ebb7cf0dc402251147527859e74ad7acc615533150bac6ab05e30cab8258fc"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json",
+        "sha256": "42f6ed24002b36d5715fe6cd5d819a5470dc5fdf3ae233d3f0384725af86191f"
+      },
+      {
+        "path": "scripts/story_2_1_gate.py",
+        "sha256": "28c0aacac8184d5dc75776f6dd5090103c69df21011971b78054f1a0c00fe073"
+      },
+      {
+        "path": "scripts/story_2_2_gate.py",
+        "sha256": "f2b06e29eb4fa3449334d42f1d896d1b6fd80d940a566e315a73c8425247ffec"
+      }
+    ],
+    "reviewed_commit": "d628b91caefacd15256fd4ec3008e4a208070004",
+    "reviewed_tree": "eb38ee82d7563c1181c99a5a403ab8feb110e90e",
+    "reviewer_id": "agentmage-sprint-2-independent-gate-v1"
+  },
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "execution_performed": false,
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "d628b91caefacd15256fd4ec3008e4a208070004",
+  "reviewed_tree": "eb38ee82d7563c1181c99a5a403ab8feb110e90e",
+  "schema_version": 1,
+  "sprint_id": 2,
+  "status": "blocked-macos",
+  "story_gates": [
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 2,
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_control_ids": [
+        "G-DOD-01",
+        "G-DOD-02",
+        "G-DOD-03",
+        "G-DOD-04",
+        "G-DOD-05",
+        "G-DOD-06",
+        "G-DOD-07",
+        "G-DOD-08",
+        "G-DOD-09",
+        "G-DOD-10",
+        "G-DOD-11",
+        "G-DOD-12",
+        "G-DOD-13"
+      ],
+      "shared_linux_foundation_complete": true,
+      "status": "blocked-macos",
+      "story_checkbox_complete": false,
+      "story_id": "2.1"
+    },
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 3,
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_control_ids": [
+        "G-DOD-01",
+        "G-DOD-02",
+        "G-DOD-03",
+        "G-DOD-04",
+        "G-DOD-05",
+        "G-DOD-06",
+        "G-DOD-07",
+        "G-DOD-08",
+        "G-DOD-09",
+        "G-DOD-10",
+        "G-DOD-11",
+        "G-DOD-12",
+        "G-DOD-13"
+      ],
+      "shared_linux_foundation_complete": true,
+      "status": "blocked-macos",
+      "story_checkbox_complete": false,
+      "story_id": "2.2"
+    }
+  ],
+  "summary": {
+    "acceptance_criteria_failed": 0,
+    "acceptance_criteria_passed": 5,
+    "blocking_control_count": 1,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "blocking_story_count": 2,
+    "blocking_story_ids": [
+      "2.1",
+      "2.2"
+    ],
+    "shared_linux_foundation_complete": true,
+    "sprint_checkbox_complete": false,
+    "story_gate_count": 2
+  },
+  "universal_definition_of_done": {
+    "all_non_platform_controls_pass_or_not_applicable": true,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "control_ids": [
+      "G-DOD-01",
+      "G-DOD-02",
+      "G-DOD-03",
+      "G-DOD-04",
+      "G-DOD-05",
+      "G-DOD-06",
+      "G-DOD-07",
+      "G-DOD-08",
+      "G-DOD-09",
+      "G-DOD-10",
+      "G-DOD-11",
+      "G-DOD-12",
+      "G-DOD-13"
+    ],
+    "macos_evidence_substitution": "prohibited",
+    "story_count": 2
+  }
+}
