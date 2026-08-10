@@ -26,8 +26,8 @@ from scripts.story_2_2_security_evidence import check_all as check_security  # n
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json"
-REVIEWED_COMMIT = "5c342303a5c30078d0ac6e7370d77bdf5152e51c"
-REVIEWED_TREE = "d3c40d6975cf2df5853a41523a6c20b19b70c979"
+REVIEWED_COMMIT = "eb3799111730196a3428356a25cde69e9e7005fd"
+REVIEWED_TREE = "4868df2580e68596570e13bcd18c774d82cc31bd"
 REVIEWED_PATHS = (
     "fuzzing/target-registry.json",
     "fuzzing/toolchain-policy.json",

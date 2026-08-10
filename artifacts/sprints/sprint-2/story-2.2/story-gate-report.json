@@ -95,7 +95,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
-        "sha256": "0b64a735675f655e7abfee581d6b3a95b5439b6d53fdcb3e0294f77f662b0e9d"
+        "sha256": "00519487fe7bf40d0c8307cc232d0a21c1f6b02b8d6930027761ee6d178ab860"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
@@ -103,15 +103,15 @@
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
-        "sha256": "3416fcd4be97e2f3a5a2c100bf93685bd016c8b20212530f5cc636baefbfdea6"
+        "sha256": "d8b5b2e3fe8143ba0f388718c035fa9907c3723e953db00dec80afecda9a5c53"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-        "sha256": "70ebb7cf0dc402251147527859e74ad7acc615533150bac6ab05e30cab8258fc"
+        "sha256": "ac4ae3624ec429e462752d7df82feb7570d220f9b0ae3a519c14214c08bbd355"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
-        "sha256": "8ca0b5f8561d84e7b3ef94c099bb243304719e445dcb32bdb7bf6ddc3938b5f0"
+        "sha256": "a942b91476cdacbc06f4083a9107b810de35526d204bbf07479a28f2157ec221"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json",
@@ -119,7 +119,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json",
-        "sha256": "66caa2f7290285e47292265b1d490924195f09f96477098d96664ae70decf8b1"
+        "sha256": "390beeac91bbc7ce5701c249b6981a2997e936a124c0f277294ee64876598102"
       },
       {
         "path": "scripts/fuzz_target_registry.py",
@@ -150,8 +150,8 @@
         "sha256": "aba7d7af5ba109ca34ae3eb080c72b5f27bf16e821e2c5124a680f203e6e881e"
       }
     ],
-    "reviewed_commit": "5c342303a5c30078d0ac6e7370d77bdf5152e51c",
-    "reviewed_tree": "d3c40d6975cf2df5853a41523a6c20b19b70c979",
+    "reviewed_commit": "eb3799111730196a3428356a25cde69e9e7005fd",
+    "reviewed_tree": "4868df2580e68596570e13bcd18c774d82cc31bd",
     "reviewer_id": "agentmage-story-2.2-independent-gate-v1"
   },
   "macos": {
@@ -163,8 +163,8 @@
   "product_acceptance_claim": "none",
   "product_boundary_execution_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "5c342303a5c30078d0ac6e7370d77bdf5152e51c",
-  "reviewed_tree": "d3c40d6975cf2df5853a41523a6c20b19b70c979",
+  "reviewed_commit": "eb3799111730196a3428356a25cde69e9e7005fd",
+  "reviewed_tree": "4868df2580e68596570e13bcd18c774d82cc31bd",
   "schema_version": 1,
   "status": "blocked-macos",
   "story_id": "2.2",
