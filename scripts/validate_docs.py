@@ -34,6 +34,8 @@ REQUIRED_FILES = (
     "scripts/model_admission.py",
     "model-profiles/candidates/gemma-4-e4b/source-admission.json",
     "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+    "model-profiles/evaluation/corpus-v1.json",
+    "scripts/model_corpus.py",
     "artifacts/sprints/sprint-0/story-0.1/evidence-manifest.json",
     "artifacts/sprints/sprint-0/story-0.1/summary.md",
     "artifacts/sprints/sprint-0/story-0.2/evidence-manifest.json",
