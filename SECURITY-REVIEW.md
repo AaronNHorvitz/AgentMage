@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | Document status | Public product-security planning baseline; no external certification claim |
-| Source review date | 2026-08-09 |
+| Source review date | 2026-08-10 |
 | Product ownership | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment |
 | Intended product boundary | Local, single-user desktop software |
 | Primary validation target | Apple Silicon macOS on a personally controlled MacBook Pro |
-| Development references | Fedora and Ubuntu |
+| Linux release references | Fedora and Ubuntu with native `llama.cpp`; Docker Model Runner is a separately gated compatibility adapter |
 | Deferred platform | Windows 11 |
 | Initial release scope | Read-only local evidence assistant in native Visual Studio Code Chat |
 
@@ -28,6 +28,8 @@ This document does not:
 - Transfer project ownership, sponsorship, or authorship through evaluation, testing, installation, or use.
 
 The device owner or deploying organization retains authority over installation, allowed data, endpoint policy, and use in its own environment.
+
+This guide is interpreted with [SECURITY.md](SECURITY.md), [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), and [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md). Those documents define public vulnerability handling, model admission, and the process/socket/data-flow boundary; a release cannot substitute looser behavior for any of them.
 
 ## 2. Recommended Review Position
 
@@ -55,6 +57,7 @@ A reviewer should be able to complete the initial assessment in this order:
 - [ ] Confirm who owns or manages the target device and whether installation is permitted.
 - [ ] Confirm that normal v0.1 operation has no cloud or hosted service dependency.
 - [ ] Confirm the macOS, Visual Studio Code, extension, model, runtime, and cryptographic module versions.
+- [ ] Confirm the model admission record, immutable artifact identity, runtime adapter, and fallback state against the model-provenance policy.
 - [ ] Review the architecture diagram, data-flow diagram, threat model, and shared-responsibility matrix.
 - [ ] Validate signatures, notarization, hashes, SBOM, model manifest, and release provenance.
 - [ ] Run the automated reviewer suite and retain its signed evidence bundle.
@@ -158,7 +161,7 @@ Each requirement must have an implementation owner, automated test where possibl
 
 | ID | Requirement | Build integration | Reviewer test or evidence |
 |---|---|---|---|
-| `SR-GOV-001` | Define one bounded use case and prohibited uses. | Compile the approved profile into configuration and show it in `agentmage doctor`. | Compare behavior and documentation with the approved use-case record. |
+| `SR-GOV-001` | Define one bounded use case and prohibited uses. | Compile the approved profile into configuration and show the redacted doctor result inside native Visual Studio Code Chat. | Compare behavior and documentation with the approved use-case record. |
 | `SR-GOV-002` | Treat v0.1 as a general-purpose local profile and prohibit data classes that have not been explicitly supported and tested. | Display and record the boundary without sending it to the model. | Attempt to enable a prohibited data profile; startup must refuse. |
 | `SR-GOV-003` | Do not claim external certification, customer approval, or managed-environment approval that has not been granted. | Add claim linting to release documentation. | Scan release text and UI for unsupported certification or approval claims. |
 | `SR-GOV-004` | Identify the software version, owner, maintainer, support period, and security contact. | Put immutable identifiers in the signed release manifest. | Verify displayed identifiers against the signed manifest. |
@@ -179,12 +182,12 @@ Each requirement must have an implementation owner, automated test where possibl
 | `SR-PLT-004` | Permit access only to one user-selected read-only workspace. | Use an app-scoped security-scoped bookmark and descriptor-relative path operations. | Test stale bookmarks, aliases, symlinks, mount changes, rename races, case folding, and Unicode normalization. |
 | `SR-PLT-005` | Give the Visual Studio Code extension display and interaction authority only. | Keep file, Git, model-runtime, key, and grant access in the local host. | Instrument the extension host and prove it cannot invoke tools or read the workspace through AgentMage. |
 | `SR-PLT-006` | Authenticate every local IPC peer and launch. | Validate code identity, audit token, App Group, socket mode, peer credentials, protocol version, and fresh challenge. | Attempt unsigned, wrongly signed, replayed, cross-user, wrong-App-Group, and malformed clients. |
-| `SR-PLT-007` | Keep the inference process untrusted and authority-free. | Give it only model data, bounded prompt input, resource limits, and authenticated local response output. | Attempt file, environment, credential, socket, tool, and grant access from the runtime. |
+| `SR-PLT-007` | Keep every inference process or container untrusted and authority-free. | Enforce the declared topology in `RUNTIME-BOUNDARIES.md`; give inference only model data, bounded prompt input, resource limits, and a guarded local response path. | Attempt file, environment, credential, socket, tool, grant, and peer-process access from each runtime adapter. |
 | `SR-PLT-008` | Keep model acquisition separate from normal operation. | The installer has artifact acquisition authority but no workspace, session, tool, or inference authority. | Run installer and host concurrently; one must refuse. Inspect installer access and cleanup. |
 | `SR-PLT-009` | Remain compatible with the selected endpoint-hardening baseline, device management, monitoring, and firewall. | Test on the exact managed-like macOS profile without weakening it. | Run the selected baseline assessment before and after installation and compare results. |
 | `SR-PLT-010` | Freeze the tested platform matrix. | Bind OS build, architecture, SDK, toolchain, VS Code build, entitlements, and helper hashes to release identity. | Change each version independently and verify unsupported-state reporting. |
 | `SR-PLT-011` | Do not load downloaded executable code, plugins, dynamic agents, or unsigned libraries during v0.1. | Enforce a closed signed component inventory. | Add an unmanifested library or plugin and verify load refusal. |
-| `SR-PLT-012` | Keep Fedora and Ubuntu development evidence separate from Mac deployment evidence. | Label every result with platform, hardware, kernel/OS, package, and runtime identity. | Verify that Linux passes cannot satisfy Mac-only gates. |
+| `SR-PLT-012` | Keep Fedora, Ubuntu, and macOS evidence separate and distinguish native from containerized runtime evidence. | Label every result with platform, hardware, kernel/OS, package, model artifact, runtime build, adapter, and container image digest where applicable. | Verify that one platform or adapter pass cannot satisfy another platform- or adapter-specific gate. |
 
 ### 8.3 Access Control, Paths, and User Authority
 
@@ -222,7 +225,7 @@ Each requirement must have an implementation owner, automated test where possibl
 |---|---|---|---|
 | `SR-NET-001` | Make no outbound connection after the separate installer exits. | Remove network entitlements and network client dependencies from normal components. | Observe packets, DNS, sockets, and system calls for at least 60 minutes; require zero outbound attempts and bytes. |
 | `SR-NET-002` | Provide no cloud fallback, telemetry, analytics, crash upload, account check, update check, or remote model discovery. | Compile these capabilities out of v0.1, not merely disable them in UI. | Block the network and exercise every workflow; behavior must remain complete and deterministic. |
-| `SR-NET-003` | Bind local services only to the declared local transport. | Prefer private IPC; if loopback is unavoidable, authenticate peers and reject non-loopback binding. | Scan all interfaces and namespaces and attempt LAN, container, cross-user, and undeclared-process connections. |
+| `SR-NET-003` | Bind local services only to the declared local transport and treat loopback as reachability control, not authentication. | Prefer authenticated private IPC. Where Docker Model Runner's unauthenticated HTTP API is used, isolate it behind the kernel, bind only to the approved local address, and deny every undeclared process, user, container, and namespace. | Scan all interfaces and namespaces and attempt LAN, container, cross-user, tool-worker, extension-host, and undeclared-process connections. |
 | `SR-NET-004` | Attribute egress proof to AgentMage processes despite Visual Studio Code having independent network capability. | Identify processes, descriptors, and IPC flows in the evidence collector. | Run with VS Code offline controls and separately prove the AgentMage extension sends no repository or prompt content. |
 | `SR-NET-005` | Make acquisition network use visible, bounded, and separate. | Show source host, artifact identity, expected size, license, hash, and destination before download. | Capture an acquisition session and verify no workspace, prompt, session, or credential content is transmitted. |
 | `SR-NET-006` | Reject proxy, environment, DNS, and local-service confusion. | Ignore ambient proxy settings in offline components and pin local service identity. | Inject proxy variables, DNS overrides, hostile loopback services, and container aliases. |
@@ -237,11 +240,11 @@ Each requirement must have an implementation owner, automated test where possibl
 | `SR-SUP-003` | Pin source dependencies, build tools, parsers, model runtime, conversion tools, and platform SDKs. | Use lock files, hashes, allowlists, and explicit update review. | Attempt an undeclared or substituted dependency and verify build or startup failure. |
 | `SR-SUP-004` | Produce complete source/build and shipped-binary SBOMs in a standard machine-readable format. | Generate SPDX or CycloneDX at build and compare with binary analysis. | Validate schema, required elements, transitive coverage, versions, hashes, licenses, and generation context. |
 | `SR-SUP-005` | Produce release provenance linking source, builder, dependencies, commands, tests, artifacts, and signer. | Generate signed provenance and checksums from the release runner. | Independently verify signatures and trace a package back to source and build inputs. |
-| `SR-SUP-006` | Perform supplier and component due diligence. | Record ownership/control, origin, maintainer, provenance, release history, resilience, support, license, vulnerabilities, and alternatives. | Review all critical dependencies and model/runtime suppliers using the documented project categories. |
-| `SR-SUP-007` | Maintain a Model BOM and runtime manifest. | Record model developer, license, lineage, original hash, conversion and quantization recipe, tokenizer, GGUF hash, runtime, and platform fit. | Recreate or independently verify every identity and hash; reject silent substitutions. |
+| `SR-SUP-006` | Perform supplier and component due diligence. | Apply `MODEL-PROVENANCE-POLICY.md` to models and record ownership/control, origin, maintainer, provenance, release history, resilience, support, license, vulnerabilities, and alternatives for every critical component. | Review all critical dependencies and model/runtime suppliers; block unknown, prohibited, revoked, or incomplete admission records. |
+| `SR-SUP-007` | Maintain a Model BOM and runtime manifest. | Record model developer, license, lineage, original hash, conversion and quantization recipe, tokenizer, GGUF hash, immutable OCI digest where applicable, runtime build, adapter, and platform fit. | Recreate or independently verify every identity and hash, compare native/container behavior, and reject mutable tags or silent substitutions as release identities. |
 | `SR-SUP-008` | Scan source, dependencies, binaries, packages, and model/runtime artifacts for known vulnerabilities and malware. | Use at least SAST, SCA, secret scanning, package scanning, and project-approved malware scanning. | Preserve tool versions, databases, suppressions, raw results, and disposition for every finding. |
 | `SR-SUP-009` | Audit memory-unsafe and privileged code. | Prefer memory-safe implementation; inventory every `unsafe`, FFI, native library, and entitlement. | Require focused review, fuzz coverage, and justification for each boundary. |
-| `SR-SUP-010` | Publish a vulnerability disclosure, triage, remediation, release, and notification process. | Define severity, ownership, response targets, embargo handling, supported versions, and emergency disable procedure. | Run a tabletop from report receipt through fixed signed release and notification. |
+| `SR-SUP-010` | Publish a vulnerability disclosure, triage, remediation, release, and notification process. | Implement `SECURITY.md`, including supported versions, signed manual patch delivery, emergency local disablement, embargo handling, and end of support. | Run a tabletop from report receipt through fixed signed release and notification. |
 | `SR-SUP-011` | Provide deterministic or reproducible build evidence to the feasible degree. | Eliminate uncontrolled timestamps, paths, network fetches, and ambient tools. | Build twice in clean runners and compare outputs or explain signed, bounded differences. |
 | `SR-SUP-012` | Support risk-based customer assurance requests without changing the product's ownership or default boundary. | Generate SBOM, secure-development mapping, supply-chain summary, optional attestation inputs, and additional evidence from one release manifest. | Reviewer selects an evidence profile; the package must be complete without manual reconstruction. |
 | `SR-SUP-013` | Prevent release when a critical component is unmaintained, revoked, unverified, or outside policy. | Make supply-chain policy a release gate. | Mark a fixture component revoked and verify blocked build and blocked startup. |
@@ -411,11 +414,13 @@ Pass: zero unauthorized accepted connections; bounded failures; correct audit ev
 
 1. Confirm the installer is not running.
 2. Start packet, DNS, socket, process, and endpoint-firewall observation before AgentMage.
-3. Run model inference, repository mapping, read/search/hash/Git inspection, crash recovery, diagnostics, and cancellation for at least 60 minutes.
-4. Repeat with no network route.
-5. Attribute any unrelated Visual Studio Code or OS traffic by process and verify it contains no AgentMage data.
+3. Record the active native runtime build or immutable Docker Model Runner engine and model image digests.
+4. Run model inference, repository mapping, read/search/hash/Git inspection, crash recovery, diagnostics, and cancellation for at least 60 minutes.
+5. Repeat with no network route.
+6. For Docker Model Runner, probe its unauthenticated API from a LAN peer, ordinary container, separate network namespace, tool worker, extension host, and unrelated same-user process.
+7. Attribute any unrelated Visual Studio Code or OS traffic by process and verify it contains no AgentMage data.
 
-Pass: AgentMage produces zero outbound attempts and zero outbound bytes; only declared authenticated local IPC exists; all supported workflows succeed offline.
+Pass: AgentMage produces zero outbound attempts and zero outbound bytes; only declared local paths exist; no undeclared peer reaches the inference API; all supported workflows succeed offline.
 
 ### `RV-07` Acquisition Separation
 
@@ -458,9 +463,9 @@ Pass: zero unauthorized executions; every denial has a stable reason and audit e
 
 ### `RV-13` Model and Runtime Provenance
 
-Verify license, lineage, original artifact, conversion, quantization, tokenizer, chat template, GGUF, runtime build, platform, resource requirements, and all hashes. Substitute each item independently.
+Verify the `MODEL-PROVENANCE-POLICY.md` admission record, license, publisher/control, lineage, original artifact, conversion, quantization, tokenizer, chat template, GGUF, immutable OCI digest where applicable, runtime build, adapter, platform, resource requirements, and all hashes. Substitute each item independently. Run the same fixed response, tool-schema, cancellation, context-limit, and resource corpus through every enabled native and Docker adapter.
 
-Pass: exact approved identity loads; every silent substitution, mismatch, corruption, or unsupported environment is quarantined or refused.
+Pass: the exact approved identity loads; every silent substitution, mutable-tag-only identity, mismatch, corruption, prohibited lineage, or unsupported environment is quarantined or refused; all enabled adapters meet the same published contract thresholds, with differences recorded rather than hidden.
 
 ### `RV-14` Model Quality and Evidence Integrity
 
@@ -532,6 +537,7 @@ review-evidence/
     shared-responsibility.md
     system-boundary.md
     data-flow.md
+    runtime-boundaries.md
     threat-model.md
     risk-register.md
   plans/
@@ -557,6 +563,7 @@ review-evidence/
     licenses/
     support-policy.md
     vulnerability-disclosure.md
+    model-admission.json
   platform/
     macos-profile.json
     signatures.txt
@@ -619,9 +626,9 @@ Integrate this security baseline into the project without turning it into a pape
 3. Implement the release manifest, data inventory, component inventory, model manifest, SBOM, CBOM, and evidence index before feature growth.
 4. Build the reviewer command contract alongside each platform component rather than after the product is complete.
 5. Generate human-readable and machine-readable control evidence from the same source records.
-6. Run security tests on every change to a trust boundary and the complete suite for release candidates.
+6. Assign the first execution of every `RV-*` protocol to the earliest sprint that implements its boundary; release sprints rerun the complete applicable suite and assemble evidence rather than discovering controls for the first time.
 7. Make failed critical gates block signing and packaging.
-8. Test Linux core behavior continuously, but require independent M5/macOS evidence for every deployment claim.
+8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter, but require independent M5/macOS evidence for every Mac deployment claim.
 9. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
 10. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
 
@@ -632,10 +639,10 @@ Recommended implementation gates:
 | `SEC-G0` Scope | Approved threat model, use-case boundary, data inventory, shared responsibilities, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake platform tests pass. |
 | `SEC-G2` macOS | Signing, notarization, App Sandbox, XPC, bookmarks, Keychain/crypto provider, selected endpoint-baseline compatibility, and offline proof pass on the M5 reference. |
-| `SEC-G3` Model | Installer separation, model/runtime provenance, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
+| `SEC-G3` Model | Installer separation, model/runtime provenance, native/container contract parity, Docker API isolation, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
 | `SEC-G4` Supply chain | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility/provenance, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete. |
-| `SEC-G6` Independent assessment | A separate reviewer runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |
+| `SEC-G6` Independent assessment | A reviewer independent of the implementation under test runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Customer decisions, environment controls, exceptions, allowed data, and deployment approval are recorded outside the product's control. |
 
 ## 14. Release Decision Rule

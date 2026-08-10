@@ -3,13 +3,14 @@
 | Field | Planning baseline |
 |---|---|
 | Status | Design and planning; implementation has not started |
-| Version | 1.0 |
-| Date | 2026-08-09 |
+| Version | 1.1 |
+| Date | 2026-08-10 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
+| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), and [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) |
 | Planning cadence | 103 sequential two-week sprints across 10 epics |
 
 ## 1. Purpose
@@ -18,7 +19,7 @@ This document is the high-level implementation plan for AgentMage, a brand-new, 
 
 AgentMage is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer. Public release is the product objective; any later managed-device evaluation is optional, separate from development, and does not change project ownership.
 
-This document is derived from `PRD.md`, `Agent-Scaffolding-Inventory.md`, and `SECURITY-REVIEW.md`. It is intentionally less granular than `TASKS.md` and defines implementation phases, workstreams, dependencies, milestone outcomes, risks, and gates. It does **not** replace the numbered stories, tasks, sub-tasks, tests, acceptance criteria, artifacts, or evidence requirements in `TASKS.md`.
+This document is derived from `PRD.md`, `Agent-Scaffolding-Inventory.md`, and `SECURITY-REVIEW.md`. It is intentionally less granular than `TASKS.md` and defines implementation phases, workstreams, dependencies, milestone outcomes, risks, and gates. `MODEL-PROVENANCE-POLICY.md`, `SECURITY.md`, and `RUNTIME-BOUNDARIES.md` provide subordinate admission, disclosure, and boundary procedures. This plan does **not** replace the numbered stories, tasks, sub-tasks, tests, acceptance criteria, artifacts, or evidence requirements in `TASKS.md`.
 
 A developer or coding agent must use this document to understand the overall sequence and use `TASKS.md` to perform the next bite-sized unit of work. No implementation item may be considered complete from this plan alone.
 
@@ -46,11 +47,13 @@ The governing rules are:
 5. `TASKS.md` owns executable ordering, sprint dependencies, stories, tasks, sub-tasks, tests, artifacts, Given/When/Then acceptance criteria, and PASS/BLOCKED gates.
 6. `README.md` summarizes the project and must remain consistent with all five planning and authority documents.
 
+Supporting policy and decision files implement those authorities and cannot silently weaken them. Each document has an independent revision; cross-document compatibility is established by recorded source versions, decision records, and automated checks rather than matching version numbers.
+
 If documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. This plan must be corrected before implementation continues; it cannot override a requirement, test, security control, or sprint gate. Accepted identifiers are never silently removed, weakened, merged away, or renumbered.
 
 ## 3. Implementation Outcomes
 
-The first implementation objective is v0.1, a read-only local evidence assistant in native Visual Studio Code Chat on Apple Silicon macOS, Fedora, and Ubuntu. Its only enabled model profile is manifest-pinned Gemma 4 E4B. Gemma 4 26B and Mistral Devstral Small 2 (`ai/devstral-small-2:24B`) remain disabled later candidates until their separate admission gates pass.
+The first implementation objective is v0.1, a read-only local evidence assistant in native Visual Studio Code Chat on Apple Silicon macOS, Fedora, and Ubuntu. Its initial candidate is manifest-pinned Gemma 4 E4B, which is enabled only after admission passes. Gemma 4 12B Unified is the named disabled fallback candidate. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
 
 The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, and bounded agents. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
 
@@ -63,8 +66,10 @@ The implementation must preserve these outcomes throughout the roadmap:
 - Encrypted SQLite is canonical for operational state; beginning in v0.2, Markdown is canonical only for human-owned knowledge and approved portable memory; JSON Lines is derived export only.
 - Every tool attempt produces one receipt, and every file-grounded claim has a resolvable, stale-aware citation.
 - The strict-local profile has no cloud model, external API, telemetry, analytics, cloud storage, hosted account, or cloud fallback.
-- Codex remains a separate user-controlled surface. AgentMage may prepare a local handoff preview but cannot invoke, populate, copy to, call, or transmit to Codex.
-- Every enabled model and related artifact passes license, publisher, lineage, provenance, integrity, resource, quality, security, platform, and the documented non-Chinese and non-Chinese-derived model-origin gates.
+- Codex remains a separate user-controlled surface. AgentMage may prepare a local handoff preview with classification and unresolved-redaction warnings but cannot invoke, populate, copy to, call, or transmit to Codex.
+- Every enabled model and related artifact passes `MODEL-PROVENANCE-POLICY.md`, including license, publisher, lineage, origin, provenance, integrity, resource, quality, security, platform, and non-Chinese/non-Chinese-derived model gates.
+- Native `llama.cpp` and Docker Model Runner implement one `LocalModelRuntime` contract. Native inference is the Linux security reference; Docker is a supported compatibility adapter only after its additional privilege, endpoint, isolation, parity, and zero-egress gates pass.
+- `agentmage doctor` is a deterministic diagnostics response rendered in native Visual Studio Code Chat for v0.1; it is not evidence that the deferred full CLI exists.
 - Security and release claims remain bounded to reproducible evidence and never imply external certification or customer deployment approval.
 - Windows 11 and Intel Mac support remain absent until separately promoted, implemented, and assessed; passing macOS or Linux evidence cannot satisfy a future Windows gate.
 
@@ -79,7 +84,9 @@ flowchart TB
     KERNEL --> POLICY["Policy, grants, receipts, classification, and recovery"]
     POLICY --> PLATFORM["macOS and Linux platform adapters"]
     PLATFORM --> TOOLS["Sandboxed deterministic workers"]
-    PLATFORM --> MODEL["Approved local model runtime"]
+    PLATFORM --> ADAPTER["LocalModelRuntime contract"]
+    ADAPTER --> NATIVE["Native llama.cpp"]
+    ADAPTER --> DMR["Gated Docker Model Runner"]
     POLICY <--> STATE[("Encrypted operational store")]
     TOOLS --> EVIDENCE["Receipts and citations"]
     MODEL --> EVIDENCE
@@ -91,9 +98,9 @@ The kernel contracts are frozen before feature code. They define tasks, work pac
 
 ### 4.2 Platform Boundaries Before Capabilities
 
-macOS and Linux adapters are implemented and tested before tools depend on them. The adapters own local inference, workspace authorization, secure path resolution, process confinement, operating-system secret storage, resource limits, installation, and updates.
+macOS and Linux adapters are implemented and tested before tools depend on them. The adapters own local inference, workspace authorization, secure path resolution, process confinement, operating-system secret storage, resource limits, installation, and updates. `RUNTIME-BOUNDARIES.md` defines their process, privilege, socket, lifecycle, and classified data-flow contract.
 
-The MacBook Pro M5 is the primary launch and deployment reference. Fedora is the Linux performance reference. Ubuntu must pass the same supported workflow. Platform-specific mechanisms may differ, but no platform may weaken the common contract.
+The MacBook Pro M5 is the primary launch and deployment reference. Fedora is the Linux performance reference. Ubuntu must pass the same supported workflow. Native `llama.cpp` is the Linux security reference, while Docker Model Runner supplies a separately gated compatibility path matching Docker-based development. Platform-specific mechanisms may differ, but no platform or runtime may weaken the common contract.
 
 ### 4.3 Deterministic Tools Before Model Synthesis
 
@@ -101,7 +108,7 @@ Synthetic fixtures, read-only tools, Git inspection, repository mapping, receipt
 
 ### 4.4 One Interface Before Additional Shells
 
-Native Visual Studio Code Chat is the sole v0.1 interface. A development diagnostic harness may exercise contracts but is not a supported second shell. The complete CLI is introduced in v0.4, and standalone macOS and Linux desktop applications are introduced in v1+ only after the shared kernel is stable.
+Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The complete CLI is introduced in v0.4, and standalone macOS and Linux desktop applications are introduced in v1+ only after the shared kernel is stable.
 
 ### 4.5 Authority Added Incrementally
 
@@ -115,14 +122,14 @@ These workstreams continue across multiple epics even though their first deliver
 |---|---|---|
 | Governance and traceability | Epic 0 | Requirement registry, decision records, additions-only checks, document consistency, public-authority provenance, and final closure |
 | Kernel and contracts | Epics 0-1 | Typed boundaries, policy, work packets, tools, grants, receipts, cancellation, configuration, and compatibility |
-| Platform engineering | Epic 1 | macOS signing/sandbox/XPC/Keychain/Metal and Linux Bubblewrap/seccomp/cgroups/Secret Service, later packaging and updates |
-| Model lifecycle | Epic 1 | Approved-artifact catalog, installer/importer, runtime adapters, diagnostics, explicit selection, later measured routing |
+| Platform engineering | Epic 1 | macOS signing/sandbox/XPC/Keychain/Metal and Linux Bubblewrap/seccomp/cgroups/Secret Service, native and Docker runtime boundaries, later packaging and updates |
+| Model lifecycle | Epic 0 feasibility, Epic 1 implementation | Provenance policy, early E4B/fallback evidence, approved-artifact catalog, installer/importer, native/Docker parity, Chat diagnostics, explicit selection, later measured routing |
 | Data and privacy | Epic 1 | Classification, encrypted operational state, retention, local data root, knowledge authority, export, backup, and deletion |
 | Deterministic evidence | Epic 1 | Read-only tools, Git, repository map, evidence states, citations, reconciliation, and truthful completion |
 | User interfaces | Epic 1 | Native Visual Studio Code Chat, later complete CLI and desktop applications using the same kernel |
 | Capability expansion | Epics 2-8 | Knowledge, writes, coding, frontier consultation, documents, connectors, web, schedules, and agents |
-| Security assurance | Epic 0 | Threat cases, `SR-*` mappings, `RV-*` protocols, adversarial testing, independent review, and evidence bundles |
-| Release engineering | Epic 0 | Reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, rollback, and support |
+| Security assurance | Epic 0 | Threat cases, `SR-*` mappings, assigned `RV-*` owners, continuous fuzzing, adversarial testing, independent review criteria, and incremental evidence bundles |
+| Release engineering | Epic 0 | Apache-2.0 licensing, reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, vulnerability response, signed manual patches, rollback, and support |
 
 ## 6. Delivery Sequence
 
@@ -167,6 +174,8 @@ The two-week sprint cadence is the current planning baseline, not a product deli
 - Repository and package architecture with one-way dependency enforcement.
 - Synthetic workspaces, repositories, attacks, model fixtures, and evidence tooling.
 - Versioned configuration, pinned dependencies, reproducible builds, bills of materials, and no-install diagnostics.
+- Public licensing, model-provenance, vulnerability-response, runtime-boundary, decision, and documentation-validation foundations.
+- An early Gemma 4 E4B native/Docker feasibility record with Gemma 4 12B Unified retained as the disabled fallback candidate.
 
 **Exit condition:** `G-FOUNDATION` passes only when the governing contracts, architecture checks, fixture system, build integrity, and security-review baseline are executable and reproducible.
 
@@ -180,11 +189,12 @@ The two-week sprint cadence is the current planning baseline, not a product deli
 2. Implement the platform-adapter contract, release manifests, macOS topology, Linux topology, and strict-local network boundary.
 3. Implement sensitivity-labeled encrypted operational state, transactions, checkpoints, and crash-safe recovery.
 4. Implement the agent runtime, bounded planning, context management, and session behavior.
-5. Implement the manifest-pinned model runtime, separate installer/importer, manual model selection, diagnostics, and resource controls.
+5. Implement the manifest-pinned model runtime, native `llama.cpp` and gated Docker Model Runner adapters, separate installer/importer, adapter-parity suite, manual model selection, native-Chat diagnostics, and resource controls.
 6. Implement sandboxed read-only file and Git tools with untrusted-instruction handling.
 7. Implement the deterministic repository map, coverage reporting, source resolution, evidence states, stale citations, and tamper-evident receipts.
-8. Implement native Visual Studio Code Chat and the local-only manual Codex handoff boundary.
-9. Run clean cross-platform installation, offline, security, privacy, recovery, quality, performance, documentation, and independent-review gates.
+8. Implement native Visual Studio Code Chat, accessibility from its first increment, and the local-only manual Codex handoff boundary with classification and redaction warnings.
+9. Complete vulnerability-response and patch procedures, continuous trust-boundary fuzzing, incident table-top exercises, and each `RV-*` protocol in its owning sprint.
+10. Re-run proven clean cross-platform installation, offline, security, privacy, recovery, quality, performance, documentation, accessibility, and independent-review gates and assemble the signed release evidence.
 
 **Exit condition:** `G-V0.1` passes only when every `AM-*` v0.1 backlog row, required `AT-*` threshold, applicable `SR-*` control, reviewer protocol, clean-platform workflow, signed artifact, and published operating guide agrees with the raw evidence.
 
@@ -275,10 +285,10 @@ Security assurance is built with each component rather than added after feature 
 | `SEC-G0` Scope | Epic 0 | Threat model, use-case boundary, data inventory, shared responsibility, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Epics 0-1 | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake-platform tests pass. |
 | `SEC-G2` macOS | Epic 1 and every Mac release | Signing, notarization, App Sandbox, XPC, bookmarks, Keychain/crypto provider, selected endpoint-baseline compatibility, and offline proof pass on the M5 reference. |
-| `SEC-G3` Model | Epic 1 and every added model | Installer separation, provenance, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
-| `SEC-G4` Supply chain | Begins in Epic 0; repeated for release | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility, provenance, and support plans pass. |
+| `SEC-G3` Model | Epic 0 feasibility, Epic 1 implementation, and every added model or adapter | Provenance policy, immutable identities, installer separation, native/Docker parity, endpoint isolation, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
+| `SEC-G4` Supply chain | Begins in Epic 0; repeated for release | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility, provenance, signed manual patch, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Before each supported release | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete where applicable. |
-| `SEC-G6` Independent assessment | Every release candidate | A separate reviewer runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |
+| `SEC-G6` Independent assessment | Critical boundary completion and every release candidate | A reviewer who did not author the exact boundary records identity, commit, findings, disposition, and re-review; a separate release reviewer re-runs applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Separate customer decision | A device owner or deploying organization records environment controls, exceptions, allowed data, residual risk, and deployment approval outside AgentMage's authority. |
 
 AgentMage targets a bounded, single-user desktop application and produces reproducible product-security evidence. It does not claim external certification or managed-environment approval that has not been independently granted, and no evaluation or deployment transfers ownership, sponsorship, or authorship.
@@ -305,7 +315,7 @@ Every implementation sub-task inherits five issue-local cases where applicable:
 - Dependency failure, cancellation, timeout, or uncertain result.
 - Exact intended side effects and proof that prohibited side effects did not occur.
 
-Every sprint must produce its declared code or documentation, artifacts, tests, raw evidence, environment identity, hashes, summaries, limitations, security mappings, and reviewer dispositions. Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/`.
+Every sprint must produce its declared code or documentation, artifacts, tests, raw evidence, environment identity, hashes, summaries, limitations, security mappings, assigned reviewer-protocol results, and reviewer dispositions. Each `RV-*` protocol has one first-execution owner; the release sprint re-runs current suites instead of discovering the control for the first time. Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/`.
 
 Raw evidence is authoritative over a summary. Failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking checks cannot be represented as passing. Linux evidence never substitutes for a Mac deployment gate, and Mac evidence never replaces the supported Linux workflow.
 
@@ -319,6 +329,7 @@ Each release is produced from pinned source, dependencies, toolchains, model/run
 - Software Bill of Materials, Cryptographic Bill of Materials, Model Bill of Materials, licenses, hashes, dependency graph, and vulnerability dispositions.
 - Clean standard-user installation, upgrade, offline operation, diagnostics, recovery, rollback, and uninstall.
 - Complete capability and limitation matrices.
+- The public `SECURITY.md` support state, vulnerability process, signed manual patch route, emergency-disable procedure, and end-of-support date bound to the release manifest.
 - Raw and summarized acceptance evidence tied to the exact release identity.
 - Independent reproduction before a release is represented as review-ready.
 
@@ -331,6 +342,7 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Scope expansion before foundation closure | Inconsistent contracts and untestable authority | Enforce Epic 0 and dependency gates before feature work. |
 | Local-model quality or malformed tool calls | Unsupported answers or unsafe execution requests | Deterministic-first behavior, schema validation, evidence states, bounded retries, quality thresholds, and visible failure. |
 | Platform divergence | A passing Linux path masks an invalid Mac deployment or vice versa | Shared adapter contracts, identical fixtures, platform-specific evidence, and independent Mac testing. |
+| Docker Model Runner privilege or endpoint exposure | A local compatibility path contradicts standard-user or exclusive-client claims | Native Linux security reference, immutable Docker identities, explicit prerequisite reporting, loopback and local-client probes, namespace/container isolation, profile-specific evidence, and fail-closed admission. |
 | macOS packaging and identity complexity | IPC impersonation, invalid entitlements, or unreleasable package | Freeze the release manifest, use an isolated Apple Silicon runner, and test signatures, notarization, XPC identities, bookmarks, and Keychain. |
 | Dependency, model, or supplier provenance gaps | License, security, or review rejection | Approved-artifact catalog, bills of materials, hashes, lineage, origin policy, due diligence, and fail-closed admission. |
 | Prompt injection or untrusted repository content | Policy manipulation, secret leakage, or false completion | Treat all content as untrusted; keep policy and grants outside the model; run adversarial fixtures. |
@@ -338,20 +350,21 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Secret or private-data persistence | Disclosure through logs, memory, exports, or diagnostics | Classify and minimize before persistence, use operating-system key storage, detect secrets, redact output, and fail closed without encryption. |
 | Network or connector expansion | Hidden egress or remote mutation | Strict-local baseline, explicit temporary network grants, destination scopes, sensitivity-labeled cache, read-only connector phase, and receipts. |
 | Granular-plan drift | Future developers or LLMs implement stale or orphaned work | Stable IDs, additions-only checks, document hashes, requirement registry, cross-document validation, and Sprint 0 traceability. |
-| Long roadmap and resource pressure | Excessive concurrent scope, thermal load, disk growth, or abandoned partial capabilities | Sequential gates, one bounded story per sprint, resource budgets, cancellation, cleanup, and capability removal tests. |
+| Long roadmap and resource pressure | Excessive concurrent scope, thermal load, disk growth, or abandoned partial capabilities | Sequential gates, bounded stories, split decisions, resource budgets, cancellation, cleanup, and capability removal tests. |
 | Optional environment-review uncertainty | Product evidence is mistaken for customer approval or a transfer of ownership | Shared-responsibility model, explicit ownership boundary, reserved customer decisions, and reproducible review package. |
 
 ## 12. Planning and Change Management
 
 Changes to the implementation sequence follow these rules:
 
-1. A new product requirement begins in the PRD or an approved decision record.
+1. A new product requirement begins in the PRD or an approved decision record under `docs/decisions/`.
 2. A detailed requirement receives a stable inventory identifier, release, dependencies, tests, and disposition.
 3. Applicable security controls, threat cases, reviewer protocols, privacy, records, accessibility, supply-chain, and operational effects are mapped.
 4. The high-level milestone and dependency impact are recorded in this plan.
 5. New executable work is appended to `TASKS.md` with a story, numbered tasks and sub-tasks, Given/When/Then criteria, sprint criteria, artifacts, tests, evidence, and gate.
 6. Accepted identifiers are not renumbered. A supersession preserves the original text and records the approved replacement and rationale.
 7. A changed source, dependency, configuration, schema, model, runtime, platform, threat model, authority path, storage path, network path, installer, or package makes affected evidence stale and triggers impact-based reruns.
+8. A sprint may contain multiple bounded stories only when their combined gate remains achievable; otherwise the work is split without renumbering accepted identifiers.
 
 Release dates, staffing assumptions, and parallelization are intentionally not promised here. The two-week sprint cadence is a planning baseline. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
@@ -361,11 +374,13 @@ Implementation begins with Epic 0, Sprint 0 in `TASKS.md`.
 
 The first high-level sequence is:
 
-1. Establish the canonical requirement registry, document traceability, public-authority provenance, conflict handling, and additions-only checks.
-2. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
-3. Build the synthetic fixture, attack, test-result, and evidence framework before real user data is touched.
-4. Freeze configuration, dependencies, build integrity, bills of materials, and no-install diagnostics.
-5. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
+1. Establish the canonical requirement registry, decision and risk records, document traceability, public-authority provenance, conflict handling, and additions-only checks.
+2. Validate the Apache-2.0, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
+3. Run the early Gemma 4 E4B artifact, native/Docker runtime, tool-call, resource, and quality feasibility spike; retain Gemma 4 12B Unified as a disabled fallback.
+4. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
+5. Build the synthetic fixture, attack, fuzzing, test-result, and evidence framework before real user data is touched.
+6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
+7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
 For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, retain the required evidence, and record the sprint gate as `PASS` or `BLOCKED` before proceeding.
 

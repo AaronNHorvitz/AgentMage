@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Product** | AgentMage - a portable, local-first AI agent |
-| **Version** | Draft v0.4 |
+| **Version** | Draft v0.5 |
 | **Author** | Aaron N. Horvitz |
-| **Date** | 2026-08-09 |
+| **Date** | 2026-08-10 |
 | **Status** | Design phase; implementation not started |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
@@ -13,11 +13,12 @@
 | **Execution plan** | [TASKS.md](./TASKS.md) - 10 epics and 103 sequential two-week sprints |
 | **Reference platforms** | Apple Silicon MacBook Pro M5 as the primary launch reference, plus Fedora and Ubuntu in the same release |
 | **First interface** | Native Visual Studio Code Chat |
-| **First model** | Manifest-pinned local Gemma 4 E4B through native `llama.cpp` with Metal on macOS and an approved local runtime on Linux |
+| **First model** | Manifest-pinned local Gemma 4 E4B through native `llama.cpp`, plus a gated Docker Model Runner compatibility adapter on Linux |
+| **License** | Apache License 2.0 |
 
 AgentMage is a brand-new, from-scratch project. It is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer, and it is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
 
-This PRD governs product intent, release scope, architecture, and product-level requirements. The inventory governs stable requirement identifiers, detailed capability gates, and acceptance tests. The security review governs the public product-security baseline and reviewer evidence contract. The implementation plan provides the derived high-level build sequence, workstreams, milestones, dependencies, and risks. The task plan governs granular execution order, stories, tasks, sub-tasks, acceptance criteria, and sprint gates. The README summarizes these authorities and must not redefine them.
+This PRD governs product intent, release scope, architecture, and product-level requirements. The inventory governs stable requirement identifiers, detailed capability gates, and acceptance tests. The security review governs the public product-security baseline and reviewer evidence contract. The implementation plan provides the derived high-level build sequence, workstreams, milestones, dependencies, and risks. The task plan governs granular execution order, stories, tasks, sub-tasks, acceptance criteria, and sprint gates. The README summarizes these authorities and must not redefine them. Supporting model, disclosure, runtime, and decision documents implement these authorities and cannot weaken them.
 
 If the documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted requirement, test, security-control, reviewer-protocol, epic, sprint, story, task, and sub-task identifiers are never silently removed, weakened, merged away, or renumbered.
 
@@ -31,6 +32,12 @@ If the documents conflict, the narrower safety boundary or release scope wins un
 | `IMPLEMENTATION-PLAN.md` | Derived high-level implementation sequence, workstreams, milestones, dependencies, risks, and release strategy |
 | `TASKS.md` | Epic and sprint order, stories, numbered tasks and sub-tasks, Given/When/Then criteria, evidence, and PASS/BLOCKED gates |
 | `README.md` | Concise orientation consistent with all five planning and authority documents |
+| `MODEL-PROVENANCE-POLICY.md` | Model-origin, lineage, license, artifact, runtime, quality, and fallback admission procedure under the inventory and security baseline |
+| `SECURITY.md` | Public vulnerability reporting, supported-version, patch-delivery, emergency-disablement, and end-of-support policy |
+| `RUNTIME-BOUNDARIES.md` | Derived trust-boundary, privilege, process, socket, lifecycle, and data-flow specification |
+| `docs/decisions/*.md` | Accepted clarifications and supersessions with rationale and verification; never authority to weaken a higher-ranked requirement silently |
+
+Each document has an independent revision. A derived document's version number does not claim that the governing PRD has the same maturity; compatibility is established by recorded source versions and automated cross-document checks.
 
 ## 1. Product Summary
 
@@ -163,14 +170,14 @@ There is no Model-to-Tool, Shell-to-Tool, Shell-to-Model, or Capability-Pack-to-
 ## 6. v0.1 User Experience
 
 1. The user installs the signed and notarized AgentMage package on an Apple Silicon MacBook Pro M5, or the verified Linux package on Fedora or Ubuntu.
-2. A separate installer/importer assesses hardware, memory, disk space, model and quantization fit, license, publisher, lineage, model-origin policy, hashes, and runtime compatibility before atomically enabling an approved artifact.
-3. A local, redacted `agentmage doctor` view reports the active model and runtime manifests, offline state, platform boundary, workspace grant, capability versions, index health, encrypted-store availability, and session-recovery status.
+2. A separate installer/importer assesses hardware, memory, disk space, model and quantization fit, license, publisher, lineage, `MODEL-PROVENANCE-POLICY.md`, native artifact or immutable OCI hashes, and runtime compatibility before atomically enabling an approved artifact.
+3. A local, redacted `agentmage doctor` response renders inside native Visual Studio Code Chat and reports the active model and runtime manifests, offline state, platform boundary, workspace grant, capability versions, index health, encrypted-store availability, and session-recovery status without requiring the deferred end-user CLI.
 4. **AgentMage - Gemma 4 E4B (Local, Read Only)** appears in the native Chat model picker.
 5. The user selects a workspace and sees its resolved root, exclusions, sensitivity, and read-grant expiration.
 6. AgentMage can list files, read bounded text, search names or text, inspect metadata, calculate hashes, inspect Git, and build a deterministic structural repository map without changing the workspace.
 7. Chat responses stream in the native Chat window and include progress, citations, denials, errors, completion receipts, and visible **Observed**, **Derived**, **Inferred**, or **Unknown/Blocked** claim states.
-8. AgentMage may render a local Codex handoff packet containing the objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions.
-9. AgentMage cannot invoke Codex, control or populate its tab, write the clipboard, or transmit the packet. The user manually switches to Codex and chooses what to submit.
+8. AgentMage may render a local Codex handoff packet containing the objective, acceptance criteria, cited evidence, constraints, disclosure list, unresolved questions, classification status, and unresolved redaction warnings.
+9. AgentMage cannot invoke Codex, control or populate its tab, write the clipboard, or transmit the packet. The preview explains that manual submission discloses selected content to a separate product under that product's policies; the user manually switches to Codex, resolves or accepts each warning, and chooses what to submit.
 10. The user may persist one encrypted session or operate ephemerally.
 11. After a crash or restart, a persisted session revalidates environmental drift, including repository-map inputs and cited file hashes, and resumes at the next safe action.
 
@@ -185,21 +192,25 @@ All platforms use authenticated local inter-process communication, encrypted SQL
 ```mermaid
 flowchart TB
     V["Native VS Code Chat extension"] -->|"authenticated local IPC"| K["Kernel host"]
-    K -->|"inference only"| M["Manifest-pinned local model runtime"]
+    K -->|"inference only"| A["LocalModelRuntime adapter"]
+    A --> M["Native llama.cpp"]
+    A --> R["Gated Docker Model Runner"]
     K -->|"single-use grant"| T["Fresh sandboxed tool worker"]
     K <--> D[("Encrypted SQLite")]
     K <--> Q["Operating-system secret store"]
     T -->|"read-only authorized root"| W["User-selected workspace"]
 
-    X["Separate installer/importer"] -->|"verified atomic activation"| A["Approved model store"]
-    A --> M
+    X["Separate installer/importer"] -->|"verified atomic activation"| MS["Approved model store"]
+    MS -->|"hash-verified load"| M
+    MS -->|"immutable OCI activation"| R
 
     T -. "no network" .-> N["Network denied"]
-    M -. "no tools, files, grants, or credentials" .-> W
+    M -. "no tools, files, grants, credentials, or egress" .-> W
+    R -. "unauthenticated local service; no AgentMage authority" .-> W
     X -. "no workspace or session authority" .-> W
 ```
 
-On macOS, the kernel, tool worker, secret store, and inference boxes map to the signed App-Sandboxed host, XPC helper, Keychain, and native Metal service. On Fedora and Ubuntu, they map to the unprivileged kernel, fresh Bubblewrap worker, Linux Secret Service, and approved guarded local runtime. Platform-specific enforcement may differ; the shared authority, path, privacy, receipt, and offline contracts may not.
+On macOS, the kernel, tool worker, secret store, and inference boxes map to the signed App-Sandboxed host, XPC helper, Keychain, and native Metal service. On Fedora and Ubuntu, they map to the unprivileged AgentMage kernel, fresh Bubblewrap worker, Linux Secret Service, and either the native security-reference runtime or separately gated Docker compatibility runtime. Platform-specific enforcement may differ; the shared authority, path, privacy, receipt, and offline contracts may not. `RUNTIME-BOUNDARIES.md` gives the complete process, privilege, socket, lifecycle, and classified data-flow inventory.
 
 ### 7.1 macOS Reference Runtime
 
@@ -218,19 +229,20 @@ Docker Desktop with Docker Model Runner may be offered as an optional macOS adap
 
 - An unprivileged AgentMage kernel process.
 - Fresh Bubblewrap tool workers with read-only workspace binds, seccomp, and `systemd-run --user` cgroup limits.
-- Docker Engine and Docker Model Runner behind the guarded local-runtime adapter, or a separately approved native `llama.cpp` adapter.
+- Native `llama.cpp` as the security-reference adapter, installed and run in user-owned scope.
+- Docker Engine with Docker Model Runner as a supported compatibility adapter behind the same `LocalModelRuntime` contract only after its immutable OCI, privilege, unauthenticated-endpoint, namespace, container, local-client, parity, and zero-egress gates pass.
 - Linux Secret Service for the encrypted-store key.
 - Descriptor-relative path protection using `openat2` where available and a fail-closed fallback.
 
-Each platform fails startup when its declared signing, sandbox, workspace, key-store, local-runtime, path, resource, or network controls cannot be verified.
+Each platform and runtime profile fails startup when its declared signing, sandbox, workspace, key-store, local-runtime, path, privilege, socket, resource, or network controls cannot be verified. Installing Docker or operating-system dependencies remains a visible platform prerequisite and is never hidden inside AgentMage's installer.
 
 Before acquisition, the installer/importer reports available memory, free disk space, supported acceleration, artifact size, expected working set, context limit, and quantization compatibility. It supports bounded retry, partial-download recovery, staging cleanup, hash-failure quarantine, atomic activation, load/unload, and clean cancellation. The normal AgentMage host never downloads a model or silently substitutes an artifact.
 
 ## 8. Model Policy and Routing
 
-The first approved model is Gemma 4 E4B. Its manifest records the first-party identity, publisher, license, upstream lineage and hash, conversion and quantization recipe, packaged-artifact and tokenizer hashes, runtime build, supported platform, expected memory and disk use, context ceiling, acceleration requirements, and measured tool-call limitations. `ai/gemma4:e4b` is the verified Docker Model Runner identity where that adapter is used; macOS uses the same approved profile through a pinned GGUF artifact and native `llama.cpp` Metal runtime. A separate installer/importer must show the license, verify this manifest, prove hardware fit, and complete an installation self-test before an artifact becomes runnable. AgentMage refuses a silent artifact or runtime change.
+The first candidate model is Gemma 4 E4B. It is not enabled until its admission record passes. Its manifest records the first-party identity, publisher, Apache-2.0 license disposition, upstream lineage and hash, conversion and quantization recipe, packaged-artifact and tokenizer hashes, runtime build, supported platform, expected memory and disk use, context ceiling, acceleration requirements, and measured tool-call limitations. Docker's `ai/gemma4:e4b` name must resolve to an approved immutable OCI digest; native adapters use the same approved profile through a hash-pinned GGUF and supporting artifacts. A separate installer/importer must show the license, verify the manifest, prove hardware fit, and complete an installation self-test before an artifact becomes runnable. AgentMage refuses a silent artifact or runtime change.
 
-Every model, embedding model, reranker, tokenizer, conversion, quantization, runtime, and derived artifact must pass the project's documented non-Chinese and non-Chinese-derived model-origin policy in addition to license, publisher, lineage, provenance, integrity, resource, quality, security, and platform review. Gemma 4 26B and Devstral Small 2 using `ai/devstral-small-2:24B` are later candidates and remain disabled until their separate gates pass. v0.1 exposes an approved-artifact catalog, not an arbitrary model or provider marketplace.
+Every model, embedding model, reranker, tokenizer, conversion, quantization, runtime, and derived artifact must pass `MODEL-PROVENANCE-POLICY.md`, including the documented non-Chinese and non-Chinese-derived model rule, in addition to license, publisher, lineage, provenance, integrity, resource, quality, security, and platform review. Gemma 4 12B Unified is the named disabled fallback if E4B fails a mandatory quality or tool-calling gate. Gemma 4 26B A4B and other later candidates remain disabled until their separate gates pass. v0.1 exposes an approved-artifact catalog, not an arbitrary model or provider marketplace.
 
 v0.1 uses explicit user model selection. It attempts deterministic read-only operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract. It records benchmark data for a later measured router without changing behavior.
 
@@ -242,7 +254,7 @@ Protected assets include user files, conversation text, operational state, grant
 
 All repository instructions, source comments, documentation, issue text, generated text, and future knowledge notes are untrusted content by default. The kernel may expose their cited text to the model and may apply explicitly trust-gated behavioral guidance, but workspace content cannot change policy, grant authority, activate a capability, expand a root, override the current user request, or instruct the kernel to ignore higher-priority controls.
 
-The Visual Studio Code extension has display and interaction authority only. It cannot access AgentMage workspace tools or a raw model runtime directly. On macOS, its minimal native IPC bridge is signed and pinned to the AgentMage designated requirement; it carries protocol messages and a one-launch authentication challenge but no workspace authority. The kernel owns policy and connects to the approved local inference adapter. On macOS, the signed XPC tool helper receives one consumed operation grant and one read-only security-scoped workspace bookmark. On Linux, a Bubblewrap worker receives one consumed operation grant and one read-only workspace bind. Both receive isolated scratch space, strict resource limits, no ambient home access, no workspace writes, and no network. Every local model runtime has inference authority only and never receives tools, grants, workspace access, or credentials. The separate model installer receives acquisition authority only and cannot run during an offline session.
+The Visual Studio Code extension has display and interaction authority only. It cannot access AgentMage workspace tools or a raw model runtime directly. On macOS, its minimal native IPC bridge is signed and pinned to the AgentMage designated requirement; it carries protocol messages and a one-launch authentication challenge but no workspace authority. The kernel owns policy and connects through `LocalModelRuntime`. On macOS, the signed XPC tool helper receives one consumed operation grant and one read-only security-scoped workspace bookmark. On Linux, a Bubblewrap worker receives one consumed operation grant and one read-only workspace bind. Both receive isolated scratch space, strict resource limits, no ambient home access, no workspace writes, and no network. Every local model runtime has inference authority only and never receives tools, grants, workspace access, credentials, or AgentMage authority. Docker Model Runner's raw API is untrusted and cannot be exposed to the extension or tool workers. The separate model installer receives acquisition authority only and cannot run during an offline session.
 
 Startup fails closed when required isolation, socket, encryption, path, or network controls cannot be verified.
 
@@ -311,7 +323,7 @@ Grants and receipts default to 90 days, operational sessions to 30 days, bounded
 
 ## 14. Offline and Network Contract
 
-After the separate model installer/importer has exited, v0.1 makes no outbound connection. The native macOS `llama.cpp` service has no network entitlement and communicates locally with the kernel. Docker Model Runner, where enabled on Linux or as an optional Mac adapter, is treated as an unauthenticated local inference service and binds to the approved local path only. The kernel is the only approved AgentMage inference client; the Visual Studio Code extension and tool workers cannot reach a model runtime directly.
+After the separate model installer/importer has exited, v0.1 makes no outbound connection. Native `llama.cpp` communicates over private local IPC and has no network authority. Docker Model Runner, where enabled on Linux or as an optional Mac adapter, is treated as an unauthenticated local inference service and binds to the exact approved loopback endpoint only. Loopback is necessary but not sufficient: the Docker profile must prove its declared namespace, local-client, container, socket, and egress boundary. The kernel adapter is the only approved AgentMage inference client; the Visual Studio Code extension and tool workers cannot reach a model runtime directly.
 
 Startup refuses undeclared listeners and any non-loopback, local-area-network, or container-accessible service binding. Release tests monitor sockets, packets, Domain Name System activity, macOS entitlements and XPC identities, and Linux namespaces. They verify that inference and kernel interfaces are unreachable from undeclared processes, ordinary containers where applicable, and local-area-network peers.
 
@@ -321,7 +333,7 @@ There is no cloud fallback, hosted account requirement, telemetry, analytics, cr
 
 Codex is a separate user-controlled Visual Studio Code surface. AgentMage may prepare and display a bounded local handoff packet, but it cannot treat Codex as a model provider, tool, fallback, subagent, or execution target.
 
-In v0.1, handoff ends at local preview. AgentMage cannot activate or populate the Codex tab, invoke a Codex or OpenAI endpoint, write the packet to the clipboard, launch a transfer command, or transmit any packet content. The user must manually switch tabs, review the packet, choose the content, and submit it.
+In v0.1, handoff ends at local preview. AgentMage cannot activate or populate the Codex tab, invoke a Codex or OpenAI endpoint, write the packet to the clipboard, launch a transfer command, or transmit any packet content. The preview labels classification, possible restricted content, unresolved redactions, included sources, and the separate destination boundary. The user must manually switch tabs, resolve or explicitly accept the warnings, choose the content, and submit it.
 
 A later convenience action may be considered only through a supported public interface and only when the user initiates it after an exact disclosure preview. No standing approval, model decision, failure condition, schedule, or router may authorize autonomous delivery. Imported Codex output remains untrusted and re-enters through validation rather than directly changing canonical state.
 
@@ -358,6 +370,8 @@ The inventory's v0.1 quantitative acceptance matrix is mandatory. Key gates incl
 - 100% exact repository-map output for supported-language fixtures, with every structural fact resolving to the correct file hash and source range and every unsupported relationship omitted or labelled as inferred.
 - 100% correct evidence-state assignment and stale-citation detection on the labeled evidence corpus.
 - 100% correct model installation, recovery, hardware-fit, manifest, runtime, and redacted `agentmage doctor` results across clean supported platforms.
+- 100% immutable model, tokenizer, template, GGUF, OCI, and runtime identity resolution plus behavioral parity across every enabled native or Docker adapter; one adapter's result never substitutes for another.
+- Zero non-loopback Docker Model Runner exposure, zero access from prohibited clients or ordinary containers under the approved profile, and zero runtime acquisition or egress after installation.
 - Kernel startup p95 at most 5 seconds, deterministic tool p95 at most 2 seconds on 10,000 files/1 GiB, and warm Gemma first-token p95 at most 15 seconds on the recorded MacBook Pro M5 and Fedora reference machines.
 - Kernel peak memory at most 1.5 GiB excluding the model and total peak memory at most 12 GiB.
 - The complete supported workflow passes on Apple Silicon MacBook Pro M5, Fedora, and Ubuntu.
@@ -387,7 +401,7 @@ The inventory owns the executable requirement definitions. The task plan owns ex
 
 ## 19. Release Sequence
 
-The release labels are product epics rather than individual stories. The current execution baseline assigns one bounded story to each sequential two-week sprint. The cadence is a reversible planning assumption, not a product delivery guarantee.
+The release labels are product epics rather than individual stories. The current execution baseline assigns one or more bounded stories to each sequential two-week sprint only when their combined gate remains achievable. The cadence is a reversible planning assumption, not a product delivery guarantee; oversized work is split through an appended decision without renumbering accepted identifiers.
 
 ```mermaid
 flowchart LR
@@ -449,7 +463,7 @@ Managed-device evaluation is optional and outside the personal development bound
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 10 epics and 103 sequential sprints. Each sprint currently represents a two-week planning timebox and contains one bounded user-, maintainer-, or reviewer-facing story.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 10 epics and 103 sequential sprints. Each sprint currently represents a two-week planning timebox and contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains achievable. Decision 0001 records this additions-only clarification.
 
 ```mermaid
 flowchart LR

@@ -9,14 +9,17 @@
 | Product authority | `PRD.md` |
 | Detailed requirement authority | `Agent-Scaffolding-Inventory.md` |
 | Product-security engineering baseline | `SECURITY-REVIEW.md` |
+| Product vulnerability and support policy | `SECURITY.md` |
+| Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
+| Runtime/process/socket boundary | `RUNTIME-BOUNDARIES.md` |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
 | Execution rule | Work proceeds in numbered order; a dependent sprint cannot start until every dependency gate is PASS |
 
 ## Planning Hierarchy and Numbering
 
 - `Epic E` is a release or major product increment and is not itself story-sized.
-- `Sprint N` is one two-week planning timebox with one bounded story in this baseline.
-- `Story N.1` is the user-, maintainer-, or reviewer-facing value delivered by Sprint N.
+- `Sprint N` is one two-week planning timebox with one or more bounded stories; a story that no longer fits is split through an appended planning decision before implementation continues.
+- `Story N.S` is one user-, maintainer-, or reviewer-facing value delivered by Sprint N.
 - `Task N.1.T` groups implementation, artifacts, or verification work under the story.
 - `Sub-task N.1.T.U` is the smallest planned independently checkable work item.
 - `Story AC N.1.ACk` is a Given/When/Then acceptance criterion for the story.
@@ -34,6 +37,7 @@
 | Broad legacy increments combine multiple user outcomes. | Epic candidate | Split the flagged increments into sequential stories listed below; no legacy job, artifact, test, or gate was removed. |
 | `DEFER` items are intentionally not implementation-ready. | Unplaceable as active work | Keep them as tested exclusions until a user-approved decision promotes them into a stable backlog and new numbered stories. |
 | Customer-only decisions such as managed-device installation, allowed data, privacy, retention, accessibility acceptance, and AI-tool approval are outside product authority. | Reviewer-owned | Place evidence-production work in sprints, but reserve the actual determination for the device owner or deploying organization. |
+| The delivery/security audit identified missing v0.1 policy, runtime, fuzzing, incident, accessibility, support, diagnostics, and handoff work. | Accepted planning decision | Record the independently assessed decisions in `docs/decisions/0001-product-security-and-runtime-baseline.md`; add bounded stories without deleting or renumbering prior work. |
 
 ### Epic Candidates Resolved
 
@@ -89,6 +93,35 @@ Every numbered implementation sub-task inherits five issue-local cases: `UT-POS`
 Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/` as raw machine-readable output plus a concise generated summary. A test marked not applicable requires a written rationale and reviewer approval. A summary is never the authority over contradictory raw evidence.
 
 These controls support public product-security review, independent verification, customer evaluation, and optional managed-device assessment. They do not claim external certification or deployment approval that has not been independently granted, and they do not transfer project ownership.
+
+### v0.1 Reviewer Protocol First-Execution Ownership
+
+The owning sprint performs the first complete execution possible for its boundary and retains raw evidence. Sprint 25 reruns every applicable protocol against the integrated release candidate; it does not become the first owner merely because it assembles the release evidence bundle.
+
+| Protocol | First-execution owner | Required rerun or extension |
+|---|---|---|
+| `RV-01` Release identity and integrity | Sprint 3 for build inputs; Sprint 25 for signed packages | Every release candidate |
+| `RV-02` Clean standard-user installation | Sprint 8 on macOS; Sprint 9 on Fedora/Ubuntu | Sprint 25 on all release platforms |
+| `RV-03` Sandbox and ambient-access resistance | Sprint 8 on macOS; Sprint 9 on Fedora/Ubuntu | Every changed platform boundary and Sprint 25 |
+| `RV-04` Path and race safety | Sprint 6 | Every changed path/tool boundary and Sprint 25 |
+| `RV-05` IPC identity and replay | Sprint 8 | Linux extension in Sprint 9; Sprint 25 |
+| `RV-06` Offline and egress proof | Sprint 10 | Every runtime adapter change and Sprint 25 |
+| `RV-07` Acquisition separation | Sprint 14 | Every model/runtime artifact change and Sprint 25 |
+| `RV-08` Data minimization and secret leakage | Sprint 11 | Every persistence/export surface and Sprint 25 |
+| `RV-09` Cryptography and key handling | Sprint 11 | Every provider/platform change and Sprint 25 |
+| `RV-10` Retention, backup, and sanitization | Sprint 11 | Every durable store and Sprint 25 |
+| `RV-11` Prompt injection and authority escalation | Sprint 17 | Every new untrusted-content or tool surface and Sprint 25 |
+| `RV-12` Grant mutation and replay | Sprint 5 | Every authority-bearing capability and Sprint 25 |
+| `RV-13` Model and runtime provenance | Sprint 13 | Every model, quantization, runtime, image, or adapter change and Sprint 25 |
+| `RV-14` Model quality and evidence integrity | Sprint 13, extended in Sprint 15 | Every model/profile change and Sprint 25 |
+| `RV-15` Fuzzing and malformed input | Sprint 2 harness/corpus foundation | Continuous at every parser, IPC, model-output, path, and FFI boundary; Sprint 25 |
+| `RV-16` Resource exhaustion and cancellation | Sprint 15 | Every model/runtime/tool resource-policy change and Sprint 25 |
+| `RV-17` Crash recovery and state integrity | Sprint 22 | Every durable-state transition and Sprint 25 |
+| `RV-18` Audit completeness and redaction | Sprint 21 | Every event/schema/export change and Sprint 25 |
+| `RV-19` Vulnerability and supply-chain review | Sprint 3 for source/build inputs | Sprint 25 for shipped packages and models |
+| `RV-20` Accessibility | Sprint 23 | Every user-facing surface and Sprint 25 |
+| `RV-21` Incident tabletop | Sprint 25 | Every material incident/runbook change |
+| `RV-22` Update, rollback, and end of support | Sprint 25 for signed manual patch delivery | Sprint 96 when automatic update capability is introduced |
 
 ## Epic Roadmap
 
@@ -156,15 +189,73 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 0.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can navigate any v0.1 requirement to its source heading, implementation sprint, acceptance test, exclusion state, and current evidence without manual reconstruction.
 - [ ] **Story AC 0.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every public product-security reference is either linked as a current live source or retained as an approved hash-pinned snapshot with provenance; neither state is represented as publisher certification, endorsement, or approval of AgentMage.
 
+#### [ ] Story 0.2 - Public Policy, License, and Documentation Controls
+
+**User-facing value:** As a user, maintainer, or reviewer, I need the project's license, vulnerability process, model-admission rules, runtime boundaries, and documentation checks to be explicit before implementation so that foundational assumptions cannot drift silently.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 0.2.1 - Establish public policy and decision artifacts**
+  - [ ] **Sub-task 0.2.1.1:** Publish the Apache License 2.0 as the repository license and identify it consistently in product documents and package metadata.
+  - [ ] **Sub-task 0.2.1.2:** Publish `SECURITY.md` with supported-version status, private vulnerability reporting, triage, signed manual patch delivery, emergency local disablement, and end-of-support behavior.
+  - [ ] **Sub-task 0.2.1.3:** Publish `MODEL-PROVENANCE-POLICY.md` with supplier/control, license, lineage, derivative, immutable identity, runtime, evaluation, admission, revocation, and fallback requirements.
+  - [ ] **Sub-task 0.2.1.4:** Publish `RUNTIME-BOUNDARIES.md` with processes, privileges, sockets, data flows, runtime adapters, lifecycle, and fail-closed conditions for macOS, Fedora, and Ubuntu.
+  - [ ] **Sub-task 0.2.1.5:** Record the accepted baseline in `docs/decisions/0001-product-security-and-runtime-baseline.md` without importing external audit text into the repository.
+
+- [ ] **Task 0.2.2 - Enforce documentation integrity in continuous integration**
+  - [ ] **Sub-task 0.2.2.1:** Add Markdown linting and Mermaid parsing with pinned tool versions and immutable workflow action revisions.
+  - [ ] **Sub-task 0.2.2.2:** Add local-link, secret-pattern, prohibited-claim, stable-identifier, required-document, and cross-document consistency checks.
+  - [ ] **Sub-task 0.2.2.3:** Add deliberate ignore rules for credentials, local model artifacts, databases, logs, build output, caches, and generated evidence without ignoring canonical planning documents.
+  - [ ] **Sub-task 0.2.2.4:** Document and run one local command that reproduces the documentation gate from a clean checkout.
+
+- [ ] **Task 0.2.3 - Verify and close the story**
+  - [ ] **Sub-task 0.2.3.1:** Seed broken links, malformed Mermaid, unresolved stable IDs, a prohibited deployment claim, and synthetic secret signatures independently; assert every case blocks while the unmodified repository passes.
+  - [ ] **Sub-task 0.2.3.2:** Compare all canonical documents against the accepted decision; assert license, model, runtime, platform, interface, handoff, support, and release boundaries agree.
+  - [ ] **Sub-task 0.2.3.3 - Product security evidence:** Map `SR-GOV-003`/`SR-GOV-004`/`SR-GOV-006`/`SR-GOV-009`/`SR-GOV-010`, `SR-SUP-001`/`SR-SUP-003`/`SR-SUP-006`/`SR-SUP-010`, and `SR-TST-001`; retain policy hashes, lint output, mutation-test output, workflow identity, and decision record.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 0.2.AC1:** Given a clean checkout, when the documented local documentation command and continuous-integration workflow run, then Markdown, Mermaid, links, secrets, claims, identifiers, and cross-document assertions all pass with identical blocking semantics.
+- [ ] **Story AC 0.2.AC2:** Given any release artifact or model profile, when its license, support state, provenance, runtime, or vulnerability path is reviewed, then one current public document states the controlling rule and links to its evidence owner.
+- [ ] **Story AC 0.2.AC3:** Given seeded policy drift or sensitive material, when documentation validation runs, then the exact file and rule are reported without printing the sensitive value and the gate fails.
+
+#### [ ] Story 0.3 - Gemma 4 E4B and Runtime Feasibility Decision
+
+**User-facing value:** As a user and maintainer, I need evidence that Gemma 4 E4B can perform the v0.1 workload through the declared local runtimes before the architecture depends on it.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 0.3.1 - Admit candidate artifacts for evaluation**
+  - [ ] **Sub-task 0.3.1.1:** Verify the first-party Gemma 4 E4B model card, Apache-2.0 disposition, publisher/control, lineage, tokenizer, context contract, and known limitations under `MODEL-PROVENANCE-POLICY.md`.
+  - [ ] **Sub-task 0.3.1.2:** Resolve and record immutable source, GGUF, conversion/quantization, native runtime-build, Docker engine-image, and `ai/gemma4:e4b` model-image digests; never use a mutable tag as release identity.
+  - [ ] **Sub-task 0.3.1.3:** Create one versioned corpus for native macOS, native Linux, and Docker Model Runner adapters covering ordinary chat, repository tasks, citations, tool schemas, malformed output recovery, cancellation, context limits, latency, memory, and zero egress.
+
+- [ ] **Task 0.3.2 - Execute the feasibility spike and decide**
+  - [ ] **Sub-task 0.3.2.1:** Run the corpus on Fedora native `llama.cpp` and the isolated Docker Model Runner compatibility adapter with explicit context and resource settings.
+  - [ ] **Sub-task 0.3.2.2:** Run the same corpus on the MacBook Pro M5 native `llama.cpp`/Metal reference when that hardware is available; do not substitute Linux evidence for the Mac result.
+  - [ ] **Sub-task 0.3.2.3:** Record PASS, BLOCKED, or REJECTED for E4B with raw scores, failures, resource fit, runtime differences, and remediation; do not tune thresholds after viewing results without a versioned decision.
+  - [ ] **Sub-task 0.3.2.4:** If E4B is rejected, evaluate the disabled Gemma 4 12B Unified fallback through the complete admission and corpus gate; never switch automatically or silently.
+
+- [ ] **Task 0.3.3 - Verify and close the story**
+  - [ ] **Sub-task 0.3.3.1:** Substitute one license, lineage field, GGUF hash, OCI digest, runtime build, tokenizer, and context setting at a time; assert quarantine or visible refusal before inference.
+  - [ ] **Sub-task 0.3.3.2:** Probe Docker Model Runner from a LAN peer, unrelated same-user process, tool container, and separate namespace; assert only the guarded kernel adapter path succeeds.
+  - [ ] **Sub-task 0.3.3.3 - Product security evidence:** Perform the feasibility portions of `RV-06`, `RV-13`, `RV-14`, and `RV-16`; retain manifests, immutable identities, corpus, raw adapter results, network probes, and the model/runtime decision.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 0.3.AC1:** Given every candidate artifact and runtime, when admission and substitution tests run, then only exact immutable policy-approved identities reach inference and every unknown or altered input fails visibly.
+- [ ] **Story AC 0.3.AC2:** Given the fixed cross-adapter corpus, when E4B runs on each available reference path, then results expose quality, context, latency, memory, cancellation, and isolation differences and produce a recorded decision without automatic fallback.
+- [ ] **Story AC 0.3.AC3:** Given Docker Model Runner's unauthenticated API, when reachability and zero-egress probes run, then no undeclared process, container, namespace, or non-loopback peer can reach it and no AgentMage data leaves the workstation.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 0.AC1:** Every v0.1 backlog dependency and acceptance-test reference resolves exactly once.
 - [ ] **Sprint AC 0.AC2:** Every PRD v0.1 requirement maps to at least one stable backlog row.
 - [ ] **Sprint AC 0.AC3:** Every competitive recommendation maps to an inventory section and release gate.
-- [ ] **Sprint AC 0.AC4:** README, PRD, inventory, and this plan agree on platforms, model, interface, data authority, release sequence, and exclusions.
+- [ ] **Sprint AC 0.AC4:** README, PRD, implementation plan, inventory, tasks, license, security/model/runtime policies, and accepted decisions agree on platforms, model, runtimes, interface, data authority, release sequence, and exclusions.
 - [ ] **Sprint AC 0.AC5:** Removing or weakening a fixture requirement causes the traceability check to fail.
 
-**Gate decision:** Sprint 0 is PASS only when Story 0.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 0 is PASS only when Stories 0.1 through 0.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 1 - Repository and Package Architecture
 
 **Timebox:** Two weeks.
@@ -265,6 +356,29 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 2.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every later input class has a versioned normal, boundary, malformed, hostile, oversized, cancellation, and recovery fixture with declared prohibited side effects.
 - [ ] **Story AC 2.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then an independent runner can reproduce corpus identity and test summaries without access to private user data or the original development machine.
 
+#### [ ] Story 2.2 - Continuous Trust-Boundary Fuzzing Foundation
+
+**User-facing value:** As a user and reviewer, I need malformed-input testing to begin with the first parsers and protocols so that security defects are found while each boundary is still small.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 2.2.1 - Build reusable fuzz infrastructure**
+  - [ ] **Sub-task 2.2.1.1:** Define fuzz-target contracts for manifests, configuration, IPC, model output, capability grants, paths, text encodings, Git objects, repository parsers, SQLite imports, archives, and every FFI boundary.
+  - [ ] **Sub-task 2.2.1.2:** Record pinned engines, sanitizers, dictionaries, seed corpora, maximum input/resource limits, minimum local and continuous-integration durations, crash deduplication, and regression-corpus retention.
+  - [ ] **Sub-task 2.2.1.3:** Add a standard result schema for seed, coverage, sanitizer state, crash signature, minimized reproducer, timeout/resource event, owner, severity, disposition, and evidence hash.
+  - [ ] **Sub-task 2.2.1.4:** Require every future trust-boundary story to register and execute its targets before its sprint gate can pass.
+
+- [ ] **Task 2.2.2 - Verify and close the story**
+  - [ ] **Sub-task 2.2.2.1:** Seed crashing, hanging, resource-exhausting, path-escaping, secret-leaking, and authorization-bypassing fixtures; assert deterministic detection, minimization, ownership, and gate failure.
+  - [ ] **Sub-task 2.2.2.2:** Run the empty/fake-boundary baseline twice from clean environments; assert corpus and result reconciliation while failed or timed-out cases never become passes.
+  - [ ] **Sub-task 2.2.2.3 - Product security evidence:** Establish `RV-15`; map `SR-SUP-009`, `SR-TST-002`, `SR-TST-004`, `SR-TST-006`, and `SR-TST-012`; retain target registry, pinned tools, seed corpus, seeded-failure results, minimized reproducers, and reviewer disposition.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 2.2.AC1:** Given a newly registered trust boundary, when its story gate is evaluated, then a versioned fuzz target, corpus, resource budget, raw result, and regression path are required or the gate blocks.
+- [ ] **Story AC 2.2.AC2:** Given each seeded security failure, when the fuzz harness runs, then it produces a bounded minimized reproducer and a non-pass disposition without exposing secret-canary values.
+- [ ] **Story AC 2.2.AC3:** Given two clean runs with identical inputs and tools, when summaries are generated, then target identity, crash classification, coverage fields, and evidence hashes reconcile exactly.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 2.AC1:** Recreating the corpus yields identical expected hashes where determinism is required.
@@ -273,7 +387,7 @@ These controls support public product-security review, independent verification,
 - [ ] **Sprint AC 2.AC4:** Test results identify the exact fixture, platform, build, model, runtime, and policy versions.
 - [ ] **Sprint AC 2.AC5:** No fixture contains a real credential or private user file.
 
-**Gate decision:** Sprint 2 is PASS only when Story 2.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 2 is PASS only when Stories 2.1 and 2.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 3 - Configuration, Versioning, and Build Integrity
 
 **Timebox:** Two weeks.
@@ -319,6 +433,29 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 3.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then all configuration inputs are versioned and fail closed, and no unknown, stale, malformed, or permission-broadening setting reaches capability registration.
 - [ ] **Story AC 3.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then migration, diff, backup, and rollback preserve semantics and redact secrets while producing reproducible before/after evidence.
 
+#### [ ] Story 3.2 - Vulnerability Support and Signed Manual Patch Policy
+
+**User-facing value:** As a user or reviewer, I need a clear way to report vulnerabilities and receive authentic fixes so that a local-only product remains supportable without hidden network services or automatic update checks.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 3.2.1 - Implement the support contract**
+  - [ ] **Sub-task 3.2.1.1:** Implement supported-version, severity, ownership, response-target, embargo, disclosure, end-of-support, and maintainer-contact records consistent with `SECURITY.md`.
+  - [ ] **Sub-task 3.2.1.2:** Define signed manual patch metadata with release identity, signer, checksums, provenance, prerequisites, schema impact, rollback path, revocation, and support state; keep silent update checks and remote control absent.
+  - [ ] **Sub-task 3.2.1.3:** Define a local emergency-disable mechanism that can block a compromised model, runtime, component, capability, or version through a user-installed signed policy update without transmitting workstation data.
+  - [ ] **Sub-task 3.2.1.4:** Define safe diagnostics and evidence-preservation guidance for vulnerability reports, including explicit exclusion of prompts, user files, credentials, keys, and unrelated paths.
+
+- [ ] **Task 3.2.2 - Verify and close the story**
+  - [ ] **Sub-task 3.2.2.1:** Test valid, wrong-signer, downgrade, corrupt, mismatched, interrupted, revoked, unsupported-version, migration-failure, and rollback fixtures against the manual patch contract.
+  - [ ] **Sub-task 3.2.2.2:** Exercise the reporting workflow from private intake through triage, bounded evidence, remediation decision, signed patch metadata, notification, and closure using synthetic content.
+  - [ ] **Sub-task 3.2.2.3 - Product security evidence:** Map `SR-GOV-004`, `SR-GOV-010`, `SR-SUP-005`/`SR-SUP-010`/`SR-SUP-011`/`SR-SUP-013`, `SR-OPS-004` through `SR-OPS-007`; retain support records, patch schemas, signature and rollback tests, revocation tests, and tabletop notes. Sprint 25 performs the first complete package-level `RV-22` execution.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 3.2.AC1:** Given a vulnerability report containing only synthetic data, when the support workflow runs, then ownership, severity, bounded evidence, decisions, notifications, and closure are traceable without any automatic network contact by AgentMage.
+- [ ] **Story AC 3.2.AC2:** Given valid and adversarial manual patch metadata, when verification runs, then only an authorized non-downgrade patch for the exact supported release can proceed and every failure preserves the prior safe state.
+- [ ] **Story AC 3.2.AC3:** Given a revoked component or end-of-support release, when AgentMage starts, then the applicable local capability or version is visibly blocked or constrained according to signed policy and no remote kill switch is required.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 3.AC1:** `AT-CFG-001` passes.
@@ -327,7 +464,7 @@ These controls support public product-security review, independent verification,
 - [ ] **Sprint AC 3.AC4:** Configuration migration preserves semantics and fails safely on unsupported versions.
 - [ ] **Sprint AC 3.AC5:** Logs and diagnostics contain configuration identity but no secrets.
 
-**Gate decision:** Sprint 3 is PASS only when Story 3.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 3 is PASS only when Stories 3.1 and 3.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ## [ ] Epic 1 - v0.1 - Read-Only Local Evidence Assistant
 
@@ -645,6 +782,30 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 9.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then fedora and Ubuntu produce equivalent shared policy, receipt, path, cancellation, and evidence outcomes while preserving distinct platform manifests.
 - [ ] **Story AC 9.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each worker receives only one operation's exact read scope, private scratch, executable allowlist, limits, and no network or durable secret material.
 
+#### [ ] Story 9.2 - Linux Native Reference and Docker Compatibility Boundary
+
+**User-facing value:** As a Linux user, I need native `llama.cpp` and Docker Model Runner to follow one AgentMage contract without Docker becoming an undeclared privilege or network boundary.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 9.2.1 - Implement explicit Linux runtime topologies**
+  - [ ] **Sub-task 9.2.1.1:** Package unprivileged native `llama.cpp` as the Fedora/Ubuntu security-reference adapter with pinned build identity, restricted model store, bounded resources, guarded kernel IPC, and no workspace/tool/grant/credential authority.
+  - [ ] **Sub-task 9.2.1.2:** Package Docker Model Runner as an optional compatibility adapter with pinned engine/model OCI digests, explicit install/daemon prerequisites, declared user/group privileges, bounded mounts/resources, and no workspace/tool/grant/credential authority.
+  - [ ] **Sub-task 9.2.1.3:** Prevent the extension, tool worker, unrelated process, and arbitrary container from connecting directly to the Docker Model Runner API; route AgentMage inference only through the guarded kernel adapter.
+  - [ ] **Sub-task 9.2.1.4:** Refuse Docker mode when daemon privilege, socket ownership, API binding, container reachability, image identity, resource limits, or zero-egress state differs from the approved topology.
+
+- [ ] **Task 9.2.2 - Verify and close the story**
+  - [ ] **Sub-task 9.2.2.1:** Inspect process trees, user/group identity, capabilities, namespaces, sockets, mounts, cgroups, images, and firewall state for native and Docker modes on clean Fedora and Ubuntu systems.
+  - [ ] **Sub-task 9.2.2.2:** Probe the unauthenticated Docker API from LAN, host, same-user, extension, tool-worker, ordinary-container, and separate-namespace positions; assert only the declared kernel path succeeds.
+  - [ ] **Sub-task 9.2.2.3:** Disable each required isolation primitive independently; assert visible startup refusal with no fallback to a weaker adapter.
+  - [ ] **Sub-task 9.2.2.4 - Product security evidence:** Extend `RV-02`, `RV-03`, and `RV-05`; map `SR-PLT-001`/`SR-PLT-006`/`SR-PLT-007`/`SR-PLT-010`/`SR-PLT-012`, `SR-NET-003`/`SR-NET-006`; retain process/socket/mount diagrams, immutable identities, reachability matrix, failed-preflight results, and parity report.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 9.2.AC1:** Given native and Docker Linux modes, when their topologies are inspected, then every process, privilege, mount, socket, writable path, resource limit, model artifact, and network rule matches `RUNTIME-BOUNDARIES.md` or startup fails.
+- [ ] **Story AC 9.2.AC2:** Given Docker Model Runner's unauthenticated API, when every declared hostile peer probes it, then no peer except the guarded kernel adapter succeeds and no non-loopback listener exists.
+- [ ] **Story AC 9.2.AC3:** Given a Linux user without an approved Docker boundary, when AgentMage starts, then native `llama.cpp` remains the reference path and Docker is neither required nor selected silently.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 9.AC1:** Linux portions of `AT-PLAT-001`, `AT-SEC-001`, and `AT-SBX-001` pass on Fedora and Ubuntu.
@@ -653,7 +814,7 @@ These controls support public product-security review, independent verification,
 - [ ] **Sprint AC 9.AC4:** Failure of Bubblewrap, seccomp, cgroups, Secret Service, path protection, or network controls prevents startup.
 - [ ] **Sprint AC 9.AC5:** Shared contract fixtures produce equivalent policy and evidence results across macOS and Linux.
 
-**Gate decision:** Sprint 9 is PASS only when Story 9.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 9 is PASS only when Stories 9.1 and 9.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 10 - Strict-Local Network and Data-Residency Boundary
 
 **Timebox:** Two weeks.
@@ -836,9 +997,9 @@ These controls support public product-security review, independent verification,
 
 - [ ] **Task 13.1.1 - Implement the bounded story**
   - [ ] **Sub-task 13.1.1.1** (legacy `S-013-I01`): Implement `LocalModelRuntime` load, unload, health, token count, streaming, cancellation, resource reporting, manifest verification, and zero-network contracts.
-  - [ ] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Define the approved Gemma 4 E4B manifest with identity, publisher, lineage, license, quantization, conversion, tokenizer, artifact hashes, runtime compatibility, context ceiling, and resource expectations.
+  - [ ] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Define the approved Gemma 4 E4B manifest under `MODEL-PROVENANCE-POLICY.md` with identity, publisher/control, lineage, Apache-2.0 disposition, quantization, conversion, tokenizer, GGUF hashes, immutable OCI digests where applicable, runtime compatibility, context ceiling, and resource expectations.
   - [ ] **Sub-task 13.1.1.3** (legacy `S-013-I03`): Implement the signed native `llama.cpp` Metal adapter for the Mac reference path.
-  - [ ] **Sub-task 13.1.1.4** (legacy `S-013-I04`): Implement the approved Linux runtime adapter behind the same contract.
+  - [ ] **Sub-task 13.1.1.4** (legacy `S-013-I04`): Implement native `llama.cpp` as the approved Linux reference adapter and Docker Model Runner as a separately gated compatibility adapter behind the same contract.
   - [ ] **Sub-task 13.1.1.5** (legacy `S-013-I05`): Implement provider-neutral model client, response, message, tool-call, tool-result, capability, and role schemas.
   - [ ] **Sub-task 13.1.1.6** (legacy `S-013-I06`): Implement model health, structured-output validation, plain-text fallback, bounded retry, cancellation, and malformed-response reporting.
   - [ ] **Sub-task 13.1.1.7** (legacy `S-013-I07`): Prohibit unapproved model families, changed manifests, cloud fallback, arbitrary endpoints, and automatic model switching.
@@ -861,6 +1022,29 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 13.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then only the exact approved Gemma 4 E4B artifact set loads; silent changes to any model/runtime component trigger a new manifest and security-impact review.
 - [ ] **Story AC 13.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then runtime adapters are interchangeable at the kernel contract while platform, performance, quality, and limitation evidence remains separately attributable.
 
+#### [ ] Story 13.2 - Cross-Adapter Model Parity and Fallback Gate
+
+**User-facing value:** As a user, I need the selected Gemma profile to behave predictably across native macOS, native Linux, and Docker Linux paths, with a visible stop instead of a silent model or runtime substitution.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 13.2.1 - Establish parity and admission gates**
+  - [ ] **Sub-task 13.2.1.1:** Use the versioned Story 0.3 corpus and explicit context/output/resource settings for every enabled adapter; record adapter-specific prompt template or tool-call transformations without changing the shared contract.
+  - [ ] **Sub-task 13.2.1.2:** Compare schema validity, tool-call recovery, grounding, citations, uncertainty, cancellation latency, context behavior, output limits, memory, throughput, and repeated-run variance against one published threshold set.
+  - [ ] **Sub-task 13.2.1.3:** Quarantine an adapter that fails identity, isolation, contract, quality, or resource thresholds while leaving other approved adapters and the user's selected profile unchanged.
+  - [ ] **Sub-task 13.2.1.4:** Keep Gemma 4 12B Unified disabled unless E4B is formally rejected and the fallback independently passes the full admission, runtime, hardware-fit, and evaluation gate through a recorded decision.
+
+- [ ] **Task 13.2.2 - Verify and close the story**
+  - [ ] **Sub-task 13.2.2.1:** Run matched native/Docker corpus trials with one changed model hash, image digest, template, context setting, decoding setting, and runtime build at a time; assert incomparable or unapproved results cannot be merged or enabled.
+  - [ ] **Sub-task 13.2.2.2:** Force each adapter below every threshold and make E4B unavailable; assert a visible blocked result with no automatic adapter, model, frontier, or cloud fallback.
+  - [ ] **Sub-task 13.2.2.3 - Product security evidence:** Complete `RV-13` and the first full `RV-14`; map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-006`/`SR-AI-010` through `SR-AI-014`, and `SR-TST-006`; retain matched manifests, raw corpus results, parity calculations, quarantine receipts, negative results, and fallback decision state.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 13.2.AC1:** Given the same approved model profile and fixed corpus, when each adapter runs, then all meet the same blocking contract and quality thresholds while measurable platform differences remain separately attributable.
+- [ ] **Story AC 13.2.AC2:** Given any adapter, model, manifest, or threshold failure, when selection is attempted, then AgentMage stops visibly and preserves the current task without automatically selecting another local or remote model.
+- [ ] **Story AC 13.2.AC3:** Given a proposed fallback enablement, when reviewers inspect it, then a separate complete admission record, platform results, hardware-fit evidence, and accepted decision exist before the profile is selectable.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 13.AC1:** `AT-MODEL-001` passes on all reference platforms.
@@ -869,7 +1053,7 @@ These controls support public product-security review, independent verification,
 - [ ] **Sprint AC 13.AC4:** Cancellation unloads or stops work cleanly without corrupting session state.
 - [ ] **Sprint AC 13.AC5:** No adapter gives the model tools, grants, workspace access, credentials, or network authority.
 
-**Gate decision:** Sprint 13 is PASS only when Story 13.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 13 is PASS only when Stories 13.1 and 13.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
 **Timebox:** Two weeks.
@@ -943,7 +1127,7 @@ These controls support public product-security review, independent verification,
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 15.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 15.1.1.1** (legacy `S-015-I01`): Implement redacted `agentmage doctor` data for model, runtime, hardware fit, offline state, sandbox, helper, workspace grant, capability versions, repository-map health, encrypted store, receipt sequence, and recovery.
+  - [ ] **Sub-task 15.1.1.1** (legacy `S-015-I01`): Implement one typed redacted doctor-data provider for model, runtime, hardware fit, offline state, sandbox, helper, workspace grant, capability versions, repository-map health, encrypted store, receipt sequence, and recovery.
   - [ ] **Sub-task 15.1.1.2** (legacy `S-015-I02`): Implement deterministic-first task dispatch and explicit user model selection.
   - [ ] **Sub-task 15.1.1.3** (legacy `S-015-I03`): Record task class, deterministic operations, model choice, validation outcome, latency, resources, and acceptance result without changing routing.
   - [ ] **Sub-task 15.1.1.4** (legacy `S-015-I04`): Implement visible model identity, digest, runtime, context, tool limits, vision limits, and resource status in every session.
@@ -969,6 +1153,30 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 15.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can determine exact package, platform, model, runtime, policy, capability, sandbox, storage, and offline status from one redacted local report.
 - [ ] **Story AC 15.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then resource pressure degrades or stops only the affected operation; it cannot trigger cloud fallback, model switching, unbounded retries, or hidden capability changes.
 
+#### [ ] Story 15.2 - Native Chat Doctor and Safe Diagnostic Export
+
+**User-facing value:** As a user, I need to diagnose AgentMage from the same native Visual Studio Code Chat surface I already use, while producing a deliberately reviewed export only when support evidence is needed.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 15.2.1 - Implement the diagnostic surfaces**
+  - [ ] **Sub-task 15.2.1.1:** Add a native Chat request that renders the typed doctor result with healthy, degraded, blocked, unavailable, quarantined, and unsupported states plus local remediation.
+  - [ ] **Sub-task 15.2.1.2:** Keep the command-line diagnostic harness non-user-facing in v0.1 and constrain it to automated/reviewer testing through the same typed provider; do not create a second chat interface.
+  - [ ] **Sub-task 15.2.1.3:** Add an explicit local preview before writing a diagnostic export, showing included fields, redactions, sensitivity, destination, hash, and retention; require a one-use grant for the export write.
+  - [ ] **Sub-task 15.2.1.4:** Ensure diagnostics never test health by contacting the internet and never include raw prompts, file contents, credentials, keys, environment values, unrelated paths, hostnames, usernames, or stable device identifiers.
+
+- [ ] **Task 15.2.2 - Verify and close the story**
+  - [ ] **Sub-task 15.2.2.1:** Render every diagnostic state in native Chat using keyboard-only and screen-reader navigation; assert stable status names, actionable remediation, cancellation, and no layout-dependent meaning.
+  - [ ] **Sub-task 15.2.2.2:** Inject unique canaries into every prohibited source and compare Chat, harness, logs, receipts, and exported diagnostics; assert zero canary disclosure and identical non-sensitive status semantics.
+  - [ ] **Sub-task 15.2.2.3:** Attempt export without approval, to an ungranted/cloud-synchronized path, with stale preview, after cancellation, and after a crash; assert no unauthorized or partial artifact remains.
+  - [ ] **Sub-task 15.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-16`, `RV-18`, and `RV-20`; map `SR-GOV-001`, `SR-DAT-002`/`SR-DAT-003`, `SR-OPS-003`, `SR-CIV-006` through `SR-CIV-009`; retain state fixtures, Chat snapshots/accessibility output, canary scans, export previews, and cleanup results.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 15.2.AC1:** Given any supported or failed local state, when the user asks for diagnostics in native Chat, then the response accurately names the state and remediation without requiring a terminal or network connection.
+- [ ] **Story AC 15.2.AC2:** Given prohibited data in every potential source, when Chat, internal harness, logs, and export paths are exercised, then none of that data appears and equivalent non-sensitive results reconcile.
+- [ ] **Story AC 15.2.AC3:** Given an export request, when preview, grant, destination, or lifecycle validation fails, then no diagnostic file is written or retained.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 15.AC1:** `AT-DIA-001` and `AT-ROUTE-001` pass.
@@ -977,7 +1185,7 @@ These controls support public product-security review, independent verification,
 - [ ] **Sprint AC 15.AC4:** Applicable deterministic operations always precede model inference.
 - [ ] **Sprint AC 15.AC5:** No task causes an automatic model switch, external call, or frontier transfer.
 
-**Gate decision:** Sprint 15 is PASS only when Story 15.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 15 is PASS only when Stories 15.1 and 15.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 16 - Sandboxed Read-Only Tool Protocol
 
 **Timebox:** Two weeks.
@@ -1376,7 +1584,7 @@ These controls support public product-security review, independent verification,
   - [ ] **Sub-task 23.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [ ] **Sub-task 23.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
   - [ ] **Sub-task 23.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 23.1.3.4 - Product security evidence:** Map all applicable v0.1 `SR-GOV-*`, `SR-PLT-*`, `SR-ACC-*`, `SR-DAT-*`, `SR-NET-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; execute `RV-01` through `RV-22` as applicable and retain the complete reviewer evidence bundle defined by `SECURITY-REVIEW.md`.
+  - [ ] **Sub-task 23.1.3.4 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-007`, `SR-DAT-003`, `SR-OPS-001`/`SR-OPS-003`, `SR-TST-004`, and `SR-CIV-006` through `SR-CIV-009`; extend `RV-05`, `RV-08`, and `RV-18`; retain authenticated message traces, raw-interface denial tests, redaction scans, native Chat workflow output, and reviewer disposition.
 
 ##### Story Acceptance Criteria
 
@@ -1384,15 +1592,39 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 23.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I01`, `S-021-I02`, `S-021-I03`, `S-021-I04`, and `S-021-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [ ] **Story AC 23.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 23.2 - Accessible Native Chat Workflow
+
+**User-facing value:** As a user with varied visual, motor, or assistive-technology needs, I need every v0.1 action and status to remain operable and understandable in native Visual Studio Code Chat.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.2.1 - Implement accessible interaction and output**
+  - [ ] **Sub-task 23.2.1.1:** Define accessible names, roles, states, descriptions, live-status behavior, error associations, focus order, focus restoration, and keyboard operation for model selection, workspace selection, chat, citations, diagnostics, cancellation, and handoff preview.
+  - [ ] **Sub-task 23.2.1.2:** Ensure status and evidence meaning never depends only on color, icon, animation, position, hover, pointer precision, or timing; preserve content at supported zoom and reflow settings.
+  - [ ] **Sub-task 23.2.1.3:** Make generated Markdown, citations, diagnostics, limitations, receipts, and error guidance structurally navigable and understandable by screen readers.
+  - [ ] **Sub-task 23.2.1.4:** Publish a versioned accessibility conformance report that distinguishes automated passes, manual passes, failures, not-tested items, platform differences, and remediation.
+
+- [ ] **Task 23.2.2 - Verify and close the story**
+  - [ ] **Sub-task 23.2.2.1:** Complete each core workflow by keyboard alone at supported zoom/reflow levels; assert visible focus, no trap, no clipped control, no pointer-only action, and successful cancellation/recovery.
+  - [ ] **Sub-task 23.2.2.2:** Perform manual VoiceOver testing on macOS and declared Linux screen-reader testing, plus automated accessibility checks where supported; retain exact OS, VS Code, extension, and assistive-technology versions.
+  - [ ] **Sub-task 23.2.2.3:** Seed missing names, bad focus order, color-only meaning, inaccessible live updates, timeout pressure, and malformed generated structure; assert each blocks the core-workflow gate.
+  - [ ] **Sub-task 23.2.2.4 - Product security evidence:** Complete the first `RV-20`; map `SR-CIV-006` through `SR-CIV-009` and `SR-TST-008`; retain keyboard transcripts, accessibility-tree output, contrast/reflow results, assistive-technology notes, seeded-failure results, and the conformance report.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.2.AC1:** Given a keyboard-only user, when each v0.1 core workflow is performed, then every action, status, citation, error, cancellation, and recovery path is reachable with visible logical focus and no trap.
+- [ ] **Story AC 23.2.AC2:** Given supported screen readers and zoom/reflow settings, when Chat streams text, tools, evidence states, diagnostics, and failures, then updates are announced in order without lost content, color-only meaning, overlap, or forced timing.
+- [ ] **Story AC 23.2.AC3:** Given raw automated and manual results, when the conformance report is generated, then every pass, failure, not-tested item, platform difference, and remediation reconciles to current evidence.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Story 23.1 is complete and linked to its legacy requirement or issue identity.
+- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 and 23.2 is complete and linked to its source requirement or issue identity.
 - [ ] **Sprint AC 23.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [ ] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [ ] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Gate decision:** Sprint 23 is PASS only when Story 23.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 23 is PASS only when Stories 23.1 and 23.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
 **Timebox:** Two weeks.
@@ -1423,7 +1655,7 @@ These controls support public product-security review, independent verification,
   - [ ] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
   - [ ] **Sub-task 24.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map all applicable v0.1 `SR-GOV-*`, `SR-PLT-*`, `SR-ACC-*`, `SR-DAT-*`, `SR-NET-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; execute `RV-01` through `RV-22` as applicable and retain the complete reviewer evidence bundle defined by `SECURITY-REVIEW.md`.
+  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review.
 
 ##### Story Acceptance Criteria
 
@@ -1431,15 +1663,39 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [ ] **Story AC 24.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 24.2 - Handoff Disclosure and Staleness Warnings
+
+**User-facing value:** As a user, I need to know exactly what a Codex handoff packet contains, what it excludes, whether it is stale, and that I alone decide whether to submit it outside AgentMage.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 24.2.1 - Implement handoff safety communication**
+  - [ ] **Sub-task 24.2.1.1:** Show a mandatory pre-handoff review with objective, exact included files/ranges/excerpts, citations/hashes, inferred content, exclusions, unresolved questions, sensitivity labels, redactions, destination class, and estimated size.
+  - [ ] **Sub-task 24.2.1.2:** State clearly that the packet remains local, AgentMage has not contacted Codex or any external service, and external handling begins only if the user manually transfers selected content.
+  - [ ] **Sub-task 24.2.1.3:** Revalidate workspace, source hashes, citations, policy, and redaction immediately before final rendering; mark changed evidence stale and require regeneration rather than silently carrying it forward.
+  - [ ] **Sub-task 24.2.1.4:** Require explicit acknowledgment when a packet contains any permitted non-public or user-provided content, while continuing to block credentials, keys, prohibited data, hidden files, and unrelated context.
+
+- [ ] **Task 24.2.2 - Verify and close the story**
+  - [ ] **Sub-task 24.2.2.1:** Inject secret canaries, hidden files, stale citations, inferred claims, conflicting classifications, oversized excerpts, and prompt-injection requests to conceal disclosure; assert blocking or accurate visible treatment.
+  - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt.
+  - [ ] **Sub-task 24.2.2.3:** Compare disclosure preview, rendered packet, and packet manifest byte-for-byte for included content and hashes; assert no unpreviewed field or excerpt appears.
+  - [ ] **Sub-task 24.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-11`, and `RV-18`; map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-CIV-003`/`SR-CIV-004`/`SR-CIV-009`; retain previews, packet manifests, canary scans, staleness results, prohibited-action traces, and acknowledgments.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 24.2.AC1:** Given a proposed handoff, when the review is rendered, then every included source, excerpt, inference, sensitivity label, redaction, exclusion, unresolved question, and destination implication is visible before the user acts.
+- [ ] **Story AC 24.2.AC2:** Given changed, prohibited, hidden, or unpreviewed content, when final rendering is attempted, then the handoff blocks or requires regeneration and no packet is transmitted, copied, or injected into another interface.
+- [ ] **Story AC 24.2.AC3:** Given an approved current preview, when the packet is rendered, then its content and manifest match exactly and AgentMage records only a local receipt, never an external-delivery claim.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 24.AC1:** Every numbered implementation sub-task in Story 24.1 is complete and linked to its legacy requirement or issue identity.
+- [ ] **Sprint AC 24.AC1:** Every numbered implementation sub-task in Stories 24.1 and 24.2 is complete and linked to its source requirement or issue identity.
 - [ ] **Sprint AC 24.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [ ] **Sprint AC 24.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [ ] **Sprint AC 24.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 24.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Gate decision:** Sprint 24 is PASS only when Story 24.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 24 is PASS only when Stories 24.1 and 24.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 25 - v0.1 Cross-Platform Release
 
 **Timebox:** Two weeks.
@@ -1459,7 +1715,7 @@ These controls support public product-security review, independent verification,
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 25.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 25.1.1.1** (legacy `S-021-I08`): Complete security, privacy, injection, path, network, model, repository-map, evidence, recovery, quality, performance, and documentation suites.
+  - [ ] **Sub-task 25.1.1.1** (legacy `S-021-I08`): Rerun the complete security, privacy, injection, path, network, model, repository-map, evidence, recovery, quality, performance, accessibility, support, and documentation suites after their owning sprints have completed first execution.
   - [ ] **Sub-task 25.1.1.2** (legacy `S-021-I09`): Publish install, first-run, model installation, diagnostics, permissions, evidence, repository-map, privacy, offline proof, recovery, troubleshooting, limitation, and maintainer release guides.
   - [ ] **Sub-task 25.1.1.3** (legacy `S-021-I10`): Run clean installations and the identical supported workflow on the recorded MacBook Pro M5, Fedora, and Ubuntu environments.
 
@@ -1482,15 +1738,39 @@ These controls support public product-security review, independent verification,
 - [ ] **Story AC 25.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every v0.1 backlog row and quantitative threshold has current raw evidence on its declared platform; no Linux result substitutes for Mac deployment evidence and no skipped check is green.
 - [ ] **Story AC 25.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the release package is read-only, local-only after acquisition, single-model, single-agent, native-Chat-first, standard-user installable, accessible, reproducible, recoverable, and independently verifiable.
 
+#### [ ] Story 25.2 - Incident Tabletop and Release Support Readiness
+
+**User-facing value:** As a user or reviewer, I need evidence that maintainers can contain and repair a security failure without improvising access, collecting private content, or relying on hidden cloud control.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 25.2.1 - Prepare incident and support operations**
+  - [ ] **Sub-task 25.2.1.1:** Publish versioned local-first runbooks for suspected egress, compromised dependency/package, prompt-injection disclosure, model/runtime revocation, key-store or cryptographic failure, and corrupted operational state.
+  - [ ] **Sub-task 25.2.1.2:** Define detection, local suspension, containment, bounded evidence preservation, severity, ownership, communication, remediation, signed manual patch, verification, recovery, and lessons-record transitions for each scenario.
+  - [ ] **Sub-task 25.2.1.3:** Define what diagnostics may be requested and prohibit raw prompts, workspace files, credentials, private keys, full environment dumps, unrelated paths, and unreviewed archives from support evidence.
+  - [ ] **Sub-task 25.2.1.4:** Prepare signed emergency-disable and manual patch fixtures that require explicit local user installation and never create a remote kill switch, telemetry channel, or silent update check.
+
+- [ ] **Task 25.2.2 - Execute tabletop and patch exercises**
+  - [ ] **Sub-task 25.2.2.1:** Run the four required `RV-21` scenarios with named participants independent of the component under test; inject ambiguous, late, duplicate, and false-positive signals and record decisions.
+  - [ ] **Sub-task 25.2.2.2:** Run `RV-22` against valid, wrong-signer, downgrade, interrupted, corrupt, manifest-mismatched, migration-failed, rollback, revoked-component, and end-of-support manual patch states.
+  - [ ] **Sub-task 25.2.2.3:** Search every tabletop, diagnostic, support, and patch artifact for synthetic canaries and prohibited host identity; assert redaction and retention policy before evidence is retained.
+  - [ ] **Sub-task 25.2.2.4 - Product security evidence:** Complete `RV-21` and v0.1 `RV-22`; map `SR-SUP-010`, `SR-OPS-004` through `SR-OPS-007`, `SR-TST-010`, and `SR-CIV-005`/`SR-CIV-009`; retain timelines, decisions, communications, redacted evidence, patch verification, recovery results, and lessons/actions with owners.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 25.2.AC1:** Given each required incident scenario, when the tabletop runs, then participants detect, suspend, contain, preserve bounded evidence, assign ownership, communicate, remediate, verify, recover, and record lessons without acquiring undeclared authority or private user content.
+- [ ] **Story AC 25.2.AC2:** Given valid and adversarial signed manual patches, when `RV-22` runs, then only the exact authorized non-downgrade patch succeeds, rollback preserves security and data integrity, and revoked or unsupported states remain visibly constrained.
+- [ ] **Story AC 25.2.AC3:** Given the complete tabletop evidence, when an independent reviewer reconstructs each timeline, then every action, decision, failure, notification, open risk, and follow-up owner is present and no synthetic secret canary is disclosed.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 25.AC1:** Every `AM-*` v0.1 backlog row is complete with its required `AT-*` receipts.
 - [ ] **Sprint AC 25.AC2:** Every Section 31B threshold passes without waiver on the declared platforms.
-- [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, and `AT-DOC-001` pass.
+- [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`, `RV-21`, and v0.1 `RV-22` pass.
 - [ ] **Sprint AC 25.AC4:** Release notes list every v0.1 exclusion, including writes, semantic indexing, Obsidian, full CLI, desktop, GitHub, browser, connectors, schedules, child agents, and Codex transfer.
 - [ ] **Sprint AC 25.AC5:** `G-V0.1` closes only after the signed artifacts, documentation, tests, and offline proof agree exactly.
 
-**Gate decision:** Sprint 25 is PASS only when Story 25.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 25 is PASS only when Stories 25.1 and 25.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ## [ ] Epic 2 - v0.2 - Knowledge, Obsidian, and Memory
 

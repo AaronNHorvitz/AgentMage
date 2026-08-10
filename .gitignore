@@ -1,2 +1,44 @@
 # Fluid local planning analysis; keep out of future repository commits.
 
+# Credentials and local environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.mobileprovision
+
+# Local model and runtime artifacts
+*.gguf
+*.safetensors
+*.onnx
+*.mlmodelc/
+models/
+.local-models/
+
+# Operational data and private evidence
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.log
+artifacts/
+review-evidence/
+
+# Build, dependency, cache, and generated output
+node_modules/
+target/
+build/
+dist/
+coverage/
+.mermaid-output/
+.vscode-test/
+*.tmp
+*.swp
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db

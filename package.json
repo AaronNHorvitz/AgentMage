@@ -1,0 +1,16 @@
+{
+  "name": "agentmage-planning-docs",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "docs:mermaid": "python3 scripts/check_mermaid.py",
+    "docs:validate": "python3 scripts/validate_docs.py",
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "11.16.0",
+    "markdownlint-cli2": "0.23.2"
+  }
+}

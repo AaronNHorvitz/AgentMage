@@ -10,8 +10,10 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | First product release | v0.1 Read-Only Local Evidence Assistant |
 | First interface | Native Visual Studio Code Chat beside the separate Codex tab |
 | First enabled model | Manifest-pinned Gemma 4 E4B |
+| Model runtimes | Native `llama.cpp`; gated Docker Model Runner compatibility adapter |
 | v0.1 platforms | Apple Silicon macOS, Fedora, and Ubuntu |
 | Execution plan | 10 epics and 103 sequential two-week sprints |
+| License | [Apache License 2.0](./LICENSE) |
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
@@ -26,6 +28,8 @@ The project documents have distinct responsibilities:
 5. [`TASKS.md`](./TASKS.md) governs granular execution order through epics, sprints, stories, tasks, sub-tasks, acceptance criteria, and PASS/BLOCKED gates.
 6. This README is the orientation document and must summarize, rather than redefine, those authorities.
 
+Supporting policies remain subordinate to those authorities: [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md) controls model admission procedure, [`SECURITY.md`](./SECURITY.md) controls public vulnerability and support communication, and [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) records the derived process, privilege, socket, lifecycle, and data-flow specification. Accepted clarifications and supersessions are recorded under [`docs/decisions/`](./docs/decisions/).
+
 If documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted identifiers are never silently removed, weakened, merged away, or renumbered.
 
 ## v0.1
@@ -33,14 +37,14 @@ If documents conflict, the narrower safety boundary or release scope wins until 
 v0.1 is intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat.
 
 - Apple Silicon macOS on a MacBook Pro M5 is the primary launch and deployment reference. Fedora is the Linux performance reference, and the identical supported workflow must pass on clean Ubuntu in the same release.
-- A manifest-pinned Gemma 4 E4B profile runs through signed native `llama.cpp` with Metal on macOS and an approved local runtime on Fedora and Ubuntu.
-- A separate model installer/importer checks hardware fit, disk and memory requirements, license, publisher, lineage, project model-origin policy, artifact hashes, runtime compatibility, quarantine, recovery, and clean activation before enabling the profile.
-- A redacted local `agentmage doctor` report proves the active model, runtime, sandbox, workspace grant, encrypted store, repository-map health, receipt sequence, recovery state, and offline condition.
+- A manifest-pinned Gemma 4 E4B profile runs through signed native `llama.cpp` with Metal on macOS. Fedora and Ubuntu support both native `llama.cpp` and a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.
+- A separate model installer/importer checks hardware fit, disk and memory requirements, license, publisher, lineage, the [model provenance policy](./MODEL-PROVENANCE-POLICY.md), artifact or OCI hashes, runtime compatibility, quarantine, recovery, and clean activation before enabling the profile.
+- A redacted `agentmage doctor` response is rendered inside native Visual Studio Code Chat; v0.1 does not require an end-user command-line interface. It reports the active model, runtime, sandbox, workspace grant, encrypted store, repository-map health, receipt sequence, recovery state, and offline condition.
 - **AgentMage - Gemma 4 E4B (Local, Read Only)** appears in the native Chat model picker.
 - The user selects one workspace and can list, read, search, inspect metadata, calculate hashes, and inspect Git without changing it.
 - A deterministic, Git-aware repository map inventories permitted files, identifies supported languages and symbols with pinned Tree-sitter parsers, records reliable definitions, imports, and relationships, and cites every structural fact to an exact source range.
 - Every tool attempt has a receipt and every file-grounded claim has a resolvable citation. Answers visibly distinguish **Observed**, **Derived**, **Inferred**, and **Unknown/Blocked** statements. Changed evidence makes prior citations stale rather than silently reinterpreting them.
-- AgentMage can render a local, reviewable Codex handoff packet, but only the user can switch tabs and submit selected content.
+- AgentMage can render a local, reviewable Codex handoff packet with classification and disclosure warnings, but only the user can switch tabs and submit selected content.
 - One encrypted session can resume safely after interruption without repeating completed actions.
 - After the installer/importer exits, normal v0.1 operation has no cloud model, external API, telemetry, analytics, cloud storage, update check, or cloud fallback.
 
@@ -76,11 +80,11 @@ Platform adapters implement inference, workspace authorization, secure paths, to
 ## Platform Support
 
 - **Apple Silicon macOS:** v0.1 targets a MacBook Pro M5. The package is arm64, Developer ID-signed, notarized, stapled, Hardened Runtime-enabled, and App-Sandboxed. It uses a signed native Visual Studio Code bridge, authenticated App Group IPC, a read-only security-scoped workspace bookmark, sandboxed XPC tools, Keychain, and native Metal inference.
-- **Fedora:** the v0.1 Linux performance reference uses an unprivileged kernel, fresh Bubblewrap workers, seccomp, user cgroup limits, Linux Secret Service, and an approved local inference adapter.
-- **Ubuntu:** v0.1 must pass the same supported workflow, shared contracts, and acceptance fixtures as Fedora.
+- **Fedora:** the v0.1 Linux performance reference uses an unprivileged AgentMage kernel, fresh Bubblewrap workers, seccomp, user cgroup limits, Linux Secret Service, and native `llama.cpp` as the security-reference inference adapter. Docker Model Runner is a supported compatibility adapter only after its separate package, privilege, endpoint-exposure, isolation, provenance, parity, and zero-egress gates pass.
+- **Ubuntu:** v0.1 must pass the same supported workflow, shared contracts, native reference path, Docker compatibility gates, and acceptance fixtures as Fedora.
 - **Deferred:** Intel Mac and Windows are unsupported until separately promoted and assessed.
 
-The clean Mac installation must not require Homebrew, Rosetta, Xcode command-line tools, Docker Desktop, Python, ambient Git, or administrator access after installation. Docker Desktop may become an optional adapter only after separate licensing and security gates; it is not part of the reference path.
+The clean Mac installation must not require Homebrew, Rosetta, Xcode command-line tools, Docker Desktop, Python, ambient Git, or administrator access after installation. Docker Desktop may become an optional Mac adapter only after separate licensing and security gates; it is not part of the Mac reference path. On Linux, Docker prerequisites remain visible platform dependencies and AgentMage never describes a Docker-backed profile as wholly unprivileged without evidence.
 
 Shipping the Mac package requires an isolated Apple Silicon release runner and an Apple Developer Program identity for Developer ID signing and notarization. These are maintainer release requirements, not end-user dependencies. Production uses a pinned stable Visual Studio Code language-model provider API and never requires a proposed API or Visual Studio Code Insiders.
 
@@ -116,15 +120,15 @@ Classification, secret detection, minimization, retention assignment, and encryp
 
 v0.1 uses explicit user model selection. It attempts deterministic operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract.
 
-The initial profile is Gemma 4 E4B. Its manifest pins identity, license, publisher, upstream lineage, conversion and quantization recipe, artifact and tokenizer hashes, runtime compatibility, platform support, and resource limits. Every enabled model, embedding model, reranker, tokenizer, conversion, runtime, and derived artifact must satisfy the project's documented non-Chinese and non-Chinese-derived model-origin policy as a supply-chain requirement.
+The initial candidate is Gemma 4 E4B. Its manifest pins identity, license, publisher, upstream lineage, conversion and quantization recipe, native artifact or immutable OCI digest, tokenizer and template hashes, runtime compatibility, platform support, and resource limits. Every enabled model, embedding model, reranker, tokenizer, conversion, runtime, and derived artifact must satisfy [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), including the project's non-Chinese and non-Chinese-derived model rule, as a supply-chain requirement.
 
-Gemma 4 26B and `ai/devstral-small-2:24B` remain disabled until their separate registry, lineage, license, origin, resource, quality, security, and platform gates pass. A broad model marketplace is not a v0.1 objective.
+Gemma 4 12B Unified is the named disabled fallback candidate if E4B fails a mandatory quality or tool-calling threshold. Gemma 4 26B A4B and other later candidates remain disabled until their separate registry, lineage, license, origin, resource, quality, security, and platform gates pass. A broad model marketplace is not a v0.1 objective, and AgentMage never switches models or adapters automatically.
 
 ## Codex Handoff Boundary
 
-AgentMage may prepare and display a local handoff packet containing the objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions. Handoff stops at that preview.
+AgentMage may prepare and display a local handoff packet containing the objective, acceptance criteria, cited evidence, constraints, disclosure list, unresolved questions, data-classification status, and unresolved redaction warnings. Handoff stops at that preview.
 
-AgentMage cannot invoke Codex, activate or populate the Codex tab, write the packet to the clipboard, call a Codex or OpenAI endpoint, or transmit content. The user manually switches to Codex, reviews the packet, chooses what to disclose, and submits it. This rule cannot be overridden by standing consent, routing, failure recovery, scheduling, or a model decision.
+AgentMage cannot invoke Codex, activate or populate the Codex tab, write the packet to the clipboard, call a Codex or OpenAI endpoint, or transmit content. The preview warns that manual submission discloses the selected content to a separate product under that product's policies. The user manually switches to Codex, resolves or accepts each warning, chooses what to disclose, and submits it. This rule cannot be overridden by standing consent, routing, failure recovery, scheduling, or a model decision.
 
 ## Delivery Roadmap
 
@@ -154,7 +158,7 @@ flowchart LR
 | 8 | v1+ Desktop, Extensions, Actions, Scheduling, and Agents | 76-100 |
 | 9 | Requirement closure and final product verification | 101-102 |
 
-The two-week cadence is the current planning baseline, not a product guarantee. Work proceeds in dependency order. Every sprint contains one bounded story, numbered tasks and sub-tasks, 2-4 Given/When/Then story criteria, 3-5 sprint criteria, evidence requirements, and a binary PASS/BLOCKED gate.
+The two-week cadence is the current planning baseline, not a product guarantee. Work proceeds in dependency order. A sprint contains one or more bounded stories only when their combined gate remains achievable; each story has numbered tasks and sub-tasks, 2-4 Given/When/Then criteria, evidence requirements, and a binary PASS/BLOCKED gate. Oversized work is split through a recorded decision without renumbering accepted identifiers.
 
 ## Release Gates
 
@@ -169,3 +173,19 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Security Review and Verification Guide](./SECURITY-REVIEW.md) - public product-security baseline, security requirements, reviewer protocols, and evidence contract.
 - [High-Level Implementation Plan](./IMPLEMENTATION-PLAN.md) - architectural sequence, cross-cutting workstreams, milestones, risks, and release strategy.
 - [Story-Based Sprint Plan](./TASKS.md) - 10 epics, 103 sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
+- [Model Provenance and Admission Policy](./MODEL-PROVENANCE-POLICY.md) - origin, lineage, license, artifact, runtime, quality, and fallback admission rules.
+- [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
+- [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
+- [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.
+- [Apache License 2.0](./LICENSE) - permissions and conditions for use, modification, and distribution.
+
+## Documentation Validation
+
+The planning baseline is checked locally and in continuous integration with pinned documentation tools:
+
+```bash
+npm ci --ignore-scripts
+npm run docs:check
+```
+
+The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.
