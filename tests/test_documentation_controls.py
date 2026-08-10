@@ -2,8 +2,20 @@ from __future__ import annotations
 
 import json
 import re
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from scripts.validate_docs import (
+    check_claims,
+    check_cross_document_contract,
+    check_identifiers,
+    check_links,
+    check_required,
+    check_sensitive,
+    main as validate_docs,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +65,67 @@ class DocumentationControlTests(unittest.TestCase):
         self.assertIn('ROOT / "node_modules" / ".bin" / "mmdc"', checker)
         self.assertNotIn("npx", checker)
         self.assertIn("TemporaryDirectory", checker)
+
+    def test_canonical_documentation_passes_every_local_integrity_check(self) -> None:
+        self.assertEqual(validate_docs(), 0)
+
+        failures: list[str] = []
+        check_required(failures)
+        check_cross_document_contract(failures)
+        self.assertEqual(failures, [])
+
+    def test_local_link_check_rejects_missing_and_escaping_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            document = root / "document.md"
+            document.write_text(
+                "[valid](target.md) [missing](absent.md) [escape](../outside.md)\n",
+                encoding="utf-8",
+            )
+            (root / "target.md").write_text("# Target\n", encoding="utf-8")
+            failures: list[str] = []
+
+            with patch("scripts.validate_docs.ROOT", root):
+                check_links([document], failures)
+
+        self.assertEqual(len(failures), 2)
+        self.assertTrue(any("broken local link" in item for item in failures))
+        self.assertTrue(any("link leaves repository" in item for item in failures))
+
+    def test_sensitive_check_names_rule_without_echoing_matched_value(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            document = root / "synthetic.txt"
+            synthetic_value = "gh" + "p_" + "0123456789abcdefghijklmnop"
+            document.write_text(f"token={synthetic_value}\n", encoding="utf-8")
+            failures: list[str] = []
+
+            with patch("scripts.validate_docs.ROOT", root):
+                check_sensitive([document], failures)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("possible GitHub token", failures[0])
+        self.assertNotIn(synthetic_value, failures[0])
+
+    def test_claim_and_identifier_checks_report_the_exact_rule(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            root = Path(temp_dir)
+            claims = root / "claim.md"
+            claims.write_text("A prohibited federal deployment claim.\n", encoding="utf-8")
+            identifiers = root / "identifier.md"
+            identifiers.write_text("Unknown requirement AM-MISSING-999.\n", encoding="utf-8")
+            claim_failures: list[str] = []
+            identifier_failures: list[str] = []
+
+            check_claims([claims], claim_failures)
+            check_identifiers([identifiers], identifier_failures)
+
+        self.assertEqual(len(claim_failures), 1)
+        self.assertIn("prohibited deployment-specific claim", claim_failures[0])
+        self.assertIn(
+            "unresolved stable identifier: AM-MISSING-999",
+            identifier_failures,
+        )
 
 
 if __name__ == "__main__":

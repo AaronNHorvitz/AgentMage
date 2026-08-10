@@ -204,7 +204,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 - [ ] **Task 0.2.2 - Enforce documentation integrity in continuous integration**
   - [x] **Sub-task 0.2.2.1:** Add Markdown linting and Mermaid parsing with pinned tool versions and immutable workflow action revisions.
-  - [ ] **Sub-task 0.2.2.2:** Add local-link, secret-pattern, prohibited-claim, stable-identifier, required-document, and cross-document consistency checks.
+  - [x] **Sub-task 0.2.2.2:** Add local-link, secret-pattern, prohibited-claim, stable-identifier, required-document, and cross-document consistency checks.
   - [ ] **Sub-task 0.2.2.3:** Add deliberate ignore rules for credentials, local model artifacts, databases, logs, build output, caches, and generated evidence without ignoring canonical planning documents.
   - [ ] **Sub-task 0.2.2.4:** Document and run one local command that reproduces the documentation gate from a clean checkout.
 
