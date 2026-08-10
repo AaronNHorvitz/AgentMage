@@ -1,0 +1,46 @@
+{
+  "data_classification": "public_synthetic_only",
+  "docker_model_runner": {
+    "adapter_id": "linux-docker-model-runner-cuda",
+    "blocker": "Docker and Docker Model Runner are not installed on the evaluation host.",
+    "execution_status": "BLOCKED",
+    "substitute_runtime_used": false
+  },
+  "evidence_date": "2026-08-10",
+  "fallback_evaluated": false,
+  "independent_review_performed": false,
+  "limitations": [
+    "This bundle records only the completed native Fedora adapter run.",
+    "The server log replaces the local evaluation-data root with a declared placeholder.",
+    "Docker and macOS evidence remain required before the cross-adapter decision.",
+    "The blocked source-lineage and GGUF reproducibility findings remain unresolved."
+  ],
+  "macos_native": {
+    "adapter_id": "macos-native-metal",
+    "blocker": "The required MacBook Pro M5 evaluation host is not available.",
+    "execution_status": "BLOCKED",
+    "linux_evidence_substituted": false
+  },
+  "native_linux": {
+    "adapter_id": "linux-native-vulkan",
+    "execution_status": "COMPLETE",
+    "failed_cases": [
+      "REPO-001",
+      "CITE-001",
+      "TOOL-001"
+    ],
+    "failed_thresholds": [
+      "citation_precision",
+      "citation_recall",
+      "tool_call_valid_rate"
+    ],
+    "quality_status": "FAIL"
+  },
+  "profile_decision": "PENDING",
+  "record_type": "story_0_3_partial_adapter_disposition",
+  "release_approval": false,
+  "result_source_revision": "a89cc70e18043e88f1eb8fcc978d87cf70cd0093",
+  "schema_version": 1,
+  "task_0_3_2_1_status": "BLOCKED",
+  "verification_revision": "d5f2f08b5cd9a591f3d0be5d2e9fce0ff5619a48"
+}

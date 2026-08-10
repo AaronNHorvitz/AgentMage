@@ -1,0 +1,30 @@
+{
+  "bundle_id": "sprint-0-story-0.3-native-linux-partial-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "adapter-disposition.json",
+      "sha256": "68c4cf211a3104db660cb06421088c4b9819a59c3eb9ad6580965946c65d2fe2",
+      "size": 1634
+    },
+    {
+      "path": "native-linux-result.json",
+      "sha256": "0f5d9bac48d893a2c8a40c14c3d060352b64a610342391bfd2da5f1e9f4832ca",
+      "size": 62607
+    },
+    {
+      "path": "native-linux-server.log",
+      "sha256": "0c95b1ee743ae13b5cf185f617272d18ec9c3e01c40d7306c9b2d4b0322bfc35",
+      "size": 49525
+    },
+    {
+      "path": "summary.md",
+      "sha256": "79be4979e8587d658f159087f3e347145faba6c26b758f1bf47224b20201093b",
+      "size": 1446
+    }
+  ],
+  "result_source_revision": "a89cc70e18043e88f1eb8fcc978d87cf70cd0093",
+  "schema_version": 1,
+  "scope": "Story 0.3 native Linux feasibility result; Docker and macOS remain blocked",
+  "verification_revision": "d5f2f08b5cd9a591f3d0be5d2e9fce0ff5619a48"
+}
