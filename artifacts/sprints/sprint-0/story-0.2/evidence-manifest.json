@@ -1,0 +1,44 @@
+{
+  "bundle_id": "sprint-0-story-0.2-product-security-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "control-map.json",
+      "sha256": "cccc5a7232ce4a60f527719ad65874921c4e2b165c4b4d55dc2569d8a1ba676d",
+      "size": 2228
+    },
+    {
+      "path": "decision-record.json",
+      "sha256": "a584a49129ddb73c6efb115c5a89615c2f1d4d30dae94ef8f4c499437fdb17e4",
+      "size": 475
+    },
+    {
+      "path": "policy-hashes.json",
+      "sha256": "e1a0be45ea262e5c5948d8acce8ad6662da8617a4e1827b36c3259cfe469f3af",
+      "size": 2277
+    },
+    {
+      "path": "raw-checker-output.json",
+      "sha256": "48558f7d6914db834558f5ffdb822368339fb7082574c7127407c2ccda3d8921",
+      "size": 4015
+    },
+    {
+      "path": "reviewer-disposition.json",
+      "sha256": "9d873dcc6c758ef91a2f37ff8633f72a925e4b7c7f26f50f79a2fdc51c58e60f",
+      "size": 727
+    },
+    {
+      "path": "summary.md",
+      "sha256": "4ae4d811151044caa81f58e55bdf210980035f420e924ae15b10e937bcb3a3a4",
+      "size": 700
+    },
+    {
+      "path": "workflow-identity.json",
+      "sha256": "44360bc54bcfdedd644c39c7738f4eb0a73aa24f23ca7cf6af6fa47e215fd2de",
+      "size": 724
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Story 0.2 public policy and documentation controls",
+  "source_revision": "00d2cd77b35affaedad5d457828007397e259314"
+}

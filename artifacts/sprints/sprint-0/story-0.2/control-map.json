@@ -1,0 +1,95 @@
+{
+  "controls": [
+    {
+      "evidence": [
+        "scripts/validate_docs.py",
+        "raw-checker-output.json"
+      ],
+      "id": "SR-GOV-003",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "SECURITY.md",
+        "decision-record.json"
+      ],
+      "id": "SR-GOV-004",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "RUNTIME-BOUNDARIES.md",
+        "policy-hashes.json"
+      ],
+      "id": "SR-GOV-006",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "policy-hashes.json",
+        "workflow-identity.json"
+      ],
+      "id": "SR-GOV-009",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "docs/decisions/0001-product-security-and-runtime-baseline.md"
+      ],
+      "id": "SR-GOV-010",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "SECURITY-REVIEW.md",
+        "control-map.json"
+      ],
+      "id": "SR-SUP-001",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "package-lock.json",
+        "workflow-identity.json"
+      ],
+      "id": "SR-SUP-003",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "MODEL-PROVENANCE-POLICY.md"
+      ],
+      "id": "SR-SUP-006",
+      "release_control_satisfied": false,
+      "status": "foundation_only"
+    },
+    {
+      "evidence": [
+        "SECURITY.md",
+        "reviewer-disposition.json"
+      ],
+      "id": "SR-SUP-010",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    },
+    {
+      "evidence": [
+        "raw-checker-output.json",
+        "TASKS.md"
+      ],
+      "id": "SR-TST-001",
+      "release_control_satisfied": false,
+      "status": "policy_scope_pass"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Story 0.2 public policy and documentation controls only",
+  "source_revision": "00d2cd77b35affaedad5d457828007397e259314"
+}

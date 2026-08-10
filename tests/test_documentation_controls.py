@@ -236,6 +236,7 @@ class DocumentationControlTests(unittest.TestCase):
             "tests/test_documentation_controls.py",
             ".github/workflows/documentation.yml",
             "artifacts/sprints/sprint-0/story-0.1/evidence-manifest.json",
+            "artifacts/sprints/sprint-0/story-0.2/evidence-manifest.json",
         )
 
         for relative in versioned_paths:

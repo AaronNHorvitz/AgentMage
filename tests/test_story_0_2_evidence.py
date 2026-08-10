@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from scripts.story_0_2_evidence import (
     ARTIFACT_NAMES,
+    DEFAULT_OUTPUT,
     POLICY_FILES,
     REQUIRED_CONTROLS,
     ROOT,
     Story02EvidenceError,
     control_map,
+    check_bundle,
     decision_record,
     policy_hashes,
     reviewer_disposition,
@@ -20,6 +23,19 @@ from scripts.story_0_2_evidence import (
 
 
 class Story02EvidenceTests(unittest.TestCase):
+    def test_committed_bundle_hashes_and_reconciles(self) -> None:
+        self.assertEqual(check_bundle(), [])
+        manifest = json.loads(
+            (DEFAULT_OUTPUT / "evidence-manifest.json").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(manifest["schema_version"], 1)
+        self.assertRegex(manifest["source_revision"], r"^[0-9a-f]{40}$")
+        self.assertEqual(
+            [item["path"] for item in manifest["files"]],
+            list(ARTIFACT_NAMES),
+        )
+
     def test_policy_hashes_cover_every_governing_artifact(self) -> None:
         hashes = policy_hashes(ROOT, "fixture-revision")
 
@@ -85,6 +101,22 @@ class Story02EvidenceTests(unittest.TestCase):
                 "workflow-identity.json",
             ),
         )
+
+    def test_hash_tampering_is_detected_without_mutating_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            copied = Path(temp_dir) / "story-0.2"
+            copied.mkdir()
+            for source in DEFAULT_OUTPUT.iterdir():
+                if source.is_file():
+                    (copied / source.name).write_bytes(source.read_bytes())
+            target = copied / "workflow-identity.json"
+            target.write_bytes(target.read_bytes() + b"\n")
+            before = target.read_bytes()
+
+            failures = check_bundle(copied)
+
+            self.assertTrue(any("hash mismatch" in failure for failure in failures))
+            self.assertEqual(target.read_bytes(), before)
 
 
 if __name__ == "__main__":

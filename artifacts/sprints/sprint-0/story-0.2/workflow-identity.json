@@ -1,0 +1,19 @@
+{
+  "actions": [
+    "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+    "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+  ],
+  "actions_immutable": true,
+  "gate_command": "npm run docs:clean-check",
+  "gate_script": "npm ci --ignore-scripts && npm run docs:check",
+  "install_command": "npm ci --ignore-scripts",
+  "lockfile_sha256": "071dc50866b41ff3e746b67c191deca726be40d10a4e9a15d1fa541dd8eba16f",
+  "path": ".github/workflows/documentation.yml",
+  "permissions": {
+    "contents": "read"
+  },
+  "runner": "ubuntu-24.04",
+  "schema_version": 1,
+  "sha256": "1c7d1cc7504a0a426d15ccc5a21fe77f0e016d75ffeabb7f853ccdb6ca2fd54b",
+  "source_revision": "00d2cd77b35affaedad5d457828007397e259314"
+}
