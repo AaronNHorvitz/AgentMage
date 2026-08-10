@@ -478,11 +478,13 @@ The owning sprint performs the first complete execution possible for its boundar
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 3.AC1:** `AT-CFG-001` passes.
-- [ ] **Sprint AC 3.AC2:** Unknown, malformed, stale, or permission-broadening settings stop before startup.
-- [ ] **Sprint AC 3.AC3:** A profile cannot enable a capability excluded from its release.
-- [ ] **Sprint AC 3.AC4:** Configuration migration preserves semantics and fails safely on unsupported versions.
-- [ ] **Sprint AC 3.AC5:** Logs and diagnostics contain configuration identity but no secrets.
+- [x] **Sprint AC 3.AC1:** `AT-CFG-001` passes. Evidence: 485 permission-bearing mutations exceed the required 100-case threshold, all 485 are rejected through five untrusted channels, accepted broadening is zero, and 72 schema failures produce stable exact diagnostics.
+- [x] **Sprint AC 3.AC2:** Unknown, malformed, stale, or permission-broadening settings stop before startup. Evidence: all 72 schema-failure cases and 485 cross-channel authority mutations reject before registration with zero partial startups and zero accepted broadenings.
+- [x] **Sprint AC 3.AC3:** A profile cannot enable a capability excluded from its release. Evidence: all seven profiles, including four future-disabled profiles, start from clean synthetic roots with zero registered capabilities and zero early product registrations.
+- [x] **Sprint AC 3.AC4:** Configuration migration preserves semantics and fails safely on unsupported versions. Evidence: six injected interruptions span all three durable transitions, every selected state is the exact prior or complete migrated form, unsupported fixtures reject, concurrent preimage change is preserved, and exact rollback is repeatable.
+- [x] **Sprint AC 3.AC5:** Logs and diagnostics contain configuration identity but no secrets. Evidence: session/release result contracts retain only `profile_id` and SHA-256 configuration identity with canonical record hashing, while raw configuration and private paths remain absent; the bounded diagnostic fixture has zero scan findings and zero private-data records.
+
+**Sprint gate evidence:** All five sprint acceptance criteria and all shared/Linux work pass. Sprint 3 remains `BLOCKED-MACOS` under `G-DOD-10`: [`sprint-gate-report.json`](artifacts/sprints/sprint-3/sprint-gate-report.json) independently reviews commit `aac2a33e549c18cf6784e0552a2ebfaa13f2c66e` and tree `fbe3ff4f87eaa0c0bea6a6479c2cc010b8d8d929`, verifies 14 aggregate story-gate and acceptance artifacts with zero findings, and confirms both Stories 3.1 and 3.2 are blocked only by the same missing Mac execution evidence. No Linux result substitutes for Mac evidence; product startup, product acceptance, and release claims remain absent, and the sprint checkbox remains open.
 
 **Gate decision:** Sprint 3 is PASS only when Stories 3.1 and 3.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
