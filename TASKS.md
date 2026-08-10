@@ -196,7 +196,7 @@ The owning sprint performs the first complete execution possible for its boundar
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 0.2.1 - Establish public policy and decision artifacts**
-  - [ ] **Sub-task 0.2.1.1:** Publish the Apache License 2.0 as the repository license and identify it consistently in product documents and package metadata.
+  - [x] **Sub-task 0.2.1.1:** Publish the Apache License 2.0 as the repository license and identify it consistently in product documents and package metadata.
   - [ ] **Sub-task 0.2.1.2:** Publish `SECURITY.md` with supported-version status, private vulnerability reporting, triage, signed manual patch delivery, emergency local disablement, and end-of-support behavior.
   - [ ] **Sub-task 0.2.1.3:** Publish `MODEL-PROVENANCE-POLICY.md` with supplier/control, license, lineage, derivative, immutable identity, runtime, evaluation, admission, revocation, and fallback requirements.
   - [ ] **Sub-task 0.2.1.4:** Publish `RUNTIME-BOUNDARIES.md` with processes, privileges, sockets, data flows, runtime adapters, lifecycle, and fail-closed conditions for macOS, Fedora, and Ubuntu.
