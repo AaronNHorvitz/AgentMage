@@ -127,7 +127,7 @@ class FixtureGeneratorTests(unittest.TestCase):
         mutated["product_parser_support_claim"] = "supported"
         self.assertTrue(validate_profile(mutated))
 
-    def test_report_cannot_claim_versioned_corpus_completion(self) -> None:
+    def test_report_cannot_change_versioned_corpus_disposition(self) -> None:
         report = read_json(
             Path("artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json")
         )

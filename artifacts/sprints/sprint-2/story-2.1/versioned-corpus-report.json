@@ -1,0 +1,98 @@
+{
+  "archive_safety_contract": {
+    "absolute_entries": false,
+    "compressed_entries": false,
+    "duplicate_entries": false,
+    "encrypted_entries": false,
+    "executable_entries": false,
+    "path_traversal_entries": false,
+    "symlink_entries": false
+  },
+  "assembler": {
+    "path": "scripts/versioned_corpus.py",
+    "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+  },
+  "content_contract": {
+    "private_user_data": false,
+    "product_parser_support_claim": "none",
+    "real_credentials": false,
+    "remote_execution": false
+  },
+  "corpus": {
+    "archive_bytes": 41280,
+    "archive_path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+    "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
+    "entry_count": 77,
+    "family_counts": {
+      "adversarial": 13,
+      "base": 39,
+      "documents": 10,
+      "golden": 4,
+      "paths": 11
+    },
+    "manifest_path": "fixtures/corpus/v1/manifest.json",
+    "manifest_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
+    "version": "1.0.0"
+  },
+  "golden_evidence_states": [
+    "Derived",
+    "Inferred",
+    "Observed",
+    "Unknown/Blocked"
+  ],
+  "golden_manifest_count": 4,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "path_fixture_materialization": "inert-declarations-only",
+  "product_support_claim": "none",
+  "schema_version": 1,
+  "source_provenance": [
+    {
+      "family": "base",
+      "generator": "scripts/fixture_generator.py",
+      "generator_sha256": "0b61463bc170a9f76e2497d836a883af21456497640e8f4810d6ce2280b807d9",
+      "namespace": "base",
+      "profile_id": "agentmage-synthetic-corpus-v1",
+      "profile_path": "fixtures/generator-profile.json",
+      "profile_sha256": "80a368b6b0f100ce8bddd9c668d744c594a0be6bfbcacd173f1e05b2c5bafc9e"
+    },
+    {
+      "family": "paths",
+      "generator": "scripts/path_fixture_generator.py",
+      "generator_sha256": "48894669061956708d5e526cf4b4f196dd304d7a757d32f2c66d7788562f2c94",
+      "namespace": "paths",
+      "profile_id": "agentmage-path-fixtures-v1",
+      "profile_path": "fixtures/path-fixture-profile.json",
+      "profile_sha256": "be4812c8be1a35eae561bb3d4c8e9e8741f3eaf4d10502b098e33a4142aa2655"
+    },
+    {
+      "family": "adversarial",
+      "generator": "scripts/adversarial_fixture_generator.py",
+      "generator_sha256": "053a2f16bc7919f3d97425f76470b34cd026430925b37e417ddd302ae8af2d2a",
+      "namespace": "adversarial",
+      "profile_id": "agentmage-adversarial-fixtures-v1",
+      "profile_path": "fixtures/adversarial-fixture-profile.json",
+      "profile_sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc"
+    },
+    {
+      "family": "documents",
+      "generator": "scripts/document_fixture_generator.py",
+      "generator_sha256": "8a7c8c3824e6b88801f47b29f5c0e209de35201038bd7f0770e52fe626960638",
+      "namespace": "documents",
+      "profile_id": "agentmage-document-fixtures-v1",
+      "profile_path": "fixtures/document-fixture-profile.json",
+      "profile_sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425"
+    },
+    {
+      "family": "golden",
+      "generator": "scripts/expected_output_manifests.py",
+      "generator_sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13",
+      "namespace": "golden",
+      "profile_id": "agentmage-expected-output-manifests-v1",
+      "profile_path": "fixtures/expected-output-profile.json",
+      "profile_sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+    }
+  ],
+  "status": "pass",
+  "task_id": "2.1.2.1"
+}

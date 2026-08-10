@@ -164,7 +164,7 @@ class ExpectedOutputManifestTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_manifest_records(unknown_source)
 
-    def test_report_contains_hashes_not_manifest_payloads_and_reserves_goldens(self) -> None:
+    def test_report_contains_hashes_not_payloads_and_binds_golden_disposition(self) -> None:
         report = build_report()
         self.assertFalse(report["manifest_preview"]["persisted"])
         self.assertEqual(report["manifest_preview"]["manifest_count"], 4)

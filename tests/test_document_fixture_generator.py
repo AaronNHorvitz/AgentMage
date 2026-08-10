@@ -216,7 +216,7 @@ class DocumentFixtureGeneratorTests(unittest.TestCase):
         self.assertTrue(validate_profile(active))
         self.assertTrue(validate_profile(claimed))
 
-    def test_report_is_hash_only_current_and_cannot_claim_versioned_corpus(self) -> None:
+    def test_report_is_hash_only_current_and_cannot_change_corpus_disposition(self) -> None:
         report = build_report()
         self.assertFalse(report["corpus_preview"]["persisted"])
         self.assertEqual(report["corpus_preview"]["family_count"], 10)

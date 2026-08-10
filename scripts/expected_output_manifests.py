@@ -144,8 +144,11 @@ def validate_profile(profile: Any) -> list[str]:
         failures.append("expected-output profile cannot claim authority")
     if profile.get("product_receipt_implementation_claim") != "none":
         failures.append("expected-output profile cannot claim a product receipt implementation")
-    if profile.get("versioned_golden_manifest_status") != "reserved-for-sub-task-2.1.2.1":
-        failures.append("expected-output profile prematurely claims versioned golden manifests")
+    if (
+        profile.get("versioned_golden_manifest_status")
+        != "fulfilled-by-agentmage-versioned-synthetic-corpus-v1"
+    ):
+        failures.append("expected-output profile lost its versioned golden disposition")
     return failures
 
 
@@ -417,7 +420,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         "source_range_semantics": profile["source_range_semantics"],
         "prohibited_side_effects": list(EXPECTED_PROHIBITED_SIDE_EFFECTS),
         "product_receipt_implementation_claim": "none",
-        "versioned_golden_manifest_status": "reserved-for-sub-task-2.1.2.1",
+        "versioned_golden_manifest_status": "fulfilled-by-agentmage-versioned-synthetic-corpus-v1",
         "macos_support_claim": "none",
     }
 
@@ -432,8 +435,11 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         failures.append("expected-output manifest generation did not pass")
     if report.get("product_receipt_implementation_claim") != "none":
         failures.append("expected-output report made a product receipt implementation claim")
-    if report.get("versioned_golden_manifest_status") != "reserved-for-sub-task-2.1.2.1":
-        failures.append("expected-output report prematurely claimed golden manifests")
+    if (
+        report.get("versioned_golden_manifest_status")
+        != "fulfilled-by-agentmage-versioned-synthetic-corpus-v1"
+    ):
+        failures.append("expected-output report lost its versioned golden disposition")
     if report.get("macos_support_claim") != "none":
         failures.append("expected-output report made a macOS support claim")
     if report != build_report(root):

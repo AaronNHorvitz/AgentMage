@@ -388,7 +388,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         "raw_canary_values_retained": False,
         "authority_claim": "none",
         "product_security_claim": "none",
-        "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1",
+        "versioned_corpus_status": "fulfilled-by-agentmage-versioned-synthetic-corpus-v1",
     }
 
 
@@ -407,8 +407,11 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         failures.append("adversarial fixture report claimed authority")
     if report.get("product_security_claim") != "none":
         failures.append("adversarial fixture report claimed product security")
-    if report.get("versioned_corpus_status") != "reserved-for-sub-task-2.1.2.1":
-        failures.append("adversarial fixture report claimed versioned corpus completion")
+    if (
+        report.get("versioned_corpus_status")
+        != "fulfilled-by-agentmage-versioned-synthetic-corpus-v1"
+    ):
+        failures.append("adversarial fixture report lost its versioned corpus disposition")
     if report != build_report(root):
         failures.append("adversarial fixture report is stale or non-deterministic")
     return failures

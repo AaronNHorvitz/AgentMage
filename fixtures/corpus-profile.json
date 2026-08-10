@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-versioned-synthetic-corpus-v1",
+  "status": "versioned-synthetic-corpus-contract",
+  "corpus_version": "1.0.0",
+  "fixed_zip_timestamp": "2024-01-01T00:00:00Z",
+  "archive": {
+    "format": "zip-stored",
+    "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip"
+  },
+  "manifest_path": "fixtures/corpus/v1/manifest.json",
+  "sources": [
+    {
+      "family": "base",
+      "generator": "scripts/fixture_generator.py",
+      "namespace": "base",
+      "path": "fixtures/generator-profile.json",
+      "profile_id": "agentmage-synthetic-corpus-v1"
+    },
+    {
+      "family": "paths",
+      "generator": "scripts/path_fixture_generator.py",
+      "namespace": "paths",
+      "path": "fixtures/path-fixture-profile.json",
+      "profile_id": "agentmage-path-fixtures-v1"
+    },
+    {
+      "family": "adversarial",
+      "generator": "scripts/adversarial_fixture_generator.py",
+      "namespace": "adversarial",
+      "path": "fixtures/adversarial-fixture-profile.json",
+      "profile_id": "agentmage-adversarial-fixtures-v1"
+    },
+    {
+      "family": "documents",
+      "generator": "scripts/document_fixture_generator.py",
+      "namespace": "documents",
+      "path": "fixtures/document-fixture-profile.json",
+      "profile_id": "agentmage-document-fixtures-v1"
+    },
+    {
+      "family": "golden",
+      "generator": "scripts/expected_output_manifests.py",
+      "namespace": "golden",
+      "path": "fixtures/expected-output-profile.json",
+      "profile_id": "agentmage-expected-output-manifests-v1"
+    }
+  ],
+  "archive_safety_contract": {
+    "compressed_entries": false,
+    "duplicate_entries": false,
+    "executable_entries": false,
+    "path_traversal_entries": false,
+    "symlink_entries": false,
+    "absolute_entries": false,
+    "encrypted_entries": false
+  },
+  "content_contract": {
+    "private_user_data": false,
+    "real_credentials": false,
+    "remote_execution": false,
+    "product_parser_support_claim": "none"
+  },
+  "path_fixture_materialization": "inert-declarations-only",
+  "macos_execution_status": "blocked-macos"
+}

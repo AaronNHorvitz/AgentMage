@@ -486,7 +486,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         "side_effect_contract": profile["side_effect_contract"],
         "privacy_contract": profile["privacy_contract"],
         "product_parser_support_claim": "none",
-        "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1",
+        "versioned_corpus_status": "fulfilled-by-agentmage-versioned-synthetic-corpus-v1",
         "macos_support_claim": "none",
     }
 
@@ -501,8 +501,11 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         failures.append("fixture generator did not pass")
     if report.get("product_parser_support_claim") != "none":
         failures.append("fixture generator report made a parser support claim")
-    if report.get("versioned_corpus_status") != "reserved-for-sub-task-2.1.2.1":
-        failures.append("fixture generator prematurely claimed the versioned corpus artifact")
+    if (
+        report.get("versioned_corpus_status")
+        != "fulfilled-by-agentmage-versioned-synthetic-corpus-v1"
+    ):
+        failures.append("fixture generator lost its versioned corpus disposition")
     if report.get("macos_support_claim") != "none":
         failures.append("fixture generator report made a macOS support claim")
     expected = build_report(root)
