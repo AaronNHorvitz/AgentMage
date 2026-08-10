@@ -267,10 +267,29 @@ def validate_artifact_record(record: dict[str, object]) -> list[str]:
         "sha256:" + str(gguf.get("sha256", ""))
     ):
         failures.append("Docker model layer does not match GGUF identity")
+    if isinstance(docker_engine, dict):
+        if docker_engine.get("local_state") != "exact_image_staged_and_executed_via_rootless_podman":
+            failures.append("Docker Model Runner compatibility execution state is missing")
+        if docker_engine.get("compatibility_container_engine") != "Podman 5.8.4":
+            failures.append("Docker Model Runner compatibility engine is not disclosed")
+        if docker_engine.get("runtime_source_revision") != (
+            "72874f559c598b8f89fbb24864868337cf5afb4c"
+        ):
+            failures.append("Docker Model Runner llama.cpp revision mismatch")
+    if isinstance(docker_model, dict) and docker_model.get("local_state") != (
+        "staged_hash_verified_and_executed_in_dedicated_model_store"
+    ):
+        failures.append("Docker model local execution state is missing")
 
     host = record["evaluation_host"]
     if not isinstance(host, dict) or host.get("docker_available") is not False:
         failures.append("local Docker unavailability is not recorded")
+    if isinstance(host, dict) and (
+        host.get("podman_available") is not True
+        or host.get("podman_version") != "5.8.4"
+        or host.get("dmr_compatibility_execution_complete") is not True
+    ):
+        failures.append("rootless Podman compatibility execution is not recorded")
     if isinstance(host, dict) and "RTX 4090" not in str(host.get("gpu", "")):
         failures.append("evaluation GPU identity is missing")
 
@@ -286,7 +305,7 @@ def validate_artifact_record(record: dict[str, object]) -> list[str]:
         expected_blockers = {
             "SOURCE-ADMISSION-BLOCKED",
             "GGUF-CONVERSION-NOT-REPRODUCIBLE",
-            "DOCKER-RUNTIME-UNAVAILABLE",
+            "DOCKER-ENGINE-NOT-VERIFIED",
         }
         if blocker_codes != expected_blockers:
             failures.append("artifact-admission blockers are incomplete")

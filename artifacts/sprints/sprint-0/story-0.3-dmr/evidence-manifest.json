@@ -1,0 +1,36 @@
+{
+  "bundle_id": "sprint-0-story-0.3-dmr-linux-evidence",
+  "diagnostic_source_revision": "dcb2c824e93ac10e0732653c0369b1e1ca072a42",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "adapter-disposition.json",
+      "sha256": "146911b75a21d7d2a610515815fcd696d5f02f45bb8c6d82d8b4bf76e298c785",
+      "size": 2800
+    },
+    {
+      "path": "dmr-linux-diagnostic-result.json",
+      "sha256": "8d17b09d7c485d407ff58ac424a66211ac0b2779ae3a2cfc320e7037ef0f734b",
+      "size": 100922
+    },
+    {
+      "path": "dmr-linux-result.json",
+      "sha256": "eac0a656920a4cb00dd0cec5e35c6eb3999f3500883ffe7acd132e0d5714621a",
+      "size": 109511
+    },
+    {
+      "path": "dmr-linux-server.log",
+      "sha256": "225d7c28285bb27008a9c90dd6ab4955de5059d7d4004ae6a388799b0aca047d",
+      "size": 330375
+    },
+    {
+      "path": "summary.md",
+      "sha256": "0a1bc7fabc14a55bb37dcd37ba3e8a5366a4bb261e7e741a6c12bcc56ab626bf",
+      "size": 2195
+    }
+  ],
+  "result_source_revision": "0d132ecd6cdd6ffae37e956d5e5d1cf925b579bb",
+  "schema_version": 1,
+  "scope": "Story 0.3 Fedora native plus isolated DMR compatibility execution; macOS and final decision remain pending",
+  "verification_revision": "0f28e4ecb387e3fddf6c427f3ca08e253ba58811"
+}

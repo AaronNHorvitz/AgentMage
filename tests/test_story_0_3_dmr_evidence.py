@@ -4,11 +4,15 @@ from scripts.story_0_3_dmr_evidence import (
     ARTIFACT_NAMES,
     Story03DMREvidenceError,
     build_manifest,
+    check_bundle,
     sanitize_server_log,
 )
 
 
 class Story03DMREvidenceTests(unittest.TestCase):
+    def test_committed_dmr_evidence_reconciles(self):
+        self.assertEqual(check_bundle(), [])
+
     def test_server_log_sanitizer_removes_local_evaluation_root(self):
         source = "loading /home/example/.local/share/agentmage/evaluation/models/model.gguf\n"
         self.assertEqual(

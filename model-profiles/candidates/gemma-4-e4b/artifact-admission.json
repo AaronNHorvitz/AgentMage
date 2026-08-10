@@ -2,7 +2,7 @@
   "schema_version": 1,
   "record_type": "model_artifact_admission",
   "profile_id": "gemma-4-e4b-it",
-  "evaluated_at": "2026-08-10T08:31:58Z",
+  "evaluated_at": "2026-08-10T09:42:00Z",
   "source_admission": {
     "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
     "status": "BLOCKED"
@@ -59,7 +59,11 @@
     "operating_system": "linux",
     "cuda_version": "13.3.0",
     "created": "2026-07-09T10:50:38.746465485Z",
-    "local_state": "docker_not_installed",
+    "local_state": "exact_image_staged_and_executed_via_rootless_podman",
+    "compatibility_container_engine": "Podman 5.8.4",
+    "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+    "runtime_version": "b9879",
+    "execution_result_source_revision": "0d132ecd6cdd6ffae37e956d5e5d1cf925b579bb",
     "endpoint_contract": "unauthenticated local API requiring separate isolation proof"
   },
   "docker_model": {
@@ -72,7 +76,7 @@
     "model_layer_digest": "sha256:85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
     "projector_layer_digest": "sha256:ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
     "manifest_annotation_repository": "unsloth/gemma-4-E4B-it-GGUF",
-    "local_state": "resolved_remotely_not_pulled"
+    "local_state": "staged_hash_verified_and_executed_in_dedicated_model_store"
   },
   "evaluation_host": {
     "operating_system": "Fedora Kinoite 44",
@@ -85,6 +89,9 @@
     "driver": "610.43.03",
     "native_runtime_device_probe": "Vulkan0: NVIDIA GeForce RTX 4090 (24564 MiB)",
     "docker_available": false,
+    "podman_available": true,
+    "podman_version": "5.8.4",
+    "dmr_compatibility_execution_complete": true,
     "llama_cpp_system_install_available": false
   },
   "source_evidence": [
@@ -117,12 +124,13 @@
         "reason": "The third-party GGUF identity is exact, but its complete conversion and quantization command, tool revision, and environment are not disclosed."
       },
       {
-        "code": "DOCKER-RUNTIME-UNAVAILABLE",
-        "reason": "Docker and Docker Model Runner are not installed on the Fedora evaluation host."
+        "code": "DOCKER-ENGINE-NOT-VERIFIED",
+        "reason": "The exact Docker Model Runner image completed isolated compatibility execution under rootless Podman, but Docker Engine itself is not installed or directly verified on the Fedora evaluation host."
       }
     ],
     "allowed_actions": [
       "native runtime binary self-test",
+      "isolated Docker Model Runner compatibility evaluation under rootless Podman",
       "remote immutable metadata inspection",
       "quarantined artifact acquisition and synthetic-data evaluation"
     ],

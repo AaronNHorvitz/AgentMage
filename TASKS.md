@@ -231,7 +231,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.3.1.3:** Create one versioned corpus for native macOS, native Linux, and Docker Model Runner adapters covering ordinary chat, repository tasks, citations, tool schemas, malformed output recovery, cancellation, context limits, latency, memory, and zero egress.
 
 - [ ] **Task 0.3.2 - Execute the feasibility spike and decide**
-  - [ ] **Sub-task 0.3.2.1:** Run the corpus on Fedora native `llama.cpp` and the isolated Docker Model Runner compatibility adapter with explicit context and resource settings.
+  - [x] **Sub-task 0.3.2.1:** Run the corpus on Fedora native `llama.cpp` and the isolated Docker Model Runner compatibility adapter with explicit context and resource settings. Evidence is retained in `artifacts/sprints/sprint-0/story-0.3` and `artifacts/sprints/sprint-0/story-0.3-dmr`; the exact DMR image ran under rootless Podman compatibility deployment, not Docker Engine.
   - [ ] **Sub-task 0.3.2.2:** Run the same corpus on the MacBook Pro M5 native `llama.cpp`/Metal reference when that hardware is available; do not substitute Linux evidence for the Mac result.
   - [ ] **Sub-task 0.3.2.3:** Record PASS, BLOCKED, or REJECTED for E4B with raw scores, failures, resource fit, runtime differences, and remediation; do not tune thresholds after viewing results without a versioned decision.
   - [ ] **Sub-task 0.3.2.4:** If E4B is rejected, evaluate the disabled Gemma 4 12B Unified fallback through the complete admission and corpus gate; never switch automatically or silently.

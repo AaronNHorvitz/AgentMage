@@ -1,0 +1,65 @@
+{
+  "data_classification": "public_synthetic_only",
+  "diagnostic_source_revision": "dcb2c824e93ac10e0732653c0369b1e1ca072a42",
+  "docker_model_runner": {
+    "adapter_id": "linux-docker-model-runner-cuda",
+    "compatibility_container_engine": "Podman 5.8.4",
+    "docker_engine_directly_tested": false,
+    "exact_dmr_image_used": true,
+    "execution_status": "COMPLETE",
+    "failed_cases": [
+      "CITE-001",
+      "TOOL-001"
+    ],
+    "failed_thresholds": [
+      "citation_recall",
+      "tool_call_valid_rate"
+    ],
+    "model_manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "quality_status": "FAIL",
+    "runtime_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
+  },
+  "evidence_date": "2026-08-10",
+  "fallback_evaluated": false,
+  "independent_review_performed": false,
+  "limitations": [
+    "The exact Docker Model Runner image ran under rootless Podman compatibility deployment; Docker Engine itself was not tested.",
+    "The earlier immutable native summary states 72 trials; the fixed corpus and raw result contain 82 trials and remain authoritative.",
+    "The Docker Model Runner log includes startup and diagnostic activity from the dedicated public-synthetic evaluation container.",
+    "MacBook Pro M5 evidence remains required before a cross-adapter profile decision.",
+    "The blocked source-lineage and GGUF reproducibility findings remain unresolved."
+  ],
+  "macos_native": {
+    "adapter_id": "macos-native-metal",
+    "blocker": "The required MacBook Pro M5 evaluation host is not available.",
+    "execution_status": "BLOCKED",
+    "linux_evidence_substituted": false
+  },
+  "native_linux": {
+    "adapter_id": "linux-native-vulkan",
+    "evidence_manifest_sha256": "3ac2c3dad2aa8f56ce33ca0846f95582c5515b40d0360cd6cd96e33c680f1215",
+    "evidence_path": "artifacts/sprints/sprint-0/story-0.3",
+    "execution_status": "COMPLETE",
+    "quality_status": "FAIL"
+  },
+  "profile_decision": "PENDING",
+  "record_type": "story_0_3_dmr_adapter_disposition",
+  "release_approval": false,
+  "result_source_revision": "0d132ecd6cdd6ffae37e956d5e5d1cf925b579bb",
+  "schema_version": 1,
+  "task_0_3_2_1_status": "COMPLETE",
+  "task_0_3_2_status": "PENDING_MACOS_AND_DECISION",
+  "token_counter_diagnostic": {
+    "execution_status": "COMPLETE",
+    "failed_cases": [
+      "CITE-001",
+      "TOOL-001",
+      "CONTEXT-001",
+      "PERF-001"
+    ],
+    "finding": "Cached OpenAI usage values could not serve as total prompt-token counts; transform 1.1.1 disabled prompt caching and consumed exact structured over-context counts.",
+    "result_status": "FAIL",
+    "superseded_for_decision_by_transform": "1.1.1"
+  },
+  "verification_revision": "0f28e4ecb387e3fddf6c427f3ca08e253ba58811"
+}

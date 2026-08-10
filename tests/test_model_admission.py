@@ -78,6 +78,14 @@ class ModelAdmissionTests(unittest.TestCase):
             self.artifact_record["gguf_identity"]["multimodal_projector"]["downloaded"]
         )
         self.assertFalse(self.artifact_record["evaluation_host"]["docker_available"])
+        self.assertTrue(self.artifact_record["evaluation_host"]["podman_available"])
+        self.assertTrue(
+            self.artifact_record["evaluation_host"]["dmr_compatibility_execution_complete"]
+        )
+        self.assertEqual(
+            self.artifact_record["docker_engine"]["local_state"],
+            "exact_image_staged_and_executed_via_rootless_podman",
+        )
 
     def test_gguf_runtime_and_oci_substitutions_are_rejected(self) -> None:
         mutations = {
@@ -100,6 +108,20 @@ class ModelAdmissionTests(unittest.TestCase):
                 mutate(changed)
                 failures = validate_artifact_record(changed)
                 self.assertTrue(any(expected in item for item in failures), failures)
+
+    def test_dmr_compatibility_evidence_cannot_be_overstated_or_removed(self) -> None:
+        changed = copy.deepcopy(self.artifact_record)
+        changed["evaluation_host"]["docker_available"] = True
+        changed["evaluation_host"]["dmr_compatibility_execution_complete"] = False
+        changed["docker_engine"]["compatibility_container_engine"] = "Docker Engine"
+        changed["decision"]["blockers"][2]["code"] = "DOCKER-RUNTIME-UNAVAILABLE"
+
+        failures = validate_artifact_record(changed)
+
+        self.assertTrue(any("Docker unavailability" in item for item in failures))
+        self.assertTrue(any("Podman compatibility execution" in item for item in failures))
+        self.assertTrue(any("compatibility engine" in item for item in failures))
+        self.assertTrue(any("blockers are incomplete" in item for item in failures))
 
 
 if __name__ == "__main__":
