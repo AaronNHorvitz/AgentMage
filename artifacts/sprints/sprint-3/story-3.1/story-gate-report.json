@@ -1,0 +1,214 @@
+{
+  "acceptance_criteria": [
+    {
+      "authority_mutation_attempts": 485,
+      "criterion_id": "3.1.AC1",
+      "profile_startup_count": 7,
+      "registered_capability_count": 0,
+      "schema_failure_cases": 72,
+      "status": "pass-shared-linux"
+    },
+    {
+      "criterion_id": "3.1.AC2",
+      "durable_transition_count": 3,
+      "injected_interruption_count": 6,
+      "repeatable_rollback": "pass-idempotent-exact-preimage",
+      "status": "pass-shared-linux"
+    }
+  ],
+  "independent_review": {
+    "artifacts": [
+      {
+        "path": "configuration/profiles/catalog.json",
+        "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
+      },
+      {
+        "path": "configuration/profiles/capability-deltas.json",
+        "sha256": "da26c74db1dc8cd61fd4f7670391dd09b89906a88e5a9a2da593a5bddbb904d4"
+      },
+      {
+        "path": "configuration/permission-bearing-values.json",
+        "sha256": "477c3fd1888c8ec153bdeb2d5136a9850faa1bebceee7286c207029b8717db78"
+      },
+      {
+        "path": "kernel/engine/src/configuration.rs",
+        "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json",
+        "sha256": "3e51f4850de60c16cbaefbc068955c54c89a7f35ce839b675436630c175ee2d1"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/profile-catalog-report.json",
+        "sha256": "c325698c04d16c6b720f68333348a4c9a15b0f0cec07d9c130bf99f59d6a054d"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
+        "sha256": "c2252133ea6e1c402901e67e71533f305ef61ecc42fa652c45144541ce3e40e7"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
+        "sha256": "d621c5d7a6d3c2032bd5086d74fab1f97ef76a33a3ef0a7f41c6faee9d880948"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
+        "sha256": "e30c1a557583290507f445fbc726dab4db3afc9d7eec2fa25663c1a81df017bb"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+        "sha256": "22d473ec24f61f229aef8ac32166a0925894ed5cf42b721ccafd7702d69bf3a1"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
+        "sha256": "e5d3fe83d3faa7122fd4df9803b33f0a0db5f69960125f5bfac3c89bb13be889"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
+        "sha256": "47147408621a273af2b7e97c423d744d19b8425ae6bb8457fdf0143e27e610e5"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
+        "sha256": "c7be1f7f0740be3591a80056a2d2c2d553c7aee0c1ab9d50339a6a7e399ec5d7"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+        "sha256": "7c1b140d96e8a4d5a9518c914789ae4c2f188d962f24992c36ce4f65ab94c522"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
+        "sha256": "c97136619b5578f5d3b0f0d17aea3c6742b2e2daa3324299815e8b8a49f857d4"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "sha256": "1adb0de974ddc12c8418ff8979febbb31258828495905a8d213db71c216b4c7b"
+      }
+    ],
+    "external_human_review_claim": "none",
+    "reviewed_commit": "af13ebaa8832a3db36f270337e616c50b5fe180b",
+    "reviewed_tree": "f4872857e2e0f654c9846afc215beaea523dea36",
+    "reviewer_id": "agentmage-story-3.1-independent-gate-v1"
+  },
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "only_blocker": "macos-execution-evidence-unavailable",
+  "product_acceptance_claim": "none",
+  "product_startup_activation_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "af13ebaa8832a3db36f270337e616c50b5fe180b",
+  "reviewed_tree": "f4872857e2e0f654c9846afc215beaea523dea36",
+  "schema_version": 1,
+  "security_mapping": {
+    "mapped_requirement_count": 9,
+    "product_requirements_complete": 0
+  },
+  "shared_linux_story_work_complete": true,
+  "status": "blocked-macos",
+  "story_id": "3.1",
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-no-product-authority"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-no-product-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-automated-independent-implementation-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
+      ],
+      "status": "pass-gate-reporting"
+    }
+  ]
+}
