@@ -3,10 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "npm": ">=11.12.1 <12"
+  },
+  "workspaces": [
+    "shells/vscode"
+  ],
   "scripts": {
     "additions:check": "python3 scripts/additions_only.py",
     "additions:update": "python3 scripts/additions_only.py --update",
     "architecture:check": "python3 scripts/architecture_decision.py",
+    "build-contract:check": "python3 scripts/build_contract.py",
     "dependencies:check": "python3 scripts/dependency_rules.py",
     "modules:check": "python3 scripts/module_inventory.py",
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
@@ -32,6 +41,14 @@
     "model:macos-runtime-check": "python3 scripts/macos_runtime_admission.py",
     "model:substitution-build": "python3 scripts/model_substitution.py --write --verification-revision HEAD",
     "model:substitution-check": "python3 scripts/model_substitution.py",
+    "product:build": "cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell",
+    "product:check": "npm run product:format-check && npm run product:lint && npm run product:build && npm run product:test",
+    "product:format": "cargo fmt --all && npm run format --workspace @agentmage/vscode-shell",
+    "product:format-check": "cargo fmt --all -- --check && npm run format:check --workspace @agentmage/vscode-shell",
+    "product:lint": "cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell",
+    "product:macos:build": "swift build --package-path platforms/macos",
+    "product:macos:test": "swift test --package-path platforms/macos",
+    "product:test": "cargo test --workspace --locked && npm run test --workspace @agentmage/vscode-shell",
     "model:feasibility-test": "python3 -m unittest tests.test_model_feasibility",
     "policy:build": "python3 scripts/policy_expectations.py",
     "policy:check": "python3 scripts/policy_expectations.py --check",
@@ -39,7 +56,7 @@
     "requirements:build": "python3 scripts/requirement_registry.py",
     "requirements:coverage": "python3 scripts/requirement_coverage.py",
     "requirements:test": "python3 -m unittest discover -s tests -p 'test_*.py'",
-    "requirements:check": "python3 scripts/requirement_registry.py --check && npm run additions:check && npm run architecture:check && npm run modules:check && npm run dependencies:check && npm run policy:check && npm run references:check && npm run traceability:check && npm run evidence:sprint0:check && npm run evidence:story0.2:check && npm run evidence:story0.3:check && npm run evidence:story0.3-dmr:check && npm run evidence:story0.3-fallback:check && npm run evidence:story0.3-reachability:check && npm run evidence:story0.3-security:check && npm run model:source-check && npm run model:corpus-check && npm run model:disposition-check && npm run model:fallback-admission-check && npm run model:fallback-disposition-check && npm run model:macos-runtime-check && npm run model:substitution-check && npm run requirements:coverage && npm run requirements:test",
+    "requirements:check": "python3 scripts/requirement_registry.py --check && npm run additions:check && npm run architecture:check && npm run modules:check && npm run dependencies:check && npm run build-contract:check && npm run policy:check && npm run references:check && npm run traceability:check && npm run evidence:sprint0:check && npm run evidence:story0.2:check && npm run evidence:story0.3:check && npm run evidence:story0.3-dmr:check && npm run evidence:story0.3-fallback:check && npm run evidence:story0.3-reachability:check && npm run evidence:story0.3-security:check && npm run model:source-check && npm run model:corpus-check && npm run model:disposition-check && npm run model:fallback-admission-check && npm run model:fallback-disposition-check && npm run model:macos-runtime-check && npm run model:substitution-check && npm run requirements:coverage && npm run requirements:test",
     "schemas:validate": "node scripts/validate_planning_schemas.mjs",
     "schemas:test": "node --test tests/test_planning_schemas.mjs",
     "schemas:check": "npm run schemas:validate && npm run schemas:test",

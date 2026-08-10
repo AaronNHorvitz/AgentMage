@@ -1,0 +1,30 @@
+[workspace]
+members = [
+  "capabilities/read-only",
+  "kernel/contracts",
+  "kernel/engine",
+  "platforms/linux",
+  "release/xtask",
+  "shells/host",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.95.0"
+license = "Apache-2.0"
+repository = "https://github.com/AaronNHorvitz/AgentMage"
+publish = false
+
+[workspace.dependencies]
+agentmage-capability-read-only = { path = "capabilities/read-only" }
+agentmage-kernel-contracts = { path = "kernel/contracts" }
+agentmage-kernel-engine = { path = "kernel/engine" }
+agentmage-platform-linux = { path = "platforms/linux" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"

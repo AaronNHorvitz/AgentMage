@@ -1,0 +1,20 @@
+[package]
+name = "agentmage-host"
+description = "AgentMage local host composition shell"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+agentmage-capability-read-only.workspace = true
+agentmage-kernel-contracts.workspace = true
+agentmage-kernel-engine.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+agentmage-platform-linux.workspace = true
+
+[lints]
+workspace = true

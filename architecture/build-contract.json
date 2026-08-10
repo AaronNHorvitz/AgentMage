@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0004",
+  "status": "configured",
+  "toolchains": {
+    "rust": "1.95.0",
+    "rust_edition": "2024",
+    "cargo_resolver": "3",
+    "node": "24.15.0",
+    "npm": "11.12.1",
+    "typescript": "5.9.3",
+    "swift_tools": "6.0"
+  },
+  "required_files": [
+    ".cargo/config.toml",
+    ".editorconfig",
+    "Cargo.lock",
+    "Cargo.toml",
+    "capabilities/read-only/Cargo.toml",
+    "capabilities/read-only/src/lib.rs",
+    "kernel/contracts/Cargo.toml",
+    "kernel/contracts/src/lib.rs",
+    "kernel/engine/Cargo.toml",
+    "kernel/engine/src/lib.rs",
+    "package-lock.json",
+    "package.json",
+    "platforms/linux/Cargo.toml",
+    "platforms/linux/src/lib.rs",
+    "platforms/macos/Package.resolved",
+    "platforms/macos/Package.swift",
+    "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
+    "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
+    "release/xtask/Cargo.toml",
+    "release/xtask/src/main.rs",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+    "shells/host/Cargo.toml",
+    "shells/host/src/main.rs",
+    "shells/vscode/eslint.config.mjs",
+    "shells/vscode/package.json",
+    "shells/vscode/src/index.ts",
+    "shells/vscode/test/index.test.ts",
+    "shells/vscode/tsconfig.json"
+  ],
+  "lockfiles": [
+    "Cargo.lock",
+    "package-lock.json",
+    "platforms/macos/Package.resolved"
+  ],
+  "commands": {
+    "build": "npm run product:build",
+    "format": "npm run product:format",
+    "format_check": "npm run product:format-check",
+    "lint": "npm run product:lint",
+    "test": "npm run product:test",
+    "shared_linux_check": "npm run product:check",
+    "macos_build": "npm run product:macos:build",
+    "macos_test": "npm run product:macos:test"
+  },
+  "platform_status": {
+    "shared_linux_commands": "verified-local",
+    "macos_manifest": "interface-only",
+    "macos_commands": "blocked-macos",
+    "macos_implementation": "blocked-macos",
+    "macos_verification": "blocked-macos"
+  },
+  "end_user_ambient_toolchains": []
+}

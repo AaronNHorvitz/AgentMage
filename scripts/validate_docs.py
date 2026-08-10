@@ -23,6 +23,7 @@ REQUIRED_FILES = (
     "architecture/language-build-matrix.json",
     "architecture/module-inventory.json",
     "architecture/dependency-rules.json",
+    "architecture/build-contract.json",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",

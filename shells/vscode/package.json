@@ -1,0 +1,27 @@
+{
+  "name": "@agentmage/vscode-shell",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Display-only AgentMage Visual Studio Code shell",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.mjs\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.mjs\"",
+    "lint": "eslint src test",
+    "test": "npm run build && node --test \"dist/test/*.test.js\""
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.2.0",
+    "@types/vscode": "1.125.0",
+    "eslint": "10.8.1",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.66.0"
+  }
+}
