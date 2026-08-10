@@ -1,0 +1,190 @@
+{
+  "catalog_id": "agentmage-configuration-profile-catalog-v1",
+  "catalog_version": "1.0.0",
+  "loader_status": "not-implemented",
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "profiles": [
+    {
+      "activation_status": "inactive-no-loader",
+      "blocked_by": [
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "development",
+      "configuration_path": "configuration/profiles/development.json",
+      "effective_capabilities": [],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_capabilities": [],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "development"
+    },
+    {
+      "activation_status": "inactive-no-loader",
+      "blocked_by": [
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "synthetic-test",
+      "configuration_path": "configuration/profiles/synthetic-test.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_capabilities": [
+        "workspace.read"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "synthetic-test"
+    },
+    {
+      "activation_status": "inactive-no-loader",
+      "blocked_by": [
+        "product-configuration-loader",
+        "story-16-read-only-tools"
+      ],
+      "configuration_mode": "strict-local-read-only",
+      "configuration_path": "configuration/profiles/strict-local-read-only.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_capabilities": [
+        "workspace.read"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "strict-local-read-only"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.1",
+        "gate-v0.2",
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "knowledge",
+      "configuration_path": "configuration/profiles/knowledge.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "future-v0.2",
+      "planned_capabilities": [
+        "knowledge.index",
+        "knowledge.search",
+        "workspace.read"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "knowledge"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.2",
+        "gate-v0.3",
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "write",
+      "configuration_path": "configuration/profiles/write.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "future-v0.3",
+      "planned_capabilities": [
+        "workspace.read",
+        "workspace.write"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "write"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.3",
+        "gate-v0.4",
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "coding",
+      "configuration_path": "configuration/profiles/coding.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "future-v0.4",
+      "planned_capabilities": [
+        "process.run",
+        "workspace.read",
+        "workspace.write"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "coding"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.6",
+        "gate-v0.7",
+        "product-configuration-loader"
+      ],
+      "configuration_mode": "network-enabled",
+      "configuration_path": "configuration/profiles/later-network.json",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "network_effective": false,
+      "phase": "future-v0.7",
+      "planned_capabilities": [
+        "network.read",
+        "workspace.read"
+      ],
+      "platform_scope": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "product_registration": false,
+      "profile_id": "later-network"
+    }
+  ],
+  "schema_version": 1,
+  "status": "defined-no-product-loader"
+}

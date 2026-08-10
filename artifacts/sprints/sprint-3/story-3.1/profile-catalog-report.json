@@ -1,0 +1,75 @@
+{
+  "artifacts": [
+    {
+      "path": "schemas/configuration/profile-catalog.schema.json",
+      "sha256": "36564306fa41d13667ff5ffcc785996a3dc5c3bef51b2683b1c66add34bfeb0a"
+    },
+    {
+      "path": "scripts/configuration_profiles.py",
+      "sha256": "f5c0aa020b113f1104fd34867d6aaae8061068af50dd11bbda3b4a7f5ab275c1"
+    },
+    {
+      "path": "tests/test_configuration_profiles.py",
+      "sha256": "b77be294858f95f86a080ee21b7d1f3a19deb91057dc0c0b1087a62093d245ad"
+    },
+    {
+      "path": "configuration/profiles/catalog.json",
+      "sha256": "8198f5b5752beb0beb1a8f861f4ad6f9a5087893788b13b1e64319a90d2bbbe5"
+    },
+    {
+      "path": "configuration/profiles/development.json",
+      "sha256": "14526c971a612f3db8e52ec681da7f60d3d59b800510138a0eb8a5d461df6633"
+    },
+    {
+      "path": "configuration/profiles/synthetic-test.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "configuration/profiles/strict-local-read-only.json",
+      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+    },
+    {
+      "path": "configuration/profiles/knowledge.json",
+      "sha256": "88a0c9b1bb20146fcfa651e30589fc26e6692843b600f5f8024765749421dc37"
+    },
+    {
+      "path": "configuration/profiles/write.json",
+      "sha256": "a30524787a9398aea2d3d6c6201537f43789ed2986f29cd24c45c1ff7bd2e76c"
+    },
+    {
+      "path": "configuration/profiles/coding.json",
+      "sha256": "337877eb03511ba6cdaf9d34de4b5ad682bfe91c377422c11279a541f15c54d8"
+    },
+    {
+      "path": "configuration/profiles/later-network.json",
+      "sha256": "53b6d4882cdfc741b41c68ac52abd5f842941dcb8751afb50678e997a9e1a49b"
+    }
+  ],
+  "loader_status": "not-implemented",
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_profile_activation_claim": "none",
+  "profile_ids": [
+    "development",
+    "synthetic-test",
+    "strict-local-read-only",
+    "knowledge",
+    "write",
+    "coding",
+    "later-network"
+  ],
+  "schema_version": 1,
+  "status": "pass-profile-catalog-future-disabled",
+  "summary": {
+    "active_product_profile_count": 0,
+    "current_foundation_profile_count": 3,
+    "future_disabled_profile_count": 4,
+    "future_profiles_with_only_baseline_effective_authority": 4,
+    "network_effective_profile_count": 0,
+    "product_registered_profile_count": 0,
+    "profile_count": 7
+  },
+  "task_id": "3.1.1.2"
+}

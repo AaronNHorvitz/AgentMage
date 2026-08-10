@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/profile-catalog.schema.json",
+  "title": "AgentMage Configuration Profile Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "catalog_id",
+    "catalog_version",
+    "status",
+    "loader_status",
+    "profiles",
+    "macos_execution_status",
+    "macos_support_claim"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "catalog_id": {
+      "const": "agentmage-configuration-profile-catalog-v1"
+    },
+    "catalog_version": {
+      "const": "1.0.0"
+    },
+    "status": {
+      "const": "defined-no-product-loader"
+    },
+    "loader_status": {
+      "const": "not-implemented"
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile_id",
+          "configuration_path",
+          "phase",
+          "activation_status",
+          "configuration_mode",
+          "platform_scope",
+          "effective_capabilities",
+          "planned_capabilities",
+          "blocked_by",
+          "network_effective",
+          "product_registration",
+          "macos_execution_status",
+          "macos_support_claim"
+        ],
+        "properties": {
+          "profile_id": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+          },
+          "configuration_path": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
+          },
+          "phase": {
+            "enum": [
+              "current-foundation",
+              "future-v0.2",
+              "future-v0.3",
+              "future-v0.4",
+              "future-v0.7"
+            ]
+          },
+          "activation_status": {
+            "enum": [
+              "inactive-no-loader",
+              "future-disabled"
+            ]
+          },
+          "configuration_mode": {
+            "enum": [
+              "development",
+              "synthetic-test",
+              "strict-local-read-only",
+              "knowledge",
+              "write",
+              "coding",
+              "network-enabled"
+            ]
+          },
+          "platform_scope": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "fedora-x86_64",
+                "ubuntu-x86_64"
+              ]
+            }
+          },
+          "effective_capabilities": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
+            }
+          },
+          "planned_capabilities": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
+            }
+          },
+          "blocked_by": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/nonEmptyString"
+            }
+          },
+          "network_effective": {
+            "const": false
+          },
+          "product_registration": {
+            "const": false
+          },
+          "macos_execution_status": {
+            "const": "blocked-macos"
+          },
+          "macos_support_claim": {
+            "const": "none"
+          }
+        }
+      }
+    },
+    "macos_execution_status": {
+      "const": "blocked-macos"
+    },
+    "macos_support_claim": {
+      "const": "none"
+    }
+  }
+}

@@ -44,6 +44,7 @@ export const CONFIGURATION_SECTION_TYPES = Object.freeze([
 ]);
 
 export const CONFIGURATION_BUNDLE_TYPE = "agent-configuration";
+export const CONFIGURATION_PROFILE_CATALOG_TYPE = "profile-catalog";
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
 
@@ -131,9 +132,18 @@ export function createConfigurationValidators() {
       `schemas/configuration/${CONFIGURATION_BUNDLE_TYPE}.schema.json`,
     ),
   );
+  ajv.addSchema(
+    readJson(
+      `schemas/configuration/${CONFIGURATION_PROFILE_CATALOG_TYPE}.schema.json`,
+    ),
+  );
 
   return Object.fromEntries(
-    [...CONFIGURATION_SECTION_TYPES, CONFIGURATION_BUNDLE_TYPE].map(
+    [
+      ...CONFIGURATION_SECTION_TYPES,
+      CONFIGURATION_BUNDLE_TYPE,
+      CONFIGURATION_PROFILE_CATALOG_TYPE,
+    ].map(
       (recordType) => {
         const schemaId =
           `https://agentmage.dev/schemas/configuration/${recordType}.schema.json`;
@@ -345,6 +355,32 @@ export function validateConfigurationFixtures() {
   return results;
 }
 
+export function validateConfigurationProfiles() {
+  const validators = createConfigurationValidators();
+  const catalog = readJson("configuration/profiles/catalog.json");
+  const results = [
+    {
+      recordType: CONFIGURATION_PROFILE_CATALOG_TYPE,
+      ...validateConfigurationRecord(
+        CONFIGURATION_PROFILE_CATALOG_TYPE,
+        catalog,
+        validators,
+      ),
+    },
+  ];
+  for (const profile of catalog.profiles ?? []) {
+    results.push({
+      recordType: `configuration-profile[${profile.profile_id}]`,
+      ...validateConfigurationRecord(
+        CONFIGURATION_BUNDLE_TYPE,
+        readJson(profile.configuration_path),
+        validators,
+      ),
+    });
+  }
+  return results;
+}
+
 export function buildConfigurationSchemaReport() {
   const validators = createConfigurationValidators();
   const bundlePath =
@@ -548,10 +584,12 @@ function main() {
   ];
   const testingResults = validateTestingFixtures();
   const configurationResults = validateConfigurationFixtures();
+  const configurationProfileResults = validateConfigurationProfiles();
   const results = [
     ...planningResults,
     ...testingResults,
     ...configurationResults,
+    ...configurationProfileResults,
   ];
   const failures = results.filter((result) => !result.valid);
   for (const failure of validateConfigurationSchemaReport()) {
@@ -578,7 +616,8 @@ function main() {
   console.log(
     `Validated ${planningResults.length} planning and `
       + `${testingResults.length} testing and `
-      + `${configurationResults.length} configuration schema fixture(s).`,
+      + `${configurationResults.length} configuration schema fixture(s), plus `
+      + `${configurationProfileResults.length} profile record(s).`,
   );
   return 0;
 }

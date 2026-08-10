@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   CONFIGURATION_BUNDLE_TYPE,
+  CONFIGURATION_PROFILE_CATALOG_TYPE,
   CONFIGURATION_SECTION_TYPES,
   RECORD_TYPES,
   TEST_RECORD_TYPES,
@@ -16,6 +17,7 @@ import {
   createTestingValidators,
   validateConfigurationFixtures,
   validateConfigurationRecord,
+  validateConfigurationProfiles,
   validateConfigurationSchemaReport,
   validatePlanningRecord,
   validatePlanningTemplates,
@@ -412,4 +414,38 @@ test("unknown configuration record types fail explicitly", () => {
     () => validateConfigurationRecord("unknown-record", {}, configurationValidators),
     /unknown configuration record type/,
   );
+});
+
+test("configuration profile catalog and all seven profiles satisfy formal schemas", () => {
+  const results = validateConfigurationProfiles();
+  assert.equal(results.length, 8);
+  assert.equal(results[0].recordType, CONFIGURATION_PROFILE_CATALOG_TYPE);
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    Array(8).fill(true),
+  );
+});
+
+test("future profile catalog entries cannot claim registration, network, or macOS support", () => {
+  const catalog = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "configuration/profiles/catalog.json"),
+      "utf8",
+    ),
+  );
+  for (const mutation of [
+    ["product_registration", true],
+    ["network_effective", true],
+    ["macos_support_claim", "supported"],
+  ]) {
+    const changed = structuredClone(catalog);
+    changed.profiles.at(-1)[mutation[0]] = mutation[1];
+    assert.equal(
+      validateConfiguration(
+        CONFIGURATION_PROFILE_CATALOG_TYPE,
+        changed,
+      ).valid,
+      false,
+    );
+  }
 });
