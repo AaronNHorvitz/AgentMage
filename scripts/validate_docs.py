@@ -43,6 +43,7 @@ REQUIRED_FILES = (
     "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
     "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
     "artifacts/sprints/sprint-2/story-2.1/fixture-provenance-report.json",
+    "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
     "artifacts/sprints/sprint-2/story-2.1/path-fixture-report.json",
     "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
     "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
