@@ -26,7 +26,10 @@ pub use task::{
     DataSensitivity, Plan, PlanState, PlanStep, PlanStepState, RollbackPlan, StopCondition,
     StopConditionKind, Task, TaskStatus, WorkPacket, WorkPacketState,
 };
-pub use tool::{OperationOutcome, ToolCall, ToolDefinition, ToolResult};
+pub use tool::{
+    OperationOutcome, RequiredGrantTemplate, StateChange, ToolCall, ToolDefinition, ToolResult,
+    ToolRiskLevel,
+};
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-contracts";

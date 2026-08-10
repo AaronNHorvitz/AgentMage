@@ -24,6 +24,8 @@ pub struct SchemaReference {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ContractPayload {
+    /// Exact schema identity used to validate this payload.
+    pub schema: SchemaReference,
     /// Declared media type of the payload bytes.
     pub media_type: String,
     /// Exact payload bytes.
@@ -116,7 +118,7 @@ pub struct ContractError {
 
 #[cfg(test)]
 mod tests {
-    use super::{CONTRACT_SCHEMA_VERSION, ContractPayload, ValidationSeverity};
+    use super::{CONTRACT_SCHEMA_VERSION, ContractPayload, SchemaReference, ValidationSeverity};
 
     #[test]
     fn first_contract_family_is_explicitly_versioned() {
@@ -126,6 +128,11 @@ mod tests {
     #[test]
     fn payload_keeps_media_bytes_and_digest_separate() {
         let payload = ContractPayload {
+            schema: SchemaReference {
+                schema_id: crate::SchemaId::from_raw("fixture.schema"),
+                schema_version: 1,
+                schema_sha256: "1".repeat(64),
+            },
             media_type: "application/json".to_owned(),
             bytes: br#"{"fixture":true}"#.to_vec(),
             sha256: "0".repeat(64),

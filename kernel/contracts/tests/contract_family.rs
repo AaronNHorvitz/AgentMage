@@ -2,11 +2,11 @@ use agentmage_kernel_contracts::{
     Action, ActionId, ActionKind, ActionState, BudgetLimit, BudgetResource,
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, CorrelationId, DataSensitivity,
     ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference, OperationOutcome, Plan,
-    PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Receipt, ReceiptId, RetryDisposition,
-    RollbackPlan, SchemaId, SchemaReference, SessionId, StopCondition, StopConditionKind, Task,
-    TaskId, TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ValidationIssue,
-    ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, from_json,
-    to_canonical_json,
+    PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Receipt, ReceiptId,
+    RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
+    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId,
+    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue, ValidationSeverity,
+    VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, from_json, to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -126,7 +126,15 @@ fn complete_contract_family_preserves_linked_identities() {
         description: "Reads one synthetic fixture".to_owned(),
         input_schema: schema.clone(),
         output_schema: schema,
+        risk_level: ToolRiskLevel::Low,
         declared_effects: vec!["read-only-observation".to_owned()],
+        required_grant: RequiredGrantTemplate {
+            capability_class: "read-only".to_owned(),
+            operation: "fixture.read".to_owned(),
+            target_scope: "workspace-file".to_owned(),
+            single_use: true,
+        },
+        timeout_ms: 1_000,
     };
     let call = ToolCall {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -136,6 +144,7 @@ fn complete_contract_family_preserves_linked_identities() {
         tool_id: tool_id.clone(),
         tool_version: tool.tool_version.clone(),
         arguments: ContractPayload {
+            schema: tool.input_schema.clone(),
             media_type: "application/json".to_owned(),
             bytes: b"{}".to_vec(),
             sha256: "2".repeat(64),
@@ -170,6 +179,8 @@ fn complete_contract_family_preserves_linked_identities() {
         validation_issues: vec![validation_issue],
         evidence: vec![evidence.clone()],
         error: Some(error.clone()),
+        elapsed_ms: 0,
+        state_change: StateChange::NotChanged,
     };
     let receipt = Receipt {
         schema_version: CONTRACT_SCHEMA_VERSION,

@@ -23,6 +23,48 @@ pub enum OperationOutcome {
     Uncertain,
 }
 
+/// Review risk assigned to one registered tool definition.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolRiskLevel {
+    /// Deterministic observation with no expected state change.
+    Low,
+    /// Bounded operation requiring additional review controls.
+    Moderate,
+    /// State-changing or sensitive operation requiring strong controls.
+    High,
+    /// Operation whose failure or misuse may have severe consequences.
+    Critical,
+}
+
+/// Descriptive template for the exact grant a tool call would require.
+///
+/// This template carries no authority and cannot be consumed as a grant.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RequiredGrantTemplate {
+    /// Capability class that must be enabled by release policy.
+    pub capability_class: String,
+    /// Exact operation class a future grant must name.
+    pub operation: String,
+    /// Descriptive target-scope class a future grant must narrow.
+    pub target_scope: String,
+    /// Whether the future operation grant must be single use.
+    pub single_use: bool,
+}
+
+/// Whether a tool attempt changed state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StateChange {
+    /// The attempt did not change state.
+    NotChanged,
+    /// The attempt changed state as declared and verified.
+    Changed,
+    /// Whether state changed cannot be established safely.
+    Uncertain,
+}
+
 /// Versioned description of one tool available for registration review.
 ///
 /// A tool definition describes shape and expected effects. It cannot grant its own use.
@@ -43,8 +85,14 @@ pub struct ToolDefinition {
     pub input_schema: SchemaReference,
     /// Closed output schema identity.
     pub output_schema: SchemaReference,
+    /// Review risk assigned to the operation.
+    pub risk_level: ToolRiskLevel,
     /// Declared effect classes used for policy and review.
     pub declared_effects: Vec<String>,
+    /// Non-authoritative description of the future exact grant requirement.
+    pub required_grant: RequiredGrantTemplate,
+    /// Maximum elapsed execution time in milliseconds.
+    pub timeout_ms: u64,
 }
 
 /// Versioned request to invoke one exact tool contract.
@@ -90,12 +138,18 @@ pub struct ToolResult {
     pub evidence: Vec<EvidenceReference>,
     /// Optional typed terminal error.
     pub error: Option<ContractError>,
+    /// Logical elapsed duration in milliseconds.
+    pub elapsed_ms: u64,
+    /// Typed state-change disposition.
+    pub state_change: StateChange,
 }
 
 #[cfg(test)]
 mod tests {
     use super::{OperationOutcome, ToolCall};
-    use crate::{ActionId, ContractPayload, CorrelationId, ToolCallId, ToolId};
+    use crate::{
+        ActionId, ContractPayload, CorrelationId, SchemaId, SchemaReference, ToolCallId, ToolId,
+    };
 
     #[test]
     fn call_binds_exact_tool_version_and_correlation_identity() {
@@ -107,6 +161,11 @@ mod tests {
             tool_id: ToolId::from_raw("fixture.read"),
             tool_version: "1.0.0".to_owned(),
             arguments: ContractPayload {
+                schema: SchemaReference {
+                    schema_id: SchemaId::from_raw("fixture.input"),
+                    schema_version: 1,
+                    schema_sha256: "1".repeat(64),
+                },
                 media_type: "application/json".to_owned(),
                 bytes: b"{}".to_vec(),
                 sha256: "0".repeat(64),
