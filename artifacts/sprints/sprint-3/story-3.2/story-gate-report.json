@@ -1,0 +1,290 @@
+{
+  "acceptance_criteria": [
+    {
+      "actual_external_action_count": 0,
+      "agentmage_network_call_count": 0,
+      "bounded_evidence_finding_count": 0,
+      "criterion_id": "3.2.AC1",
+      "private_user_data_record_count": 0,
+      "receipt_count": 7,
+      "status": "pass-shared-linux-story-scope",
+      "workflow_state_count": 7
+    },
+    {
+      "case_count": 10,
+      "criterion_id": "3.2.AC2",
+      "passed_case_count": 10,
+      "prior_state_failure_count": 0,
+      "signature_verified_case_count": 8,
+      "status": "pass-shared-linux-story-scope",
+      "valid_patch_count": 1
+    },
+    {
+      "blocked_subject_count": 5,
+      "blocked_subject_kinds": [
+        "model-artifact",
+        "runtime",
+        "component",
+        "capability",
+        "release-version"
+      ],
+      "criterion_id": "3.2.AC3",
+      "implemented_product_startup_hook_claim": "none",
+      "remote_kill_switch": false,
+      "startup_checkpoint_declared": true,
+      "status": "pass-shared-linux-contract-scope"
+    }
+  ],
+  "actual_incident_claim": "none",
+  "independent_review": {
+    "artifacts": [
+      {
+        "path": "SECURITY.md",
+        "sha256": "2b61b47e54dfc9c05c9b8691f2a9e676d66f0af642683d84a44771ae6a2afbdc"
+      },
+      {
+        "path": "support/vulnerability-support-policy.json",
+        "sha256": "b8a63600b4539f9ad58432be198d61149d8e671fca8cee6a74f0d8449fa2831c"
+      },
+      {
+        "path": "support/vulnerability-report-evidence-policy.json",
+        "sha256": "4267ac0e32b6cdee6a0244dbfafedefea200da1a266b06323eaebe84d189d17d"
+      },
+      {
+        "path": "docs/support/vulnerability-reporting.md",
+        "sha256": "58f8c0ac7f578da703ccc45540419da6970852aa2527b864d01e4ae670d9a208"
+      },
+      {
+        "path": "docs/security/story-3.2-vulnerability-response-tabletop.md",
+        "sha256": "81a149adf91d72163762a0b841cd46ebd2d4f0cefe05a8397596a11ad3c456c5"
+      },
+      {
+        "path": "schemas/support/vulnerability-support-policy.schema.json",
+        "sha256": "0f10a8ba110124df1feb20b26f127d8ab8fa6615ac8dc7a17cc6a94417f25912"
+      },
+      {
+        "path": "schemas/support/vulnerability-report-evidence-policy.schema.json",
+        "sha256": "2b1b943d224509d1605ec45ca654b7107659d8e4b7aedb2e38c09a457c1ddc1a"
+      },
+      {
+        "path": "schemas/support/vulnerability-diagnostic-bundle.schema.json",
+        "sha256": "d464f02ded4c5dc664d632d10f6a19fefdbc804e432797dea8352aeeb61688a5"
+      },
+      {
+        "path": "schemas/support/signed-manual-patch-metadata.schema.json",
+        "sha256": "8c40a7017be9c00c4e69841df65cf1f69ebbb09ed5f7c1d38744229a5a7d8d98"
+      },
+      {
+        "path": "schemas/support/emergency-disable-policy.schema.json",
+        "sha256": "dbf1a9879fcb9e2d5dc7e8fb6e8492603d41c47d789bfa4a7a3eb9e65ac1d4af"
+      },
+      {
+        "path": "fixtures/support/vulnerability-workflow/workflow.valid.json",
+        "sha256": "8d2473a3e1ead586074a11af777b329f1d402fd69fb6bdf52c7d04b462202af4"
+      },
+      {
+        "path": "fixtures/support/manual-patch/cases.json",
+        "sha256": "607b569c5d8c8598e79649f2b02d4c1633b3aa7a69b1fb6f9e70aad38e6f8458"
+      },
+      {
+        "path": "fixtures/support/manual-patch/cases/valid.json",
+        "sha256": "721c87eccbad245f86804861b76e8bfc3dff678b57a9d65f1df86ad7c7806ca3"
+      },
+      {
+        "path": "fixtures/support/manual-patch/cases/revoked.json",
+        "sha256": "8db73006178c70b64afd9161976920b6b88b6101fbe5a88364ca86996c238414"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
+        "sha256": "c0c2f075d003dee24bd2b5bd26a2d2d47247d8aa8a54c6677ff6160a3e7286a8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/support-policy-platform-report.json",
+        "sha256": "043215efee419cefce195aa6118823a3544e290318aec28347ec7ad0a4ecac19"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
+        "sha256": "a40ccca77d853b4e8d41d13e67804638a056cc4e4b0259f8423b8a9485dde501"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/manual-patch-metadata-report.json",
+        "sha256": "f0835469fbaeed216693a6681978e52035671540a2f1900f62826b5aeec94e37"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/emergency-disable-policy-report.json",
+        "sha256": "1df1722723f0d6442dc4d1781890bf1e9b7964d824ae84d0c26e3e7816871786"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/manual-patch-verification-report.json",
+        "sha256": "520f7f49dcd4c426ab53e31cd4a7f8daf29e473dddb79b6dde790a166ec84205"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
+        "sha256": "8164ff20bedaf64a5ce1d8440a3af2e10651d7cd274b03b221b622f4eae64cd3"
+      },
+      {
+        "path": "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "sha256": "80d2aea451124c453d9b9728746fd06bedc6a59d92de461e05e9352f00903f86"
+      },
+      {
+        "path": "scripts/manual_patch_verifier.py",
+        "sha256": "ced083c8840fd22599222703be62f54e61a2ddd5d0dc6d3a853ba215ff52dc1e"
+      },
+      {
+        "path": "scripts/vulnerability_support_workflow.py",
+        "sha256": "c170468d9ea5ca4f21346596205af013c0904a6e5ade85eacc0970919d5ff89a"
+      },
+      {
+        "path": "scripts/story_3_2_security_evidence.py",
+        "sha256": "f5f81990702e2588f5ecb284e6bd0b51d2389ad0c89a3c5c35d2a4db519ff55c"
+      },
+      {
+        "path": "tests/test_manual_patch_verifier.py",
+        "sha256": "f2a9bb225567f40e533a8bbfeac10a6e37ec147b234fd9250cb504aa728b703d"
+      },
+      {
+        "path": "tests/test_vulnerability_support_workflow.py",
+        "sha256": "de2db2895561730204a0d0d13c9c3e1cc4b452dd24af19d98c6cd3f795dc600e"
+      },
+      {
+        "path": "tests/test_story_3_2_security_evidence.py",
+        "sha256": "11eb5de1f5ca8f47c1f56e50b0014754b56ed01dc8dc771e048bd1ad94295ecf"
+      }
+    ],
+    "external_human_review_claim": "none",
+    "finding_count": 0,
+    "findings": [],
+    "reviewed_commit": "254408669fbb9538eae9d41f7900653b41c47221",
+    "reviewed_tree": "2482a1e5e47c419adbe41bbc69ce5a5b1a82095d",
+    "reviewer_id": "agentmage-story-3.2-independent-gate-v1"
+  },
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "only_blocker": "macos-execution-evidence-unavailable",
+  "private_user_data_used": false,
+  "product_acceptance_claim": "none",
+  "product_patch_claim": "none",
+  "product_startup_integration_claim": "none",
+  "product_support_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "254408669fbb9538eae9d41f7900653b41c47221",
+  "reviewed_tree": "2482a1e5e47c419adbe41bbc69ce5a5b1a82095d",
+  "schema_version": 1,
+  "security_mapping": {
+    "mapped_requirement_count": 10,
+    "product_requirements_complete": 0,
+    "rv_21_complete": false,
+    "rv_22_complete": false
+  },
+  "shared_linux_story_work_complete": true,
+  "status": "blocked-macos",
+  "story_id": "3.2",
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-no-product-authority"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-no-product-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-synthetic-minimized-evidence"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-read-only-preservation"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-automated-independent-implementation-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "evidence": [
+        "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
+      ],
+      "status": "pass-gate-reporting"
+    }
+  ]
+}
