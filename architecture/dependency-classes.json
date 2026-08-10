@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0004",
+  "status": "enforced",
+  "production": {
+    "cargo_internal_path_packages": [
+      "agentmage-capability-read-only",
+      "agentmage-kernel-contracts",
+      "agentmage-kernel-engine",
+      "agentmage-platform-linux"
+    ],
+    "cargo_external_packages": [],
+    "vscode_extension_packages": [],
+    "swift_packages": []
+  },
+  "development": {
+    "root_npm_packages": [
+      "@mermaid-js/mermaid-cli",
+      "ajv",
+      "ajv-formats",
+      "markdownlint-cli2"
+    ],
+    "vscode_extension_npm_packages": [
+      "@eslint/js",
+      "@types/node",
+      "@types/vscode",
+      "eslint",
+      "prettier",
+      "typescript",
+      "typescript-eslint"
+    ],
+    "cargo_packages": []
+  },
+  "platform_packaging": {
+    "linux_packages": [],
+    "macos_packages": [],
+    "may_enter_product_manifests": false
+  },
+  "optional_later_capabilities": {
+    "packages": [],
+    "enabled": false,
+    "included_in_default_build": false,
+    "included_in_release": false
+  }
+}
