@@ -11,7 +11,7 @@
   "product_acceptance_claim": "none",
   "profile": {
     "id": "agentmage-shared-acceptance-runner-v1",
-    "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+    "sha256": "3eb39451d737c7e6f539d525622005c2081bc1bbcbf17240363386130a9c9f5b"
   },
   "raw_output_retained": false,
   "registered_checks": [
@@ -21,25 +21,26 @@
     "path-declaration-safety",
     "document-structure-safety",
     "platform-redaction",
-    "result-reconciliation"
+    "result-reconciliation",
+    "fault-adapter-closure"
   ],
   "run": {
-    "case_count": 7,
+    "case_count": 8,
     "corpus": {
       "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
       "manifest_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
       "version": "1.0.0"
     },
     "run_id": "agentmage-sprint-2-shared-acceptance-v1",
-    "run_sha256": "9b0e5d1666a67ae2eb3865c82fd6025719df9a842cc034589a25f5e5618cd89a",
+    "run_sha256": "d87749a4ca09388d400ef246801562267510437095802aebfbabb5540d47e012",
     "status_counts": {
       "cancelled": 0,
       "error": 0,
       "fail": 0,
-      "pass": 7,
+      "pass": 8,
       "skipped": 0
     },
-    "total_logical_duration_ms": 91
+    "total_logical_duration_ms": 108
   },
   "run_record_persisted": false,
   "schema_version": 1,

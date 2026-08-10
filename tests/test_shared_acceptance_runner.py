@@ -41,17 +41,17 @@ class SharedAcceptanceRunnerTests(unittest.TestCase):
             [result["test_id"] for result in self.run["results"]],
             [case[0] for case in EXPECTED_CASES],
         )
-        self.assertEqual(len(self.run["results"]), 7)
+        self.assertEqual(len(self.run["results"]), 8)
         self.assertTrue(all(result["status"] == "pass" for result in self.run["results"]))
         self.assertTrue(all(result["expectation_met"] for result in self.run["results"]))
         self.assertEqual(self.run["summary"]["overall_status"], "pass")
-        self.assertEqual(self.run["summary"]["status_counts"]["pass"], 7)
+        self.assertEqual(self.run["summary"]["status_counts"]["pass"], 8)
 
     def test_canonical_run_is_byte_deterministic_and_uses_logical_timing(self) -> None:
         second = run_acceptance(self.profile)
         self.assertEqual(canonical_json(self.run), canonical_json(second))
         self.assertEqual(self.run["run_sha256"], second["run_sha256"])
-        self.assertEqual(self.run["summary"]["total_logical_duration_ms"], 91)
+        self.assertEqual(self.run["summary"]["total_logical_duration_ms"], 108)
         self.assertTrue(
             all(
                 result["timing_kind"] == "synthetic-logical-not-wall-clock"
@@ -127,9 +127,9 @@ class SharedAcceptanceRunnerTests(unittest.TestCase):
         token = CancellationToken()
         token.cancel()
         run = run_acceptance(self.profile, token=token)
-        self.assertEqual(len(run["results"]), 7)
+        self.assertEqual(len(run["results"]), 8)
         self.assertTrue(all(result["status"] == "cancelled" for result in run["results"]))
-        self.assertEqual(run["summary"]["status_counts"]["cancelled"], 7)
+        self.assertEqual(run["summary"]["status_counts"]["cancelled"], 8)
         self.assertEqual(run["summary"]["overall_status"], "fail")
         self.assertEqual(validate_run(run, self.profile), [])
 

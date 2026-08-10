@@ -1,0 +1,54 @@
+{
+  "adversarial_payloads_executed": 0,
+  "all_adapters_closed": true,
+  "event_count": 29,
+  "execution_contract": {
+    "executes_adversarial_payloads": false,
+    "executes_external_commands": false,
+    "exhausts_real_resources": false,
+    "reads_ambient_data": false,
+    "retains_raw_payloads": false,
+    "uses_network": false,
+    "writes_filesystem": false
+  },
+  "external_commands_performed": 0,
+  "filesystem_writes_performed": 0,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_calls_performed": 0,
+  "product_support_claim": "none",
+  "profile": {
+    "id": "agentmage-fault-test-adapters-v1",
+    "sha256": "0f9218a787400c7d7915c2a144e545508d2b7cfe3360c0d99abb972c878cda1b"
+  },
+  "raw_payloads_retained": false,
+  "real_resource_exhaustions_performed": 0,
+  "resource_counters_zeroed": true,
+  "scenario_counts": {
+    "adversarial": 5,
+    "cancellation": 4,
+    "crash": 5,
+    "network": 8,
+    "resource": 7
+  },
+  "schema_version": 1,
+  "side_effect_count": 0,
+  "status": "pass",
+  "status_counts": {
+    "cancelled": 4,
+    "crashed": 3,
+    "denied": 1,
+    "failed": 2,
+    "partial": 1,
+    "quarantined": 2,
+    "redacted": 1,
+    "rejected": 2,
+    "resource-exhausted": 6,
+    "succeeded": 3,
+    "timed-out": 2,
+    "unavailable": 1,
+    "uncertain": 1
+  },
+  "task_id": "2.1.2.4",
+  "trace_sha256": "37f0d8017c1c4293c8b1a68050ac9f348e2533a1f886255f85968b4ee245fe07"
+}

@@ -31,6 +31,7 @@ from fixtures.fake_adapters import (  # noqa: E402
 )
 from scripts import document_fixture_generator as documents  # noqa: E402
 from scripts import expected_output_manifests as goldens  # noqa: E402
+from scripts import fault_test_adapter_evidence as fault_adapters  # noqa: E402
 from scripts import platform_result_recorder as platform_records  # noqa: E402
 from scripts import test_result_bundle as result_bundles  # noqa: E402
 from scripts import versioned_corpus  # noqa: E402
@@ -87,6 +88,12 @@ EXPECTED_CASES = (
         "result-reconciliation",
         "agentmage-test-result-bundle-v1",
         16,
+    ),
+    (
+        "acceptance.fault-adapter-closure",
+        "fault-adapter-closure",
+        "agentmage-fault-test-adapters-v1",
+        17,
     ),
 )
 RUN_STATUSES = ("pass", "fail", "skipped", "error", "cancelled")
@@ -372,6 +379,27 @@ def result_reconciliation(root: Path) -> CheckObservation:
     )
 
 
+def fault_adapter_closure(root: Path) -> CheckObservation:
+    profile = read_json(root / "fixtures/fault-test-adapter-profile.json")
+    failures = fault_adapters.validate_profile(profile, root)
+    if not failures:
+        failures.extend(fault_adapters.check_report(root))
+    report = fault_adapters.build_report(root) if not failures else None
+    return CheckObservation(
+        passed=not failures,
+        diagnostic=(
+            "fault adapters cover crash, network, resource, and adversarial modes"
+            if not failures
+            else "; ".join(failures)
+        ),
+        metrics={
+            "adapter_family_count": 4,
+            "event_count": report["event_count"] if report is not None else 0,
+            "side_effect_count": report["side_effect_count"] if report is not None else 0,
+        },
+    )
+
+
 def default_handlers() -> dict[str, Handler]:
     return {
         "corpus-integrity": corpus_integrity,
@@ -381,6 +409,7 @@ def default_handlers() -> dict[str, Handler]:
         "document-structure-safety": document_structure_safety,
         "platform-redaction": platform_redaction,
         "result-reconciliation": result_reconciliation,
+        "fault-adapter-closure": fault_adapter_closure,
     }
 
 

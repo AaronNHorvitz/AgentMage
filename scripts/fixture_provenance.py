@@ -91,6 +91,14 @@ CONTRACT_SPECS = (
         ),
         "node_suffix": "acceptance-runner",
     },
+    {
+        "contract_id": "agentmage-fault-test-adapters-v1",
+        "contract_kind": "fault-test-adapters",
+        "profile": "fixtures/fault-test-adapter-profile.json",
+        "implementation": "fixtures/fault_test_adapters.py",
+        "report": "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
+        "node_suffix": "fault-test-adapters",
+    },
 )
 EXPECTED_RELATIONS = {
     "configures",
@@ -402,6 +410,12 @@ def build_ledger(root: Path = ROOT) -> dict[str, Any]:
                 "edge-acceptance-consumes-fake-adapters",
                 acceptance_node,
                 "report-fake-adapters",
+                "consumes",
+            ),
+            edge(
+                "edge-acceptance-consumes-fault-test-adapters",
+                acceptance_node,
+                "report-fault-test-adapters",
                 "consumes",
             ),
         )

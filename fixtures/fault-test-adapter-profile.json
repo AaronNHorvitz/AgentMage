@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-fault-test-adapters-v1",
+  "status": "synthetic-fault-adapter-contract",
+  "generated_at": "2024-01-01T00:04:00Z",
+  "bounds": {
+    "max_detail_bytes": 128,
+    "max_events_per_adapter": 64,
+    "max_payload_metadata_bytes": 1048576
+  },
+  "execution_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "writes_filesystem": false,
+    "exhausts_real_resources": false,
+    "executes_adversarial_payloads": false,
+    "reads_ambient_data": false,
+    "retains_raw_payloads": false
+  },
+  "crash_cases": [
+    {
+      "case_id": "crash-healthy",
+      "checkpoint": "before-operation",
+      "mode": "healthy",
+      "expected_status": "succeeded",
+      "committed": false
+    },
+    {
+      "case_id": "crash-before-operation",
+      "checkpoint": "before-operation",
+      "mode": "crash-before-operation",
+      "expected_status": "crashed",
+      "committed": false
+    },
+    {
+      "case_id": "crash-before-commit",
+      "checkpoint": "before-commit",
+      "mode": "crash-before-commit",
+      "expected_status": "crashed",
+      "committed": false
+    },
+    {
+      "case_id": "crash-after-commit",
+      "checkpoint": "after-commit-before-receipt",
+      "mode": "crash-after-commit",
+      "expected_status": "crashed",
+      "committed": true
+    },
+    {
+      "case_id": "crash-uncertain-commit",
+      "checkpoint": "recovery-boundary",
+      "mode": "uncertain-commit",
+      "expected_status": "uncertain",
+      "committed": null
+    }
+  ],
+  "network_allowlist": [
+    "https://model.fixture.invalid/v1/chat",
+    "https://updates.fixture.invalid/v1/manifest"
+  ],
+  "network_cases": [
+    {
+      "case_id": "network-allowlisted-success",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "allowlisted-success",
+      "expected_status": "succeeded"
+    },
+    {
+      "case_id": "network-policy-denial",
+      "endpoint": "https://blocked.fixture.invalid/v1/chat",
+      "mode": "policy-denial",
+      "expected_status": "denied"
+    },
+    {
+      "case_id": "network-dns-failure",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "dns-failure",
+      "expected_status": "failed"
+    },
+    {
+      "case_id": "network-connect-timeout",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "connect-timeout",
+      "expected_status": "timed-out"
+    },
+    {
+      "case_id": "network-read-timeout",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "read-timeout",
+      "expected_status": "timed-out"
+    },
+    {
+      "case_id": "network-connection-reset",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "connection-reset",
+      "expected_status": "failed"
+    },
+    {
+      "case_id": "network-partial-response",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "partial-response",
+      "expected_status": "partial"
+    },
+    {
+      "case_id": "network-offline",
+      "endpoint": "https://model.fixture.invalid/v1/chat",
+      "mode": "offline",
+      "expected_status": "unavailable"
+    }
+  ],
+  "resource_limits": {
+    "cpu_steps": 1000,
+    "memory_bytes": 1048576,
+    "disk_bytes": 1048576,
+    "token_count": 4096,
+    "file_count": 128,
+    "output_bytes": 65536
+  },
+  "resource_cases": [
+    {
+      "case_id": "resource-within-budget",
+      "demand": {
+        "cpu_steps": 10,
+        "memory_bytes": 1024,
+        "disk_bytes": 1024,
+        "token_count": 10,
+        "file_count": 1,
+        "output_bytes": 128
+      },
+      "expected_status": "succeeded",
+      "exhausted_dimension": null
+    },
+    {
+      "case_id": "resource-cpu-exhausted",
+      "demand": {
+        "cpu_steps": 1001,
+        "memory_bytes": 0,
+        "disk_bytes": 0,
+        "token_count": 0,
+        "file_count": 0,
+        "output_bytes": 0
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "cpu_steps"
+    },
+    {
+      "case_id": "resource-memory-exhausted",
+      "demand": {
+        "cpu_steps": 0,
+        "memory_bytes": 1048577,
+        "disk_bytes": 0,
+        "token_count": 0,
+        "file_count": 0,
+        "output_bytes": 0
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "memory_bytes"
+    },
+    {
+      "case_id": "resource-disk-exhausted",
+      "demand": {
+        "cpu_steps": 0,
+        "memory_bytes": 0,
+        "disk_bytes": 1048577,
+        "token_count": 0,
+        "file_count": 0,
+        "output_bytes": 0
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "disk_bytes"
+    },
+    {
+      "case_id": "resource-token-exhausted",
+      "demand": {
+        "cpu_steps": 0,
+        "memory_bytes": 0,
+        "disk_bytes": 0,
+        "token_count": 4097,
+        "file_count": 0,
+        "output_bytes": 0
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "token_count"
+    },
+    {
+      "case_id": "resource-file-exhausted",
+      "demand": {
+        "cpu_steps": 0,
+        "memory_bytes": 0,
+        "disk_bytes": 0,
+        "token_count": 0,
+        "file_count": 129,
+        "output_bytes": 0
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "file_count"
+    },
+    {
+      "case_id": "resource-output-exhausted",
+      "demand": {
+        "cpu_steps": 0,
+        "memory_bytes": 0,
+        "disk_bytes": 0,
+        "token_count": 0,
+        "file_count": 0,
+        "output_bytes": 65537
+      },
+      "expected_status": "resource-exhausted",
+      "exhausted_dimension": "output_bytes"
+    }
+  ],
+  "adversarial_cases": [
+    {
+      "case_id": "adversarial-prompt-injection",
+      "archive_path": "adversarial/prompt-injection/requests.json",
+      "classification": "prompt-injection",
+      "disposition": "reject",
+      "expected_status": "rejected"
+    },
+    {
+      "case_id": "adversarial-approval-bypass",
+      "archive_path": "adversarial/approval-bypass/cases.json",
+      "classification": "approval-bypass",
+      "disposition": "reject",
+      "expected_status": "rejected"
+    },
+    {
+      "case_id": "adversarial-secret-canary",
+      "archive_path": "adversarial/secret-canaries/structured.json",
+      "classification": "secret-canary",
+      "disposition": "redact",
+      "expected_status": "redacted"
+    },
+    {
+      "case_id": "adversarial-malformed-tool-call",
+      "archive_path": "adversarial/model-calls/truncated-json.json",
+      "classification": "malformed-tool-call",
+      "disposition": "quarantine",
+      "expected_status": "quarantined"
+    },
+    {
+      "case_id": "adversarial-path-boundary",
+      "archive_path": "paths/path-scenarios.json",
+      "classification": "path-boundary",
+      "disposition": "quarantine",
+      "expected_status": "quarantined"
+    }
+  ],
+  "cancellation_contract": {
+    "pre_cancelled_status": "cancelled",
+    "adapters": [
+      "crash-test-adapter",
+      "network-test-adapter",
+      "resource-test-adapter",
+      "adversarial-test-adapter"
+    ]
+  },
+  "cleanup_contract": {
+    "close_is_idempotent": true,
+    "operations_after_close_rejected": true,
+    "resource_counters_zeroed": true
+  },
+  "macos_execution_status": "blocked-macos"
+}

@@ -53,15 +53,31 @@
       "contract_kind": "acceptance-runner",
       "evidence_report": {
         "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
-        "sha256": "b2e37902000b7110ce0a233b1d60cd7a007cfed0187c46c9d76108a5452b8810"
+        "sha256": "8742cfd63782d3fc39a12a5f5d169702ad51b861bbc2e902c57a32ce05d8c332"
       },
       "implementation": {
         "path": "scripts/shared_acceptance_runner.py",
-        "sha256": "e21eba7459ce645c1aea41b3a4a42ab2199ccb2da1a3227fe3b886a3ff828b90"
+        "sha256": "ba5fa56e2ca83d98513d487764d1410033cd04aa9128ebe69c74e38940f978ad"
       },
       "profile": {
         "path": "fixtures/acceptance-runner-profile.json",
-        "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+        "sha256": "3eb39451d737c7e6f539d525622005c2081bc1bbcbf17240363386130a9c9f5b"
+      }
+    },
+    {
+      "contract_id": "agentmage-fault-test-adapters-v1",
+      "contract_kind": "fault-test-adapters",
+      "evidence_report": {
+        "path": "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
+        "sha256": "1f7dac9229cb16ffbe8e8933af5f875424217b116790c0fa2a6a48bad0e3c59e"
+      },
+      "implementation": {
+        "path": "fixtures/fault_test_adapters.py",
+        "sha256": "c9bbc6a425027b0c907f77c781e6663cd61964a17f9a913b75a9b77965fcd442"
+      },
+      "profile": {
+        "path": "fixtures/fault-test-adapter-profile.json",
+        "sha256": "0f9218a787400c7d7915c2a144e545508d2b7cfe3360c0d99abb972c878cda1b"
       }
     }
   ],
@@ -130,7 +146,7 @@
     }
   ],
   "ledger_id": "agentmage-fixture-provenance-ledger-v1",
-  "ledger_sha256": "f4a9cdff1ef9e02814750fedb71ce607cceda3a742d0bc93ee4beb8911f70640",
+  "ledger_sha256": "6846fe9d8d654025c8d8ff52bd784a38a2f191f2dd8c107bd7b123661dfb1163",
   "ledger_version": "1.0.0",
   "lineage": {
     "edges": [
@@ -145,6 +161,12 @@
         "from_node": "implementation-acceptance-runner",
         "relation": "consumes",
         "to_node": "report-fake-adapters"
+      },
+      {
+        "edge_id": "edge-acceptance-consumes-fault-test-adapters",
+        "from_node": "implementation-acceptance-runner",
+        "relation": "consumes",
+        "to_node": "report-fault-test-adapters"
       },
       {
         "edge_id": "edge-acceptance-consumes-platform-results",
@@ -261,6 +283,18 @@
         "to_node": "implementation-fake-adapters"
       },
       {
+        "edge_id": "edge-fault-test-adapters-implementation-report",
+        "from_node": "implementation-fault-test-adapters",
+        "relation": "produces",
+        "to_node": "report-fault-test-adapters"
+      },
+      {
+        "edge_id": "edge-fault-test-adapters-profile-implementation",
+        "from_node": "profile-fault-test-adapters",
+        "relation": "configures",
+        "to_node": "implementation-fault-test-adapters"
+      },
+      {
         "edge_id": "edge-golden-generator-archive",
         "from_node": "generator-golden",
         "relation": "contributes-to",
@@ -368,13 +402,19 @@
         "artifact_role": "implementation",
         "node_id": "implementation-acceptance-runner",
         "path": "scripts/shared_acceptance_runner.py",
-        "sha256": "e21eba7459ce645c1aea41b3a4a42ab2199ccb2da1a3227fe3b886a3ff828b90"
+        "sha256": "ba5fa56e2ca83d98513d487764d1410033cd04aa9128ebe69c74e38940f978ad"
       },
       {
         "artifact_role": "implementation",
         "node_id": "implementation-fake-adapters",
         "path": "fixtures/fake_adapters.py",
         "sha256": "8c15a54095e67a5ad354ec8f8e79a9abee2902cb38e25ac8be9decf2e1ed6403"
+      },
+      {
+        "artifact_role": "implementation",
+        "node_id": "implementation-fault-test-adapters",
+        "path": "fixtures/fault_test_adapters.py",
+        "sha256": "c9bbc6a425027b0c907f77c781e6663cd61964a17f9a913b75a9b77965fcd442"
       },
       {
         "artifact_role": "implementation",
@@ -398,7 +438,7 @@
         "artifact_role": "profile",
         "node_id": "profile-acceptance-runner",
         "path": "fixtures/acceptance-runner-profile.json",
-        "sha256": "e42fab3b1db83d3cdf9c8eee69229ba4e30a22c879605bb995052563b9dbbf5d"
+        "sha256": "3eb39451d737c7e6f539d525622005c2081bc1bbcbf17240363386130a9c9f5b"
       },
       {
         "artifact_role": "profile",
@@ -432,6 +472,12 @@
       },
       {
         "artifact_role": "profile",
+        "node_id": "profile-fault-test-adapters",
+        "path": "fixtures/fault-test-adapter-profile.json",
+        "sha256": "0f9218a787400c7d7915c2a144e545508d2b7cfe3360c0d99abb972c878cda1b"
+      },
+      {
+        "artifact_role": "profile",
         "node_id": "profile-golden",
         "path": "fixtures/expected-output-profile.json",
         "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
@@ -458,7 +504,7 @@
         "artifact_role": "evidence-report",
         "node_id": "report-acceptance-runner",
         "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
-        "sha256": "b2e37902000b7110ce0a233b1d60cd7a007cfed0187c46c9d76108a5452b8810"
+        "sha256": "8742cfd63782d3fc39a12a5f5d169702ad51b861bbc2e902c57a32ce05d8c332"
       },
       {
         "artifact_role": "evidence-report",
@@ -489,6 +535,12 @@
         "node_id": "report-fake-adapters",
         "path": "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
         "sha256": "87f55101e959d78ebb6e32932ab0dc26eb2a3d7c375403f35c78c207707d4b5a"
+      },
+      {
+        "artifact_role": "evidence-report",
+        "node_id": "report-fault-test-adapters",
+        "path": "artifacts/sprints/sprint-2/story-2.1/fault-test-adapter-report.json",
+        "sha256": "1f7dac9229cb16ffbe8e8933af5f875424217b116790c0fa2a6a48bad0e3c59e"
       },
       {
         "artifact_role": "evidence-report",
@@ -524,7 +576,7 @@
     "fixture_classification": "repository-controlled-synthetic-only",
     "private_user_data": false,
     "real_credentials": false,
-    "root_fixture_contract_count": 10,
+    "root_fixture_contract_count": 11,
     "root_fixture_contracts_complete": true
   },
   "source_families": [

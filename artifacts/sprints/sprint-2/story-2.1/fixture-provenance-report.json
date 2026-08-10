@@ -2,12 +2,12 @@
   "all_artifact_hashes_verified": true,
   "fixture_classification": "repository-controlled-synthetic-only",
   "ledger": {
-    "contract_count": 4,
-    "edge_count": 31,
-    "node_count": 32,
+    "contract_count": 5,
+    "edge_count": 34,
+    "node_count": 35,
     "path": "fixtures/corpus/v1/provenance-ledger.json",
-    "self_sha256": "f4a9cdff1ef9e02814750fedb71ce607cceda3a742d0bc93ee4beb8911f70640",
-    "sha256": "78875a1f9bcae04e54aaae8a35ed026f45366a007fe2e8939f0610724d5acb3d",
+    "self_sha256": "6846fe9d8d654025c8d8ff52bd784a38a2f191f2dd8c107bd7b123661dfb1163",
+    "sha256": "f28b6772bf88a49355c41e7b816d36bb2f7f30503fc1b99bc6534f3edbea411a",
     "source_family_count": 5
   },
   "lineage_graph_acyclic": true,

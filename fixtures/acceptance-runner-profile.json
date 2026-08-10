@@ -46,6 +46,12 @@
       "fixture_id": "agentmage-test-result-bundle-v1",
       "logical_duration_ms": 16,
       "test_id": "acceptance.result-reconciliation"
+    },
+    {
+      "check_id": "fault-adapter-closure",
+      "fixture_id": "agentmage-fault-test-adapters-v1",
+      "logical_duration_ms": 17,
+      "test_id": "acceptance.fault-adapter-closure"
     }
   ],
   "expected_status": "pass",
