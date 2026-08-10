@@ -1,0 +1,122 @@
+{
+  "content_contract": {
+    "external_process_required": false,
+    "host_resource_exhaustion_permitted": false,
+    "network_required": false,
+    "private_user_data": false,
+    "real_credentials": false,
+    "secret_canary_persisted": false
+  },
+  "corpus_id": "agentmage-seeded-security-failures-v1",
+  "corpus_sha256": "d2590288b9c94833215e471894816239fdedf6d1690dec77a4f5242d6d691bd4",
+  "corpus_version": "1.0.0",
+  "coverage": {
+    "complete": true,
+    "required_failure_classes": [
+      "crash",
+      "hang",
+      "resource-exhaustion",
+      "path-escape",
+      "secret-leak",
+      "authorization-bypass"
+    ],
+    "seed_count": 6
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "product_boundary_execution_claim": "none",
+  "schema_version": 1,
+  "seeds": [
+    {
+      "derivation_sha256": null,
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "crash",
+      "host_resource_exhaustion": false,
+      "owner": "configuration-boundary",
+      "payload_base64": "bm9pc2U6Q1JBU0g6c3ludGhldGljLXRhaWw=",
+      "payload_kind": "literal-base64",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-crash-001",
+      "seed_sha256": "ab21faf3df4e09a98adfed2a4523c2f74bf32a1cf87019d65fc62e6213a32d28",
+      "severity": "high",
+      "target_id": "FT-MANIFEST-001"
+    },
+    {
+      "derivation_sha256": null,
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "hang",
+      "host_resource_exhaustion": false,
+      "owner": "ipc-boundary",
+      "payload_base64": "bm9pc2U6SEFORzpsb2dpY2FsLXN0ZXAtYnVkZ2V0OnN5bnRoZXRpYy10YWls",
+      "payload_kind": "literal-base64",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-hang-001",
+      "seed_sha256": "e178e24e431d58a3cb9d153ee8d0341518db4b6acbce944e598e55c4950d28eb",
+      "severity": "high",
+      "target_id": "FT-IPC-001"
+    },
+    {
+      "derivation_sha256": null,
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "resource-exhaustion",
+      "host_resource_exhaustion": false,
+      "owner": "model-output-boundary",
+      "payload_base64": "bm9pc2U6UkVTT1VSQ0U6bG9naWNhbC1tZW1vcnktYnVkZ2V0OnN5bnRoZXRpYy10YWls",
+      "payload_kind": "literal-base64",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-resource-001",
+      "seed_sha256": "f14aefd05f59c10f4f9cedde47984ff3e50b5647aebb9ccb0bd8c13257624708",
+      "severity": "high",
+      "target_id": "FT-MODEL-OUTPUT-001"
+    },
+    {
+      "derivation_sha256": null,
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "path-escape",
+      "host_resource_exhaustion": false,
+      "owner": "path-boundary",
+      "payload_base64": "bm9pc2U6Li4vLi4vc3ludGhldGljLW91dHNpZGU6dGFpbA==",
+      "payload_kind": "literal-base64",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-path-001",
+      "seed_sha256": "db7b608431576bc1ff9bf4fda97f896a337ddc6e476c901298944bee056b9117",
+      "severity": "critical",
+      "target_id": "FT-PATH-001"
+    },
+    {
+      "derivation_sha256": "9e56f853f06ceccbacfd06801ee0c4ae16710670a4c8ad1fe35f53b481ba5318",
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "secret-leak",
+      "host_resource_exhaustion": false,
+      "owner": "redaction-boundary",
+      "payload_base64": null,
+      "payload_kind": "derived-synthetic-canary",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-secret-001",
+      "seed_sha256": "5b16b49ab2bca7e519d1f67b433ecdf02a0d6bd3ae0e28d1edc111281ee735c5",
+      "severity": "critical",
+      "target_id": "FT-TEXT-001"
+    },
+    {
+      "derivation_sha256": null,
+      "expected_disposition": "quarantined-blocking",
+      "failure_class": "authorization-bypass",
+      "host_resource_exhaustion": false,
+      "owner": "capability-grant-boundary",
+      "payload_base64": "bm9pc2U6QllQQVNTOm1pc3NpbmctZ3JhbnQ6c3ludGhldGljLXRhaWw=",
+      "payload_kind": "literal-base64",
+      "private_user_data": false,
+      "real_credential": false,
+      "seed_id": "seed-authorization-001",
+      "seed_sha256": "feb9a82e599b46b637ff4da6a2b9645caf1c80a188f68540f868d5622d79f90d",
+      "severity": "critical",
+      "target_id": "FT-GRANT-001"
+    }
+  ],
+  "status": "bounded-synthetic-security-failures"
+}

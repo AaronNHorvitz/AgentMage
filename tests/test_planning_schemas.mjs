@@ -205,10 +205,10 @@ test("unknown planning record types fail explicitly", () => {
 
 test("platform, provenance, and fuzz results satisfy their testing schemas", () => {
   const results = validateTestingFixtures();
-  assert.equal(results.length, 4);
+  assert.equal(results.length, 10);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true],
+    [true, true, true, true, true, true, true, true, true, true],
   );
   assert.deepEqual(TEST_RECORD_TYPES, [
     "platform-result",

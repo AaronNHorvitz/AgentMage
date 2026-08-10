@@ -212,6 +212,15 @@ export function validateTestingFixtures() {
     recordType: "fuzz-result",
     ...validateTestingRecord("fuzz-result", fuzzResult, validators),
   });
+  const seededFailureReport = readJson(
+    "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+  );
+  results.push(
+    ...seededFailureReport.results.map((record, index) => ({
+      recordType: `seeded-fuzz-result[${index}]`,
+      ...validateTestingRecord("fuzz-result", record, validators),
+    })),
+  );
   return results;
 }
 

@@ -154,7 +154,7 @@
     "scheduled_full_target": 3600
   },
   "policy_id": "agentmage-fuzz-toolchain-policy-v1",
-  "policy_sha256": "7b343d3318bc62c528dc8972e32a501af9c5504b969207fff9f35973372c8934",
+  "policy_sha256": "d58939136bde8c1a2cbb91144e29fdbcfdc451848c61ecbce3854a3a6d11963e",
   "policy_version": "1.0.0",
   "product_fuzz_execution_claim": "none",
   "regression_retention": {
@@ -188,6 +188,10 @@
     {
       "path": "fixtures/corpus/v1/manifest.json",
       "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
+    },
+    {
+      "path": "fuzzing/seeds/security-failures-v1.json",
+      "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
     }
   ],
   "status": "pinned-tools-recorded-not-installed",

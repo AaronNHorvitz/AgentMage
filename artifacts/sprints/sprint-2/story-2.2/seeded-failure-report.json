@@ -1,0 +1,760 @@
+{
+  "gate_results": [
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-MANIFEST-001"
+    },
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-IPC-001"
+    },
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-MODEL-OUTPUT-001"
+    },
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-PATH-001"
+    },
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-TEXT-001"
+    },
+    {
+      "failures": [
+        "result-non-pass"
+      ],
+      "status": "block",
+      "target_id": "FT-GRANT-001"
+    }
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "private_user_data_used": false,
+  "product_boundary_execution_claim": "none",
+  "raw_payloads_recorded": false,
+  "regressions": [
+    {
+      "bytes": 6,
+      "path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
+      "sha256": "7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a"
+    },
+    {
+      "bytes": 4,
+      "path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
+      "sha256": "b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9"
+    },
+    {
+      "bytes": 5,
+      "path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
+      "sha256": "6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5"
+    },
+    {
+      "bytes": 8,
+      "path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
+      "sha256": "1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc"
+    },
+    {
+      "bytes": 3,
+      "path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
+      "sha256": "fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7"
+    },
+    {
+      "bytes": 28,
+      "path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
+      "sha256": "e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43"
+    }
+  ],
+  "results": [
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "13cc1fe72e88863fb580b91b59fe7d0e88bd19bea4100b464d35409bb26f2bd1",
+        "features_covered": 26,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "0560ddffb08ccc806a40b54040f2c6909da55e27ce2c030fb02d0ddf57fdf8c5",
+        "failure_class": "crash",
+        "normalized_top_frames": [
+          "fake_manifests::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "468dbaf4a89a4ebad9a8685c8168922c0b46dafc66ef5b07430baca461e2df7d",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 5,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5",
+        "original_sha256": "468dbaf4a89a4ebad9a8685c8168922c0b46dafc66ef5b07430baca461e2df7d",
+        "path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "configuration-boundary",
+        "risk_decision": null,
+        "severity": "high"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-0560ddffb08ccc806a40",
+      "record_sha256": "493db9dec22e7d96d60373b9d3f98f5ded0a8b807e68b11a0079234433f9dc8f",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 0,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 31,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "crash",
+        "seed": 1993985177
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "9e42ade25ca412d5a74cb87b700d7602ca9719b882eabfee8524569ccd4deb40",
+        "triggered": [
+          "crash-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "manifests",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-MANIFEST-001"
+      },
+      "timeout_resource_event": {
+        "event": "none",
+        "host_exhausted": false,
+        "limit": null,
+        "observed": null,
+        "unit": null
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "d9b58ad1b667e4426bdf9c50cc90d5396caea277e3160f82225baf6bf7779421",
+        "features_covered": 45,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "dde5442e5f569789b68f6032828f2c05b3d3a282abf1f7adb6a4ee6208606e69",
+        "failure_class": "hang",
+        "normalized_top_frames": [
+          "fake_ipc_messages::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "d9c57c664624a0f6b50e2ba93d7c34f6a7178f225d35058e3217ad8179575288",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 4,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9",
+        "original_sha256": "d9c57c664624a0f6b50e2ba93d7c34f6a7178f225d35058e3217ad8179575288",
+        "path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "ipc-boundary",
+        "risk_decision": null,
+        "severity": "high"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-dde5442e5f569789b68f",
+      "record_sha256": "8bd9a4834a0a7916c0f00c0c68df076a0e9cb936aa4b6e10a9c4d3e90502825e",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 0,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 49,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "hang",
+        "seed": 1949006446
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "7dd7c550498687b476366bbd1b4bcc4b89561f7f536b384e3e99f5f10b12ad78",
+        "triggered": [
+          "hang-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "ipc-messages",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-IPC-001"
+      },
+      "timeout_resource_event": {
+        "event": "run-timeout",
+        "host_exhausted": false,
+        "limit": 5,
+        "observed": 6,
+        "unit": "seconds"
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "5dce7bf7b25090afa10b717925801974aae0c7d6a133c0a28d7df789134b9d35",
+        "features_covered": 51,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "18063008c7e6c349448569d069cfd823c516ad9ca218a2e3a459824334607e33",
+        "failure_class": "resource-exhaustion",
+        "normalized_top_frames": [
+          "fake_model_output::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "d364857de67f10b1be182ee70d05495b8de3619fd177afa52e71fee8ae00fc26",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 8,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc",
+        "original_sha256": "d364857de67f10b1be182ee70d05495b8de3619fd177afa52e71fee8ae00fc26",
+        "path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "model-output-boundary",
+        "risk_decision": null,
+        "severity": "high"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-18063008c7e6c3494485",
+      "record_sha256": "4a7c2bd53dc230c3b8614390b50a5d9a8bc83399fd65af2673cbcb1269185bdb",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 0,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 59,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "resource-exhaustion",
+        "seed": 3380919793
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "a1b820ed1c806625870e33f6fcdabbe3935d9145ba728fcc125c6f447fd1943a",
+        "triggered": [
+          "resource-exhaustion-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "model-output",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-MODEL-OUTPUT-001"
+      },
+      "timeout_resource_event": {
+        "event": "memory",
+        "host_exhausted": false,
+        "limit": 1073741824,
+        "observed": 1073741825,
+        "unit": "bytes"
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "6e061c91eaf7b47c04e94918e3fbe60fc6afb1552ca5e463b3d910cce25e9b05",
+        "features_covered": 34,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "1be200cf10c9cd7a13520580d1bde838ce5d21f6e2797f67726d37425ea2ae1c",
+        "failure_class": "path-escape",
+        "normalized_top_frames": [
+          "fake_paths::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "d76805dac40353b69454644d9218e81fc968b8c63491ae3d62154fb0b980323d",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 3,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7",
+        "original_sha256": "d76805dac40353b69454644d9218e81fc968b8c63491ae3d62154fb0b980323d",
+        "path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "path-boundary",
+        "risk_decision": null,
+        "severity": "critical"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-1be200cf10c9cd7a1352",
+      "record_sha256": "22f7ee2feb455358f65238efb0b77c202cf4a650f2319cbc5cc681c8fd55b73a",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 0,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 37,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "path-escape",
+        "seed": 3417079443
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
+        "triggered": [
+          "path-escape-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "paths",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-PATH-001"
+      },
+      "timeout_resource_event": {
+        "event": "none",
+        "host_exhausted": false,
+        "limit": null,
+        "observed": null,
+        "unit": null
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "36b849f322c2e842eed552e141bb1e00104b87a2534cfc9d9cb65840f1a3ab83",
+        "features_covered": 65,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "759944aa9d77d6e403db793c4d0d02182e7f07d8b61167a09802da9a9743e1ac",
+        "failure_class": "secret-leak",
+        "normalized_top_frames": [
+          "fake_text_encodings::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "839fa8cdfb1155b4bee79dc01fddece64271192ea3fbbef077dc2860e3cc2cd2",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 28,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43",
+        "original_sha256": "839fa8cdfb1155b4bee79dc01fddece64271192ea3fbbef077dc2860e3cc2cd2",
+        "path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "redaction-boundary",
+        "risk_decision": null,
+        "severity": "critical"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-759944aa9d77d6e403db",
+      "record_sha256": "3f61522a1b728e03bdfa14396471dc3fe390cb48121292411d8f2d8ebeac77a1",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 1,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 93,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "secret-leak",
+        "seed": 3236657236
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "763a7ac6cf2784dc3976e737df215e7cd6a85a5746bd3516ae342a2a78bd22f6",
+        "triggered": [
+          "secret-leak-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "text-encodings",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-TEXT-001"
+      },
+      "timeout_resource_event": {
+        "event": "none",
+        "host_exhausted": false,
+        "limit": null,
+        "observed": null,
+        "unit": null
+      }
+    },
+    {
+      "captured_at": "2024-01-01T00:20:00Z",
+      "coverage": {
+        "corpus_entry_count": 1,
+        "coverage_sha256": "295f0b07208baa9c54812300a976d01c6d33ae75cf0ad2655a5fd354940aa79d",
+        "features_covered": 41,
+        "kind": "deterministic-oracle",
+        "new_features": 1,
+        "unavailable_reason": null
+      },
+      "evidence": [
+        {
+          "path": "fuzzing/seeds/security-failures-v1.json",
+          "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+        },
+        {
+          "path": "fuzzing/toolchain-policy.json",
+          "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+        }
+      ],
+      "failure": {
+        "crash_signature": "75cf1143c1264a7181fadfb71405426817ede516f3a47568d70d6942ddef65e6",
+        "failure_class": "authorization-bypass",
+        "normalized_top_frames": [
+          "fake_capability_grants::evaluate"
+        ],
+        "raw_input_retained": false,
+        "raw_input_sha256": "2a6f631108e58777f11d6705f2e69743b799ba61c7ad23fcdf16f949f4a5c142",
+        "stack_sha256": null
+      },
+      "macos_execution_status": "blocked-macos",
+      "macos_support_claim": "none",
+      "minimized_reproducer": {
+        "bytes": 6,
+        "failure_signature_preserved": true,
+        "minimized_sha256": "7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a",
+        "original_sha256": "2a6f631108e58777f11d6705f2e69743b799ba61c7ad23fcdf16f949f4a5c142",
+        "path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
+        "raw_private_input_retained": false,
+        "status": "minimized"
+      },
+      "network_used": false,
+      "ownership": {
+        "disposition": "quarantined-blocking",
+        "duplicate_of": null,
+        "owner": "capability-grant-boundary",
+        "risk_decision": null,
+        "severity": "critical"
+      },
+      "product_fuzz_claim": "none",
+      "record_id": "am-fuzz-result-75cf1143c1264a7181fa",
+      "record_sha256": "31253e6921e647a8fe58e0e08f3cf7337217603681b409e71821a35ec7fa4c8f",
+      "record_type": "fuzz-result",
+      "redaction": {
+        "private_paths_recorded": false,
+        "raw_payload_recorded": false,
+        "redaction_count": 0,
+        "secret_canary_values_recorded": false
+      },
+      "run": {
+        "duration_seconds": 60,
+        "execution_count": 47,
+        "maximum_input_bytes": 4096,
+        "mode": "fuzzing",
+        "result_status": "authorization-bypass",
+        "seed": 3532444043
+      },
+      "sanitizer": {
+        "enabled": [
+          "deterministic-security-oracle"
+        ],
+        "finding_count": 1,
+        "state_sha256": "b0959c04750d40ce8284f9a2d416ceff696bacd0e29ce50d51239cfd010a6e29",
+        "triggered": [
+          "authorization-bypass-oracle"
+        ]
+      },
+      "schema_version": 1,
+      "target": {
+        "boundary_class": "capability-grants",
+        "build_sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051",
+        "corpus_sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+        "dictionary_sha256": [
+          "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
+          "17e9ae9857e7c7db08011d25727603c987ca4c766ddf418d2fa1a0daa5715c5b",
+          "4cb1442b7657b3083c5d50dab734c8671e9e37277f8bdaf81ffe788cc92c18ce",
+          "13c5146040efe77bdbea3d5fdc71accbe42a8ec3019266859a461792564862ef",
+          "fdade2eff827cd062eed5a494893bae7ce00500d0906095c5070499870ead176",
+          "20f77973fffd47a062a2754faf0e41bc385791cbfa9ef3857a67b423d27d9f4a"
+        ],
+        "engine": {
+          "engine_id": "agentmage-bounded-fake-fuzzer",
+          "integrity": "35f856abdd575666e56cc14bbd7bbdababb85e34a875e2663946b355302106c9",
+          "version": "1.0.0"
+        },
+        "harness_sha256": "2a75240fed98e0ed81e2c5df7908daad6055e054257c6c0fadfac2c44fd8fdd8",
+        "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
+        "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
+        "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+        "target_id": "FT-GRANT-001"
+      },
+      "timeout_resource_event": {
+        "event": "none",
+        "host_exhausted": false,
+        "limit": null,
+        "observed": null,
+        "unit": null
+      }
+    }
+  ],
+  "schema_version": 1,
+  "secret_canary_values_recorded": false,
+  "seed_corpus": {
+    "path": "fuzzing/seeds/security-failures-v1.json",
+    "self_sha256": "d2590288b9c94833215e471894816239fdedf6d1690dec77a4f5242d6d691bd4",
+    "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea",
+    "version": "1.0.0"
+  },
+  "status": "pass-seeded-failures-blocked",
+  "summary": {
+    "blocking_gate_result_count": 6,
+    "detected_failure_count": 6,
+    "host_resource_exhaustion_count": 0,
+    "minimized_reproducer_count": 6,
+    "network_call_count": 0,
+    "non_pass_result_count": 6,
+    "owned_disposition_count": 6,
+    "schema_shaped_result_count": 6,
+    "seed_count": 6
+  },
+  "task_id": "2.2.2.1"
+}

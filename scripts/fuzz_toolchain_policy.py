@@ -165,6 +165,7 @@ def build_policy(root: Path = ROOT) -> dict[str, Any]:
             artifact(root, "fixtures/story-2.1/later-input-class-fixtures-v1.json"),
             artifact(root, "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip"),
             artifact(root, "fixtures/corpus/v1/manifest.json"),
+            artifact(root, "fuzzing/seeds/security-failures-v1.json"),
         ],
         "resource_limits": {
             "maximum_input_bytes": 4096,
@@ -367,7 +368,7 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
     if (
         value.get("engine_count") != 3
         or value.get("dictionary_count") != 6
-        or value.get("seed_corpus_count") != 3
+        or value.get("seed_corpus_count") != 4
         or value.get("budgets_recorded") is not True
         or value.get("crash_deduplication_recorded") is not True
         or value.get("regression_retention_recorded") is not True

@@ -15,7 +15,7 @@
     },
     {
       "path": "fuzzing/toolchain-policy.json",
-      "sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5"
+      "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
     }
   ],
   "failure": {
@@ -49,7 +49,7 @@
   },
   "product_fuzz_claim": "none",
   "record_id": "am-fuzz-result-e8cdf560641e3537004d",
-  "record_sha256": "f50406c7292023c0b3b94a677b4f28c628b278c8bba384e873af0cfa7583ffdd",
+  "record_sha256": "55319c7b25fb75a32f0ddc1dc932220e62f6b4b8fe19f716adf3f05f7e091142",
   "record_type": "fuzz-result",
   "redaction": {
     "private_paths_recorded": false,
@@ -95,7 +95,7 @@
     },
     "harness_sha256": "5d44b6a6fe6b5357e8900554bf2a838567d42d73f2c61d8cf7c7916ce9307b02",
     "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
-    "policy_sha256": "f9c885c133d0f024a8a52cf83f8a5511dc7f2b469f4067230012915b048b9ec5",
+    "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
     "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
     "target_id": "FT-PATH-001"
   },
