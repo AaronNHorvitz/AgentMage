@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/workspace.schema.json",
+  "title": "AgentMage Workspace Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "maximum_roots",
+    "default_access",
+    "symlink_policy",
+    "roots"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "maximum_roots": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32
+    },
+    "default_access": {
+      "const": "deny"
+    },
+    "symlink_policy": {
+      "enum": [
+        "deny",
+        "same-root-only"
+      ]
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root_id",
+          "locator_kind",
+          "locator",
+          "access",
+          "follow_mount_changes"
+        ],
+        "properties": {
+          "root_id": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+          },
+          "locator_kind": {
+            "enum": [
+              "managed-relative",
+              "platform-resolved-handle"
+            ]
+          },
+          "locator": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/nonEmptyString"
+          },
+          "access": {
+            "enum": [
+              "read-only",
+              "read-write"
+            ]
+          },
+          "follow_mount_changes": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

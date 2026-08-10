@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/permission.schema.json",
+  "title": "AgentMage Permission Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "default_effect",
+    "authority_inheritance",
+    "model_authority",
+    "grant_policy",
+    "allowed_capabilities",
+    "network"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "default_effect": {
+      "const": "deny"
+    },
+    "authority_inheritance": {
+      "const": "restrict-only"
+    },
+    "model_authority": {
+      "const": "none"
+    },
+    "grant_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "single_use",
+        "expiry_required",
+        "exact_scope_required",
+        "transferable",
+        "replay_policy"
+      ],
+      "properties": {
+        "single_use": {
+          "const": true
+        },
+        "expiry_required": {
+          "const": true
+        },
+        "exact_scope_required": {
+          "const": true
+        },
+        "transferable": {
+          "const": false
+        },
+        "replay_policy": {
+          "const": "deny"
+        }
+      }
+    },
+    "allowed_capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 256,
+      "items": {
+        "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "allowed_endpoints"
+      ],
+      "properties": {
+        "mode": {
+          "const": "deny-all"
+        },
+        "allowed_endpoints": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    }
+  }
+}

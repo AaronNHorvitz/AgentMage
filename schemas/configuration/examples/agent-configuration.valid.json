@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "core": {
+    "schema_version": 1,
+    "product_id": "agentmage",
+    "profile_id": "synthetic-test-linux",
+    "configuration_mode": "synthetic-test",
+    "startup_failure_policy": "fail-closed",
+    "strict_local": true,
+    "inheritance_mode": "restrict-only"
+  },
+  "platform": {
+    "schema_version": 1,
+    "platform_id": "fedora-x86_64",
+    "adapter_id": "linux-platform-v1",
+    "sandbox_profile_id": "synthetic-no-side-effect-v1",
+    "path_identity_strategy": "descriptor-relative",
+    "secret_provider_id": "secret-service",
+    "standard_user_required": true,
+    "administrator_required": false,
+    "ambient_dependency_policy": "deny"
+  },
+  "model": {
+    "schema_version": 1,
+    "enabled": false,
+    "model_profile_id": "fake-model-v1",
+    "manifest_path": "fixtures/fake-model-manifest.json",
+    "runtime_adapter_id": "fake-inference-runtime-v1",
+    "transport": "local-stdio",
+    "network_access": false,
+    "automatic_routing": false,
+    "decoding": {
+      "deterministic": true,
+      "temperature": 0,
+      "top_k": 1,
+      "seed": 104729,
+      "maximum_context_tokens": 4096,
+      "maximum_output_tokens": 1024
+    }
+  },
+  "workspace": {
+    "schema_version": 1,
+    "maximum_roots": 1,
+    "default_access": "deny",
+    "symlink_policy": "deny",
+    "roots": [
+      {
+        "root_id": "synthetic-workspace",
+        "locator_kind": "managed-relative",
+        "locator": "fixtures/generated/workspace",
+        "access": "read-only",
+        "follow_mount_changes": false
+      }
+    ]
+  },
+  "tool": {
+    "schema_version": 1,
+    "registry_path": "fixtures/tool-registry.json",
+    "unregistered_tool_policy": "deny",
+    "tools": [
+      {
+        "tool_id": "synthetic-read-file",
+        "version": "1.0.0",
+        "integrity_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "enabled": true,
+        "required_capabilities": [
+          "workspace.read"
+        ],
+        "side_effect_class": "read"
+      }
+    ]
+  },
+  "permission": {
+    "schema_version": 1,
+    "default_effect": "deny",
+    "authority_inheritance": "restrict-only",
+    "model_authority": "none",
+    "grant_policy": {
+      "single_use": true,
+      "expiry_required": true,
+      "exact_scope_required": true,
+      "transferable": false,
+      "replay_policy": "deny"
+    },
+    "allowed_capabilities": [
+      "workspace.read"
+    ],
+    "network": {
+      "mode": "deny-all",
+      "allowed_endpoints": []
+    }
+  },
+  "budget": {
+    "schema_version": 1,
+    "maximum_input_bytes": 1048576,
+    "maximum_output_bytes": 262144,
+    "maximum_file_count": 1000,
+    "maximum_tree_depth": 64,
+    "maximum_context_tokens": 4096,
+    "maximum_output_tokens": 1024,
+    "maximum_operation_milliseconds": 60000,
+    "maximum_memory_bytes": 1073741824,
+    "maximum_processes": 0,
+    "maximum_concurrency": 1
+  },
+  "logging": {
+    "schema_version": 1,
+    "level": "info",
+    "structured": true,
+    "destination": {
+      "kind": "managed-local-file",
+      "managed_relative_path": "state/logs/agentmage.jsonl"
+    },
+    "maximum_event_bytes": 16384,
+    "redaction": {
+      "secret_values": "redact",
+      "credentials": "redact",
+      "private_paths": "redact",
+      "environment_values": "drop"
+    },
+    "record_prompts": false,
+    "record_tool_arguments": false,
+    "record_environment_values": false
+  },
+  "retention": {
+    "schema_version": 1,
+    "sessions_days": 30,
+    "receipts_days": 90,
+    "logs_days": 14,
+    "temporary_artifacts_minutes": 60,
+    "expired_data_action": "delete-on-next-startup-or-maintenance",
+    "backup_policy": "exclude-by-default",
+    "secure_deletion_claim": "best-effort-no-physical-erasure-claim"
+  },
+  "skill": {
+    "schema_version": 1,
+    "enablement": "manual-only",
+    "unsigned_skill_policy": "disabled",
+    "self_modification": "deny",
+    "catalog_paths": [],
+    "maximum_enabled_skills": 0,
+    "capability_ceiling": []
+  },
+  "shell": {
+    "schema_version": 1,
+    "shell_id": "vscode-shell-v1",
+    "surface_id": "vscode-native-chat",
+    "transport": "local-ipc",
+    "launch_privilege": "standard-user",
+    "network_access": false,
+    "direct_command_execution": false,
+    "model_to_tool_channel": "prohibited",
+    "diagnostics_surface": "native-chat-status"
+  }
+}

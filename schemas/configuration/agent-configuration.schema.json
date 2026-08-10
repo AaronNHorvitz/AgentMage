@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/agent-configuration.schema.json",
+  "title": "AgentMage Configuration Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "core",
+    "platform",
+    "model",
+    "workspace",
+    "tool",
+    "permission",
+    "budget",
+    "logging",
+    "retention",
+    "skill",
+    "shell"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "core": {
+      "$ref": "https://agentmage.dev/schemas/configuration/core.schema.json"
+    },
+    "platform": {
+      "$ref": "https://agentmage.dev/schemas/configuration/platform.schema.json"
+    },
+    "model": {
+      "$ref": "https://agentmage.dev/schemas/configuration/model.schema.json"
+    },
+    "workspace": {
+      "$ref": "https://agentmage.dev/schemas/configuration/workspace.schema.json"
+    },
+    "tool": {
+      "$ref": "https://agentmage.dev/schemas/configuration/tool.schema.json"
+    },
+    "permission": {
+      "$ref": "https://agentmage.dev/schemas/configuration/permission.schema.json"
+    },
+    "budget": {
+      "$ref": "https://agentmage.dev/schemas/configuration/budget.schema.json"
+    },
+    "logging": {
+      "$ref": "https://agentmage.dev/schemas/configuration/logging.schema.json"
+    },
+    "retention": {
+      "$ref": "https://agentmage.dev/schemas/configuration/retention.schema.json"
+    },
+    "skill": {
+      "$ref": "https://agentmage.dev/schemas/configuration/skill.schema.json"
+    },
+    "shell": {
+      "$ref": "https://agentmage.dev/schemas/configuration/shell.schema.json"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "core": {
+            "type": "object",
+            "properties": {
+              "strict_local": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "model": {
+            "type": "object",
+            "properties": {
+              "network_access": {
+                "const": false
+              }
+            }
+          },
+          "permission": {
+            "type": "object",
+            "properties": {
+              "network": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "const": "deny-all"
+                  },
+                  "allowed_endpoints": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          },
+          "shell": {
+            "type": "object",
+            "properties": {
+              "network_access": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

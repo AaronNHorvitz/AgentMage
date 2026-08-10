@@ -5,11 +5,18 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  CONFIGURATION_BUNDLE_TYPE,
+  CONFIGURATION_SECTION_TYPES,
   RECORD_TYPES,
   TEST_RECORD_TYPES,
   TEMPLATE_TYPES,
+  buildConfigurationSchemaReport,
+  createConfigurationValidators,
   createPlanningValidators,
   createTestingValidators,
+  validateConfigurationFixtures,
+  validateConfigurationRecord,
+  validateConfigurationSchemaReport,
   validatePlanningRecord,
   validatePlanningTemplates,
   validateTestingFixtures,
@@ -19,6 +26,7 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const validators = createPlanningValidators();
 const testingValidators = createTestingValidators();
+const configurationValidators = createConfigurationValidators();
 
 function fixture(recordType) {
   const fixturePath = path.join(
@@ -44,6 +52,26 @@ function template(recordType) {
     `${recordType}.template.json`,
   );
   return JSON.parse(fs.readFileSync(templatePath, "utf8"));
+}
+
+function configurationFixture() {
+  return JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/configuration/examples/agent-configuration.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+}
+
+function validateConfiguration(recordType, data) {
+  return validateConfigurationRecord(
+    recordType,
+    data,
+    configurationValidators,
+  );
 }
 
 test("all canonical examples satisfy their schema and semantic contract", () => {
@@ -277,5 +305,111 @@ test("unknown testing record types fail explicitly", () => {
   assert.throws(
     () => validateTestingRecord("unknown-record", {}, testingValidators),
     /unknown testing record type/,
+  );
+});
+
+test("all configuration sections and the bundle satisfy closed versioned schemas", () => {
+  const results = validateConfigurationFixtures();
+  assert.equal(results.length, CONFIGURATION_SECTION_TYPES.length + 1);
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    Array(results.length).fill(true),
+  );
+  assert.equal(results.at(-1).recordType, CONFIGURATION_BUNDLE_TYPE);
+});
+
+test("configuration schemas reject missing versions and unknown fields", () => {
+  const bundle = configurationFixture();
+  for (const recordType of CONFIGURATION_SECTION_TYPES) {
+    const missing = structuredClone(bundle[recordType]);
+    delete missing.schema_version;
+    assert.equal(validateConfiguration(recordType, missing).valid, false);
+
+    const unknown = structuredClone(bundle[recordType]);
+    unknown.unreviewed_extension = true;
+    assert.equal(validateConfiguration(recordType, unknown).valid, false);
+  }
+  const unknownBundle = structuredClone(bundle);
+  unknownBundle.unreviewed_extension = true;
+  assert.equal(
+    validateConfiguration(CONFIGURATION_BUNDLE_TYPE, unknownBundle).valid,
+    false,
+  );
+});
+
+test("configuration validation does not coerce values or apply defaults", () => {
+  const bundle = configurationFixture();
+  const before = structuredClone(bundle);
+  bundle.budget.maximum_concurrency = "1";
+  assert.equal(
+    validateConfiguration(CONFIGURATION_BUNDLE_TYPE, bundle).valid,
+    false,
+  );
+  assert.equal(bundle.budget.maximum_concurrency, "1");
+  before.budget.maximum_concurrency = "1";
+  assert.deepEqual(bundle, before);
+});
+
+test("configuration bundle enforces authority, network, and logging controls", () => {
+  const baseline = configurationFixture();
+  const mutations = [];
+  const permission = structuredClone(baseline);
+  permission.permission.default_effect = "allow";
+  mutations.push(permission);
+  const modelNetwork = structuredClone(baseline);
+  modelNetwork.model.network_access = true;
+  mutations.push(modelNetwork);
+  const shellNetwork = structuredClone(baseline);
+  shellNetwork.shell.network_access = true;
+  mutations.push(shellNetwork);
+  const promptLog = structuredClone(baseline);
+  promptLog.logging.record_prompts = true;
+  mutations.push(promptLog);
+  const modelTool = structuredClone(baseline);
+  modelTool.shell.model_to_tool_channel = "allowed";
+  mutations.push(modelTool);
+  for (const changed of mutations) {
+    assert.equal(
+      validateConfiguration(CONFIGURATION_BUNDLE_TYPE, changed).valid,
+      false,
+    );
+  }
+});
+
+test("configuration bundle rejects authority and resource relationships that broaden scope", () => {
+  const capability = configurationFixture();
+  capability.tool.tools[0].required_capabilities.push("workspace.write");
+  const capabilityResult = validateConfiguration(
+    CONFIGURATION_BUNDLE_TYPE,
+    capability,
+  );
+  assert.equal(capabilityResult.valid, false);
+  assert.match(capabilityResult.semanticErrors[0], /outside permission ceiling/);
+
+  const budget = configurationFixture();
+  budget.model.decoding.maximum_output_tokens = 2048;
+  const budgetResult = validateConfiguration(
+    CONFIGURATION_BUNDLE_TYPE,
+    budget,
+  );
+  assert.equal(budgetResult.valid, false);
+  assert.match(budgetResult.semanticErrors[0], /exceeds the global/);
+});
+
+test("configuration schema report binds all schemas and fail-closed mutations", () => {
+  assert.deepEqual(validateConfigurationSchemaReport(), []);
+  const report = buildConfigurationSchemaReport();
+  assert.equal(report.section_schema_count, 11);
+  assert.equal(report.schemas.length, 13);
+  assert.equal(report.mutation_count, 48);
+  assert.equal(report.rejected_mutation_count, 48);
+  assert.equal(report.product_configuration_loader_claim, "none");
+  assert.equal(report.macos_execution_status, "blocked-macos");
+});
+
+test("unknown configuration record types fail explicitly", () => {
+  assert.throws(
+    () => validateConfigurationRecord("unknown-record", {}, configurationValidators),
+    /unknown configuration record type/,
   );
 });

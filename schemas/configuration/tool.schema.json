@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/tool.schema.json",
+  "title": "AgentMage Tool Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "registry_path",
+    "unregistered_tool_policy",
+    "tools"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "registry_path": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
+    },
+    "unregistered_tool_policy": {
+      "const": "deny"
+    },
+    "tools": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tool_id",
+          "version",
+          "integrity_sha256",
+          "enabled",
+          "required_capabilities",
+          "side_effect_class"
+        ],
+        "properties": {
+          "tool_id": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+          },
+          "version": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/semanticVersion"
+          },
+          "integrity_sha256": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "required_capabilities": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 32,
+            "items": {
+              "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
+            }
+          },
+          "side_effect_class": {
+            "enum": [
+              "none",
+              "read",
+              "write",
+              "process",
+              "network"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

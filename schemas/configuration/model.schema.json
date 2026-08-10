@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/model.schema.json",
+  "title": "AgentMage Model Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "enabled",
+    "model_profile_id",
+    "manifest_path",
+    "runtime_adapter_id",
+    "transport",
+    "network_access",
+    "automatic_routing",
+    "decoding"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "model_profile_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "manifest_path": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
+    },
+    "runtime_adapter_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "transport": {
+      "enum": [
+        "local-stdio",
+        "local-unix-socket"
+      ]
+    },
+    "network_access": {
+      "const": false
+    },
+    "automatic_routing": {
+      "const": false
+    },
+    "decoding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deterministic",
+        "temperature",
+        "top_k",
+        "seed",
+        "maximum_context_tokens",
+        "maximum_output_tokens"
+      ],
+      "properties": {
+        "deterministic": {
+          "type": "boolean"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "top_k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "seed": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/nonNegativeInteger"
+        },
+        "maximum_context_tokens": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/positiveInteger"
+        },
+        "maximum_output_tokens": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/positiveInteger"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "deterministic": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "temperature": {
+                "const": 0
+              },
+              "top_k": {
+                "const": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

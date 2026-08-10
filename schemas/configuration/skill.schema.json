@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/skill.schema.json",
+  "title": "AgentMage Skill Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "enablement",
+    "unsigned_skill_policy",
+    "self_modification",
+    "catalog_paths",
+    "maximum_enabled_skills",
+    "capability_ceiling"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "enablement": {
+      "const": "manual-only"
+    },
+    "unsigned_skill_policy": {
+      "const": "disabled"
+    },
+    "self_modification": {
+      "const": "deny"
+    },
+    "catalog_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 32,
+      "items": {
+        "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
+      }
+    },
+    "maximum_enabled_skills": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 256
+    },
+    "capability_ceiling": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
+      }
+    }
+  }
+}

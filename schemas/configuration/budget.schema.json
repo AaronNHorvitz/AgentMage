@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/budget.schema.json",
+  "title": "AgentMage Budget Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "maximum_input_bytes",
+    "maximum_output_bytes",
+    "maximum_file_count",
+    "maximum_tree_depth",
+    "maximum_context_tokens",
+    "maximum_output_tokens",
+    "maximum_operation_milliseconds",
+    "maximum_memory_bytes",
+    "maximum_processes",
+    "maximum_concurrency"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "maximum_input_bytes": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/byteLimit"
+    },
+    "maximum_output_bytes": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/byteLimit"
+    },
+    "maximum_file_count": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/positiveInteger"
+    },
+    "maximum_tree_depth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1024
+    },
+    "maximum_context_tokens": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/positiveInteger"
+    },
+    "maximum_output_tokens": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/positiveInteger"
+    },
+    "maximum_operation_milliseconds": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/durationMilliseconds"
+    },
+    "maximum_memory_bytes": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/byteLimit"
+    },
+    "maximum_processes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "maximum_concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    }
+  }
+}

@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "task_id": "3.1.1.1",
+  "status": "pass-versioned-closed-configuration-schemas",
+  "formal_validator": {
+    "engine": "ajv-draft-2020-12",
+    "coerce_types": false,
+    "remove_additional": false,
+    "strict": true,
+    "use_defaults": false
+  },
+  "schemas": [
+    {
+      "path": "schemas/configuration/common.schema.json",
+      "sha256": "d01ef7808eacd03024ad8cf96734405791a9c0f85865e0f7a0a6934b072a178d"
+    },
+    {
+      "path": "schemas/configuration/core.schema.json",
+      "sha256": "bf91c31b56debc34225aefc850f042975203b7679f8cd602e5de1b4cbef35697"
+    },
+    {
+      "path": "schemas/configuration/platform.schema.json",
+      "sha256": "fe7ce7edbe34fa68c69d3c8c1bc32240fd7f344af702973e854e0abcaba2e63a"
+    },
+    {
+      "path": "schemas/configuration/model.schema.json",
+      "sha256": "7a1734821222909f6146904c94018a5793bd756e1c0081093dee7e56858f7875"
+    },
+    {
+      "path": "schemas/configuration/workspace.schema.json",
+      "sha256": "d053c0e62cce239e59787d8b1e59f142c258458ec9d00f5cb6dbd9551e91975d"
+    },
+    {
+      "path": "schemas/configuration/tool.schema.json",
+      "sha256": "183b6f954807b493ad652f84a25ad78f572225fffd2f945a94e59a79d5ea3c5e"
+    },
+    {
+      "path": "schemas/configuration/permission.schema.json",
+      "sha256": "678b1c56d7f8829aa5b97af729c8ec8b3fc663c28bba240a31f70f95837dcac0"
+    },
+    {
+      "path": "schemas/configuration/budget.schema.json",
+      "sha256": "b9e31e0b7362c3ec1e1edc545ac5298c5a81d8cdabf2b44d386a5178f45c0a85"
+    },
+    {
+      "path": "schemas/configuration/logging.schema.json",
+      "sha256": "dbec9f547889c74b98fdd05a225d436bbf1fa5c77e20afd66f643857890c478b"
+    },
+    {
+      "path": "schemas/configuration/retention.schema.json",
+      "sha256": "80af0d27b524bc26af09cfd89341c0344ca6120a2cb3f4c861664a8902365f1b"
+    },
+    {
+      "path": "schemas/configuration/skill.schema.json",
+      "sha256": "50e5278074b2806bba9473850f4cf9665c5be6e840d28e01f6619d7df52ba3d0"
+    },
+    {
+      "path": "schemas/configuration/shell.schema.json",
+      "sha256": "06fc78d50e438a45b7fa3cd52aa16bf3ab8138844c8e08304281f5112c2bce42"
+    },
+    {
+      "path": "schemas/configuration/agent-configuration.schema.json",
+      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+    }
+  ],
+  "canonical_fixture": {
+    "path": "schemas/configuration/examples/agent-configuration.valid.json",
+    "sha256": "aa0114507e32e96f8840f147364120261c6a8465b267653b117d738d57a5b0d7"
+  },
+  "implementation": {
+    "path": "scripts/validate_planning_schemas.mjs",
+    "sha256": "b816bef2351bb64bd7097799ca8548268a6d414aa68b78dbdc0bcfcb1119061b"
+  },
+  "tests": {
+    "path": "tests/test_planning_schemas.mjs",
+    "sha256": "f3d9c6ad869bf95e66b3897aadeba6ca7dfc029089ee38f596c15534638438e8"
+  },
+  "section_types": [
+    "core",
+    "platform",
+    "model",
+    "workspace",
+    "tool",
+    "permission",
+    "budget",
+    "logging",
+    "retention",
+    "skill",
+    "shell"
+  ],
+  "section_schema_count": 11,
+  "bundle_schema_count": 1,
+  "shared_definition_schema_count": 1,
+  "canonical_validation_count": 12,
+  "mutation_results": [
+    {
+      "record_type": "core",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "core",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "core",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "core",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "platform",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "platform",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "platform",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "platform",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "model",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "model",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "model",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "model",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "workspace",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "workspace",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "workspace",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "workspace",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "tool",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "tool",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "tool",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "tool",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "permission",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "permission",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "permission",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "permission",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "budget",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "budget",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "budget",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "budget",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "logging",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "logging",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "logging",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "logging",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "retention",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "retention",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "retention",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "retention",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "skill",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "skill",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "skill",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "skill",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "shell",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "shell",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "shell",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "shell",
+      "mutation": "unsupported-version",
+      "rejected": true
+    },
+    {
+      "record_type": "agent-configuration",
+      "mutation": "missing-schema-version",
+      "rejected": true
+    },
+    {
+      "record_type": "agent-configuration",
+      "mutation": "unknown-field",
+      "rejected": true
+    },
+    {
+      "record_type": "agent-configuration",
+      "mutation": "wrong-type",
+      "rejected": true
+    },
+    {
+      "record_type": "agent-configuration",
+      "mutation": "unsupported-version",
+      "rejected": true
+    }
+  ],
+  "mutation_count": 48,
+  "rejected_mutation_count": 48,
+  "baseline_controls": {
+    "startup_failure_policy": "fail-closed",
+    "default_permission_effect": "deny",
+    "authority_inheritance": "restrict-only",
+    "administrator_required": false,
+    "model_network_access": false,
+    "shell_network_access": false,
+    "automatic_model_routing": false,
+    "model_to_tool_channel": "prohibited",
+    "prompt_logging": false,
+    "environment_value_logging": false
+  },
+  "product_configuration_loader_claim": "none",
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none"
+}

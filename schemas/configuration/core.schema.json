@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/core.schema.json",
+  "title": "AgentMage Core Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "product_id",
+    "profile_id",
+    "configuration_mode",
+    "startup_failure_policy",
+    "strict_local",
+    "inheritance_mode"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "product_id": {
+      "const": "agentmage"
+    },
+    "profile_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "configuration_mode": {
+      "enum": [
+        "development",
+        "synthetic-test",
+        "strict-local-read-only",
+        "knowledge",
+        "write",
+        "coding",
+        "network-enabled"
+      ]
+    },
+    "startup_failure_policy": {
+      "const": "fail-closed"
+    },
+    "strict_local": {
+      "type": "boolean"
+    },
+    "inheritance_mode": {
+      "const": "restrict-only"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "configuration_mode": {
+            "not": {
+              "const": "network-enabled"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "strict_local": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}

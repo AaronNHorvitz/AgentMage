@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/platform.schema.json",
+  "title": "AgentMage Platform Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "platform_id",
+    "adapter_id",
+    "sandbox_profile_id",
+    "path_identity_strategy",
+    "secret_provider_id",
+    "standard_user_required",
+    "administrator_required",
+    "ambient_dependency_policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "platform_id": {
+      "enum": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    "adapter_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "sandbox_profile_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "path_identity_strategy": {
+      "enum": [
+        "descriptor-relative",
+        "security-scoped-bookmark"
+      ]
+    },
+    "secret_provider_id": {
+      "enum": [
+        "secret-service",
+        "keychain"
+      ]
+    },
+    "standard_user_required": {
+      "const": true
+    },
+    "administrator_required": {
+      "const": false
+    },
+    "ambient_dependency_policy": {
+      "const": "deny"
+    }
+  }
+}

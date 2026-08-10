@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/shell.schema.json",
+  "title": "AgentMage Shell Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "shell_id",
+    "surface_id",
+    "transport",
+    "launch_privilege",
+    "network_access",
+    "direct_command_execution",
+    "model_to_tool_channel",
+    "diagnostics_surface"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "shell_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "surface_id": {
+      "enum": [
+        "vscode-native-chat",
+        "host-cli"
+      ]
+    },
+    "transport": {
+      "enum": [
+        "local-stdio",
+        "local-ipc"
+      ]
+    },
+    "launch_privilege": {
+      "const": "standard-user"
+    },
+    "network_access": {
+      "const": false
+    },
+    "direct_command_execution": {
+      "const": false
+    },
+    "model_to_tool_channel": {
+      "const": "prohibited"
+    },
+    "diagnostics_surface": {
+      "enum": [
+        "status-command",
+        "native-chat-status"
+      ]
+    }
+  }
+}

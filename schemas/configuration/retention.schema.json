@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/retention.schema.json",
+  "title": "AgentMage Retention Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sessions_days",
+    "receipts_days",
+    "logs_days",
+    "temporary_artifacts_minutes",
+    "expired_data_action",
+    "backup_policy",
+    "secure_deletion_claim"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "sessions_days": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3650
+    },
+    "receipts_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3650
+    },
+    "logs_days": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 365
+    },
+    "temporary_artifacts_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10080
+    },
+    "expired_data_action": {
+      "const": "delete-on-next-startup-or-maintenance"
+    },
+    "backup_policy": {
+      "enum": [
+        "exclude-by-default",
+        "user-managed-encrypted"
+      ]
+    },
+    "secure_deletion_claim": {
+      "const": "best-effort-no-physical-erasure-claim"
+    }
+  }
+}

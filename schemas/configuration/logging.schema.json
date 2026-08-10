@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/logging.schema.json",
+  "title": "AgentMage Logging Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "level",
+    "structured",
+    "destination",
+    "maximum_event_bytes",
+    "redaction",
+    "record_prompts",
+    "record_tool_arguments",
+    "record_environment_values"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "level": {
+      "enum": [
+        "error",
+        "warn",
+        "info",
+        "debug"
+      ]
+    },
+    "structured": {
+      "const": true
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "managed_relative_path"
+      ],
+      "properties": {
+        "kind": {
+          "const": "managed-local-file"
+        },
+        "managed_relative_path": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
+        }
+      }
+    },
+    "maximum_event_bytes": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 1048576
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "secret_values",
+        "credentials",
+        "private_paths",
+        "environment_values"
+      ],
+      "properties": {
+        "secret_values": {
+          "const": "redact"
+        },
+        "credentials": {
+          "const": "redact"
+        },
+        "private_paths": {
+          "const": "redact"
+        },
+        "environment_values": {
+          "const": "drop"
+        }
+      }
+    },
+    "record_prompts": {
+      "const": false
+    },
+    "record_tool_arguments": {
+      "const": false
+    },
+    "record_environment_values": {
+      "const": false
+    }
+  }
+}
