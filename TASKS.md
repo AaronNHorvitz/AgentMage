@@ -314,8 +314,8 @@ The owning sprint performs the first complete execution possible for its boundar
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 1.AC1:** A clean checkout builds and runs the empty test suite on all reference platforms.
-- [ ] **Sprint AC 1.AC2:** Static dependency tests prove the kernel imports no shell or capability pack.
-- [ ] **Sprint AC 1.AC3:** Dependency resolution is reproducible from lock files and approved artifacts.
+- [x] **Sprint AC 1.AC2:** Static dependency tests prove the kernel imports no shell or capability pack. Evidence: the accepted dependency rules, compile/assembly diagrams, exact graph validator, and [`dependency-injection-report.json`](artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json) reject all 32 independently injected prohibited edges.
+- [x] **Sprint AC 1.AC3:** Dependency resolution is reproducible from lock files and approved artifacts. Evidence: [`locked-resolution-report.json`](artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json) records identical clean Cargo/npm graphs from two offline locked resolutions and fail-closed substituted, missing, revoked, and wrong-platform inputs; Swift remains `BLOCKED-MACOS` without weakening the demonstrated shared/Linux dependency result.
 - [ ] **Sprint AC 1.AC4:** No required Mac end-user dependency assumes Homebrew, Rosetta, ambient Python, ambient Git, Xcode command-line tools, Docker Desktop, or administrator access.
 - [ ] **Sprint AC 1.AC5:** Missing optional dependencies degrade only their declared capabilities.
 
