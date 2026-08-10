@@ -1,0 +1,63 @@
+{
+  "evidence_states": [
+    "Observed",
+    "Derived",
+    "Inferred",
+    "Unknown/Blocked"
+  ],
+  "macos_support_claim": "none",
+  "manifest_preview": {
+    "manifest_count": 4,
+    "manifest_set_sha256": "f7d5b8cc61bb0a495fe2e2034a314c17c46f1c160f9e906327ad4ef45d7c1781",
+    "manifests": [
+      {
+        "case_id": "derived-task-count",
+        "path": "expected-outputs/derived-task-count.json",
+        "sha256": "dd7a5c1ffbb2ca858b3143e7298e19088b51b430c26a5ad1da6454ca98ec033e"
+      },
+      {
+        "case_id": "inferred-testing-preference",
+        "path": "expected-outputs/inferred-testing-preference.json",
+        "sha256": "ff365c8f0bc9290fbe9007e1f54213f7fa857a750afa6d9e66f8bfc2e9c89cb6"
+      },
+      {
+        "case_id": "observed-bounded-read",
+        "path": "expected-outputs/observed-bounded-read.json",
+        "sha256": "b3b188d39544f1ffbbc09c81092b2e2d79af4b363dfa112f69238c7f42f10e0b"
+      },
+      {
+        "case_id": "unknown-adjacent-workspace",
+        "path": "expected-outputs/unknown-adjacent-workspace.json",
+        "sha256": "db929cab58eed1feaec23964e27aa67265786ea4cbec6c2b18deffcb337212ca"
+      }
+    ],
+    "persisted": false
+  },
+  "product_receipt_implementation_claim": "none",
+  "profile": {
+    "id": "agentmage-expected-output-manifests-v1",
+    "sha256": "07449fa3cceefdb3edefdbc4e7564bf81bf7870b40d0c9d25f9af7547c696348"
+  },
+  "prohibited_side_effects": [
+    "workspace-write",
+    "command-execution",
+    "network-access",
+    "credential-read",
+    "grant-mint",
+    "external-delivery"
+  ],
+  "receipt_chain": {
+    "algorithm": "sha256-canonical-json",
+    "genesis_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "receipt_count": 4,
+    "validated": true
+  },
+  "schema_version": 1,
+  "source_range_semantics": {
+    "byte_offsets": "zero-based-half-open-utf8",
+    "line_numbers": "one-based-inclusive"
+  },
+  "status": "pass",
+  "task_id": "2.1.1.6",
+  "versioned_golden_manifest_status": "reserved-for-sub-task-2.1.2.1"
+}

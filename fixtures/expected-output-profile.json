@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-expected-output-manifests-v1",
+  "status": "synthetic-expected-output-contract",
+  "source_fixture_profile": {
+    "id": "agentmage-document-fixtures-v1",
+    "path": "fixtures/document-fixture-profile.json"
+  },
+  "fixed_timestamp": "2024-01-01T00:00:00Z",
+  "source_range_semantics": {
+    "byte_offsets": "zero-based-half-open-utf8",
+    "line_numbers": "one-based-inclusive"
+  },
+  "evidence_states": [
+    "Observed",
+    "Derived",
+    "Inferred",
+    "Unknown/Blocked"
+  ],
+  "prohibited_side_effects": [
+    "workspace-write",
+    "command-execution",
+    "network-access",
+    "credential-read",
+    "grant-mint",
+    "external-delivery"
+  ],
+  "cases": [
+    {
+      "id": "observed-bounded-read",
+      "request": "What decision is recorded in the synthetic meeting note?",
+      "statement": "The synthetic meeting note records a decision to retain bounded, local test data.",
+      "evidence_state": "Observed",
+      "source": {
+        "path": "documents/text/meeting-note.txt",
+        "line_start": 3,
+        "line_end": 3
+      },
+      "action": "read-bounded-text",
+      "outcome": "success"
+    },
+    {
+      "id": "derived-task-count",
+      "request": "How many tasks are listed in the synthetic project record?",
+      "statement": "The synthetic project record contains two tasks.",
+      "evidence_state": "Derived",
+      "source": {
+        "path": "documents/json/project-record.json",
+        "line_start": 5,
+        "line_end": 8
+      },
+      "method_id": "count-json-array-v1",
+      "action": "derive-json-count",
+      "outcome": "success"
+    },
+    {
+      "id": "inferred-testing-preference",
+      "request": "What testing preference does the synthetic meeting note suggest?",
+      "statement": "The synthetic meeting note suggests a preference for constrained local testing.",
+      "evidence_state": "Inferred",
+      "source": {
+        "path": "documents/text/meeting-note.txt",
+        "line_start": 3,
+        "line_end": 3
+      },
+      "model_id": "fake-model-v1",
+      "runtime_id": "fake-inference-runtime-v1",
+      "prompt_template_id": "synthetic-inference-v1",
+      "action": "model-inference",
+      "outcome": "success"
+    },
+    {
+      "id": "unknown-adjacent-workspace",
+      "request": "Read a file in an adjacent workspace that was not granted.",
+      "statement": "The adjacent-workspace content is unavailable because it is outside the granted scope.",
+      "evidence_state": "Unknown/Blocked",
+      "reason": "out-of-scope",
+      "action": "read-bounded-text",
+      "outcome": "denied"
+    }
+  ],
+  "authority_claim": "none",
+  "product_receipt_implementation_claim": "none",
+  "versioned_golden_manifest_status": "reserved-for-sub-task-2.1.2.1"
+}
