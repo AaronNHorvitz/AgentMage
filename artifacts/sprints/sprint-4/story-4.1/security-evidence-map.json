@@ -1,0 +1,273 @@
+{
+  "artifacts": [
+    {
+      "bytes": 65272,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "bytes": 3340,
+      "path": "architecture/dependency-rules.json",
+      "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
+    },
+    {
+      "bytes": 13656,
+      "path": "docs/architecture/kernel-contract-reference.md",
+      "sha256": "964430ea33190cdb3f4d0aca4076e51a69d25c70cdff1ca32cf1793d94f8f369"
+    },
+    {
+      "bytes": 3737,
+      "path": "docs/architecture/kernel-dependency-report.md",
+      "sha256": "392fa0d4555bb900315d2f1bbcfd921ba7e2102c5a7abd04e9e26aadabce3709"
+    },
+    {
+      "bytes": 8560,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "982f28636b9e626bc8ab8b51f4f19eb7816877af9665a8a33800625a6e918696"
+    },
+    {
+      "bytes": 20481,
+      "path": "kernel/engine/src/propagation.rs",
+      "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
+    },
+    {
+      "bytes": 35834,
+      "path": "kernel/engine/src/tooling.rs",
+      "sha256": "0469415d926107869b157b6cc074c9a582fef0b80a109a6fc4f42cded3f17386"
+    },
+    {
+      "bytes": 8704,
+      "path": "kernel/engine/tests/boundary_workflow.rs",
+      "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
+    },
+    {
+      "bytes": 2588,
+      "path": "fixtures/contracts/fixture_verifier.rs",
+      "sha256": "8c9c8ba8e28b5f6ce41272c459fc2c29b371cad93bfd582d2f247b439affeb07"
+    },
+    {
+      "bytes": 641,
+      "path": "fixtures/contracts/compatibility.json",
+      "sha256": "10c7787727fdfcdde05d60d5bee026541e9140c39d75dd55639c741761ceb8ee"
+    },
+    {
+      "bytes": 5200,
+      "path": "fixtures/contracts/v1/manifest.json",
+      "sha256": "4bd8db1a10d2a034899dd2733a0b8461d82f2f01ac5d1019257d8906bf595396"
+    },
+    {
+      "bytes": 20729,
+      "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
+      "sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd"
+    },
+    {
+      "bytes": 4810,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
+      "sha256": "d9a18a590cbc39768f65ef199c1d74fa58a6571b2a0dc101a30be70becbc190e"
+    },
+    {
+      "bytes": 4099,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
+      "sha256": "4ca4ac911309cb4db566358e600e0613001045f64b6c496e93337200a6904451"
+    },
+    {
+      "bytes": 1728,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
+      "sha256": "531463023d941ebb2ee047d2776dff60f83cc3a5e655490675b85fa3d350c01f"
+    },
+    {
+      "bytes": 9701,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
+      "sha256": "f5a846b9d3592e03d6508ec401bf06fa61fffe3427ec45729a23e4d7ad760180"
+    },
+    {
+      "bytes": 4896,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
+      "sha256": "0870f7595b6182b2ef2c1e94c01c7e9ade114c0ae3146227467988bde3d6fd79"
+    },
+    {
+      "bytes": 4406,
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
+      "sha256": "8f6af0392e598e32feeeefca2d13da1a0d7f966d581f1277f7fccd36d5a2882d"
+    },
+    {
+      "bytes": 14572,
+      "path": "scripts/kernel_contract_package.py",
+      "sha256": "0f06ee2874ed3b30e9e31d4e549c07bca0e3817685bcdc8ed6fa83cac8170dfb"
+    },
+    {
+      "bytes": 10982,
+      "path": "scripts/kernel_contract_reference.py",
+      "sha256": "7c2c3a38192dc9a739c4ac3e34df2f08abae37b8288d690d403ffa95f0bc71b4"
+    },
+    {
+      "bytes": 15762,
+      "path": "scripts/kernel_contract_fixtures.py",
+      "sha256": "57aae8f5194fc40b8f6d2ea6d70a8b87bed8467382d804889f5a0d75dcdc9baf"
+    },
+    {
+      "bytes": 15434,
+      "path": "scripts/kernel_architecture_report.py",
+      "sha256": "7c989769d2db31878d67c404f209cce47b4c7e7bfdd55af8ca7d1515ee1ab5e8"
+    },
+    {
+      "bytes": 7932,
+      "path": "scripts/kernel_dispatch_security.py",
+      "sha256": "ced7c803ba9d7311160e0103f143245186451fed97ca53d01dcc37ed53325c7f"
+    },
+    {
+      "bytes": 8581,
+      "path": "scripts/kernel_boundary_integration.py",
+      "sha256": "538282dffbee309412267a019fd14c8515cc74a0a831c65d25ae72b156198849"
+    },
+    {
+      "bytes": 16818,
+      "path": "scripts/story_4_1_security_evidence.py",
+      "sha256": "159d50c38a03a230b478209971dc2cea38adc832c2347d3f0f550926838054e2"
+    },
+    {
+      "bytes": 2117,
+      "path": "tests/test_kernel_contract_package.py",
+      "sha256": "fd7ebd409a0682cd67ac6664cc9ace95fb57c07dea01ace4015676d52d386798"
+    },
+    {
+      "bytes": 1579,
+      "path": "tests/test_kernel_contract_reference.py",
+      "sha256": "6838f234900aa30937d11f4697f7d20889d161dd484cba2270e2c51cf4d3a4d1"
+    },
+    {
+      "bytes": 2483,
+      "path": "tests/test_kernel_contract_fixtures.py",
+      "sha256": "a5f925a3ddf6d82cd76d0fa360f10656d457bc4174f61993fc80d08c098db671"
+    },
+    {
+      "bytes": 1780,
+      "path": "tests/test_kernel_architecture_report.py",
+      "sha256": "21cbcb1e09210d62ae9d10b814e6fe28efd6ef72cfda067d19b52446ccc3a6f6"
+    },
+    {
+      "bytes": 1389,
+      "path": "tests/test_kernel_dispatch_security.py",
+      "sha256": "158ee96b773436c76ca36b870baf9edef37f4beb227363cd30d4ad12db323006"
+    },
+    {
+      "bytes": 1421,
+      "path": "tests/test_kernel_boundary_integration.py",
+      "sha256": "4f545441cfa9e47e27e7e5973529b5163b2c7baee2607529fb388117ce34d775"
+    },
+    {
+      "bytes": 4927,
+      "path": "tests/test_story_4_1_security_evidence.py",
+      "sha256": "2f150d60966fb9c78e23de71116c962c26bce411001a09f7c19ab87844b07f67"
+    }
+  ],
+  "durable_audit_claim": "none",
+  "fuzzing_claim": "fixed-corpus-only-not-fuzzing",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "positive_authority_path_claim": "none",
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The logical and materialized compile-time component graphs are deterministic, acyclic, and closed against prohibited dependency edges; the documented typed routes distinguish shell, kernel, platform adapter, tool, and model boundaries.",
+      "evidence": [
+        "architecture/dependency-rules.json",
+        "docs/architecture/kernel-dependency-report.md",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The running product must inventory and trace every process, file store, socket, IPC endpoint, and runtime data flow, including generated VS Code protocol and implemented platform adapters.",
+      "requirement_id": "SR-GOV-006",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Descriptions, tasks, work packets, plans, prompts, tool definitions, models, shells, tools, capability packs, forged descriptions, and unregistered callers have no authority path; every current dispatch terminates in a typed zero-execution receipt.",
+      "evidence": [
+        "kernel/engine/src/authority.rs",
+        "kernel/engine/src/tooling.rs",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Sprint 5 must define the sole typed CapabilityGrant path and prove that every concrete executor validates and atomically consumes an exact grant while every non-grant object remains denied.",
+      "requirement_id": "SR-ACC-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Prompt and model-origin records are descriptive, non-authoritative provenance; model-origin dispatch cannot execute, create authority, or bypass deterministic kernel validation.",
+      "evidence": [
+        "docs/architecture/kernel-contract-reference.md",
+        "kernel/engine/src/authority.rs",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Real model adapters and user interfaces must label model claims as inferred until deterministic evidence supports them and must visibly preserve unsupported or conflicting status.",
+      "requirement_id": "SR-AI-003",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "Structured pre-grant receipts and boundary traces retain operation outcome, stable typed error, task identity, correlation identity, route, and zero-execution state-change disposition.",
+      "evidence": [
+        "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The product audit schema and durable ledger must add release identity, monotonic and wall time, pseudonymous actor/session identity, object identity, policy decision, complete event coverage, retention, and protected export.",
+      "requirement_id": "SR-OPS-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Linux unit, public-client integration, compatibility, architecture, and adversarial pre-grant suites run through deterministic report checkers with retained evidence.",
+      "evidence": [
+        "tests/test_kernel_contract_fixtures.py",
+        "tests/test_kernel_dispatch_security.py",
+        "tests/test_kernel_boundary_integration.py",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Later product boundaries must add requirement-tagged property, end-to-end, real-platform, recovery, accessibility, and product-wide adversarial suites with complete skipped/flaky/quarantined accounting.",
+      "requirement_id": "SR-TST-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "A fixed, hash-bound contract corpus exercises canonical valid records plus malformed, missing, unknown, duplicate, trailing, old-version, new-version, and generated oversized inputs.",
+      "evidence": [
+        "fixtures/contracts/compatibility.json",
+        "fixtures/contracts/v1/manifest.json",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "This fixed corpus is not fuzzing; registered parser and trust-boundary campaigns must retain corpus identity, duration, coverage, sanitizer configuration, crashes, fixes, and deterministic regression replay.",
+      "requirement_id": "SR-TST-002",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The current contract and pre-grant dispatch boundaries reject malformed, hostile, oversized, partial, stale-version, conflicting, forged, and unregistered inputs with bounded redacted failures, zero privilege, and exact receipts.",
+      "evidence": [
+        "fixtures/contracts/compatibility.json",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
+        "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every later parser and trust boundary must repeat these classes and prove bounded failure, no data disclosure, no authority expansion, and correct receipts for its own input domain.",
+      "requirement_id": "SR-TST-004",
+      "story_contribution": "demonstrated-story-scope"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "dd596103cfeea0c51c4f2eb8fd257904a7729752",
+  "status": "pass-linux-security-mapping",
+  "story_id": "4.1",
+  "summary": {
+    "demonstrated_story_scope_count": 2,
+    "mapped_requirement_count": 7,
+    "partial_story_evidence_count": 5,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 32,
+    "story_gate_complete": false
+  },
+  "task_id": "4.1.3.5"
+}
