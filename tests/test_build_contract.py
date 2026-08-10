@@ -48,6 +48,22 @@ class BuildContractTests(unittest.TestCase):
             failures = validate_contract(self.contract, root)
         self.assertTrue(any("kernel/engine Cargo dependencies" in item for item in failures))
 
+    def test_contract_serialization_dependencies_cannot_disappear(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_build_inputs(root)
+            manifest = root / "kernel/contracts/Cargo.toml"
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").replace(
+                    "serde_json.workspace = true\n", ""
+                ),
+                encoding="utf-8",
+            )
+            failures = validate_contract(self.contract, root)
+        self.assertTrue(
+            any("kernel/contracts Cargo dependencies" in item for item in failures)
+        )
+
     def test_floating_typescript_version_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

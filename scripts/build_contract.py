@@ -35,7 +35,10 @@ EXPECTED_CARGO_PACKAGES = {
         "agentmage-capability-read-only",
         {"agentmage-kernel-contracts"},
     ),
-    "kernel/contracts": ("agentmage-kernel-contracts", set()),
+    "kernel/contracts": (
+        "agentmage-kernel-contracts",
+        {"serde", "serde_json"},
+    ),
     "kernel/engine": (
         "agentmage-kernel-engine",
         {
