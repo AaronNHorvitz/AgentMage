@@ -43,7 +43,7 @@ NATIVE_ADAPTER: Final = "linux-native-vulkan"
 DOCKER_ADAPTER: Final = "linux-docker-model-runner-cuda"
 RESULT_SCHEMA_VERSION: Final = 1
 RUNNER_TRANSFORM_VERSION: Final = "1.0.1"
-DMR_RUNNER_TRANSFORM_VERSION: Final = "1.1.0"
+DMR_RUNNER_TRANSFORM_VERSION: Final = "1.1.1"
 
 
 class FeasibilityError(RuntimeError):
@@ -349,6 +349,8 @@ def unix_http_request(
     path: str,
     payload: dict[str, Any] | None = None,
     timeout: float = 120.0,
+    *,
+    allowed_statuses: frozenset[int] = frozenset(),
 ) -> tuple[int, bytes, float]:
     connection = UnixHTTPConnection(socket_path, timeout=timeout)
     started = time.monotonic()
@@ -362,7 +364,7 @@ def unix_http_request(
         response = connection.getresponse()
         raw = response.read()
         status = response.status
-        if status < 200 or status >= 300:
+        if (status < 200 or status >= 300) and status not in allowed_statuses:
             detail = raw.decode("utf-8", errors="replace").strip()
             raise FeasibilityError(
                 f"request failed for Unix socket {path}: HTTP {status}: {detail}"
@@ -555,13 +557,31 @@ class OpenAIAdapter:
                     "top_k": 1,
                     "seed": 4242,
                     "max_tokens": 1,
+                    "cache_prompt": False,
                 }
                 if self.model is not None:
                     payload["model"] = self.model
-                response, _ = self.request_json(
-                    "POST", "/v1/chat/completions", payload, timeout=600.0
+                if self.socket_path is None:
+                    raise FeasibilityError("usage token probes require a Unix socket transport")
+                status, raw, _ = unix_http_request(
+                    "POST",
+                    self.socket_path,
+                    f"{self.path_prefix}/v1/chat/completions",
+                    payload,
+                    timeout=600.0,
+                    allowed_statuses=frozenset({400}),
                 )
-                prompt_tokens = response.get("usage", {}).get("prompt_tokens")
+                try:
+                    response = json.loads(raw)
+                except json.JSONDecodeError as error:
+                    raise FeasibilityError("usage token probe returned malformed JSON") from error
+                if status == 400:
+                    error = response.get("error", {}) if isinstance(response, dict) else {}
+                    if error.get("type") != "exceed_context_size_error":
+                        raise FeasibilityError("usage token probe returned an unexpected HTTP 400")
+                    prompt_tokens = error.get("n_prompt_tokens")
+                else:
+                    prompt_tokens = response.get("usage", {}).get("prompt_tokens")
                 if not isinstance(prompt_tokens, int) or prompt_tokens < 1:
                     raise FeasibilityError("usage token probe did not return prompt_tokens")
                 self.token_count_cache[key] = prompt_tokens
@@ -1532,10 +1552,10 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
         failures.append("result record type is incorrect")
     adapter_id = result["adapter_id"]
     admitted_transforms = {
-        NATIVE_ADAPTER: RUNNER_TRANSFORM_VERSION,
-        DOCKER_ADAPTER: DMR_RUNNER_TRANSFORM_VERSION,
+        NATIVE_ADAPTER: {RUNNER_TRANSFORM_VERSION},
+        DOCKER_ADAPTER: {"1.1.0", DMR_RUNNER_TRANSFORM_VERSION},
     }
-    if result["runner_transform_version"] != admitted_transforms.get(adapter_id):
+    if result["runner_transform_version"] not in admitted_transforms.get(adapter_id, set()):
         failures.append("runner transform version is not admitted")
     if adapter_id not in admitted_transforms:
         failures.append("result adapter identity is incorrect")
@@ -1595,6 +1615,10 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
             failures.append("runtime settings differ from the admitted native contract")
     else:
         container = settings.get("container", {}) if isinstance(settings, dict) else {}
+        token_count_methods = {
+            "1.1.0": "openai_usage_probe_max_tokens_1",
+            DMR_RUNNER_TRANSFORM_VERSION: "openai_usage_probe_cache_disabled_with_context_error_count",
+        }
         expected_dmr_settings = {
             "context_tokens": corpus["decoder"]["operational_context_tokens"],
             "gpu_layers": 999,
@@ -1604,7 +1628,7 @@ def validate_result(result: dict[str, Any], corpus: dict[str, Any], admission: d
             "micro_batch_size": 512,
             "offline": True,
             "api_transport": "unix_domain_socket",
-            "token_count_method": "openai_usage_probe_max_tokens_1",
+            "token_count_method": token_count_methods.get(result["runner_transform_version"]),
             "model_store_access": "dedicated_volume_read_write_for_bundle_materialization",
             "decoder": corpus["decoder"],
         }
@@ -2066,7 +2090,7 @@ def run_dmr(args: argparse.Namespace) -> int:
             "micro_batch_size": 512,
             "offline": True,
             "api_transport": "unix_domain_socket",
-            "token_count_method": "openai_usage_probe_max_tokens_1",
+            "token_count_method": "openai_usage_probe_cache_disabled_with_context_error_count",
             "model_store_access": "dedicated_volume_read_write_for_bundle_materialization",
             "decoder": corpus["decoder"],
             "container": environment,

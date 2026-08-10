@@ -2,7 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from scripts.model_feasibility import (
     Completion,
@@ -250,7 +250,8 @@ class ModelFeasibilityTests(unittest.TestCase):
     def test_interface_inventory_uses_network_namespace_link_table(self):
         self.assertIn("lo", namespace_interfaces())
 
-    def test_usage_probe_token_counter_is_cached_and_uses_fixed_decoder(self):
+    @patch("scripts.model_feasibility.unix_http_request")
+    def test_usage_probe_token_counter_is_cached_and_uses_fixed_decoder(self, request_mock):
         adapter = OpenAIAdapter(
             None,
             "ai/gemma4:e4b",
@@ -258,15 +259,46 @@ class ModelFeasibilityTests(unittest.TestCase):
             path_prefix="/engines/llama.cpp",
             usage_token_counter=True,
         )
-        adapter.request_json = Mock(return_value=({"usage": {"prompt_tokens": 37}}, 0.1))
+        request_mock.return_value = (
+            200,
+            json.dumps({"usage": {"prompt_tokens": 37}}).encode(),
+            0.1,
+        )
         messages = [{"role": "user", "content": "count me"}]
         self.assertEqual(adapter.tokenize_messages(messages), 37)
         self.assertEqual(adapter.tokenize_messages(messages), 37)
-        adapter.request_json.assert_called_once()
-        payload = adapter.request_json.call_args.args[2]
+        request_mock.assert_called_once()
+        payload = request_mock.call_args.args[3]
         self.assertEqual(payload["max_tokens"], 1)
         self.assertEqual(payload["top_k"], 1)
         self.assertEqual(payload["seed"], 4242)
+        self.assertIs(payload["cache_prompt"], False)
+
+    @patch("scripts.model_feasibility.unix_http_request")
+    def test_usage_probe_accepts_exact_count_from_context_error(self, request_mock):
+        request_mock.return_value = (
+            400,
+            json.dumps(
+                {
+                    "error": {
+                        "type": "exceed_context_size_error",
+                        "n_prompt_tokens": 24930,
+                    }
+                }
+            ).encode(),
+            0.1,
+        )
+        adapter = OpenAIAdapter(
+            None,
+            "ai/gemma4:e4b",
+            socket_path=Path("/tmp/model-runner.sock"),
+            path_prefix="/engines/llama.cpp",
+            usage_token_counter=True,
+        )
+        self.assertEqual(
+            adapter.tokenize_messages([{"role": "user", "content": "too long"}]),
+            24930,
+        )
 
     @patch("scripts.model_feasibility.command_text")
     def test_container_network_snapshot_requires_only_loopback(self, command_text_mock):
