@@ -6,7 +6,8 @@ use crate::{ErrorId, SchemaId};
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
 
 /// Reference to a closed versioned schema without embedding parser authority.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SchemaReference {
     /// Stable schema identity.
     pub schema_id: SchemaId,
@@ -20,7 +21,8 @@ pub struct SchemaReference {
 ///
 /// The parser validates size, media type, canonical representation, and digest before a
 /// payload can reach an implementation boundary.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ContractPayload {
     /// Declared media type of the payload bytes.
     pub media_type: String,
@@ -31,7 +33,8 @@ pub struct ContractPayload {
 }
 
 /// Severity of a contract-validation issue.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ValidationSeverity {
     /// The candidate contract cannot be admitted.
     Error,
@@ -40,7 +43,8 @@ pub enum ValidationSeverity {
 }
 
 /// One stable validation issue produced without partial admission.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ValidationIssue {
     /// Stable machine-readable diagnostic code.
     pub code: String,
@@ -53,7 +57,8 @@ pub struct ValidationIssue {
 }
 
 /// Broad category for a typed AgentMage error.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ErrorCategory {
     /// Input failed a closed contract.
     Validation,
@@ -74,7 +79,8 @@ pub enum ErrorCategory {
 }
 
 /// Whether and under what condition an error may be retried.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum RetryDisposition {
     /// Retrying the same request is prohibited.
     Never,
@@ -87,7 +93,8 @@ pub enum RetryDisposition {
 }
 
 /// Versioned error returned at any kernel contract boundary.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ContractError {
     /// Contract schema version.
     pub schema_version: u16,

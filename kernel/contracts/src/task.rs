@@ -5,7 +5,8 @@ use crate::{
 };
 
 /// Lifecycle state of a user-directed task.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum TaskStatus {
     /// The task is being assembled and is not runnable.
     Draft,
@@ -26,7 +27,8 @@ pub enum TaskStatus {
 /// Versioned description of one user-directed task.
 ///
 /// A task describes desired work but carries no operation authority.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Task {
     /// Contract schema version.
     pub schema_version: u16,
@@ -45,7 +47,8 @@ pub struct Task {
 }
 
 /// Lifecycle state of a revision-controlled work packet.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum WorkPacketState {
     /// The packet is incomplete and cannot be scheduled.
     Draft,
@@ -66,7 +69,8 @@ pub enum WorkPacketState {
 /// Versioned snapshot of the exact work submitted to planning and execution.
 ///
 /// Work packets are descriptive records. They cannot grant access or authorize effects.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct WorkPacket {
     /// Contract schema version.
     pub schema_version: u16,
@@ -91,7 +95,8 @@ pub struct WorkPacket {
 }
 
 /// Lifecycle state of a plan.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum PlanState {
     /// The plan is a proposal and cannot authorize an action.
     Proposed,
@@ -108,7 +113,8 @@ pub enum PlanState {
 }
 
 /// Lifecycle state of one plan step.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum PlanStepState {
     /// The step is proposed.
     Proposed,
@@ -127,7 +133,8 @@ pub enum PlanStepState {
 }
 
 /// One ordered descriptive step in a task plan.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PlanStep {
     /// Stable step identity.
     pub plan_step_id: PlanStepId,
@@ -146,7 +153,8 @@ pub struct PlanStep {
 /// Versioned ordered plan for one work-packet revision.
 ///
 /// A plan describes intended actions but cannot authorize them.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Plan {
     /// Contract schema version.
     pub schema_version: u16,
@@ -165,7 +173,8 @@ pub struct Plan {
 }
 
 /// Descriptive class of a proposed action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ActionKind {
     /// A deterministic registered tool may be proposed.
     DeterministicTool,
@@ -178,7 +187,8 @@ pub enum ActionKind {
 }
 
 /// Lifecycle state of an action record.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ActionState {
     /// The action is descriptive only.
     Proposed,
@@ -204,7 +214,8 @@ pub enum ActionState {
 ///
 /// An action does not contain authority. Dispatch must pair it with separately validated
 /// authority at the kernel boundary introduced by the capability-grant story.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Action {
     /// Contract schema version.
     pub schema_version: u16,

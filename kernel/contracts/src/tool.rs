@@ -6,7 +6,8 @@ use crate::{
 };
 
 /// Terminal outcome shared by tool results and receipts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum OperationOutcome {
     /// The attempted operation satisfied its declared postconditions.
     Succeeded,
@@ -25,7 +26,8 @@ pub enum OperationOutcome {
 /// Versioned description of one tool available for registration review.
 ///
 /// A tool definition describes shape and expected effects. It cannot grant its own use.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ToolDefinition {
     /// Contract schema version.
     pub schema_version: u16,
@@ -49,7 +51,8 @@ pub struct ToolDefinition {
 ///
 /// A tool call is a request, not authority. The dispatcher must reject it unless a
 /// separate exact grant is current and valid immediately before execution.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ToolCall {
     /// Contract schema version.
     pub schema_version: u16,
@@ -68,7 +71,8 @@ pub struct ToolCall {
 }
 
 /// Versioned terminal result of one tool-call attempt.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ToolResult {
     /// Contract schema version.
     pub schema_version: u16,

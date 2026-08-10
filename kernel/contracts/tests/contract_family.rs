@@ -4,8 +4,20 @@ use agentmage_kernel_contracts::{
     EvidenceReference, OperationOutcome, Plan, PlanId, PlanState, PlanStep, PlanStepId,
     PlanStepState, Receipt, ReceiptId, RetryDisposition, SchemaId, SchemaReference, SessionId,
     Task, TaskId, TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult,
-    ValidationIssue, ValidationSeverity, WorkPacket, WorkPacketId, WorkPacketState,
+    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
+    WorkPacketState, from_json, to_canonical_json,
 };
+use std::fmt::Debug;
+
+fn assert_round_trip<T>(value: &T)
+where
+    T: VersionedContract + Debug + PartialEq,
+{
+    let first = to_canonical_json(value).expect("fixture must serialize");
+    let second = to_canonical_json(value).expect("fixture must serialize deterministically");
+    assert_eq!(first, second);
+    assert_eq!(&from_json::<T>(&first).expect("fixture must parse"), value);
+}
 
 #[test]
 fn complete_contract_family_preserves_linked_identities() {
@@ -148,6 +160,17 @@ fn complete_contract_family_preserves_linked_identities() {
         receipt_sha256: "5".repeat(64),
         occurred_at: "2026-08-10T00:00:00Z".to_owned(),
     };
+
+    assert_round_trip(&task);
+    assert_round_trip(&packet);
+    assert_round_trip(&plan);
+    assert_round_trip(&action);
+    assert_round_trip(&tool);
+    assert_round_trip(&call);
+    assert_round_trip(&result);
+    assert_round_trip(&result.evidence[0]);
+    assert_round_trip(result.error.as_ref().expect("fixture error"));
+    assert_round_trip(&receipt);
 
     assert_eq!(packet.task_id, task.task_id);
     assert_eq!(plan.plan_id, packet.plan_id.expect("fixture plan identity"));

@@ -6,7 +6,8 @@ use crate::{
 };
 
 /// Class of evidence referenced by a contract record.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EvidenceKind {
     /// Direct deterministic observation.
     Observation,
@@ -25,7 +26,8 @@ pub enum EvidenceKind {
 /// Versioned content-addressed reference to bounded evidence.
 ///
 /// The reference carries identity and freshness material, not ambient filesystem access.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceReference {
     /// Contract schema version.
     pub schema_version: u16,
@@ -49,7 +51,8 @@ pub struct EvidenceReference {
 ///
 /// This base contract records identities, outcome, evidence, and chain fields. Later
 /// stories add durable keyed integrity, retention, and complete product event coverage.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Receipt {
     /// Contract schema version.
     pub schema_version: u16,

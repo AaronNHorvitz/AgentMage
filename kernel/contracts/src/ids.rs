@@ -3,7 +3,18 @@
 macro_rules! define_identifier {
     ($name:ident, $documentation:literal) => {
         #[doc = $documentation]
-        #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(
+            Clone,
+            Debug,
+            PartialEq,
+            Eq,
+            PartialOrd,
+            Ord,
+            Hash,
+            serde::Serialize,
+            serde::Deserialize,
+        )]
+        #[serde(transparent)]
         pub struct $name(String);
 
         impl $name {
