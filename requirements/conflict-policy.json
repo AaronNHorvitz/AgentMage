@@ -1,0 +1,47 @@
+{
+  "automatic_resolution": "provisional_narrower_boundary_only",
+  "empty_intersection_behavior": "blocked",
+  "exact_mismatch_behavior": "blocked",
+  "policy_id": "agentmage-requirement-conflict-v1",
+  "required_decision": {
+    "approval_status": "accepted",
+    "must_preserve_superseded_requirements": true,
+    "record_type": "requirement_supersession"
+  },
+  "schema_version": 1,
+  "unknown_field_behavior": "blocked",
+  "strategies": {
+    "allowlist_intersection": [
+      "actions",
+      "capabilities",
+      "data_classes",
+      "platforms",
+      "releases",
+      "roots",
+      "transports"
+    ],
+    "ceiling_minimum": [
+      "max_bytes",
+      "max_context_tokens",
+      "max_duration_seconds",
+      "max_files",
+      "max_memory_bytes",
+      "max_network_bytes",
+      "max_operations"
+    ],
+    "denylist_union": [
+      "actions",
+      "capabilities",
+      "data_classes",
+      "paths",
+      "transports"
+    ],
+    "exact_match_or_block": [
+      "authority_model",
+      "canonical_store",
+      "model_identity",
+      "runtime_identity"
+    ],
+    "required_controls_union": true
+  }
+}

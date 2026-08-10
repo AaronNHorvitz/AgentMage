@@ -26,3 +26,16 @@ Each requirement record contains:
 | `status` | Current implementation status. All records begin as `planned`; documentation integration alone is not implementation completion. |
 
 The top-level source hash covers the complete canonical inventory. Any inventory edit makes check mode fail until the registry is regenerated and reviewed. Schema consumers must reject unsupported `schema_version` values rather than guessing.
+
+## Conflict Policy
+
+`conflict-policy.json` defines the fail-closed provisional rule used when two structured requirements disagree:
+
+- Allowed actions, capabilities, data classes, platforms, releases, roots, and transports are intersected.
+- Prohibitions and required controls are combined.
+- Numeric resource ceilings use the lower declared value.
+- Authority, canonical-store, model, and runtime identities must match exactly or the result blocks.
+- An empty allowed intersection, unknown field, malformed value, or unstructured disagreement blocks.
+- A mechanically narrowed result remains provisional until an accepted requirement-supersession decision preserves the original requirements and records the replacement.
+
+The resolver in `scripts/requirement_conflicts.py` is pure: it returns an `unchanged`, `provisional`, or `blocked` result and never edits its inputs or project files.
