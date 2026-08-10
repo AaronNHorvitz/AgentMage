@@ -59,6 +59,8 @@ artifacts/sprints/sprint-1/*
 artifacts/sprints/sprint-2/*
 !artifacts/sprints/sprint-2/story-2.1/
 !artifacts/sprints/sprint-2/story-2.1/**
+!artifacts/sprints/sprint-2/story-2.2/
+!artifacts/sprints/sprint-2/story-2.2/**
 
 # Build, dependency, cache, and generated output
 node_modules/

@@ -1,0 +1,703 @@
+{
+  "coverage": {
+    "complete": true,
+    "duplicate_boundary_classes": [],
+    "missing_boundary_classes": [],
+    "registered_target_count": 12,
+    "required_boundary_class_count": 12
+  },
+  "ffi_discovery": {
+    "active_boundaries": [],
+    "active_boundary_count": 0,
+    "future_boundary_registration_required": true,
+    "gate_on_unregistered_boundary": "block",
+    "native_suffixes": [
+      ".c",
+      ".cc",
+      ".cpp",
+      ".h",
+      ".hpp",
+      ".m",
+      ".mm"
+    ],
+    "source_roots": [
+      "kernel",
+      "capabilities",
+      "runtimes",
+      "platforms",
+      "shells"
+    ],
+    "unregistered_boundary_count": 0
+  },
+  "future_story_gate_contract": {
+    "execution_required_after_boundary_implementation": true,
+    "failed_or_timed_out_result_disposition": "block",
+    "missing_corpus_disposition": "block",
+    "missing_result_disposition": "block",
+    "missing_target_disposition": "block",
+    "registration_required": true,
+    "waiver_mechanism": "signed-dated-risk-decision-outside-normal-development-credentials"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_support_claim": "none",
+  "registry_id": "agentmage-fuzz-target-registry-v1",
+  "registry_sha256": "d0255752d0234c97455d81ce301acfae173c8f81ad2a95cd3020c10d0c309b30",
+  "registry_version": "1.0.0",
+  "schema_version": 1,
+  "status": "baseline-contracts-registered",
+  "targets": [
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "manifests",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        3
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "manifests",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-MANIFEST-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "configuration",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        3
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "configuration",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-CONFIG-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "ipc-messages",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        8,
+        9
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "ipc-messages",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-IPC-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "model-output",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        13
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "model-output",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-MODEL-OUTPUT-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "capability-grants",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        5
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "capability-grants",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-GRANT-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "paths",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        6
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "paths",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-PATH-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "text-encodings",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        16
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "text-encodings",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-TEXT-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "git-objects",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        17
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "git-objects",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-GIT-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "repository-parsers",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        18,
+        19
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "repository-parsers",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-REPOSITORY-PARSER-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "sqlite-imports",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        11
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "sqlite-imports",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-SQLITE-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "archives",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        33
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "archives",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-ARCHIVE-001"
+    },
+    {
+      "activation_contract": {
+        "concrete_harness_required_before_owner_gate": true,
+        "fake_boundary_baseline_required": true,
+        "regression_path_required": true,
+        "result_record_required": true,
+        "versioned_seed_corpus_required": true
+      },
+      "boundary_class": "ffi-boundaries",
+      "execution_contract": {
+        "ambient_authority_permitted": false,
+        "external_process_permitted": false,
+        "idempotent_cleanup_required": true,
+        "network_permitted": false,
+        "pre_cancellation_required": true,
+        "user_file_write_permitted": false
+      },
+      "first_execution_owner_sprints": [
+        4
+      ],
+      "input_contract": {
+        "accept_arbitrary_bytes": true,
+        "host_path_resolution_permitted": false,
+        "maximum_materialized_input_bytes": 4096,
+        "oversized_declared_input_bytes": 4097,
+        "private_user_data_permitted": false,
+        "real_credentials_permitted": false
+      },
+      "outcome_contract": {
+        "authorization_bypass_is_non_pass": true,
+        "panic_or_crash_is_non_pass": true,
+        "path_escape_is_non_pass": true,
+        "resource_exhaustion_is_non_pass": true,
+        "secret_exposure_is_non_pass": true,
+        "timeout_is_non_pass": true
+      },
+      "product_boundary_implemented": false,
+      "product_support_claim": "none",
+      "seed_selection": {
+        "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "input_class": "ffi-boundaries",
+        "required_scenarios": [
+          "normal",
+          "boundary",
+          "malformed",
+          "hostile",
+          "oversized",
+          "cancellation",
+          "recovery"
+        ]
+      },
+      "status": "baseline-contract-registered",
+      "target_id": "FT-FFI-001"
+    }
+  ]
+}

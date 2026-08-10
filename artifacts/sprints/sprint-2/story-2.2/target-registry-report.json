@@ -1,0 +1,56 @@
+{
+  "coverage": {
+    "complete": true,
+    "duplicate_boundary_classes": [],
+    "missing_boundary_classes": [],
+    "registered_target_count": 12,
+    "required_boundary_class_count": 12
+  },
+  "ffi_discovery": {
+    "active_boundaries": [],
+    "active_boundary_count": 0,
+    "future_boundary_registration_required": true,
+    "gate_on_unregistered_boundary": "block",
+    "native_suffixes": [
+      ".c",
+      ".cc",
+      ".cpp",
+      ".h",
+      ".hpp",
+      ".m",
+      ".mm"
+    ],
+    "source_roots": [
+      "kernel",
+      "capabilities",
+      "runtimes",
+      "platforms",
+      "shells"
+    ],
+    "unregistered_boundary_count": 0
+  },
+  "fixture_set": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+  "future_story_gate_contract": {
+    "execution_required_after_boundary_implementation": true,
+    "failed_or_timed_out_result_disposition": "block",
+    "missing_corpus_disposition": "block",
+    "missing_result_disposition": "block",
+    "missing_target_disposition": "block",
+    "registration_required": true,
+    "waiver_mechanism": "signed-dated-risk-decision-outside-normal-development-credentials"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_calls": 0,
+  "private_user_data_used": false,
+  "product_boundary_execution_claim": "none",
+  "registry": {
+    "path": "fuzzing/target-registry.json",
+    "self_sha256": "d0255752d0234c97455d81ce301acfae173c8f81ad2a95cd3020c10d0c309b30",
+    "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+    "version": "1.0.0"
+  },
+  "schema_version": 1,
+  "status": "pass-baseline-contract-registration",
+  "task_id": "2.2.1.1"
+}
