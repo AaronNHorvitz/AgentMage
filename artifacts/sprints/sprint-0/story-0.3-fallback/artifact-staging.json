@@ -1,0 +1,33 @@
+{
+  "data_classification": "public_synthetic_only",
+  "docker_model": {
+    "all_required_identities_verified_before_dmr_inference": true,
+    "config_digest": "sha256:fd55c7a19127c5a1a3c7dd6d52388ac193653bfa366235dea4588c735cc12967",
+    "manifest_digest": "sha256:50b48bb3c9659db6d9615fe9ec91b6d2e6da64f333135987ea12e6965dbd84f6",
+    "model_layer_digest": "sha256:90fd944d227e9d9b68e7e2c7d5b57b79d4c66ed521b0919fbbd932cf834f6f8e",
+    "projector_layer_digest": "sha256:91f086971e56d7a7d8d39e271873fccdb49541bd259d6e02c401a4f1cb7a219e"
+  },
+  "evidence_date": "2026-08-10",
+  "profile_id": "gemma-4-12b-unified-it",
+  "record_type": "fallback_artifact_staging_receipt",
+  "schema_version": 1,
+  "scope": "quarantined evaluation only",
+  "selected_gguf": {
+    "hash_verified_before_native_inference": true,
+    "sha256": "90fd944d227e9d9b68e7e2c7d5b57b79d4c66ed521b0919fbbd932cf834f6f8e",
+    "size": 7366423360
+  },
+  "selected_projector": {
+    "hash_verified_before_native_inference": true,
+    "sha256": "91f086971e56d7a7d8d39e271873fccdb49541bd259d6e02c401a4f1cb7a219e",
+    "size": 175115840
+  },
+  "source_weights_downloaded": false,
+  "state": {
+    "admission_blockers_resolved": false,
+    "automatic_switch": false,
+    "candidate_enabled": false,
+    "evaluation_staging_complete": true,
+    "release_approval": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "bundle_id": "sprint-0-story-0.3-gemma-4-12b-fallback-evidence",
+  "evidence_date": "2026-08-10",
+  "files": [
+    {
+      "path": "adapter-disposition.json",
+      "sha256": "afb4e55728641c83d85600d6912973c7751da768b68bc4796d35edc878e52429",
+      "size": 9512
+    },
+    {
+      "path": "artifact-staging.json",
+      "sha256": "d544ecbd7bed892a4bb98b0cd59313aad4485d3fbdd566e520f7aaec05350f44",
+      "size": 1338
+    },
+    {
+      "path": "dmr-linux-result.json",
+      "sha256": "eed164ba7f646fa107fd2aede98a37482408942fa66ea499c338f789f35e3fa5",
+      "size": 124448
+    },
+    {
+      "path": "dmr-linux-server.log",
+      "sha256": "99d7f6f887aa611e37452e4bb9e70f99beef64acd24c2af90408a5a6e8576282",
+      "size": 305429
+    },
+    {
+      "path": "native-linux-result.json",
+      "sha256": "5b8cf4b03b989a3bbb71aaeb697359209fd7b03582c18d061d9e19c2430c7982",
+      "size": 56004
+    },
+    {
+      "path": "native-linux-server.log",
+      "sha256": "6b978bb5e4c37aa2c95719f9904903d5262c1bc4255a347ec81ab3ca348c3fa7",
+      "size": 48800
+    },
+    {
+      "path": "summary.md",
+      "sha256": "c08ab4fbfa90cedb6df8a75a027a5f449cfb04302ecd60388aa61a1519d92560",
+      "size": 2102
+    }
+  ],
+  "schema_version": 1,
+  "scope": "complete available-platform fallback admission and corpus disposition",
+  "verification_revision": "2a9fa29f76c5898e5c63159a9b08ff147cf43625"
+}

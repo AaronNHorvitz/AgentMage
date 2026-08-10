@@ -6,7 +6,9 @@ import unittest
 from pathlib import Path
 
 from scripts.story_0_3_fallback_evidence import (
+    DEFAULT_OUTPUT,
     FallbackEvidenceError,
+    check_bundle,
     failed_cases,
     failed_thresholds,
     sanitize_server_log,
@@ -16,6 +18,9 @@ from scripts.story_0_3_fallback_evidence import (
 
 
 class Story03FallbackEvidenceTests(unittest.TestCase):
+    def test_committed_fallback_bundle_is_valid_and_disabled(self) -> None:
+        self.assertEqual(check_bundle(DEFAULT_OUTPUT), [])
+
     def test_server_log_sanitizer_replaces_evaluation_root(self) -> None:
         source = (
             "loading /var/home/example/.local/share/agentmage/evaluation/models/model.gguf\n"
