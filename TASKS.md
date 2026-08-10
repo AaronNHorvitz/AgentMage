@@ -152,7 +152,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 **Dependencies:** None.
 
-#### [ ] Story 0.1 - Canonical Scope and Traceability Baseline
+#### [x] Story 0.1 - Canonical Scope and Traceability Baseline
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need canonical scope and traceability baseline so that AgentMage delivers the following bounded outcome: Make the project documents mechanically consistent and establish one traceable source for every requirement.
 
@@ -185,9 +185,9 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 0.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then registry generation is byte-identical across two clean runs, and every duplicate, orphan, contradiction, missing test, and release mismatch in the seeded corpus is detected with no false pass.
-- [ ] **Story AC 0.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can navigate any v0.1 requirement to its source heading, implementation sprint, acceptance test, exclusion state, and current evidence without manual reconstruction.
-- [ ] **Story AC 0.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every public product-security reference is either linked as a current live source or retained as an approved hash-pinned snapshot with provenance; neither state is represented as publisher certification, endorsement, or approval of AgentMage.
+- [x] **Story AC 0.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then registry generation is byte-identical across two clean runs, and every duplicate, orphan, contradiction, missing test, and release mismatch in the seeded corpus is detected with no false pass.
+- [x] **Story AC 0.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can navigate any v0.1 requirement to its source heading, implementation sprint, acceptance test, exclusion state, and current evidence without manual reconstruction.
+- [x] **Story AC 0.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every public product-security reference is either linked as a current live source or retained as an approved hash-pinned snapshot with provenance; neither state is represented as publisher certification, endorsement, or approval of AgentMage.
 
 #### [ ] Story 0.2 - Public Policy, License, and Documentation Controls
 
