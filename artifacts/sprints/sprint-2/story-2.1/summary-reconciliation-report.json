@@ -1,0 +1,38 @@
+{
+  "comparison": {
+    "bundle_sha256": "c216ebfbf47cf6c9022e4f39aeac7df037f7b013260d06a314b80d17fc584566",
+    "comparison_sha256": "70beecdb28e5683060bfa9581e1e90200e508073549227fe33face215431d434",
+    "independent_summary_sha256": "6fde0ba66ac715ca429cee9b7b8f517f34823a417f7b63efe07d52163ce2dfd3",
+    "producer_summary_sha256": "6fde0ba66ac715ca429cee9b7b8f517f34823a417f7b63efe07d52163ce2dfd3",
+    "result_set_sha256": "890cc9f5a8dfe1200420f7b2711f97591ee3c96e9ec8816833120ddc72f7ddac",
+    "test_id_set_sha256": "53dc0e4c63c5d1ea31813ad0322bcbef099b5fe43377161c1ff02ecde4c221e7"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "product_acceptance_claim": "none",
+  "profile": {
+    "path": "fixtures/test-result-bundle-profile.json",
+    "sha256": "b9de6a5526078f02ab8b9c5c880f6591ffb586b6aee117ef8fc732b2ac33bc60"
+  },
+  "raw_output_retained": false,
+  "raw_results_persisted_by_verifier": false,
+  "reconciliation": {
+    "cancelled_test_count": 1,
+    "exact_match": true,
+    "flaky_test_count": 2,
+    "non_pass_converted_to_pass_count": 0,
+    "non_pass_test_count": 5,
+    "omitted_or_duplicate_result_count": 0,
+    "overall_status": "fail",
+    "quarantined_test_count": 1,
+    "retried_test_count": 4,
+    "retry_exhausted_test_count": 1,
+    "skipped_test_count": 1,
+    "test_count": 9,
+    "timeout_test_count": 1
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "task_id": "2.1.3.4",
+  "test_id": "S-002-IT01"
+}

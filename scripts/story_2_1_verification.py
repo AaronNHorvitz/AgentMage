@@ -21,6 +21,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts import versioned_corpus  # noqa: E402
+from scripts import test_result_bundle as result_bundles  # noqa: E402
 from fixtures.fake_adapters import (  # noqa: E402
     CrashInjector,
     FakeClock,
@@ -52,6 +53,14 @@ ADAPTER_REPORT_PATH = (
     / "sprint-2"
     / "story-2.1"
     / "adapter-mode-verification-report.json"
+)
+SUMMARY_REPORT_PATH = (
+    ROOT
+    / "artifacts"
+    / "sprints"
+    / "sprint-2"
+    / "story-2.1"
+    / "summary-reconciliation-report.json"
 )
 EXPECTED_SOURCE_SEEDS = {
     "base": "agentmage-sprint-2-synthetic-v1",
@@ -510,17 +519,244 @@ def check_adapter_report(root: Path = ROOT) -> list[str]:
     return validate_adapter_report(report, root)
 
 
+def independent_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    statuses = ("cancelled", "error", "fail", "pass", "skipped", "timeout")
+    classifications = (
+        "cancelled",
+        "flaky",
+        "pass",
+        "persistent-failure",
+        "quarantined-failure",
+        "retry-exhausted",
+        "skipped",
+    )
+    status_counts = Counter(result["final_status"] for result in results)
+    classification_counts = Counter(result["classification"] for result in results)
+    non_pass_count = sum(result["final_status"] != "pass" for result in results)
+    return {
+        "classification_counts": {
+            item: classification_counts[item] for item in classifications
+        },
+        "final_status_counts": {item: status_counts[item] for item in statuses},
+        "flaky_test_count": sum(bool(result["flaky"]) for result in results),
+        "non_pass_test_count": non_pass_count,
+        "overall_status": "pass" if non_pass_count == 0 else "fail",
+        "quarantined_test_count": sum(
+            bool(result["quarantined"]) for result in results
+        ),
+        "redacted_attempt_count": sum(
+            attempt["output"]["redaction_count"] > 0
+            for result in results
+            for attempt in result["attempts"]
+        ),
+        "retried_test_count": sum(result["retry_count"] > 0 for result in results),
+        "retry_attempt_count": sum(result["retry_count"] for result in results),
+        "skipped_test_count": sum(
+            result["final_status"] == "skipped" for result in results
+        ),
+        "test_count": len(results),
+        "truncated_attempt_count": sum(
+            bool(attempt["output"]["truncated"])
+            for result in results
+            for attempt in result["attempts"]
+        ),
+    }
+
+
+def independent_reconciliation(bundle: dict[str, Any]) -> dict[str, Any]:
+    shards = bundle.get("shards", [])
+    if not isinstance(shards, list):
+        raise ValueError("result bundle shards are invalid")
+    results = []
+    shard_indices = set()
+    for shard in shards:
+        index = shard.get("index")
+        if index in shard_indices:
+            raise ValueError("result bundle contains duplicate shard indices")
+        shard_indices.add(index)
+        shard_results = shard.get("results", [])
+        if shard.get("result_count") != len(shard_results):
+            raise ValueError("result bundle shard count does not reconcile")
+        for result in shard_results:
+            if result.get("shard") != index:
+                raise ValueError("result bundle result is assigned to the wrong shard")
+        results.extend(shard_results)
+    test_ids = [result.get("test_id") for result in results]
+    if len(test_ids) != len(set(test_ids)):
+        raise ValueError("result bundle contains duplicate test identities")
+    expected_ids = set(result_bundles.EXPECTED_CASE_IDS)
+    if set(test_ids) != expected_ids:
+        raise ValueError("result bundle omitted or added a test identity")
+    if any(
+        result["final_status"] != "pass" and result["classification"] == "pass"
+        for result in results
+    ):
+        raise ValueError("result bundle converted a non-pass result to pass")
+    summary = independent_summary(results)
+    return {
+        "summary": summary,
+        "result_count": len(results),
+        "result_set_sha256": sha256_bytes(
+            canonical_json(sorted(results, key=lambda item: item["test_id"]))
+        ),
+        "test_id_set_sha256": sha256_bytes(canonical_json(sorted(test_ids))),
+    }
+
+
+def build_summary_report(root: Path = ROOT) -> dict[str, Any]:
+    profile_path = root / result_bundles.PROFILE_PATH.relative_to(ROOT)
+    profile = read_json(profile_path)
+    bundle = result_bundles.build_bundle(profile, root)
+    bundle_failures = result_bundles.validate_bundle(bundle, profile, root)
+    if bundle_failures:
+        raise ValueError("; ".join(bundle_failures))
+    independent = independent_reconciliation(bundle)
+    producer_summary = bundle["summary"]
+    independently_recomputed = independent["summary"]
+    if producer_summary != independently_recomputed:
+        raise ValueError("independent summary does not match producer summary")
+    required_classifications = {
+        "persistent-failure",
+        "skipped",
+        "flaky",
+        "quarantined-failure",
+        "retry-exhausted",
+        "cancelled",
+    }
+    observed_classifications = {
+        key
+        for key, count in independently_recomputed["classification_counts"].items()
+        if count > 0
+    }
+    if not required_classifications <= observed_classifications:
+        raise ValueError("summary fixture classification closure is incomplete")
+    comparison = {
+        "bundle_sha256": bundle["bundle_sha256"],
+        "producer_summary_sha256": sha256_bytes(canonical_json(producer_summary)),
+        "independent_summary_sha256": sha256_bytes(
+            canonical_json(independently_recomputed)
+        ),
+        "result_set_sha256": independent["result_set_sha256"],
+        "test_id_set_sha256": independent["test_id_set_sha256"],
+    }
+    comparison["comparison_sha256"] = sha256_bytes(canonical_json(comparison))
+    return {
+        "schema_version": 1,
+        "task_id": "2.1.3.4",
+        "test_id": "S-002-IT01",
+        "status": "pass",
+        "profile": artifact(
+            root, result_bundles.PROFILE_PATH.relative_to(ROOT).as_posix()
+        ),
+        "comparison": comparison,
+        "reconciliation": {
+            "exact_match": True,
+            "test_count": independently_recomputed["test_count"],
+            "non_pass_test_count": independently_recomputed[
+                "non_pass_test_count"
+            ],
+            "skipped_test_count": independently_recomputed["skipped_test_count"],
+            "retried_test_count": independently_recomputed["retried_test_count"],
+            "flaky_test_count": independently_recomputed["flaky_test_count"],
+            "quarantined_test_count": independently_recomputed[
+                "quarantined_test_count"
+            ],
+            "retry_exhausted_test_count": independently_recomputed[
+                "classification_counts"
+            ]["retry-exhausted"],
+            "cancelled_test_count": independently_recomputed[
+                "final_status_counts"
+            ]["cancelled"],
+            "timeout_test_count": independently_recomputed["final_status_counts"][
+                "timeout"
+            ],
+            "overall_status": independently_recomputed["overall_status"],
+            "omitted_or_duplicate_result_count": 0,
+            "non_pass_converted_to_pass_count": 0,
+        },
+        "raw_results_persisted_by_verifier": False,
+        "raw_output_retained": False,
+        "product_acceptance_claim": "none",
+        "macos_execution_status": "blocked-macos",
+        "macos_support_claim": "none",
+    }
+
+
+def validate_summary_report(report: Any, root: Path = ROOT) -> list[str]:
+    if not isinstance(report, dict):
+        return ["Story 2.1 summary report must be an object"]
+    failures: list[str] = []
+    if (
+        report.get("schema_version") != 1
+        or report.get("task_id") != "2.1.3.4"
+        or report.get("test_id") != "S-002-IT01"
+    ):
+        failures.append("Story 2.1 summary report identity is invalid")
+    if report.get("status") != "pass":
+        failures.append("Story 2.1 summary report did not pass")
+    reconciliation = report.get("reconciliation", {})
+    if (
+        reconciliation.get("exact_match") is not True
+        or reconciliation.get("test_count") != 9
+        or reconciliation.get("non_pass_test_count") != 5
+        or reconciliation.get("omitted_or_duplicate_result_count") != 0
+        or reconciliation.get("non_pass_converted_to_pass_count") != 0
+        or reconciliation.get("overall_status") != "fail"
+    ):
+        failures.append("Story 2.1 summary reconciliation contract was weakened")
+    if report.get("raw_results_persisted_by_verifier") is not False or report.get(
+        "raw_output_retained"
+    ) is not False:
+        failures.append("Story 2.1 summary verifier retained raw results or output")
+    if report.get("product_acceptance_claim") != "none":
+        failures.append("Story 2.1 summary report made a product acceptance claim")
+    if report.get("macos_execution_status") != "blocked-macos" or report.get(
+        "macos_support_claim"
+    ) != "none":
+        failures.append("Story 2.1 summary report made an invalid macOS claim")
+    try:
+        expected = build_summary_report(root)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        failures.append(f"cannot rebuild Story 2.1 summary report: {error}")
+    else:
+        if report != expected:
+            failures.append("Story 2.1 summary report is stale or non-deterministic")
+    return failures
+
+
+def write_summary_report(root: Path = ROOT) -> None:
+    write_atomic(
+        root / SUMMARY_REPORT_PATH.relative_to(ROOT),
+        canonical_json(build_summary_report(root)),
+    )
+
+
+def check_summary_report(root: Path = ROOT) -> list[str]:
+    try:
+        report = read_json(root / SUMMARY_REPORT_PATH.relative_to(ROOT))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"cannot read Story 2.1 summary report: {error}"]
+    return validate_summary_report(report, root)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write-corpus-report", action="store_true")
     parser.add_argument("--write-adapter-report", action="store_true")
+    parser.add_argument("--write-summary-report", action="store_true")
     args = parser.parse_args()
     try:
         if args.write_corpus_report:
             write_corpus_report()
         if args.write_adapter_report:
             write_adapter_report()
-        failures = check_corpus_report() + check_adapter_report()
+        if args.write_summary_report:
+            write_summary_report()
+        failures = (
+            check_corpus_report()
+            + check_adapter_report()
+            + check_summary_report()
+        )
     except (OSError, ValueError, KeyError, TypeError, shutil.Error) as error:
         print(f"Story 2.1 verification failed: {error}", file=sys.stderr)
         return 1
@@ -528,7 +764,7 @@ def main() -> int:
         for failure in failures:
             print(f"Story 2.1 verification failed: {failure}", file=sys.stderr)
         return 1
-    print("Story 2.1 corpus and adapter verification evidence validated")
+    print("Story 2.1 corpus, adapter, and summary evidence validated")
     return 0
 
 

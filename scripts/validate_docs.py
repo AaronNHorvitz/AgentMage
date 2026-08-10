@@ -47,6 +47,7 @@ REQUIRED_FILES = (
     "artifacts/sprints/sprint-2/story-2.1/path-fixture-report.json",
     "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
     "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
+    "artifacts/sprints/sprint-2/story-2.1/summary-reconciliation-report.json",
     "artifacts/sprints/sprint-2/story-2.1/test-result-bundle-report.json",
     "artifacts/sprints/sprint-2/story-2.1/versioned-corpus-report.json",
     "fixtures/generator-profile.json",
