@@ -47,6 +47,15 @@
       "network": "disabled-by-client"
     },
     {
+      "id": "cargo-fetch",
+      "argv": [
+        "cargo",
+        "fetch",
+        "--locked"
+      ],
+      "network": "bootstrap-only"
+    },
+    {
       "id": "cargo-locked-tree",
       "argv": [
         "cargo",

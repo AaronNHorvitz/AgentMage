@@ -67,6 +67,21 @@ class CleanBuildEvidenceTests(unittest.TestCase):
     def test_canonical_policy_is_valid(self) -> None:
         self.assertEqual(validate_policy(self.policy), [])
 
+    def test_only_locked_dependency_bootstraps_may_use_network(self) -> None:
+        bootstrap = [
+            item for item in self.policy["commands"] if item["network"] == "bootstrap-only"
+        ]
+        self.assertEqual(
+            [(item["id"], item["argv"]) for item in bootstrap],
+            [
+                (
+                    "npm-clean-install",
+                    ["npm", "ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+                ),
+                ("cargo-fetch", ["cargo", "fetch", "--locked"]),
+            ],
+        )
+
     def test_checked_in_report_is_current(self) -> None:
         self.assertEqual(check_report(), [])
 

@@ -34,6 +34,7 @@ EXPECTED_PLATFORMS = ("fedora-x86_64", "ubuntu-x86_64")
 EXPECTED_COMMANDS = (
     "npm-clean-install",
     "npm-locked-tree",
+    "cargo-fetch",
     "cargo-locked-tree",
     "build",
     "lint",
@@ -336,6 +337,20 @@ def run_platform(
     )
     if run.returncode != 0:
         detail = run.stderr.strip().splitlines()[-1] if run.stderr.strip() else "unknown"
+        try:
+            failed_report = json.loads(run.stdout)
+            failed_command = next(
+                item
+                for item in failed_report.get("commands", [])
+                if item.get("status") == "fail"
+            )
+        except (json.JSONDecodeError, StopIteration, TypeError):
+            pass
+        else:
+            detail = (
+                f"command {failed_command.get('id', 'unknown')} exited "
+                f"{failed_command.get('exit_code', 'unknown')}"
+            )
         raise OSError(f"clean build failed for {platform_id}: {detail}")
     try:
         result = json.loads(run.stdout)
