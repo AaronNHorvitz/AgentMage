@@ -1,0 +1,88 @@
+{
+  "bundle_preview": {
+    "bundle_sha256": "c216ebfbf47cf6c9022e4f39aeac7df037f7b013260d06a314b80d17fc584566",
+    "context": {
+      "platform_profile_id": "agentmage-platform-result-recorder-v1",
+      "platform_profile_sha256": "bf82a978ac768da55c08b439846395eed75dc57e4fa49f3f268b5dab7d0a2730",
+      "platform_record_id": "am-platform-result-f6a1b123edf99ed18c41",
+      "platform_record_sha256": "eff18cc95359ecef036d00a92ecdbf6e00fff6af58bee66ab0a1397a02572357"
+    },
+    "persisted": false,
+    "shards": [
+      {
+        "index": 0,
+        "result_count": 4,
+        "sha256": "7d92a74a0eaf95e5c66cf065a391be9d10f942283cef4413a1d2d340c256c99f"
+      },
+      {
+        "index": 1,
+        "result_count": 1,
+        "sha256": "a3468726dbc00195f6dbe82d1f0eba55f6e80457b3896f450804e99ad0010672"
+      },
+      {
+        "index": 2,
+        "result_count": 4,
+        "sha256": "e79cd699c88c42cca3818c535e37dc002c83ab180037ce733cd61626f808c0ac"
+      }
+    ],
+    "summary": {
+      "classification_counts": {
+        "cancelled": 1,
+        "flaky": 2,
+        "pass": 2,
+        "persistent-failure": 1,
+        "quarantined-failure": 1,
+        "retry-exhausted": 1,
+        "skipped": 1
+      },
+      "final_status_counts": {
+        "cancelled": 1,
+        "error": 0,
+        "fail": 2,
+        "pass": 4,
+        "skipped": 1,
+        "timeout": 1
+      },
+      "flaky_test_count": 2,
+      "non_pass_test_count": 5,
+      "overall_status": "fail",
+      "quarantined_test_count": 1,
+      "redacted_attempt_count": 1,
+      "retried_test_count": 4,
+      "retry_attempt_count": 6,
+      "skipped_test_count": 1,
+      "test_count": 9,
+      "truncated_attempt_count": 1
+    }
+  },
+  "classification_closure": [
+    "pass",
+    "persistent-failure",
+    "flaky",
+    "skipped",
+    "quarantined-failure",
+    "retry-exhausted",
+    "cancelled"
+  ],
+  "content_addressing_claim": "tamper-evident-by-hash",
+  "filesystem_immutability_claim": "none",
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "max_retained_bytes_per_attempt": 64,
+  "profile": {
+    "id": "agentmage-test-result-bundle-v1",
+    "sha256": "b9de6a5526078f02ab8b9c5c880f6591ffb586b6aee117ef8fc732b2ac33bc60"
+  },
+  "raw_output_retained": false,
+  "schema_version": 1,
+  "side_effect_contract": {
+    "changes_test_status": false,
+    "executes_tests": false,
+    "retains_raw_output": false,
+    "suppresses_non_pass_results": false,
+    "uses_network": false
+  },
+  "status": "pass",
+  "synthetic_canary_values_retained": false,
+  "task_id": "2.1.1.8"
+}

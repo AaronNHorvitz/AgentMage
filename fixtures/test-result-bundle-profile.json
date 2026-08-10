@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-test-result-bundle-v1",
+  "status": "synthetic-result-bundle-contract",
+  "generated_at": "2024-01-01T00:01:00Z",
+  "platform_profile": {
+    "path": "fixtures/platform-result-profile.json",
+    "synthetic_result_id": "synthetic-fedora-result"
+  },
+  "sharding": {
+    "algorithm": "sha256-test-id-modulo-v1",
+    "shard_count": 3
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "quarantined_retries": false,
+    "retryable_statuses": [
+      "fail",
+      "error",
+      "timeout"
+    ],
+    "terminal_statuses": [
+      "pass",
+      "skipped",
+      "cancelled"
+    ]
+  },
+  "output_policy": {
+    "encoding": "utf-8",
+    "max_retained_bytes_per_attempt": 64,
+    "raw_output_retained": false,
+    "synthetic_canaries_redacted": true
+  },
+  "cases": [
+    {
+      "fixture_id": "fixture-markdown-normal",
+      "quarantined": false,
+      "test_id": "parser.normal",
+      "attempts": [
+        {
+          "duration_ms": 12,
+          "output": "synthetic parse passed",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-malformed-json",
+      "quarantined": false,
+      "test_id": "parser.persistent-failure",
+      "attempts": [
+        {
+          "duration_ms": 10,
+          "output": "failure includes AM_SYNTHETIC_CANARY_RESULT_OUTPUT_001",
+          "status": "fail"
+        },
+        {
+          "duration_ms": 11,
+          "output": "same synthetic parser failure",
+          "status": "fail"
+        },
+        {
+          "duration_ms": 13,
+          "output": "same synthetic parser failure",
+          "status": "fail"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-model-malformed",
+      "quarantined": false,
+      "test_id": "model.flaky",
+      "attempts": [
+        {
+          "duration_ms": 30,
+          "output": "synthetic malformed response",
+          "status": "error"
+        },
+        {
+          "duration_ms": 25,
+          "output": "synthetic retry passed",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-runtime-timeout",
+      "quarantined": false,
+      "test_id": "runtime.timeout-flaky",
+      "attempts": [
+        {
+          "duration_ms": 1000,
+          "output": "synthetic timeout",
+          "status": "timeout"
+        },
+        {
+          "duration_ms": 40,
+          "output": "synthetic retry passed",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-optional-document",
+      "quarantined": false,
+      "test_id": "documents.skipped",
+      "attempts": [
+        {
+          "duration_ms": 0,
+          "output": "synthetic optional dependency unavailable",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-known-defect",
+      "quarantined": true,
+      "test_id": "known.quarantined-failure",
+      "attempts": [
+        {
+          "duration_ms": 15,
+          "output": "synthetic known failure",
+          "status": "fail"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-worker-timeout",
+      "quarantined": false,
+      "test_id": "worker.timeout-exhausted",
+      "attempts": [
+        {
+          "duration_ms": 1000,
+          "output": "synthetic timeout one",
+          "status": "timeout"
+        },
+        {
+          "duration_ms": 1000,
+          "output": "synthetic timeout two",
+          "status": "timeout"
+        },
+        {
+          "duration_ms": 1000,
+          "output": "synthetic timeout three",
+          "status": "timeout"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-oversized-output",
+      "quarantined": false,
+      "test_id": "output.oversized",
+      "attempts": [
+        {
+          "duration_ms": 18,
+          "output": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "fixture_id": "fixture-user-cancellation",
+      "quarantined": false,
+      "test_id": "worker.cancelled",
+      "attempts": [
+        {
+          "duration_ms": 7,
+          "output": "synthetic user cancellation",
+          "status": "cancelled"
+        }
+      ]
+    }
+  ],
+  "side_effect_contract": {
+    "executes_tests": false,
+    "uses_network": false,
+    "changes_test_status": false,
+    "retains_raw_output": false,
+    "suppresses_non_pass_results": false
+  },
+  "macos_execution_status": "blocked-macos"
+}
