@@ -1,0 +1,326 @@
+{
+  "artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "746d5f5dd662686295e7a3c8245cf1aea942a32d0ca769ead30abeab2c5e3051"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+    },
+    {
+      "path": "architecture/artifact-scan-policy.json",
+      "sha256": "d38481e605067fe141e356e3b7b497f2a04f6f042a8848c99b0b7bff01333699"
+    },
+    {
+      "path": "architecture/build-contract.json",
+      "sha256": "a6ca2ce5550bc7696e8510b8c056d883e9254d8ae2d4e691664898f9a5cf9b31"
+    },
+    {
+      "path": "architecture/clean-build-policy.json",
+      "sha256": "6abd23cb1d74aa5707d8c7285ef2cd2dd496550dd859402f052ed9b77807ed5e"
+    },
+    {
+      "path": "architecture/dependency-classes.json",
+      "sha256": "4b932ab5bf0f6f320fffc4d8c80a12758c32c4998281a7dd7cff0468c36940eb"
+    },
+    {
+      "path": "architecture/dependency-rules.json",
+      "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
+    },
+    {
+      "path": "architecture/language-build-matrix.json",
+      "sha256": "ab25c3641ce48aeed2bec9cc07204c7115d3fdc6a547ebcfcc56353d85d72237"
+    },
+    {
+      "path": "architecture/module-inventory.json",
+      "sha256": "8130a4b936e0879b25a0b59191517d8ccae904e19922de41dfa460e2005e8781"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "sha256": "0aa4a86aa80aea6e390c41d8e527e68ef4c066edad49f7dbb13abb01dacbc1a3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+      "sha256": "f2b0f0e423fdb0d224aedb0f94f8fcef279ddcfd0c8974e8a90b7dc9ef3de6e5"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "2ec9d131794a3d3e696b5d83098b0034978aa13610dd20b340536e0484d86817"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
+      "sha256": "3f0a9808df87850682e1868baa128b1e56206c99c201595cf3b1761d90f681af"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json",
+      "sha256": "1c53945f78a1b5392df5ed1d15af7879a83f43761d19c9d638799d1080da68df"
+    },
+    {
+      "path": "docs/decisions/0003-blocked-platform-lane-continuation.md",
+      "sha256": "a0b34b80e420568e500243723727eceec926eb3fe1f9a6a9ed6cf14e4c2a4565"
+    },
+    {
+      "path": "docs/decisions/0004-language-and-build-system-architecture.md",
+      "sha256": "fafb99eb1154e119de1684c066b70fa587cd99d5d50531a3d46093bbb29c2296"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+    },
+    {
+      "path": "platforms/macos/Package.resolved",
+      "sha256": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d"
+    },
+    {
+      "path": "release/clean-build/Containerfile.linux",
+      "sha256": "4ad8732b7655cae6dd72b71f4ac597ea27270bc93b60419608f6d05a3e95e8f4"
+    },
+    {
+      "path": "scripts/artifact_scanner.py",
+      "sha256": "c703c305489a851f37e2816068668391aa0da9dbb2592e0a9fc9066fc9fa7269"
+    },
+    {
+      "path": "scripts/clean_build_evidence.py",
+      "sha256": "ca8ccefd46d3036ca9a327332933ec281b38acc9685bab9569672bae26e533c1"
+    },
+    {
+      "path": "scripts/dependency_injection.py",
+      "sha256": "e49398d5fddf7a9f08ddcfac9f446ce32218b7e16593c4ff8a699774fcd66159"
+    },
+    {
+      "path": "scripts/locked_resolution.py",
+      "sha256": "502f258177b7c8dd17e515e36ee463051bf915fb7f9bdfb388013839743a7a0b"
+    },
+    {
+      "path": "scripts/story_1_1_security_evidence.py",
+      "sha256": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "661aaf0c64ace296db03086f1d5950cb892434ddf189c350667d479c3c635ffe"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "26ec8cdc7823380cb5264d458d981965d0d03a196fcd4aa83a45152e23e7a1dc"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "ae68af283dff9203f78662ea2c60c0a0ea8e451d7285492b2f3de61f8fe4e1a6"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "c22e323427852fe51ec838d9b0486222e7e134d9d13ff2cdc783b77a6e6c00d5"
+    }
+  ],
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "open_reviews": [
+    {
+      "evidence": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+      "id": "license-metadata-khroma-2.1.0",
+      "release_approved": false,
+      "scope": "excluded-development-dependency",
+      "status": "open-review"
+    }
+  ],
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The empty shared/Linux product and all declared development checks run as non-root UID/GID 10001 on clean Fedora and Ubuntu environments.",
+      "evidence": [
+        "architecture/clean-build-policy.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Installation and normal product operation still require clean-account tests on all release platforms; macOS execution remains blocked.",
+      "requirement_id": "SR-PLT-001",
+      "review_protocols": [
+        "RV-02"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Build toolchains, Linux OS versions, architectures, source inputs, and container image identities are frozen for Story 1.1 evidence.",
+      "evidence": [
+        "architecture/build-contract.json",
+        "architecture/language-build-matrix.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The release manifest must still bind VS Code, SDK, package, entitlement, helper, hardware, and exact macOS identities and reject every substituted release field.",
+      "requirement_id": "SR-PLT-010",
+      "review_protocols": [
+        "RV-01",
+        "RV-02"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The source, synthetic build/package surfaces, and SBOM reject seeded undeclared binaries, dynamic loaders, privileged assumptions, secrets, and production licenses.",
+      "evidence": [
+        "architecture/artifact-scan-policy.json",
+        "architecture/dependency-classes.json",
+        "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+        "supply-chain/sbom.cdx.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Signed packaged-binary inventories and runtime load-refusal tests remain required for every native release artifact, including macOS.",
+      "requirement_id": "SR-PLT-011",
+      "review_protocols": [
+        "RV-01",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Fedora, Ubuntu, shared, synthetic package, and blocked macOS results have distinct identities and cannot satisfy one another's gate.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "docs/decisions/0003-blocked-platform-lane-continuation.md"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Later native package, runtime, hardware, and adapter evidence must preserve the same separation through release.",
+      "requirement_id": "SR-PLT-012",
+      "review_protocols": [
+        "RV-01",
+        "RV-02",
+        "RV-19"
+      ],
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "Linux verification uses rootless, ephemeral, least-authority environments with a read-only committed source archive and fresh writable state.",
+      "evidence": [
+        "architecture/clean-build-policy.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "release/clean-build/Containerfile.linux"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Protected source controls, independent test/release identities, signing, notarization, MFA, access logs, and credential separation remain release responsibilities.",
+      "requirement_id": "SR-SUP-002",
+      "review_protocols": [
+        "RV-01",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Story 1.1 dependencies and build tools are exact, locked, hashed, resolved twice, and fail closed for substituted, missing, revoked, and wrong-platform inputs.",
+      "evidence": [
+        "Cargo.lock",
+        "package-lock.json",
+        "platforms/macos/Package.resolved",
+        "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json",
+        "supply-chain/dependency-hashes.sha256"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every future parser, platform SDK, model, runtime, converter, and package tool must be admitted under the same rule before release.",
+      "requirement_id": "SR-SUP-003",
+      "review_protocols": [
+        "RV-01",
+        "RV-13",
+        "RV-19"
+      ],
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "A deterministic CycloneDX 1.6 source/build dependency SBOM records component classes, versions, hashes, licenses, and dependency edges.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+        "supply-chain/dependency-provenance.json",
+        "supply-chain/sbom.cdx.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Shipped-binary and package SBOM generation, schema review in the release runner, and source-to-binary comparison remain unavailable before packaging.",
+      "requirement_id": "SR-SUP-004",
+      "review_protocols": [
+        "RV-01",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Story artifacts bind source revision, build inputs, commands, toolchains, environment identities, dependency hashes, and evidence hashes.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "supply-chain/dependency-hashes.sha256"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "A release runner must produce signed provenance linking final packages and SBOMs to an independently verifiable builder and signer.",
+      "requirement_id": "SR-SUP-005",
+      "review_protocols": [
+        "RV-01",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Dependency origin, integrity, class, version, and license metadata are retained; missing metadata remains visible rather than being approved.",
+      "evidence": [
+        "LICENSE",
+        "architecture/dependency-classes.json",
+        "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+        "supply-chain/dependency-provenance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The development-only khroma license metadata review is open, and ownership, control, maintainer, vulnerability, resilience, support, and alternatives review remains for every critical product component.",
+      "requirement_id": "SR-SUP-006",
+      "review_protocols": [
+        "RV-13",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Two clean offline resolutions produce one graph identity, and independent clean Fedora and Ubuntu runs reproduce unchanged supply-chain artifacts without ambient dependencies.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json",
+        "supply-chain/dependency-hashes.sha256"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Final native/package builds must compare reproducible outputs or record bounded signed differences, including the unavailable macOS build.",
+      "requirement_id": "SR-SUP-011",
+      "review_protocols": [
+        "RV-01",
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Pinned compiler/linter checks, dependency analysis, architecture mutation tests, secret patterns, and artifact policy scans rerun from clean Linux environments.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "artifacts/sprints/sprint-1/story-1.1/dependency-injection-report.json",
+        "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Release-grade pinned SAST, SCA, secret, binary, and platform-security analyzers, reviewed suppressions, signed results, and genuine macOS analysis remain required.",
+      "requirement_id": "SR-TST-003",
+      "review_protocols": [
+        "RV-19"
+      ],
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "006dfdc64710b46ba57ee2afc23bb26803209b73",
+  "status": "complete-evidence-map-blocked-macos",
+  "summary": {
+    "canonical_blocking_artifact_findings": 0,
+    "linux_clean_platforms_passed": 2,
+    "mapped_requirements": 11,
+    "open_reviews": 1,
+    "product_requirements_complete": 0,
+    "story_gate_complete": false,
+    "task_mapping_complete": true
+  },
+  "task_id": "1.1.3.5"
+}

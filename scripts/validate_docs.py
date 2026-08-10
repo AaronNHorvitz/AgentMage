@@ -33,6 +33,7 @@ REQUIRED_FILES = (
     "supply-chain/sbom.cdx.json",
     "release/clean-build/Containerfile.linux",
     "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+    "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
     "supply-chain/README.md",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
