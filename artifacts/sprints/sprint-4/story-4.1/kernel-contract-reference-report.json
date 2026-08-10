@@ -110,7 +110,7 @@
   },
   "limitations": [
     "The reference describes frozen wire schema version 1, not a product release.",
-    "Golden serialization and compatibility fixtures remain Task 4.1.2.3.",
+    "The published golden fixtures cover wire schema version 1 only.",
     "No macOS build or execution evidence is claimed.",
     "No CapabilityGrant or positive execution path exists in this package."
   ],
@@ -119,15 +119,15 @@
     "macos_implementation_claim": "none",
     "macos_reference": "blocked-macos"
   },
-  "reference_revision": "5d9c64479525b590b8fb094caeb8efa98ca7ee6e",
+  "reference_revision": "61696222755d6dd4d0a8183fe1b1dcae7c0a9c1f",
   "reference_sources": [
     {
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "2dbd9478b98a1fca729988a197559a6cd76c85f8f90b63bb27faf923e37811d6"
+      "sha256": "964430ea33190cdb3f4d0aca4076e51a69d25c70cdff1ca32cf1793d94f8f369"
     },
     {
       "path": "scripts/kernel_contract_reference.py",
-      "sha256": "80db2b0834e9c8c7e1be1e75879656af35ce9322e353e18a8bc1ddcdb9efd082"
+      "sha256": "7c2c3a38192dc9a739c4ac3e34df2f08abae37b8288d690d403ffa95f0bc71b4"
     },
     {
       "path": "tests/test_kernel_contract_reference.py",
