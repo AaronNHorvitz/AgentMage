@@ -1,17 +1,29 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from scripts.kernel_contract_fixtures import (
     EXPECTED_VALID_NAMES,
     FixtureValidationError,
+    enable_fixture_verifier,
     invalid_fixtures,
     parse_bundle,
 )
 
 
 class KernelContractFixtureTests(unittest.TestCase):
+    def test_verifier_target_is_added_explicitly_to_normalized_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_name:
+            root = Path(temporary_name)
+            (root / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+            enable_fixture_verifier(root)
+            manifest = (root / "Cargo.toml").read_text()
+            self.assertIn('name = "fixture_verifier"', manifest)
+            self.assertIn('path = "tests/fixture_verifier.rs"', manifest)
+
     def test_bundle_parser_rejects_duplicate_and_incomplete_types(self) -> None:
         duplicate = [
             {"name": "task", "canonical_json": "{}"},

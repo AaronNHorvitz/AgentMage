@@ -116,6 +116,14 @@ def unpack_package(destination: Path) -> Path:
     return package_root
 
 
+def enable_fixture_verifier(package_root: Path) -> None:
+    manifest_path = package_root / "Cargo.toml"
+    manifest_path.write_bytes(
+        manifest_path.read_bytes()
+        + b'\n[[test]]\nname = "fixture_verifier"\npath = "tests/fixture_verifier.rs"\n'
+    )
+
+
 def parse_bundle(output: bytes) -> dict[str, bytes]:
     if len(output) > 2 * 1024 * 1024:
         raise FixtureValidationError("fixture generator output is oversized")
@@ -278,6 +286,7 @@ def verify_with_rust(revision: str, fixture_root: Path) -> None:
         (package_root / "tests/fixture_verifier.rs").write_bytes(
             git_file(revision, VERIFY_SOURCE)
         )
+        enable_fixture_verifier(package_root)
         environment = {
             **os.environ,
             "AGENTMAGE_CONTRACT_FIXTURE_ROOT": str(fixture_root),
