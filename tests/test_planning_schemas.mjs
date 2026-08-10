@@ -8,6 +8,7 @@ import {
   CONFIGURATION_BUNDLE_TYPE,
   CONFIGURATION_PROFILE_CATALOG_TYPE,
   CONFIGURATION_RESULT_TYPE,
+  CONFIGURATION_REVIEW_TYPES,
   CONFIGURATION_SECTION_TYPES,
   RECORD_TYPES,
   TEST_RECORD_TYPES,
@@ -20,6 +21,7 @@ import {
   validateConfigurationRecord,
   validateConfigurationProfiles,
   validateConfigurationResultFixtures,
+  validateConfigurationReviewFixtures,
   validateConfigurationSchemaReport,
   validatePlanningRecord,
   validatePlanningTemplates,
@@ -387,6 +389,48 @@ test("configuration-bound results reject incomplete or broadened records", () =>
       false,
     );
   }
+});
+
+test("configuration diff and rollback review examples satisfy closed schemas", () => {
+  const results = validateConfigurationReviewFixtures();
+  assert.deepEqual(
+    results.map((result) => result.recordType),
+    CONFIGURATION_REVIEW_TYPES,
+  );
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    [true, true],
+  );
+});
+
+test("configuration review schemas reject raw values and unsafe rollback claims", () => {
+  const diff = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/configuration/examples/configuration-diff.valid.json"),
+      "utf8",
+    ),
+  );
+  diff.changes[0].before_value = "private-value";
+  assert.equal(
+    validateConfiguration(CONFIGURATION_REVIEW_TYPES[0], diff).valid,
+    false,
+  );
+
+  const rollback = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/configuration/examples/configuration-rollback-report.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  rollback.backup_retained = false;
+  rollback.private_path_persisted = true;
+  assert.equal(
+    validateConfiguration(CONFIGURATION_REVIEW_TYPES[1], rollback).valid,
+    false,
+  );
 });
 
 test("configuration schemas reject missing versions and unknown fields", () => {

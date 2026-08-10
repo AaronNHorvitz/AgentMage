@@ -1,0 +1,131 @@
+{
+  "active_product_profile_count": 0,
+  "baseline_profile_id": "strict-local-read-only",
+  "effective_authority_broadening_profile_count": 0,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_effective_profile_count": 0,
+  "profiles": [
+    {
+      "activation_status": "inactive-no-product-registration",
+      "blocked_by": [
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [
+        "workspace.read"
+      ],
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_not_effective": [],
+      "product_registration": false,
+      "profile_id": "development"
+    },
+    {
+      "activation_status": "inactive-no-product-registration",
+      "blocked_by": [
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_not_effective": [],
+      "product_registration": false,
+      "profile_id": "synthetic-test"
+    },
+    {
+      "activation_status": "inactive-no-product-registration",
+      "blocked_by": [
+        "product-configuration-loader",
+        "story-16-read-only-tools"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "current-foundation",
+      "planned_not_effective": [],
+      "product_registration": false,
+      "profile_id": "strict-local-read-only"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.1",
+        "gate-v0.2",
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "future-v0.2",
+      "planned_not_effective": [
+        "knowledge.index",
+        "knowledge.search"
+      ],
+      "product_registration": false,
+      "profile_id": "knowledge"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.2",
+        "gate-v0.3",
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "future-v0.3",
+      "planned_not_effective": [
+        "workspace.write"
+      ],
+      "product_registration": false,
+      "profile_id": "write"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.3",
+        "gate-v0.4",
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "future-v0.4",
+      "planned_not_effective": [
+        "process.run",
+        "workspace.write"
+      ],
+      "product_registration": false,
+      "profile_id": "coding"
+    },
+    {
+      "activation_status": "future-disabled",
+      "blocked_by": [
+        "gate-v0.6",
+        "gate-v0.7",
+        "product-configuration-loader"
+      ],
+      "effective_added_from_baseline": [],
+      "effective_authority_broadening": false,
+      "effective_removed_from_baseline": [],
+      "network_effective": false,
+      "phase": "future-v0.7",
+      "planned_not_effective": [
+        "network.read"
+      ],
+      "product_registration": false,
+      "profile_id": "later-network"
+    }
+  ],
+  "record_type": "configuration-profile-capability-deltas",
+  "schema_version": 1
+}

@@ -1741,6 +1741,17 @@ mod tests {
 
     const SYNTHETIC_PROFILE: &[u8] =
         include_bytes!("../../../configuration/profiles/synthetic-test.json");
+    const MIGRATION_V0_PROFILE: &[u8] =
+        include_bytes!("../../../fixtures/configuration/migration/v0.valid.json");
+    const MIGRATION_V1_EXPECTED: &[u8] =
+        include_bytes!("../../../fixtures/configuration/migration/v1.expected.json");
+    const MIGRATION_V1_NOT_MIGRATABLE: &[u8] =
+        include_bytes!("../../../fixtures/configuration/migration/v1.not-migratable.invalid.json");
+    const MIGRATION_V0_RESERVED_VERSION: &[u8] = include_bytes!(
+        "../../../fixtures/configuration/migration/v0.reserved-version.invalid.json"
+    );
+    const MIGRATION_V0_MISSING_SECTION: &[u8] =
+        include_bytes!("../../../fixtures/configuration/migration/v0.missing-section.invalid.json");
     static TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
     fn manager() -> ConfigurationManager {
@@ -2235,6 +2246,45 @@ mod tests {
                 .allowed_capabilities,
             ["workspace.read"]
         );
+    }
+
+    #[test]
+    fn published_migration_fixtures_match_the_runtime_contract() {
+        let migrated = manager()
+            .migrate_v0(MIGRATION_V0_PROFILE)
+            .expect("published version zero fixture migrates");
+        let expected = manager()
+            .load_bytes(MIGRATION_V1_EXPECTED)
+            .expect("published version one fixture loads");
+        assert_eq!(migrated.configuration().sha256(), expected.sha256());
+        assert_eq!(
+            migrated.configuration().canonical_bytes(),
+            expected.canonical_bytes()
+        );
+        assert_eq!(migrated.changes().len(), 13);
+
+        for (fixture, error_code) in [
+            (
+                MIGRATION_V1_NOT_MIGRATABLE,
+                "configuration-unsupported-version",
+            ),
+            (
+                MIGRATION_V0_RESERVED_VERSION,
+                "configuration-contract-violation",
+            ),
+            (
+                MIGRATION_V0_MISSING_SECTION,
+                "configuration-contract-violation",
+            ),
+        ] {
+            assert_eq!(
+                manager()
+                    .migrate_v0(fixture)
+                    .expect_err("published invalid fixture must fail")
+                    .code(),
+                error_code
+            );
+        }
     }
 
     #[test]

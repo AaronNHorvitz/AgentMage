@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/configuration-rollback-report.schema.json",
+  "title": "AgentMage Configuration Rollback Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "operation_id",
+    "status",
+    "profile_id",
+    "expected_current_sha256",
+    "backup_sha256",
+    "restored_sha256",
+    "preimage_verified",
+    "backup_retained",
+    "atomic_replace",
+    "raw_configuration_persisted",
+    "private_path_persisted",
+    "error_code"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "record_type": {
+      "const": "configuration-rollback-report"
+    },
+    "operation_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "status": {
+      "enum": [
+        "restored",
+        "blocked",
+        "failed",
+        "uncertain"
+      ]
+    },
+    "profile_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "expected_current_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    },
+    "backup_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    },
+    "restored_sha256": {
+      "oneOf": [
+        {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "preimage_verified": {
+      "type": "boolean"
+    },
+    "backup_retained": {
+      "type": "boolean"
+    },
+    "atomic_replace": {
+      "type": "boolean"
+    },
+    "raw_configuration_persisted": {
+      "const": false
+    },
+    "private_path_persisted": {
+      "const": false
+    },
+    "error_code": {
+      "oneOf": [
+        {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "restored"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "restored_sha256": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+          },
+          "preimage_verified": {
+            "const": true
+          },
+          "backup_retained": {
+            "const": true
+          },
+          "atomic_replace": {
+            "const": true
+          },
+          "error_code": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "blocked",
+              "failed",
+              "uncertain"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "error_code": {
+            "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+          }
+        }
+      }
+    }
+  ]
+}

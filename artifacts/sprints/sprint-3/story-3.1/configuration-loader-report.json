@@ -77,7 +77,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "aa0fbfac90624120018a0efbe58b94eff5ddc86994fdf150f27737f966b41a9a"
+      "sha256": "906d1ab6d826bbf383d85de3d97449f6dbf0e9b24b10a9b7ce8ba4da46ca7914"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
@@ -92,8 +92,28 @@
       "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
     },
     {
+      "path": "fixtures/configuration/migration/v0.valid.json",
+      "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
+    },
+    {
+      "path": "fixtures/configuration/migration/v1.expected.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "fixtures/configuration/migration/v1.not-migratable.invalid.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "fixtures/configuration/migration/v0.reserved-version.invalid.json",
+      "sha256": "2f61f504a5ca486cbaad6a958a3b3962e0c75dcdf0d3e6f002c530f05246e704"
+    },
+    {
+      "path": "fixtures/configuration/migration/v0.missing-section.invalid.json",
+      "sha256": "6f012e1d4b12f6bb20191b70b050848b5de1487f11ce05f8208f69cb59810689"
+    },
+    {
       "path": "scripts/configuration_loader_evidence.py",
-      "sha256": "f2c2a5981de7323d3a135ef10c65635baaef2aa64144e1bfea6e0ddaab86d768"
+      "sha256": "956bde2efeabe5a662c42daae5c4c980f467c49cbd1b39eafaf7f8a25fbaa298"
     },
     {
       "path": "tests/test_configuration_loader_evidence.py",
@@ -104,7 +124,7 @@
   "summary": {
     "atomic_backup": "pass-content-addressed-private-file",
     "failed_test_count": 0,
-    "focused_test_count": 10,
+    "focused_test_count": 11,
     "migration": "pass-version-0-to-1-only",
     "redacted_diff": "pass-hash-only-values",
     "rollback": "pass-preimage-checked",
@@ -121,6 +141,7 @@
     "migrates_only_version_zero_with_fixed_non_broadening_operations",
     "migration_rejects_wrong_source_ambiguous_version_and_missing_section",
     "mirrors_published_identifier_version_collection_and_numeric_bounds",
+    "published_migration_fixtures_match_the_runtime_contract",
     "rejects_permission_network_logging_and_budget_broadening",
     "rejects_unknown_duplicate_missing_unsupported_and_oversized_input",
     "safe_defaults_are_explicit_read_only_and_minimum_authority"

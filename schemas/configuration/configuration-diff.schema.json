@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/configuration-diff.schema.json",
+  "title": "AgentMage Redacted Configuration Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "before_sha256",
+    "after_sha256",
+    "authority_broadening",
+    "changes"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "record_type": {
+      "const": "configuration-diff"
+    },
+    "before_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    },
+    "after_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    },
+    "authority_broadening": {
+      "type": "boolean"
+    },
+    "changes": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/change"
+      }
+    }
+  },
+  "$defs": {
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "before_sha256",
+        "after_sha256",
+        "impact"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/(?:[^/~]|~0|~1)+(?:/(?:[^/~]|~0|~1)+)*$",
+          "maxLength": 4096
+        },
+        "before_sha256": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+        },
+        "after_sha256": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+        },
+        "impact": {
+          "enum": [
+            "authority-broadening",
+            "authority-restriction",
+            "resource-increase",
+            "resource-restriction",
+            "operational"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "budget": {
+    "maximum_concurrency": 1,
+    "maximum_context_tokens": 4096,
+    "maximum_file_count": 1000,
+    "maximum_input_bytes": 1048576,
+    "maximum_memory_bytes": 1073741824,
+    "maximum_operation_milliseconds": 60000,
+    "maximum_output_bytes": 262144,
+    "maximum_output_tokens": 1024,
+    "maximum_processes": 0,
+    "maximum_tree_depth": 64
+  },
+  "core": {
+    "configuration_mode": "synthetic-test",
+    "inheritance_mode": "restrict-only",
+    "product_id": "agentmage",
+    "profile": "synthetic-test",
+    "startup_failure_policy": "fail-closed",
+    "strict_local": true
+  },
+  "logging": {
+    "destination": {
+      "kind": "managed-local-file",
+      "managed_relative_path": "state/logs/agentmage.jsonl"
+    },
+    "level": "info",
+    "maximum_event_bytes": 16384,
+    "record_environment_values": false,
+    "record_prompts": false,
+    "record_tool_arguments": false,
+    "redaction": {
+      "credentials": "redact",
+      "environment_values": "drop",
+      "private_paths": "redact",
+      "secret_values": "redact"
+    },
+    "structured": true
+  },
+  "model": {
+    "automatic_routing": false,
+    "decoding": {
+      "deterministic": true,
+      "maximum_context_tokens": 4096,
+      "maximum_output_tokens": 1024,
+      "seed": 104729,
+      "temperature": 0,
+      "top_k": 1
+    },
+    "enabled": false,
+    "manifest_path": "fixtures/fake-model-manifest.json",
+    "model_profile_id": "fake-model-v1",
+    "network_access": false,
+    "runtime_adapter_id": "fake-inference-runtime-v1",
+    "transport": "local-stdio"
+  },
+  "permission": {
+    "allowed_capabilities": [
+      "workspace.read"
+    ],
+    "authority_inheritance": "restrict-only",
+    "default_effect": "deny",
+    "grant_policy": {
+      "exact_scope_required": true,
+      "expiry_required": true,
+      "replay_policy": "deny",
+      "single_use": true,
+      "transferable": false
+    },
+    "model_authority": "none",
+    "network": {
+      "allowed_endpoints": [],
+      "mode": "deny-all"
+    }
+  },
+  "platform": {
+    "adapter_id": "linux-platform-v1",
+    "administrator_required": false,
+    "ambient_dependency_policy": "deny",
+    "path_identity_strategy": "descriptor-relative",
+    "platform_id": "fedora-x86_64",
+    "sandbox_profile_id": "synthetic-no-side-effect-v1",
+    "secret_provider_id": "secret-service",
+    "standard_user_required": true
+  },
+  "retention": {
+    "backup_policy": "exclude-by-default",
+    "expired_data_action": "delete-on-next-startup-or-maintenance",
+    "logs_days": 14,
+    "receipts_days": 90,
+    "secure_deletion_claim": "best-effort-no-physical-erasure-claim",
+    "sessions_days": 30,
+    "temporary_artifacts_minutes": 60
+  },
+  "schema_version": 0,
+  "skill": {
+    "capability_ceiling": [],
+    "catalog_paths": [],
+    "enablement": "manual-only",
+    "maximum_enabled_skills": 0,
+    "self_modification": "deny",
+    "unsigned_skill_policy": "disabled"
+  },
+  "tool": {
+    "registry_path": "fixtures/tool-registry.json",
+    "tools": [
+      {
+        "enabled": true,
+        "integrity_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "required_capabilities": [
+          "workspace.read"
+        ],
+        "side_effect_class": "read",
+        "tool_id": "synthetic-read-file",
+        "version": "1.0.0"
+      }
+    ],
+    "unregistered_tool_policy": "deny"
+  },
+  "workspace": {
+    "default_access": "deny",
+    "maximum_roots": 1,
+    "roots": [
+      {
+        "access": "read-only",
+        "follow_mount_changes": false,
+        "locator": "fixtures/generated/workspace",
+        "locator_kind": "managed-relative",
+        "root_id": "synthetic-workspace"
+      }
+    ],
+    "symlink_policy": "deny"
+  }
+}

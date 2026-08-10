@@ -1,0 +1,16 @@
+{
+  "atomic_replace": true,
+  "backup_retained": true,
+  "backup_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "error_code": null,
+  "expected_current_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "operation_id": "synthetic-configuration-rollback",
+  "preimage_verified": true,
+  "private_path_persisted": false,
+  "profile_id": "strict-local-read-only",
+  "raw_configuration_persisted": false,
+  "record_type": "configuration-rollback-report",
+  "restored_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "schema_version": 1,
+  "status": "restored"
+}
