@@ -9,7 +9,11 @@
       "agentmage-kernel-engine",
       "agentmage-platform-linux"
     ],
-    "cargo_external_packages": [],
+    "cargo_external_packages": [
+      "serde",
+      "serde_json",
+      "sha2"
+    ],
     "vscode_extension_packages": [],
     "swift_packages": []
   },

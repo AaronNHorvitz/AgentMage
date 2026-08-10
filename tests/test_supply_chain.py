@@ -39,6 +39,17 @@ class SupplyChainTests(unittest.TestCase):
         failures = validate_documents(mutated, self.bom, self.hash_text)
         self.assertTrue(any("missing lock integrity" in item for item in failures))
 
+    def test_external_cargo_packages_use_registry_checksums(self) -> None:
+        external = [
+            item
+            for item in self.provenance["components"]
+            if item["ecosystem"] == "cargo" and item["source"]["type"] == "registry"
+        ]
+        self.assertEqual(len(external), 21)
+        for component in external:
+            self.assertTrue(component["source"]["url"].startswith("https://crates.io/crates/"))
+            self.assertEqual(component["integrity"], f"sha256:{component['hashes'][0]['content']}")
+
     def test_sbom_omission_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.bom)
         mutated["components"].pop()

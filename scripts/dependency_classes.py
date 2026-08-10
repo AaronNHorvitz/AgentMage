@@ -26,6 +26,7 @@ EXPECTED_INTERNAL_CARGO = {
     "agentmage-kernel-engine",
     "agentmage-platform-linux",
 }
+EXPECTED_EXTERNAL_CARGO = {"serde", "serde_json", "sha2"}
 EXPECTED_ROOT_NPM = {
     "@mermaid-js/mermaid-cli",
     "ajv",
@@ -88,7 +89,9 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
 
     if set(production.get("cargo_internal_path_packages", [])) != EXPECTED_INTERNAL_CARGO:
         failures.append("production Cargo path-package class does not match manifests")
-    for key in ("cargo_external_packages", "vscode_extension_packages", "swift_packages"):
+    if set(production.get("cargo_external_packages", [])) != EXPECTED_EXTERNAL_CARGO:
+        failures.append("production external Cargo class does not match manifests")
+    for key in ("vscode_extension_packages", "swift_packages"):
         if production.get(key) != []:
             failures.append(f"undeclared production dependency class must be empty: {key}")
     if set(development.get("root_npm_packages", [])) != EXPECTED_ROOT_NPM:
@@ -156,7 +159,7 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
             failures.append(f"{relative} contains undeclared Cargo development dependencies")
         if build_dependencies:
             failures.append(f"{relative} contains undeclared Cargo build dependencies")
-    if cargo_production != EXPECTED_INTERNAL_CARGO:
+    if cargo_production != EXPECTED_INTERNAL_CARGO | EXPECTED_EXTERNAL_CARGO:
         failures.append("Cargo production dependency class drifted")
 
     if ".package(" in swift_manifest:

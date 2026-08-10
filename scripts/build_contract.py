@@ -36,7 +36,10 @@ EXPECTED_CARGO_PACKAGES = {
         {"agentmage-kernel-contracts"},
     ),
     "kernel/contracts": ("agentmage-kernel-contracts", set()),
-    "kernel/engine": ("agentmage-kernel-engine", {"agentmage-kernel-contracts"}),
+    "kernel/engine": (
+        "agentmage-kernel-engine",
+        {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},
+    ),
     "platforms/linux": ("agentmage-platform-linux", {"agentmage-kernel-contracts"}),
     "release/xtask": ("agentmage-xtask", set()),
     "shells/host": (
@@ -158,6 +161,9 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
     try:
         workspace = read_toml(root / "Cargo.toml")
         cargo_lock = read_toml(root / "Cargo.lock")
+        cargo_external_catalog = read_json(
+            root / "supply-chain/cargo-external-catalog.json"
+        )
         root_package = read_json(root / "package.json")
         npm_lock = read_json(root / "package-lock.json")
         swift_lock = read_json(root / "platforms/macos/Package.resolved")
@@ -197,13 +203,30 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
             failures.append(f"{path} contains an undeclared Cargo dependency class")
 
     lock_packages = cargo_lock.get("package", [])
-    if {item.get("name") for item in lock_packages} != {
-        value[0] for value in EXPECTED_CARGO_PACKAGES.values()
-    }:
+    workspace_names = {value[0] for value in EXPECTED_CARGO_PACKAGES.values()}
+    catalog_keys = {
+        (item.get("name"), item.get("version"))
+        for item in cargo_external_catalog.get("packages", [])
+        if isinstance(item, dict)
+    }
+    lock_external_keys = {
+        (item.get("name"), item.get("version"))
+        for item in lock_packages
+        if item.get("source") is not None
+    }
+    if {item.get("name") for item in lock_packages if item.get("source") is None} != workspace_names:
         failures.append("Cargo.lock package closure does not match workspace packages")
+    if cargo_external_catalog.get("schema_version") != 1 or catalog_keys != lock_external_keys:
+        failures.append("Cargo external catalog does not match the locked package closure")
     for item in lock_packages:
-        if "source" in item or "checksum" in item:
-            failures.append("Cargo.lock contains an undeclared external package")
+        if item.get("source") is None:
+            if "checksum" in item:
+                failures.append("workspace Cargo package unexpectedly has a checksum")
+        elif (
+            item.get("source") != "registry+https://github.com/rust-lang/crates.io-index"
+            or not isinstance(item.get("checksum"), str)
+        ):
+            failures.append("Cargo.lock contains an unapproved external package")
 
     if root_package.get("packageManager") != "npm@11.12.1":
         failures.append("root package manager must be pinned to npm 11.12.1")

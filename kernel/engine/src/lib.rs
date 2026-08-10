@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Versioned, fail-closed configuration loading and recovery.
+pub mod configuration;
+
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-engine";
 

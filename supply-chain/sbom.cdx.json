@@ -99,7 +99,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "42670c92b9262c859210005d371c3027836d303546e9fd02ffd34f2c20bc73b7"
+          "content": "78cbffd4014f24bd52b64fa12ac7ffe5f55ac655737864c071256511f8e5ce3f"
         }
       ],
       "licenses": [
@@ -188,6 +188,617 @@
       "version": "0.0.0"
     },
     {
+      "bom-ref": "cargo:block-buffer@0.12.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "block-buffer",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/block-buffer@0.12.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.12.1"
+    },
+    {
+      "bom-ref": "cargo:cfg-if@1.0.4",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "cfg-if",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/cfg-if@1.0.4",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.4"
+    },
+    {
+      "bom-ref": "cargo:const-oid@0.10.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "const-oid",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/const-oid@0.10.2",
+      "scope": "required",
+      "type": "library",
+      "version": "0.10.2"
+    },
+    {
+      "bom-ref": "cargo:cpufeatures@0.3.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8b2a41393f66f16b0823bb79094d54ac5fbd34ab292ddafb9a0456ac9f87d201"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "cpufeatures",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/cpufeatures@0.3.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.3.0"
+    },
+    {
+      "bom-ref": "cargo:crypto-common@0.2.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "crypto-common",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/crypto-common@0.2.2",
+      "scope": "required",
+      "type": "library",
+      "version": "0.2.2"
+    },
+    {
+      "bom-ref": "cargo:digest@0.11.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "digest",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/digest@0.11.3",
+      "scope": "required",
+      "type": "library",
+      "version": "0.11.3"
+    },
+    {
+      "bom-ref": "cargo:hybrid-array@0.4.14",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "707114b52a152fa7bdb290cd7cd5912d9467273b6d74e21b8d81aca1f8533f6b"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "hybrid-array",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/hybrid-array@0.4.14",
+      "scope": "required",
+      "type": "library",
+      "version": "0.4.14"
+    },
+    {
+      "bom-ref": "cargo:itoa@1.0.18",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "itoa",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/itoa@1.0.18",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.18"
+    },
+    {
+      "bom-ref": "cargo:libc@0.2.189",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "libc",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/libc@0.2.189",
+      "scope": "required",
+      "type": "library",
+      "version": "0.2.189"
+    },
+    {
+      "bom-ref": "cargo:memchr@2.8.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Unlicense OR MIT"
+        }
+      ],
+      "name": "memchr",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/memchr@2.8.3",
+      "scope": "required",
+      "type": "library",
+      "version": "2.8.3"
+    },
+    {
+      "bom-ref": "cargo:proc-macro2@1.0.107",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "proc-macro2",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/proc-macro2@1.0.107",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.107"
+    },
+    {
+      "bom-ref": "cargo:quote@1.0.47",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "quote",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/quote@1.0.47",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.47"
+    },
+    {
+      "bom-ref": "cargo:serde@1.0.229",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "serde",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/serde@1.0.229",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.229"
+    },
+    {
+      "bom-ref": "cargo:serde_core@1.0.229",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "serde_core",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/serde_core@1.0.229",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.229"
+    },
+    {
+      "bom-ref": "cargo:serde_derive@1.0.229",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "serde_derive",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/serde_derive@1.0.229",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.229"
+    },
+    {
+      "bom-ref": "cargo:serde_json@1.0.151",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "serde_json",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/serde_json@1.0.151",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.151"
+    },
+    {
+      "bom-ref": "cargo:sha2@0.11.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "sha2",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/sha2@0.11.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.11.0"
+    },
+    {
+      "bom-ref": "cargo:syn@3.0.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "53e9bae58849f64dfa4f5d5ae372c8341f7305f82a3868709269343628b659a3"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "syn",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/syn@3.0.3",
+      "scope": "required",
+      "type": "library",
+      "version": "3.0.3"
+    },
+    {
+      "bom-ref": "cargo:typenum@1.20.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "typenum",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/typenum@1.20.1",
+      "scope": "required",
+      "type": "library",
+      "version": "1.20.1"
+    },
+    {
+      "bom-ref": "cargo:unicode-ident@1.0.24",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        }
+      ],
+      "name": "unicode-ident",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/unicode-ident@1.0.24",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.24"
+    },
+    {
+      "bom-ref": "cargo:zmij@1.0.23",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "zmij",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/zmij@1.0.23",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.23"
+    },
+    {
       "bom-ref": "npm-workspace:@agentmage/vscode-shell@0.0.0",
       "hashes": [
         {
@@ -223,7 +834,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "918a19c66bbe5691d30ce29749ce90b242fa9ed4b698bae9f7795448ffb7ede9"
+          "content": "7fab519354f057f938cce7a8cbf9b3c6686386b88e01b7b6ce092b4cf91709e3"
         }
       ],
       "licenses": [
@@ -11750,16 +12361,16 @@
   "dependencies": [
     {
       "dependsOn": [
-        "cargo:agentmage-kernel-contracts@{'workspace': True}"
+        "cargo:agentmage-kernel-contracts@0.0.0"
       ],
       "ref": "cargo:agentmage-capability-read-only@0.0.0"
     },
     {
       "dependsOn": [
-        "cargo:agentmage-capability-read-only@{'workspace': True}",
-        "cargo:agentmage-kernel-contracts@{'workspace': True}",
-        "cargo:agentmage-kernel-engine@{'workspace': True}",
-        "cargo:agentmage-platform-linux@{'workspace': True}"
+        "cargo:agentmage-capability-read-only@0.0.0",
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:agentmage-kernel-engine@0.0.0",
+        "cargo:agentmage-platform-linux@0.0.0"
       ],
       "ref": "cargo:agentmage-host@0.0.0"
     },
@@ -11769,19 +12380,145 @@
     },
     {
       "dependsOn": [
-        "cargo:agentmage-kernel-contracts@{'workspace': True}"
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0"
       ],
       "ref": "cargo:agentmage-kernel-engine@0.0.0"
     },
     {
       "dependsOn": [
-        "cargo:agentmage-kernel-contracts@{'workspace': True}"
+        "cargo:agentmage-kernel-contracts@0.0.0"
       ],
       "ref": "cargo:agentmage-platform-linux@0.0.0"
     },
     {
       "dependsOn": [],
       "ref": "cargo:agentmage-xtask@0.0.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:hybrid-array@0.4.14"
+      ],
+      "ref": "cargo:block-buffer@0.12.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:cfg-if@1.0.4"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:const-oid@0.10.2"
+    },
+    {
+      "dependsOn": [
+        "cargo:libc@0.2.189"
+      ],
+      "ref": "cargo:cpufeatures@0.3.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:hybrid-array@0.4.14"
+      ],
+      "ref": "cargo:crypto-common@0.2.2"
+    },
+    {
+      "dependsOn": [
+        "cargo:block-buffer@0.12.1",
+        "cargo:const-oid@0.10.2",
+        "cargo:crypto-common@0.2.2"
+      ],
+      "ref": "cargo:digest@0.11.3"
+    },
+    {
+      "dependsOn": [
+        "cargo:typenum@1.20.1"
+      ],
+      "ref": "cargo:hybrid-array@0.4.14"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:itoa@1.0.18"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:libc@0.2.189"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:memchr@2.8.3"
+    },
+    {
+      "dependsOn": [
+        "cargo:unicode-ident@1.0.24"
+      ],
+      "ref": "cargo:proc-macro2@1.0.107"
+    },
+    {
+      "dependsOn": [
+        "cargo:proc-macro2@1.0.107"
+      ],
+      "ref": "cargo:quote@1.0.47"
+    },
+    {
+      "dependsOn": [
+        "cargo:serde_core@1.0.229",
+        "cargo:serde_derive@1.0.229"
+      ],
+      "ref": "cargo:serde@1.0.229"
+    },
+    {
+      "dependsOn": [
+        "cargo:serde_derive@1.0.229"
+      ],
+      "ref": "cargo:serde_core@1.0.229"
+    },
+    {
+      "dependsOn": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3"
+      ],
+      "ref": "cargo:serde_derive@1.0.229"
+    },
+    {
+      "dependsOn": [
+        "cargo:itoa@1.0.18",
+        "cargo:memchr@2.8.3",
+        "cargo:serde@1.0.229",
+        "cargo:serde_core@1.0.229",
+        "cargo:zmij@1.0.23"
+      ],
+      "ref": "cargo:serde_json@1.0.151"
+    },
+    {
+      "dependsOn": [
+        "cargo:cfg-if@1.0.4",
+        "cargo:cpufeatures@0.3.0",
+        "cargo:digest@0.11.3"
+      ],
+      "ref": "cargo:sha2@0.11.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:unicode-ident@1.0.24"
+      ],
+      "ref": "cargo:syn@3.0.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:typenum@1.20.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:unicode-ident@1.0.24"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:zmij@1.0.23"
     },
     {
       "dependsOn": [],
@@ -14110,7 +14847,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:81f630f9-57db-5f65-92ab-985a1284d9f8",
+  "serialNumber": "urn:uuid:52a4ec99-d636-53f9-aafc-0a0be406378c",
   "specVersion": "1.6",
   "version": 1
 }

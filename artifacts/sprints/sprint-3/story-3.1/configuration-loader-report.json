@@ -1,0 +1,107 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "configuration",
+        "--locked"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    }
+  ],
+  "configuration_content_persisted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "platform_execution": "fedora-linux",
+  "private_paths_persisted": false,
+  "product_loader_registration_claim": "none",
+  "product_profile_activation_claim": "none",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "f0fa7de3ba5baeda84181098ef11d17df4b00d09058c38e37cfbd8399ed39a1e"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "768ff57311bd3de95000fcace3de631a047a18eff1e78962f2ed09cc84f8410a"
+    },
+    {
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "9ef97e8aa9614a91b12c298c26d4a41653b5c8f778503f2e6559a35cd14b66e4"
+    },
+    {
+      "path": "schemas/configuration/agent-configuration.schema.json",
+      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+    },
+    {
+      "path": "configuration/profiles/strict-local-read-only.json",
+      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+    },
+    {
+      "path": "configuration/profiles/synthetic-test.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "scripts/configuration_loader_evidence.py",
+      "sha256": "82203c1312fb75c7dda499d98042405320c0c5984c0619fff5b7e83c699df052"
+    },
+    {
+      "path": "tests/test_configuration_loader_evidence.py",
+      "sha256": "49d27e53a969d327eee661d14f0330338d0ce1e7c29c815ee820a043c69f455e"
+    }
+  ],
+  "status": "pass-shared-linux-configuration-loader",
+  "summary": {
+    "atomic_backup": "pass-content-addressed-private-file",
+    "failed_test_count": 0,
+    "focused_test_count": 10,
+    "migration": "pass-version-0-to-1-only",
+    "redacted_diff": "pass-hash-only-values",
+    "rollback": "pass-preimage-checked",
+    "safe_defaults": "pass-explicit-read-only-minimum-authority",
+    "skipped_test_count": 0,
+    "unknown_and_duplicate_field_rejection": "pass"
+  },
+  "task_id": "3.1.1.3",
+  "tests": [
+    "atomic_apply_retains_backup_and_rollback_restores_exact_identity",
+    "diff_is_stable_redacted_and_classifies_authority_and_resource_changes",
+    "invalid_candidate_and_stale_rollback_preimage_preserve_current_file",
+    "loads_canonical_profile_deterministically",
+    "migrates_only_version_zero_with_fixed_non_broadening_operations",
+    "migration_rejects_wrong_source_ambiguous_version_and_missing_section",
+    "mirrors_published_identifier_version_collection_and_numeric_bounds",
+    "rejects_permission_network_logging_and_budget_broadening",
+    "rejects_unknown_duplicate_missing_unsupported_and_oversized_input",
+    "safe_defaults_are_explicit_read_only_and_minimum_authority"
+  ]
+}

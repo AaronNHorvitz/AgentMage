@@ -2,8 +2,8 @@
   "additional_properties_permitted": false,
   "canonical_example": {
     "path": "schemas/testing/examples/fuzz-result.valid.json",
-    "record_sha256": "55319c7b25fb75a32f0ddc1dc932220e62f6b4b8fe19f716adf3f05f7e091142",
-    "sha256": "c9445c98622cf42ae62f157d82ab21b276f0c2a2fcf3763bd727bccd9e2df3c3"
+    "record_sha256": "cfd60c3f572949eee7cf32a27cef877535d21d220efd56e67f667965a297c3e8",
+    "sha256": "4664a001a1167fec09af00c144803d10e97212df0b114366725ce4dafdc2047f"
   },
   "macos_execution_status": "blocked-macos",
   "macos_support_claim": "none",

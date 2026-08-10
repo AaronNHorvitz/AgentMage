@@ -30,6 +30,7 @@ INPUT_PATHS = (
     "platforms/macos/Package.swift",
     "rust-toolchain.toml",
     "shells/vscode/package.json",
+    "supply-chain/cargo-external-catalog.json",
 )
 
 
@@ -97,6 +98,7 @@ def npm_name(lock_path: str) -> str:
 def cargo_components(root: Path) -> tuple[list[dict[str, Any]], dict[str, list[str]]]:
     cargo_lock = read_toml(root / "Cargo.lock")
     workspace = read_toml(root / "Cargo.toml")
+    external_catalog = read_json(root / "supply-chain/cargo-external-catalog.json")
     members = workspace["workspace"]["members"]
     workspace_license = workspace["workspace"]["package"]["license"]
     member_by_name: dict[str, tuple[str, dict[str, Any]]] = {}
@@ -104,15 +106,35 @@ def cargo_components(root: Path) -> tuple[list[dict[str, Any]], dict[str, list[s
         manifest = read_toml(root / member / "Cargo.toml")
         member_by_name[manifest["package"]["name"]] = (member, manifest)
 
+    external_licenses = {
+        (item["name"], item["version"]): item["license"]
+        for item in external_catalog.get("packages", [])
+    }
+    lock_packages = cargo_lock.get("package", [])
+    external_lock_keys = {
+        (item["name"], item["version"])
+        for item in lock_packages
+        if item.get("source") is not None
+    }
+    if external_catalog.get("schema_version") != 1:
+        raise ValueError("Cargo external license catalog schema version is invalid")
+    if set(external_licenses) != external_lock_keys:
+        raise ValueError("Cargo external license catalog does not match Cargo.lock")
+    package_id_by_name = {
+        item["name"]: f"cargo:{item['name']}@{item['version']}" for item in lock_packages
+    }
+    if len(package_id_by_name) != len(lock_packages):
+        raise ValueError("Cargo.lock contains ambiguous package names")
+
     components: list[dict[str, Any]] = []
     edges: dict[str, list[str]] = {}
-    for package in cargo_lock.get("package", []):
+    for package in lock_packages:
         name = package["name"]
         version = package["version"]
-        member, manifest = member_by_name[name]
         component_id = f"cargo:{name}@{version}"
-        components.append(
-            {
+        if name in member_by_name:
+            member, manifest = member_by_name[name]
+            component = {
                 "component_id": component_id,
                 "ecosystem": "cargo",
                 "name": name,
@@ -128,12 +150,35 @@ def cargo_components(root: Path) -> tuple[list[dict[str, Any]], dict[str, list[s
                 "integrity": None,
                 "hashes": [{"algorithm": "SHA-256", "content": tree_hash(root / member)}],
             }
-        )
+        else:
+            checksum = package.get("checksum")
+            if package.get("source") != "registry+https://github.com/rust-lang/crates.io-index":
+                raise ValueError(f"Cargo package has an unapproved source: {name}")
+            if not isinstance(checksum, str) or not re.fullmatch(r"[a-f0-9]{64}", checksum):
+                raise ValueError(f"Cargo package is missing its registry checksum: {name}")
+            component = {
+                "component_id": component_id,
+                "ecosystem": "cargo",
+                "name": name,
+                "version": version,
+                "classification": "production",
+                "scope": "required",
+                "license": external_licenses[(name, version)],
+                "source": {
+                    "type": "registry",
+                    "url": f"https://crates.io/crates/{quote(name, safe='')}/{quote(version, safe='')}",
+                },
+                "integrity": f"sha256:{checksum}",
+                "hashes": [{"algorithm": "SHA-256", "content": checksum}],
+            }
+        components.append(component)
         dependencies = []
         for dependency in package.get("dependencies", []):
             dependency_name = dependency.split(" ", 1)[0]
-            dependency_version = member_by_name[dependency_name][1]["package"]["version"]
-            dependencies.append(f"cargo:{dependency_name}@{dependency_version}")
+            dependency_id = package_id_by_name.get(dependency_name)
+            if dependency_id is None:
+                raise ValueError(f"Cargo dependency is absent from the lock: {dependency_name}")
+            dependencies.append(dependency_id)
         edges[component_id] = sorted(dependencies)
     return components, edges
 
@@ -372,6 +417,12 @@ def validate_documents(
                 failures.append(f"npm component has unapproved source: {component_id}")
             if not component.get("integrity"):
                 failures.append(f"npm component missing lock integrity: {component_id}")
+        if component.get("ecosystem") == "cargo" and component.get("source", {}).get("type") == "registry":
+            source = component.get("source", {}).get("url", "")
+            if not source.startswith("https://crates.io/crates/"):
+                failures.append(f"Cargo component has unapproved source: {component_id}")
+            if not str(component.get("integrity", "")).startswith("sha256:"):
+                failures.append(f"Cargo component missing lock integrity: {component_id}")
 
     if bom.get("bomFormat") != "CycloneDX" or bom.get("specVersion") != "1.6":
         failures.append("SBOM must use CycloneDX 1.6")

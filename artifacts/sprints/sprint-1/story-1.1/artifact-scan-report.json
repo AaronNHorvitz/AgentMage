@@ -53,7 +53,7 @@
   },
   "surfaces": [
     {
-      "files_scanned": 12,
+      "files_scanned": 13,
       "findings": [],
       "surface": "source"
     },
@@ -68,7 +68,7 @@
       "surface": "package"
     },
     {
-      "components_scanned": 379,
+      "components_scanned": 400,
       "files_scanned": 1,
       "findings": [
         {

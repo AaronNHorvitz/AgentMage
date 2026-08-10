@@ -16,7 +16,12 @@
     ".ts"
   ],
   "approved_production_licenses": [
-    "Apache-2.0"
+    "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "Apache-2.0",
+    "Apache-2.0 OR MIT",
+    "MIT",
+    "MIT OR Apache-2.0",
+    "Unlicense OR MIT"
   ],
   "excluded_development_noassertion_disposition": "open-review",
   "binary_magic": [

@@ -9,6 +9,12 @@ Run `npm run supply-chain:check` in normal verification. The check fails for a
 stale component closure, changed lock integrity, undeclared registry source,
 missing license disposition, missing hash, or promoted macOS status.
 
+External Cargo packages are closed against `Cargo.lock` by
+`cargo-external-catalog.json`. The catalog records the SPDX expression from each
+selected registry package manifest; the generated provenance and SBOM bind each
+entry to the corresponding crates.io source and lock checksum. Any omitted,
+additional, renamed, or re-versioned package fails regeneration.
+
 Development-only packages remain in the SBOM with `excluded` scope so the build
 toolchain is reviewable without representing those packages as shipped runtime
 dependencies. `NOASSERTION` records absent upstream license metadata visibly; it

@@ -21,6 +21,7 @@
     "kernel/contracts/Cargo.toml",
     "kernel/contracts/src/lib.rs",
     "kernel/engine/Cargo.toml",
+    "kernel/engine/src/configuration.rs",
     "kernel/engine/src/lib.rs",
     "package-lock.json",
     "package.json",
@@ -40,7 +41,8 @@
     "shells/vscode/package.json",
     "shells/vscode/src/index.ts",
     "shells/vscode/test/index.test.ts",
-    "shells/vscode/tsconfig.json"
+    "shells/vscode/tsconfig.json",
+    "supply-chain/cargo-external-catalog.json"
   ],
   "lockfiles": [
     "Cargo.lock",

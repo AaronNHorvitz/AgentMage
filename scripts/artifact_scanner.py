@@ -32,6 +32,14 @@ EXPECTED_SEEDS = (
     "undeclared-binary",
     "undeclared-license",
 )
+EXPECTED_PRODUCTION_LICENSES = (
+    "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "Apache-2.0",
+    "Apache-2.0 OR MIT",
+    "MIT",
+    "MIT OR Apache-2.0",
+    "Unlicense OR MIT",
+)
 SECRET_ASSIGNMENT = re.compile(
     r"(?i)\b(?:api[_-]?key|password|token)\s*=\s*[\"'][^\"']+[\"']"
 )
@@ -69,7 +77,7 @@ def validate_policy(policy: Any) -> list[str]:
         failures.append("artifact scan source roots drifted")
     if tuple(policy.get("source_extensions", [])) != EXPECTED_EXTENSIONS:
         failures.append("artifact scan source extensions drifted")
-    if policy.get("approved_production_licenses") != ["Apache-2.0"]:
+    if tuple(policy.get("approved_production_licenses", [])) != EXPECTED_PRODUCTION_LICENSES:
         failures.append("production license allowlist drifted")
     if policy.get("excluded_development_noassertion_disposition") != "open-review":
         failures.append("missing development license metadata must remain open review")
