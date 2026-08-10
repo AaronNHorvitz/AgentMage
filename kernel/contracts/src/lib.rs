@@ -22,8 +22,9 @@ pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
 };
 pub use task::{
-    Action, ActionKind, ActionState, Plan, PlanState, PlanStep, PlanStepState, Task, TaskStatus,
-    WorkPacket, WorkPacketState,
+    Action, ActionKind, ActionState, BudgetLimit, BudgetResource, CompletionEvidence,
+    DataSensitivity, Plan, PlanState, PlanStep, PlanStepState, RollbackPlan, StopCondition,
+    StopConditionKind, Task, TaskStatus, WorkPacket, WorkPacketState,
 };
 pub use tool::{OperationOutcome, ToolCall, ToolDefinition, ToolResult};
 

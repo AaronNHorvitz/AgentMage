@@ -64,6 +64,102 @@ pub enum WorkPacketState {
     Completed,
     /// The packet was cancelled.
     Cancelled,
+    /// A separately identified packet replaced this immutable revision line.
+    Superseded,
+}
+
+/// Resource measured by one declared work-packet budget.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BudgetResource {
+    /// Number of plan steps attempted.
+    PlanSteps,
+    /// Number of deterministic tool calls attempted.
+    ToolCalls,
+    /// Number of local model calls attempted.
+    ModelCalls,
+    /// Total bytes admitted as operation input.
+    InputBytes,
+    /// Total bytes emitted as operation output.
+    OutputBytes,
+    /// Logical elapsed-time budget in milliseconds.
+    ElapsedMilliseconds,
+}
+
+/// One explicit upper bound carried by a descriptive work packet.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BudgetLimit {
+    /// Resource constrained by this entry.
+    pub resource: BudgetResource,
+    /// Inclusive non-zero maximum.
+    pub limit: u64,
+}
+
+/// Reason a bounded run must stop before proposing another action.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StopConditionKind {
+    /// All acceptance checks have verified evidence.
+    AcceptanceSatisfied,
+    /// A new decision from the user is required.
+    UserDecisionRequired,
+    /// Current policy denies the next action.
+    PolicyDenied,
+    /// A typed error prevents safe continuation.
+    Error,
+    /// Cancellation was requested.
+    Cancelled,
+    /// A declared deadline was reached.
+    DeadlineReached,
+    /// A declared resource budget was exhausted.
+    BudgetExhausted,
+    /// An attempted effect has an uncertain terminal state.
+    UncertainResult,
+}
+
+/// One explicit descriptive stopping rule.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StopCondition {
+    /// Stable stop-condition class.
+    pub kind: StopConditionKind,
+    /// Bounded explanation of how the condition applies to this packet.
+    pub description: String,
+}
+
+/// Data handling label applied to one work packet.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DataSensitivity {
+    /// Data remains only in process memory for the current turn or process.
+    Ephemeral,
+    /// Data may enter the encrypted operational store under its retention policy.
+    Operational,
+    /// Data is eligible for explicit user-directed durable promotion.
+    Durable,
+    /// Data requires the strict restricted-data policy before persistence.
+    Restricted,
+}
+
+/// Descriptive rollback expectations for work that may later receive write authority.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RollbackPlan {
+    /// Whether the proposed work is expected to be mechanically reversible.
+    pub reversible: bool,
+    /// Bounded rollback or recovery description.
+    pub description: String,
+}
+
+/// Evidence offered for one exact acceptance check.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CompletionEvidence {
+    /// Exact acceptance-check text from the owning packet revision.
+    pub acceptance_check: String,
+    /// Bounded evidence records supporting that check.
+    pub evidence: Vec<crate::EvidenceReference>,
 }
 
 /// Versioned snapshot of the exact work submitted to planning and execution.
@@ -82,10 +178,46 @@ pub struct WorkPacket {
     pub revision: u32,
     /// Exact objective at this revision.
     pub objective: String,
-    /// Exact acceptance criteria at this revision.
-    pub acceptance_criteria: Vec<String>,
-    /// Exact constraints at this revision.
-    pub constraints: Vec<String>,
+    /// User-visible reason the work is needed.
+    pub reason: String,
+    /// Stable descriptive owner identity.
+    pub owner: String,
+    /// Evidence already established as authoritative for this packet.
+    pub authoritative_evidence: Vec<crate::EvidenceReference>,
+    /// Non-authoritative candidate file declarations that later grants may permit to change.
+    pub mutable_files: Vec<String>,
+    /// Non-authoritative candidate file declarations that must not be changed.
+    pub protected_files: Vec<String>,
+    /// Exact expected output description.
+    pub expected_output: String,
+    /// Checks that must pass before completion.
+    pub acceptance_checks: Vec<String>,
+    /// Evidence classes required before completion.
+    pub required_evidence: Vec<EvidenceKind>,
+    /// Descriptive capability class required to perform the work.
+    pub required_capability_class: String,
+    /// Declared resource ceilings; enforcement is owned by the bounded-run story.
+    pub budgets: Vec<BudgetLimit>,
+    /// Declared conditions that stop further action proposals.
+    pub stop_conditions: Vec<StopCondition>,
+    /// Rollback or recovery expectations.
+    pub rollback: RollbackPlan,
+    /// Data handling label for this packet.
+    pub sensitivity: DataSensitivity,
+    /// ISO 8601 calendar date on which authoritative evidence was last verified.
+    pub last_verification_date: String,
+    /// Optional next action description.
+    pub next_action: Option<String>,
+    /// Optional ISO 8601 calendar date for the next review.
+    pub next_review: Option<String>,
+    /// Optional explanation of the current state.
+    pub status_reason: Option<String>,
+    /// Optional terminal or review disposition.
+    pub disposition: Option<String>,
+    /// Evidence offered for each exact acceptance check in a completion transition.
+    pub completion_evidence: Vec<CompletionEvidence>,
+    /// Replacement packet when this revision line is superseded.
+    pub superseding_work: Option<WorkPacketId>,
     /// Current packet-validation findings.
     pub validation_issues: Vec<ValidationIssue>,
     /// Attached plan identity, if planning has completed.

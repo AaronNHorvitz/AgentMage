@@ -4,6 +4,8 @@
 
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Bounded work-packet validation, revision history, and plan adaptation.
+pub mod work_packet;
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-engine";
