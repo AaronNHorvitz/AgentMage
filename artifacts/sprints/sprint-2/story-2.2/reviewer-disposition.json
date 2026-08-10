@@ -1,0 +1,17 @@
+{
+  "evidence_date": "2026-08-10",
+  "independent_review_performed": false,
+  "independent_review_status": "PENDING",
+  "macos_evidence_substituted": false,
+  "ordinary_development_waiver_permitted": false,
+  "product_boundaries_tested": false,
+  "record_type": "story_2_2_security_reviewer_disposition",
+  "release_approval": false,
+  "rv_15_foundation_status": "COMPLETE",
+  "rv_15_full_protocol_status": "NOT_COMPLETE",
+  "schema_version": 1,
+  "seeded_security_failures_retained": true,
+  "shared_linux_foundation_status": "PASS",
+  "story_2_2_status": "BLOCKED_REQUIRED_MAC_HARDWARE",
+  "task_2_2_2_3_status": "COMPLETE"
+}

@@ -1,0 +1,197 @@
+{
+  "artifacts": [
+    {
+      "bytes": 23407,
+      "path": "fuzzing/target-registry.json",
+      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+    },
+    {
+      "bytes": 6312,
+      "path": "fuzzing/toolchain-policy.json",
+      "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+    },
+    {
+      "bytes": 6778,
+      "path": "fuzzing/story-gate-policy.json",
+      "sha256": "7e03aa0aba1eec30f7b0e15407ec084c7eb4640736305ba63b24a87767e7d737"
+    },
+    {
+      "bytes": 4453,
+      "path": "fuzzing/seeds/security-failures-v1.json",
+      "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+    },
+    {
+      "bytes": 14322,
+      "path": "schemas/testing/fuzz-result.schema.json",
+      "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
+    },
+    {
+      "bytes": 1678,
+      "path": "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
+      "sha256": "fc7256ce3227a9a2981bb784e44e58eb00c29aa3ab9f0e14aa757dcfb3d23b81"
+    },
+    {
+      "bytes": 730,
+      "path": "artifacts/sprints/sprint-2/story-2.2/toolchain-policy-report.json",
+      "sha256": "1ef7ec18305292fc469e3df7c5a0eab20fe4755bcbdcbc1b72f25dad0a89aeb7"
+    },
+    {
+      "bytes": 1057,
+      "path": "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
+      "sha256": "0b64a735675f655e7abfee581d6b3a95b5439b6d53fdcb3e0294f77f662b0e9d"
+    },
+    {
+      "bytes": 770,
+      "path": "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
+      "sha256": "62cca78adc0f28e512c61f9c7e2b375c2e7f0d470ffd120f678df5d9bca2e918"
+    },
+    {
+      "bytes": 29790,
+      "path": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+      "sha256": "3416fcd4be97e2f3a5a2c100bf93685bd016c8b20212530f5cc636baefbfdea6"
+    },
+    {
+      "bytes": 22500,
+      "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
+      "sha256": "70ebb7cf0dc402251147527859e74ad7acc615533150bac6ab05e30cab8258fc"
+    },
+    {
+      "bytes": 6,
+      "path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
+      "sha256": "7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a"
+    },
+    {
+      "bytes": 4,
+      "path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
+      "sha256": "b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9"
+    },
+    {
+      "bytes": 5,
+      "path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
+      "sha256": "6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5"
+    },
+    {
+      "bytes": 8,
+      "path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
+      "sha256": "1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc"
+    },
+    {
+      "bytes": 3,
+      "path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
+      "sha256": "fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7"
+    },
+    {
+      "bytes": 28,
+      "path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
+      "sha256": "e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43"
+    },
+    {
+      "bytes": 5319,
+      "path": "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
+      "sha256": "8ca0b5f8561d84e7b3ef94c099bb243304719e445dcb32bdb7bf6ddc3938b5f0"
+    },
+    {
+      "bytes": 628,
+      "path": "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json",
+      "sha256": "9647294a353402bc10ae7a8ee49cb267ddd9ef26b2519b97d5b9487d2655c9c7"
+    }
+  ],
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "product_boundary_execution_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The registry inventories the FFI boundary class, currently discovers zero active FFI boundaries, and requires sanitizers plus focused fuzz ownership when one appears.",
+      "evidence": [
+        "fuzzing/target-registry.json",
+        "fuzzing/toolchain-policy.json",
+        "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every future unsafe block, FFI edge, native library, privilege, and entitlement still requires concrete inventory, justification, review, and product-boundary fuzz evidence.",
+      "requirement_id": "SR-SUP-009",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Twelve required trust-boundary classes have versioned target contracts, pinned fuzz policy, synthetic seeds, normalized results, minimization, and deterministic clean-run reconciliation.",
+      "evidence": [
+        "fuzzing/target-registry.json",
+        "fuzzing/toolchain-policy.json",
+        "fuzzing/seeds/security-failures-v1.json",
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Each concrete product parser and protocol must execute its registered target for the required durations with real coverage and sanitizer evidence before its owner gate can pass.",
+      "requirement_id": "SR-TST-002",
+      "story_contribution": "foundation-established"
+    },
+    {
+      "demonstrated": "Six bounded hostile failure classes are deterministically detected, minimized, retained, owned, and prevented from becoming passes without exposing the synthetic secret canary.",
+      "evidence": [
+        "fuzzing/seeds/security-failures-v1.json",
+        "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+        "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
+        "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
+        "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
+        "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
+        "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
+        "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every later product input class must exercise malformed, hostile, oversized, partial, stale, and conflicting cases against its implemented boundary and prove bounded side effects.",
+      "requirement_id": "SR-TST-004",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Input, duration, memory, output, corpus, concurrency, minimization, and retention budgets are pinned; logical hang and memory-limit crossings remain blocking without exhausting the host.",
+      "evidence": [
+        "fuzzing/toolchain-policy.json",
+        "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
+        "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Integrated product processes must enforce CPU, GPU, memory, disk, context, file, output, and concurrency limits while proving cancellation, cleanup, audit, and responsiveness.",
+      "requirement_id": "SR-TST-006",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Every seeded non-pass result forces its target gate to block, missing or stale evidence fails closed, and ordinary development credentials have no waiver path.",
+      "evidence": [
+        "fuzzing/story-gate-policy.json",
+        "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
+        "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The integrated release process must bind these target gates to package production and validate any exceptional signed, dated risk decision outside ordinary development credentials.",
+      "requirement_id": "SR-TST-012",
+      "story_contribution": "foundation-established"
+    }
+  ],
+  "reviewer_disposition": {
+    "independent_review_status": "PENDING",
+    "release_approval": false,
+    "task_status": "COMPLETE"
+  },
+  "reviewer_protocol": {
+    "foundation_status": "COMPLETE",
+    "full_protocol_status": "NOT_COMPLETE",
+    "protocol_id": "RV-15"
+  },
+  "schema_version": 1,
+  "status": "complete-evidence-map-blocked-macos",
+  "summary": {
+    "independent_review_complete": false,
+    "mapped_requirement_count": 5,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 19,
+    "retained_regression_count": 6,
+    "rv_15_foundation_complete": true,
+    "rv_15_full_protocol_complete": false,
+    "story_gate_complete": false
+  },
+  "task_id": "2.2.2.3"
+}
