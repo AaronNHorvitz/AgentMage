@@ -2,7 +2,7 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Design and planning; implementation has not started |
+| Status | Implementation in progress; blocked Mac platform lane retained |
 | Version | 1.1 |
 | Date | 2026-08-10 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
@@ -146,7 +146,7 @@ flowchart LR
     E8 --> E9["Epic 9<br/>Product Completion<br/>Sprints 101-102"]
 ```
 
-The two-week sprint cadence is the current planning baseline, not a product delivery guarantee. Work proceeds in numbered dependency order. If a story cannot fit its timebox, it is blocked and split into newly appended identifiers before implementation continues.
+The two-week sprint cadence is the current planning baseline, not a product delivery guarantee. Work proceeds in numbered dependency order. Under Decision 0003, unavailable Mac-specific work remains `BLOCKED-MACOS` while later shared or Linux work may proceed only when it does not consume or assume the missing Mac result. No affected story, sprint, epic, or release gate closes until its retained Mac work passes. If a story cannot fit its timebox for reasons other than the isolated platform lane, it is blocked and split into newly appended identifiers before implementation continues.
 
 | Epic | High-level outcome | Sprint range | Exit gate |
 |---|---|---|---|
@@ -339,7 +339,7 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 
 | Risk | Consequence | Planned control |
 |---|---|---|
-| Scope expansion before foundation closure | Inconsistent contracts and untestable authority | Enforce Epic 0 and dependency gates before feature work. |
+| Scope expansion before foundation closure | Inconsistent contracts and untestable authority | Enforce numeric work order and all non-platform dependencies; Decision 0003 permits only explicitly independent work past retained `BLOCKED-MACOS` items and never closes an affected gate. |
 | Local-model quality or malformed tool calls | Unsupported answers or unsafe execution requests | Deterministic-first behavior, schema validation, evidence states, bounded retries, quality thresholds, and visible failure. |
 | Platform divergence | A passing Linux path masks an invalid Mac deployment or vice versa | Shared adapter contracts, identical fixtures, platform-specific evidence, and independent Mac testing. |
 | Docker Model Runner privilege or endpoint exposure | A local compatibility path contradicts standard-user or exclusive-client claims | Native Linux security reference, immutable Docker identities, explicit prerequisite reporting, loopback and local-client probes, namespace/container isolation, profile-specific evidence, and fail-closed admission. |
@@ -365,6 +365,7 @@ Changes to the implementation sequence follow these rules:
 6. Accepted identifiers are not renumbered. A supersession preserves the original text and records the approved replacement and rationale.
 7. A changed source, dependency, configuration, schema, model, runtime, platform, threat model, authority path, storage path, network path, installer, or package makes affected evidence stale and triggers impact-based reruns.
 8. A sprint may contain multiple bounded stories only when their combined gate remains achievable; otherwise the work is split without renumbering accepted identifiers.
+9. Decision 0003 permits a blocked platform lane: a missing Mac result does not prevent independent shared/Linux development, but every affected Mac, cross-platform, sprint, epic, and release status remains blocked and no evidence is substituted.
 
 Release dates, staffing assumptions, and parallelization are intentionally not promised here. The two-week sprint cadence is a planning baseline. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
@@ -382,7 +383,7 @@ The first high-level sequence is:
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
-For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, retain the required evidence, and record the sprint gate as `PASS` or `BLOCKED` before proceeding.
+For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When the item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decision 0003. Record affected gates as `BLOCKED-MACOS`; never infer a pass from downstream development progress.
 
 ## 14. Completion Definition
 

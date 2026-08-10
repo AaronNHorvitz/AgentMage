@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Planning baseline; implementation has not started |
+| Status | Implementation in progress; blocked Mac platform lane retained |
 | Cadence | Two weeks per sprint (interpretation of the requested cadence; revise through a planning decision if needed) |
 | Scope | Complete AgentMage roadmap from foundation through final product closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
@@ -13,7 +13,7 @@
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime/process/socket boundary | `RUNTIME-BOUNDARIES.md` |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
-| Execution rule | Work proceeds in numbered order; a dependent sprint cannot start until every dependency gate is PASS |
+| Execution rule | Work proceeds in numbered order under Decision 0003; independent shared/Linux work may continue past a `BLOCKED-MACOS` dependency, but no affected story, sprint, epic, or release gate may be marked PASS |
 
 ## Planning Hierarchy and Numbering
 
@@ -38,6 +38,16 @@
 | `DEFER` items are intentionally not implementation-ready. | Unplaceable as active work | Keep them as tested exclusions until a user-approved decision promotes them into a stable backlog and new numbered stories. |
 | Customer-only decisions such as managed-device installation, allowed data, privacy, retention, accessibility acceptance, and AI-tool approval are outside product authority. | Reviewer-owned | Place evidence-production work in sprints, but reserve the actual determination for the device owner or deploying organization. |
 | The delivery/security audit identified missing v0.1 policy, runtime, fuzzing, incident, accessibility, support, diagnostics, and handoff work. | Accepted planning decision | Record the independently assessed decisions in `docs/decisions/0001-product-security-and-runtime-baseline.md`; add bounded stories without deleting or renumbering prior work. |
+| Required MacBook Pro M5 hardware is unavailable while independent shared and Linux work remains executable. | Accepted sequencing decision | Apply `docs/decisions/0003-blocked-platform-lane-continuation.md`: retain every Mac item and gate as `BLOCKED-MACOS`, prohibit substitution or release claims, and continue only dependency-independent work in numeric order. |
+
+### Blocked Platform Lane
+
+- `BLOCKED-MACOS` is a truthful incomplete state, never a pass, waiver, test skip, or supported-platform claim.
+- The first unchecked item remains authoritative within each platform lane. When an item requires unavailable Mac execution or artifacts, record the blocker and continue to the next numbered item whose inputs are independent of that result.
+- Platform-neutral contracts must preserve macOS requirements even when only Linux execution is currently possible.
+- Stories, sprints, epics, and releases remain unchecked whenever their closure depends on one or more `BLOCKED-MACOS` items.
+- Linux evidence, mocks, cross-compilation, and static checks may prove their own declared scope only; they never satisfy a Mac checkbox or cross-platform gate.
+- Mac work resumes at the earliest blocked identifier when the physical hardware or untouched evidence becomes available.
 
 ### Epic Candidates Resolved
 
@@ -255,7 +265,7 @@ The owning sprint performs the first complete execution possible for its boundar
 - [ ] **Sprint AC 0.AC4:** README, PRD, implementation plan, inventory, tasks, license, security/model/runtime policies, and accepted decisions agree on platforms, model, runtimes, interface, data authority, release sequence, and exclusions.
 - [ ] **Sprint AC 0.AC5:** Removing or weakening a fixture requirement causes the traceability check to fail.
 
-**Gate decision:** Sprint 0 is PASS only when Stories 0.1 through 0.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 0 is `BLOCKED-MACOS` until Stories 0.1 through 0.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Decision 0003 permits dependency-independent shared and Linux development to continue without representing this sprint or any affected downstream gate as PASS.
 ### [ ] Sprint 1 - Repository and Package Architecture
 
 **Timebox:** Two weeks.

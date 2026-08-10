@@ -6,13 +6,13 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Design and planning; implementation has not started |
+| Status | Implementation in progress; blocked Mac platform lane retained |
 | First product release | v0.1 Read-Only Local Evidence Assistant |
 | First interface | Native Visual Studio Code Chat beside the separate Codex tab |
 | First enabled model | Manifest-pinned Gemma 4 E4B |
 | Model runtimes | Native `llama.cpp`; gated Docker Model Runner compatibility adapter |
 | v0.1 platforms | Apple Silicon macOS, Fedora, and Ubuntu |
-| Execution plan | 10 epics and 103 sequential two-week sprints |
+| Execution plan | 10 epics and 103 numbered two-week sprints; independent shared/Linux work may continue past retained `BLOCKED-MACOS` items under Decision 0003 |
 | License | [Apache License 2.0](./LICENSE) |
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
@@ -31,6 +31,8 @@ The project documents have distinct responsibilities:
 Supporting policies remain subordinate to those authorities: [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md) controls model admission procedure, [`SECURITY.md`](./SECURITY.md) controls public vulnerability and support communication, and [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) records the derived process, privilege, socket, lifecycle, and data-flow specification. Accepted clarifications and supersessions are recorded under [`docs/decisions/`](./docs/decisions/).
 
 If documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted identifiers are never silently removed, weakened, merged away, or renumbered.
+
+Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-platform-lane-continuation.md). MacBook Pro M5 tasks remain required and unchecked while the hardware is unavailable. Independent shared-kernel and Linux work may continue in numeric order, but no Mac-dependent story, sprint, epic, supported-platform statement, or release gate is represented as passing, and Linux evidence never substitutes for Mac evidence.
 
 ## v0.1
 
