@@ -35,6 +35,7 @@ impl_versioned_contract!(
     crate::ContractError,
     crate::EvidenceReference,
     crate::Plan,
+    crate::Prompt,
     crate::Receipt,
     crate::Task,
     crate::ToolCall,

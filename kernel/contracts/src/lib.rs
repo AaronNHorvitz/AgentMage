@@ -6,6 +6,7 @@ mod boundary;
 mod common;
 mod evidence;
 mod ids;
+mod prompt;
 mod serialization;
 mod task;
 mod tool;
@@ -19,9 +20,10 @@ pub use common::{
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use ids::{
-    ActionId, CancellationId, CorrelationId, ErrorId, EvidenceId, PlanId, PlanStepId, ReceiptId,
-    SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
+    ActionId, CancellationId, CorrelationId, ErrorId, EvidenceId, PlanId, PlanStepId, PromptId,
+    ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
 };
+pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
 };

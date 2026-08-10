@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Sealed classification and denial of descriptive artifacts as authority.
+pub mod authority;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 /// Cancellation trees and lossless typed failure propagation.

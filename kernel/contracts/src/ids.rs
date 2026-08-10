@@ -54,6 +54,7 @@ define_identifier!(
 );
 define_identifier!(PlanId, "Stable identity for one task plan.");
 define_identifier!(PlanStepId, "Stable identity for one plan step.");
+define_identifier!(PromptId, "Stable identity for one assembled model prompt.");
 define_identifier!(
     ActionId,
     "Stable identity for one proposed or executed action."

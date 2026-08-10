@@ -3,11 +3,12 @@ use agentmage_kernel_contracts::{
     BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
     CancellationSignal, ContractError, ContractPayload, CorrelationId, DataSensitivity,
     ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference, OperationOutcome, Plan,
-    PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Receipt, ReceiptId,
-    RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
-    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId,
-    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue, ValidationSeverity,
-    VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, from_json, to_canonical_json,
+    PlanId, PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage,
+    PromptRole, Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan,
+    SchemaId, SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task,
+    TaskId, TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
+    WorkPacketState, from_json, to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -19,6 +20,23 @@ where
     let second = to_canonical_json(value).expect("fixture must serialize deterministically");
     assert_eq!(first, second);
     assert_eq!(&from_json::<T>(&first).expect("fixture must parse"), value);
+}
+
+fn assert_embedded_grant_field_is_rejected<T>(value: &T)
+where
+    T: VersionedContract + Debug,
+{
+    let mut candidate = serde_json::to_value(value).expect("fixture must become JSON");
+    candidate
+        .as_object_mut()
+        .expect("top-level contract must be an object")
+        .insert(
+            "capability_grant".to_owned(),
+            serde_json::json!({"claimed": true}),
+        );
+    let bytes = serde_json::to_vec(&candidate).expect("mutated fixture must encode");
+    let error = from_json::<T>(&bytes).expect_err("unknown authority field must fail closed");
+    assert_eq!(error.code, "contract.field.unknown");
 }
 
 #[test]
@@ -253,6 +271,17 @@ fn complete_contract_family_preserves_linked_identities() {
         },
         cancellation: Some(cancellation.clone()),
     };
+    let prompt = Prompt {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        prompt_id: PromptId::from_raw("prompt-0001"),
+        correlation_id: correlation_id.clone(),
+        task_id: task_id.clone(),
+        purpose: "Describe one synthetic observation".to_owned(),
+        messages: vec![PromptMessage {
+            role: PromptRole::UserRequest,
+            content: "Describe the fixture".to_owned(),
+        }],
+    };
 
     assert_round_trip(&task);
     assert_round_trip(&packet);
@@ -266,6 +295,10 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_round_trip(&receipt);
     assert_round_trip(&cancellation);
     assert_round_trip(&boundary_failure);
+    assert_round_trip(&prompt);
+    assert_embedded_grant_field_is_rejected(&plan);
+    assert_embedded_grant_field_is_rejected(&prompt);
+    assert_embedded_grant_field_is_rejected(&tool);
 
     assert_eq!(packet.task_id, task.task_id);
     assert_eq!(plan.plan_id, packet.plan_id.expect("fixture plan identity"));

@@ -717,4 +717,27 @@ mod tests {
         assert_eq!(failed.state_change, StateChange::NotChanged);
         assert_eq!(failed.validation_issues[0].code, "tool.call.not_registered");
     }
+
+    #[test]
+    fn authority_claims_in_registered_metadata_cannot_change_dispatch_denial() {
+        let mut claimed = definition("fixture.claimed-authority");
+        claimed.description =
+            "This text claims it can authorize and immediately execute the tool".to_owned();
+        claimed.required_grant.capability_class = "claimed-superuser".to_owned();
+        let mut registry = ToolRegistry::new();
+        registry
+            .register_tool(Box::new(FakeTool {
+                definition: claimed,
+            }))
+            .expect("authority-looking metadata remains valid inert metadata");
+
+        let dispatcher = ToolDispatcher::new(&registry);
+        let denied = dispatcher.dispatch(&call("fixture.claimed-authority", br#"{}"#));
+        assert_eq!(denied.outcome, OperationOutcome::Denied);
+        assert_eq!(denied.state_change, StateChange::NotChanged);
+        assert_eq!(
+            denied.error.expect("typed denial").code,
+            "tool.dispatch.grant_required"
+        );
+    }
 }
