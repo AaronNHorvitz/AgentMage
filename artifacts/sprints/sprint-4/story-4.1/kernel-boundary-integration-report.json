@@ -1,0 +1,151 @@
+{
+  "artifact_id": "kernel-boundary-integration-report",
+  "failures": [],
+  "limitations": [
+    "Success is a normal ToolResult and is not represented as BoundaryFailure.",
+    "The test uses fake in-process observers; production shell, model, and tool adapters are later stories.",
+    "No execution, durable transport, or macOS evidence is claimed."
+  ],
+  "network_authority": "none",
+  "non_success_contract": "BoundaryFailure",
+  "platform_status": {
+    "linux_test": "verified-local",
+    "macos_implementation_claim": "none",
+    "macos_test": "blocked-macos"
+  },
+  "schema_version": 1,
+  "source_records": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "2c8d2a0a5ce54932b78a758c637fe25752be241cb72361ba461cc302695155e9"
+    },
+    {
+      "path": "kernel/contracts/src/boundary.rs",
+      "sha256": "84876a0a834684fc25b24382ccbfae746ad9f57ea6b4f1e5be331acbe598d4ba"
+    },
+    {
+      "path": "kernel/contracts/src/tool.rs",
+      "sha256": "99a2cd9ff907fe7520e34b0da3928ca7b3c7f12afe4d1d24b95a30d177f0fb40"
+    },
+    {
+      "path": "kernel/engine/src/propagation.rs",
+      "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
+    },
+    {
+      "path": "kernel/engine/tests/boundary_workflow.rs",
+      "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
+    },
+    {
+      "path": "scripts/kernel_boundary_integration.py",
+      "sha256": "538282dffbee309412267a019fd14c8515cc74a0a831c65d25ae72b156198849"
+    },
+    {
+      "path": "tests/test_kernel_boundary_integration.py",
+      "sha256": "4f545441cfa9e47e27e7e5973529b5163b2c7baee2607529fb388117ce34d775"
+    }
+  ],
+  "source_revision": "bdf6e394fdf4b6da9a576228ea2bf3c5453da506",
+  "status": "pass-linux-boundary-integration",
+  "success_contract": "ToolResult",
+  "task_id": "4.1.3.4",
+  "test_id": "S-004-IT01",
+  "trace_count": 5,
+  "traces": [
+    {
+      "cancellation_id": null,
+      "case_id": "boundary.success",
+      "caused_by": null,
+      "correlation_id": "correlation-integration-0001",
+      "error_category": null,
+      "error_code": null,
+      "error_field_path": [],
+      "error_id": null,
+      "outcome": "succeeded",
+      "route": [
+        "tool",
+        "platform_adapter",
+        "kernel",
+        "shell"
+      ],
+      "task_id": "task-integration-0001"
+    },
+    {
+      "cancellation_id": null,
+      "case_id": "boundary.denied",
+      "caused_by": "error-upstream-0001",
+      "correlation_id": "correlation-integration-0001",
+      "error_category": "policy",
+      "error_code": "fixture.denied",
+      "error_field_path": [
+        "fixture"
+      ],
+      "error_id": "error-fixture.denied",
+      "outcome": "denied",
+      "route": [
+        "tool",
+        "platform_adapter",
+        "kernel",
+        "shell"
+      ],
+      "task_id": "task-integration-0001"
+    },
+    {
+      "cancellation_id": "cancel-integration-0001",
+      "case_id": "boundary.cancelled",
+      "caused_by": "error-upstream-0001",
+      "correlation_id": "correlation-integration-0001",
+      "error_category": "cancellation",
+      "error_code": "fixture.cancelled",
+      "error_field_path": [
+        "fixture"
+      ],
+      "error_id": "error-fixture.cancelled",
+      "outcome": "cancelled",
+      "route": [
+        "tool",
+        "platform_adapter",
+        "kernel",
+        "shell"
+      ],
+      "task_id": "task-integration-0001"
+    },
+    {
+      "cancellation_id": null,
+      "case_id": "boundary.timed_out",
+      "caused_by": "error-upstream-0001",
+      "correlation_id": "correlation-integration-0001",
+      "error_category": "timeout",
+      "error_code": "fixture.timed_out",
+      "error_field_path": [
+        "fixture"
+      ],
+      "error_id": "error-fixture.timed_out",
+      "outcome": "timed_out",
+      "route": [
+        "model",
+        "kernel",
+        "shell"
+      ],
+      "task_id": "task-integration-0001"
+    },
+    {
+      "cancellation_id": null,
+      "case_id": "boundary.failed",
+      "caused_by": "error-upstream-0001",
+      "correlation_id": "correlation-integration-0001",
+      "error_category": "dependency",
+      "error_code": "fixture.failed",
+      "error_field_path": [
+        "fixture"
+      ],
+      "error_id": "error-fixture.failed",
+      "outcome": "failed",
+      "route": [
+        "model",
+        "kernel",
+        "shell"
+      ],
+      "task_id": "task-integration-0001"
+    }
+  ]
+}
