@@ -131,12 +131,14 @@ pub struct ToolResult {
     /// Exact terminal outcome.
     pub outcome: OperationOutcome,
     /// Optional schema-bound output payload.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub output: Option<ContractPayload>,
     /// Validation findings retained without partial success.
     pub validation_issues: Vec<ValidationIssue>,
     /// Evidence records produced by the attempt.
     pub evidence: Vec<EvidenceReference>,
     /// Optional typed terminal error.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub error: Option<ContractError>,
     /// Logical elapsed duration in milliseconds.
     pub elapsed_ms: u64,

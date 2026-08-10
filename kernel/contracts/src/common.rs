@@ -113,6 +113,7 @@ pub struct ContractError {
     /// Retry contract for the caller.
     pub retry: RetryDisposition,
     /// Optional causal error identity without embedding another raw error.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub caused_by: Option<ErrorId>,
 }
 

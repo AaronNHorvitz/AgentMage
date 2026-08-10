@@ -1,6 +1,6 @@
 //! Deterministic JSON serialization and closed parsing boundaries.
 
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};
 
 use crate::{CONTRACT_SCHEMA_VERSION, ContractError, ErrorCategory, ErrorId, RetryDisposition};
 
@@ -14,6 +14,14 @@ pub type ContractResult<T> = Result<T, Box<ContractError>>;
 pub trait VersionedContract: Serialize + DeserializeOwned {
     /// Returns the candidate contract's schema version.
     fn schema_version(&self) -> u16;
+}
+
+pub(crate) fn deserialize_required_option<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(deserializer)
 }
 
 macro_rules! impl_versioned_contract {

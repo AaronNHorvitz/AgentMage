@@ -40,10 +40,12 @@ pub struct EvidenceReference {
     /// Stable object identity within the source.
     pub object_id: String,
     /// Optional structured fragment or bounded range identity.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub fragment: Option<String>,
     /// Lowercase SHA-256 digest of the observed source content.
     pub content_sha256: String,
     /// Source revision observed when the reference was created.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub observed_revision: Option<String>,
 }
 
@@ -69,6 +71,7 @@ pub struct Receipt {
     /// Attempted action.
     pub action_id: ActionId,
     /// Tool-call identity when the action attempted a tool.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub tool_call_id: Option<ToolCallId>,
     /// Exact terminal outcome.
     pub outcome: OperationOutcome,
@@ -77,6 +80,7 @@ pub struct Receipt {
     /// Evidence references retained for the attempt.
     pub evidence: Vec<EvidenceReference>,
     /// Optional typed terminal error.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub error: Option<ContractError>,
     /// Previous receipt digest or the all-zero genesis digest.
     pub previous_receipt_sha256: String,

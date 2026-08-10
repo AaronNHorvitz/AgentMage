@@ -219,20 +219,26 @@ pub struct WorkPacket {
     /// ISO 8601 calendar date on which authoritative evidence was last verified.
     pub last_verification_date: String,
     /// Optional next action description.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub next_action: Option<String>,
     /// Optional ISO 8601 calendar date for the next review.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub next_review: Option<String>,
     /// Optional explanation of the current state.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub status_reason: Option<String>,
     /// Optional terminal or review disposition.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub disposition: Option<String>,
     /// Evidence offered for each exact acceptance check in a completion transition.
     pub completion_evidence: Vec<CompletionEvidence>,
     /// Replacement packet when this revision line is superseded.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub superseding_work: Option<WorkPacketId>,
     /// Current packet-validation findings.
     pub validation_issues: Vec<ValidationIssue>,
     /// Attached plan identity, if planning has completed.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub plan_id: Option<PlanId>,
     /// Current packet state.
     pub state: WorkPacketState,
@@ -368,6 +374,7 @@ pub struct Action {
     /// Owning task identity.
     pub task_id: TaskId,
     /// Optional plan step that proposed the action.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub plan_step_id: Option<PlanStepId>,
     /// Descriptive action class.
     pub kind: ActionKind,

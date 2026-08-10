@@ -39,6 +39,23 @@ where
     assert_eq!(error.code, "contract.field.unknown");
 }
 
+fn assert_optional_keys_are_required<T>(value: &T, keys: &[&str])
+where
+    T: VersionedContract + Debug,
+{
+    for key in keys {
+        let mut candidate = serde_json::to_value(value).expect("fixture must become JSON");
+        candidate
+            .as_object_mut()
+            .expect("top-level contract must be an object")
+            .remove(*key)
+            .expect("fixture key must exist");
+        let bytes = serde_json::to_vec(&candidate).expect("mutated fixture must encode");
+        let error = from_json::<T>(&bytes).expect_err("omitted optional key must fail closed");
+        assert_eq!(error.code, "contract.field.missing", "missing key: {key}");
+    }
+}
+
 #[test]
 fn complete_contract_family_preserves_linked_identities() {
     let session_id = SessionId::from_raw("session-0001");
@@ -299,6 +316,26 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_embedded_grant_field_is_rejected(&plan);
     assert_embedded_grant_field_is_rejected(&prompt);
     assert_embedded_grant_field_is_rejected(&tool);
+    assert_optional_keys_are_required(
+        &packet,
+        &[
+            "next_action",
+            "next_review",
+            "status_reason",
+            "disposition",
+            "superseding_work",
+            "plan_id",
+        ],
+    );
+    assert_optional_keys_are_required(&action, &["plan_step_id"]);
+    assert_optional_keys_are_required(&result, &["output", "error"]);
+    assert_optional_keys_are_required(&result.evidence[0], &["fragment", "observed_revision"]);
+    assert_optional_keys_are_required(
+        result.error.as_ref().expect("fixture error"),
+        &["caused_by"],
+    );
+    assert_optional_keys_are_required(&receipt, &["tool_call_id", "error"]);
+    assert_optional_keys_are_required(&boundary_failure, &["cancellation"]);
 
     assert_eq!(packet.task_id, task.task_id);
     assert_eq!(plan.plan_id, packet.plan_id.expect("fixture plan identity"));

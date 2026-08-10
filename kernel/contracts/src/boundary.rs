@@ -93,6 +93,7 @@ pub struct BoundaryFailure {
     /// Original typed error preserved without replacement.
     pub error: ContractError,
     /// Exact cancellation signal for a cancelled outcome only.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub cancellation: Option<CancellationSignal>,
 }
 
