@@ -44,7 +44,8 @@
       "id": "fake-clock",
       "operations": [
         "now",
-        "advance"
+        "advance",
+        "probe"
       ]
     },
     {
@@ -69,6 +70,13 @@
     "reads_real_workspace": false,
     "persists_state": false,
     "stores_real_secret": false
+  },
+  "cleanup_contract": {
+    "close_is_idempotent": true,
+    "operations_after_close_rejected": true,
+    "runtime_stopped": true,
+    "secret_store_cleared": true,
+    "clock_reset": true
   },
   "product_adapter_claim": "none",
   "platform_support_claim": "none"

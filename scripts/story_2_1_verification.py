@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,20 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts import versioned_corpus  # noqa: E402
+from fixtures.fake_adapters import (  # noqa: E402
+    CrashInjector,
+    FakeClock,
+    FakeConnector,
+    FakeInferenceRuntime,
+    FakeMode,
+    FakeModel,
+    FakeSecretStore,
+    FakeStatus,
+    FakeTool,
+    ScenarioPlan,
+    SyntheticSecret,
+    trace_sha256,
+)
 
 
 CORPUS_REPORT_PATH = (
@@ -30,12 +45,30 @@ CORPUS_REPORT_PATH = (
     / "story-2.1"
     / "corpus-reproducibility-report.json"
 )
+ADAPTER_REPORT_PATH = (
+    ROOT
+    / "artifacts"
+    / "sprints"
+    / "sprint-2"
+    / "story-2.1"
+    / "adapter-mode-verification-report.json"
+)
 EXPECTED_SOURCE_SEEDS = {
     "base": "agentmage-sprint-2-synthetic-v1",
     "paths": "agentmage-path-fixtures-synthetic-v1",
     "adversarial": "agentmage-adversarial-synthetic-v1",
     "documents": "agentmage-document-synthetic-v1",
     "golden": "agentmage-expected-output-synthetic-v1",
+}
+EXPECTED_FAKE_STATUSES = {
+    FakeMode.SUCCESS: FakeStatus.SUCCEEDED,
+    FakeMode.DENIAL: FakeStatus.DENIED,
+    FakeMode.MALFORMED: FakeStatus.MALFORMED,
+    FakeMode.CANCELLATION: FakeStatus.CANCELLED,
+    FakeMode.TIMEOUT: FakeStatus.TIMED_OUT,
+    FakeMode.CRASH_BEFORE: FakeStatus.CRASHED,
+    FakeMode.CRASH_AFTER: FakeStatus.CRASHED,
+    FakeMode.UNCERTAIN: FakeStatus.UNCERTAIN,
 }
 
 
@@ -283,14 +316,211 @@ def check_corpus_report(root: Path = ROOT) -> list[str]:
     return validate_corpus_report(report, root)
 
 
+def adapter_case(
+    adapter_id: str, mode: FakeMode
+) -> tuple[Any, Any, str]:
+    operation_key = {
+        "fake-model": "fake-model.generate",
+        "fake-tool": "fake-tool.invoke",
+        "fake-inference-runtime": "fake-inference-runtime.start",
+        "fake-connector": "fake-connector.list",
+        "fake-clock": "fake-clock.probe",
+        "fake-secret-store": "fake-secret-store.store",
+        "crash-injector": "crash-injector.checkpoint",
+    }[adapter_id]
+    plan = ScenarioPlan({operation_key: [mode]})
+    if adapter_id == "fake-model":
+        adapter = FakeModel(plan)
+        operation = lambda: adapter.generate("synthetic verification prompt")
+    elif adapter_id == "fake-tool":
+        adapter = FakeTool(plan)
+        operation = lambda: adapter.invoke("synthetic-read", {"path": "fixture.txt"})
+    elif adapter_id == "fake-inference-runtime":
+        adapter = FakeInferenceRuntime(plan)
+        operation = lambda: adapter.start("synthetic-profile")
+    elif adapter_id == "fake-connector":
+        adapter = FakeConnector(plan)
+        operation = adapter.list
+    elif adapter_id == "fake-clock":
+        adapter = FakeClock(plan=plan)
+        operation = adapter.probe
+    elif adapter_id == "fake-secret-store":
+        adapter = FakeSecretStore(plan)
+        operation = lambda: adapter.store(
+            "synthetic-handle",
+            SyntheticSecret("AM_SYNTHETIC_SECRET_STORY_2_1"),
+        )
+    else:
+        adapter = CrashInjector(plan)
+        operation = lambda: adapter.checkpoint("synthetic-checkpoint")
+    return adapter, operation, operation_key
+
+
+def build_adapter_report(root: Path = ROOT) -> dict[str, Any]:
+    adapter_ids = (
+        "fake-model",
+        "fake-tool",
+        "fake-inference-runtime",
+        "fake-connector",
+        "fake-clock",
+        "fake-secret-store",
+        "crash-injector",
+    )
+    all_adapters = []
+    adapter_summaries = []
+    total_post_close_rejections = 0
+    for adapter_id in adapter_ids:
+        statuses: Counter[str] = Counter()
+        instances = []
+        for mode, expected_status in EXPECTED_FAKE_STATUSES.items():
+            adapter, operation, _operation_key = adapter_case(adapter_id, mode)
+            outcome = operation()
+            if outcome.status is not expected_status:
+                raise ValueError(
+                    f"fake adapter status mismatch: {adapter_id}/{mode.value}"
+                )
+            if adapter.plan.pending() != 0:
+                raise ValueError(
+                    f"fake adapter plan was not consumed: {adapter_id}/{mode.value}"
+                )
+            statuses[outcome.status.value] += 1
+            adapter.close()
+            adapter.close()
+            try:
+                operation()
+            except RuntimeError:
+                total_post_close_rejections += 1
+            else:
+                raise ValueError(
+                    f"fake adapter accepted operation after close: {adapter_id}"
+                )
+            if isinstance(adapter, FakeInferenceRuntime) and adapter.running:
+                raise ValueError("fake runtime remained active after close")
+            if isinstance(adapter, FakeSecretStore) and adapter.stored_count != 0:
+                raise ValueError("fake secret store retained state after close")
+            if isinstance(adapter, FakeClock) and adapter.current != 1704067200:
+                raise ValueError("fake clock did not reset after close")
+            instances.append(adapter)
+            all_adapters.append(adapter)
+        adapter_summaries.append(
+            {
+                "adapter_id": adapter_id,
+                "mode_count": len(instances),
+                "event_count": sum(len(adapter.events) for adapter in instances),
+                "status_counts": dict(sorted(statuses.items())),
+                "trace_sha256": trace_sha256(instances),
+                "cleanup_passed": all(adapter.closed for adapter in instances),
+            }
+        )
+
+    events = [event for adapter in all_adapters for event in adapter.events]
+    serialized_events = json.dumps(
+        [event.as_record() for event in events], sort_keys=True
+    )
+    if "AM_SYNTHETIC_SECRET_" in serialized_events:
+        raise ValueError("adapter trace retained a synthetic secret value")
+    return {
+        "schema_version": 1,
+        "task_id": "2.1.3.2",
+        "test_id": "S-002-UT02",
+        "status": "pass",
+        "contract": artifact(root, "fixtures/fake-adapter-contract.json"),
+        "adapters": adapter_summaries,
+        "summary": {
+            "adapter_count": len(adapter_ids),
+            "mode_count": len(EXPECTED_FAKE_STATUSES),
+            "matrix_case_count": len(events),
+            "expected_matrix_case_count": len(adapter_ids)
+            * len(EXPECTED_FAKE_STATUSES),
+            "post_close_rejection_count": total_post_close_rejections,
+            "all_typed_outcomes_matched": True,
+            "all_cleanup_passed": True,
+            "raw_secret_retained": False,
+            "trace_sha256": trace_sha256(all_adapters),
+        },
+        "side_effect_contract": {
+            "external_commands": False,
+            "network": False,
+            "real_workspace": False,
+            "persistent_state": False,
+            "real_secrets": False,
+        },
+        "product_support_claim": "none",
+        "macos_execution_status": "blocked-macos",
+        "macos_support_claim": "none",
+    }
+
+
+def validate_adapter_report(report: Any, root: Path = ROOT) -> list[str]:
+    if not isinstance(report, dict):
+        return ["Story 2.1 adapter report must be an object"]
+    failures: list[str] = []
+    if (
+        report.get("schema_version") != 1
+        or report.get("task_id") != "2.1.3.2"
+        or report.get("test_id") != "S-002-UT02"
+    ):
+        failures.append("Story 2.1 adapter report identity is invalid")
+    if report.get("status") != "pass":
+        failures.append("Story 2.1 adapter report did not pass")
+    summary = report.get("summary", {})
+    if (
+        summary.get("adapter_count") != 7
+        or summary.get("mode_count") != 8
+        or summary.get("matrix_case_count") != 56
+        or summary.get("expected_matrix_case_count") != 56
+        or summary.get("post_close_rejection_count") != 56
+        or summary.get("all_typed_outcomes_matched") is not True
+        or summary.get("all_cleanup_passed") is not True
+        or summary.get("raw_secret_retained") is not False
+    ):
+        failures.append("Story 2.1 adapter matrix or cleanup contract was weakened")
+    if any(
+        value is not False for value in report.get("side_effect_contract", {}).values()
+    ):
+        failures.append("Story 2.1 adapter report contains a real side effect")
+    if report.get("product_support_claim") != "none":
+        failures.append("Story 2.1 adapter report made a product support claim")
+    if report.get("macos_execution_status") != "blocked-macos" or report.get(
+        "macos_support_claim"
+    ) != "none":
+        failures.append("Story 2.1 adapter report made an invalid macOS claim")
+    try:
+        expected = build_adapter_report(root)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        failures.append(f"cannot rebuild Story 2.1 adapter report: {error}")
+    else:
+        if report != expected:
+            failures.append("Story 2.1 adapter report is stale or non-deterministic")
+    return failures
+
+
+def write_adapter_report(root: Path = ROOT) -> None:
+    write_atomic(
+        root / ADAPTER_REPORT_PATH.relative_to(ROOT),
+        canonical_json(build_adapter_report(root)),
+    )
+
+
+def check_adapter_report(root: Path = ROOT) -> list[str]:
+    try:
+        report = read_json(root / ADAPTER_REPORT_PATH.relative_to(ROOT))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"cannot read Story 2.1 adapter report: {error}"]
+    return validate_adapter_report(report, root)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write-corpus-report", action="store_true")
+    parser.add_argument("--write-adapter-report", action="store_true")
     args = parser.parse_args()
     try:
         if args.write_corpus_report:
             write_corpus_report()
-        failures = check_corpus_report()
+        if args.write_adapter_report:
+            write_adapter_report()
+        failures = check_corpus_report() + check_adapter_report()
     except (OSError, ValueError, KeyError, TypeError, shutil.Error) as error:
         print(f"Story 2.1 verification failed: {error}", file=sys.stderr)
         return 1
@@ -298,7 +528,7 @@ def main() -> int:
         for failure in failures:
             print(f"Story 2.1 verification failed: {failure}", file=sys.stderr)
         return 1
-    print("Story 2.1 corpus reproducibility and corruption evidence validated")
+    print("Story 2.1 corpus and adapter verification evidence validated")
     return 0
 
 

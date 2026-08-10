@@ -1,0 +1,145 @@
+{
+  "adapters": [
+    {
+      "adapter_id": "fake-model",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "77927c72e9d7f47d400c54e95ddae2980f4969a0f3bcdea8eb342f97803ececd"
+    },
+    {
+      "adapter_id": "fake-tool",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "353dc443e52f5c9b4790368ca4274571996a352566d28e38435398d5a66452c5"
+    },
+    {
+      "adapter_id": "fake-inference-runtime",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "bde74e34289be45fe9025657fc6dc9aba5f64e37c7b483212cad348c2e752a81"
+    },
+    {
+      "adapter_id": "fake-connector",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "7622af0c1097a9960c1dfcdf94611d0bac697b3cca960717b0349892edd2889a"
+    },
+    {
+      "adapter_id": "fake-clock",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "0491f8ead22f3b36ece3236d097c8a4cfb560b62d5d3e589f5987db497158be7"
+    },
+    {
+      "adapter_id": "fake-secret-store",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "4ac4908051920383dbad3e234084215685de187501342f6df197efc0b19da6b6"
+    },
+    {
+      "adapter_id": "crash-injector",
+      "cleanup_passed": true,
+      "event_count": 8,
+      "mode_count": 8,
+      "status_counts": {
+        "cancelled": 1,
+        "crashed": 2,
+        "denied": 1,
+        "malformed": 1,
+        "succeeded": 1,
+        "timed-out": 1,
+        "uncertain": 1
+      },
+      "trace_sha256": "19317e1f6ea3b5504da17b8d4e99392ed80f896da2a894f01a701f20dc2a697d"
+    }
+  ],
+  "contract": {
+    "path": "fixtures/fake-adapter-contract.json",
+    "sha256": "c0f01c3c98832b89b19c6e3e2e68be240a87b425ce3003158e440afd59cc05ce"
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "product_support_claim": "none",
+  "schema_version": 1,
+  "side_effect_contract": {
+    "external_commands": false,
+    "network": false,
+    "persistent_state": false,
+    "real_secrets": false,
+    "real_workspace": false
+  },
+  "status": "pass",
+  "summary": {
+    "adapter_count": 7,
+    "all_cleanup_passed": true,
+    "all_typed_outcomes_matched": true,
+    "expected_matrix_case_count": 56,
+    "matrix_case_count": 56,
+    "mode_count": 8,
+    "post_close_rejection_count": 56,
+    "raw_secret_retained": false,
+    "trace_sha256": "d52bdac955a6bb3e7281b887226a6cd8c8663062f6dd1b9e5a93904419344ca6"
+  },
+  "task_id": "2.1.3.2",
+  "test_id": "S-002-UT02"
+}

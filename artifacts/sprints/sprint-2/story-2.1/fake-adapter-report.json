@@ -32,7 +32,8 @@
       "id": "fake-clock",
       "operations": [
         "now",
-        "advance"
+        "advance",
+        "probe"
       ]
     },
     {
@@ -51,6 +52,7 @@
     }
   ],
   "baseline_trace": {
+    "all_adapters_closed": true,
     "event_count": 13,
     "events": [
       {
@@ -187,7 +189,14 @@
     "raw_secret_retained": false,
     "trace_sha256": "c21fd274c1b11af5808a105dd742426cff6e5d32d9fe954c334d7d80d4eabd22"
   },
-  "contract_sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244",
+  "cleanup_contract": {
+    "clock_reset": true,
+    "close_is_idempotent": true,
+    "operations_after_close_rejected": true,
+    "runtime_stopped": true,
+    "secret_store_cleared": true
+  },
+  "contract_sha256": "c0f01c3c98832b89b19c6e3e2e68be240a87b425ce3003158e440afd59cc05ce",
   "mode_count": 8,
   "modes": [
     "success",

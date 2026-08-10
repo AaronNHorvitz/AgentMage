@@ -122,6 +122,11 @@ class FakeAdapter:
         self.adapter_id = adapter_id
         self.plan = plan or ScenarioPlan()
         self.events: list[FakeEvent] = []
+        self.closed = False
+
+    def _ensure_open(self) -> None:
+        if self.closed:
+            raise RuntimeError(f"{self.adapter_id} is closed")
 
     def _outcome(
         self,
@@ -130,6 +135,7 @@ class FakeAdapter:
         success_payload: Any,
         success_committed: bool = False,
     ) -> FakeOutcome:
+        self._ensure_open()
         mode = self.plan.next(self.adapter_id, operation)
         mapping = {
             FakeMode.SUCCESS: (FakeStatus.SUCCEEDED, success_committed, None),
@@ -157,6 +163,14 @@ class FakeAdapter:
         if status is FakeStatus.MALFORMED:
             payload = {"synthetic_malformed": True}
         return FakeOutcome(status=status, event=event, payload=payload)
+
+    def _cleanup(self) -> None:
+        pass
+
+    def close(self) -> None:
+        if not self.closed:
+            self._cleanup()
+            self.closed = True
 
 
 class FakeModel(FakeAdapter):
@@ -215,6 +229,7 @@ class FakeInferenceRuntime(FakeAdapter):
         )
 
     def _forced_denial(self, operation: str, request: Any, reason: str) -> FakeOutcome:
+        self._ensure_open()
         event = FakeEvent(
             sequence=len(self.events) + 1,
             adapter_id=self.adapter_id,
@@ -233,6 +248,9 @@ class FakeInferenceRuntime(FakeAdapter):
         if outcome.status is FakeStatus.SUCCEEDED:
             self.running = False
         return outcome
+
+    def _cleanup(self) -> None:
+        self.running = False
 
 
 class FakeConnector(FakeAdapter):
@@ -254,6 +272,7 @@ class FakeConnector(FakeAdapter):
         )
 
     def _forced_missing(self, record_id: str) -> FakeOutcome:
+        self._ensure_open()
         event = FakeEvent(
             sequence=len(self.events) + 1,
             adapter_id=self.adapter_id,
@@ -268,14 +287,18 @@ class FakeConnector(FakeAdapter):
         return FakeOutcome(status=FakeStatus.DENIED, event=event)
 
 
-class FakeClock:
-    adapter_id = "fake-clock"
-
-    def __init__(self, epoch: int = 1704067200) -> None:
+class FakeClock(FakeAdapter):
+    def __init__(
+        self,
+        epoch: int = 1704067200,
+        plan: ScenarioPlan | None = None,
+    ) -> None:
+        super().__init__("fake-clock", plan)
+        self._epoch = epoch
         self._now = epoch
-        self.events: list[FakeEvent] = []
 
-    def _record(self, operation: str, request: Any) -> None:
+    def _record_clock(self, operation: str, request: Any) -> None:
+        self._ensure_open()
         self.events.append(
             FakeEvent(
                 sequence=len(self.events) + 1,
@@ -290,15 +313,25 @@ class FakeClock:
         )
 
     def now(self) -> int:
-        self._record("now", {})
+        self._record_clock("now", {})
         return self._now
 
     def advance(self, seconds: int) -> int:
         if seconds < 0:
             raise ValueError("fake clock cannot move backwards")
         self._now += seconds
-        self._record("advance", {"seconds": seconds})
+        self._record_clock("advance", {"seconds": seconds})
         return self._now
+
+    def probe(self) -> FakeOutcome:
+        return self._outcome("probe", {"epoch": self._now}, {"epoch": self._now})
+
+    @property
+    def current(self) -> int:
+        return self._now
+
+    def _cleanup(self) -> None:
+        self._now = self._epoch
 
 
 class FakeSecretStore(FakeAdapter):
@@ -333,6 +366,7 @@ class FakeSecretStore(FakeAdapter):
         return outcome
 
     def _missing(self, handle: str, operation: str) -> FakeOutcome:
+        self._ensure_open()
         event = FakeEvent(
             sequence=len(self.events) + 1,
             adapter_id=self.adapter_id,
@@ -345,6 +379,13 @@ class FakeSecretStore(FakeAdapter):
         )
         self.events.append(event)
         return FakeOutcome(status=FakeStatus.DENIED, event=event)
+
+    @property
+    def stored_count(self) -> int:
+        return len(self._values)
+
+    def _cleanup(self) -> None:
+        self._values.clear()
 
 
 class CrashInjector(FakeAdapter):
@@ -395,9 +436,12 @@ def baseline_trace() -> dict[str, Any]:
         for adapter in adapters
         for event in adapter.events
     ]
+    for adapter in adapters:
+        adapter.close()
     return {
         "events": records,
         "event_count": len(records),
         "trace_sha256": trace_sha256(adapters),
         "raw_secret_retained": False,
+        "all_adapters_closed": all(adapter.closed for adapter in adapters),
     }

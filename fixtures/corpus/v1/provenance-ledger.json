@@ -5,15 +5,15 @@
       "contract_kind": "fake-adapters",
       "evidence_report": {
         "path": "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
-        "sha256": "87f55101e959d78ebb6e32932ab0dc26eb2a3d7c375403f35c78c207707d4b5a"
+        "sha256": "33573b6c7fd4df041380044a11dede4b9cce0cc516cc4aff1222e46f9a36c8d3"
       },
       "implementation": {
         "path": "fixtures/fake_adapters.py",
-        "sha256": "8c15a54095e67a5ad354ec8f8e79a9abee2902cb38e25ac8be9decf2e1ed6403"
+        "sha256": "15dc64560f755eba2465b5bf0553664a053cd50072e69fe494cee8a05c90eb7c"
       },
       "profile": {
         "path": "fixtures/fake-adapter-contract.json",
-        "sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244"
+        "sha256": "c0f01c3c98832b89b19c6e3e2e68be240a87b425ce3003158e440afd59cc05ce"
       }
     },
     {
@@ -146,7 +146,7 @@
     }
   ],
   "ledger_id": "agentmage-fixture-provenance-ledger-v1",
-  "ledger_sha256": "e4776bc9091695b5e2d9b0d9fd7be63d83c7837ad1152138ed234ef756c6f714",
+  "ledger_sha256": "7dee217f16a0c8053b5ca8080b1d38213c509367571deabc672dfc26337b9d0e",
   "ledger_version": "1.0.0",
   "lineage": {
     "edges": [
@@ -408,7 +408,7 @@
         "artifact_role": "implementation",
         "node_id": "implementation-fake-adapters",
         "path": "fixtures/fake_adapters.py",
-        "sha256": "8c15a54095e67a5ad354ec8f8e79a9abee2902cb38e25ac8be9decf2e1ed6403"
+        "sha256": "15dc64560f755eba2465b5bf0553664a053cd50072e69fe494cee8a05c90eb7c"
       },
       {
         "artifact_role": "implementation",
@@ -468,7 +468,7 @@
         "artifact_role": "profile",
         "node_id": "profile-fake-adapters",
         "path": "fixtures/fake-adapter-contract.json",
-        "sha256": "19fc3c50fd48884653d5df1d7b209aa341cefb09282125634fb030a682537244"
+        "sha256": "c0f01c3c98832b89b19c6e3e2e68be240a87b425ce3003158e440afd59cc05ce"
       },
       {
         "artifact_role": "profile",
@@ -534,7 +534,7 @@
         "artifact_role": "evidence-report",
         "node_id": "report-fake-adapters",
         "path": "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",
-        "sha256": "87f55101e959d78ebb6e32932ab0dc26eb2a3d7c375403f35c78c207707d4b5a"
+        "sha256": "33573b6c7fd4df041380044a11dede4b9cce0cc516cc4aff1222e46f9a36c8d3"
       },
       {
         "artifact_role": "evidence-report",

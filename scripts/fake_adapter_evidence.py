@@ -32,7 +32,7 @@ EXPECTED_ADAPTERS = (
     ("fake-tool", ("invoke",)),
     ("fake-inference-runtime", ("start", "infer", "stop")),
     ("fake-connector", ("list", "read")),
-    ("fake-clock", ("now", "advance")),
+    ("fake-clock", ("now", "advance", "probe")),
     ("fake-secret-store", ("store", "load", "delete")),
     ("crash-injector", ("checkpoint",)),
 )
@@ -42,6 +42,13 @@ EXPECTED_SIDE_EFFECTS = {
     "reads_real_workspace": False,
     "persists_state": False,
     "stores_real_secret": False,
+}
+EXPECTED_CLEANUP = {
+    "close_is_idempotent": True,
+    "operations_after_close_rejected": True,
+    "runtime_stopped": True,
+    "secret_store_cleared": True,
+    "clock_reset": True,
 }
 
 
@@ -75,6 +82,8 @@ def validate_contract(contract: Any) -> list[str]:
         failures.append("fake adapter clock is not pinned")
     if contract.get("side_effect_contract") != EXPECTED_SIDE_EFFECTS:
         failures.append("fake adapter side-effect contract was weakened")
+    if contract.get("cleanup_contract") != EXPECTED_CLEANUP:
+        failures.append("fake adapter cleanup contract was weakened")
     if contract.get("product_adapter_claim") != "none":
         failures.append("fake adapter contract claimed product implementation")
     if contract.get("platform_support_claim") != "none":
@@ -103,6 +112,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         "modes": list(EXPECTED_MODES),
         "baseline_trace": trace,
         "side_effect_contract": contract["side_effect_contract"],
+        "cleanup_contract": contract["cleanup_contract"],
         "product_adapter_claim": "none",
         "platform_support_claim": "none",
     }

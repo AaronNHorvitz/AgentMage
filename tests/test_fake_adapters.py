@@ -91,6 +91,33 @@ class FakeAdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             clock.advance(-1)
 
+    def test_all_adapters_close_idempotently_and_reject_post_close_operations(self) -> None:
+        adapters_and_operations = [
+            (FakeModel(), lambda item: item.generate("fixture")),
+            (FakeTool(), lambda item: item.invoke("fixture", {})),
+            (FakeInferenceRuntime(), lambda item: item.start("fixture")),
+            (FakeConnector(), lambda item: item.list()),
+            (FakeClock(), lambda item: item.probe()),
+            (
+                FakeSecretStore(),
+                lambda item: item.store(
+                    "fixture", SyntheticSecret("AM_SYNTHETIC_SECRET_CLEANUP")
+                ),
+            ),
+            (CrashInjector(), lambda item: item.checkpoint("fixture")),
+        ]
+        for adapter, operation in adapters_and_operations:
+            with self.subTest(adapter=adapter.adapter_id):
+                operation(adapter)
+                adapter.close()
+                adapter.close()
+                self.assertTrue(adapter.closed)
+                with self.assertRaises(RuntimeError):
+                    operation(adapter)
+        self.assertFalse(adapters_and_operations[2][0].running)
+        self.assertEqual(adapters_and_operations[4][0].current, 1704067200)
+        self.assertEqual(adapters_and_operations[5][0].stored_count, 0)
+
     def test_secret_value_is_redacted_from_repr_and_trace(self) -> None:
         secret = SyntheticSecret("AM_SYNTHETIC_SECRET_TEST_ONLY")
         store = FakeSecretStore()
