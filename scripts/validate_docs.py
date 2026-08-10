@@ -28,6 +28,7 @@ REQUIRED_FILES = (
     "requirements/security-references.json",
     "requirements/security-reference-baseline.json",
     "requirements/traceability-report.json",
+    "scripts/verify_clean_traceability.py",
     "schemas/planning/common.schema.json",
     "schemas/planning/decision-record.schema.json",
     "schemas/planning/risk-register.schema.json",

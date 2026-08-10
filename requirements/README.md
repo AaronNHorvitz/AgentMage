@@ -159,3 +159,11 @@ npm run traceability:check
 ```
 
 Check mode performs no writes. Any source-document change leaves the committed report stale until it is regenerated and reviewed.
+
+Run the clean-tree integration check with:
+
+```bash
+npm run traceability:clean
+```
+
+The command archives committed `HEAD` into an isolated temporary checkout, runs every offline requirement and policy gate there, and verifies each normative PRD statement's complete source-to-requirement-to-planned-issue-to-test-to-release/status/evidence chain. Use `python3 scripts/verify_clean_traceability.py --revision <tree-or-commit>` to verify a different staged tree or commit without changing the working directory.
