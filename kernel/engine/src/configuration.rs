@@ -7,6 +7,11 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+#[cfg(unix)]
+use std::fs::File;
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
+
 use ed25519_dalek::{Signature, VerifyingKey};
 use serde::de::{self, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -653,6 +658,75 @@ pub struct ApplyReceipt {
     backup_path: PathBuf,
 }
 
+/// Evidence returned after a durable version 0-to-1 file migration.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationApplyReceipt {
+    previous_sha256: String,
+    migrated_sha256: String,
+    backup_path: PathBuf,
+    changes: Vec<String>,
+}
+
+impl MigrationApplyReceipt {
+    /// Returns the exact pre-migration file identity retained in the backup.
+    #[must_use]
+    pub fn previous_sha256(&self) -> &str {
+        &self.previous_sha256
+    }
+
+    /// Returns the canonical migrated configuration identity.
+    #[must_use]
+    pub fn migrated_sha256(&self) -> &str {
+        &self.migrated_sha256
+    }
+
+    /// Returns the content-addressed version 0 backup path.
+    #[must_use]
+    pub fn backup_path(&self) -> &Path {
+        &self.backup_path
+    }
+
+    /// Returns the deterministic migration operations in application order.
+    #[must_use]
+    pub fn changes(&self) -> &[String] {
+        &self.changes
+    }
+}
+
+/// Evidence returned by an exact, repeatable migration rollback.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationRollbackReceipt {
+    restored_sha256: String,
+    already_restored: bool,
+}
+
+impl MigrationRollbackReceipt {
+    /// Returns the exact restored version 0 file identity.
+    #[must_use]
+    pub fn restored_sha256(&self) -> &str {
+        &self.restored_sha256
+    }
+
+    /// Reports whether the requested version 0 state was already selected.
+    #[must_use]
+    pub const fn already_restored(&self) -> bool {
+        self.already_restored
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum MigrationDurableTransition {
+    Backup,
+    Candidate,
+    Target,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum TransitionBoundary {
+    Before,
+    After,
+}
+
 impl ApplyReceipt {
     /// Returns the previous configuration identity.
     #[must_use]
@@ -855,6 +929,136 @@ impl ConfigurationManager {
         })
     }
 
+    /// Durably migrates a version 0 configuration file while retaining its exact preimage.
+    pub fn migrate_path_v0(
+        &self,
+        target: &Path,
+    ) -> Result<MigrationApplyReceipt, ConfigurationError> {
+        self.migrate_path_v0_with_observer(target, |_, _| Ok(()))
+    }
+
+    fn migrate_path_v0_with_observer<F>(
+        &self,
+        target: &Path,
+        mut observer: F,
+    ) -> Result<MigrationApplyReceipt, ConfigurationError>
+    where
+        F: FnMut(MigrationDurableTransition, TransitionBoundary) -> Result<(), ConfigurationError>,
+    {
+        let source = fs::read(target).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "legacy configuration file could not be read")
+        })?;
+        let migration = self.migrate_v0(&source)?;
+        let previous_sha256 = sha256(&source);
+        let migrated_sha256 = migration.configuration.sha256.clone();
+        let migrated_bytes = migration.configuration.canonical_bytes.clone();
+        let backup_path = backup_path(target, &previous_sha256)?;
+        let temporary_path = temporary_path(target, &migrated_sha256)?;
+
+        observer(
+            MigrationDurableTransition::Backup,
+            TransitionBoundary::Before,
+        )?;
+        write_new_or_verify(&backup_path, &source)?;
+        sync_parent_directory(&backup_path)?;
+        observer(
+            MigrationDurableTransition::Backup,
+            TransitionBoundary::After,
+        )?;
+
+        observer(
+            MigrationDurableTransition::Candidate,
+            TransitionBoundary::Before,
+        )?;
+        prepare_migration_candidate(&temporary_path, &migrated_bytes)?;
+        sync_parent_directory(&temporary_path)?;
+        observer(
+            MigrationDurableTransition::Candidate,
+            TransitionBoundary::After,
+        )?;
+
+        observer(
+            MigrationDurableTransition::Target,
+            TransitionBoundary::Before,
+        )?;
+        let current = fs::read(target).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "migration preimage could not be read")
+        })?;
+        if sha256(&current) != previous_sha256 {
+            return Err(ConfigurationError::new(
+                ErrorCode::Conflict,
+                "migration preimage changed before publication",
+            ));
+        }
+        fs::rename(&temporary_path, target).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "migrated configuration publish failed")
+        })?;
+        sync_parent_directory(target)?;
+        observer(
+            MigrationDurableTransition::Target,
+            TransitionBoundary::After,
+        )?;
+
+        let observed = self.load_path(target)?;
+        if observed.sha256 != migrated_sha256 {
+            return Err(ConfigurationError::new(
+                ErrorCode::Conflict,
+                "migrated configuration identity did not verify",
+            ));
+        }
+        Ok(MigrationApplyReceipt {
+            previous_sha256,
+            migrated_sha256,
+            backup_path,
+            changes: migration.changes,
+        })
+    }
+
+    /// Restores an exact version 0 migration backup and succeeds on an identical retry.
+    pub fn rollback_migration(
+        &self,
+        target: &Path,
+        backup: &Path,
+        expected_migrated_sha256: &str,
+    ) -> Result<MigrationRollbackReceipt, ConfigurationError> {
+        let backup_bytes = fs::read(backup).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "migration backup could not be read")
+        })?;
+        self.migrate_v0(&backup_bytes)?;
+        let restored_sha256 = sha256(&backup_bytes);
+        let current_bytes = fs::read(target).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "current configuration could not be read")
+        })?;
+        let current_sha256 = sha256(&current_bytes);
+        if current_sha256 == restored_sha256 {
+            return Ok(MigrationRollbackReceipt {
+                restored_sha256,
+                already_restored: true,
+            });
+        }
+        if current_sha256 != expected_migrated_sha256 {
+            return Err(ConfigurationError::new(
+                ErrorCode::Conflict,
+                "migration rollback preimage does not match current configuration",
+            ));
+        }
+        self.load_bytes(&current_bytes)?;
+        atomic_replace(target, &backup_bytes, &restored_sha256)?;
+        let observed = fs::read(target).map_err(|_| {
+            ConfigurationError::new(ErrorCode::Io, "restored configuration could not be read")
+        })?;
+        if sha256(&observed) != restored_sha256 {
+            return Err(ConfigurationError::new(
+                ErrorCode::Conflict,
+                "migration rollback identity did not verify",
+            ));
+        }
+        Ok(MigrationRollbackReceipt {
+            restored_sha256,
+            already_restored: false,
+        })
+    }
+
     /// Compares two validated configurations without retaining raw changed values.
     pub fn diff(
         &self,
@@ -972,6 +1176,7 @@ impl ConfigurationManager {
         }
         let backup_path = backup_path(target, &current.sha256)?;
         write_new_or_verify(&backup_path, &current.canonical_bytes)?;
+        sync_parent_directory(&backup_path)?;
         atomic_replace(target, &next.canonical_bytes, &next.sha256)?;
         let observed = self.load_path(target)?;
         if observed.sha256 != next.sha256 {
@@ -1647,19 +1852,44 @@ fn backup_path(target: &Path, hash: &str) -> Result<PathBuf, ConfigurationError>
     Ok(parent.join(format!(".{filename}.agentmage-backup-{hash}.json")))
 }
 
+fn temporary_path(target: &Path, hash: &str) -> Result<PathBuf, ConfigurationError> {
+    let parent = target.parent().ok_or_else(|| {
+        ConfigurationError::new(
+            ErrorCode::Io,
+            "configuration parent directory is unavailable",
+        )
+    })?;
+    let filename = target
+        .file_name()
+        .and_then(|value| value.to_str())
+        .ok_or_else(|| {
+            ConfigurationError::new(ErrorCode::Io, "configuration filename is invalid")
+        })?;
+    Ok(parent.join(format!(".{filename}.agentmage-new-{hash}.tmp")))
+}
+
 fn write_new_or_verify(path: &Path, content: &[u8]) -> Result<(), ConfigurationError> {
-    match OpenOptions::new().write(true).create_new(true).open(path) {
+    match create_private_new(path) {
         Ok(mut file) => {
             file.write_all(content).map_err(|_| {
                 ConfigurationError::new(ErrorCode::Io, "configuration backup write failed")
             })?;
+            set_private_permissions(path)?;
             file.sync_all().map_err(|_| {
                 ConfigurationError::new(ErrorCode::Io, "configuration backup sync failed")
             })?;
-            set_private_permissions(path)?;
             Ok(())
         }
         Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            let metadata = fs::symlink_metadata(path).map_err(|_| {
+                ConfigurationError::new(ErrorCode::Io, "configuration backup inspect failed")
+            })?;
+            if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
+                return Err(ConfigurationError::new(
+                    ErrorCode::Conflict,
+                    "configuration backup path is not a regular file",
+                ));
+            }
             let existing = fs::read(path).map_err(|_| {
                 ConfigurationError::new(ErrorCode::Io, "configuration backup read failed")
             })?;
@@ -1679,27 +1909,53 @@ fn write_new_or_verify(path: &Path, content: &[u8]) -> Result<(), ConfigurationE
     }
 }
 
-fn atomic_replace(target: &Path, content: &[u8], hash: &str) -> Result<(), ConfigurationError> {
-    let parent = target.parent().ok_or_else(|| {
-        ConfigurationError::new(
+fn prepare_migration_candidate(path: &Path, content: &[u8]) -> Result<(), ConfigurationError> {
+    match create_private_new(path) {
+        Ok(mut file) => {
+            file.write_all(content).map_err(|_| {
+                ConfigurationError::new(ErrorCode::Io, "migration candidate write failed")
+            })?;
+            set_private_permissions(path)?;
+            file.sync_all().map_err(|_| {
+                ConfigurationError::new(ErrorCode::Io, "migration candidate sync failed")
+            })?;
+            Ok(())
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            let metadata = fs::symlink_metadata(path).map_err(|_| {
+                ConfigurationError::new(ErrorCode::Io, "migration candidate could not be inspected")
+            })?;
+            if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
+                return Err(ConfigurationError::new(
+                    ErrorCode::Conflict,
+                    "migration candidate path is not a regular file",
+                ));
+            }
+            let existing = fs::read(path).map_err(|_| {
+                ConfigurationError::new(ErrorCode::Io, "migration candidate could not be read")
+            })?;
+            if existing == content {
+                set_private_permissions(path)?;
+                Ok(())
+            } else {
+                Err(ConfigurationError::new(
+                    ErrorCode::Conflict,
+                    "migration candidate conflicts with existing file",
+                ))
+            }
+        }
+        Err(_) => Err(ConfigurationError::new(
             ErrorCode::Io,
-            "configuration parent directory is unavailable",
-        )
+            "migration candidate could not be created",
+        )),
+    }
+}
+
+fn atomic_replace(target: &Path, content: &[u8], hash: &str) -> Result<(), ConfigurationError> {
+    let temporary = temporary_path(target, hash)?;
+    let mut file = create_private_new(&temporary).map_err(|_| {
+        ConfigurationError::new(ErrorCode::Conflict, "configuration temporary file exists")
     })?;
-    let filename = target
-        .file_name()
-        .and_then(|value| value.to_str())
-        .ok_or_else(|| {
-            ConfigurationError::new(ErrorCode::Io, "configuration filename is invalid")
-        })?;
-    let temporary = parent.join(format!(".{filename}.agentmage-new-{hash}.tmp"));
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&temporary)
-        .map_err(|_| {
-            ConfigurationError::new(ErrorCode::Conflict, "configuration temporary file exists")
-        })?;
     if file.write_all(content).is_err() || file.sync_all().is_err() {
         drop(file);
         let _ = fs::remove_file(&temporary);
@@ -1720,6 +1976,33 @@ fn atomic_replace(target: &Path, content: &[u8], hash: &str) -> Result<(), Confi
             "configuration atomic replacement failed",
         ));
     }
+    sync_parent_directory(target)?;
+    Ok(())
+}
+
+fn create_private_new(path: &Path) -> std::io::Result<std::fs::File> {
+    let mut options = OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    options.mode(0o600);
+    options.open(path)
+}
+
+#[cfg(unix)]
+fn sync_parent_directory(path: &Path) -> Result<(), ConfigurationError> {
+    let parent = path.parent().ok_or_else(|| {
+        ConfigurationError::new(
+            ErrorCode::Io,
+            "configuration parent directory is unavailable",
+        )
+    })?;
+    File::open(parent)
+        .and_then(|directory| directory.sync_all())
+        .map_err(|_| ConfigurationError::new(ErrorCode::Io, "configuration directory sync failed"))
+}
+
+#[cfg(not(unix))]
+fn sync_parent_directory(_path: &Path) -> Result<(), ConfigurationError> {
     Ok(())
 }
 
@@ -3126,6 +3409,127 @@ mod tests {
             .expect("rollback succeeds");
         assert_eq!(restored.sha256(), before.sha256());
         assert!(receipt.backup_path().is_file());
+        fs::remove_dir_all(directory).expect("temporary directory removes");
+    }
+
+    #[test]
+    fn migration_interruptions_select_valid_state_and_rollback_is_repeatable() {
+        let transition_points = [
+            (
+                MigrationDurableTransition::Backup,
+                TransitionBoundary::Before,
+                false,
+            ),
+            (
+                MigrationDurableTransition::Backup,
+                TransitionBoundary::After,
+                false,
+            ),
+            (
+                MigrationDurableTransition::Candidate,
+                TransitionBoundary::Before,
+                false,
+            ),
+            (
+                MigrationDurableTransition::Candidate,
+                TransitionBoundary::After,
+                false,
+            ),
+            (
+                MigrationDurableTransition::Target,
+                TransitionBoundary::Before,
+                false,
+            ),
+            (
+                MigrationDurableTransition::Target,
+                TransitionBoundary::After,
+                true,
+            ),
+        ];
+        let expected_migrated = manager()
+            .migrate_v0(MIGRATION_V0_PROFILE)
+            .expect("migration fixture is valid");
+        let expected_migrated_sha256 = expected_migrated.configuration().sha256().to_owned();
+        let previous_sha256 = sha256(MIGRATION_V0_PROFILE);
+
+        for (transition, boundary, migrated_selected) in transition_points {
+            let directory = temporary_directory();
+            let target = directory.join("agentmage.json");
+            fs::write(&target, MIGRATION_V0_PROFILE).expect("legacy fixture writes");
+            let interruption = manager()
+                .migrate_path_v0_with_observer(&target, |observed, position| {
+                    if observed == transition && position == boundary {
+                        return Err(ConfigurationError::new(
+                            ErrorCode::Io,
+                            "synthetic migration interruption",
+                        ));
+                    }
+                    Ok(())
+                })
+                .expect_err("selected transition must interrupt");
+            assert_eq!(interruption.code(), "configuration-io-failure");
+            assert_eq!(
+                sha256(&fs::read(&target).expect("selected target reads"))
+                    == expected_migrated_sha256,
+                migrated_selected,
+                "interruption must select exactly the prior or complete migrated state",
+            );
+
+            let receipt = if migrated_selected {
+                let backup = backup_path(&target, &previous_sha256).expect("backup path builds");
+                assert!(backup.is_file());
+                MigrationApplyReceipt {
+                    previous_sha256: previous_sha256.clone(),
+                    migrated_sha256: expected_migrated_sha256.clone(),
+                    backup_path: backup,
+                    changes: expected_migrated.changes().to_vec(),
+                }
+            } else {
+                manager()
+                    .migrate_path_v0(&target)
+                    .expect("migration resumes from prior state")
+            };
+            assert_eq!(receipt.previous_sha256(), previous_sha256);
+            assert_eq!(receipt.migrated_sha256(), expected_migrated_sha256);
+            assert_eq!(receipt.changes(), expected_migrated.changes());
+
+            let first = manager()
+                .rollback_migration(&target, receipt.backup_path(), receipt.migrated_sha256())
+                .expect("first rollback restores the exact legacy preimage");
+            assert!(!first.already_restored());
+            assert_eq!(first.restored_sha256(), previous_sha256);
+            assert_eq!(
+                fs::read(&target).expect("restored target reads"),
+                MIGRATION_V0_PROFILE,
+            );
+            let repeated = manager()
+                .rollback_migration(&target, receipt.backup_path(), receipt.migrated_sha256())
+                .expect("identical rollback retry succeeds");
+            assert!(repeated.already_restored());
+            assert_eq!(repeated.restored_sha256(), previous_sha256);
+            assert!(receipt.backup_path().is_file());
+            fs::remove_dir_all(directory).expect("temporary directory removes");
+        }
+
+        let directory = temporary_directory();
+        let target = directory.join("agentmage.json");
+        fs::write(&target, MIGRATION_V0_PROFILE).expect("legacy fixture writes");
+        let conflict = manager()
+            .migrate_path_v0_with_observer(&target, |transition, boundary| {
+                if transition == MigrationDurableTransition::Target
+                    && boundary == TransitionBoundary::Before
+                {
+                    fs::write(&target, SYNTHETIC_PROFILE)
+                        .expect("concurrent replacement fixture writes");
+                }
+                Ok(())
+            })
+            .expect_err("changed preimage must prevent migration publication");
+        assert_eq!(conflict.code(), "configuration-state-conflict");
+        assert_eq!(
+            fs::read(&target).expect("concurrent replacement reads"),
+            SYNTHETIC_PROFILE,
+        );
         fs::remove_dir_all(directory).expect("temporary directory removes");
     }
 

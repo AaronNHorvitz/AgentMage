@@ -1,0 +1,121 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "configuration::tests::migration_interruptions_select_valid_state_and_rollback_is_repeatable",
+        "--locked",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    }
+  ],
+  "durability": {
+    "atomic_same_directory_publish": true,
+    "content_addressed_backup": true,
+    "file_sync": true,
+    "parent_directory_sync": true,
+    "prepared_candidate_retry": true,
+    "private_backup_and_candidate": true
+  },
+  "durable_transitions": [
+    "backup-published",
+    "candidate-published",
+    "target-published"
+  ],
+  "interruption_boundaries": [
+    "before",
+    "after"
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "platform_execution": "fedora-linux",
+  "private_paths_persisted_in_report": false,
+  "product_profile_activation_claim": "none",
+  "product_startup_migration_claim": "none",
+  "raw_configuration_persisted_in_report": false,
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "702e0fbb88f6cfaae97475e6d876e0907a8819e205bcfcc87a46825e1fd8ea00"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "768ff57311bd3de95000fcace3de631a047a18eff1e78962f2ed09cc84f8410a"
+    },
+    {
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "1a4234612c92b8815385f679a206ba6b588c73caca4f2c835f3f4125e78da748"
+    },
+    {
+      "path": "fixtures/configuration/migration/v0.valid.json",
+      "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
+    },
+    {
+      "path": "fixtures/configuration/migration/v1.expected.json",
+      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+    },
+    {
+      "path": "scripts/configuration_migration_recovery_evidence.py",
+      "sha256": "4fa8646f63275a864b7a45fe0d2c3cd5ee012b9c3720349058c40cc2dea570d7"
+    },
+    {
+      "path": "tests/test_configuration_migration_recovery_evidence.py",
+      "sha256": "c779362ff9b12a3965b3ab6c037eb6f0ec43138ec6fdfd9afc6b40220e9a457c"
+    }
+  ],
+  "state_selection": {
+    "allowed": [
+      "exact-prior-version-0",
+      "complete-canonical-version-1"
+    ],
+    "partial_configuration_allowed": false,
+    "preimage_change_overwrite_allowed": false
+  },
+  "status": "pass-shared-linux-configuration-migration-recovery",
+  "summary": {
+    "concurrent_preimage_mutation_count": 1,
+    "durable_transition_count": 3,
+    "failed_test_count": 0,
+    "focused_test_count": 1,
+    "injected_interruption_count": 6,
+    "invalid_selected_state_count": 0,
+    "repeatable_rollback": "pass-idempotent-exact-preimage",
+    "skipped_test_count": 0
+  },
+  "task_id": "3.1.3.3",
+  "test_id": "S-003-RT01",
+  "tests": [
+    "migration_interruptions_select_valid_state_and_rollback_is_repeatable"
+  ]
+}

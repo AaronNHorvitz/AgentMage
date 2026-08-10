@@ -68,12 +68,15 @@ RESULT_TESTS = (
     "configuration_or_result_changes_produce_distinct_binding_hashes",
     "session_and_release_results_bind_the_exact_configuration_identity",
 )
+RECOVERY_TESTS = (
+    "migration_interruptions_select_valid_state_and_rollback_is_repeatable",
+)
 TEST_COMMAND = (
     *TEST_COMMAND_BASE,
     "--",
     *(
         argument
-        for name in (*AUTHORITY_TESTS, *RESULT_TESTS)
+        for name in (*AUTHORITY_TESTS, *RESULT_TESTS, *RECOVERY_TESTS)
         for argument in ("--skip", name)
     ),
 )
