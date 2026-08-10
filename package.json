@@ -16,6 +16,7 @@
     "evidence:story0.2:check": "python3 scripts/story_0_2_evidence.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
+    "model:feasibility-test": "python3 -m unittest tests.test_model_feasibility",
     "policy:build": "python3 scripts/policy_expectations.py",
     "policy:check": "python3 scripts/policy_expectations.py --check",
     "references:check": "python3 scripts/security_references.py",
