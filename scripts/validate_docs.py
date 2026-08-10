@@ -25,6 +25,7 @@ REQUIRED_FILES = (
     "architecture/dependency-rules.json",
     "architecture/build-contract.json",
     "architecture/dependency-classes.json",
+    "architecture/optional-component-inventory.json",
     "supply-chain/dependency-provenance.json",
     "supply-chain/dependency-hashes.sha256",
     "supply-chain/sbom.cdx.json",

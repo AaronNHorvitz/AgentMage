@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "enforced",
+  "components": [
+    {
+      "id": "linux-bubblewrap",
+      "executable": "bwrap",
+      "platforms": [
+        "linux"
+      ],
+      "classification": "required-runtime-prerequisite",
+      "meaning": "Executable presence only; sandbox suitability remains unverified"
+    },
+    {
+      "id": "linux-resource-control",
+      "executable": "systemd-run",
+      "platforms": [
+        "linux"
+      ],
+      "classification": "required-runtime-prerequisite",
+      "meaning": "Executable presence only; user-unit and cgroup suitability remain unverified"
+    },
+    {
+      "id": "linux-secret-service-client",
+      "executable": "secret-tool",
+      "platforms": [
+        "linux"
+      ],
+      "classification": "required-runtime-prerequisite",
+      "meaning": "Executable presence only; Secret Service availability remains unverified"
+    },
+    {
+      "id": "docker-compatibility",
+      "executable": "docker",
+      "platforms": [
+        "linux",
+        "macos"
+      ],
+      "classification": "optional-compatibility",
+      "meaning": "Executable presence only; daemon, privilege, Model Runner, and security gates remain unverified"
+    },
+    {
+      "id": "rust-development",
+      "executable": "cargo",
+      "platforms": [
+        "all"
+      ],
+      "classification": "development-only",
+      "meaning": "Maintainer tool; never an ambient end-user dependency"
+    },
+    {
+      "id": "node-development",
+      "executable": "node",
+      "platforms": [
+        "all"
+      ],
+      "classification": "development-only",
+      "meaning": "Maintainer tool; never an ambient end-user dependency"
+    },
+    {
+      "id": "python-development",
+      "executable": "python3",
+      "platforms": [
+        "all"
+      ],
+      "classification": "development-only",
+      "meaning": "Repository tooling only; never an ambient end-user dependency"
+    },
+    {
+      "id": "macos-swift-build",
+      "executable": "swift",
+      "platforms": [
+        "macos"
+      ],
+      "classification": "maintainer-platform-build",
+      "meaning": "Maintainer build tool; never an ambient end-user dependency"
+    },
+    {
+      "id": "macos-xcode-build",
+      "executable": "xcodebuild",
+      "platforms": [
+        "macos"
+      ],
+      "classification": "maintainer-platform-build",
+      "meaning": "Maintainer packaging tool; never an ambient end-user dependency"
+    }
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "writes_files": false,
+    "installs_components": false,
+    "uses_network": false,
+    "emits_paths": false,
+    "emits_environment_values": false
+  },
+  "platform_status": {
+    "macos_implementation": "blocked-macos",
+    "macos_verification": "blocked-macos"
+  }
+}
