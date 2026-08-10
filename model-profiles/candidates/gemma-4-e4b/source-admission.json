@@ -2,10 +2,10 @@
   "schema_version": 1,
   "record_type": "model_source_admission",
   "profile_id": "gemma-4-e4b-it",
-  "evaluated_at": "2026-08-10T08:02:00Z",
+  "evaluated_at": "2026-08-10T09:50:00Z",
   "policy": {
     "path": "MODEL-PROVENANCE-POLICY.md",
-    "sha256": "b991c59f11e208a7451c1867e581dd099452c37a771cadcbd450a160a77cc202"
+    "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad"
   },
   "identity": {
     "canonical_model": "google/gemma-4-E4B-it",

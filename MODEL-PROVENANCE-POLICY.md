@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Product policy; implementation and model admission have not started |
+| Status | Active product policy; initial candidate evaluation is in progress |
 | Effective date | 2026-08-10 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
@@ -18,7 +18,7 @@ This policy does not approve a model merely because it is local, open-weight, po
 
 The PRD controls product scope. `Agent-Scaffolding-Inventory.md` controls stable requirements and acceptance tests. `SECURITY-REVIEW.md` controls product-security requirements and reviewer protocols. This policy supplies the model-admission procedure under those documents and cannot weaken them.
 
-Every admission decision records the policy version, model and runtime identities, evidence hashes, reviewer, date, result, limitations, and superseding decision when applicable. Unknown, contradictory, stale, or unverifiable evidence produces `BLOCKED`, never conditional approval.
+Every admission decision records the policy version, model and runtime identities, evidence hashes, reviewer, date, result, limitations, and superseding decision when applicable. Unknown, contradictory, stale, unavailable, or unverifiable evidence produces `BLOCKED`, never conditional approval. A verified prohibited identity, integrity violation, or mandatory threshold failure produces `REJECTED`. Only complete conforming evidence can produce `PASS`.
 
 ## 3. Covered Supply Chain
 
@@ -61,7 +61,7 @@ Every candidate receives one signed or hash-bound record containing:
 | Resources | Memory, disk, acceleration, context, concurrency, and cancellation limits measured on each reference platform |
 | Quality | Pinned task corpus, decoding profile, tool-call validity, grounding, uncertainty, citation, and reproducibility results |
 | Security | Prompt-injection, malformed output, resource exhaustion, egress, file/tool/credential authority, and local endpoint exposure results |
-| Decision | `PASS` or `BLOCKED`, reviewer, date, limitations, evidence index, expiry or re-review trigger, and fallback status |
+| Decision | `PASS`, `BLOCKED`, or `REJECTED`; reviewer, date, limitations, evidence index, expiry or re-review trigger, and fallback status |
 
 Mutable tags such as `latest` or `e4b` may be shown to users but never serve as release identity. Docker Model Runner artifacts are pinned by immutable OCI digest; native artifacts are pinned by GGUF and supporting-file hashes.
 

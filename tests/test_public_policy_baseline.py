@@ -104,7 +104,9 @@ class PublicPolicyBaselineTests(unittest.TestCase):
         ):
             self.assertIn(f"| {category} |", policy)
         for required_rule in (
-            "Unknown, contradictory, stale, or unverifiable evidence produces `BLOCKED`",
+            "Unknown, contradictory, stale, unavailable, or unverifiable evidence produces `BLOCKED`",
+            "mandatory threshold failure produces `REJECTED`",
+            "Only complete conforming evidence can produce `PASS`",
             "does not create new provenance",
             "never serve as release identity",
             "pinned by immutable OCI digest",
