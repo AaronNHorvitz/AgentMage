@@ -138,16 +138,16 @@
       "all_versions_present": true,
       "classifications": {
         "development": 371,
-        "production": 29
+        "production": 40
       },
-      "component_count": 400,
+      "component_count": 411,
       "ecosystems": {
-        "cargo": 27,
+        "cargo": 38,
         "npm": 370,
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "6ae15866f834db05753e5c4012e12536e0d60aa29c99773869c4118aba475a61",
+      "identity_set_sha256": "e4ab523414deae2abbd6b196b6b9c140dd2034224df5b0ea72eff226c81330ec",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -316,15 +316,15 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "cc4ea52b7af428bdf3192512815a4dc29cd97976b9b0d65836c770a04400a285"
+      "sha256": "61fa0d73631ab7ee7f2c5e5281599e35e9e50099573d075fc474718c29a966fe"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "0dcba1d65d09a212ff61cb1397dc87c92ce1ae541c991a7e18389b0ff904946b"
+      "sha256": "aa06c85ca271af1a8287251f2b865075a349bbf2ebf19c45d6b97d2dfc8bfac5"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "d131e4254f62ef75f31caada949b2d83dbe45c83eb54cac8f81a056c7548f3ac"
+      "sha256": "7cfe5f720df4ef1572fd2d96b5ca2da3d8e4282e4823786280cc641f9906fe25"
     },
     {
       "path": "architecture/optional-component-inventory.json",
@@ -344,11 +344,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "417edab14c481baec23f6f12f953eb15fb01cf1f8227971d0ca05d92a64cfe9b"
+      "sha256": "73beaa9e70ce2d5499cfb42d00a76711b3fa7d7e21e3707781a77aacdc318324"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "e45863ddef62346b36594170c82c7c9904684a53cdf3b7dfe5ec6474ec826a52"
+      "sha256": "ae035697305d32ddacedf0ffb0f4d327a3d459819d2b1219bd0dba4b2086951b"
     },
     {
       "path": "scripts/component_inventory.py",
@@ -356,16 +356,16 @@
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "2144d8317a65566e56060678a2dd89f256a923964f972b0540500b603935add4"
+      "sha256": "ccf859cc1f7f1d646039c1d720b12a4ab5e53273a883ae5e28af400c8dcb1dbe"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",
   "summary": {
     "approved_build_environment_count": 2,
     "approved_build_executable_count": 14,
-    "approved_component_count": 416,
+    "approved_component_count": 427,
     "approved_optional_dependency_count": 0,
-    "approved_package_count": 400,
+    "approved_package_count": 411,
     "approved_product_runtime_count": 0,
     "approved_records_missing_hash_count": 0,
     "approved_records_missing_version_count": 0,
