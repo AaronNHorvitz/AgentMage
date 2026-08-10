@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-document-fixtures-v1",
+  "status": "inert-synthetic-document-contract",
+  "seed": "agentmage-document-synthetic-v1",
+  "fixed_timestamp_epoch": 1704067200,
+  "families": [
+    {
+      "id": "text",
+      "media_type": "text/plain",
+      "path": "documents/text/meeting-note.txt"
+    },
+    {
+      "id": "json",
+      "media_type": "application/json",
+      "path": "documents/json/project-record.json"
+    },
+    {
+      "id": "word",
+      "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "path": "documents/word/status-report.docx"
+    },
+    {
+      "id": "portable-document-format",
+      "media_type": "application/pdf",
+      "path": "documents/pdf/status-report.pdf"
+    },
+    {
+      "id": "spreadsheets",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "path": "documents/spreadsheets/project-ledger.xlsx"
+    },
+    {
+      "id": "presentations",
+      "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "path": "documents/presentations/project-brief.pptx"
+    },
+    {
+      "id": "images",
+      "media_type": "image/png",
+      "path": "documents/images/status-grid.png"
+    },
+    {
+      "id": "archives",
+      "media_type": "application/zip",
+      "path": "documents/archives/reference-bundle.zip"
+    },
+    {
+      "id": "notebooks",
+      "media_type": "application/x-ipynb+json",
+      "path": "documents/notebooks/analysis-notes.ipynb"
+    },
+    {
+      "id": "logs",
+      "media_type": "text/plain",
+      "path": "documents/logs/application.log"
+    }
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "writes_outside_requested_destination": false,
+    "overwrites_existing_destination": false,
+    "creates_executable_files": false
+  },
+  "content_safety_contract": {
+    "macros": false,
+    "scripts": false,
+    "active_formulas": false,
+    "external_relationships": false,
+    "embedded_executables": false,
+    "archive_path_traversal": false,
+    "notebook_execution_history": false
+  },
+  "privacy_contract": {
+    "private_user_data": false,
+    "real_credentials": false,
+    "real_person_identity": false,
+    "private_absolute_paths": false
+  },
+  "product_parser_support_claim": "none"
+}

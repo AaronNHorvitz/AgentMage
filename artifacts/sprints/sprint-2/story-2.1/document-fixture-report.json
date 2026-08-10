@@ -1,0 +1,112 @@
+{
+  "content_safety_contract": {
+    "active_formulas": false,
+    "archive_path_traversal": false,
+    "embedded_executables": false,
+    "external_relationships": false,
+    "macros": false,
+    "notebook_execution_history": false,
+    "scripts": false
+  },
+  "corpus_preview": {
+    "family_count": 10,
+    "files": [
+      {
+        "bytes": 407,
+        "family": "archives",
+        "media_type": "application/zip",
+        "path": "documents/archives/reference-bundle.zip",
+        "sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3"
+      },
+      {
+        "bytes": 82,
+        "family": "images",
+        "media_type": "image/png",
+        "path": "documents/images/status-grid.png",
+        "sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba"
+      },
+      {
+        "bytes": 128,
+        "family": "json",
+        "media_type": "application/json",
+        "path": "documents/json/project-record.json",
+        "sha256": "922d3fba98b19460218fecb8eb6c5ff1bf27806372069a9f71b8bb30b113b41c"
+      },
+      {
+        "bytes": 162,
+        "family": "logs",
+        "media_type": "text/plain",
+        "path": "documents/logs/application.log",
+        "sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762"
+      },
+      {
+        "bytes": 466,
+        "family": "notebooks",
+        "media_type": "application/x-ipynb+json",
+        "path": "documents/notebooks/analysis-notes.ipynb",
+        "sha256": "ad6781a30326c9964b571bc3b0ca9fa838c78570221032551b5d107599dc6186"
+      },
+      {
+        "bytes": 617,
+        "family": "portable-document-format",
+        "media_type": "application/pdf",
+        "path": "documents/pdf/status-report.pdf",
+        "sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780"
+      },
+      {
+        "bytes": 2745,
+        "family": "presentations",
+        "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "path": "documents/presentations/project-brief.pptx",
+        "sha256": "4424a48de7bf6a71c9298ea4c3a20da67b60b671cf6f65fe1b47bbfebd44403c"
+      },
+      {
+        "bytes": 2479,
+        "family": "spreadsheets",
+        "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "path": "documents/spreadsheets/project-ledger.xlsx",
+        "sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e"
+      },
+      {
+        "bytes": 101,
+        "family": "text",
+        "media_type": "text/plain",
+        "path": "documents/text/meeting-note.txt",
+        "sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0"
+      },
+      {
+        "bytes": 1409,
+        "family": "word",
+        "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "path": "documents/word/status-report.docx",
+        "sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c"
+      }
+    ],
+    "persisted": false,
+    "sha256": "2f9fbc44c147054e69fcf41dea4b3d905ba7229aac62fcb7762da997c43ff00b"
+  },
+  "macos_support_claim": "none",
+  "privacy_contract": {
+    "private_absolute_paths": false,
+    "private_user_data": false,
+    "real_credentials": false,
+    "real_person_identity": false
+  },
+  "product_parser_support_claim": "none",
+  "profile": {
+    "id": "agentmage-document-fixtures-v1",
+    "seed_sha256": "be2ecf5774f427e4837af59dac65f8b14863bf1649fe02babb664e0ec40ddc50",
+    "sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425"
+  },
+  "schema_version": 1,
+  "side_effect_contract": {
+    "creates_executable_files": false,
+    "executes_external_commands": false,
+    "overwrites_existing_destination": false,
+    "uses_network": false,
+    "writes_outside_requested_destination": false
+  },
+  "status": "pass",
+  "task_id": "2.1.1.5",
+  "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1"
+}
