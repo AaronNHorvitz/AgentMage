@@ -1,0 +1,313 @@
+{
+  "artifact_id": "kernel-architecture-dependency-report",
+  "authority_findings": {
+    "kernel_contracts_internal_dependencies": [],
+    "kernel_engine_reverse_dependencies": [],
+    "lower_layer_shell_dependencies": []
+  },
+  "checks": {
+    "declared_graph_acyclic": true,
+    "document_complete": true,
+    "observed_edges_allowed": true,
+    "observed_graph_acyclic": true,
+    "swift_external_dependencies_absent": true,
+    "unmaterialized_edges_explained": true,
+    "vscode_product_dependencies_absent": true
+  },
+  "decision_id": "ADR-0004",
+  "document_failures": [],
+  "external_dependencies": {
+    "direct_cargo": [
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.229"
+        },
+        "manifest": "kernel/contracts/Cargo.toml",
+        "source": "kernel-contracts",
+        "target": "serde"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "kernel/contracts/Cargo.toml",
+        "source": "kernel-contracts",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "6ebaa1a2bf1290ab3bfe5a7b771d050ebffab2711c19a81691c683a5144a25de",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "3.0.0"
+        },
+        "manifest": "kernel/engine/Cargo.toml",
+        "source": "kernel-engine",
+        "target": "ed25519-dalek"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.229"
+        },
+        "manifest": "kernel/engine/Cargo.toml",
+        "source": "kernel-engine",
+        "target": "serde"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "kernel/engine/Cargo.toml",
+        "source": "kernel-engine",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "kernel/engine/Cargo.toml",
+        "source": "kernel-engine",
+        "target": "sha2"
+      }
+    ],
+    "direct_cargo_count": 6,
+    "locked_external_cargo_package_count": 31,
+    "swift_external": [],
+    "vscode_development": [
+      "@eslint/js",
+      "@types/node",
+      "@types/vscode",
+      "eslint",
+      "prettier",
+      "typescript",
+      "typescript-eslint"
+    ],
+    "vscode_runtime": []
+  },
+  "graph": {
+    "declared_but_unmaterialized_edges": [
+      {
+        "reason": "blocked-macos",
+        "source": "platform-macos",
+        "target": "kernel-contracts"
+      },
+      {
+        "reason": "blocked-macos",
+        "source": "shell-host",
+        "target": "platform-macos"
+      },
+      {
+        "reason": "protocol-not-yet-generated",
+        "source": "shell-vscode",
+        "target": "kernel-contracts"
+      }
+    ],
+    "declared_cycle": null,
+    "declared_edge_count": 10,
+    "declared_edges": [
+      {
+        "source": "capability-read-only",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "kernel-engine",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "platform-linux",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "platform-macos",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "shell-host",
+        "target": "capability-read-only"
+      },
+      {
+        "source": "shell-host",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "shell-host",
+        "target": "kernel-engine"
+      },
+      {
+        "source": "shell-host",
+        "target": "platform-linux"
+      },
+      {
+        "source": "shell-host",
+        "target": "platform-macos"
+      },
+      {
+        "source": "shell-vscode",
+        "target": "kernel-contracts"
+      }
+    ],
+    "observed_cycle": null,
+    "observed_product_edge_count": 7,
+    "observed_product_edges": [
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "capabilities/read-only/Cargo.toml",
+        "source": "capability-read-only",
+        "target": "kernel-contracts"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "kernel/engine/Cargo.toml",
+        "source": "kernel-engine",
+        "target": "kernel-contracts"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "kernel-contracts"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "capability-read-only"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "kernel-contracts"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "kernel-engine"
+      },
+      {
+        "condition": "cfg(target_os = \"linux\")",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "platform-linux"
+      }
+    ],
+    "prohibited_observed_edges": []
+  },
+  "inventory_status": "scaffolded",
+  "limitations": [
+    "The report verifies repository manifests and declared module policy, not runtime process or data flow.",
+    "The VS Code generated contract protocol is not yet materialized.",
+    "The macOS adapter and host composition edges remain blocked-macos.",
+    "External package security and provenance are owned by separate supply-chain evidence."
+  ],
+  "module_count": 12,
+  "platform_status": {
+    "linux_manifest_graph": "verified-local",
+    "macos_execution": "blocked-macos",
+    "macos_implementation": "blocked-macos",
+    "macos_manifest": "interface-only"
+  },
+  "schema_version": 1,
+  "source_records": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "2c8d2a0a5ce54932b78a758c637fe25752be241cb72361ba461cc302695155e9"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98"
+    },
+    {
+      "path": "architecture/dependency-rules.json",
+      "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
+    },
+    {
+      "path": "architecture/module-inventory.json",
+      "sha256": "8130a4b936e0879b25a0b59191517d8ccae904e19922de41dfa460e2005e8781"
+    },
+    {
+      "path": "capabilities/read-only/Cargo.toml",
+      "sha256": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a"
+    },
+    {
+      "path": "docs/architecture/kernel-dependency-report.md",
+      "sha256": "392fa0d4555bb900315d2f1bbcfd921ba7e2102c5a7abd04e9e26aadabce3709"
+    },
+    {
+      "path": "kernel/contracts/Cargo.toml",
+      "sha256": "a271593cde3691c01f46d4c096e327ecc1a8e2db7e19497fe322e1d18f3b9324"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "2f527e1f328c99dfa146b94698108999d759a87438cab499d1693bd4c7101649"
+    },
+    {
+      "path": "platforms/macos/Package.resolved",
+      "sha256": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d"
+    },
+    {
+      "path": "platforms/macos/Package.swift",
+      "sha256": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948"
+    },
+    {
+      "path": "release/xtask/Cargo.toml",
+      "sha256": "a6d0e5dfb1b341e981202182fa2b21809b1b781f6f3f309d0e604fa846f8ebbe"
+    },
+    {
+      "path": "scripts/kernel_architecture_report.py",
+      "sha256": "7c989769d2db31878d67c404f209cce47b4c7e7bfdd55af8ca7d1515ee1ab5e8"
+    },
+    {
+      "path": "shells/host/Cargo.toml",
+      "sha256": "33afcee42069d1f15c44936e93dc496135bfe63c0aa9201ce25d2b460ba85439"
+    },
+    {
+      "path": "shells/vscode/package.json",
+      "sha256": "5c09f46372c33606f82bc48a547c9295db063bee2aa5909bf6f7e47e10f5609f"
+    },
+    {
+      "path": "tests/test_kernel_architecture_report.py",
+      "sha256": "21cbcb1e09210d62ae9d10b814e6fe28efd6ef72cfda067d19b52446ccc3a6f6"
+    }
+  ],
+  "source_revision": "703eb13c680127324a1b910b8bd202e66de1c45b",
+  "status": "pass-linux-architecture",
+  "task_id": "4.1.2.4"
+}
