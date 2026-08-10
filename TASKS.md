@@ -169,7 +169,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.1.8** (legacy `S-000-I08`): Create a public product-security reference register that records publisher, title, publication and effective dates, source URL, retrieval date, SHA-256, current or superseded status, and the approved local-snapshot decision for every cited source without implying external certification or endorsement.
 
 - [ ] **Task 0.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 0.1.2.1:** Versioned requirement registry.
+  - [x] **Sub-task 0.1.2.1:** Versioned requirement registry.
   - [ ] **Sub-task 0.1.2.2:** Cross-document traceability report.
   - [ ] **Sub-task 0.1.2.3:** Decision and supersession templates.
   - [ ] **Sub-task 0.1.2.4:** Machine-readable exclusion register.

@@ -121,6 +121,9 @@ class RegistryArtifactTests(unittest.TestCase):
         committed_ids = [item["id"] for item in committed["requirements"]]
 
         self.assertEqual(committed, registry)
+        self.assertEqual(committed["schema_version"], 2)
+        self.assertEqual(committed["source"]["document"], "Agent-Scaffolding-Inventory.md")
+        self.assertRegex(committed["source"]["sha256"], r"^[a-f0-9]{64}$")
         self.assertEqual(committed_ids, expected_ids)
         self.assertEqual(len(committed_ids), len(set(committed_ids)))
         self.assertEqual(committed["counts"]["total"], len(committed_ids))
