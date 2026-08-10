@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "record_type": "decision",
+  "decision_id": "ADR-0000",
+  "title": "Replace with a concise decision title",
+  "status": "proposed",
+  "date": "1970-01-01",
+  "owners": [
+    "replace-with-accountable-owner"
+  ],
+  "context": "Replace with the facts, constraints, and conflict that require a decision.",
+  "decision": "Replace with the proposed rule, architecture, or disposition.",
+  "consequences": "Replace with positive, negative, operational, and compatibility consequences.",
+  "requirement_ids": [],
+  "supersedes": [],
+  "approved_by": [],
+  "evidence": []
+}

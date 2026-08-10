@@ -125,6 +125,8 @@ npm run schemas:check
 
 The valid examples under `schemas/planning/examples/` are executable fixtures, not production approvals or release evidence.
 
+The schema-valid draft templates under `schemas/planning/templates/` are the starting points for a new decision or requirement supersession. `ADR-0000`, `SUP-0000`, the 1970 date, template requirement IDs, and all `replace-with-*` values are deliberate sentinels that must be replaced. Templates remain `proposed` with empty approval and evidence fields; changing either template to `accepted` without the evidence required by its schema fails validation.
+
 ## Public Security References
 
 `security-references.json` maps every public source cited in Section 5 of `SECURITY-REVIEW.md` to deterministic provenance metadata. Each record includes the publisher, title, version and dates when declared, source URL, retrieval date and HTTP status, SHA-256 of the exact retrieved response body, current or superseded status, and an accepted local-snapshot decision.

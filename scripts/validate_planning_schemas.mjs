@@ -17,6 +17,11 @@ export const RECORD_TYPES = Object.freeze([
   "requirement-supersession",
 ]);
 
+export const TEMPLATE_TYPES = Object.freeze([
+  "decision-record",
+  "requirement-supersession",
+]);
+
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
 }
@@ -155,8 +160,26 @@ export function validatePlanningFixtures() {
   return results;
 }
 
+export function validatePlanningTemplates() {
+  const validators = createPlanningValidators();
+  const results = [];
+  for (const recordType of TEMPLATE_TYPES) {
+    const template = readJson(
+      `schemas/planning/templates/${recordType}.template.json`,
+    );
+    results.push({
+      recordType,
+      ...validatePlanningRecord(recordType, template, validators),
+    });
+  }
+  return results;
+}
+
 function main() {
-  const results = validatePlanningFixtures();
+  const results = [
+    ...validatePlanningFixtures(),
+    ...validatePlanningTemplates(),
+  ];
   const failures = results.filter((result) => !result.valid);
   if (failures.length > 0) {
     for (const failure of failures) {
@@ -168,7 +191,7 @@ function main() {
     return 1;
   }
 
-  console.log(`Validated ${results.length} planning schema fixture(s).`);
+  console.log(`Validated ${results.length} planning schema fixture(s) and template(s).`);
   return 0;
 }
 

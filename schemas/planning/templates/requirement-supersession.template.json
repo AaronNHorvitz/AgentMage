@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "record_type": "requirement_supersession",
+  "supersession_id": "SUP-0000",
+  "status": "proposed",
+  "date": "1970-01-01",
+  "original_requirement_ids": [
+    "AM-TEMPLATE-ORIGINAL"
+  ],
+  "replacement_requirement_ids": [
+    "AM-TEMPLATE-REPLACEMENT"
+  ],
+  "preserve_original_text": true,
+  "rationale": "Replace with why the preserved original requirement needs an appended replacement.",
+  "impact": "Replace with affected scope, dependencies, tests, releases, risks, and evidence.",
+  "decision_id": null,
+  "approved_by": [],
+  "approved_at": null,
+  "evidence": []
+}

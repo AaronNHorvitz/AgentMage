@@ -38,6 +38,8 @@ REQUIRED_FILES = (
     "schemas/planning/examples/change-log.valid.json",
     "schemas/planning/examples/release-manifest.valid.json",
     "schemas/planning/examples/requirement-supersession.valid.json",
+    "schemas/planning/templates/decision-record.template.json",
+    "schemas/planning/templates/requirement-supersession.template.json",
     "LICENSE",
     "docs/decisions/0001-product-security-and-runtime-baseline.md",
     "docs/decisions/0002-public-security-reference-retention.md",

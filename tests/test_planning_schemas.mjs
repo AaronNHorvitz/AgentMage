@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 
 import {
   RECORD_TYPES,
+  TEMPLATE_TYPES,
   createPlanningValidators,
   validatePlanningRecord,
+  validatePlanningTemplates,
 } from "../scripts/validate_planning_schemas.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -28,6 +30,17 @@ function validate(recordType, data) {
   return validatePlanningRecord(recordType, data, validators);
 }
 
+function template(recordType) {
+  const templatePath = path.join(
+    ROOT,
+    "schemas",
+    "planning",
+    "templates",
+    `${recordType}.template.json`,
+  );
+  return JSON.parse(fs.readFileSync(templatePath, "utf8"));
+}
+
 test("all canonical examples satisfy their schema and semantic contract", () => {
   for (const recordType of RECORD_TYPES) {
     assert.deepEqual(validate(recordType, fixture(recordType)), {
@@ -36,6 +49,32 @@ test("all canonical examples satisfy their schema and semantic contract", () => 
       semanticErrors: [],
     });
   }
+});
+
+test("decision and supersession templates are valid unapproved drafts", () => {
+  assert.equal(validatePlanningTemplates().length, TEMPLATE_TYPES.length);
+  for (const recordType of TEMPLATE_TYPES) {
+    const draft = template(recordType);
+    assert.deepEqual(validate(recordType, draft), {
+      valid: true,
+      schemaErrors: [],
+      semanticErrors: [],
+    });
+    assert.equal(draft.status, "proposed");
+    assert.deepEqual(draft.approved_by, []);
+    assert.deepEqual(draft.evidence, []);
+    assert.equal(draft.date, "1970-01-01");
+  }
+});
+
+test("templates cannot be represented as accepted without approval evidence", () => {
+  const decision = template("decision-record");
+  decision.status = "accepted";
+  assert.equal(validate("decision-record", decision).valid, false);
+
+  const supersession = template("requirement-supersession");
+  supersession.status = "accepted";
+  assert.equal(validate("requirement-supersession", supersession).valid, false);
 });
 
 test("validation does not mutate its input", () => {
