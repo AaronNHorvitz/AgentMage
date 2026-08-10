@@ -34,6 +34,8 @@ REQUIRED_FILES = (
     "release/clean-build/Containerfile.linux",
     "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
     "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+    "artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json",
+    "fixtures/generator-profile.json",
     "supply-chain/README.md",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",

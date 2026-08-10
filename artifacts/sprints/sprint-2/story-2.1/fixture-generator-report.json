@@ -1,0 +1,39 @@
+{
+  "corpus_preview": {
+    "category_counts": {
+      "git-repositories": 14,
+      "malformed-inputs": 5,
+      "markdown-workspaces": 3,
+      "obsidian-vaults": 7,
+      "supported-parser-languages": 7,
+      "unsupported-languages": 3
+    },
+    "file_count": 39,
+    "persisted": false,
+    "sha256": "32a46dd07bfc1918ac2a2bef943bc1c10c22caf50f52ed7d30d9ddee82b91023"
+  },
+  "macos_support_claim": "none",
+  "privacy_contract": {
+    "private_user_data": false,
+    "real_credentials": false,
+    "real_person_identity": false,
+    "remote_references": false
+  },
+  "product_parser_support_claim": "none",
+  "profile": {
+    "id": "agentmage-synthetic-corpus-v1",
+    "seed_sha256": "3ccb0f0eebb156ddc863656574c0642cc4dce4536e169dbee36cc6ab46363d5d",
+    "sha256": "80a368b6b0f100ce8bddd9c668d744c594a0be6bfbcacd173f1e05b2c5bafc9e"
+  },
+  "schema_version": 1,
+  "side_effect_contract": {
+    "creates_executable_files": false,
+    "executes_external_commands": false,
+    "overwrites_existing_destination": false,
+    "uses_network": false,
+    "writes_outside_requested_destination": false
+  },
+  "status": "pass",
+  "task_id": "2.1.1.1",
+  "versioned_corpus_status": "reserved-for-sub-task-2.1.2.1"
+}

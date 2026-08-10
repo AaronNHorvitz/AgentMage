@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "profile_id": "agentmage-synthetic-corpus-v1",
+  "status": "fixture-contract-not-product-admission",
+  "seed": "agentmage-sprint-2-synthetic-v1",
+  "fixed_timestamp_epoch": 1704067200,
+  "categories": [
+    "markdown-workspaces",
+    "obsidian-vaults",
+    "git-repositories",
+    "supported-parser-languages",
+    "unsupported-languages",
+    "malformed-inputs"
+  ],
+  "supported_parser_fixture_languages": [
+    {
+      "id": "go",
+      "extension": ".go"
+    },
+    {
+      "id": "javascript",
+      "extension": ".js"
+    },
+    {
+      "id": "python",
+      "extension": ".py"
+    },
+    {
+      "id": "rust",
+      "extension": ".rs"
+    },
+    {
+      "id": "shell",
+      "extension": ".sh"
+    },
+    {
+      "id": "sql",
+      "extension": ".sql"
+    },
+    {
+      "id": "typescript",
+      "extension": ".ts"
+    }
+  ],
+  "unsupported_language_fixtures": [
+    {
+      "id": "cobol",
+      "extension": ".cob"
+    },
+    {
+      "id": "fortran",
+      "extension": ".f90"
+    },
+    {
+      "id": "unknown",
+      "extension": ".xyz"
+    }
+  ],
+  "malformed_cases": [
+    "invalid-json",
+    "invalid-utf8",
+    "nul-containing-text",
+    "truncated-source",
+    "unterminated-frontmatter"
+  ],
+  "side_effect_contract": {
+    "executes_external_commands": false,
+    "uses_network": false,
+    "writes_outside_requested_destination": false,
+    "overwrites_existing_destination": false,
+    "creates_executable_files": false
+  },
+  "privacy_contract": {
+    "private_user_data": false,
+    "real_credentials": false,
+    "real_person_identity": false,
+    "remote_references": false
+  },
+  "product_parser_support_claim": "none"
+}

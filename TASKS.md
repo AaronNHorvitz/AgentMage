@@ -339,7 +339,7 @@ The owning sprint performs the first complete execution possible for its boundar
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 2.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 2.1.1.1** (legacy `S-002-I01`): Create fixture generators for Markdown workspaces, Obsidian vaults, Git repositories, supported parser languages, unsupported languages, and malformed inputs.
+  - [x] **Sub-task 2.1.1.1** (legacy `S-002-I01`): Create fixture generators for Markdown workspaces, Obsidian vaults, Git repositories, supported parser languages, unsupported languages, and malformed inputs. Evidence: the fixture-only [`generator-profile.json`](fixtures/generator-profile.json), deterministic standard-library [`fixture_generator.py`](scripts/fixture_generator.py), focused mutation/reproducibility tests, and [`fixture-generator-report.json`](artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json) cover all six required families without external commands, network use, executable files, existing-destination overwrite, private data, real credentials, remote references, product parser-admission claims, versioned-corpus completion claims, or macOS support claims.
   - [ ] **Sub-task 2.1.1.2** (legacy `S-002-I02`): Create path traversal, symlink escape, case collision, Unicode normalization, mount-change, file-replacement, and stale-bookmark fixtures.
   - [ ] **Sub-task 2.1.1.3** (legacy `S-002-I03`): Create secret canaries, prompt-injection content, conflicting instructions, malformed model calls, grant replay, and approval-bypass fixtures.
   - [ ] **Sub-task 2.1.1.4** (legacy `S-002-I04`): Create deterministic fake model, fake tool, fake inference runtime, fake connector, fake clock, fake secret store, and crash injector adapters.
