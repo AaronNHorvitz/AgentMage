@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0004",
+  "status": "accepted",
+  "module_rules": [
+    {
+      "id": "kernel-contracts",
+      "layer": 0,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": []
+    },
+    {
+      "id": "kernel-engine",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "platform-linux",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "platform-macos",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "capability-read-only",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "shell-host",
+      "layer": 2,
+      "allowed_imports": [
+        "capability-read-only",
+        "kernel-contracts",
+        "kernel-engine",
+        "platform-linux",
+        "platform-macos"
+      ],
+      "declared_imports": [
+        "capability-read-only",
+        "kernel-contracts",
+        "kernel-engine",
+        "platform-linux",
+        "platform-macos"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "shell-vscode",
+      "layer": 2,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "fixture-corpus",
+      "layer": 0,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": []
+    },
+    {
+      "id": "packaging-linux",
+      "layer": 3,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": [
+        "capability-read-only",
+        "platform-linux",
+        "shell-host",
+        "shell-vscode"
+      ]
+    },
+    {
+      "id": "packaging-macos",
+      "layer": 3,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": [
+        "capability-read-only",
+        "platform-macos",
+        "shell-host",
+        "shell-vscode"
+      ]
+    },
+    {
+      "id": "documentation",
+      "layer": 0,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": []
+    },
+    {
+      "id": "release-xtask",
+      "layer": 4,
+      "allowed_imports": [],
+      "declared_imports": [],
+      "assembly_inputs": [
+        "documentation",
+        "fixture-corpus",
+        "packaging-linux",
+        "packaging-macos"
+      ]
+    }
+  ],
+  "category_constraints": [
+    {
+      "source_category": "kernel",
+      "forbidden_target_categories": [
+        "capability-packs",
+        "platform-adapters",
+        "shells"
+      ]
+    },
+    {
+      "source_category": "platform-adapters",
+      "forbidden_target_categories": [
+        "capability-packs",
+        "shells"
+      ]
+    },
+    {
+      "source_category": "capability-packs",
+      "forbidden_target_categories": [
+        "platform-adapters",
+        "shells"
+      ]
+    }
+  ]
+}

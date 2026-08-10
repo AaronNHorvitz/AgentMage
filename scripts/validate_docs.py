@@ -22,6 +22,7 @@ REQUIRED_FILES = (
     "RUNTIME-BOUNDARIES.md",
     "architecture/language-build-matrix.json",
     "architecture/module-inventory.json",
+    "architecture/dependency-rules.json",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",
@@ -60,6 +61,7 @@ REQUIRED_FILES = (
     "docs/decisions/0002-public-security-reference-retention.md",
     "docs/decisions/0003-blocked-platform-lane-continuation.md",
     "docs/decisions/0004-language-and-build-system-architecture.md",
+    "docs/architecture/dependency-direction.md",
 )
 CANONICAL_DOCS = (
     "README.md",
