@@ -16,7 +16,7 @@ from typing import Final
 ROOT: Final = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE: Final = ROOT / "Agent-Scaffolding-Inventory.md"
 DEFAULT_OUTPUT: Final = ROOT / "requirements" / "registry.json"
-SCHEMA_VERSION: Final = 1
+SCHEMA_VERSION: Final = 2
 
 KIND_BY_PREFIX: Final = {
     "AM": "product_requirement",
@@ -26,6 +26,15 @@ KIND_BY_PREFIX: Final = {
 DEFINITION_ROW: Final = re.compile(
     r"^\|\s*`((AM|AT|CR)-[A-Z0-9.-]+)`\s*\|", re.MULTILINE
 )
+HEADING: Final = re.compile(r"^#{1,6}\s+(.+?)\s*$")
+IDENTIFIER_CELL: Final = re.compile(r"^`((AM|AT|CR)-[A-Z0-9.-]+)`$")
+REFERENCE_ID: Final = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
+EXPECTED_COLUMNS: Final = {"AM": 6, "AT": 3, "CR": 5}
+EXPECTED_HEADING: Final = {
+    "AM": "Executable v0.1 Backlog",
+    "AT": "31B. v0.1 Quantitative Acceptance Matrix",
+    "CR": "35. Competitive Review Integration Register",
+}
 
 
 class RegistryError(ValueError):
@@ -53,17 +62,140 @@ def extract_identifiers(markdown: str) -> list[tuple[str, str]]:
     return sorted(matches, key=lambda item: item[0])
 
 
+def split_table_row(line: str) -> list[str]:
+    """Split one canonical Markdown table row into trimmed cells."""
+    stripped = line.strip()
+    if not stripped.startswith("|") or not stripped.endswith("|"):
+        raise RegistryError("canonical requirement row must start and end with `|`")
+    return [cell.strip() for cell in stripped[1:-1].split("|")]
+
+
+def referenced_ids(cell: str, prefix: str) -> list[str]:
+    """Extract ordered, unique stable references of one prefix from a cell."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for identifier in REFERENCE_ID.findall(cell):
+        if identifier.startswith(f"{prefix}-") and identifier not in seen:
+            seen.add(identifier)
+            result.append(identifier)
+    return result
+
+
+def definition_from_cells(
+    cells: list[str],
+    *,
+    heading: str,
+    line_number: int,
+    source_document: str,
+    source_line: str,
+) -> dict[str, object]:
+    """Normalize a canonical AM, AT, or CR table row."""
+    identifier_match = IDENTIFIER_CELL.fullmatch(cells[0])
+    if identifier_match is None:
+        raise RegistryError(f"invalid requirement identifier at line {line_number}")
+    identifier, prefix = identifier_match.groups()
+
+    expected_columns = EXPECTED_COLUMNS[prefix]
+    if len(cells) != expected_columns:
+        raise RegistryError(
+            f"{identifier} at line {line_number} has {len(cells)} columns; "
+            f"expected {expected_columns}"
+        )
+    if heading != EXPECTED_HEADING[prefix]:
+        raise RegistryError(
+            f"{identifier} is defined under {heading!r}; expected "
+            f"{EXPECTED_HEADING[prefix]!r}"
+        )
+
+    if prefix == "AM":
+        title = cells[1]
+        release = cells[4]
+        dependencies = referenced_ids(cells[2], "AM")
+        disposition = cells[3].lower()
+        acceptance_tests = referenced_ids(cells[5], "AT")
+    elif prefix == "AT":
+        title = cells[1]
+        release = "v0.1"
+        dependencies = []
+        disposition = "required"
+        acceptance_tests = []
+    else:
+        title = cells[1]
+        release = cells[2]
+        dependencies = []
+        disposition = "integrated"
+        acceptance_tests = []
+
+    return {
+        "id": identifier,
+        "kind": KIND_BY_PREFIX[prefix],
+        "title": title,
+        "source": {
+            "document": source_document,
+            "heading": heading,
+            "line": line_number,
+            "definition_sha256": hashlib.sha256(
+                (source_line + "\n").encode("utf-8")
+            ).hexdigest(),
+        },
+        "release": release,
+        "dependencies": dependencies,
+        "disposition": disposition,
+        "acceptance_tests": acceptance_tests,
+        "status": "planned",
+    }
+
+
+def parse_definitions(markdown: str, source_document: str) -> list[dict[str, object]]:
+    """Parse all canonical requirement definitions with traceability fields."""
+    definitions: list[dict[str, object]] = []
+    current_heading = ""
+    for line_number, line in enumerate(markdown.splitlines(), start=1):
+        heading_match = HEADING.match(line)
+        if heading_match:
+            current_heading = heading_match.group(1)
+            continue
+
+        row_match = DEFINITION_ROW.match(line)
+        if row_match:
+            definitions.append(
+                definition_from_cells(
+                    split_table_row(line),
+                    heading=current_heading,
+                    line_number=line_number,
+                    source_document=source_document,
+                    source_line=line,
+                )
+            )
+
+    identifiers = [str(definition["id"]) for definition in definitions]
+    duplicates = sorted(
+        identifier for identifier, count in Counter(identifiers).items() if count > 1
+    )
+    if duplicates:
+        raise RegistryError(f"duplicate requirement definitions: {', '.join(duplicates)}")
+
+    present_prefixes = {identifier.split("-", 1)[0] for identifier in identifiers}
+    missing_prefixes = sorted(set(KIND_BY_PREFIX) - present_prefixes)
+    if missing_prefixes:
+        raise RegistryError(
+            "missing canonical requirement categories: " + ", ".join(missing_prefixes)
+        )
+
+    return sorted(definitions, key=lambda definition: str(definition["id"]))
+
+
 def build_registry(source_path: Path = DEFAULT_SOURCE) -> dict[str, object]:
     """Build a deterministic registry object from the canonical inventory."""
     source_bytes = source_path.read_bytes()
     markdown = source_bytes.decode("utf-8")
-    identifiers = extract_identifiers(markdown)
-    by_kind = Counter(kind for _, kind in identifiers)
 
     try:
         source_name = source_path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
         source_name = source_path.name
+    definitions = parse_definitions(markdown, source_name)
+    by_kind = Counter(str(definition["kind"]) for definition in definitions)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -72,12 +204,10 @@ def build_registry(source_path: Path = DEFAULT_SOURCE) -> dict[str, object]:
             "sha256": hashlib.sha256(source_bytes).hexdigest(),
         },
         "counts": {
-            "total": len(identifiers),
+            "total": len(definitions),
             "by_kind": {kind: by_kind[kind] for kind in sorted(by_kind)},
         },
-        "requirements": [
-            {"id": identifier, "kind": kind} for identifier, kind in identifiers
-        ],
+        "requirements": definitions,
     }
 
 

@@ -9,319 +9,1441 @@
   },
   "requirements": [
     {
+      "acceptance_tests": [
+        "AT-AUTH-001"
+      ],
+      "dependencies": [
+        "AM-CFG-001",
+        "AM-PTH-001"
+      ],
+      "disposition": "build",
       "id": "AM-AUT-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6692860760abf9bb938d4df40ecc5f691b26980c4f703cd7250f7b745ea9ab6f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 87
+      },
+      "status": "planned",
+      "title": "Define and enforce the single-use `CapabilityGrant` contract for every authority-bearing action."
     },
     {
+      "acceptance_tests": [
+        "AT-CFG-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001"
+      ],
+      "disposition": "build",
       "id": "AM-CFG-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "affb202b27825c9bef86ba424923fcd5939cca35b30404d00fce9efeee89ab15",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 81
+      },
+      "status": "planned",
+      "title": "Load and validate versioned configuration without silently broadening authority."
     },
     {
+      "acceptance_tests": [
+        "AT-DATA-001",
+        "AT-CRASH-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001"
+      ],
+      "disposition": "build",
       "id": "AM-DAT-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "06cb7b7bfab5f6a91fae9394afd6e93427eb8e989302e5dfa39ede6e0c4a38e0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 88
+      },
+      "status": "planned",
+      "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts."
     },
     {
+      "acceptance_tests": [
+        "AT-DIA-001",
+        "AT-DOC-001"
+      ],
+      "dependencies": [
+        "AM-SEC-001",
+        "AM-PRV-001",
+        "AM-MDL-003"
+      ],
+      "disposition": "build",
       "id": "AM-DIA-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "56d25af7e1c3869428eef80646a4dc0b688acd0d471281cb58135ca4f4495fb4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 93
+      },
+      "status": "planned",
+      "title": "Produce a redacted local doctor response inside native Visual Studio Code Chat for model/runtime identity, offline state, platform boundary, workspace grant, capability versions, repository-map health, encrypted storage, and session recovery without exposing secrets; retain a non-user-facing diagnostic harness for automated testing."
     },
     {
+      "acceptance_tests": [
+        "AT-SPEC-001",
+        "AT-DOC-001"
+      ],
+      "dependencies": [
+        "AM-TST-001",
+        "AM-TST-002"
+      ],
+      "disposition": "build",
       "id": "AM-DOC-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8d123966f790f64c3044807385a3c9d81d421471c30193b39386a58ad881599e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 106
+      },
+      "status": "planned",
+      "title": "Publish startup, limitation, privacy, recovery, and offline-verification instructions."
     },
     {
+      "acceptance_tests": [
+        "AT-EVD-001",
+        "AT-EVD-002"
+      ],
+      "dependencies": [
+        "AM-TOL-001",
+        "AM-GIT-001"
+      ],
+      "disposition": "build",
       "id": "AM-EVD-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "3e913470dcecd60b16a4fde8ba78df06abe4d500e28ac3920b20b6ce28b8f0d0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 98
+      },
+      "status": "planned",
+      "title": "Require a receipt for every tool action and a resolvable citation for every file-grounded claim."
     },
     {
+      "acceptance_tests": [
+        "AT-EVD-003",
+        "AT-RESUME-001"
+      ],
+      "dependencies": [
+        "AM-EVD-001",
+        "AM-REP-001"
+      ],
+      "disposition": "build",
       "id": "AM-EVD-002",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "44263ba7bf294af5e9f568723c30316a64b1515a2872a0f5059d04d3d0ca6a7a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 99
+      },
+      "status": "planned",
+      "title": "Label material claims as Observed, Derived, Inferred, or Unknown/Blocked and bind citations to source hashes and ranges so changed evidence becomes visibly stale."
     },
     {
+      "acceptance_tests": [
+        "AT-GIT-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-PTH-001"
+      ],
+      "disposition": "build",
       "id": "AM-GIT-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bc35d84c5471c5d9971367e773d140b786ecdda6917adc7b808758fb0365b34b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 95
+      },
+      "status": "planned",
+      "title": "Implement read-only Git status, diff, log, branch, and object inspection."
     },
     {
+      "acceptance_tests": [
+        "AT-HOF-001"
+      ],
+      "dependencies": [
+        "AM-EVD-002",
+        "AM-PRV-001"
+      ],
+      "disposition": "build",
       "id": "AM-HOF-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0257ca7f4b82ef4bd105638c56330d2ad5ee601093121805c060f529a1a64588",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 100
+      },
+      "status": "planned",
+      "title": "Render a local, reviewable Codex handoff packet without invoking Codex, controlling its tab, writing the clipboard, or transmitting content."
     },
     {
+      "acceptance_tests": [
+        "AT-INJ-001",
+        "AT-INS-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-TOL-001"
+      ],
+      "disposition": "build",
       "id": "AM-INS-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4b6c7296404c152ef7c63183e0617b6dfe498bf35f327ec9c5874bed08d2ade8",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 96
+      },
+      "status": "planned",
+      "title": "Treat repository instructions and all workspace text as untrusted content; allow only cited or explicitly trust-gated behavioral guidance that cannot change policy, grants, roots, tools, or user intent."
     },
     {
+      "acceptance_tests": [
+        "AT-ARCH-001",
+        "AT-EVD-001"
+      ],
+      "dependencies": [],
+      "disposition": "build",
       "id": "AM-KRN-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "5808b26eedffa6fce7a96190f4703efa5eab42f89f5ed78a9ebdfd57b0f0da5f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 80
+      },
+      "status": "planned",
+      "title": "Implement the interface-independent kernel boundary and typed task, tool, result, and receipt contracts."
     },
     {
+      "acceptance_tests": [
+        "AT-MODEL-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-NET-001"
+      ],
+      "disposition": "verify",
       "id": "AM-MDL-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "72c066824e095c253625fe843ae38426d1d05d5221c55c2c40ca341994901563",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 90
+      },
+      "status": "planned",
+      "title": "Verify the same manifest-pinned Gemma 4 E4B profile through native `llama.cpp` on macOS, Fedora, and Ubuntu, and through the separately gated Docker Model Runner compatibility adapter on Linux; require contract and evaluation parity before enabling either Linux adapter."
     },
     {
+      "acceptance_tests": [
+        "AT-ROUTE-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001"
+      ],
+      "disposition": "build",
       "id": "AM-MDL-002",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "cf67e89b311ad687a4f0d13843ade35531d6ea539247bd6a48970ef6931a9418",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 91
+      },
+      "status": "planned",
+      "title": "Use deterministic operations first and explicit user model selection; record benchmark data without automatic routing."
     },
     {
+      "acceptance_tests": [
+        "AT-MODEL-002"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-NET-001",
+        "AM-MDL-001"
+      ],
+      "disposition": "build",
       "id": "AM-MDL-003",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bf77716245c20319797fb6e9fb3ae27c61f9ace0513beaea3315791e9e33da99",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 92
+      },
+      "status": "planned",
+      "title": "Implement the separate approved-model installer/importer with hardware-fit checks, license and lineage display, resumable staging, hash verification, quarantine, atomic activation, self-test, unload, and cleanup."
     },
     {
+      "acceptance_tests": [
+        "AT-NET-001",
+        "AT-NET-002"
+      ],
+      "dependencies": [
+        "AM-SEC-001"
+      ],
+      "disposition": "build",
       "id": "AM-NET-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a3a5488f05c91727d98446b335b64314a884daf50cd97f4cbbb5c44c6c93061b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 85
+      },
+      "status": "planned",
+      "title": "Enforce offline operation and restrict the selected local inference runtime to the guarded inference path."
     },
     {
+      "acceptance_tests": [
+        "AT-PLAT-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-CFG-001"
+      ],
+      "disposition": "build",
       "id": "AM-PLT-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7adddf72aa7708bf45f687ad45404a5953bd34c0f8eb81e5691759de61dd1393",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 82
+      },
+      "status": "planned",
+      "title": "Implement and package the platform-adapter boundary for Apple Silicon macOS, Fedora, and Ubuntu, with MacBook Pro M5 as the primary launch reference."
     },
     {
+      "acceptance_tests": [
+        "AT-PRIV-001",
+        "AT-PRIV-002"
+      ],
+      "dependencies": [
+        "AM-DAT-001",
+        "AM-PLT-001"
+      ],
+      "disposition": "build",
       "id": "AM-PRV-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "fb88079c94f77158c98e85114c0fe3f1f29744b3b132f626ef5f0ed255867227",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 89
+      },
+      "status": "planned",
+      "title": "Classify data before persistence and enforce encryption, minimization, retention, and operating-system key storage."
     },
     {
+      "acceptance_tests": [
+        "AT-PATH-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001"
+      ],
+      "disposition": "build",
       "id": "AM-PTH-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9075ee87ebe3a16a3898e7d6350b5f2d60725cc16fd3aa334094484df3391797",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 86
+      },
+      "status": "planned",
+      "title": "Enforce canonical workspace-relative capability paths through the platform path adapter while generating absolute paths only for display links."
     },
     {
+      "acceptance_tests": [
+        "AT-REP-001",
+        "AT-EVD-002"
+      ],
+      "dependencies": [
+        "AM-TOL-001",
+        "AM-GIT-001",
+        "AM-INS-001"
+      ],
+      "disposition": "build",
       "id": "AM-REP-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7be1f14f2a4adbd23bd8202bab7c1a9f98c4c5f5f5cd87a3d8d989d263c545db",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 97
+      },
+      "status": "planned",
+      "title": "Build a deterministic, Git-aware, policy-aware repository map with pinned Tree-sitter parsers, supported-language symbols, reliable definitions/imports/relationships, bounded cache, coverage report, and exact source citations."
     },
     {
+      "acceptance_tests": [
+        "AT-SEC-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001"
+      ],
+      "disposition": "build",
       "id": "AM-SEC-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "60d329edad706b9a63dd417ae4e2e80b8fae5cdf69328dcb9d55a0c6ad3d3795",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 83
+      },
+      "status": "planned",
+      "title": "Implement the shared threat model and documented macOS and Linux process topologies."
     },
     {
+      "acceptance_tests": [
+        "AT-SBX-001",
+        "AT-INJ-001"
+      ],
+      "dependencies": [
+        "AM-SEC-001"
+      ],
+      "disposition": "build",
       "id": "AM-SEC-002",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a7fc23f5350d302c5729075d496d60c862ee54dc02e6dda15dffe28aa4cf1661",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 84
+      },
+      "status": "planned",
+      "title": "Run every file and Git tool inside the restricted platform tool worker."
     },
     {
+      "acceptance_tests": [
+        "AT-CRASH-001",
+        "AT-RESUME-001"
+      ],
+      "dependencies": [
+        "AM-DAT-001",
+        "AM-EVD-002"
+      ],
+      "disposition": "build",
       "id": "AM-SES-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "31acf3da6bf5827760074e6895532cb7c66f91484d97ea85d03d9fa1d8e362a2",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 101
+      },
+      "status": "planned",
+      "title": "Persist and resume one active local session without duplicating completed actions."
     },
     {
+      "acceptance_tests": [
+        "AT-TOOL-001",
+        "AT-PATH-001"
+      ],
+      "dependencies": [
+        "AM-SEC-002",
+        "AM-PTH-001"
+      ],
+      "disposition": "build",
       "id": "AM-TOL-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6832d618c21d6f2f9c402c5b839d0cb5e40eee386c0169936b3537ac03ff1eae",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 94
+      },
+      "status": "planned",
+      "title": "Implement bounded list, read, search, metadata, and hash tools."
     },
     {
+      "acceptance_tests": [
+        "AT-PLAT-001",
+        "AT-SEC-001",
+        "AT-SBX-001",
+        "AT-INJ-001",
+        "AT-INS-001",
+        "AT-NET-001",
+        "AT-NET-002",
+        "AT-PATH-001",
+        "AT-AUTH-001",
+        "AT-DATA-001",
+        "AT-CRASH-001",
+        "AT-PRIV-001",
+        "AT-PRIV-002",
+        "AT-HOF-001"
+      ],
+      "dependencies": [
+        "AM-PLT-001",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-NET-001",
+        "AM-PTH-001",
+        "AM-AUT-001",
+        "AM-DAT-001",
+        "AM-PRV-001",
+        "AM-INS-001",
+        "AM-HOF-001"
+      ],
+      "disposition": "build",
       "id": "AM-TST-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "07f6b25f461a59af3bd070184b12d47e0f3af24d0ba853a44cf6e5975a336d5e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 104
+      },
+      "status": "planned",
+      "title": "Run the complete platform, path, sandbox, instruction-injection, network, privacy, handoff, and crash security suite."
     },
     {
+      "acceptance_tests": [
+        "AT-MODEL-001",
+        "AT-MODEL-002",
+        "AT-DIA-001",
+        "AT-ROUTE-001",
+        "AT-TOOL-001",
+        "AT-GIT-001",
+        "AT-REP-001",
+        "AT-EVD-001",
+        "AT-EVD-002",
+        "AT-EVD-003",
+        "AT-RESUME-001",
+        "AT-VSC-001",
+        "AT-VSC-002",
+        "AT-QUAL-001",
+        "AT-PERF-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001",
+        "AM-MDL-002",
+        "AM-MDL-003",
+        "AM-DIA-001",
+        "AM-TOL-001",
+        "AM-GIT-001",
+        "AM-REP-001",
+        "AM-EVD-002",
+        "AM-SES-001",
+        "AM-VSC-001",
+        "AM-VSC-002"
+      ],
+      "disposition": "build",
       "id": "AM-TST-002",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a054897bd62d12b61863c02e93eeda6352e25f16cd71239869f94f34fc264494",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 105
+      },
+      "status": "planned",
+      "title": "Run the repository-map, evidence-state, model lifecycle, diagnostics, quality, latency, memory, context, and model capability suite against fixed fixtures."
     },
     {
+      "acceptance_tests": [
+        "AT-VSC-001"
+      ],
+      "dependencies": [
+        "AM-MDL-001",
+        "AM-KRN-001"
+      ],
+      "disposition": "build",
       "id": "AM-VSC-001",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "dc158cb1c6d7de236441dde30060846c4c7d0db7c9c3473d5832691dffd0f992",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 102
+      },
+      "status": "planned",
+      "title": "Register AgentMage as a Visual Studio Code language-model chat provider and expose Gemma 4 E4B in the native model picker."
     },
     {
+      "acceptance_tests": [
+        "AT-VSC-002"
+      ],
+      "dependencies": [
+        "AM-VSC-001",
+        "AM-EVD-002",
+        "AM-DIA-001"
+      ],
+      "disposition": "build",
       "id": "AM-VSC-002",
-      "kind": "product_requirement"
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "d4d7c668ee1f22d51be3b6f710423dd721d972a01db2255a72ef8d8d30bd072e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog",
+        "line": 103
+      },
+      "status": "planned",
+      "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-ARCH-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "881b0b86b404a90db60449b02dd35b50e474f42893815efab7b948e0feceb8f7",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1441
+      },
+      "status": "planned",
+      "title": "Static and runtime dependency checks across kernel, Core Read-Only pack, and Visual Studio Code shell."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-AUTH-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6f4196ec9f28c1817367c9e881e47db710a34a3aeffc9350c986b4465b3133b6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1451
+      },
+      "status": "planned",
+      "title": "Grant mutation, replay, expiry, nonce reuse, preimage change, task change, target change, uncertain-result retry, and child-scope tests."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CFG-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6de1efc92a254ea03d1b079e0e688cae6b1570c9e71f0a2dae1e3fafa9354b22",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1442
+      },
+      "status": "planned",
+      "title": "Invalid, unknown, and permission-broadening configuration mutations."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CRASH-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bce082393a038eb39d6c76e56edd79390344b8bcb0eb193cd4142a3afaf0aa88",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1453
+      },
+      "status": "planned",
+      "title": "Forced termination during model, file, Git, receipt, and checkpoint phases."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-DATA-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "09eeafdf4254f63b73f29e74cf35d79c12b2e48f1b3a1d3515d38e6b42ae4269",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1452
+      },
+      "status": "planned",
+      "title": "Transaction and migration invariants with crashes injected at every durable-write boundary."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-DIA-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "90a6319a59e0eb13ee8d0dcefcad16ec5408929935efb1790249ea4ad3a5f9c3",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1459
+      },
+      "status": "planned",
+      "title": "Redacted local doctor results rendered inside native Visual Studio Code Chat across model, runtime, offline, sandbox/helper, workspace, capability, repository-map, encrypted-store, receipt, and recovery states."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-DOC-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "91088a866b596c62243a119d2866ca31a9bd6dd9e25af7a7db48a2a3bc334098",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1473
+      },
+      "status": "planned",
+      "title": "Three clean installations, one each on MacBook Pro M5, Fedora, and Ubuntu, by a reader using only published instructions."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-EVD-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "fe9dc987ba61f81ffab3eb71ef9ec5d6ac01092435c1c5e16447282a59abac18",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1464
+      },
+      "status": "planned",
+      "title": "Tool-action receipt coverage."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-EVD-002",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "f1af2c30a44845bfc9bed0e6bcdafd8ea622d781c45132c498d2d8a8161aa569",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1465
+      },
+      "status": "planned",
+      "title": "File-grounded claim and citation scoring against a labeled corpus."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-EVD-003",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "03c161ccf9635ac2eb02522c6fe8de4013bfebca75d8fbc1f9f3af20d8fd5f74",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1466
+      },
+      "status": "planned",
+      "title": "Evidence-state, deterministic-derivation, citation-hash, source-range, conflict, and stale-citation scoring against a labeled corpus."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-GIT-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "5832ea93ba32a5bde3dbfe4ae8553c1a1cfda33f188413ba117af5798384448b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1462
+      },
+      "status": "planned",
+      "title": "Read-only Git operations across clean, dirty, detached, untracked, and malformed fixture repositories."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-HOF-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "cce2ccd7a7e7e85e19220e02a10f5a9ce5bf6c47bdb47de39c959ed63baa4848",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1456
+      },
+      "status": "planned",
+      "title": "Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-INJ-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "39e7b4c1b075d11462418e0f4ef18bfdd0dc5afe8ab8a7bbb05e10a339e8a50d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1446
+      },
+      "status": "planned",
+      "title": "Prompt-injection and malicious-content suite."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-INS-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "276de9e71bf648700e2ac7e189d0e63c4b3439ae587b4a57d401ae2f837d9255",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1447
+      },
+      "status": "planned",
+      "title": "Repository-instruction trust and precedence suite covering nested instructions, conflicts, generated text, comments, policy-change requests, hidden-tool requests, broader-root requests, external transfer, and false-completion instructions."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-MODEL-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "92b791e3c97fc1315332d6d932bcc304e5352da3e6d71e3525e27bf05a698cbe",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1457
+      },
+      "status": "planned",
+      "title": "Admission record, license, publisher/control, lineage, artifact, tokenizer, native GGUF hash, immutable OCI digest where applicable, runtime, acceleration, and offline response verification for Gemma 4 E4B."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-MODEL-002",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "7696cb983b7b8108bc27527699b017f2598d927821813cbe1e2211ee26032685",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1458
+      },
+      "status": "planned",
+      "title": "Installer/importer preflight, acquisition, cancellation, recovery, quarantine, atomic activation, self-test, load/unload, and cleanup across the supported platform matrix."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-NET-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ff8a5bb1056dd4b8842c0ff948a231b8433599fe97788c7b9bbcbded5e43b02e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1448
+      },
+      "status": "planned",
+      "title": "Packet, socket, process, container, namespace, and Domain Name System monitoring for a 60-minute offline end-to-end run after the separate model installer has exited on each supported platform and adapter."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-NET-002",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ad8292b4543d131beeb4eb2d25c29c156aec8643aa36d2fb457fb4e8ce0f8a7a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1449
+      },
+      "status": "planned",
+      "title": "Reachability probes from a local-area-network peer, unrelated same-user process, ordinary container where applicable, separate network namespace, tool worker, XPC helper, extension host, and kernel."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PATH-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9179559a6e33173f74cbb334d8e53bfd3423752e00c1ad936bdabceba972f466",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1450
+      },
+      "status": "planned",
+      "title": "Absolute path, traversal, encoding, separator, symlink, alias, stale-bookmark, case-folding, Unicode-normalization, rename-race, mount, and file-replacement attacks."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PERF-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4e1d612ba719c969c1c21916ce889bbdf79a1eb33f9ea70b744e237f05f9d33c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1471
+      },
+      "status": "planned",
+      "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PLAT-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "12a56f916bead89fabe3a523bdfc615129d8bb615b2da627738aaf36e7be2e57",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1443
+      },
+      "status": "planned",
+      "title": "Clean first-run packaging and platform-adapter verification on MacBook Pro M5, Fedora, and Ubuntu."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PRIV-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "6c0353a92b95bd62e85ce7e30fb74fcda1f44e77bf19ba323fbea787a9254bb8",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1454
+      },
+      "status": "planned",
+      "title": "Secret canaries in prompts, files, attachments, tool output, errors, and model responses."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PRIV-002",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2571ae44791997b6c94bfdc8c0c81bc2f42af3f83b44da18055daa4c678551bb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1455
+      },
+      "status": "planned",
+      "title": "Encryption, ephemeral fallback, expiry, export, and cryptographic-erasure tests."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-QUAL-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "4a27634f923a1f5182805e8beae4d97eb1ea41fa091b2a011f740046ef730233",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1470
+      },
+      "status": "planned",
+      "title": "Labeled read-only repository questions, extraction tasks, schema calls, malformed-tool recovery, and adversarial completion prompts."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-REP-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "dc0467900199dc8e1876cd7454784288ec18af03d1a52bf62048bedf9aaca5dc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1463
+      },
+      "status": "planned",
+      "title": "Deterministic repository-map construction, invalidation, coverage, rendering, source resolution, and read-only invariants across supported and unsupported fixture repositories."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-RESUME-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "33d35b4f9fad91ae917ccfd26b456b0ef0b9b491f2c06481ed1798fe3934b945",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1467
+      },
+      "status": "planned",
+      "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-ROUTE-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8883e2854d6da09cb935fd6866a6475cfc8528e3b463efec4739326adbc382c5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1460
+      },
+      "status": "planned",
+      "title": "Mixed deterministic and model-assisted task suite."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SBX-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "ca6ccee0e1d95ac61f13874f7a5ce4b62f5c6d8fcadec462be37f030f7d5344b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1445
+      },
+      "status": "planned",
+      "title": "Per-platform sandbox escape suite covering filesystem, process, device, environment, namespace, XPC, bookmark, and entitlement attacks."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SEC-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "9eb29d8f9fb20fa47dbaf06fe2b62f1aa473c64eea324276f182cc1c32daf8cc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1444
+      },
+      "status": "planned",
+      "title": "Process, socket, file-permission, entitlement, environment, identity, and privilege inspection on macOS, Fedora, and Ubuntu."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SPEC-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2137970f3ec64877145d0cf1ed26b8c7a92181321e82df767a0daff11750b471",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1472
+      },
+      "status": "planned",
+      "title": "Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-TOOL-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "38794252650831d8707836dc68ea28c8bafcab4df1a7d9a25da0eb4f68bfb321",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1461
+      },
+      "status": "planned",
+      "title": "Golden list, read, search, metadata, and hash fixtures with size and result limits."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-VSC-001",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "bb32b8479b7989290b47654b18c51772bac51d0652fd7c140b3ed1cab7ba4ca6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1468
+      },
+      "status": "planned",
+      "title": "Clean extension and kernel-host installation plus model discovery on MacBook Pro M5, Fedora, and Ubuntu."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-VSC-002",
-      "kind": "acceptance_test"
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0ad6083e55497930e94b666db4f8b5065fa06e77c6dc04fd29920cb3e624d794",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix",
+        "line": 1469
+      },
+      "status": "planned",
+      "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests."
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-DIA",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "877567aebd241067488d13afa50e8c65d634a1bee8c69cae8b2b1f15068fbdfd",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1580
+      },
+      "status": "planned",
+      "title": "Redacted runtime and capability diagnostics"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-EVAL",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "a4752d14e298850fc8b80970a9617a694337e0845fe78c3b2bfac2a5cbed5f58",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1581
+      },
+      "status": "planned",
+      "title": "Gemma 4 quality, tool-recovery, context, latency, citation, and injection evaluation on reference hardware"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-EVD",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "0a24d974a5bf7e92b9a7d065e8aa83fea965cba0073493c0a101864552a2c95b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1579
+      },
+      "status": "planned",
+      "title": "Observed, Derived, Inferred, and Unknown/Blocked answer states with resolvable and stale-aware citations"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-MDL",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "2ba81cd03eb62a50e2a86677bb57b5f596e9824d7b6ce7848daaa4c0aeefc9aa",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1578
+      },
+      "status": "planned",
+      "title": "Complete approved local-model acquisition, verification, fit, lifecycle, diagnostics, cancellation, and offline proof"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-REP",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "8aee25d105937eb34f8056ba5a602dc4cddba094e8d882bab7de9a56b9e7855d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1577
+      },
+      "status": "planned",
+      "title": "Deterministic, policy-aware, citation-preserving read-only repository map without required embeddings"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P0-TRUST",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.1",
+      "source": {
+        "definition_sha256": "582027f0f14e0b7423338c3420b4a018ae1e53215f463b62980fca0ff0c0c9dc",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1582
+      },
+      "status": "planned",
+      "title": "Repository, notes, issues, tool output, and imported instructions remain untrusted data unless explicitly trust-gated as non-authority guidance"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-RET",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.2",
+      "source": {
+        "definition_sha256": "6f375865398b1dcede9bf475eb089dd721344d09bf78adcd7bc3c3219e85fd29",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1583
+      },
+      "status": "planned",
+      "title": "Optional approved local hybrid structural, lexical, embedding, and reranking retrieval with deletion and deterministic fallback"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-ROL",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "Design now; staged by release",
+      "source": {
+        "definition_sha256": "4a5fe87b735489782c3420515e574d1fae492d02da2c56ae061edc4f18ccd5c3",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1587
+      },
+      "status": "planned",
+      "title": "Provider-independent allowlisted internal roles for dialogue, tools, summaries, repository maps, embeddings, reranking, patches, and claim verification"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-SES",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.2-v0.5",
+      "source": {
+        "definition_sha256": "583e7b86716eae0ed548e57b490ad1828882977217b045ae842d4bc6da504997",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1588
+      },
+      "status": "planned",
+      "title": "Session fork, citation-preserving compaction, encrypted archive, controlled deletion, and redacted evidence bundle"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-SKL",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.2-v0.4",
+      "source": {
+        "definition_sha256": "430906671d718e2169f0e835ed21793788feea7cedff40e176632967377a5a53",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1589
+      },
+      "status": "planned",
+      "title": "Declarative, provenance-recorded, trust-gated skills before executable plugins"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-VAL",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.4",
+      "source": {
+        "definition_sha256": "ca38cc59d009f00b99728710af19ad5c50327dcdcd934dbecdc820d692f6bdc1",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1586
+      },
+      "status": "planned",
+      "title": "Separately approved trusted test, lint, formatter, build, and scan templates with evidence-based receipts"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-WKT",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.4",
+      "source": {
+        "definition_sha256": "47bda9c287e6d4888d64bf7d30807da367de0e2be7291520a88ce09760590785",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1585
+      },
+      "status": "planned",
+      "title": "Git worktree isolation that supplements, but is never described as, the security sandbox"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P1-WRT",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.3",
+      "source": {
+        "definition_sha256": "4615bfd58d2bb8ebda6c82a4e35b0463083faf0f434cf328949237bdd57b687c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1584
+      },
+      "status": "planned",
+      "title": "Exact-preimage controlled-write transaction with shadow changes, one-use grant, atomic application, receipts, verification, and rollback"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P2-CLI",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.4+",
+      "source": {
+        "definition_sha256": "0b9ba91213e4b34958a99c46db004682c5c720bd7d9d68730a64064d1a2efdb0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1591
+      },
+      "status": "planned",
+      "title": "CLI, JSON, software development kit, and Agent Client Protocol only after stable VS Code, with predeclared grants and fail-closed headless behavior"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P2-CON",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v0.7+",
+      "source": {
+        "definition_sha256": "67ca76bc68d7ee8dbea816347d6dfc359316c3347a011cf454be9294c3d943cb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1592
+      },
+      "status": "planned",
+      "title": "User-initiated read-only GitHub and connector synchronization into a sensitivity-labeled local cache"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P2-JOB",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "459ac274a77ee12ea0f6bc7aa8ecc3ac38dbf0b5321914d415c7e55fafcc1a57",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1593
+      },
+      "status": "planned",
+      "title": "Leased, idempotent, budgeted, cancellable, expiring scheduled work with read-only first release and post-run receipts"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P2-MAG",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "8d015b42cbd0a8f159b2d2882bd751e72408059ddceaeac9baab63347ab45a11",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1594
+      },
+      "status": "planned",
+      "title": "Child grants, separate writable worktrees, ownership, conflicts, budgets, cancellation propagation, and attributable receipts"
     },
     {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "integrated",
       "id": "CR-P2-MCP",
-      "kind": "competitive_requirement"
+      "kind": "competitive_requirement",
+      "release": "v1+",
+      "source": {
+        "definition_sha256": "3866411c1fff8f1b38d97623321d13f776f0244014b6fa587625b9bc70762a2f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "35. Competitive Review Integration Register",
+        "line": 1590
+      },
+      "status": "planned",
+      "title": "Manifested MCP and plugins fully mediated by the kernel, with identity, scopes, limits, cancellation, receipts, and a read-only first phase"
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "source": {
     "document": "Agent-Scaffolding-Inventory.md",
     "sha256": "de39501438c88e622b4a2005fd765297671d63f2fdf0552f8c3a9a8803603013"

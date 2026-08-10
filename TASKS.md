@@ -160,7 +160,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 - [ ] **Task 0.1.1 - Implement the bounded story**
   - [x] **Sub-task 0.1.1.1** (legacy `S-000-I01`): Create a machine-readable requirement registry for every `AM-*`, `AT-*`, and `CR-*` identifier.
-  - [ ] **Sub-task 0.1.1.2** (legacy `S-000-I02`): Record each requirement's title, source document, source heading, release, dependencies, disposition, acceptance tests, and current status.
+  - [x] **Sub-task 0.1.1.2** (legacy `S-000-I02`): Record each requirement's title, source document, source heading, release, dependencies, disposition, acceptance tests, and current status.
   - [ ] **Sub-task 0.1.1.3** (legacy `S-000-I03`): Define the conflict rule that preserves the narrower safety boundary or release scope until an approved decision resolves the conflict.
   - [ ] **Sub-task 0.1.1.4** (legacy `S-000-I04`): Define decision-record, risk-register, change-log, release-manifest, and requirement-supersession schemas.
   - [ ] **Sub-task 0.1.1.5** (legacy `S-000-I05`): Create a coverage check that reports duplicate identifiers, unresolved dependencies, missing acceptance tests, release mismatches, and unmapped normative statements.
