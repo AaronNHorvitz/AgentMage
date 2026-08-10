@@ -9,6 +9,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.validate_docs import (
+    CANONICAL_DOCS,
+    DECISION_BOUNDARIES,
+    ROOT as VALIDATOR_ROOT,
+    check_accepted_decision_contract,
     check_claims,
     check_cross_document_contract,
     check_identifiers,
@@ -95,7 +99,33 @@ class DocumentationControlTests(unittest.TestCase):
         failures: list[str] = []
         check_required(failures)
         check_cross_document_contract(failures)
+        check_accepted_decision_contract(failures)
         self.assertEqual(failures, [])
+
+    def test_each_accepted_decision_boundary_detects_canonical_drift(self) -> None:
+        canonical = {
+            relative: (VALIDATOR_ROOT / relative).read_text(encoding="utf-8")
+            for relative in CANONICAL_DOCS
+        }
+
+        for boundary, patterns in DECISION_BOUNDARIES.items():
+            with self.subTest(boundary=boundary):
+                changed = dict(canonical)
+                mutated = changed["README.md"]
+                for pattern in patterns:
+                    mutated = pattern.sub("REMOVED-BOUNDARY", mutated)
+                changed["README.md"] = mutated
+                failures: list[str] = []
+
+                check_accepted_decision_contract(failures, documents=changed)
+
+                self.assertTrue(
+                    any(
+                        item.startswith(f"README.md: {boundary} boundary")
+                        for item in failures
+                    ),
+                    failures,
+                )
 
     def test_local_link_check_rejects_missing_and_escaping_targets(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -56,6 +56,45 @@ CANONICAL_DOCS = (
     "Agent-Scaffolding-Inventory.md",
     "TASKS.md",
 )
+DECISION_FILE = "docs/decisions/0001-product-security-and-runtime-baseline.md"
+DECISION_BOUNDARIES = {
+    "license": (
+        re.compile(r"Apache(?: License)?[- ]2\.0", re.IGNORECASE),
+    ),
+    "model": (
+        re.compile(r"Gemma 4 E4B"),
+        re.compile(r"Gemma 4 12B Unified"),
+    ),
+    "runtime": (
+        re.compile(r"llama\.cpp"),
+        re.compile(r"Docker Model Runner"),
+        re.compile(r"LocalModelRuntime"),
+    ),
+    "platform": (
+        re.compile(r"Apple Silicon"),
+        re.compile(r"Fedora"),
+        re.compile(r"Ubuntu"),
+    ),
+    "interface": (
+        re.compile(r"Visual Studio Code Chat"),
+    ),
+    "handoff": (
+        re.compile(r"Codex"),
+        re.compile(
+            r"(?:only the user|user manually|user chooses|cannot invoke Codex|"
+            r"without invoking Codex|Codex invocation)",
+            re.IGNORECASE,
+        ),
+    ),
+    "support": (
+        re.compile(r"SECURITY\.md"),
+        re.compile(r"support(?:ed|ing|s|able|-|\b)", re.IGNORECASE),
+    ),
+    "release": (
+        re.compile(r"release gate", re.IGNORECASE),
+        re.compile(r"\bblocked\b", re.IGNORECASE),
+    ),
+}
 LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 IDENTIFIER = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
 SR_IDENTIFIER = re.compile(r"\bSR-[A-Z]+-\d{3}\b")
@@ -214,6 +253,48 @@ def check_cross_document_contract(failures: list[str]) -> None:
         failures.append("LICENSE: expected complete Apache License 2.0 text")
 
 
+def check_accepted_decision_contract(
+    failures: list[str],
+    documents: dict[str, str] | None = None,
+    decision: str | None = None,
+) -> None:
+    """Require every canonical document to preserve Decision 0001 boundaries."""
+    canonical = documents or {relative: read(relative) for relative in CANONICAL_DOCS}
+    decision_text = decision if decision is not None else read(DECISION_FILE)
+    decision_markers = {
+        "license": ("Apache License 2.0",),
+        "model": ("Gemma 4 E4B", "Gemma 4 12B Unified"),
+        "runtime": ("llama.cpp", "Docker Model Runner", "LocalModelRuntime"),
+        "platform": ("Fedora", "Ubuntu"),
+        "interface": ("native-Chat diagnostics",),
+        "handoff": ("handoff disclosure warnings",),
+        "support": ("SECURITY.md", "supported versions", "end of support"),
+        "release": ("release sprint", "assembles evidence"),
+    }
+
+    if "| Status | Accepted |" not in decision_text:
+        failures.append(f"{DECISION_FILE}: decision is not accepted")
+    for boundary, markers in decision_markers.items():
+        for marker in markers:
+            if marker not in decision_text:
+                failures.append(
+                    f"{DECISION_FILE}: {boundary} boundary is missing decision marker"
+                )
+
+    for relative in CANONICAL_DOCS:
+        text = canonical.get(relative)
+        if text is None:
+            failures.append(f"{relative}: missing from decision-consistency input")
+            continue
+        for boundary, patterns in DECISION_BOUNDARIES.items():
+            for pattern in patterns:
+                if pattern.search(text) is None:
+                    failures.append(
+                        f"{relative}: {boundary} boundary disagrees with Decision 0001"
+                    )
+                    break
+
+
 def main() -> int:
     failures: list[str] = []
     files = markdown_files()
@@ -228,6 +309,7 @@ def main() -> int:
     check_claims(files, failures)
     check_identifiers(files, failures)
     check_cross_document_contract(failures)
+    check_accepted_decision_contract(failures)
 
     if failures:
         print("Documentation validation failed:", file=sys.stderr)
