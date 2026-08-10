@@ -32,6 +32,7 @@ REQUIRED_FILES = (
     "supply-chain/dependency-hashes.sha256",
     "supply-chain/sbom.cdx.json",
     "release/clean-build/Containerfile.linux",
+    "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
     "supply-chain/README.md",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",

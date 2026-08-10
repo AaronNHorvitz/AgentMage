@@ -8,6 +8,7 @@ from scripts.clean_build_evidence import (
     EXPECTED_COMMANDS,
     EXPECTED_CONTROLS,
     build_report,
+    check_report,
     normalized_sha256_id,
     validate_policy,
     validate_report,
@@ -65,6 +66,9 @@ class CleanBuildEvidenceTests(unittest.TestCase):
 
     def test_canonical_policy_is_valid(self) -> None:
         self.assertEqual(validate_policy(self.policy), [])
+
+    def test_checked_in_report_is_current(self) -> None:
+        self.assertEqual(check_report(), [])
 
     def test_complete_linux_fixture_retains_blocked_macos(self) -> None:
         self.assertEqual(validate_report(self.report), [])
