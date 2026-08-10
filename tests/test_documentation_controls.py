@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,6 +24,17 @@ WORKFLOW = ROOT / ".github" / "workflows" / "documentation.yml"
 
 
 class DocumentationControlTests(unittest.TestCase):
+    @staticmethod
+    def is_ignored(relative: str) -> bool:
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "--quiet", "--", relative],
+            cwd=ROOT,
+            check=False,
+        )
+        if result.returncode not in (0, 1):
+            raise AssertionError(f"git check-ignore failed for {relative}")
+        return result.returncode == 0
+
     def test_documentation_tools_are_exactly_pinned_and_locked(self) -> None:
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         lock = json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))
@@ -126,6 +138,68 @@ class DocumentationControlTests(unittest.TestCase):
             "unresolved stable identifier: AM-MISSING-999",
             identifier_failures,
         )
+
+    def test_private_and_generated_local_artifacts_are_ignored(self) -> None:
+        ignored_paths = (
+            ".env",
+            ".env.local",
+            "credentials/private.key",
+            "credentials/certificate.pem",
+            "credentials/identity.p12",
+            "credentials/signing.pfx",
+            "profile.mobileprovision",
+            "models/candidate.gguf",
+            ".local-models/candidate.safetensors",
+            "runtime/model.onnx",
+            "runtime/model.mlmodelc/weights.bin",
+            "state/agentmage.sqlite",
+            "state/agentmage.sqlite3",
+            "state/cache.db",
+            "state/cache.db-wal",
+            "state/cache.db-shm",
+            "logs/session.log",
+            "artifacts/sprints/sprint-1/private-result.json",
+            "review-evidence/private-report.json",
+            "node_modules/package/index.js",
+            "scripts/__pycache__/module.pyc",
+            "target/debug/agentmage",
+            "build/output.bin",
+            "dist/agentmage.tar",
+            "coverage/report.json",
+            ".mermaid-output/diagram.svg",
+            ".vscode-test/settings.json",
+            "scratch.tmp",
+            "buffer.swp",
+            ".DS_Store",
+            "Thumbs.db",
+        )
+
+        for relative in ignored_paths:
+            with self.subTest(path=relative):
+                self.assertTrue(self.is_ignored(relative))
+
+    def test_canonical_records_and_admitted_evidence_are_not_ignored(self) -> None:
+        versioned_paths = (
+            ".env.example",
+            "README.md",
+            "PRD.md",
+            "IMPLEMENTATION-PLAN.md",
+            "Agent-Scaffolding-Inventory.md",
+            "TASKS.md",
+            "SECURITY-REVIEW.md",
+            "SECURITY.md",
+            "MODEL-PROVENANCE-POLICY.md",
+            "RUNTIME-BOUNDARIES.md",
+            "requirements/registry.json",
+            "scripts/validate_docs.py",
+            "tests/test_documentation_controls.py",
+            ".github/workflows/documentation.yml",
+            "artifacts/sprints/sprint-0/story-0.1/evidence-manifest.json",
+        )
+
+        for relative in versioned_paths:
+            with self.subTest(path=relative):
+                self.assertFalse(self.is_ignored(relative))
 
 
 if __name__ == "__main__":
