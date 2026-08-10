@@ -7,6 +7,10 @@
   "status": "released",
   "created_at": "2026-08-10T18:00:00Z",
   "source_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "configuration": {
+    "profile_id": "strict-local-read-only",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
   "platforms": [
     "fedora-x86_64"
   ],

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "record_type": "configuration-bound-result",
+  "result_kind": "session",
+  "result_id": "synthetic-session-result",
+  "payload_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "configuration": {
+    "profile_id": "strict-local-read-only",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "record_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

@@ -447,6 +447,101 @@ pub struct RestrictedConfigurationOutcome {
     diff: ConfigurationDiff,
 }
 
+/// Identifies the product result boundary receiving a configuration identity.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ConfigurationResultKind {
+    /// A bounded session result or session audit result.
+    Session,
+    /// A bounded release result.
+    Release,
+}
+
+impl ConfigurationResultKind {
+    /// Returns the stable result-kind identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Session => "session",
+            Self::Release => "release",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+struct ResultConfigurationIdentity {
+    profile_id: String,
+    sha256: String,
+}
+
+#[derive(Serialize)]
+struct ConfigurationBoundResultIdentityMaterial<'a> {
+    schema_version: u32,
+    record_type: &'static str,
+    result_kind: ConfigurationResultKind,
+    result_id: &'a str,
+    payload_sha256: &'a str,
+    configuration: &'a ResultConfigurationIdentity,
+}
+
+/// A session or release result bound to one exact validated configuration.
+#[derive(Clone, Debug, Serialize)]
+pub struct ConfigurationBoundResult {
+    schema_version: u32,
+    record_type: &'static str,
+    result_kind: ConfigurationResultKind,
+    result_id: String,
+    payload_sha256: String,
+    configuration: ResultConfigurationIdentity,
+    record_sha256: String,
+    #[serde(skip)]
+    canonical_bytes: Vec<u8>,
+}
+
+impl ConfigurationBoundResult {
+    /// Returns whether this record binds a session or release result.
+    #[must_use]
+    pub const fn result_kind(&self) -> ConfigurationResultKind {
+        self.result_kind
+    }
+
+    /// Returns the caller-provided bounded result identity.
+    #[must_use]
+    pub fn result_id(&self) -> &str {
+        &self.result_id
+    }
+
+    /// Returns the hash of the result payload kept outside this record.
+    #[must_use]
+    pub fn payload_sha256(&self) -> &str {
+        &self.payload_sha256
+    }
+
+    /// Returns the exact configuration profile identity.
+    #[must_use]
+    pub fn configuration_profile_id(&self) -> &str {
+        &self.configuration.profile_id
+    }
+
+    /// Returns the exact canonical configuration hash.
+    #[must_use]
+    pub fn configuration_sha256(&self) -> &str {
+        &self.configuration.sha256
+    }
+
+    /// Returns the hash of the record identity material.
+    #[must_use]
+    pub fn record_sha256(&self) -> &str {
+        &self.record_sha256
+    }
+
+    /// Returns deterministic canonical JSON containing identities but no raw configuration.
+    #[must_use]
+    pub fn canonical_bytes(&self) -> &[u8] {
+        &self.canonical_bytes
+    }
+}
+
 impl RestrictedConfigurationOutcome {
     /// Returns the untrusted channel through which the candidate arrived.
     #[must_use]
@@ -736,6 +831,36 @@ impl ConfigurationManager {
         })
     }
 
+    /// Binds a session result to the exact validated configuration that produced it.
+    pub fn bind_session_result(
+        &self,
+        configuration: &LoadedConfiguration,
+        result_id: &str,
+        payload_sha256: &str,
+    ) -> Result<ConfigurationBoundResult, ConfigurationError> {
+        bind_configuration_result(
+            configuration,
+            ConfigurationResultKind::Session,
+            result_id,
+            payload_sha256,
+        )
+    }
+
+    /// Binds a release result to the exact validated configuration that produced it.
+    pub fn bind_release_result(
+        &self,
+        configuration: &LoadedConfiguration,
+        result_id: &str,
+        payload_sha256: &str,
+    ) -> Result<ConfigurationBoundResult, ConfigurationError> {
+        bind_configuration_result(
+            configuration,
+            ConfigurationResultKind::Release,
+            result_id,
+            payload_sha256,
+        )
+    }
+
     /// Atomically applies a valid configuration after retaining a content-addressed backup.
     pub fn apply_with_backup(
         &self,
@@ -814,6 +939,52 @@ fn loaded(configuration: AgentConfiguration) -> Result<LoadedConfiguration, Conf
         canonical_bytes,
         sha256,
     })
+}
+
+fn bind_configuration_result(
+    configuration: &LoadedConfiguration,
+    result_kind: ConfigurationResultKind,
+    result_id: &str,
+    payload_sha256: &str,
+) -> Result<ConfigurationBoundResult, ConfigurationError> {
+    if !identifier(result_id) || !sha256_text(payload_sha256) {
+        return contract_error();
+    }
+    let configuration_identity = ResultConfigurationIdentity {
+        profile_id: configuration.profile_id().to_owned(),
+        sha256: configuration.sha256().to_owned(),
+    };
+    let identity_material = ConfigurationBoundResultIdentityMaterial {
+        schema_version: 1,
+        record_type: "configuration-bound-result",
+        result_kind,
+        result_id,
+        payload_sha256,
+        configuration: &configuration_identity,
+    };
+    let identity_bytes = serde_json::to_vec(&identity_material).map_err(|_| {
+        ConfigurationError::new(
+            ErrorCode::ContractViolation,
+            "configuration-bound result could not be serialized",
+        )
+    })?;
+    let mut record = ConfigurationBoundResult {
+        schema_version: 1,
+        record_type: "configuration-bound-result",
+        result_kind,
+        result_id: result_id.to_owned(),
+        payload_sha256: payload_sha256.to_owned(),
+        configuration: configuration_identity,
+        record_sha256: sha256(&identity_bytes),
+        canonical_bytes: Vec::new(),
+    };
+    record.canonical_bytes = serde_json::to_vec(&record).map_err(|_| {
+        ConfigurationError::new(
+            ErrorCode::ContractViolation,
+            "configuration-bound result could not be serialized",
+        )
+    })?;
+    Ok(record)
 }
 
 fn validate_configuration(value: &AgentConfiguration) -> Result<(), ConfigurationError> {
@@ -1926,6 +2097,93 @@ mod tests {
             .expect("candidate is valid");
         let diff = manager().diff(&parent, &loaded).expect("diff succeeds");
         assert!(diff.broadens_authority());
+    }
+
+    #[test]
+    fn session_and_release_results_bind_the_exact_configuration_identity() {
+        let configuration = manager().safe_defaults().expect("configuration loads");
+        let payload = "a".repeat(64);
+        let session = manager()
+            .bind_session_result(&configuration, "session-result-1", &payload)
+            .expect("session result binds");
+        let release = manager()
+            .bind_release_result(&configuration, "release-result-1", &payload)
+            .expect("release result binds");
+        assert_eq!(session.result_kind(), ConfigurationResultKind::Session);
+        assert_eq!(session.result_kind().as_str(), "session");
+        assert_eq!(release.result_kind(), ConfigurationResultKind::Release);
+        assert_eq!(release.result_kind().as_str(), "release");
+        for record in [&session, &release] {
+            assert_eq!(
+                record.configuration_profile_id(),
+                configuration.profile_id()
+            );
+            assert_eq!(record.configuration_sha256(), configuration.sha256());
+            assert_eq!(record.payload_sha256(), payload);
+            assert_eq!(record.record_sha256().len(), 64);
+        }
+    }
+
+    #[test]
+    fn configuration_bound_results_are_deterministic_and_minimized() {
+        let configuration = manager().safe_defaults().expect("configuration loads");
+        let payload = "b".repeat(64);
+        let first = manager()
+            .bind_session_result(&configuration, "session-result-2", &payload)
+            .expect("session result binds");
+        let second = manager()
+            .bind_session_result(&configuration, "session-result-2", &payload)
+            .expect("session result binds");
+        assert_eq!(first.record_sha256(), second.record_sha256());
+        assert_eq!(first.canonical_bytes(), second.canonical_bytes());
+        let text = std::str::from_utf8(first.canonical_bytes()).expect("record is UTF-8");
+        assert!(text.contains(configuration.sha256()));
+        assert!(!text.contains("permission"));
+        assert!(!text.contains("workspace"));
+    }
+
+    #[test]
+    fn configuration_or_result_changes_produce_distinct_binding_hashes() {
+        let strict = manager().safe_defaults().expect("strict loads");
+        let synthetic = manager()
+            .load_bytes(SYNTHETIC_PROFILE)
+            .expect("synthetic loads");
+        let payload = "c".repeat(64);
+        let strict_record = manager()
+            .bind_release_result(&strict, "release-result-2", &payload)
+            .expect("strict result binds");
+        let synthetic_record = manager()
+            .bind_release_result(&synthetic, "release-result-2", &payload)
+            .expect("synthetic result binds");
+        let changed_payload = manager()
+            .bind_release_result(&strict, "release-result-2", &"d".repeat(64))
+            .expect("changed result binds");
+        assert_ne!(
+            strict_record.record_sha256(),
+            synthetic_record.record_sha256()
+        );
+        assert_ne!(
+            strict_record.record_sha256(),
+            changed_payload.record_sha256()
+        );
+    }
+
+    #[test]
+    fn configuration_bound_results_reject_invalid_identifiers_and_hashes() {
+        let configuration = manager().safe_defaults().expect("configuration loads");
+        for (result_id, payload) in [
+            ("Invalid Result", "a".repeat(64)),
+            ("session-result-3", "A".repeat(64)),
+            ("session-result-3", "0".repeat(63)),
+        ] {
+            assert_eq!(
+                manager()
+                    .bind_session_result(&configuration, result_id, &payload)
+                    .expect_err("invalid binding must fail")
+                    .code(),
+                "configuration-contract-violation"
+            );
+        }
     }
 
     #[test]

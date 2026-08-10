@@ -69,11 +69,11 @@
   },
   "implementation": {
     "path": "scripts/validate_planning_schemas.mjs",
-    "sha256": "6b51c0f917c72de26435044c2f66a8d2798fe8a541ba1062498f5d4a6ebb8084"
+    "sha256": "03772e99bdb7bca73270b77be36513ec6ea8213d504b5f7f8d8c83fe208cee13"
   },
   "tests": {
     "path": "tests/test_planning_schemas.mjs",
-    "sha256": "3a5cf7f825b34f8696b35290633fc8b844fffee8f890eb0b2059fdfbc8e02e10"
+    "sha256": "202cd7fb9f1a97353a8d1706d128f7e6c9a9de6512c9d169ae321ba481ec8ae3"
   },
   "section_types": [
     "core",

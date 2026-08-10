@@ -21,7 +21,15 @@
         "--skip",
         "resource_logging_and_retention_increases_are_rejected",
         "--skip",
-        "roots_models_tools_and_platform_identity_cannot_broaden_or_change"
+        "roots_models_tools_and_platform_identity_cannot_broaden_or_change",
+        "--skip",
+        "configuration_bound_results_are_deterministic_and_minimized",
+        "--skip",
+        "configuration_bound_results_reject_invalid_identifiers_and_hashes",
+        "--skip",
+        "configuration_or_result_changes_produce_distinct_binding_hashes",
+        "--skip",
+        "session_and_release_results_bind_the_exact_configuration_identity"
       ],
       "status": "pass"
     },
@@ -69,7 +77,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "4eb372c178b64e5f2529041eaa3498588dfbf4c4dca8e9fc353f6e02d757ee5a"
+      "sha256": "aa0fbfac90624120018a0efbe58b94eff5ddc86994fdf150f27737f966b41a9a"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
@@ -85,7 +93,7 @@
     },
     {
       "path": "scripts/configuration_loader_evidence.py",
-      "sha256": "d73b5cc576efdf119af570bc277446b719f75c519fce359a41b1156daa8ea516"
+      "sha256": "f2c2a5981de7323d3a135ef10c65635baaef2aa64144e1bfea6e0ddaab86d768"
     },
     {
       "path": "tests/test_configuration_loader_evidence.py",

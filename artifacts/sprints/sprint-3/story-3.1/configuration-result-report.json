@@ -1,0 +1,184 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::configuration_bound_results_are_deterministic_and_minimized",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::configuration_bound_results_reject_invalid_identifiers_and_hashes",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::configuration_or_result_changes_produce_distinct_binding_hashes",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::session_and_release_results_bind_the_exact_configuration_identity",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "schemas:check"
+      ],
+      "status": "pass"
+    }
+  ],
+  "configuration_identity_fields": [
+    "profile_id",
+    "sha256"
+  ],
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "platform_execution": "fedora-linux",
+  "private_paths_persisted": false,
+  "product_profile_activation_claim": "none",
+  "product_release_execution_claim": "none",
+  "product_session_execution_claim": "none",
+  "raw_configuration_persisted": false,
+  "result_kinds": [
+    "session",
+    "release"
+  ],
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "f0fa7de3ba5baeda84181098ef11d17df4b00d09058c38e37cfbd8399ed39a1e"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "768ff57311bd3de95000fcace3de631a047a18eff1e78962f2ed09cc84f8410a"
+    },
+    {
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "aa0fbfac90624120018a0efbe58b94eff5ddc86994fdf150f27737f966b41a9a"
+    },
+    {
+      "path": "schemas/configuration/common.schema.json",
+      "sha256": "d01ef7808eacd03024ad8cf96734405791a9c0f85865e0f7a0a6934b072a178d"
+    },
+    {
+      "path": "schemas/configuration/configuration-result.schema.json",
+      "sha256": "6265130692e819173572e13bff42c97346d3a51ab769cc9d6ff8734084f8a5c4"
+    },
+    {
+      "path": "schemas/configuration/examples/configuration-session-result.valid.json",
+      "sha256": "88fcf9ff2a4c614a18667e0327df81e6922bf4c8fa65e1dc19d803b9ace1c3de"
+    },
+    {
+      "path": "schemas/configuration/examples/configuration-release-result.valid.json",
+      "sha256": "3b17245b9c6e4cfa3edd26f3fa0fdb770f526cf6613796d2e29ce08d38f4467e"
+    },
+    {
+      "path": "schemas/planning/common.schema.json",
+      "sha256": "2a4044bc59ed3219ce1a9d6c4f419ea5c5394be032dfc114856b29717fba8c04"
+    },
+    {
+      "path": "schemas/planning/release-manifest.schema.json",
+      "sha256": "87b315e4b02af24e48fdb20dbc6910942e1242b607e7b901e6112da24e1c15a1"
+    },
+    {
+      "path": "schemas/planning/examples/release-manifest.valid.json",
+      "sha256": "b4c61cd304a73abf1ca540803aa82b7278df8c9ca0ce0ba7f88b7b585de00aad"
+    },
+    {
+      "path": "scripts/validate_planning_schemas.mjs",
+      "sha256": "03772e99bdb7bca73270b77be36513ec6ea8213d504b5f7f8d8c83fe208cee13"
+    },
+    {
+      "path": "tests/test_planning_schemas.mjs",
+      "sha256": "202cd7fb9f1a97353a8d1706d128f7e6c9a9de6512c9d169ae321ba481ec8ae3"
+    },
+    {
+      "path": "scripts/configuration_result_evidence.py",
+      "sha256": "fb29ec920b3f7808bf67fd2f01d6fae0b74b1f5b8b7de9f6b34b524a22f08c59"
+    },
+    {
+      "path": "tests/test_configuration_result_evidence.py",
+      "sha256": "b93663719a818f385107944ba8d641f0b6bdc7619f0da8b77610db3334251208"
+    }
+  ],
+  "status": "pass-shared-linux-configuration-result-binding",
+  "summary": {
+    "configuration_hash_algorithm": "sha256",
+    "deterministic_record_encoding": "canonical-json",
+    "failed_test_count": 0,
+    "focused_test_count": 4,
+    "record_hash_algorithm": "sha256",
+    "release_manifest_configuration_identity_required": true,
+    "skipped_test_count": 0
+  },
+  "task_id": "3.1.1.5",
+  "tests": [
+    "configuration_bound_results_are_deterministic_and_minimized",
+    "configuration_bound_results_reject_invalid_identifiers_and_hashes",
+    "configuration_or_result_changes_produce_distinct_binding_hashes",
+    "session_and_release_results_bind_the_exact_configuration_identity"
+  ]
+}

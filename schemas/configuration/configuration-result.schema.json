@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/configuration/configuration-result.schema.json",
+  "title": "AgentMage Configuration-Bound Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "result_kind",
+    "result_id",
+    "payload_sha256",
+    "configuration",
+    "record_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+    },
+    "record_type": {
+      "const": "configuration-bound-result"
+    },
+    "result_kind": {
+      "enum": [
+        "session",
+        "release"
+      ]
+    },
+    "result_id": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+    },
+    "payload_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    },
+    "configuration": {
+      "$ref": "#/$defs/configurationIdentity"
+    },
+    "record_sha256": {
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "configurationIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "sha256"
+      ],
+      "properties": {
+        "profile_id": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

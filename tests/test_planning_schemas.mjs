@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
   CONFIGURATION_BUNDLE_TYPE,
   CONFIGURATION_PROFILE_CATALOG_TYPE,
+  CONFIGURATION_RESULT_TYPE,
   CONFIGURATION_SECTION_TYPES,
   RECORD_TYPES,
   TEST_RECORD_TYPES,
@@ -18,6 +19,7 @@ import {
   validateConfigurationFixtures,
   validateConfigurationRecord,
   validateConfigurationProfiles,
+  validateConfigurationResultFixtures,
   validateConfigurationSchemaReport,
   validatePlanningRecord,
   validatePlanningTemplates,
@@ -62,6 +64,18 @@ function configurationFixture() {
       path.join(
         ROOT,
         "schemas/configuration/examples/agent-configuration.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+}
+
+function configurationResultFixture(resultKind) {
+  return JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        `schemas/configuration/examples/configuration-${resultKind}-result.valid.json`,
       ),
       "utf8",
     ),
@@ -211,6 +225,19 @@ test("released manifests require a signer and release evidence", () => {
   assert.equal(validate("release-manifest", release).valid, false);
 });
 
+test("release manifests require one exact configuration identity", () => {
+  const missingConfiguration = fixture("release-manifest");
+  delete missingConfiguration.configuration;
+  assert.equal(
+    validate("release-manifest", missingConfiguration).valid,
+    false,
+  );
+
+  const invalidHash = fixture("release-manifest");
+  invalidHash.configuration.sha256 = "A".repeat(64);
+  assert.equal(validate("release-manifest", invalidHash).valid, false);
+});
+
 test("accepted supersessions require approval and disjoint requirement sets", () => {
   const missingApproval = fixture("requirement-supersession");
   missingApproval.decision_id = null;
@@ -318,6 +345,48 @@ test("all configuration sections and the bundle satisfy closed versioned schemas
     Array(results.length).fill(true),
   );
   assert.equal(results.at(-1).recordType, CONFIGURATION_BUNDLE_TYPE);
+});
+
+test("session and release result examples bind an exact configuration identity", () => {
+  const results = validateConfigurationResultFixtures();
+  assert.equal(results.length, 2);
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    [true, true],
+  );
+  assert.deepEqual(
+    results.map((result) => result.recordType),
+    [
+      `${CONFIGURATION_RESULT_TYPE}[session]`,
+      `${CONFIGURATION_RESULT_TYPE}[release]`,
+    ],
+  );
+});
+
+test("configuration-bound results reject incomplete or broadened records", () => {
+  const mutations = [];
+  const missingIdentity = configurationResultFixture("session");
+  delete missingIdentity.configuration;
+  mutations.push(missingIdentity);
+
+  const unknownField = configurationResultFixture("release");
+  unknownField.raw_configuration = {};
+  mutations.push(unknownField);
+
+  const invalidKind = configurationResultFixture("session");
+  invalidKind.result_kind = "task";
+  mutations.push(invalidKind);
+
+  const invalidHash = configurationResultFixture("release");
+  invalidHash.payload_sha256 = "not-a-hash";
+  mutations.push(invalidHash);
+
+  for (const changed of mutations) {
+    assert.equal(
+      validateConfiguration(CONFIGURATION_RESULT_TYPE, changed).valid,
+      false,
+    );
+  }
 });
 
 test("configuration schemas reject missing versions and unknown fields", () => {
