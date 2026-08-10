@@ -182,11 +182,10 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 
 ## Documentation Validation
 
-The planning baseline is checked locally and in continuous integration with pinned documentation tools:
+From a clean checkout, one command installs the lockfile-pinned documentation tools with package lifecycle scripts disabled and runs the same blocking gate used by continuous integration:
 
 ```bash
-npm ci --ignore-scripts
-npm run docs:check
+npm run docs:clean-check
 ```
 
 The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, the generated requirement registry, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.

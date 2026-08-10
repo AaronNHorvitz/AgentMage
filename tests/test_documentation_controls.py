@@ -68,8 +68,19 @@ class DocumentationControlTests(unittest.TestCase):
 
         self.assertIn("permissions:\n  contents: read", workflow)
         self.assertIn("runs-on: ubuntu-24.04", workflow)
-        self.assertIn("run: npm ci --ignore-scripts", workflow)
-        self.assertIn("run: npm run docs:check", workflow)
+        self.assertIn("run: npm run docs:clean-check", workflow)
+        self.assertNotRegex(workflow, r"run: npm (?:ci --ignore-scripts|run docs:check)$")
+
+    def test_one_command_reproduces_the_clean_documentation_gate(self) -> None:
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertEqual(
+            package["scripts"]["docs:clean-check"],
+            "npm ci --ignore-scripts && npm run docs:check",
+        )
+        self.assertIn("npm run docs:clean-check", readme)
+        self.assertNotIn("npm ci --ignore-scripts\nnpm run docs:check", readme)
 
     def test_mermaid_parser_uses_only_the_locked_local_cli(self) -> None:
         checker = (ROOT / "scripts" / "check_mermaid.py").read_text(encoding="utf-8")

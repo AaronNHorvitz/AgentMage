@@ -23,8 +23,5 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Install pinned documentation tools
-        run: npm ci --ignore-scripts
-
-      - name: Validate documentation
-        run: npm run docs:check
+      - name: Reproduce clean documentation gate
+        run: npm run docs:clean-check

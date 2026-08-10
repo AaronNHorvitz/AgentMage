@@ -9,6 +9,7 @@
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
     "docs:mermaid": "python3 scripts/check_mermaid.py",
     "docs:validate": "python3 scripts/validate_docs.py",
+    "docs:clean-check": "npm ci --ignore-scripts && npm run docs:check",
     "evidence:sprint0:build": "python3 scripts/sprint0_evidence.py --write --source-revision HEAD",
     "evidence:sprint0:check": "python3 scripts/sprint0_evidence.py",
     "policy:build": "python3 scripts/policy_expectations.py",
