@@ -172,7 +172,7 @@ The owning sprint performs the first complete execution possible for its boundar
   - [x] **Sub-task 0.1.2.1:** Versioned requirement registry.
   - [x] **Sub-task 0.1.2.2:** Cross-document traceability report.
   - [x] **Sub-task 0.1.2.3:** Decision and supersession templates.
-  - [ ] **Sub-task 0.1.2.4:** Machine-readable exclusion register.
+  - [x] **Sub-task 0.1.2.4:** Machine-readable exclusion register.
   - [ ] **Sub-task 0.1.2.5:** Versioned public-authority register and snapshot-retention policy.
 
 - [ ] **Task 0.1.3 - Verify and close the story**

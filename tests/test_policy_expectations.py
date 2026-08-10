@@ -24,9 +24,16 @@ class PolicyExpectationTests(unittest.TestCase):
     def test_covers_every_canonical_policy_class(self) -> None:
         registry = build_policy_registry()
 
+        self.assertEqual(registry["schema_version"], 1)
         self.assertEqual(registry["counts"]["by_kind"], EXPECTED_COUNTS)
         self.assertEqual(registry["counts"]["total"], 73)
         self.assertEqual(len(registry["expectations"]), 73)
+        self.assertEqual(
+            [source["document"] for source in registry["sources"]],
+            ["PRD.md", "Agent-Scaffolding-Inventory.md"],
+        )
+        for source in registry["sources"]:
+            self.assertRegex(source["sha256"], r"^[a-f0-9]{64}$")
         self.assertEqual(
             len({record["id"] for record in registry["expectations"]}),
             73,
