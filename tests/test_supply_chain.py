@@ -45,10 +45,27 @@ class SupplyChainTests(unittest.TestCase):
             for item in self.provenance["components"]
             if item["ecosystem"] == "cargo" and item["source"]["type"] == "registry"
         ]
-        self.assertEqual(len(external), 21)
+        self.assertEqual(len(external), 32)
         for component in external:
             self.assertTrue(component["source"]["url"].startswith("https://crates.io/crates/"))
             self.assertEqual(component["integrity"], f"sha256:{component['hashes'][0]['content']}")
+
+    def test_versioned_cargo_dependencies_resolve_without_name_ambiguity(self) -> None:
+        components = {item["component_id"] for item in self.provenance["components"]}
+        self.assertIn("cargo:syn@2.0.119", components)
+        self.assertIn("cargo:syn@3.0.3", components)
+        dependencies = {
+            item["component_id"]: item["depends_on"]
+            for item in self.provenance["dependencies"]
+        }
+        self.assertIn(
+            "cargo:syn@2.0.119",
+            dependencies["cargo:curve25519-dalek-derive@0.1.1"],
+        )
+        self.assertIn(
+            "cargo:syn@3.0.3",
+            dependencies["cargo:serde_derive@1.0.229"],
+        )
 
     def test_sbom_omission_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.bom)

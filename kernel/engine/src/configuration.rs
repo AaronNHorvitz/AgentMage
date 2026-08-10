@@ -7,6 +7,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use ed25519_dalek::{Signature, VerifyingKey};
 use serde::de::{self, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Number, Value};
@@ -28,6 +29,7 @@ enum ErrorCode {
     Io,
     Conflict,
     AuthorityBroadening,
+    ParentSignatureInvalid,
 }
 
 impl ErrorCode {
@@ -40,6 +42,7 @@ impl ErrorCode {
             Self::Io => "configuration-io-failure",
             Self::Conflict => "configuration-state-conflict",
             Self::AuthorityBroadening => "configuration-authority-broadening",
+            Self::ParentSignatureInvalid => "configuration-parent-signature-invalid",
         }
     }
 }
@@ -307,6 +310,42 @@ pub struct LoadedConfiguration {
     sha256: String,
 }
 
+#[derive(Serialize)]
+struct ParentProfileSignatureMaterial<'a> {
+    schema_version: u32,
+    record_type: &'static str,
+    profile_id: &'a str,
+    configuration_sha256: &'a str,
+}
+
+/// A configuration whose detached Ed25519 parent-profile signature was verified.
+#[derive(Clone, Debug)]
+pub struct VerifiedParentProfile {
+    configuration: LoadedConfiguration,
+    verifying_key_sha256: String,
+    signature_sha256: String,
+}
+
+impl VerifiedParentProfile {
+    /// Returns the signed configuration identity used as the authority ceiling.
+    #[must_use]
+    pub fn configuration_sha256(&self) -> &str {
+        self.configuration.sha256()
+    }
+
+    /// Returns the hash of the trusted Ed25519 verification key.
+    #[must_use]
+    pub fn verifying_key_sha256(&self) -> &str {
+        &self.verifying_key_sha256
+    }
+
+    /// Returns the hash of the verified detached signature.
+    #[must_use]
+    pub fn signature_sha256(&self) -> &str {
+        &self.signature_sha256
+    }
+}
+
 impl LoadedConfiguration {
     /// Returns the configured profile identity.
     #[must_use]
@@ -415,6 +454,8 @@ impl ConfigurationDiff {
 /// Identifies an untrusted configuration channel that may only restrict authority.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RestrictedConfigurationSource {
+    /// A candidate read from a local configuration file.
+    ConfigurationFile,
     /// A candidate assembled from process environment input.
     Environment,
     /// A candidate supplied by a child configuration or subordinate task.
@@ -430,6 +471,7 @@ impl RestrictedConfigurationSource {
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::ConfigurationFile => "configuration-file",
             Self::Environment => "environment",
             Self::ChildProfile => "child-profile",
             Self::Repository => "repository",
@@ -704,6 +746,34 @@ impl ConfigurationManager {
         self.load_bytes(STRICT_LOCAL_PROFILE)
     }
 
+    /// Verifies one detached Ed25519 signature before admitting a parent authority ceiling.
+    pub fn verify_parent_profile(
+        &self,
+        configuration: &LoadedConfiguration,
+        verifying_key: &[u8; 32],
+        signature: &[u8; 64],
+    ) -> Result<VerifiedParentProfile, ConfigurationError> {
+        let key = VerifyingKey::from_bytes(verifying_key).map_err(|_| {
+            ConfigurationError::new(
+                ErrorCode::ParentSignatureInvalid,
+                "parent profile signature verification failed",
+            )
+        })?;
+        let signature = Signature::from_bytes(signature);
+        let material = parent_profile_signature_material(configuration)?;
+        key.verify_strict(&material, &signature).map_err(|_| {
+            ConfigurationError::new(
+                ErrorCode::ParentSignatureInvalid,
+                "parent profile signature verification failed",
+            )
+        })?;
+        Ok(VerifiedParentProfile {
+            configuration: configuration.clone(),
+            verifying_key_sha256: sha256(verifying_key),
+            signature_sha256: sha256(signature.to_bytes().as_slice()),
+        })
+    }
+
     /// Migrates the single supported legacy version without adding authority.
     pub fn migrate_v0(&self, input: &[u8]) -> Result<MigrationOutcome, ConfigurationError> {
         if input.len() > self.maximum_bytes {
@@ -811,24 +881,46 @@ impl ConfigurationManager {
     /// Loads an untrusted full candidate only when it cannot exceed its trusted parent.
     pub fn load_restricted_candidate(
         &self,
-        parent: &LoadedConfiguration,
+        parent: &VerifiedParentProfile,
         source: RestrictedConfigurationSource,
         candidate: &[u8],
     ) -> Result<RestrictedConfigurationOutcome, ConfigurationError> {
         let configuration = self.load_bytes(candidate)?;
-        if !authority_is_subset(&parent.configuration, &configuration.configuration) {
+        if !authority_is_subset(
+            &parent.configuration.configuration,
+            &configuration.configuration,
+        ) {
             return Err(ConfigurationError::new(
                 ErrorCode::AuthorityBroadening,
                 "untrusted configuration candidate exceeds its parent authority",
             ));
         }
-        let diff = self.diff(parent, &configuration)?;
+        let diff = self.diff(&parent.configuration, &configuration)?;
         Ok(RestrictedConfigurationOutcome {
             source,
-            parent_sha256: parent.sha256.clone(),
+            parent_sha256: parent.configuration.sha256.clone(),
             configuration,
             diff,
         })
+    }
+
+    /// Reads a local candidate file and applies the same signed-parent restriction boundary.
+    pub fn load_restricted_path(
+        &self,
+        parent: &VerifiedParentProfile,
+        path: &Path,
+    ) -> Result<RestrictedConfigurationOutcome, ConfigurationError> {
+        let candidate = fs::read(path).map_err(|_| {
+            ConfigurationError::new(
+                ErrorCode::Io,
+                "restricted configuration file could not be read",
+            )
+        })?;
+        self.load_restricted_candidate(
+            parent,
+            RestrictedConfigurationSource::ConfigurationFile,
+            &candidate,
+        )
     }
 
     /// Binds a session result to the exact validated configuration that produced it.
@@ -924,6 +1016,23 @@ impl ConfigurationManager {
         }
         Ok(restored)
     }
+}
+
+fn parent_profile_signature_material(
+    configuration: &LoadedConfiguration,
+) -> Result<Vec<u8>, ConfigurationError> {
+    serde_json::to_vec(&ParentProfileSignatureMaterial {
+        schema_version: 1,
+        record_type: "agentmage-parent-profile-authority",
+        profile_id: configuration.profile_id(),
+        configuration_sha256: configuration.sha256(),
+    })
+    .map_err(|_| {
+        ConfigurationError::new(
+            ErrorCode::ContractViolation,
+            "parent profile signature material could not be serialized",
+        )
+    })
 }
 
 fn loaded(configuration: AgentConfiguration) -> Result<LoadedConfiguration, ConfigurationError> {
@@ -1737,6 +1846,8 @@ fn parse_unique_json(input: &[u8]) -> Result<Value, ConfigurationError> {
 mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use ed25519_dalek::{Signer, SigningKey};
+
     use super::*;
 
     const SYNTHETIC_PROFILE: &[u8] =
@@ -1752,14 +1863,17 @@ mod tests {
     );
     const MIGRATION_V0_MISSING_SECTION: &[u8] =
         include_bytes!("../../../fixtures/configuration/migration/v0.missing-section.invalid.json");
+    const PERMISSION_BEARING_VALUES: &[u8] =
+        include_bytes!("../../../configuration/permission-bearing-values.json");
     static TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
     fn manager() -> ConfigurationManager {
         ConfigurationManager::default()
     }
 
-    fn restricted_sources() -> [RestrictedConfigurationSource; 4] {
+    fn restricted_sources() -> [RestrictedConfigurationSource; 5] {
         [
+            RestrictedConfigurationSource::ConfigurationFile,
             RestrictedConfigurationSource::Environment,
             RestrictedConfigurationSource::ChildProfile,
             RestrictedConfigurationSource::Repository,
@@ -1767,8 +1881,24 @@ mod tests {
         ]
     }
 
-    fn mutate(mut value: Value, path: &[&str], replacement: Value) -> Vec<u8> {
-        let mut current = &mut value;
+    fn signed_parent(input: &[u8]) -> VerifiedParentProfile {
+        let configuration = manager().load_bytes(input).expect("signed parent loads");
+        // This deterministic key is synthetic unit-test material, never a product trust root.
+        let signing_key = SigningKey::from_bytes(&[0x42; 32]);
+        let material =
+            parent_profile_signature_material(&configuration).expect("signature material builds");
+        let signature = signing_key.sign(&material).to_bytes();
+        manager()
+            .verify_parent_profile(
+                &configuration,
+                &signing_key.verifying_key().to_bytes(),
+                &signature,
+            )
+            .expect("synthetic parent signature verifies")
+    }
+
+    fn set_value(value: &mut Value, path: &[&str], replacement: Value) {
+        let mut current = value;
         for part in &path[..path.len() - 1] {
             current = match current {
                 Value::Array(items) => items
@@ -1781,6 +1911,10 @@ mod tests {
             .as_object_mut()
             .expect("fixture parent must be an object")
             .insert(path[path.len() - 1].to_owned(), replacement);
+    }
+
+    fn mutate(mut value: Value, path: &[&str], replacement: Value) -> Vec<u8> {
+        set_value(&mut value, path, replacement);
         serde_json::to_vec(&value).expect("fixture must serialize")
     }
 
@@ -1897,6 +2031,336 @@ mod tests {
                 "configuration does not match the closed version 1 contract",
             ),
         }
+    }
+
+    fn permission_bearing_mutation(path: &str) -> (Vec<u8>, Vec<u8>) {
+        let mut parent = fixture_value();
+        if path == "/tool/tools/0/enabled" {
+            parent["tool"]["tools"][0]["enabled"] = Value::Bool(false);
+        }
+        let mut candidate = parent.clone();
+        match path {
+            "/core/configuration_mode" => {
+                candidate["core"]["configuration_mode"] = Value::String("coding".to_owned());
+            }
+            "/core/startup_failure_policy" => {
+                candidate["core"]["startup_failure_policy"] = Value::String("continue".to_owned());
+            }
+            "/core/strict_local" => {
+                candidate["core"]["configuration_mode"] =
+                    Value::String("network-enabled".to_owned());
+                candidate["core"]["strict_local"] = Value::Bool(false);
+            }
+            "/core/inheritance_mode" => {
+                candidate["core"]["inheritance_mode"] = Value::String("merge".to_owned());
+            }
+            "/platform/platform_id" => {
+                candidate["platform"]["platform_id"] = Value::String("ubuntu-x86_64".to_owned());
+            }
+            "/platform/adapter_id" => {
+                candidate["platform"]["adapter_id"] =
+                    Value::String("alternate-linux-platform-v1".to_owned());
+            }
+            "/platform/sandbox_profile_id" => {
+                candidate["platform"]["sandbox_profile_id"] =
+                    Value::String("alternate-sandbox-v1".to_owned());
+            }
+            "/platform/path_identity_strategy" => {
+                candidate["platform"]["path_identity_strategy"] =
+                    Value::String("security-scoped-bookmark".to_owned());
+            }
+            "/platform/secret_provider_id" => {
+                candidate["platform"]["secret_provider_id"] = Value::String("keychain".to_owned());
+            }
+            "/platform/standard_user_required" => {
+                candidate["platform"]["standard_user_required"] = Value::Bool(false);
+            }
+            "/platform/administrator_required" => {
+                candidate["platform"]["administrator_required"] = Value::Bool(true);
+            }
+            "/platform/ambient_dependency_policy" => {
+                candidate["platform"]["ambient_dependency_policy"] =
+                    Value::String("allow".to_owned());
+            }
+            "/model/enabled" => candidate["model"]["enabled"] = Value::Bool(true),
+            "/model/model_profile_id" => {
+                candidate["model"]["model_profile_id"] =
+                    Value::String("alternate-model-v1".to_owned());
+            }
+            "/model/manifest_path" => {
+                candidate["model"]["manifest_path"] =
+                    Value::String("fixtures/alternate-model-manifest.json".to_owned());
+            }
+            "/model/runtime_adapter_id" => {
+                candidate["model"]["runtime_adapter_id"] =
+                    Value::String("alternate-runtime-v1".to_owned());
+            }
+            "/model/transport" => {
+                candidate["model"]["transport"] = Value::String("local-unix-socket".to_owned());
+            }
+            "/model/network_access" => {
+                candidate["model"]["network_access"] = Value::Bool(true);
+            }
+            "/model/automatic_routing" => {
+                candidate["model"]["automatic_routing"] = Value::Bool(true);
+            }
+            "/model/decoding/deterministic" => {
+                candidate["model"]["decoding"]["deterministic"] = Value::Bool(false);
+            }
+            "/model/decoding/temperature" => {
+                candidate["model"]["decoding"]["deterministic"] = Value::Bool(false);
+                candidate["model"]["decoding"]["temperature"] = Value::from(1.0);
+            }
+            "/model/decoding/top_k" => {
+                candidate["model"]["decoding"]["deterministic"] = Value::Bool(false);
+                candidate["model"]["decoding"]["top_k"] = Value::from(2);
+            }
+            "/model/decoding/seed" => {
+                candidate["model"]["decoding"]["seed"] = Value::from(104_730);
+            }
+            "/model/decoding/maximum_context_tokens" => {
+                candidate["model"]["decoding"]["maximum_context_tokens"] = Value::from(4097);
+                candidate["budget"]["maximum_context_tokens"] = Value::from(4097);
+            }
+            "/model/decoding/maximum_output_tokens" => {
+                candidate["model"]["decoding"]["maximum_output_tokens"] = Value::from(1025);
+                candidate["budget"]["maximum_output_tokens"] = Value::from(1025);
+            }
+            "/workspace/maximum_roots" => {
+                candidate["workspace"]["maximum_roots"] = Value::from(2);
+            }
+            "/workspace/default_access" => {
+                candidate["workspace"]["default_access"] = Value::String("allow".to_owned());
+            }
+            "/workspace/symlink_policy" => {
+                candidate["workspace"]["symlink_policy"] =
+                    Value::String("same-root-only".to_owned());
+            }
+            "/workspace/roots" => {
+                candidate["workspace"]["maximum_roots"] = Value::from(2);
+                candidate["workspace"]["roots"]
+                    .as_array_mut()
+                    .expect("workspace roots array")
+                    .push(serde_json::json!({
+                        "root_id": "second-workspace",
+                        "locator_kind": "managed-relative",
+                        "locator": "fixtures/generated/second-workspace",
+                        "access": "read-only",
+                        "follow_mount_changes": false
+                    }));
+            }
+            "/workspace/roots/0/root_id" => {
+                candidate["workspace"]["roots"][0]["root_id"] =
+                    Value::String("alternate-workspace".to_owned());
+            }
+            "/workspace/roots/0/locator_kind" => {
+                candidate["workspace"]["roots"][0]["locator_kind"] =
+                    Value::String("platform-resolved-handle".to_owned());
+            }
+            "/workspace/roots/0/locator" => {
+                candidate["workspace"]["roots"][0]["locator"] =
+                    Value::String("fixtures/generated/alternate-workspace".to_owned());
+            }
+            "/workspace/roots/0/access" => {
+                candidate["workspace"]["roots"][0]["access"] =
+                    Value::String("read-write".to_owned());
+            }
+            "/workspace/roots/0/follow_mount_changes" => {
+                candidate["workspace"]["roots"][0]["follow_mount_changes"] = Value::Bool(true);
+            }
+            "/tool/registry_path" => {
+                candidate["tool"]["registry_path"] =
+                    Value::String("fixtures/alternate-tool-registry.json".to_owned());
+            }
+            "/tool/unregistered_tool_policy" => {
+                candidate["tool"]["unregistered_tool_policy"] = Value::String("allow".to_owned());
+            }
+            "/tool/tools" => {
+                candidate["tool"]["tools"]
+                    .as_array_mut()
+                    .expect("tools array")
+                    .push(serde_json::json!({
+                        "tool_id": "synthetic-second-tool",
+                        "version": "1.0.0",
+                        "integrity_sha256": "2".repeat(64),
+                        "enabled": false,
+                        "required_capabilities": [],
+                        "side_effect_class": "none"
+                    }));
+            }
+            "/tool/tools/0/tool_id" => {
+                candidate["tool"]["tools"][0]["tool_id"] =
+                    Value::String("alternate-read-file".to_owned());
+            }
+            "/tool/tools/0/version" => {
+                candidate["tool"]["tools"][0]["version"] = Value::String("1.0.1".to_owned());
+            }
+            "/tool/tools/0/integrity_sha256" => {
+                candidate["tool"]["tools"][0]["integrity_sha256"] = Value::String("2".repeat(64));
+            }
+            "/tool/tools/0/enabled" => {
+                candidate["tool"]["tools"][0]["enabled"] = Value::Bool(true);
+            }
+            "/tool/tools/0/required_capabilities" => {
+                candidate["permission"]["allowed_capabilities"] =
+                    serde_json::json!(["workspace.read", "workspace.write"]);
+                candidate["tool"]["tools"][0]["required_capabilities"] =
+                    serde_json::json!(["workspace.read", "workspace.write"]);
+            }
+            "/tool/tools/0/side_effect_class" => {
+                candidate["tool"]["tools"][0]["side_effect_class"] =
+                    Value::String("write".to_owned());
+            }
+            "/permission/default_effect" => {
+                candidate["permission"]["default_effect"] = Value::String("allow".to_owned());
+            }
+            "/permission/authority_inheritance" => {
+                candidate["permission"]["authority_inheritance"] =
+                    Value::String("merge".to_owned());
+            }
+            "/permission/model_authority" => {
+                candidate["permission"]["model_authority"] = Value::String("tools".to_owned());
+            }
+            "/permission/grant_policy/single_use" => {
+                candidate["permission"]["grant_policy"]["single_use"] = Value::Bool(false);
+            }
+            "/permission/grant_policy/expiry_required" => {
+                candidate["permission"]["grant_policy"]["expiry_required"] = Value::Bool(false);
+            }
+            "/permission/grant_policy/exact_scope_required" => {
+                candidate["permission"]["grant_policy"]["exact_scope_required"] =
+                    Value::Bool(false);
+            }
+            "/permission/grant_policy/transferable" => {
+                candidate["permission"]["grant_policy"]["transferable"] = Value::Bool(true);
+            }
+            "/permission/grant_policy/replay_policy" => {
+                candidate["permission"]["grant_policy"]["replay_policy"] =
+                    Value::String("allow".to_owned());
+            }
+            "/permission/allowed_capabilities" => {
+                candidate["permission"]["allowed_capabilities"] =
+                    serde_json::json!(["workspace.read", "workspace.write"]);
+            }
+            "/permission/network/mode" => {
+                candidate["permission"]["network"]["mode"] = Value::String("allow-list".to_owned());
+            }
+            "/permission/network/allowed_endpoints" => {
+                candidate["permission"]["network"]["allowed_endpoints"] =
+                    serde_json::json!(["invalid-endpoint"]);
+            }
+            path @ ("/budget/maximum_input_bytes"
+            | "/budget/maximum_output_bytes"
+            | "/budget/maximum_file_count"
+            | "/budget/maximum_tree_depth"
+            | "/budget/maximum_context_tokens"
+            | "/budget/maximum_output_tokens"
+            | "/budget/maximum_operation_milliseconds"
+            | "/budget/maximum_memory_bytes"
+            | "/budget/maximum_processes"
+            | "/budget/maximum_concurrency") => {
+                let field = path.rsplit('/').next().expect("budget field");
+                let current = candidate["budget"][field]
+                    .as_u64()
+                    .expect("numeric budget field");
+                candidate["budget"][field] = Value::from(current + 1);
+            }
+            "/logging/level" => {
+                candidate["logging"]["level"] = Value::String("debug".to_owned());
+            }
+            "/logging/structured" => candidate["logging"]["structured"] = Value::Bool(false),
+            "/logging/destination/kind" => {
+                candidate["logging"]["destination"]["kind"] = Value::String("stdout".to_owned());
+            }
+            "/logging/destination/managed_relative_path" => {
+                candidate["logging"]["destination"]["managed_relative_path"] =
+                    Value::String("state/logs/alternate.jsonl".to_owned());
+            }
+            "/logging/maximum_event_bytes" => {
+                candidate["logging"]["maximum_event_bytes"] = Value::from(16_385);
+            }
+            path @ ("/logging/redaction/secret_values"
+            | "/logging/redaction/credentials"
+            | "/logging/redaction/private_paths"
+            | "/logging/redaction/environment_values") => {
+                let field = path.rsplit('/').next().expect("redaction field");
+                candidate["logging"]["redaction"][field] = Value::String("retain".to_owned());
+            }
+            path @ ("/logging/record_prompts"
+            | "/logging/record_tool_arguments"
+            | "/logging/record_environment_values") => {
+                let field = path.rsplit('/').next().expect("logging field");
+                candidate["logging"][field] = Value::Bool(true);
+            }
+            path @ ("/retention/sessions_days"
+            | "/retention/receipts_days"
+            | "/retention/logs_days"
+            | "/retention/temporary_artifacts_minutes") => {
+                let field = path.rsplit('/').next().expect("retention field");
+                let current = candidate["retention"][field]
+                    .as_u64()
+                    .expect("numeric retention field");
+                candidate["retention"][field] = Value::from(current + 1);
+            }
+            "/retention/expired_data_action" => {
+                candidate["retention"]["expired_data_action"] = Value::String("retain".to_owned());
+            }
+            "/retention/backup_policy" => {
+                candidate["retention"]["backup_policy"] =
+                    Value::String("user-managed-encrypted".to_owned());
+            }
+            "/retention/secure_deletion_claim" => {
+                candidate["retention"]["secure_deletion_claim"] =
+                    Value::String("guaranteed".to_owned());
+            }
+            "/skill/enablement" => {
+                candidate["skill"]["enablement"] = Value::String("automatic".to_owned());
+            }
+            "/skill/unsigned_skill_policy" => {
+                candidate["skill"]["unsigned_skill_policy"] = Value::String("allow".to_owned());
+            }
+            "/skill/self_modification" => {
+                candidate["skill"]["self_modification"] = Value::String("allow".to_owned());
+            }
+            "/skill/catalog_paths" => {
+                candidate["skill"]["catalog_paths"] =
+                    serde_json::json!(["skills/alternate-catalog.json"]);
+            }
+            "/skill/maximum_enabled_skills" => {
+                candidate["skill"]["maximum_enabled_skills"] = Value::from(1);
+            }
+            "/skill/capability_ceiling" => {
+                candidate["skill"]["capability_ceiling"] = serde_json::json!(["workspace.read"]);
+            }
+            "/shell/shell_id" => {
+                candidate["shell"]["shell_id"] = Value::String("alternate-shell-v1".to_owned());
+            }
+            "/shell/surface_id" => {
+                candidate["shell"]["surface_id"] = Value::String("host-cli".to_owned());
+            }
+            "/shell/transport" => {
+                candidate["shell"]["transport"] = Value::String("local-stdio".to_owned());
+            }
+            "/shell/launch_privilege" => {
+                candidate["shell"]["launch_privilege"] = Value::String("administrator".to_owned());
+            }
+            "/shell/network_access" => candidate["shell"]["network_access"] = Value::Bool(true),
+            "/shell/direct_command_execution" => {
+                candidate["shell"]["direct_command_execution"] = Value::Bool(true);
+            }
+            "/shell/model_to_tool_channel" => {
+                candidate["shell"]["model_to_tool_channel"] = Value::String("allowed".to_owned());
+            }
+            "/shell/diagnostics_surface" => {
+                candidate["shell"]["diagnostics_surface"] =
+                    Value::String("status-command".to_owned());
+            }
+            _ => panic!("unhandled permission-bearing path: {path}"),
+        }
+        (
+            serde_json::to_vec(&parent).expect("parent fixture serializes"),
+            serde_json::to_vec(&candidate).expect("candidate fixture serializes"),
+        )
     }
 
     fn fixture_value() -> Value {
@@ -2132,9 +2596,7 @@ mod tests {
 
     #[test]
     fn every_untrusted_channel_accepts_only_a_valid_restriction() {
-        let parent = manager()
-            .load_bytes(SYNTHETIC_PROFILE)
-            .expect("parent loads");
+        let parent = signed_parent(SYNTHETIC_PROFILE);
         let mut child = fixture_value();
         child["core"]["profile_id"] = Value::String("restricted-child".to_owned());
         child["tool"]["tools"] = Value::Array(Vec::new());
@@ -2149,7 +2611,7 @@ mod tests {
                 .expect("restriction must load");
             assert_eq!(outcome.source(), source);
             assert_eq!(outcome.source().as_str(), source.as_str());
-            assert_eq!(outcome.parent_sha256(), parent.sha256());
+            assert_eq!(outcome.parent_sha256(), parent.configuration_sha256());
             assert!(!outcome.diff().broadens_authority());
             assert_eq!(outcome.configuration().profile_id(), "restricted-child");
         }
@@ -2157,9 +2619,9 @@ mod tests {
 
     #[test]
     fn every_untrusted_channel_rejects_capability_broadening() {
-        let parent = manager().safe_defaults().expect("parent loads");
+        let parent = signed_parent(STRICT_LOCAL_PROFILE);
         let candidate = mutate(
-            serde_json::to_value(&parent.configuration).expect("parent serializes"),
+            serde_json::to_value(&parent.configuration.configuration).expect("parent serializes"),
             &["permission", "allowed_capabilities"],
             serde_json::json!(["workspace.read", "workspace.write"]),
         );
@@ -2173,10 +2635,121 @@ mod tests {
     }
 
     #[test]
+    fn parent_profile_signature_verification_rejects_tampering_and_wrong_keys() {
+        let configuration = manager()
+            .load_bytes(SYNTHETIC_PROFILE)
+            .expect("parent loads");
+        let signing_key = SigningKey::from_bytes(&[0x42; 32]);
+        let material =
+            parent_profile_signature_material(&configuration).expect("signature material builds");
+        let signature = signing_key.sign(&material).to_bytes();
+        let verified = manager()
+            .verify_parent_profile(
+                &configuration,
+                &signing_key.verifying_key().to_bytes(),
+                &signature,
+            )
+            .expect("signature verifies");
+        assert_eq!(verified.configuration_sha256(), configuration.sha256());
+        assert_eq!(verified.verifying_key_sha256().len(), 64);
+        assert_eq!(verified.signature_sha256().len(), 64);
+
+        let mut tampered_signature = signature;
+        tampered_signature[0] ^= 1;
+        let wrong_key = SigningKey::from_bytes(&[0x24; 32]);
+        let alternate = manager()
+            .safe_defaults()
+            .expect("alternate configuration loads");
+        for (candidate, key, signed) in [
+            (
+                &configuration,
+                signing_key.verifying_key().to_bytes(),
+                tampered_signature,
+            ),
+            (
+                &configuration,
+                wrong_key.verifying_key().to_bytes(),
+                signature,
+            ),
+            (
+                &alternate,
+                signing_key.verifying_key().to_bytes(),
+                signature,
+            ),
+        ] {
+            let error = manager()
+                .verify_parent_profile(candidate, &key, &signed)
+                .expect_err("tampered signature boundary must fail");
+            assert_eq!(error.code(), "configuration-parent-signature-invalid");
+            assert_eq!(
+                error.diagnostic(),
+                "parent profile signature verification failed"
+            );
+        }
+    }
+
+    #[test]
+    fn every_permission_bearing_value_is_rejected_through_every_untrusted_channel() {
+        let registry: Value =
+            serde_json::from_slice(PERMISSION_BEARING_VALUES).expect("registry parses");
+        assert_eq!(registry["schema_version"], Value::from(1));
+        assert_eq!(registry["status"], "enforced-test-closure");
+        let entries = registry["entries"].as_array().expect("entries array");
+        let mut seen = BTreeSet::new();
+        let directory = temporary_directory();
+        let candidate_path = directory.join("untrusted-candidate.json");
+        let mut attempted = 0;
+
+        for entry in entries {
+            let path = entry["path"].as_str().expect("path string");
+            let expected = entry["expected_rejection"]
+                .as_str()
+                .expect("expected rejection string");
+            assert!(seen.insert(path), "permission-bearing path must be unique");
+            let (parent_bytes, candidate) = permission_bearing_mutation(path);
+            let parent = signed_parent(&parent_bytes);
+            let parent_identity = parent.configuration_sha256().to_owned();
+
+            let direct = manager().load_bytes(&candidate);
+            if expected == "configuration-authority-broadening" {
+                direct.expect("authority mutation must satisfy the closed schema");
+            } else {
+                assert_eq!(
+                    direct
+                        .expect_err("safety mutation must fail schema loading")
+                        .code(),
+                    expected
+                );
+            }
+
+            for source in restricted_sources() {
+                let error = if source == RestrictedConfigurationSource::ConfigurationFile {
+                    fs::write(&candidate_path, &candidate).expect("candidate file writes");
+                    manager()
+                        .load_restricted_path(&parent, &candidate_path)
+                        .expect_err("file broadening must fail")
+                } else {
+                    manager()
+                        .load_restricted_candidate(&parent, source, &candidate)
+                        .expect_err("channel broadening must fail")
+                };
+                assert_eq!(error.code(), expected, "failed path: {path}");
+                assert_eq!(parent.configuration_sha256(), parent_identity);
+                attempted += 1;
+            }
+        }
+
+        assert_eq!(entries.len(), 97);
+        assert_eq!(seen.len(), entries.len());
+        assert_eq!(attempted, entries.len() * restricted_sources().len());
+        fs::remove_dir_all(directory).expect("temporary directory removes");
+    }
+
+    #[test]
     fn roots_models_tools_and_platform_identity_cannot_broaden_or_change() {
-        let strict = manager().safe_defaults().expect("strict parent loads");
+        let strict = signed_parent(STRICT_LOCAL_PROFILE);
         let root_write = mutate(
-            serde_json::to_value(&strict.configuration).expect("parent serializes"),
+            serde_json::to_value(&strict.configuration.configuration).expect("parent serializes"),
             &["workspace", "roots"],
             serde_json::json!([{
                 "root_id": "user-selected-workspace",
@@ -2187,13 +2760,11 @@ mod tests {
             }]),
         );
         let model_enabled = mutate(
-            serde_json::to_value(&strict.configuration).expect("parent serializes"),
+            serde_json::to_value(&strict.configuration.configuration).expect("parent serializes"),
             &["model", "enabled"],
             Value::Bool(true),
         );
-        let synthetic = manager()
-            .load_bytes(SYNTHETIC_PROFILE)
-            .expect("synthetic parent loads");
+        let synthetic = signed_parent(SYNTHETIC_PROFILE);
         let tool_changed = mutate(
             fixture_value(),
             &["tool", "tools", "0", "integrity_sha256"],
@@ -2226,9 +2797,7 @@ mod tests {
 
     #[test]
     fn resource_logging_and_retention_increases_are_rejected() {
-        let parent = manager()
-            .load_bytes(SYNTHETIC_PROFILE)
-            .expect("parent loads");
+        let parent = signed_parent(SYNTHETIC_PROFILE);
         let candidates = [
             mutate(
                 fixture_value(),
@@ -2263,7 +2832,7 @@ mod tests {
 
     #[test]
     fn malformed_untrusted_input_fails_before_authority_comparison() {
-        let parent = manager().safe_defaults().expect("parent loads");
+        let parent = signed_parent(STRICT_LOCAL_PROFILE);
         let candidate = br#"{"permission":"private-value""#;
         let error = manager()
             .load_restricted_candidate(
@@ -2276,7 +2845,7 @@ mod tests {
         assert!(!format!("{error:?}").contains("private-value"));
         assert_eq!(
             manager().safe_defaults().expect("parent reloads").sha256(),
-            parent.sha256()
+            parent.configuration_sha256()
         );
     }
 

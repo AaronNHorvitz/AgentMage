@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "33b1a379408ffe1abded8c76a7be0ec318fb6a8a983d9bef6d1589f0b77ae693"
+          "content": "c3bf65b30a470d9d3c6a28c1b1d4dc133087a5fed5e2ba746d07f47068d000f2"
         }
       ],
       "integrity": null,
@@ -222,6 +222,46 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:curve25519-dalek-derive@0.1.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
+        }
+      ],
+      "integrity": "sha256:f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3",
+      "license": "MIT/Apache-2.0",
+      "name": "curve25519-dalek-derive",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/curve25519-dalek-derive/0.1.1"
+      },
+      "version": "0.1.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:curve25519-dalek@5.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "b5eed333089e2e1c1ac8c6c0398e5e2497b4c9926ca6d0365ed1e099afa5bc23"
+        }
+      ],
+      "integrity": "sha256:b5eed333089e2e1c1ac8c6c0398e5e2497b4c9926ca6d0365ed1e099afa5bc23",
+      "license": "BSD-3-Clause",
+      "name": "curve25519-dalek",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/curve25519-dalek/5.0.0"
+      },
+      "version": "5.0.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:digest@0.11.3",
       "ecosystem": "cargo",
       "hashes": [
@@ -239,6 +279,66 @@
         "url": "https://crates.io/crates/digest/0.11.3"
       },
       "version": "0.11.3"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:ed25519-dalek@3.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "6ebaa1a2bf1290ab3bfe5a7b771d050ebffab2711c19a81691c683a5144a25de"
+        }
+      ],
+      "integrity": "sha256:6ebaa1a2bf1290ab3bfe5a7b771d050ebffab2711c19a81691c683a5144a25de",
+      "license": "BSD-3-Clause",
+      "name": "ed25519-dalek",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/ed25519-dalek/3.0.0"
+      },
+      "version": "3.0.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:ed25519@3.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "29fcf32e6c73d1079f83ab4d782de2d81620346a5f38c6237a86a22f8368980a"
+        }
+      ],
+      "integrity": "sha256:29fcf32e6c73d1079f83ab4d782de2d81620346a5f38c6237a86a22f8368980a",
+      "license": "Apache-2.0 OR MIT",
+      "name": "ed25519",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/ed25519/3.0.0"
+      },
+      "version": "3.0.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:fiat-crypto@0.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24"
+        }
+      ],
+      "integrity": "sha256:64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24",
+      "license": "MIT OR Apache-2.0 OR BSD-1-Clause",
+      "name": "fiat-crypto",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/fiat-crypto/0.3.0"
+      },
+      "version": "0.3.0"
     },
     {
       "classification": "production",
@@ -362,6 +462,46 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:rustc_version@0.4.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
+        }
+      ],
+      "integrity": "sha256:cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92",
+      "license": "MIT OR Apache-2.0",
+      "name": "rustc_version",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/rustc_version/0.4.1"
+      },
+      "version": "0.4.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:semver@1.0.28",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+        }
+      ],
+      "integrity": "sha256:8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+      "license": "MIT OR Apache-2.0",
+      "name": "semver",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/semver/1.0.28"
+      },
+      "version": "1.0.28"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:serde@1.0.229",
       "ecosystem": "cargo",
       "hashes": [
@@ -462,6 +602,66 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:signature@3.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "28d567dcbaf0049cb8ac2608a76cd95ff9e4412e1899d389ee400918ca7537f5"
+        }
+      ],
+      "integrity": "sha256:28d567dcbaf0049cb8ac2608a76cd95ff9e4412e1899d389ee400918ca7537f5",
+      "license": "Apache-2.0 OR MIT",
+      "name": "signature",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/signature/3.0.0"
+      },
+      "version": "3.0.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:subtle@2.6.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+        }
+      ],
+      "integrity": "sha256:13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292",
+      "license": "BSD-3-Clause",
+      "name": "subtle",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/subtle/2.6.1"
+      },
+      "version": "2.6.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:syn@2.0.119",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+        }
+      ],
+      "integrity": "sha256:872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297",
+      "license": "MIT OR Apache-2.0",
+      "name": "syn",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/syn/2.0.119"
+      },
+      "version": "2.0.119"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:syn@3.0.3",
       "ecosystem": "cargo",
       "hashes": [
@@ -522,6 +722,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:zeroize@1.9.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
+        }
+      ],
+      "integrity": "sha256:e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e",
+      "license": "Apache-2.0 OR MIT",
+      "name": "zeroize",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zeroize/1.9.0"
+      },
+      "version": "1.9.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:zmij@1.0.23",
       "ecosystem": "cargo",
       "hashes": [
@@ -567,7 +787,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a67bd0b1220b8f626be1e6c09575e237a928ff988fbeaeaf2241337c48f62fa7"
+          "content": "ffd598c8251f08b20dfd5ab3ff45c7017d6f3780dea90607edc02d62c9c663eb"
         }
       ],
       "integrity": null,
@@ -8026,6 +8246,7 @@
       "component_id": "cargo:agentmage-kernel-engine@0.0.0",
       "depends_on": [
         "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:ed25519-dalek@3.0.0",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0"
@@ -8068,12 +8289,54 @@
       ]
     },
     {
+      "component_id": "cargo:curve25519-dalek-derive@0.1.1",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@2.0.119"
+      ]
+    },
+    {
+      "component_id": "cargo:curve25519-dalek@5.0.0",
+      "depends_on": [
+        "cargo:cfg-if@1.0.4",
+        "cargo:cpufeatures@0.3.0",
+        "cargo:curve25519-dalek-derive@0.1.1",
+        "cargo:digest@0.11.3",
+        "cargo:fiat-crypto@0.3.0",
+        "cargo:rustc_version@0.4.1",
+        "cargo:subtle@2.6.1",
+        "cargo:zeroize@1.9.0"
+      ]
+    },
+    {
       "component_id": "cargo:digest@0.11.3",
       "depends_on": [
         "cargo:block-buffer@0.12.1",
         "cargo:const-oid@0.10.2",
         "cargo:crypto-common@0.2.2"
       ]
+    },
+    {
+      "component_id": "cargo:ed25519-dalek@3.0.0",
+      "depends_on": [
+        "cargo:curve25519-dalek@5.0.0",
+        "cargo:ed25519@3.0.0",
+        "cargo:sha2@0.11.0",
+        "cargo:signature@3.0.0",
+        "cargo:subtle@2.6.1",
+        "cargo:zeroize@1.9.0"
+      ]
+    },
+    {
+      "component_id": "cargo:ed25519@3.0.0",
+      "depends_on": [
+        "cargo:signature@3.0.0"
+      ]
+    },
+    {
+      "component_id": "cargo:fiat-crypto@0.3.0",
+      "depends_on": []
     },
     {
       "component_id": "cargo:hybrid-array@0.4.14",
@@ -8104,6 +8367,16 @@
       "depends_on": [
         "cargo:proc-macro2@1.0.107"
       ]
+    },
+    {
+      "component_id": "cargo:rustc_version@0.4.1",
+      "depends_on": [
+        "cargo:semver@1.0.28"
+      ]
+    },
+    {
+      "component_id": "cargo:semver@1.0.28",
+      "depends_on": []
     },
     {
       "component_id": "cargo:serde@1.0.229",
@@ -8145,6 +8418,22 @@
       ]
     },
     {
+      "component_id": "cargo:signature@3.0.0",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:subtle@2.6.1",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:syn@2.0.119",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:unicode-ident@1.0.24"
+      ]
+    },
+    {
       "component_id": "cargo:syn@3.0.3",
       "depends_on": [
         "cargo:proc-macro2@1.0.107",
@@ -8158,6 +8447,10 @@
     },
     {
       "component_id": "cargo:unicode-ident@1.0.24",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:zeroize@1.9.0",
       "depends_on": []
     },
     {
@@ -10472,15 +10765,15 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1",
-    "Cargo.toml": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89",
+    "Cargo.lock": "702e0fbb88f6cfaae97475e6d876e0907a8819e205bcfcc87a46825e1fd8ea00",
+    "Cargo.toml": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "a67bd0b1220b8f626be1e6c09575e237a928ff988fbeaeaf2241337c48f62fa7",
+    "package.json": "ffd598c8251f08b20dfd5ab3ff45c7017d6f3780dea90607edc02d62c9c663eb",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "5c09f46372c33606f82bc48a547c9295db063bee2aa5909bf6f7e47e10f5609f",
-    "supply-chain/cargo-external-catalog.json": "ee7254fe276e1dfffe78d3ee56be790966dc38da0a8743e260a32c071556146f"
+    "supply-chain/cargo-external-catalog.json": "13eff5654b0cf4d7a38237dfb0d5708fdd8869965471d346b5bb814ee1155349"
   },
   "platform_status": {
     "macos": "blocked-macos",

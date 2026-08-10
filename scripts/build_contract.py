@@ -38,7 +38,13 @@ EXPECTED_CARGO_PACKAGES = {
     "kernel/contracts": ("agentmage-kernel-contracts", set()),
     "kernel/engine": (
         "agentmage-kernel-engine",
-        {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},
+        {
+            "agentmage-kernel-contracts",
+            "ed25519-dalek",
+            "serde",
+            "serde_json",
+            "sha2",
+        },
     ),
     "platforms/linux": ("agentmage-platform-linux", {"agentmage-kernel-contracts"}),
     "release/xtask": ("agentmage-xtask", set()),

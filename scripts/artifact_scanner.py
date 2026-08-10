@@ -36,8 +36,11 @@ EXPECTED_PRODUCTION_LICENSES = (
     "(MIT OR Apache-2.0) AND Unicode-3.0",
     "Apache-2.0",
     "Apache-2.0 OR MIT",
+    "BSD-3-Clause",
     "MIT",
+    "MIT OR Apache-2.0 OR BSD-1-Clause",
     "MIT OR Apache-2.0",
+    "MIT/Apache-2.0",
     "Unlicense OR MIT",
 )
 SECRET_ASSIGNMENT = re.compile(

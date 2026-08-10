@@ -19,13 +19,21 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.1/configuration-authority-report.json"
 EXPECTED_TESTS = (
     "aggregate_diff_detects_non_capability_authority_broadening",
+    "every_permission_bearing_value_is_rejected_through_every_untrusted_channel",
     "every_untrusted_channel_accepts_only_a_valid_restriction",
     "every_untrusted_channel_rejects_capability_broadening",
     "malformed_untrusted_input_fails_before_authority_comparison",
+    "parent_profile_signature_verification_rejects_tampering_and_wrong_keys",
     "resource_logging_and_retention_increases_are_rejected",
     "roots_models_tools_and_platform_identity_cannot_broaden_or_change",
 )
-SOURCES = ("environment", "child-profile", "repository", "model-output")
+SOURCES = (
+    "configuration-file",
+    "environment",
+    "child-profile",
+    "repository",
+    "model-output",
+)
 AUTHORITY_DIMENSIONS = (
     "platform-identity",
     "model-activation-runtime-and-limits",
@@ -64,6 +72,7 @@ SOURCE_PATHS = (
     "kernel/engine/Cargo.toml",
     "kernel/engine/src/lib.rs",
     "kernel/engine/src/configuration.rs",
+    "configuration/permission-bearing-values.json",
     "schemas/configuration/agent-configuration.schema.json",
     "configuration/profiles/strict-local-read-only.json",
     "configuration/profiles/synthetic-test.json",
@@ -162,8 +171,12 @@ def build_report(executed_tests: Sequence[str], root: Path = ROOT) -> dict[str, 
             "skipped_test_count": 0,
             "untrusted_source_count": len(SOURCES),
             "authority_dimension_count": len(AUTHORITY_DIMENSIONS),
+            "permission_bearing_value_count": 97,
+            "cross_channel_mutation_attempt_count": 485,
             "accepted_broadening_count": 0,
             "parent_identity_binding": "sha256",
+            "parent_signature_algorithm": "ed25519",
+            "parent_signature_verification": "required-before-authority-comparison",
             "comparison_policy": "candidate-must-be-subset-of-parent",
         },
         "environment_values_read": False,
@@ -199,7 +212,12 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
         summary.get("focused_test_count") != len(EXPECTED_TESTS)
         or summary.get("failed_test_count") != 0
         or summary.get("skipped_test_count") != 0
+        or summary.get("permission_bearing_value_count") != 97
+        or summary.get("cross_channel_mutation_attempt_count") != 485
         or summary.get("accepted_broadening_count") != 0
+        or summary.get("parent_signature_algorithm") != "ed25519"
+        or summary.get("parent_signature_verification")
+        != "required-before-authority-comparison"
     ):
         failures.append("configuration authority summary is invalid")
     if (

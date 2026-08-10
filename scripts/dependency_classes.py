@@ -26,7 +26,7 @@ EXPECTED_INTERNAL_CARGO = {
     "agentmage-kernel-engine",
     "agentmage-platform-linux",
 }
-EXPECTED_EXTERNAL_CARGO = {"serde", "serde_json", "sha2"}
+EXPECTED_EXTERNAL_CARGO = {"ed25519-dalek", "serde", "serde_json", "sha2"}
 EXPECTED_ROOT_NPM = {
     "@mermaid-js/mermaid-cli",
     "ajv",

@@ -34,6 +34,20 @@
         "-p",
         "agentmage-kernel-engine",
         "--locked",
+        "configuration::tests::every_permission_bearing_value_is_rejected_through_every_untrusted_channel",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
         "configuration::tests::every_untrusted_channel_accepts_only_a_valid_restriction",
         "--",
         "--exact"
@@ -63,6 +77,20 @@
         "agentmage-kernel-engine",
         "--locked",
         "configuration::tests::malformed_untrusted_input_fails_before_authority_comparison",
+        "--",
+        "--exact"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "configuration::tests::parent_profile_signature_verification_rejects_tampering_and_wrong_keys",
         "--",
         "--exact"
       ],
@@ -125,15 +153,15 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "edcb57c8adc4f4f6848de070662fde63d09a61e72d0d2108a6b22235c18e6d89"
+      "sha256": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "dbb63e20a92771e3c41347f95801e1938c18e3cb9b174ec950f1e97efaf70bd1"
+      "sha256": "702e0fbb88f6cfaae97475e6d876e0907a8819e205bcfcc87a46825e1fd8ea00"
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "f0fa7de3ba5baeda84181098ef11d17df4b00d09058c38e37cfbd8399ed39a1e"
+      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
     },
     {
       "path": "kernel/engine/src/lib.rs",
@@ -141,7 +169,11 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "668f605f810485c2c11c3784806327da77ff3980a67b2fb392ac461999282365"
+      "sha256": "211fe3d878d5bc2f8b2d993b639b9941d240cc0abafdb26fb706716e5151d1bc"
+    },
+    {
+      "path": "configuration/permission-bearing-values.json",
+      "sha256": "477c3fd1888c8ec153bdeb2d5136a9850faa1bebceee7286c207029b8717db78"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
@@ -157,7 +189,7 @@
     },
     {
       "path": "scripts/configuration_authority_evidence.py",
-      "sha256": "10cbef81ce42c9adbc442da3d19e0b56f4fe98d6152c3302276c6873b59ce2f3"
+      "sha256": "986780c7fa0b05c8c25cebe0cdb14c341a33c68e02102b528336206e48a009cf"
     },
     {
       "path": "tests/test_configuration_authority_evidence.py",
@@ -169,22 +201,29 @@
     "accepted_broadening_count": 0,
     "authority_dimension_count": 10,
     "comparison_policy": "candidate-must-be-subset-of-parent",
+    "cross_channel_mutation_attempt_count": 485,
     "failed_test_count": 0,
-    "focused_test_count": 6,
+    "focused_test_count": 8,
     "parent_identity_binding": "sha256",
+    "parent_signature_algorithm": "ed25519",
+    "parent_signature_verification": "required-before-authority-comparison",
+    "permission_bearing_value_count": 97,
     "skipped_test_count": 0,
-    "untrusted_source_count": 4
+    "untrusted_source_count": 5
   },
   "task_id": "3.1.1.4",
   "tests": [
     "aggregate_diff_detects_non_capability_authority_broadening",
+    "every_permission_bearing_value_is_rejected_through_every_untrusted_channel",
     "every_untrusted_channel_accepts_only_a_valid_restriction",
     "every_untrusted_channel_rejects_capability_broadening",
     "malformed_untrusted_input_fails_before_authority_comparison",
+    "parent_profile_signature_verification_rejects_tampering_and_wrong_keys",
     "resource_logging_and_retention_increases_are_rejected",
     "roots_models_tools_and_platform_identity_cannot_broaden_or_change"
   ],
   "untrusted_sources": [
+    "configuration-file",
     "environment",
     "child-profile",
     "repository",

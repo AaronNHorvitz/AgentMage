@@ -10,6 +10,7 @@
       "agentmage-platform-linux"
     ],
     "cargo_external_packages": [
+      "ed25519-dalek",
       "serde",
       "serde_json",
       "sha2"

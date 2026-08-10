@@ -71,7 +71,7 @@
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "668f605f810485c2c11c3784806327da77ff3980a67b2fb392ac461999282365"
+      "sha256": "211fe3d878d5bc2f8b2d993b639b9941d240cc0abafdb26fb706716e5151d1bc"
     },
     {
       "path": "scripts/configuration_review_artifacts.py",

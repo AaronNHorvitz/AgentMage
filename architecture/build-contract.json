@@ -28,6 +28,7 @@
     "fixtures/configuration/migration/v1.not-migratable.invalid.json",
     "fixtures/configuration/migration/v0.reserved-version.invalid.json",
     "fixtures/configuration/migration/v0.missing-section.invalid.json",
+    "configuration/permission-bearing-values.json",
     "package-lock.json",
     "package.json",
     "platforms/linux/Cargo.toml",

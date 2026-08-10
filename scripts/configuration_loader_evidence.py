@@ -54,9 +54,11 @@ EXPECTED_TESTS = (
 )
 AUTHORITY_TESTS = (
     "aggregate_diff_detects_non_capability_authority_broadening",
+    "every_permission_bearing_value_is_rejected_through_every_untrusted_channel",
     "every_untrusted_channel_accepts_only_a_valid_restriction",
     "every_untrusted_channel_rejects_capability_broadening",
     "malformed_untrusted_input_fails_before_authority_comparison",
+    "parent_profile_signature_verification_rejects_tampering_and_wrong_keys",
     "resource_logging_and_retention_increases_are_rejected",
     "roots_models_tools_and_platform_identity_cannot_broaden_or_change",
 )

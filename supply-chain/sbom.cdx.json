@@ -99,7 +99,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "33b1a379408ffe1abded8c76a7be0ec318fb6a8a983d9bef6d1589f0b77ae693"
+          "content": "c3bf65b30a470d9d3c6a28c1b1d4dc133087a5fed5e2ba746d07f47068d000f2"
         }
       ],
       "licenses": [
@@ -333,6 +333,66 @@
       "version": "0.2.2"
     },
     {
+      "bom-ref": "cargo:curve25519-dalek-derive@0.1.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT/Apache-2.0"
+        }
+      ],
+      "name": "curve25519-dalek-derive",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/curve25519-dalek-derive@0.1.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.1.1"
+    },
+    {
+      "bom-ref": "cargo:curve25519-dalek@5.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b5eed333089e2e1c1ac8c6c0398e5e2497b4c9926ca6d0365ed1e099afa5bc23"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "curve25519-dalek",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/curve25519-dalek@5.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "5.0.0"
+    },
+    {
       "bom-ref": "cargo:digest@0.11.3",
       "hashes": [
         {
@@ -360,6 +420,95 @@
       "scope": "required",
       "type": "library",
       "version": "0.11.3"
+    },
+    {
+      "bom-ref": "cargo:ed25519-dalek@3.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6ebaa1a2bf1290ab3bfe5a7b771d050ebffab2711c19a81691c683a5144a25de"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "ed25519-dalek",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/ed25519-dalek@3.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "3.0.0"
+    },
+    {
+      "bom-ref": "cargo:ed25519@3.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29fcf32e6c73d1079f83ab4d782de2d81620346a5f38c6237a86a22f8368980a"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "ed25519",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/ed25519@3.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "3.0.0"
+    },
+    {
+      "bom-ref": "cargo:fiat-crypto@0.3.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0 OR BSD-1-Clause"
+        }
+      ],
+      "name": "fiat-crypto",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/fiat-crypto@0.3.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.3.0"
     },
     {
       "bom-ref": "cargo:hybrid-array@0.4.14",
@@ -536,6 +685,64 @@
       "version": "1.0.47"
     },
     {
+      "bom-ref": "cargo:rustc_version@0.4.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "rustc_version",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/rustc_version@0.4.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.4.1"
+    },
+    {
+      "bom-ref": "cargo:semver@1.0.28",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "semver",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/semver@1.0.28",
+      "scope": "required",
+      "type": "library",
+      "version": "1.0.28"
+    },
+    {
       "bom-ref": "cargo:serde@1.0.229",
       "hashes": [
         {
@@ -681,6 +888,95 @@
       "version": "0.11.0"
     },
     {
+      "bom-ref": "cargo:signature@3.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "28d567dcbaf0049cb8ac2608a76cd95ff9e4412e1899d389ee400918ca7537f5"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "signature",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/signature@3.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "3.0.0"
+    },
+    {
+      "bom-ref": "cargo:subtle@2.6.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "subtle",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/subtle@2.6.1",
+      "scope": "required",
+      "type": "library",
+      "version": "2.6.1"
+    },
+    {
+      "bom-ref": "cargo:syn@2.0.119",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "syn",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/syn@2.0.119",
+      "scope": "required",
+      "type": "library",
+      "version": "2.0.119"
+    },
+    {
       "bom-ref": "cargo:syn@3.0.3",
       "hashes": [
         {
@@ -768,6 +1064,35 @@
       "version": "1.0.24"
     },
     {
+      "bom-ref": "cargo:zeroize@1.9.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "zeroize",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/zeroize@1.9.0",
+      "scope": "required",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
       "bom-ref": "cargo:zmij@1.0.23",
       "hashes": [
         {
@@ -834,7 +1159,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a67bd0b1220b8f626be1e6c09575e237a928ff988fbeaeaf2241337c48f62fa7"
+          "content": "ffd598c8251f08b20dfd5ab3ff45c7017d6f3780dea90607edc02d62c9c663eb"
         }
       ],
       "licenses": [
@@ -12381,6 +12706,7 @@
     {
       "dependsOn": [
         "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:ed25519-dalek@3.0.0",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0"
@@ -12425,11 +12751,53 @@
     },
     {
       "dependsOn": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@2.0.119"
+      ],
+      "ref": "cargo:curve25519-dalek-derive@0.1.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:cfg-if@1.0.4",
+        "cargo:cpufeatures@0.3.0",
+        "cargo:curve25519-dalek-derive@0.1.1",
+        "cargo:digest@0.11.3",
+        "cargo:fiat-crypto@0.3.0",
+        "cargo:rustc_version@0.4.1",
+        "cargo:subtle@2.6.1",
+        "cargo:zeroize@1.9.0"
+      ],
+      "ref": "cargo:curve25519-dalek@5.0.0"
+    },
+    {
+      "dependsOn": [
         "cargo:block-buffer@0.12.1",
         "cargo:const-oid@0.10.2",
         "cargo:crypto-common@0.2.2"
       ],
       "ref": "cargo:digest@0.11.3"
+    },
+    {
+      "dependsOn": [
+        "cargo:curve25519-dalek@5.0.0",
+        "cargo:ed25519@3.0.0",
+        "cargo:sha2@0.11.0",
+        "cargo:signature@3.0.0",
+        "cargo:subtle@2.6.1",
+        "cargo:zeroize@1.9.0"
+      ],
+      "ref": "cargo:ed25519-dalek@3.0.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:signature@3.0.0"
+      ],
+      "ref": "cargo:ed25519@3.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:fiat-crypto@0.3.0"
     },
     {
       "dependsOn": [
@@ -12460,6 +12828,16 @@
         "cargo:proc-macro2@1.0.107"
       ],
       "ref": "cargo:quote@1.0.47"
+    },
+    {
+      "dependsOn": [
+        "cargo:semver@1.0.28"
+      ],
+      "ref": "cargo:rustc_version@0.4.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:semver@1.0.28"
     },
     {
       "dependsOn": [
@@ -12501,6 +12879,22 @@
       "ref": "cargo:sha2@0.11.0"
     },
     {
+      "dependsOn": [],
+      "ref": "cargo:signature@3.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:subtle@2.6.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:unicode-ident@1.0.24"
+      ],
+      "ref": "cargo:syn@2.0.119"
+    },
+    {
       "dependsOn": [
         "cargo:proc-macro2@1.0.107",
         "cargo:quote@1.0.47",
@@ -12515,6 +12909,10 @@
     {
       "dependsOn": [],
       "ref": "cargo:unicode-ident@1.0.24"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:zeroize@1.9.0"
     },
     {
       "dependsOn": [],
@@ -14847,7 +15245,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:4d6c59ba-a4df-58af-879a-79088b2663af",
+  "serialNumber": "urn:uuid:c51e00aa-1200-5c32-8b56-01babfbeed8c",
   "specVersion": "1.6",
   "version": 1
 }

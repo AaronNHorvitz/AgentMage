@@ -120,11 +120,22 @@ def cargo_components(root: Path) -> tuple[list[dict[str, Any]], dict[str, list[s
         raise ValueError("Cargo external license catalog schema version is invalid")
     if set(external_licenses) != external_lock_keys:
         raise ValueError("Cargo external license catalog does not match Cargo.lock")
-    package_id_by_name = {
-        item["name"]: f"cargo:{item['name']}@{item['version']}" for item in lock_packages
-    }
-    if len(package_id_by_name) != len(lock_packages):
-        raise ValueError("Cargo.lock contains ambiguous package names")
+    package_ids_by_name: dict[str, list[tuple[str, str]]] = {}
+    for item in lock_packages:
+        package_ids_by_name.setdefault(item["name"], []).append(
+            (item["version"], f"cargo:{item['name']}@{item['version']}")
+        )
+
+    def resolve_cargo_dependency(dependency: str) -> str:
+        parts = dependency.split(" ")
+        candidates = package_ids_by_name.get(parts[0], [])
+        if len(parts) >= 2:
+            matches = [component_id for version, component_id in candidates if version == parts[1]]
+        else:
+            matches = [component_id for _version, component_id in candidates]
+        if len(matches) != 1:
+            raise ValueError(f"Cargo dependency identity is ambiguous or absent: {dependency}")
+        return matches[0]
 
     components: list[dict[str, Any]] = []
     edges: dict[str, list[str]] = {}
@@ -174,11 +185,7 @@ def cargo_components(root: Path) -> tuple[list[dict[str, Any]], dict[str, list[s
         components.append(component)
         dependencies = []
         for dependency in package.get("dependencies", []):
-            dependency_name = dependency.split(" ", 1)[0]
-            dependency_id = package_id_by_name.get(dependency_name)
-            if dependency_id is None:
-                raise ValueError(f"Cargo dependency is absent from the lock: {dependency_name}")
-            dependencies.append(dependency_id)
+            dependencies.append(resolve_cargo_dependency(dependency))
         edges[component_id] = sorted(dependencies)
     return components, edges
 
