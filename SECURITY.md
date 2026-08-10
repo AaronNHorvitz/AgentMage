@@ -57,4 +57,4 @@ The v0.1 release gate includes tabletop exercises for suspected egress, a compro
 
 This policy covers AgentMage source, distributed packages, release infrastructure, supported runtime adapters, and approved model artifacts. It does not make a security guarantee for modified builds, unsupported platforms, unapproved models, exposed raw inference endpoints, disabled platform protections, or information the user independently transfers to another product.
 
-See `SECURITY-REVIEW.md` for normative security requirements and reviewer protocols, `MODEL-PROVENANCE-POLICY.md` for model admission, and `RUNTIME-BOUNDARIES.md` for processes, privileges, sockets, and data flows.
+See [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) for normative security requirements and reviewer protocols, [MODEL-PROVENANCE-POLICY.md](./MODEL-PROVENANCE-POLICY.md) for model admission, and [RUNTIME-BOUNDARIES.md](./RUNTIME-BOUNDARIES.md) for processes, privileges, sockets, and data flows.

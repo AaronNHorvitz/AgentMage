@@ -43,6 +43,40 @@ class PublicPolicyBaselineTests(unittest.TestCase):
                     (ROOT / relative).read_text(encoding="utf-8"),
                 )
 
+    def test_security_policy_covers_the_complete_public_response_lifecycle(self) -> None:
+        policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+
+        for heading in (
+            "## Supported Versions",
+            "## Reporting a Vulnerability",
+            "## Triage and Disclosure",
+            "## Remediation and Patch Delivery",
+            "## Emergency Disablement",
+            "## Incident Handling",
+            "## Scope",
+        ):
+            self.assertIn(heading, policy)
+        for required_promise in (
+            "No production binary is supported yet.",
+            "Use GitHub private vulnerability reporting",
+            "establish an initial severity and affected-version disposition",
+            "new signed release",
+            "Manual installation or replacement instructions",
+            "performs no automatic update check",
+            "local, user-controlled disable path",
+            "There is no remote kill switch.",
+            "support end recorded in its signed release manifest",
+            "Unsupported versions receive no remediation commitment",
+        ):
+            with self.subTest(promise=required_promise):
+                self.assertIn(required_promise, policy)
+        for linked_policy in (
+            "[SECURITY-REVIEW.md](./SECURITY-REVIEW.md)",
+            "[MODEL-PROVENANCE-POLICY.md](./MODEL-PROVENANCE-POLICY.md)",
+            "[RUNTIME-BOUNDARIES.md](./RUNTIME-BOUNDARIES.md)",
+        ):
+            self.assertIn(linked_policy, policy)
+
 
 if __name__ == "__main__":
     unittest.main()
