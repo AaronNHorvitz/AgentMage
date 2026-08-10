@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0004",
+  "status": "scaffolded",
+  "categories": [
+    {
+      "id": "kernel",
+      "path": "kernel",
+      "purpose": "Interface-independent contracts and product authority"
+    },
+    {
+      "id": "platform-adapters",
+      "path": "platforms",
+      "purpose": "Operating-system enforcement behind shared contracts"
+    },
+    {
+      "id": "capability-packs",
+      "path": "capabilities",
+      "purpose": "Bounded capability implementations without policy authority"
+    },
+    {
+      "id": "shells",
+      "path": "shells",
+      "purpose": "Process composition and user-interface integration"
+    },
+    {
+      "id": "fixtures",
+      "path": "fixtures",
+      "purpose": "Synthetic and public test inputs with pinned expectations"
+    },
+    {
+      "id": "packaging",
+      "path": "packaging",
+      "purpose": "Platform package definitions and install boundaries"
+    },
+    {
+      "id": "documentation",
+      "path": "docs",
+      "purpose": "Decisions, evaluation procedures, and product guidance"
+    },
+    {
+      "id": "release-tooling",
+      "path": "release",
+      "purpose": "Reproducible build, verification, and release orchestration"
+    }
+  ],
+  "modules": [
+    {
+      "id": "kernel-contracts",
+      "path": "kernel/contracts",
+      "category": "kernel",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "kernel-engine",
+      "path": "kernel/engine",
+      "category": "kernel",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "platform-linux",
+      "path": "platforms/linux",
+      "category": "platform-adapters",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "platform-macos",
+      "path": "platforms/macos",
+      "category": "platform-adapters",
+      "language": "swift",
+      "build_system": "swiftpm-xcode",
+      "platforms": [
+        "macos-arm64"
+      ]
+    },
+    {
+      "id": "capability-read-only",
+      "path": "capabilities/read-only",
+      "category": "capability-packs",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "shell-host",
+      "path": "shells/host",
+      "category": "shells",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "shell-vscode",
+      "path": "shells/vscode",
+      "category": "shells",
+      "language": "typescript",
+      "build_system": "npm",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "fixture-corpus",
+      "path": "fixtures/corpus",
+      "category": "fixtures",
+      "language": "data",
+      "build_system": "none",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "packaging-linux",
+      "path": "packaging/linux",
+      "category": "packaging",
+      "language": "declarative",
+      "build_system": "cargo-xtask",
+      "platforms": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "packaging-macos",
+      "path": "packaging/macos",
+      "category": "packaging",
+      "language": "declarative",
+      "build_system": "xcode",
+      "platforms": [
+        "macos-arm64"
+      ]
+    },
+    {
+      "id": "documentation",
+      "path": "docs",
+      "category": "documentation",
+      "language": "markdown",
+      "build_system": "documentation-checks",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
+      "id": "release-xtask",
+      "path": "release/xtask",
+      "category": "release-tooling",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    }
+  ]
+}

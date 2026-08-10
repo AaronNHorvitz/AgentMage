@@ -21,6 +21,7 @@ REQUIRED_FILES = (
     "MODEL-PROVENANCE-POLICY.md",
     "RUNTIME-BOUNDARIES.md",
     "architecture/language-build-matrix.json",
+    "architecture/module-inventory.json",
     "requirements/additions-only-baseline.json",
     "requirements/conflict-policy.json",
     "requirements/normative-map.json",
