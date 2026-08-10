@@ -6,8 +6,8 @@
     "edge_count": 34,
     "node_count": 35,
     "path": "fixtures/corpus/v1/provenance-ledger.json",
-    "self_sha256": "6846fe9d8d654025c8d8ff52bd784a38a2f191f2dd8c107bd7b123661dfb1163",
-    "sha256": "f28b6772bf88a49355c41e7b816d36bb2f7f30503fc1b99bc6534f3edbea411a",
+    "self_sha256": "e4776bc9091695b5e2d9b0d9fd7be63d83c7837ad1152138ed234ef756c6f714",
+    "sha256": "2ab9a14eb85f4ca8af2135b287376ab87ebb5a8a4bec41fe1961b841e99360be",
     "source_family_count": 5
   },
   "lineage_graph_acyclic": true,

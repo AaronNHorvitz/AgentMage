@@ -179,9 +179,12 @@ class VersionedCorpusTests(unittest.TestCase):
         symlinks["path_fixture_materialization"] = "active-symlinks"
         claimed = copy.deepcopy(self.profile)
         claimed["content_contract"]["product_parser_support_claim"] = "supported"
+        unpinned = copy.deepcopy(self.profile)
+        unpinned["seed"] = "changed-seed"
         self.assertTrue(validate_profile(compressed))
         self.assertTrue(validate_profile(symlinks))
         self.assertTrue(validate_profile(claimed))
+        self.assertTrue(validate_profile(unpinned))
 
     def test_report_is_current_bounded_and_retains_blocked_macos_status(self) -> None:
         report = build_report()

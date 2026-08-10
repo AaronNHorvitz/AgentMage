@@ -28,11 +28,11 @@
     "case_count": 8,
     "corpus": {
       "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
-      "manifest_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
+      "manifest_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36",
       "version": "1.0.0"
     },
     "run_id": "agentmage-sprint-2-shared-acceptance-v1",
-    "run_sha256": "d87749a4ca09388d400ef246801562267510437095802aebfbabb5540d47e012",
+    "run_sha256": "f7cde295764adb3dddebb52beba60d4da5f3efe74bbc0f70eb2ae7f1e3871ab6",
     "status_counts": {
       "cancelled": 0,
       "error": 0,

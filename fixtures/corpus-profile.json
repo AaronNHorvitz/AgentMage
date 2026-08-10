@@ -2,6 +2,7 @@
   "schema_version": 1,
   "profile_id": "agentmage-versioned-synthetic-corpus-v1",
   "status": "versioned-synthetic-corpus-contract",
+  "seed": "agentmage-versioned-corpus-synthetic-v1",
   "corpus_version": "1.0.0",
   "fixed_zip_timestamp": "2024-01-01T00:00:00Z",
   "archive": {

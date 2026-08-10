@@ -1,0 +1,113 @@
+{
+  "corpus": {
+    "archive": {
+      "entry_count": 77,
+      "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+      "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+    },
+    "id": "agentmage-versioned-synthetic-corpus-v1",
+    "manifest": {
+      "file_sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be",
+      "path": "fixtures/corpus/v1/manifest.json",
+      "self_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36"
+    },
+    "profile": {
+      "path": "fixtures/corpus-profile.json",
+      "sha256": "22a547c341672710886ddd9775cf6ac8e73bee5923132ac7860bc95905de4009"
+    },
+    "seed": "agentmage-versioned-corpus-synthetic-v1",
+    "version": "1.0.0"
+  },
+  "corruption": {
+    "archive_failure_count": 2,
+    "archive_mutation_detected_before_use": true,
+    "corrupt_artifact_persisted": false,
+    "manifest_failure_count": 3,
+    "manifest_mutation_detected_before_use": true
+  },
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "metadata": {
+    "family_counts": {
+      "adversarial": 13,
+      "base": 39,
+      "documents": 10,
+      "golden": 4,
+      "paths": 11
+    },
+    "golden_evidence_states": [
+      "Derived",
+      "Inferred",
+      "Observed",
+      "Unknown/Blocked"
+    ],
+    "golden_manifest_count": 4,
+    "provenance_record_count": 5,
+    "source_family_count": 5
+  },
+  "product_support_claim": "none",
+  "reproduction": {
+    "checked_artifacts_match": true,
+    "current_host_data_used": false,
+    "private_user_data_used": false,
+    "run_count": 2,
+    "runs": [
+      {
+        "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
+        "entry_count": 77,
+        "manifest_file_sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be",
+        "manifest_self_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36",
+        "run": 1
+      },
+      {
+        "archive_sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50",
+        "entry_count": 77,
+        "manifest_file_sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be",
+        "manifest_self_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36",
+        "run": 2
+      }
+    ],
+    "runs_byte_identical": true
+  },
+  "schema_version": 1,
+  "source_seeds": [
+    {
+      "family": "base",
+      "profile_id": "agentmage-synthetic-corpus-v1",
+      "profile_path": "fixtures/generator-profile.json",
+      "profile_sha256": "80a368b6b0f100ce8bddd9c668d744c594a0be6bfbcacd173f1e05b2c5bafc9e",
+      "seed": "agentmage-sprint-2-synthetic-v1"
+    },
+    {
+      "family": "paths",
+      "profile_id": "agentmage-path-fixtures-v1",
+      "profile_path": "fixtures/path-fixture-profile.json",
+      "profile_sha256": "be4812c8be1a35eae561bb3d4c8e9e8741f3eaf4d10502b098e33a4142aa2655",
+      "seed": "agentmage-path-fixtures-synthetic-v1"
+    },
+    {
+      "family": "adversarial",
+      "profile_id": "agentmage-adversarial-fixtures-v1",
+      "profile_path": "fixtures/adversarial-fixture-profile.json",
+      "profile_sha256": "32a2388161d7cd7e4c9e35bc761d53c7ac4df5c0659aede7cabf7ef5a15bcddc",
+      "seed": "agentmage-adversarial-synthetic-v1"
+    },
+    {
+      "family": "documents",
+      "profile_id": "agentmage-document-fixtures-v1",
+      "profile_path": "fixtures/document-fixture-profile.json",
+      "profile_sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425",
+      "seed": "agentmage-document-synthetic-v1"
+    },
+    {
+      "family": "golden",
+      "profile_id": "agentmage-expected-output-manifests-v1",
+      "profile_path": "fixtures/expected-output-profile.json",
+      "profile_sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85",
+      "seed": "agentmage-expected-output-synthetic-v1"
+    }
+  ],
+  "status": "pass",
+  "task_id": "2.1.3.1",
+  "test_id": "S-002-UT01"
+}

@@ -87,6 +87,8 @@ def validate_profile(profile: Any) -> list[str]:
         or profile.get("status") != "synthetic-expected-output-contract"
     ):
         failures.append("expected-output profile identity is invalid")
+    if profile.get("seed") != "agentmage-expected-output-synthetic-v1":
+        failures.append("expected-output seed is not pinned")
     if profile.get("source_fixture_profile") != {
         "id": "agentmage-document-fixtures-v1",
         "path": "fixtures/document-fixture-profile.json",

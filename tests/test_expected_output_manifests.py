@@ -152,8 +152,11 @@ class ExpectedOutputManifestTests(unittest.TestCase):
         weakened["prohibited_side_effects"].remove("network-access")
         claimed = copy.deepcopy(self.profile)
         claimed["authority_claim"] = "synthetic-grant"
+        unpinned = copy.deepcopy(self.profile)
+        unpinned["seed"] = "changed-seed"
         self.assertTrue(validate_profile(weakened))
         self.assertTrue(validate_profile(claimed))
+        self.assertTrue(validate_profile(unpinned))
 
     def test_invalid_source_range_and_unknown_source_are_rejected(self) -> None:
         invalid_range = copy.deepcopy(self.profile)

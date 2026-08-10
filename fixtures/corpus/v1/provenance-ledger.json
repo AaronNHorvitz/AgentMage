@@ -53,7 +53,7 @@
       "contract_kind": "acceptance-runner",
       "evidence_report": {
         "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
-        "sha256": "8742cfd63782d3fc39a12a5f5d169702ad51b861bbc2e902c57a32ce05d8c332"
+        "sha256": "e8725a488218b6adc31d000b1963119e85542d55dc7d616ce1f2efe6979db860"
       },
       "implementation": {
         "path": "scripts/shared_acceptance_runner.py",
@@ -100,22 +100,22 @@
     },
     "assembler": {
       "path": "scripts/versioned_corpus.py",
-      "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+      "sha256": "a253d422863c373a48c1e45d2a4b12deb68b51a2ebcd6f9815e4615abde77342"
     },
     "corpus_id": "agentmage-versioned-synthetic-corpus-v1",
     "corpus_version": "1.0.0",
     "evidence_report": {
       "path": "artifacts/sprints/sprint-2/story-2.1/versioned-corpus-report.json",
-      "sha256": "32e8080e73e5a06b6e8b86ac4b732b11a31db70d2088f3a827537574b5b60535"
+      "sha256": "25e53111cc31644ba1e14606916e5deb00818041e98b21f9a043f653dba6edc4"
     },
     "manifest": {
       "path": "fixtures/corpus/v1/manifest.json",
-      "self_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
-      "sha256": "630465e2651c00c4c4fe4dc775be2c4eea448f3f8e882622df07ab675f09be90"
+      "self_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36",
+      "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
     },
     "profile": {
       "path": "fixtures/corpus-profile.json",
-      "sha256": "bbc3ff084b794443f7bfe9c2a427969bf00d5c6ad72bd84196e31304aa0d9086"
+      "sha256": "22a547c341672710886ddd9775cf6ac8e73bee5923132ac7860bc95905de4009"
     }
   },
   "generated_at": "2024-01-01T00:03:00Z",
@@ -146,7 +146,7 @@
     }
   ],
   "ledger_id": "agentmage-fixture-provenance-ledger-v1",
-  "ledger_sha256": "6846fe9d8d654025c8d8ff52bd784a38a2f191f2dd8c107bd7b123661dfb1163",
+  "ledger_sha256": "e4776bc9091695b5e2d9b0d9fd7be63d83c7837ad1152138ed234ef756c6f714",
   "ledger_version": "1.0.0",
   "lineage": {
     "edges": [
@@ -366,7 +366,7 @@
         "artifact_role": "implementation",
         "node_id": "assembler-corpus",
         "path": "scripts/versioned_corpus.py",
-        "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+        "sha256": "a253d422863c373a48c1e45d2a4b12deb68b51a2ebcd6f9815e4615abde77342"
       },
       {
         "artifact_role": "generator",
@@ -390,7 +390,7 @@
         "artifact_role": "generator",
         "node_id": "generator-golden",
         "path": "scripts/expected_output_manifests.py",
-        "sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13"
+        "sha256": "9b565f029c72f57589d710b7bbd54ffc512bd8ffe4973f598ca5d50131a3ecc7"
       },
       {
         "artifact_role": "generator",
@@ -432,7 +432,7 @@
         "artifact_role": "manifest",
         "node_id": "manifest-corpus",
         "path": "fixtures/corpus/v1/manifest.json",
-        "sha256": "630465e2651c00c4c4fe4dc775be2c4eea448f3f8e882622df07ab675f09be90"
+        "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
       },
       {
         "artifact_role": "profile",
@@ -456,7 +456,7 @@
         "artifact_role": "profile",
         "node_id": "profile-corpus",
         "path": "fixtures/corpus-profile.json",
-        "sha256": "bbc3ff084b794443f7bfe9c2a427969bf00d5c6ad72bd84196e31304aa0d9086"
+        "sha256": "22a547c341672710886ddd9775cf6ac8e73bee5923132ac7860bc95905de4009"
       },
       {
         "artifact_role": "profile",
@@ -480,7 +480,7 @@
         "artifact_role": "profile",
         "node_id": "profile-golden",
         "path": "fixtures/expected-output-profile.json",
-        "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+        "sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85"
       },
       {
         "artifact_role": "profile",
@@ -504,7 +504,7 @@
         "artifact_role": "evidence-report",
         "node_id": "report-acceptance-runner",
         "path": "artifacts/sprints/sprint-2/story-2.1/shared-acceptance-runner-report.json",
-        "sha256": "8742cfd63782d3fc39a12a5f5d169702ad51b861bbc2e902c57a32ce05d8c332"
+        "sha256": "e8725a488218b6adc31d000b1963119e85542d55dc7d616ce1f2efe6979db860"
       },
       {
         "artifact_role": "evidence-report",
@@ -522,7 +522,7 @@
         "artifact_role": "evidence-report",
         "node_id": "report-corpus",
         "path": "artifacts/sprints/sprint-2/story-2.1/versioned-corpus-report.json",
-        "sha256": "32e8080e73e5a06b6e8b86ac4b732b11a31db70d2088f3a827537574b5b60535"
+        "sha256": "25e53111cc31644ba1e14606916e5deb00818041e98b21f9a043f653dba6edc4"
       },
       {
         "artifact_role": "evidence-report",
@@ -546,7 +546,7 @@
         "artifact_role": "evidence-report",
         "node_id": "report-golden",
         "path": "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json",
-        "sha256": "987bcf00ffa8555bcae45f040662e8f0c94627f2161b13940755d456177f8eec"
+        "sha256": "e13750b559c80e5ed9eb254b885e418a9911780c6803891b23b8fd67e72256ff"
       },
       {
         "artifact_role": "evidence-report",
@@ -671,18 +671,18 @@
       },
       "evidence_report": {
         "path": "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json",
-        "sha256": "987bcf00ffa8555bcae45f040662e8f0c94627f2161b13940755d456177f8eec"
+        "sha256": "e13750b559c80e5ed9eb254b885e418a9911780c6803891b23b8fd67e72256ff"
       },
       "family": "golden",
       "generator": {
         "path": "scripts/expected_output_manifests.py",
-        "sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13"
+        "sha256": "9b565f029c72f57589d710b7bbd54ffc512bd8ffe4973f598ca5d50131a3ecc7"
       },
       "namespace": "golden",
       "profile": {
         "id": "agentmage-expected-output-manifests-v1",
         "path": "fixtures/expected-output-profile.json",
-        "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+        "sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85"
       }
     }
   ],

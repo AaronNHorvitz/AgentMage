@@ -36,7 +36,7 @@
   "product_receipt_implementation_claim": "none",
   "profile": {
     "id": "agentmage-expected-output-manifests-v1",
-    "sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+    "sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85"
   },
   "prohibited_side_effects": [
     "workspace-write",

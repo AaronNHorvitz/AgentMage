@@ -142,6 +142,8 @@ def validate_profile(profile: Any) -> list[str]:
         or profile.get("corpus_version") != "1.0.0"
     ):
         failures.append("versioned corpus profile identity is invalid")
+    if profile.get("seed") != "agentmage-versioned-corpus-synthetic-v1":
+        failures.append("versioned corpus seed is not pinned")
     if profile.get("fixed_zip_timestamp") != "2024-01-01T00:00:00Z":
         failures.append("versioned corpus ZIP timestamp is not pinned")
     if profile.get("archive") != {

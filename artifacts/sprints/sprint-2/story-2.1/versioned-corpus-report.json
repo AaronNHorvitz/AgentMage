@@ -10,7 +10,7 @@
   },
   "assembler": {
     "path": "scripts/versioned_corpus.py",
-    "sha256": "ee0f14d206b5827f9c31a4c4e73c1b26a4010034da71d48b7568591c49a3cdab"
+    "sha256": "a253d422863c373a48c1e45d2a4b12deb68b51a2ebcd6f9815e4615abde77342"
   },
   "content_contract": {
     "private_user_data": false,
@@ -31,7 +31,7 @@
       "paths": 11
     },
     "manifest_path": "fixtures/corpus/v1/manifest.json",
-    "manifest_sha256": "635155b196371f2efc60efc2cd70b147307ab7b44421490e171f4e5e3baffd09",
+    "manifest_sha256": "06153f20957a28d6f35a16c67c45230fbce2c5bcb403ba5286d576b9da548d36",
     "version": "1.0.0"
   },
   "golden_evidence_states": [
@@ -86,11 +86,11 @@
     {
       "family": "golden",
       "generator": "scripts/expected_output_manifests.py",
-      "generator_sha256": "8ff4278aeb5d141f2340d4f61c882474173aa599798dc2dcfb7e980a3f12da13",
+      "generator_sha256": "9b565f029c72f57589d710b7bbd54ffc512bd8ffe4973f598ca5d50131a3ecc7",
       "namespace": "golden",
       "profile_id": "agentmage-expected-output-manifests-v1",
       "profile_path": "fixtures/expected-output-profile.json",
-      "profile_sha256": "f4640fcbd671a42ce87f8b9a24494952862e3f806ec619ad3ab073df90c2d838"
+      "profile_sha256": "62d166b71c9257e3503db92288e23374935bdeebfb18eb0a8f56ad8464015e85"
     }
   ],
   "status": "pass",

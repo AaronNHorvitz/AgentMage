@@ -36,6 +36,7 @@ REQUIRED_FILES = (
     "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
     "artifacts/sprints/sprint-2/story-2.1/fixture-generator-report.json",
     "artifacts/sprints/sprint-2/story-2.1/adversarial-fixture-report.json",
+    "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
     "artifacts/sprints/sprint-2/story-2.1/document-fixture-report.json",
     "artifacts/sprints/sprint-2/story-2.1/expected-output-report.json",
     "artifacts/sprints/sprint-2/story-2.1/fake-adapter-report.json",

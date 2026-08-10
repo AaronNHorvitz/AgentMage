@@ -2,6 +2,7 @@
   "schema_version": 1,
   "profile_id": "agentmage-expected-output-manifests-v1",
   "status": "synthetic-expected-output-contract",
+  "seed": "agentmage-expected-output-synthetic-v1",
   "source_fixture_profile": {
     "id": "agentmage-document-fixtures-v1",
     "path": "fixtures/document-fixture-profile.json"
