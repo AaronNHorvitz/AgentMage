@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "f03283dbdc0b775b428217f7971e1a1d1ca23658",
+  "reference_revision": "9826b4aa0f4038b7cd3aede41091f7dc70ad6c29",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -93,11 +93,11 @@
     },
     {
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "eee8955685b06ca811e830eb2f483a003432dfb35a1f7f4e96470d4f67f3a1fd"
+      "sha256": "7375fdfa53892bd592a0bcaf47df6094cd637e9f8353331e8caf2e1b1c893233"
     },
     {
       "path": "tests/test_platform_manifest_artifact.py",
-      "sha256": "60271d1a4600376313ca917ad93f58507480515839bde34f13ff5effb5eb6ec8"
+      "sha256": "f063bcc09599f724600d444934cea4bf8b9e977569c3aa771f12dc9223b447bd"
     }
   ],
   "status": "pass-all-available-non-macos-contract-scope",
