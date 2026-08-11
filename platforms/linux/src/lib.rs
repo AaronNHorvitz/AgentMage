@@ -2,6 +2,14 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod ipc;
+
+pub use ipc::{
+    LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
+    LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,
+    LinuxPeerIdentity, PrivateUnixListener,
+};
+
 use std::fmt;
 use std::fs;
 use std::os::fd::AsRawFd;
