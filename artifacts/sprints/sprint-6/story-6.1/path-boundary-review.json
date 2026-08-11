@@ -2,12 +2,13 @@
   "artifact_id": "independent-automated-secure-path-review",
   "coverage": {
     "admitted_escape_count": 0,
+    "available_non_macos_adapter_result_count": 3,
     "display_link_rejection_count": 1280,
     "generated_path_case_count": 640,
-    "open_boundary_count": 5,
+    "open_boundary_count": 4,
     "out_of_root_access_count": 0,
     "race_executed_scenario_count": 6,
-    "reviewed_subject_count": 4
+    "reviewed_subject_count": 5
   },
   "external_human_review_status": "not-performed",
   "findings": [],
@@ -16,13 +17,12 @@
   "macos_execution_status": "blocked-macos",
   "open_product_boundaries": [
     "macOS path adapter, aliases, bookmarks, case collisions, and Unicode collisions",
-    "Ubuntu execution evidence",
     "public workspace selection and durable authorization",
     "real tool and Visual Studio Code link activation integration",
     "coverage-guided path fuzzing and sanitizer evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "e94d26844698e32e17141706a456c2ff1e93cec6",
+  "reference_revision": "b7df1420d67ed78d2645fa29d031c6ec60d7dd00",
   "release_claim": "none",
   "review_protocol": "RV-04",
   "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
@@ -39,50 +39,59 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
+      "sha256": "9af3d24c91da0e49157f79aa46824bd374dcbd107786f8e45e3060aebba29a52"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+      "sha256": "2c0d5f2bef96e21e106d1f1ab02b2d93af8280658432bff468ee6dc1ac0cb12b"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+      "sha256": "c7ab1099758a26f7cc46d7b11bfb11218fa0cf4ea75a0fef9cc949181dacc5b7"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
+      "sha256": "87a320d6afa64e666f217faa0c862c69e3a34685c04f1ccd6394f268165b512b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "sha256": "9e1842808c46f803a975bcae6864dd87ec750de315ef52d40535881057c734b2"
     },
     {
       "path": "scripts/path_boundary_review.py",
-      "sha256": "4a682f7fe4e924b45bcea502af6fb53aae009c6968ef47353782fc41d1295b14"
+      "sha256": "18cba5c2c780c17dc76385dc4bda764f2ca7108bfee0146ab31c892effe39e0b"
     },
     {
       "path": "tests/test_path_boundary_review.py",
-      "sha256": "11035dc64df69aaa461f50ed4dccef522d060608000b0fed1dd1f66712894dba"
+      "sha256": "0017461bd8c365982a3c37362ecfe0934c25ad2ad5ec13e99d3eb9024291d81c"
     }
   ],
   "status": "pass-shared-fedora-review-scope",
   "subjects": [
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
-      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
+      "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
+      "sha256": "9af3d24c91da0e49157f79aa46824bd374dcbd107786f8e45e3060aebba29a52"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "reference_revision": "6b91f2b895cb0b45ac2c9b93b920b6bba49c683e",
-      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+      "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
+      "sha256": "2c0d5f2bef96e21e106d1f1ab02b2d93af8280658432bff468ee6dc1ac0cb12b"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "reference_revision": "945858b1e6a2c370851caa334a1507b68a8e3072",
-      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+      "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
+      "sha256": "c7ab1099758a26f7cc46d7b11bfb11218fa0cf4ea75a0fef9cc949181dacc5b7"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
-      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
+      "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
+      "sha256": "87a320d6afa64e666f217faa0c862c69e3a34685c04f1ccd6394f268165b512b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "reference_revision": "b449117350cb5d7319b37b7b0697f6d2d5b51407",
+      "sha256": "9e1842808c46f803a975bcae6864dd87ec750de315ef52d40535881057c734b2"
     }
   ],
   "task_id": "6.1.3.5",
