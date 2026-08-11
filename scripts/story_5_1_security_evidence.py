@@ -65,7 +65,6 @@ EVIDENCE_PATHS = (
     "scripts/story_5_1_security_evidence.py",
     "tests/test_grant_boundary_review.py",
     "tests/test_story_5_1_security_evidence.py",
-    "package.json",
 )
 MAPPINGS = {
     "SR-ACC-001": {
@@ -151,9 +150,8 @@ MAPPINGS = {
             "scripts/story_5_1_security_evidence.py",
             "tests/test_grant_boundary_review.py",
             "tests/test_story_5_1_security_evidence.py",
-            "package.json",
         ],
-        "demonstrated": "Deterministic Story 5 checkers fail closed on omitted subjects, changed admissions, failed verification, stale hashes, unsupported completion, release, external-review, or macOS claims, and are enrolled in the repository requirements command.",
+        "demonstrated": "Deterministic Story 5 checkers fail closed on omitted subjects, changed admissions, failed verification, stale hashes, unsupported completion, release, external-review, or macOS claims.",
         "remaining": "Production release creation must be technically blocked by every security threshold, with forced-failure evidence and any exception requiring a signed dated risk decision outside normal development credentials.",
     },
 }
