@@ -7,6 +7,10 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 publish.workspace = true
+exclude = [
+  "tests/path_corpus.rs",
+  "tests/platform_path_contract.rs",
+]
 
 [dependencies]
 serde.workspace = true

@@ -33,22 +33,34 @@ SOURCE_MEMBERS = {
     "LICENSE": "kernel/contracts/LICENSE",
     "README.md": "kernel/contracts/README.md",
     "rust-toolchain.toml": "kernel/contracts/rust-toolchain.toml",
+    "src/approval.rs": "kernel/contracts/src/approval.rs",
     "src/boundary.rs": "kernel/contracts/src/boundary.rs",
     "src/common.rs": "kernel/contracts/src/common.rs",
+    "src/display_link.rs": "kernel/contracts/src/display_link.rs",
     "src/evidence.rs": "kernel/contracts/src/evidence.rs",
+    "src/grant.rs": "kernel/contracts/src/grant.rs",
     "src/ids.rs": "kernel/contracts/src/ids.rs",
     "src/lib.rs": "kernel/contracts/src/lib.rs",
+    "src/network.rs": "kernel/contracts/src/network.rs",
+    "src/path.rs": "kernel/contracts/src/path.rs",
+    "src/platform.rs": "kernel/contracts/src/platform.rs",
+    "src/platform_path.rs": "kernel/contracts/src/platform_path.rs",
     "src/prompt.rs": "kernel/contracts/src/prompt.rs",
     "src/serialization.rs": "kernel/contracts/src/serialization.rs",
     "src/task.rs": "kernel/contracts/src/task.rs",
     "src/tool.rs": "kernel/contracts/src/tool.rs",
     "tests/contract_family.rs": "kernel/contracts/tests/contract_family.rs",
 }
+EXCLUDED_CRATE_MEMBERS = (
+    "kernel/contracts/tests/path_corpus.rs",
+    "kernel/contracts/tests/platform_path_contract.rs",
+)
 GENERATED_MEMBERS = (".cargo_vcs_info.json", "Cargo.lock", "Cargo.toml")
 EXPECTED_MEMBERS = tuple(sorted((*SOURCE_MEMBERS, *GENERATED_MEMBERS)))
 DIRECT_DEPENDENCIES = {
     "serde": {"version": "=1.0.229", "features": ["derive"]},
     "serde_json": {"version": "=1.0.151"},
+    "unicode-normalization": {"version": "=0.1.25"},
 }
 VERIFY_COMMANDS = (
     "cargo test --locked --offline --all-targets",
@@ -160,6 +172,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         "license": "Apache-2.0",
         "repository": "https://github.com/AaronNHorvitz/AgentMage",
         "publish": False,
+        "exclude": ["tests/path_corpus.rs", "tests/platform_path_contract.rs"],
     }
     for field, expected in expected_package.items():
         if package.get(field) != expected:
