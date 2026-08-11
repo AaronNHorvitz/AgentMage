@@ -340,7 +340,7 @@
         "LINEAGE-SYNTHETIC-SOURCES-UNVERIFIED"
       ],
       "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-      "sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+      "sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
       "status": "BLOCKED"
     }
   },
@@ -418,12 +418,12 @@
     ],
     "status": "REJECTED"
   },
-  "decision_source_revision": "edbd4dc78c07fdae8d7b16a364948fc5e31a86a3",
+  "decision_source_revision": "8c66c4f479fae0a289d4b9a26900c8fa92bfddc2",
   "evaluated_at": "2026-08-10T10:45:00Z",
   "evaluation_plan": {
     "candidate_state_at_start": "EVALUATION_REQUIRED_DISABLED",
     "path": "model-profiles/candidates/gemma-4-12b-unified/evaluation-plan.json",
-    "sha256": "785e5b1ac8ba9dba83800c4d88358e5bbcae9d2ac8d7c82d602fcd5eeec779a8",
+    "sha256": "196761b5f10e41ea46224c1737147f82eaf33fa72b7f96772bbed05080fec61c",
     "threshold_change_authorized": false
   },
   "evidence": {
@@ -440,7 +440,7 @@
   },
   "policy": {
     "path": "MODEL-PROVENANCE-POLICY.md",
-    "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad"
+    "sha256": "7559cecd79b4f3faea70083148abe4ffe21ac9633374d414ce33ec64a9dd4ba2"
   },
   "profile_id": "gemma-4-12b-unified-it",
   "record_type": "fallback_model_feasibility_disposition",
@@ -461,7 +461,7 @@
   "trigger_disposition": {
     "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
     "profile_id": "gemma-4-e4b-it",
-    "sha256": "8389942d3cbe439940a7ec82d55aaa5c8a5b75aeb80bc1e35ddeee4def597488",
+    "sha256": "314f38594ed955234d8516067a827b575d3b3fd81292bdd9c1191688c178464c",
     "status": "REJECTED"
   }
 }

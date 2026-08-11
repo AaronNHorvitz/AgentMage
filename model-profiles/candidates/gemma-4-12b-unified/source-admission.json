@@ -70,7 +70,7 @@
   },
   "policy": {
     "path": "MODEL-PROVENANCE-POLICY.md",
-    "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad"
+    "sha256": "7559cecd79b4f3faea70083148abe4ffe21ac9633374d414ce33ec64a9dd4ba2"
   },
   "profile_id": "gemma-4-12b-unified-it",
   "record_type": "model_source_admission",

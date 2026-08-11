@@ -4,7 +4,7 @@
     "artifact_sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
     "artifact_status": "BLOCKED",
     "source_path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-    "source_sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+    "source_sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
     "source_status": "BLOCKED"
   },
   "adapters": [
@@ -33,7 +33,7 @@
   },
   "trigger_disposition": {
     "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
-    "sha256": "8389942d3cbe439940a7ec82d55aaa5c8a5b75aeb80bc1e35ddeee4def597488",
+    "sha256": "314f38594ed955234d8516067a827b575d3b3fd81292bdd9c1191688c178464c",
     "status": "REJECTED"
   }
 }

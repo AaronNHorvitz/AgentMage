@@ -398,7 +398,7 @@
     },
     "source": {
       "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
-      "sha256": "1bc1df87d5b8da35378248a16c838ac727b16afd10d9bce85650b151151deefb",
+      "sha256": "f2e8f8b5adc19e97a6abc8b0857f9deea3dd99db088de5d81e77daf906fbe92b",
       "status": "BLOCKED"
     }
   },
@@ -468,7 +468,7 @@
     ],
     "status": "REJECTED"
   },
-  "decision_source_revision": "2c42ff03b51ad784c2eb6b0124fc522ea1f7bba6",
+  "decision_source_revision": "8c66c4f479fae0a289d4b9a26900c8fa92bfddc2",
   "evaluated_at": "2026-08-10T10:05:00Z",
   "fallback": {
     "activation_authorized": false,
@@ -480,7 +480,7 @@
   },
   "policy": {
     "path": "MODEL-PROVENANCE-POLICY.md",
-    "sha256": "ec12aa8439ed6d8002b1b43c25ae0b259ea492c9e07eed3a8687b9a2365225ad"
+    "sha256": "7559cecd79b4f3faea70083148abe4ffe21ac9633374d414ce33ec64a9dd4ba2"
   },
   "profile_id": "gemma-4-e4b-it",
   "record_type": "model_feasibility_disposition",

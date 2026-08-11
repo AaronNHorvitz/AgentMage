@@ -370,10 +370,15 @@ def run_platform(
         except (json.JSONDecodeError, StopIteration, TypeError):
             pass
         else:
+            output_tail = " | ".join(
+                str(failed_command.get("output", "")).strip().splitlines()[-8:]
+            )
             detail = (
                 f"command {failed_command.get('id', 'unknown')} exited "
                 f"{failed_command.get('exit_code', 'unknown')}"
             )
+            if output_tail:
+                detail = f"{detail}: {output_tail}"
         raise OSError(f"clean build failed for {platform_id}: {detail}")
     try:
         result = json.loads(run.stdout)
