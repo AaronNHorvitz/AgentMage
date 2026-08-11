@@ -17,9 +17,9 @@ class PathBoundaryReviewTests(unittest.TestCase):
                 "generated_path_case_count": 640,
                 "admitted_escape_count": 0,
                 "display_link_rejection_count": 1280,
-                "race_executed_scenario_count": 5,
+                "race_executed_scenario_count": 6,
                 "out_of_root_access_count": 0,
-                "open_boundary_count": 6,
+                "open_boundary_count": 5,
             },
         )
 

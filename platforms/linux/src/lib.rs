@@ -729,6 +729,7 @@ mod tests {
     use std::fs;
     use std::os::unix::fs::symlink;
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::thread;
@@ -1100,6 +1101,43 @@ mod tests {
         if let Err(error) = initial.revalidate() {
             assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
         }
+    }
+
+    #[test]
+    #[ignore = "requires an isolated user and mount namespace"]
+    fn isolated_bind_mount_swap_is_rejected_as_mount_changed() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        let mount_point = root.join("mounted");
+        let outside = test.path.join("outside");
+        fs::create_dir_all(&mount_point).expect("workspace mount point creates");
+        fs::create_dir(&outside).expect("outside directory creates");
+        fs::write(outside.join("secret.txt"), b"outside mount bytes\n")
+            .expect("outside mount fixture writes");
+        let workspace = authorize_for_test(&root);
+
+        let mounted = Command::new("mount")
+            .args(["--bind"])
+            .arg(&outside)
+            .arg(&mount_point)
+            .status()
+            .expect("mount command starts");
+        assert!(mounted.success(), "isolated bind mount must succeed");
+
+        let result = adapter().resolve(
+            &workspace,
+            &path(&["mounted", "secret.txt"]),
+            PathResolutionIntent::ContentHash,
+        );
+
+        let unmounted = Command::new("umount")
+            .arg(&mount_point)
+            .status()
+            .expect("umount command starts");
+        assert!(unmounted.success(), "isolated bind mount must be removed");
+        let error = result.expect_err("cross-mount path must fail closed");
+        assert_eq!(error.kind(), PathAdapterErrorKind::MountChanged);
+        assert_eq!(error.component_index(), Some(0));
     }
 
     #[test]

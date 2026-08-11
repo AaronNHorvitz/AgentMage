@@ -43,7 +43,6 @@ SUBJECTS = {
 }
 OPEN_BOUNDARIES = (
     "macOS path adapter, aliases, bookmarks, case collisions, and Unicode collisions",
-    "privileged isolated bind-mount replacement execution",
     "Ubuntu execution evidence",
     "public workspace selection and durable authorization",
     "real tool and Visual Studio Code link activation integration",
@@ -148,7 +147,7 @@ def independent_review(root: Path = ROOT) -> dict[str, Any]:
         "generated_path_case_count": 640,
         "admitted_escape_count": 0,
         "display_link_rejection_count": 1280,
-        "race_executed_scenario_count": 5,
+        "race_executed_scenario_count": 6,
         "out_of_root_access_count": 0,
         "open_boundary_count": len(OPEN_BOUNDARIES),
     }
@@ -250,9 +249,9 @@ def validate_report(value: Any) -> list[str]:
         "generated_path_case_count": 640,
         "admitted_escape_count": 0,
         "display_link_rejection_count": 1280,
-        "race_executed_scenario_count": 5,
+        "race_executed_scenario_count": 6,
         "out_of_root_access_count": 0,
-        "open_boundary_count": 6,
+        "open_boundary_count": 5,
     }:
         failures.append("path boundary review coverage changed")
     verification = value.get("verification")

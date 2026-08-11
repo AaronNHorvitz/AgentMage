@@ -78,7 +78,7 @@ MAPPINGS = {
             "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
         ],
         "demonstrated": "Fedora holds root and object descriptors across check and use, enforces no-follow and no-cross-mount resolution, rejects hard links, checks identity/preimages, and records zero out-of-root access across unprivileged race scenarios.",
-        "remaining": "A privileged isolated bind-mount swap and all macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted.",
+        "remaining": "All macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted; the equivalent Ubuntu execution is also pending.",
     },
     "SR-ACC-006": {
         "story_contribution": "partial-story-evidence",

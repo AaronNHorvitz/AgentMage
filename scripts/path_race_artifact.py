@@ -24,6 +24,10 @@ TESTS = (
     ("mount_identity_and_strategy", "automatic_strategy_matches_strict_openat2_probe_and_mount_ids_cannot_drift"),
     ("concurrent_toctou", "concurrent_symlink_replacement_never_changes_held_file_authority"),
 )
+MOUNT_NAMESPACE_TEST = (
+    "privileged_mount_swap",
+    "isolated_bind_mount_swap_is_rejected_as_mount_changed",
+)
 SOURCE_PATHS = (
     "kernel/contracts/src/platform_path.rs",
     "platforms/linux/src/lib.rs",
@@ -71,6 +75,19 @@ def run_test(test_name: str, root: Path = ROOT) -> None:
         raise PathRaceArtifactError(f"Linux path race scenario failed: {test_name}")
 
 
+def run_mount_namespace_test(root: Path = ROOT) -> None:
+    test_name = MOUNT_NAMESPACE_TEST[1]
+    completed = subprocess.run(
+        ["unshare", "--user", "--map-root-user", "--mount", "--propagation", "private",
+         "cargo", "test", "--locked", "--offline", "-p", "agentmage-platform-linux",
+         f"tests::{test_name}", "--", "--exact", "--ignored", "--test-threads=1"],
+        cwd=root, check=False, stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120,
+    )
+    if completed.returncode != 0:
+        raise PathRaceArtifactError("isolated bind-mount swap scenario failed")
+
+
 def execute_harness(root: Path = ROOT) -> dict[str, Any]:
     traces = []
     for scenario_id, test_name in TESTS:
@@ -81,6 +98,13 @@ def execute_harness(root: Path = ROOT) -> dict[str, Any]:
             "execution_status": "pass-fedora-local",
             "out_of_root_access_count": 0,
         })
+    run_mount_namespace_test(root)
+    traces.append({
+        "scenario_id": MOUNT_NAMESPACE_TEST[0],
+        "test_name": MOUNT_NAMESPACE_TEST[1],
+        "execution_status": "pass-fedora-isolated-user-mount-namespace",
+        "out_of_root_access_count": 0,
+    })
     return {
         "executed_scenario_count": len(traces),
         "out_of_root_access_count": 0,
@@ -132,7 +156,7 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
         "reference_revision": reference_revision,
         "sources": sources,
         "coverage": {
-            "attack_class_count": 8,
+            "attack_class_count": 9,
             "executed_scenario_count": execution["executed_scenario_count"],
             "out_of_root_access_count": execution["out_of_root_access_count"],
             "concurrent_minimum_resolution_attempts": 512,
@@ -146,13 +170,12 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
             "content_mutation": "pass-fedora-local",
             "concurrent_toctou": "pass-fedora-local",
             "mount_identity_drift": "pass-synthetic-unit",
-            "privileged_mount_swap": "not-executed-requires-isolated-privilege",
+            "privileged_mount_swap": "pass-fedora-isolated-user-mount-namespace",
             "macos_alias": "blocked-macos",
         },
         "macos_evidence_substituted": False,
         "release_claim": "none",
         "limitations": [
-            "privileged bind-mount replacement is not executed on this host",
             "macOS alias attacks are blocked with the macOS implementation",
             "Ubuntu execution is not performed",
         ],
@@ -173,8 +196,8 @@ def validate_report(value: Any) -> list[str]:
     ):
         failures.append("path race report identity changed")
     if value.get("coverage") != {
-        "attack_class_count": 8,
-        "executed_scenario_count": 5,
+        "attack_class_count": 9,
+        "executed_scenario_count": 6,
         "out_of_root_access_count": 0,
         "concurrent_minimum_resolution_attempts": 512,
     }:
@@ -182,17 +205,17 @@ def validate_report(value: Any) -> list[str]:
     traces = value.get("traces")
     if (
         not isinstance(traces, list)
-        or len(traces) != 5
-        or any(trace.get("execution_status") != "pass-fedora-local" for trace in traces)
+        or len(traces) != 6
+        or any(not str(trace.get("execution_status", "")).startswith("pass-fedora-") for trace in traces)
         or any(trace.get("out_of_root_access_count") != 0 for trace in traces)
     ):
         failures.append("path race traces are incomplete")
     status = value.get("attack_status")
-    if not isinstance(status, dict) or status.get("privileged_mount_swap") != "not-executed-requires-isolated-privilege" or status.get("macos_alias") != "blocked-macos":
+    if not isinstance(status, dict) or status.get("privileged_mount_swap") != "pass-fedora-isolated-user-mount-namespace" or status.get("macos_alias") != "blocked-macos":
         failures.append("path race blocker status changed")
     if value.get("macos_evidence_substituted") is not False or value.get("release_claim") != "none":
         failures.append("path race report made an unsupported claim")
-    if not isinstance(value.get("limitations"), list) or len(value["limitations"]) != 3:
+    if not isinstance(value.get("limitations"), list) or len(value["limitations"]) != 2:
         failures.append("path race limitations are incomplete")
     return failures
 

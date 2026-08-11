@@ -14,8 +14,8 @@ class PathRaceArtifactTests(unittest.TestCase):
             "status": "pass-fedora-unprivileged-scope",
             "reference_revision": "a" * 40,
             "coverage": {
-                "attack_class_count": 8,
-                "executed_scenario_count": 5,
+                "attack_class_count": 9,
+                "executed_scenario_count": 6,
                 "out_of_root_access_count": 0,
                 "concurrent_minimum_resolution_attempts": 512,
             },
@@ -27,6 +27,14 @@ class PathRaceArtifactTests(unittest.TestCase):
                     "out_of_root_access_count": 0,
                 }
                 for scenario, test in artifact.TESTS
+            ]
+            + [
+                {
+                    "scenario_id": artifact.MOUNT_NAMESPACE_TEST[0],
+                    "test_name": artifact.MOUNT_NAMESPACE_TEST[1],
+                    "execution_status": "pass-fedora-isolated-user-mount-namespace",
+                    "out_of_root_access_count": 0,
+                }
             ],
             "attack_status": {
                 "symlink": "pass-fedora-local",
@@ -36,12 +44,12 @@ class PathRaceArtifactTests(unittest.TestCase):
                 "content_mutation": "pass-fedora-local",
                 "concurrent_toctou": "pass-fedora-local",
                 "mount_identity_drift": "pass-synthetic-unit",
-                "privileged_mount_swap": "not-executed-requires-isolated-privilege",
+                "privileged_mount_swap": "pass-fedora-isolated-user-mount-namespace",
                 "macos_alias": "blocked-macos",
             },
             "macos_evidence_substituted": False,
             "release_claim": "none",
-            "limitations": ["one", "two", "three"],
+            "limitations": ["one", "two"],
         }
 
     def test_valid_bounded_report_is_accepted(self) -> None:
