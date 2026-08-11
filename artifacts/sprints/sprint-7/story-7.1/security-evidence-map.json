@@ -1,0 +1,259 @@
+{
+  "artifacts": [
+    {
+      "bytes": 65272,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "bytes": 5565,
+      "path": "docs/architecture/platform-adapter-contract.md",
+      "sha256": "6f48b66d591e25ae53d584fd41815034bbc989c04fb21479da2bae3ba9166f57"
+    },
+    {
+      "bytes": 11520,
+      "path": "kernel/contracts/src/platform.rs",
+      "sha256": "0516054a15ceb238ea4f6b1b233caae4704f2ad628cda0cae4e0ee9073e7b2b8"
+    },
+    {
+      "bytes": 13797,
+      "path": "kernel/engine/src/platform_startup.rs",
+      "sha256": "8aa495e12d635c1398823de675d6b2cffe42d51882e8a098758e911c99d950d0"
+    },
+    {
+      "bytes": 3346,
+      "path": "kernel/engine/tests/platform_adapter_conformance.rs",
+      "sha256": "c275562bf26657b1ad38d76d56e9fc8a039278c8645b83d316779740d60bbecf"
+    },
+    {
+      "bytes": 875,
+      "path": "release/platform-manifests/README.md",
+      "sha256": "f7d60785d346dc4652e029f55b367b71c16ed05118baba5e3fb9dec07a3091ce"
+    },
+    {
+      "bytes": 3675,
+      "path": "release/platform-manifests/v1/fedora-x86_64.json",
+      "sha256": "193fd58398c74c7a0b011beb1b23addc51b8e9b270ee666ea809b51f0504897c"
+    },
+    {
+      "bytes": 3679,
+      "path": "release/platform-manifests/v1/ubuntu-x86_64.json",
+      "sha256": "5416b0d26c7887df9f54043c6faaa2595ebd4c63c00b880ca0d17d53d8ff4366"
+    },
+    {
+      "bytes": 5550,
+      "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+      "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+    },
+    {
+      "bytes": 4405,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+      "sha256": "7858fed75782bc400a82c25b87dc0c5e6617b8a224270bae3494033706e10748"
+    },
+    {
+      "bytes": 4142,
+      "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+      "sha256": "eefb6445085e4239b6768031b70ac30136d84f7c67212cebb215b7bcb70868a1"
+    },
+    {
+      "bytes": 384525,
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "81ecbb231e008269526eb000e6b2a5ad7d63a8915859e387a2622e7485ebd411"
+    },
+    {
+      "bytes": 399530,
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "fd303fd8bb4a82760a3ce6555b4ea2f248168c2726299ef8a9fbf51fc7e6dc0a"
+    },
+    {
+      "bytes": 22770,
+      "path": "scripts/platform_manifest_artifact.py",
+      "sha256": "7375fdfa53892bd592a0bcaf47df6094cd637e9f8353331e8caf2e1b1c893233"
+    },
+    {
+      "bytes": 17584,
+      "path": "scripts/platform_result_recorder.py",
+      "sha256": "b87cdcc57dd9c906d10f4013c4b2046cbe3925af02a3b07d11c528ef4ee5a0fd"
+    },
+    {
+      "bytes": 16683,
+      "path": "scripts/story_7_1_security_evidence.py",
+      "sha256": "a53e67552c7c765a7840b92f4508c6634a950421b92c6822065af58d78fec021"
+    },
+    {
+      "bytes": 5648,
+      "path": "tests/test_platform_manifest_artifact.py",
+      "sha256": "f063bcc09599f724600d444934cea4bf8b9e977569c3aa771f12dc9223b447bd"
+    },
+    {
+      "bytes": 8072,
+      "path": "tests/test_platform_result_recorder.py",
+      "sha256": "bda9daa387442245d9e4b3f7a69f4bedc11c8c18f74295e2022841ba82dbdf51"
+    },
+    {
+      "bytes": 2517,
+      "path": "tests/test_story_7_1_security_evidence.py",
+      "sha256": "ae3b0d47600fb2fdd5aad824a7403721e4208c7c721b038f9cac6c0d4d967aa3"
+    }
+  ],
+  "containerized_ubuntu_contract_execution": true,
+  "external_human_review_status": "not-performed",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The shared startup boundary, runtime identity flow, ten capability domains, failure route, and Linux manifest mechanism inventories are explicit and machine checked.",
+      "evidence": [
+        "docs/architecture/platform-adapter-contract.md",
+        "kernel/contracts/src/platform.rs",
+        "release/platform-manifests/v1/fedora-x86_64.json",
+        "release/platform-manifests/v1/ubuntu-x86_64.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "A release-derived component, process, socket, store, and classified data-flow inventory must be generated from actual packages.",
+      "requirement_id": "SR-GOV-006",
+      "story_contribution": "partial-boundary-model"
+    },
+    {
+      "demonstrated": "The adapter contract does not request weakening endpoint controls and has a typed unavailable or invalid result for missing primitives.",
+      "evidence": [
+        "docs/architecture/platform-adapter-contract.md"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The exact managed-like macOS baseline assessment and before/after comparison remain blocked and cannot be inferred from Linux.",
+      "requirement_id": "SR-PLT-009",
+      "story_contribution": "blocked-managed-platform-assessment"
+    },
+    {
+      "demonstrated": "Fedora and Ubuntu fixtures freeze architecture, OS build, toolchain, Visual Studio Code, package, and mechanism identity fields; every shared runtime identity mismatch has a typed refusal.",
+      "evidence": [
+        "release/platform-manifests/v1/fedora-x86_64.json",
+        "release/platform-manifests/v1/ubuntu-x86_64.json",
+        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Fixture package digests must be replaced by built packages, native Linux probes must bind them, and the complete macOS manifest and mutation matrix remain open.",
+      "requirement_id": "SR-PLT-010",
+      "story_contribution": "partial-linux-manifest-contract"
+    },
+    {
+      "demonstrated": "Startup accepts only the closed adapter API, exact manifest identity, and ten declared capabilities; no arbitrary capability or fallback member exists.",
+      "evidence": [
+        "kernel/contracts/src/platform.rs",
+        "kernel/engine/src/platform_startup.rs",
+        "supply-chain/sbom.cdx.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Package loaders must prove refusal of unmanifested executable code, plugins, dynamic agents, and libraries against shipped binaries.",
+      "requirement_id": "SR-PLT-011",
+      "story_contribution": "partial-closed-contract"
+    },
+    {
+      "demonstrated": "Manifest and result records distinguish fake, Fedora-local, Ubuntu-container, and blocked-macOS status; platform and manifest evidence cannot be replayed across adapters.",
+      "evidence": [
+        "kernel/engine/tests/platform_adapter_conformance.rs",
+        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+        "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every later native runtime, package, model, hardware, and clean-install result must continue using the same non-substitution rule.",
+      "requirement_id": "SR-PLT-012",
+      "story_contribution": "demonstrated-contract-evidence-separation"
+    },
+    {
+      "demonstrated": "The manifests separate maintainer-release, end-user-runtime, and excluded-end-user dependencies and explicitly retain no credential values.",
+      "evidence": [
+        "docs/architecture/platform-adapter-contract.md",
+        "release/platform-manifests/v1/fedora-x86_64.json",
+        "release/platform-manifests/v1/ubuntu-x86_64.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Ephemeral release runners, protected branch controls, access records, MFA, and isolated signing authority require external release-environment evidence.",
+      "requirement_id": "SR-SUP-002",
+      "story_contribution": "partial-dependency-and-credential-boundary"
+    },
+    {
+      "demonstrated": "Platform fixtures pin toolchain, Visual Studio Code, package, and mechanism identities while the repository records locked dependency provenance.",
+      "evidence": [
+        "release/platform-manifests/v1/fedora-x86_64.json",
+        "release/platform-manifests/v1/ubuntu-x86_64.json",
+        "supply-chain/dependency-provenance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Actual package builders, SDKs, runtime binaries, conversion tools, and all shipped transitive artifacts must be bound and substitution-tested.",
+      "requirement_id": "SR-SUP-003",
+      "story_contribution": "partial-pinned-input-contract"
+    },
+    {
+      "demonstrated": "The current accepted source dependency graph has a checked CycloneDX SBOM and dependency provenance ledger.",
+      "evidence": [
+        "supply-chain/sbom.cdx.json",
+        "supply-chain/dependency-provenance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "A complete release-build and shipped-binary SBOM with binary reconciliation and exact generation context does not yet exist.",
+      "requirement_id": "SR-SUP-004",
+      "story_contribution": "partial-source-dependency-sbom"
+    },
+    {
+      "demonstrated": "The immutable evidence binds an exact source revision, every contract input hash, Fedora execution, and a pinned no-network Ubuntu image identity.",
+      "evidence": [
+        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+        "supply-chain/dependency-provenance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Signed release provenance must link an actual package to its builder, commands, dependencies, complete tests, artifacts, and signer.",
+      "requirement_id": "SR-SUP-005",
+      "story_contribution": "partial-source-and-test-provenance"
+    },
+    {
+      "demonstrated": "The identical adapter contract runs locally on Fedora and in a constrained no-network Ubuntu 26.04 container from the committed source revision.",
+      "evidence": [
+        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "No installation, update, migration, rollback, uninstall, or recovery run is claimed; three clean systems per supported platform and all macOS runs remain open.",
+      "requirement_id": "SR-TST-007",
+      "story_contribution": "contract-execution-only"
+    }
+  ],
+  "reviewer_protocols": [
+    {
+      "protocol_id": "RV-01",
+      "status": "partial-contract-no-release-package"
+    },
+    {
+      "protocol_id": "RV-02",
+      "status": "not-executed-no-installation"
+    },
+    {
+      "protocol_id": "RV-03",
+      "status": "partial-contract-no-native-sandbox"
+    },
+    {
+      "protocol_id": "RV-04",
+      "status": "partial-inherited-story-6-path-evidence"
+    },
+    {
+      "protocol_id": "RV-05",
+      "status": "not-implemented-no-ipc"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "0ec6eb6a592b56c315262230b53c069ef3512ebc",
+  "status": "pass-non-macos-security-mapping",
+  "story_id": "7.1",
+  "summary": {
+    "demonstrated_contract_scope_count": 1,
+    "mapped_requirement_count": 10,
+    "partial_or_blocked_scope_count": 9,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 19,
+    "story_gate_complete": false
+  },
+  "task_id": "7.1.3.5"
+}
