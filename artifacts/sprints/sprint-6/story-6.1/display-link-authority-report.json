@@ -1,0 +1,75 @@
+{
+  "artifact_id": "display-link-authority-replay-matrix",
+  "coverage": {
+    "authority_surface_count": 5,
+    "candidate_form_count": 2,
+    "display_link_count": 128,
+    "filesystem_observation_count": 0,
+    "issued_grant_count": 0,
+    "rejection_count": 1280
+  },
+  "direct_grant_target_status": "descriptive-candidate-only",
+  "limitations": [
+    "Visual Studio Code link activation is not implemented",
+    "macOS display-link generation is not executed"
+  ],
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "reference_revision": "945858b1e6a2c370851caa334a1507b68a8e3072",
+  "release_claim": "none",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "fixtures/paths/README.md",
+      "sha256": "7542074fef58e4e0b35e11ee4db9f4d9d7a4d6c1a079455df0adaa3601d0cef8"
+    },
+    {
+      "path": "fixtures/paths/v1/display-link-corpus.json",
+      "sha256": "0c1dc48adb718e01c8003ebf4de464854caa4af5f57d219c69ef5e240553a29b"
+    },
+    {
+      "path": "kernel/contracts/src/display_link.rs",
+      "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
+    },
+    {
+      "path": "kernel/contracts/src/path.rs",
+      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+    },
+    {
+      "path": "kernel/contracts/src/platform_path.rs",
+      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "path": "kernel/engine/tests/display_link_authority.rs",
+      "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
+    },
+    {
+      "path": "scripts/display_link_authority_artifact.py",
+      "sha256": "59103e0994c167ca9233a024020c5e701c4b229d5477c39eabf2426b37e669de"
+    },
+    {
+      "path": "tests/test_display_link_authority_artifact.py",
+      "sha256": "c991ef569a84dc0da8495a8573895b1ed2f169d7364a9e76a96d78083b9080bd"
+    }
+  ],
+  "status": "pass-shared-kernel-scope",
+  "task_ids": [
+    "6.1.2.2",
+    "6.1.3.3"
+  ],
+  "verification": {
+    "grant_issuer": "pass",
+    "platform_adapter_typed_input": "pass",
+    "policy_builder": "pass",
+    "workspace_path_constructor": "pass",
+    "workspace_path_deserializer": "pass"
+  }
+}
