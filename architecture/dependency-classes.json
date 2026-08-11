@@ -13,7 +13,8 @@
       "ed25519-dalek",
       "serde",
       "serde_json",
-      "sha2"
+      "sha2",
+      "unicode-normalization"
     ],
     "vscode_extension_packages": [],
     "swift_packages": []

@@ -47,7 +47,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "3070969d885f17039fa877e96024c085dce67f855bed5e8217ee15faf018137e"
+          "content": "3a7230da56f7865d24d4b359ae480c40837ef0ae433b339d0146896e8533ae70"
         }
       ],
       "integrity": null,
@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ecdb89b83f8352b0297b313f327940309c99f87b498ab15344099375338f5289"
+          "content": "6100bf972824c625b73b9249c0085b8601e1afd985ded437ec2b1b4889441a37"
         }
       ],
       "integrity": null,
@@ -682,6 +682,46 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:tinyvec@1.10.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
+        }
+      ],
+      "integrity": "sha256:bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "name": "tinyvec",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/tinyvec/1.10.0"
+      },
+      "version": "1.10.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:tinyvec_macros@0.1.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+        }
+      ],
+      "integrity": "sha256:1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20",
+      "license": "MIT OR Apache-2.0 OR Zlib",
+      "name": "tinyvec_macros",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/tinyvec_macros/0.1.1"
+      },
+      "version": "0.1.1"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:typenum@1.20.1",
       "ecosystem": "cargo",
       "hashes": [
@@ -719,6 +759,26 @@
         "url": "https://crates.io/crates/unicode-ident/1.0.24"
       },
       "version": "1.0.24"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:unicode-normalization@0.1.25",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+        }
+      ],
+      "integrity": "sha256:5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
+      "license": "MIT OR Apache-2.0",
+      "name": "unicode-normalization",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/unicode-normalization/0.1.25"
+      },
+      "version": "0.1.25"
     },
     {
       "classification": "production",
@@ -787,7 +847,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "43073d9d26d7610f2de4d611578f8bad46973cbdb845d4fb3dac66be003a04ae"
+          "content": "be3a47fdbc4c540408614a16fc3e282a4eb4c17d527c3a6b7b88a27543884630"
         }
       ],
       "integrity": null,
@@ -8240,7 +8300,11 @@
     },
     {
       "component_id": "cargo:agentmage-kernel-contracts@0.0.0",
-      "depends_on": []
+      "depends_on": [
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:unicode-normalization@0.1.25"
+      ]
     },
     {
       "component_id": "cargo:agentmage-kernel-engine@0.0.0",
@@ -8442,12 +8506,28 @@
       ]
     },
     {
+      "component_id": "cargo:tinyvec@1.10.0",
+      "depends_on": [
+        "cargo:tinyvec_macros@0.1.1"
+      ]
+    },
+    {
+      "component_id": "cargo:tinyvec_macros@0.1.1",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:typenum@1.20.1",
       "depends_on": []
     },
     {
       "component_id": "cargo:unicode-ident@1.0.24",
       "depends_on": []
+    },
+    {
+      "component_id": "cargo:unicode-normalization@0.1.25",
+      "depends_on": [
+        "cargo:tinyvec@1.10.0"
+      ]
     },
     {
       "component_id": "cargo:zeroize@1.9.0",
@@ -10765,15 +10845,15 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "702e0fbb88f6cfaae97475e6d876e0907a8819e205bcfcc87a46825e1fd8ea00",
-    "Cargo.toml": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98",
+    "Cargo.lock": "fd13a6942e8554d66568dc239428106f87e9a585077f7f2de51ace35c1d6ed3d",
+    "Cargo.toml": "6faafa45c0f5db03e631bf45b09b8362d121b5cec9f6290caaf29bb621b6428e",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "43073d9d26d7610f2de4d611578f8bad46973cbdb845d4fb3dac66be003a04ae",
+    "package.json": "be3a47fdbc4c540408614a16fc3e282a4eb4c17d527c3a6b7b88a27543884630",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "5c09f46372c33606f82bc48a547c9295db063bee2aa5909bf6f7e47e10f5609f",
-    "supply-chain/cargo-external-catalog.json": "13eff5654b0cf4d7a38237dfb0d5708fdd8869965471d346b5bb814ee1155349"
+    "supply-chain/cargo-external-catalog.json": "bbdc145b7bbc509b6c52200b4008a54b65c5c43f8cf125fc1e5b36a7a6fdbcbc"
   },
   "platform_status": {
     "macos": "blocked-macos",

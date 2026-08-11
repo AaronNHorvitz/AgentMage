@@ -68,7 +68,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3070969d885f17039fa877e96024c085dce67f855bed5e8217ee15faf018137e"
+          "content": "3a7230da56f7865d24d4b359ae480c40837ef0ae433b339d0146896e8533ae70"
         }
       ],
       "licenses": [
@@ -99,7 +99,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ecdb89b83f8352b0297b313f327940309c99f87b498ab15344099375338f5289"
+          "content": "6100bf972824c625b73b9249c0085b8601e1afd985ded437ec2b1b4889441a37"
         }
       ],
       "licenses": [
@@ -1006,6 +1006,64 @@
       "version": "3.0.3"
     },
     {
+      "bom-ref": "cargo:tinyvec@1.10.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Zlib OR Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "tinyvec",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/tinyvec@1.10.0",
+      "scope": "required",
+      "type": "library",
+      "version": "1.10.0"
+    },
+    {
+      "bom-ref": "cargo:tinyvec_macros@0.1.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0 OR Zlib"
+        }
+      ],
+      "name": "tinyvec_macros",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/tinyvec_macros@0.1.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.1.1"
+    },
+    {
       "bom-ref": "cargo:typenum@1.20.1",
       "hashes": [
         {
@@ -1062,6 +1120,35 @@
       "scope": "required",
       "type": "library",
       "version": "1.0.24"
+    },
+    {
+      "bom-ref": "cargo:unicode-normalization@0.1.25",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "unicode-normalization",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/unicode-normalization@0.1.25",
+      "scope": "required",
+      "type": "library",
+      "version": "0.1.25"
     },
     {
       "bom-ref": "cargo:zeroize@1.9.0",
@@ -1159,7 +1246,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "43073d9d26d7610f2de4d611578f8bad46973cbdb845d4fb3dac66be003a04ae"
+          "content": "be3a47fdbc4c540408614a16fc3e282a4eb4c17d527c3a6b7b88a27543884630"
         }
       ],
       "licenses": [
@@ -12700,7 +12787,11 @@
       "ref": "cargo:agentmage-host@0.0.0"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:unicode-normalization@0.1.25"
+      ],
       "ref": "cargo:agentmage-kernel-contracts@0.0.0"
     },
     {
@@ -12903,12 +12994,28 @@
       "ref": "cargo:syn@3.0.3"
     },
     {
+      "dependsOn": [
+        "cargo:tinyvec_macros@0.1.1"
+      ],
+      "ref": "cargo:tinyvec@1.10.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:tinyvec_macros@0.1.1"
+    },
+    {
       "dependsOn": [],
       "ref": "cargo:typenum@1.20.1"
     },
     {
       "dependsOn": [],
       "ref": "cargo:unicode-ident@1.0.24"
+    },
+    {
+      "dependsOn": [
+        "cargo:tinyvec@1.10.0"
+      ],
+      "ref": "cargo:unicode-normalization@0.1.25"
     },
     {
       "dependsOn": [],
@@ -15245,7 +15352,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:895f0ef1-f7b2-50ca-9d28-e4148f46c982",
+  "serialNumber": "urn:uuid:8755f0bb-685b-552e-9318-ab7ebe9995d4",
   "specVersion": "1.6",
   "version": 1
 }

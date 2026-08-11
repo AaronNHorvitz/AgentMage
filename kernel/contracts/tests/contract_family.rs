@@ -10,7 +10,8 @@ use agentmage_kernel_contracts::{
     SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
     TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
     ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
-    WorkPacketState, WorkspaceId, from_json, to_canonical_json,
+    WorkPacketState, WorkspaceId, WorkspacePath, WorkspacePathErrorKind, from_json,
+    to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -67,6 +68,33 @@ where
         "canonical_json": String::from_utf8(bytes).expect("contract JSON must be UTF-8"),
         "name": name,
     })
+}
+
+#[test]
+fn workspace_path_is_canonical_and_cannot_deserialize_ambient_authority() {
+    let path = WorkspacePath::new(
+        WorkspaceId::from_raw("workspace-0001"),
+        ["fixtures", "input.txt"],
+    )
+    .expect("canonical workspace path");
+    let first = serde_json::to_vec(&path).expect("workspace path must serialize");
+    let second = serde_json::to_vec(&path).expect("workspace path must serialize again");
+    assert_eq!(first, second);
+    assert_eq!(
+        serde_json::from_slice::<WorkspacePath>(&first).expect("workspace path must parse"),
+        path
+    );
+
+    let traversal = WorkspacePath::new(WorkspaceId::from_raw("workspace-0001"), [".."])
+        .expect_err("parent traversal must fail");
+    assert_eq!(
+        traversal.kind(),
+        WorkspacePathErrorKind::ParentTraversalComponent
+    );
+
+    let injected =
+        br#"{"workspace_id":"workspace-0001","components":["input.txt"],"absolute_root":"/tmp"}"#;
+    assert!(serde_json::from_slice::<WorkspacePath>(injected).is_err());
 }
 
 #[test]

@@ -8,6 +8,7 @@ mod common;
 mod evidence;
 mod grant;
 mod ids;
+mod path;
 mod prompt;
 mod serialization;
 mod task;
@@ -30,6 +31,10 @@ pub use ids::{
     ActionId, ActorId, CancellationId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
     PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId,
     WorkPacketId, WorkspaceId,
+};
+pub use path::{
+    MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,
+    WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use serialization::{

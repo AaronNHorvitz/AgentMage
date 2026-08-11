@@ -31,8 +31,11 @@
     {"name": "subtle", "version": "2.6.1", "license": "BSD-3-Clause"},
     {"name": "syn", "version": "2.0.119", "license": "MIT OR Apache-2.0"},
     {"name": "syn", "version": "3.0.3", "license": "MIT OR Apache-2.0"},
+    {"name": "tinyvec", "version": "1.10.0", "license": "Zlib OR Apache-2.0 OR MIT"},
+    {"name": "tinyvec_macros", "version": "0.1.1", "license": "MIT OR Apache-2.0 OR Zlib"},
     {"name": "typenum", "version": "1.20.1", "license": "MIT OR Apache-2.0"},
     {"name": "unicode-ident", "version": "1.0.24", "license": "(MIT OR Apache-2.0) AND Unicode-3.0"},
+    {"name": "unicode-normalization", "version": "0.1.25", "license": "MIT OR Apache-2.0"},
     {"name": "zeroize", "version": "1.9.0", "license": "Apache-2.0 OR MIT"},
     {"name": "zmij", "version": "1.0.23", "license": "MIT"}
   ]
