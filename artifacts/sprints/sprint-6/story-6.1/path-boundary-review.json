@@ -1,0 +1,99 @@
+{
+  "artifact_id": "independent-automated-secure-path-review",
+  "coverage": {
+    "admitted_escape_count": 0,
+    "display_link_rejection_count": 1280,
+    "generated_path_case_count": 640,
+    "open_boundary_count": 6,
+    "out_of_root_access_count": 0,
+    "race_executed_scenario_count": 5,
+    "reviewed_subject_count": 4
+  },
+  "external_human_review_status": "not-performed",
+  "findings": [],
+  "fuzzing_claim": "generated-fixed-corpus-not-fuzzing",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "open_product_boundaries": [
+    "macOS path adapter, aliases, bookmarks, case collisions, and Unicode collisions",
+    "privileged isolated bind-mount replacement execution",
+    "Ubuntu execution evidence",
+    "public workspace selection and durable authorization",
+    "real tool and Visual Studio Code link activation integration",
+    "coverage-guided path fuzzing and sanitizer evidence"
+  ],
+  "product_requirement_completion_claim": "none",
+  "reference_revision": "5c7dc03d6f09910f8e98bae7fb058996ddb17746",
+  "release_claim": "none",
+  "review_protocol": "RV-04",
+  "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
+  "reviewer_identity": "agentmage-path-boundary-review-v1",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "path": "docs/architecture/path-authority-contract.md",
+      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
+      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+    },
+    {
+      "path": "scripts/path_boundary_review.py",
+      "sha256": "6c869327a67aa5b0b29a752ef5e2b58a97e497f40173ef5c35875a043fb55269"
+    },
+    {
+      "path": "tests/test_path_boundary_review.py",
+      "sha256": "c20889d0f321aa2b6836197388a0bd7a9062cd4d861448c3da0a3ebe37439581"
+    }
+  ],
+  "status": "pass-shared-fedora-review-scope",
+  "subjects": [
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+      "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
+      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+      "reference_revision": "6b91f2b895cb0b45ac2c9b93b920b6bba49c683e",
+      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
+      "reference_revision": "945858b1e6a2c370851caa334a1507b68a8e3072",
+      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+    },
+    {
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
+      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+    }
+  ],
+  "task_id": "6.1.3.5",
+  "verification": {
+    "display_authority_reconciliation": "pass",
+    "fedora_race_reconciliation": "pass",
+    "generated_corpus_reconciliation": "pass",
+    "limitation_and_platform_disclosure": "pass",
+    "path_contract_closure": "pass",
+    "source_and_subject_hash_binding": "pass",
+    "subject_checker_reexecution": "pass"
+  }
+}
