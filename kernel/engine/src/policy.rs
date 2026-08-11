@@ -11,6 +11,22 @@ use sha2::{Digest, Sha256};
 
 use crate::grants::GrantIssuer;
 
+/// Operations explicitly prohibited by the strict-local read-only policy profile.
+pub const STRICT_LOCAL_DENIED_OPERATIONS: [GrantOperation; 12] = [
+    GrantOperation::WorkspaceWrite,
+    GrantOperation::WorkspaceDelete,
+    GrantOperation::CommandExecute,
+    GrantOperation::NetworkAccess,
+    GrantOperation::GitCommit,
+    GrantOperation::GitPush,
+    GrantOperation::Publish,
+    GrantOperation::Send,
+    GrantOperation::Upload,
+    GrantOperation::Deploy,
+    GrantOperation::DatabaseWrite,
+    GrantOperation::CredentialAccess,
+];
+
 /// Exact tool identity and contract version admitted by policy.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct ToolPolicyBinding {
@@ -79,6 +95,23 @@ pub struct PolicyDocument {
     pub credential_scopes: ScopeRules<String>,
     /// Exact publication destinations admitted for publication operations.
     pub publication_scopes: ScopeRules<String>,
+}
+
+/// Exact identity and workspace scope admitted by the strict-local read-only profile.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StrictLocalReadOnlyScope {
+    /// Monotonically increasing policy revision.
+    pub revision: u32,
+    /// Exact local actors admitted by this profile instance.
+    pub actors: BTreeSet<ActorId>,
+    /// Exact tasks admitted by this profile instance.
+    pub tasks: BTreeSet<TaskId>,
+    /// Exact actions admitted by this profile instance.
+    pub actions: BTreeSet<ActionId>,
+    /// Exact tool identities and versions admitted by this profile instance.
+    pub tools: BTreeSet<ToolPolicyBinding>,
+    /// Exact workspace targets admitted by this profile instance.
+    pub targets: BTreeSet<GrantTarget>,
 }
 
 /// Current deterministic observations supplied immediately before policy evaluation.
@@ -207,6 +240,45 @@ pub struct PolicyEngine {
 }
 
 impl PolicyEngine {
+    /// Builds the immutable strict-local profile with no stateful or external operation path.
+    pub fn strict_local_read_only(
+        scope: StrictLocalReadOnlyScope,
+    ) -> Result<Self, PolicyBuildError> {
+        Self::new(PolicyDocument {
+            schema_version: 1,
+            revision: scope.revision,
+            actors: ScopeRules {
+                allowed: scope.actors,
+                denied: BTreeSet::new(),
+            },
+            tasks: ScopeRules {
+                allowed: scope.tasks,
+                denied: BTreeSet::new(),
+            },
+            actions: ScopeRules {
+                allowed: scope.actions,
+                denied: BTreeSet::new(),
+            },
+            tools: ScopeRules {
+                allowed: scope.tools,
+                denied: BTreeSet::new(),
+            },
+            operations: ScopeRules {
+                allowed: BTreeSet::from([GrantOperation::WorkspaceRead]),
+                denied: BTreeSet::from(STRICT_LOCAL_DENIED_OPERATIONS),
+            },
+            targets: ScopeRules {
+                allowed: scope.targets,
+                denied: BTreeSet::new(),
+            },
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: ScopeRules::deny_all(),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
+        })
+    }
+
     /// Validates a closed document and computes its canonical policy identity.
     pub fn new(document: PolicyDocument) -> Result<Self, PolicyBuildError> {
         validate_document(&document)?;
@@ -466,7 +538,7 @@ mod tests {
 
     use super::{
         PolicyBuildError, PolicyDenialScope, PolicyDocument, PolicyEngine, PolicyEvaluationContext,
-        ScopeRules, ToolPolicyBinding,
+        STRICT_LOCAL_DENIED_OPERATIONS, ScopeRules, StrictLocalReadOnlyScope, ToolPolicyBinding,
     };
     use crate::grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest};
     use agentmage_kernel_contracts::{
@@ -880,5 +952,56 @@ mod tests {
             PolicyEngine::new(malformed_digest).expect_err("digest must fail"),
             PolicyBuildError::InvalidDocument
         );
+    }
+
+    #[test]
+    fn strict_local_profile_allows_only_exact_workspace_read_and_denies_every_other_operation() {
+        let engine = PolicyEngine::strict_local_read_only(StrictLocalReadOnlyScope {
+            revision: 1,
+            actors: set(ActorId::from_raw("actor-local-0001")),
+            tasks: set(TaskId::from_raw("task-0001")),
+            actions: set(ActionId::from_raw("action-0001")),
+            tools: set(ToolPolicyBinding {
+                tool_id: ToolId::from_raw("fixture.read"),
+                tool_version: "1.0.0".to_owned(),
+            }),
+            targets: set(target(&["src"])),
+        })
+        .expect("strict policy must build");
+        assert_eq!(
+            engine.document.operations.allowed,
+            set(GrantOperation::WorkspaceRead)
+        );
+        assert_eq!(
+            engine.document.operations.denied,
+            BTreeSet::from(STRICT_LOCAL_DENIED_OPERATIONS)
+        );
+        assert!(engine.document.network_scopes.allowed.is_empty());
+        assert!(engine.document.credential_scopes.allowed.is_empty());
+        assert!(engine.document.publication_scopes.allowed.is_empty());
+
+        let (read_issuer, read_grant) = issued_operation(&engine, GrantOperation::WorkspaceRead);
+        assert!(
+            engine
+                .evaluate(&read_issuer, &read_grant, &context(&read_grant))
+                .allowed
+        );
+
+        for operation in STRICT_LOCAL_DENIED_OPERATIONS
+            .into_iter()
+            .chain([GrantOperation::DatabaseRead, GrantOperation::ModelInference])
+        {
+            let (issuer, grant) = issued_operation(&engine, operation);
+            let decision = engine.evaluate(&issuer, &grant, &context(&grant));
+            assert!(
+                !decision.allowed,
+                "operation unexpectedly allowed: {operation:?}"
+            );
+            assert_eq!(
+                decision.denial_scope,
+                Some(PolicyDenialScope::Operation),
+                "wrong denial scope for: {operation:?}"
+            );
+        }
     }
 }
