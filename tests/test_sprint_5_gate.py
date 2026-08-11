@@ -43,12 +43,17 @@ class Sprint5GateTests(unittest.TestCase):
             (
                 "- [x] **Story AC 5.1.AC1:**",
                 "- [x] **Story AC 5.1.AC2:**",
+                *[
+                    f"- [x] **Sprint AC 5.AC{index}:**"
+                    for index in range(1, 6)
+                ],
                 "### [ ] Sprint 5 - Capability Grants and Policy Engine",
                 "#### [ ] Story 5.1 - Capability Grants and Policy Engine",
             )
         )
         self.assertEqual(checklist_failures(text), [])
         self.assertTrue(checklist_failures(text.replace("AC2", "ACX")))
+        self.assertTrue(checklist_failures(text.replace("5.AC5", "5.ACX")))
         self.assertTrue(checklist_failures(text.replace("### [ ]", "### [x]")))
 
     def test_acceptance_story_and_blocker_mutations_fail_closed(self) -> None:

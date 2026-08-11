@@ -45,6 +45,9 @@ REQUIRED_STORY_MARKERS = (
     "- [x] **Story AC 5.1.AC1:**",
     "- [x] **Story AC 5.1.AC2:**",
 )
+REQUIRED_SPRINT_MARKERS = tuple(
+    f"- [x] **Sprint AC 5.AC{index}:**" for index in range(1, 6)
+)
 
 
 def canonical_json(value: Any) -> bytes:
@@ -108,7 +111,11 @@ def reviewed_artifacts(root: Path = ROOT) -> list[dict[str, str]]:
 
 
 def checklist_failures(tasks_text: str) -> list[str]:
-    failures = [marker for marker in REQUIRED_STORY_MARKERS if marker not in tasks_text]
+    failures = [
+        marker
+        for marker in (*REQUIRED_STORY_MARKERS, *REQUIRED_SPRINT_MARKERS)
+        if marker not in tasks_text
+    ]
     if "### [ ] Sprint 5 - Capability Grants and Policy Engine" not in tasks_text:
         failures.append("Sprint 5 checkbox must remain open while macOS is blocked")
     if "#### [ ] Story 5.1 - Capability Grants and Policy Engine" not in tasks_text:

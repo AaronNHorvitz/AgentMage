@@ -595,15 +595,17 @@ The owning sprint performs the first complete execution possible for its boundar
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 5.AC1:** `AT-AUTH-001` passes with zero unauthorized executions.
-- [ ] **Sprint AC 5.AC2:** Every accepted grant is consumed exactly once.
-- [ ] **Sprint AC 5.AC3:** A changed preview, argument, target, preimage, policy, task, scope, expiry, or nonce invalidates authority.
-- [ ] **Sprint AC 5.AC4:** Models, tools, shells, plugins, and simulated child agents cannot mint or broaden a grant.
-- [ ] **Sprint AC 5.AC5:** Wildcard and approve-everything configurations remain impossible.
+- [x] **Sprint AC 5.AC1:** `AT-AUTH-001` passes with zero unauthorized executions. Evidence: the Sprint gate reconciles all 560 seeded grant mutations and 28 authority-escalation attempts with zero admissions in the shared/Linux in-memory boundary. No production-executor claim is made.
+- [x] **Sprint AC 5.AC2:** Every accepted grant is consumed exactly once. Evidence: success, timeout, crash, and uncertain scenarios each admit one of two racing consumers exactly once; worker/effect probes never exceed one, and every replay remains denied. Durable cross-process atomicity remains open.
+- [x] **Sprint AC 5.AC3:** A changed preview, argument, target, preimage, policy, task, scope, expiry, or nonce invalidates authority. Evidence: 14 mutation classes across 560 deterministic seeds admit zero attempts, and all four post-approval policy/preimage/task/preview mutations reach final consumption with zero worker starts.
+- [x] **Sprint AC 5.AC4:** Models, tools, shells, plugins, and simulated child agents cannot mint or broaden a grant. Evidence: all seven descriptive source classes attempt mint, widen, transfer, and combine across 28 typed cases; every result is a redacted actor/session/task-attributed denial with zero admitted authority.
+- [x] **Sprint AC 5.AC5:** Wildcard and approve-everything configurations remain impossible. Evidence: the grant contract has 15 closed operation variants with no wildcard/custom/approve-all member, strict-local policy explicitly denies 12 hazardous operations and denies two more by absence, and approval displays contain zero authority fields.
 
 **Gate decision:** Sprint 5 is PASS only when Story 5.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Current story-gate evidence:** Source commit `dd7c2d0` adds the independent [`story_5_1_gate.py`](scripts/story_5_1_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, review, checklist, Definition-of-Done, mutation, and overclaim tests; evidence commit `62b358c` publishes [`story-gate-report.json`](artifacts/sprints/sprint-5/story-5.1/story-gate-report.json), SHA-256 `d0e54d5754a639f39238a0ef2ba65c37a0d7731407dec1a85490b6ed58869c5a`. The gate independently reviews commit `345e2b561d5ed2263004e232d03ee880fcc09ba2` and tree `5894f9f707cedee1c9c7d93f9c0884813319b47c`, retains 24 exact artifact hashes, records zero findings, and passes both Story criteria and every non-platform Definition-of-Done control in the declared shared/Linux scope. Story 5.1 remains `BLOCKED-MACOS`; `G-DOD-10` is the sole blocker, Linux evidence substitution is prohibited, external human review is not claimed, and the Story checkbox remains open.
+
+**Current sprint-gate evidence:** Source commit `8bc070f` adds the independent [`sprint_5_gate.py`](scripts/sprint_5_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, story/blocker, checklist, review, Definition-of-Done, mutation, and overclaim tests; evidence commit `76b54a1` publishes [`sprint-gate-report.json`](artifacts/sprints/sprint-5/sprint-gate-report.json), SHA-256 `3bda13960c43acff01a14cb02b637563cfc950e01176e4dd9b8690212582b05d`. The gate independently reviews commit `89e68a38001b0991f964c47a04fc5a33156d9f89` and tree `a99b5cda5f9b195f0afdbbb6ceefe978ec1b3d70`, retains 13 exact artifact hashes, records zero findings, and passes all five Sprint criteria in their bounded shared/Linux scopes. Sprint 5 remains `BLOCKED-MACOS`; `G-DOD-10` and Story 5.1 are the sole blocking control and story, Linux evidence substitution is prohibited, external human review is not claimed, and both the Story and Sprint checkboxes remain open.
 ### [ ] Sprint 6 - Canonical Workspace Paths
 
 **Timebox:** Two weeks.
