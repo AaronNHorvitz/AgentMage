@@ -127,7 +127,7 @@ def validate_reference_text(
     for prohibited in (
         "macOS verification has passed",
         "published crates.io package",
-        "CapabilityGrant is implemented",
+        "CapabilityGrant contract authorizes execution by itself",
         "production tool execution",
     ):
         if prohibited in text:
@@ -144,7 +144,7 @@ def package_reference_inputs() -> tuple[
     exports = exported_symbols(lib_source)
     versioned = versioned_contracts(serialization_source)
     error_codes = boundary_error_codes(serialization_source)
-    if len(exports) != 65 or len(versioned) != 13 or len(error_codes) != 11:
+    if len(exports) != 120 or len(versioned) != 15 or len(error_codes) != 11:
         raise ReferenceValidationError("frozen package API counts are unexpected")
     return files, exports, versioned, error_codes
 
@@ -258,7 +258,7 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
             "The reference describes frozen wire schema version 1, not a product release.",
             "The published golden fixtures cover wire schema version 1 only.",
             "No macOS build or execution evidence is claimed.",
-            "No CapabilityGrant or positive execution path exists in this package.",
+            "CapabilityGrant is a wire contract; this package performs no policy validation, atomic consumption, or execution.",
         ],
     }
 

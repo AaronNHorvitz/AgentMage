@@ -20,12 +20,14 @@ passed locally. macOS packaging, build, and execution remain `blocked-macos`.
 
 ## Authority Boundary
 
-The package contains descriptions and evidence, not execution authority.
-`Task`, `WorkPacket`, `Plan`, `Action`, `Prompt`, `ToolDefinition`,
-`RequiredGrantTemplate`, and `ToolCall` cannot authorize an operation. The
-required-grant template is metadata describing a future requirement; it is not
-a grant and cannot be consumed as one. A `CapabilityGrant` contract and the
-only positive dispatch path are intentionally absent until Sprint 5.
+The package separates descriptions and approval previews from the one contract
+that may carry bounded authority. `Task`, `WorkPacket`, `Plan`, `Action`,
+`Prompt`, `ToolDefinition`, `RequiredGrantTemplate`, `ToolCall`, and
+`ApprovalRequest` cannot authorize an operation. A parsed or constructed
+`CapabilityGrant` is still only an authority candidate: the kernel must validate
+its exact actor, session, task, operation, target, exclusion, preimage, policy,
+preview, expiration, nonce, parent, revision, and lifecycle bindings before
+atomically consuming it. This source-contract package defines no executor.
 
 ```mermaid
 flowchart LR
@@ -35,10 +37,13 @@ flowchart LR
     P --> A["Action"]
     A --> C["ToolCall"]
     D["ToolDefinition"] -. "describes requirement" .-> C
+    C --> R["ApprovalRequest"]
+    R --> G["CapabilityGrant candidate"]
     C --> K{"Kernel dispatcher"}
+    G --> K
     K -->|"schema or registry failure"| F["Failed ToolResult"]
-    K -->|"valid call; grant absent"| X["Denied ToolResult"]
-    K -. "no success edge in schema v1" .-> N["No execution"]
+    K -->|"grant absent or invalid"| X["Denied ToolResult"]
+    K -. "executor is outside this package" .-> N["No package execution"]
 ```
 
 Model text, prompt roles, workspace content, plan prose, expected effects, and
@@ -145,6 +150,66 @@ request, kernel context, workspace content, prior model output, and output
 contract text. Role and ordering provide provenance; no role grants authority
 or changes policy.
 
+### Approval and Capability Grants
+
+`ApprovalRequest` is the exact, non-authoritative preview shown for a local
+decision. It binds the proposed and parent grant identities, actor, session,
+task, action and operation, exact `ToolCall`, targets and exclusions,
+`DataSensitivity`, `GrantPreimage` values, expected `GrantSideEffect` values,
+rollback text, issuance and expiry, policy digest, and confirmation digest. It
+contains no nonce, use counter, lifecycle state, or conversion method into a
+grant.
+
+`CapabilityGrant` is the only wire contract permitted to carry an authority
+candidate. `GrantClass` distinguishes parent session-read scope from a derived
+single-operation scope. `GrantOperation` is a closed enumeration without a
+wildcard. `GrantTarget`, `GrantPreimage`, `GrantSideEffect`, `GrantNonce`, and
+`GrantStatus` bind exact target components, observed state, expected effects,
+anti-replay identity, use accounting, and lifecycle. Parsing the record does not
+validate policy or authorize execution; those are kernel responsibilities.
+
+### Canonical Paths and Display Links
+
+`WorkspacePath` and `WorkspacePathComponent` represent bounded,
+workspace-relative canonical components. `WorkspacePathError` and
+`WorkspacePathErrorKind` report content-free rejection classes. The contract
+limits are `MAX_WORKSPACE_PATH_COMPONENTS` and
+`MAX_WORKSPACE_PATH_COMPONENT_BYTES`.
+
+`PlatformPathAdapter` owns native `AuthorizedWorkspaceHandle` and
+`HeldWorkspaceObject` implementations so handles cannot be mixed across adapter
+instances. `PathPlatform`, `PathResolutionIntent`, `WorkspaceObjectKind`,
+`WorkspaceObjectIdentity`, and `FilePreimage` retain only bounded identity and
+digest evidence. `PathAdapterError` and `PathAdapterErrorKind` reject unsafe,
+stale, aliased, changed, unsupported, or over-limit resolutions without
+retaining private path content.
+
+`DisplayFileLink` is non-authoritative display metadata derived from a validated
+held object. `DisplayLinkError`, `DisplayLinkErrorKind`, and
+`MAX_DISPLAY_FILE_URI_BYTES` bound and classify rejected local file URI data; a
+display link cannot open or authorize a file.
+
+### Strict-Local Network and Storage Evidence
+
+`NetworkComponent`, `NetworkDestinationClass`, `NetworkObservation`,
+`NetworkEndpointError`, `LocalEndpointIdentity`, `LocalTransport`, and
+`classify_ip_destination` provide closed, content-free classifications for
+strict-local endpoint evidence. `CloudSynchronizationMarker`,
+`StorageFilesystemClass`, and `StrictLocalStorageObservation` describe whether
+a storage location satisfies local-only policy. These observations are policy
+inputs, not network or filesystem authority.
+
+### Platform Contracts
+
+`PlatformAdapter` exposes immutable `PlatformManifestIdentity`, observed
+`PlatformRuntimeIdentity`, and bounded `PlatformCapabilityObservation` values
+before workspace access. `PlatformFamily`, `PlatformArchitecture`,
+`PlatformCapability`, `PlatformCapabilityStatus`, and
+`REQUIRED_PLATFORM_CAPABILITIES` define the closed compatibility vocabulary.
+`PLATFORM_ADAPTER_API_VERSION` versions the adapter API;
+`PlatformStartupError` and `PlatformStartupErrorKind` fail closed on platform,
+build, toolchain, package, or capability mismatch.
+
 ### Tools
 
 `ToolDefinition` freezes an exact `ToolId` and tool version, display metadata,
@@ -199,13 +264,14 @@ the first signal observed by a token remains stable.
 
 ## Versioned Top-Level Types
 
-The following 13 types implement `VersionedContract` and may be passed directly
+The following 15 types implement `VersionedContract` and may be passed directly
 to `from_json` or `to_canonical_json`:
 
 | Domain | Top-level types |
 |---|---|
 | Work | `Task`, `WorkPacket`, `Plan`, `Action` |
 | Model | `Prompt` |
+| Approval and authority | `ApprovalRequest`, `CapabilityGrant` |
 | Tool | `ToolDefinition`, `ToolCall`, `ToolResult` |
 | Evidence | `EvidenceReference`, `Receipt` |
 | Failure | `ContractError`, `CancellationSignal`, `BoundaryFailure` |
@@ -238,8 +304,9 @@ does not silently relabel an existing package artifact.
 5. Preserve sequence and declaration order when reproducing canonical bytes.
 6. Treat optional fields as required keys whose value may be `null`.
 7. Keep diagnostics bounded and avoid echoing candidate content.
-8. Treat plans, prompts, descriptions, tool definitions, and grant templates as
-   non-authoritative.
+8. Treat plans, prompts, descriptions, tool definitions, grant templates, and
+   approval requests as non-authoritative; admit a capability grant only after
+   current kernel validation and atomic consumption.
 9. Preserve task, correlation, error, cancellation, and route context across
    boundaries.
 10. Reproduce the success fixtures in the
@@ -250,18 +317,40 @@ does not silently relabel an existing package artifact.
 
 ## Public Symbol Index
 
-The package exports 65 public symbols. The index is grouped by source family so
+The package exports 120 public symbols. The index is grouped by source family so
 an implementation can distinguish wire types from helpers and identifiers.
 
+- Approval: `ApprovalRequest`.
 - Boundary: `BoundaryFailure`, `BoundaryKind`, `BoundaryOutcomeKind`,
   `CancellationReason`, `CancellationSignal`.
 - Common: `CONTRACT_SCHEMA_VERSION`, `ContractError`, `ContractPayload`,
   `ErrorCategory`, `RetryDisposition`, `SchemaReference`, `ValidationIssue`,
   `ValidationSeverity`.
+- Display links: `DisplayFileLink`, `DisplayLinkError`, `DisplayLinkErrorKind`,
+  `MAX_DISPLAY_FILE_URI_BYTES`.
 - Evidence: `EvidenceKind`, `EvidenceReference`, `Receipt`.
-- Identifiers: `ActionId`, `CancellationId`, `CorrelationId`, `ErrorId`,
-  `EvidenceId`, `PlanId`, `PlanStepId`, `PromptId`, `ReceiptId`, `SchemaId`,
-  `SessionId`, `TaskId`, `ToolCallId`, `ToolId`, `WorkPacketId`.
+- Grants: `CapabilityGrant`, `GrantClass`, `GrantOperation`, `GrantPreimage`,
+  `GrantSideEffect`, `GrantStatus`, `GrantTarget`.
+- Identifiers: `ActionId`, `ActorId`, `AdapterInstanceId`, `CancellationId`,
+  `CorrelationId`, `ErrorId`, `EvidenceId`, `GrantId`, `GrantNonce`, `PlanId`,
+  `PlanStepId`, `PromptId`, `ReceiptId`, `SchemaId`, `SessionId`, `TaskId`,
+  `ToolCallId`, `ToolId`, `WorkPacketId`, `WorkspaceAuthorizationId`,
+  `WorkspaceId`.
+- Network and storage: `CloudSynchronizationMarker`, `LocalEndpointIdentity`,
+  `LocalTransport`, `NetworkComponent`, `NetworkDestinationClass`,
+  `NetworkEndpointError`, `NetworkObservation`, `StorageFilesystemClass`,
+  `StrictLocalStorageObservation`, `classify_ip_destination`.
+- Paths: `AuthorizedWorkspaceHandle`, `FilePreimage`, `HeldWorkspaceObject`,
+  `MAX_WORKSPACE_PATH_COMPONENTS`, `MAX_WORKSPACE_PATH_COMPONENT_BYTES`,
+  `PathAdapterError`, `PathAdapterErrorKind`, `PathPlatform`,
+  `PathResolutionIntent`, `PlatformPathAdapter`, `WorkspaceObjectIdentity`,
+  `WorkspaceObjectKind`, `WorkspacePath`, `WorkspacePathComponent`,
+  `WorkspacePathError`, `WorkspacePathErrorKind`.
+- Platform: `PLATFORM_ADAPTER_API_VERSION`, `PlatformAdapter`,
+  `PlatformArchitecture`, `PlatformCapability`, `PlatformCapabilityObservation`,
+  `PlatformCapabilityStatus`, `PlatformFamily`, `PlatformManifestIdentity`,
+  `PlatformRuntimeIdentity`, `PlatformStartupError`, `PlatformStartupErrorKind`,
+  `REQUIRED_PLATFORM_CAPABILITIES`.
 - Prompt: `Prompt`, `PromptMessage`, `PromptRole`.
 - Serialization: `ContractResult`, `MAX_CONTRACT_JSON_BYTES`,
   `VersionedContract`, `from_json`, `to_canonical_json`.
@@ -276,6 +365,7 @@ an implementation can distinguish wire types from helpers and identifiers.
 ## Scope Limits
 
 This reference does not claim published JSON Schema files, cross-version
-compatibility or migration, durable receipt storage, capability grants,
-production tools, process termination, a model adapter, a product binary, or
-macOS verification. Those claims remain gated by their numbered tasks.
+compatibility or migration, durable receipt or grant-ledger storage, grant
+validity from parsing alone, production tools, process termination, a model
+adapter, a product binary, or macOS verification. Those claims remain gated by
+their numbered tasks.

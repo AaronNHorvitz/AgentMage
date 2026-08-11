@@ -29,7 +29,8 @@ class KernelContractReferenceTests(unittest.TestCase):
 
     def test_reference_validation_reports_missing_coverage_and_overclaim(self) -> None:
         failures = validate_reference_text(
-            "## Authority Boundary\nmacOS verification has passed\n",
+            "## Authority Boundary\nmacOS verification has passed\n"
+            "CapabilityGrant contract authorizes execution by itself\n",
             ("Task",),
             ("Task",),
             ("contract.parse.syntax",),
@@ -38,6 +39,10 @@ class KernelContractReferenceTests(unittest.TestCase):
         self.assertIn("missing boundary error code: contract.parse.syntax", failures)
         self.assertIn(
             "unsupported reference claim: macOS verification has passed", failures
+        )
+        self.assertIn(
+            "unsupported reference claim: CapabilityGrant contract authorizes execution by itself",
+            failures,
         )
 
 
