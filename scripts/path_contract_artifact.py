@@ -205,9 +205,9 @@ def validate_sources(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
-def git_revision(root: Path = ROOT) -> str:
+def git_revision(candidate: str = "HEAD", root: Path = ROOT) -> str:
     completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=root, check=False,
+        ["git", "rev-parse", "--verify", f"{candidate}^{{commit}}"], cwd=root, check=False,
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10,
     )
     revision = completed.stdout.decode("ascii", "strict").strip()
@@ -284,6 +284,8 @@ def validate_report(value: Any) -> list[str]:
         or value.get("status") != "pass-shared-fedora-scope"
     ):
         failures.append("path-contract report identity changed")
+    if re.fullmatch(r"[0-9a-f]{40}", str(value.get("reference_revision"))) is None:
+        failures.append("path-contract reference revision is not immutable")
     expected_coverage = {
         "adapter_error_class_count": 15,
         "adapter_method_count": 3,
@@ -334,7 +336,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         if args.write:
-            write_report(args.source_revision or git_revision())
+            write_report(git_revision(args.source_revision or "HEAD"))
         check_report()
     except (OSError, UnicodeError, PathContractArtifactError, subprocess.SubprocessError) as error:
         print(f"Path-contract artifact failed: {error}", file=sys.stderr)

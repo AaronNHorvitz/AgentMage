@@ -25,6 +25,7 @@ class PathContractArtifactTests(unittest.TestCase):
             "task_id": "6.1.2.1",
             "artifact_id": "path-contract-platform-adapter-reference",
             "status": "pass-shared-fedora-scope",
+            "reference_revision": "a" * 40,
             "coverage": artifact.validate_sources(),
             "verification": {f"check-{index}": "pass" for index in range(7)},
             "platform_status": {
@@ -55,6 +56,7 @@ class PathContractArtifactTests(unittest.TestCase):
             "task_id": "6.1.2.1",
             "artifact_id": "path-contract-platform-adapter-reference",
             "status": "pass-shared-fedora-scope",
+            "reference_revision": "a" * 40,
             "coverage": artifact.validate_sources(),
             "verification": {f"check-{index}": "pass" for index in range(7)},
             "platform_status": {
@@ -72,6 +74,9 @@ class PathContractArtifactTests(unittest.TestCase):
         drifted["coverage"]["strict_openat2_flag_count"] = 3
         self.assertTrue(artifact.validate_report(missing))
         self.assertTrue(artifact.validate_report(drifted))
+        symbolic = copy.deepcopy(value)
+        symbolic["reference_revision"] = "HEAD"
+        self.assertTrue(artifact.validate_report(symbolic))
 
 
 if __name__ == "__main__":
