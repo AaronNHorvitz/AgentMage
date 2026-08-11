@@ -26,8 +26,8 @@ from scripts.vulnerability_support_workflow import check_artifact as check_workf
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
-REVIEWED_COMMIT = "254408669fbb9538eae9d41f7900653b41c47221"
-REVIEWED_TREE = "2482a1e5e47c419adbe41bbc69ce5a5b1a82095d"
+REVIEWED_COMMIT = "941ccfc94777bd93e5bab2336d85437f19246725"
+REVIEWED_TREE = "c1527b953cf95a8a34f30b10c6719abcf669360a"
 REVIEWED_PATHS = (
     "SECURITY.md",
     "support/vulnerability-support-policy.json",

@@ -31,8 +31,8 @@ from scripts.story_3_1_security_evidence import check_map as check_security  # n
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
-REVIEWED_COMMIT = "af13ebaa8832a3db36f270337e616c50b5fe180b"
-REVIEWED_TREE = "f4872857e2e0f654c9846afc215beaea523dea36"
+REVIEWED_COMMIT = "941ccfc94777bd93e5bab2336d85437f19246725"
+REVIEWED_TREE = "c1527b953cf95a8a34f30b10c6719abcf669360a"
 REVIEWED_PATHS = (
     "configuration/profiles/catalog.json",
     "configuration/profiles/capability-deltas.json",
