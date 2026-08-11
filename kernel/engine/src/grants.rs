@@ -12,6 +12,8 @@ use agentmage_kernel_contracts::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::policy::{PolicyDenialScope, PolicyEngine, PolicyEvaluationContext};
+
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_PATH_COMPONENTS: usize = 64;
 const MAX_PATH_COMPONENT_BYTES: usize = 255;
@@ -131,6 +133,52 @@ pub struct DerivedOperationGrantRequest {
     pub policy_sha256: String,
 }
 
+/// Stable reason an operation grant cannot be consumed for one execution attempt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GrantConsumeError {
+    /// No kernel-issued grant has the requested identity.
+    NotFound,
+    /// Retained state, revision identity, or canonical hashing is inconsistent.
+    CorruptState,
+    /// Current policy or execution observations denied the grant.
+    PolicyDenied(PolicyDenialScope),
+}
+
+impl GrantConsumeError {
+    /// Returns the stable redacted code used by future receipts.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::NotFound => "grant.consume.not_found",
+            Self::CorruptState => "grant.consume.corrupt_state",
+            Self::PolicyDenied(_) => "grant.consume.policy_denied",
+        }
+    }
+}
+
+/// Non-authoritative evidence that one exact grant advanced to consumed state.
+///
+/// This record contains no target, tool, argument, or operation scope and cannot authorize a
+/// call. The future dispatcher must invoke consumption as its final kernel transaction before
+/// starting the one isolated worker attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GrantConsumptionRecord {
+    /// Exact consumed grant identity.
+    pub grant_id: GrantId,
+    /// Last issued revision that policy admitted.
+    pub issued_revision: u32,
+    /// New terminal revision retained by the issuer.
+    pub consumed_revision: u32,
+    /// Canonical digest of the admitted issued revision.
+    pub issued_grant_sha256: String,
+    /// Canonical digest of the retained consumed revision.
+    pub consumed_grant_sha256: String,
+    /// Kernel-clock instant used for final policy evaluation.
+    pub consumed_at_epoch_ms: u64,
+    /// Kernel-computed policy identity that admitted the attempt.
+    pub policy_sha256: String,
+}
+
 /// In-memory kernel issuer used before durable grant storage is introduced.
 ///
 /// Authority exists only when a candidate exactly matches this issuer's retained record.
@@ -167,6 +215,70 @@ impl GrantIssuer {
         self.revision_hashes
             .get(&(grant_id.clone(), revision))
             .map(String::as_str)
+    }
+
+    /// Revalidates and atomically consumes one exact operation grant for execution.
+    ///
+    /// All fallible integrity, policy, arithmetic, and hashing work completes before issuer state
+    /// changes. The exclusive borrow makes the current-record check and terminal transition one
+    /// in-memory transaction: after success, every replay observes `consumed` and fails closed.
+    /// Durable crash transactions remain the responsibility of the later encrypted grant store.
+    pub fn consume_for_execution(
+        &mut self,
+        grant_id: &GrantId,
+        policy: &PolicyEngine,
+        context: &PolicyEvaluationContext,
+    ) -> Result<GrantConsumptionRecord, GrantConsumeError> {
+        let issued = self
+            .current
+            .get(grant_id)
+            .cloned()
+            .ok_or(GrantConsumeError::NotFound)?;
+        let issued_sha256 = grant_sha256(&issued).map_err(|_| GrantConsumeError::CorruptState)?;
+        if self.revision_hash(grant_id, issued.revision) != Some(issued_sha256.as_str()) {
+            return Err(GrantConsumeError::CorruptState);
+        }
+
+        let decision = policy.evaluate(self, &issued, context);
+        if let Some(scope) = decision.denial_scope {
+            return Err(GrantConsumeError::PolicyDenied(scope));
+        }
+        if !decision.allowed {
+            return Err(GrantConsumeError::CorruptState);
+        }
+
+        let mut consumed = issued;
+        let issued_revision = consumed.revision;
+        consumed.revision = consumed
+            .revision
+            .checked_add(1)
+            .ok_or(GrantConsumeError::CorruptState)?;
+        consumed.use_count = consumed
+            .use_count
+            .checked_add(1)
+            .ok_or(GrantConsumeError::CorruptState)?;
+        if consumed.use_count != consumed.use_limit {
+            return Err(GrantConsumeError::CorruptState);
+        }
+        consumed.status = GrantStatus::Consumed;
+        let consumed_sha256 =
+            grant_sha256(&consumed).map_err(|_| GrantConsumeError::CorruptState)?;
+        let record = GrantConsumptionRecord {
+            grant_id: consumed.grant_id.clone(),
+            issued_revision,
+            consumed_revision: consumed.revision,
+            issued_grant_sha256: issued_sha256,
+            consumed_grant_sha256: consumed_sha256.clone(),
+            consumed_at_epoch_ms: context.now_epoch_ms,
+            policy_sha256: decision.policy_sha256,
+        };
+
+        self.revision_hashes.insert(
+            (consumed.grant_id.clone(), consumed.revision),
+            consumed_sha256,
+        );
+        self.current.insert(consumed.grant_id.clone(), consumed);
+        Ok(record)
     }
 
     /// Issues one session-read parent after closed shape and scope validation.
@@ -548,13 +660,24 @@ fn hex_sha256(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        collections::BTreeSet,
+        sync::{Arc, Barrier, Mutex},
+        thread,
+    };
+
     use super::{
-        DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
+        DerivedOperationGrantRequest, GrantConsumeError, GrantIssueError, GrantIssuer,
+        SessionReadGrantRequest,
+    };
+    use crate::policy::{
+        PolicyDenialScope, PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules,
+        ToolPolicyBinding,
     };
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, DataSensitivity, GrantClass, GrantId, GrantNonce,
-        GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, SessionId,
-        TaskId, ToolId, WorkspaceId,
+        ActionId, ActionKind, ActorId, CapabilityGrant, DataSensitivity, GrantClass, GrantId,
+        GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+        SessionId, TaskId, ToolId, WorkspaceId,
     };
 
     fn target(path: &[&str]) -> GrantTarget {
@@ -608,6 +731,76 @@ mod tests {
             nonce: GrantNonce::from_raw(nonce),
             preview_sha256: "6".repeat(64),
             policy_sha256: "2".repeat(64),
+        }
+    }
+
+    fn rules<T: Ord>(value: T) -> ScopeRules<T> {
+        ScopeRules {
+            allowed: BTreeSet::from([value]),
+            denied: BTreeSet::new(),
+        }
+    }
+
+    fn policy_document(revision: u32) -> PolicyDocument {
+        PolicyDocument {
+            schema_version: 1,
+            revision,
+            actors: rules(ActorId::from_raw("actor-local-0001")),
+            tasks: rules(TaskId::from_raw("task-0001")),
+            actions: rules(ActionId::from_raw("action-grant-operation-consume")),
+            tools: rules(ToolPolicyBinding {
+                tool_id: ToolId::from_raw("fixture.read"),
+                tool_version: "1.0.0".to_owned(),
+            }),
+            operations: rules(GrantOperation::WorkspaceRead),
+            targets: rules(target(&["src"])),
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: ScopeRules::deny_all(),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
+        }
+    }
+
+    fn issued_for_consumption() -> (GrantIssuer, PolicyEngine, CapabilityGrant) {
+        let policy = PolicyEngine::new(policy_document(1)).expect("policy must build");
+        let mut issuer = GrantIssuer::new();
+        let mut parent_request = session_request();
+        parent_request.maximum_derived_operations = 1;
+        parent_request.policy_sha256 = policy.policy_sha256().to_owned();
+        let parent = issuer
+            .issue_session_read(parent_request)
+            .expect("parent must issue");
+        let mut child_request = operation_request(
+            "grant-operation-consume",
+            "nonce-operation-consume",
+            &["src"],
+        );
+        child_request.policy_sha256 = policy.policy_sha256().to_owned();
+        let child = issuer
+            .derive_operation(&parent.grant_id, child_request)
+            .expect("child must derive");
+        (issuer, policy, child)
+    }
+
+    fn consumption_context(grant: &CapabilityGrant) -> PolicyEvaluationContext {
+        PolicyEvaluationContext {
+            actor_id: grant.actor_id.clone(),
+            session_id: grant.session_id.clone(),
+            task_id: grant.task_id.clone(),
+            action_id: grant.action_id.clone().expect("operation action"),
+            action_kind: grant.action_kind.expect("operation action kind"),
+            tool_id: grant.tool_id.clone().expect("operation tool"),
+            tool_version: grant.tool_version.clone().expect("operation tool version"),
+            targets: grant.targets.clone(),
+            argument_sha256: grant.argument_sha256.clone(),
+            preimages: grant.preimages.clone(),
+            expected_side_effects: grant.expected_side_effects.clone(),
+            preview_sha256: grant.preview_sha256.clone(),
+            now_epoch_ms: 3_000,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
         }
     }
 
@@ -735,5 +928,144 @@ mod tests {
             .expect_err("changed policy must fail");
         assert_eq!(error, GrantIssueError::PolicyChanged);
         assert_eq!(issuer.current(&parent.grant_id), Some(&original_parent));
+    }
+
+    #[test]
+    fn final_validation_consumes_once_and_retains_both_revision_hashes() {
+        let (mut issuer, policy, grant) = issued_for_consumption();
+        let issued_hash = issuer
+            .revision_hash(&grant.grant_id, grant.revision)
+            .expect("issued revision hash")
+            .to_owned();
+        let context = consumption_context(&grant);
+
+        let record = issuer
+            .consume_for_execution(&grant.grant_id, &policy, &context)
+            .expect("exact grant must consume");
+        assert_eq!(record.grant_id, grant.grant_id);
+        assert_eq!(record.issued_revision, 1);
+        assert_eq!(record.consumed_revision, 2);
+        assert_eq!(record.issued_grant_sha256, issued_hash);
+        assert_eq!(record.consumed_at_epoch_ms, context.now_epoch_ms);
+        assert_eq!(record.policy_sha256, policy.policy_sha256());
+        assert_eq!(
+            issuer.revision_hash(&grant.grant_id, 1),
+            Some(record.issued_grant_sha256.as_str())
+        );
+        assert_eq!(
+            issuer.revision_hash(&grant.grant_id, 2),
+            Some(record.consumed_grant_sha256.as_str())
+        );
+        let consumed = issuer.current(&grant.grant_id).expect("consumed grant");
+        assert_eq!(consumed.revision, 2);
+        assert_eq!(consumed.use_count, 1);
+        assert_eq!(consumed.use_limit, 1);
+        assert_eq!(consumed.status, GrantStatus::Consumed);
+
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &context)
+                .expect_err("replay must fail"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
+        );
+    }
+
+    #[test]
+    fn stale_context_policy_expiry_and_corrupt_state_fail_without_consumption() {
+        let (mut issuer, policy, grant) = issued_for_consumption();
+        let original = issuer
+            .current(&grant.grant_id)
+            .expect("issued grant")
+            .clone();
+
+        let mut changed_arguments = consumption_context(&grant);
+        changed_arguments.argument_sha256 = "a".repeat(64);
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &changed_arguments)
+                .expect_err("changed arguments must fail"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Argument)
+        );
+
+        let changed_policy = PolicyEngine::new(policy_document(2)).expect("policy must build");
+        assert_eq!(
+            issuer
+                .consume_for_execution(
+                    &grant.grant_id,
+                    &changed_policy,
+                    &consumption_context(&grant),
+                )
+                .expect_err("changed policy must fail"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
+        );
+
+        let mut expired = consumption_context(&grant);
+        expired.now_epoch_ms = grant.expires_at_epoch_ms;
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &expired)
+                .expect_err("expired grant must fail"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
+        );
+        assert_eq!(issuer.current(&grant.grant_id), Some(&original));
+
+        let key = (grant.grant_id.clone(), grant.revision);
+        issuer.revision_hashes.insert(key, "f".repeat(64));
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &consumption_context(&grant))
+                .expect_err("corrupt retained hash must fail"),
+            GrantConsumeError::CorruptState
+        );
+        assert_eq!(issuer.current(&grant.grant_id), Some(&original));
+    }
+
+    #[test]
+    fn two_racing_consumers_produce_exactly_one_terminal_transition() {
+        let (issuer, policy, grant) = issued_for_consumption();
+        let issuer = Arc::new(Mutex::new(issuer));
+        let policy = Arc::new(policy);
+        let barrier = Arc::new(Barrier::new(3));
+        let handles = (0..2)
+            .map(|_| {
+                let issuer = Arc::clone(&issuer);
+                let policy = Arc::clone(&policy);
+                let barrier = Arc::clone(&barrier);
+                let grant_id = grant.grant_id.clone();
+                let context = consumption_context(&grant);
+                thread::spawn(move || {
+                    barrier.wait();
+                    issuer
+                        .lock()
+                        .expect("issuer lock must not be poisoned")
+                        .consume_for_execution(&grant_id, &policy, &context)
+                })
+            })
+            .collect::<Vec<_>>();
+        barrier.wait();
+        let outcomes = handles
+            .into_iter()
+            .map(|handle| handle.join().expect("consumer must finish"))
+            .collect::<Vec<_>>();
+        assert_eq!(outcomes.iter().filter(|outcome| outcome.is_ok()).count(), 1);
+        assert_eq!(
+            outcomes
+                .iter()
+                .filter(|outcome| {
+                    matches!(
+                        outcome,
+                        Err(GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant))
+                    )
+                })
+                .count(),
+            1
+        );
+        let issuer = issuer.lock().expect("issuer lock must not be poisoned");
+        let consumed = issuer
+            .current(&grant.grant_id)
+            .expect("grant remains retained");
+        assert_eq!(consumed.revision, 2);
+        assert_eq!(consumed.use_count, 1);
+        assert_eq!(consumed.status, GrantStatus::Consumed);
     }
 }
