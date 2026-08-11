@@ -769,6 +769,7 @@ mod tests {
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::Command;
+    use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
@@ -989,6 +990,39 @@ mod tests {
             .run_arguments(&workspace, &["/workspace/large.txt".into()])
             .expect_err("oversized output must fail closed");
         assert_eq!(error.kind(), LinuxSandboxErrorKind::OutputLimitExceeded);
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn worker_kernel_status_confirms_no_new_privileges_and_seccomp() {
+        let root = temp_directory("kernel-status");
+        fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
+        let workspace = authorize(&root);
+        let result = runner()
+            .run_arguments(&workspace, &["/proc/self/status".into()])
+            .expect("kernel status result");
+        assert!(result.success());
+        let status = String::from_utf8(result.stdout().to_vec()).expect("status UTF-8");
+        assert!(status.lines().any(|line| line == "NoNewPrivs:\t1"));
+        assert!(status.lines().any(|line| line == "Seccomp:\t2"));
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn transient_service_terminates_an_unbounded_worker() {
+        let root = temp_directory("runtime-limit");
+        fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
+        let workspace = authorize(&root);
+        let limits =
+            LinuxSandboxLimits::new(32 * 1024 * 1024, 4, 100, 1, 4096).expect("bounded limits");
+        let bash = runner_for("/usr/bin/bash", limits);
+        let started = Instant::now();
+        let result = bash
+            .run_arguments(&workspace, &["-c".into(), "while :; do :; done".into()])
+            .expect("limited worker result");
+
+        assert!(!result.success());
+        assert!(started.elapsed() < Duration::from_secs(5));
         fs::remove_dir_all(root).expect("cleanup");
     }
 }
