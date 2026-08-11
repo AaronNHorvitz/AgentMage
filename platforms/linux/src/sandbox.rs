@@ -880,6 +880,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn fresh_worker_reads_only_the_canonical_workspace_file() {
         let root = temp_directory("read");
         fs::write(root.join("allowed.txt"), b"bounded worker output\n").expect("fixture");
@@ -897,6 +898,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn foreign_workspace_identity_never_starts_a_worker() {
         let root = temp_directory("foreign");
         fs::write(root.join("allowed.txt"), b"content").expect("fixture");
@@ -913,6 +915,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn worker_cannot_write_the_read_only_workspace() {
         let root = temp_directory("read-only");
         let fixture = root.join("allowed.txt");
@@ -929,6 +932,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn worker_has_no_ambient_host_paths_devices_or_processes() {
         let root = temp_directory("ambient");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -949,6 +953,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn worker_receives_only_the_fixed_environment_and_no_network() {
         let root = temp_directory("environment");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -978,6 +983,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn worker_output_is_drained_but_never_retained_past_the_bound() {
         let root = temp_directory("output");
         fs::write(root.join("large.txt"), vec![b'x'; 4096]).expect("fixture");
@@ -994,6 +1000,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn worker_kernel_status_confirms_no_new_privileges_and_seccomp() {
         let root = temp_directory("kernel-status");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -1009,6 +1016,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn transient_service_terminates_an_unbounded_worker() {
         let root = temp_directory("runtime-limit");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
