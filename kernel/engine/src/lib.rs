@@ -10,6 +10,8 @@ pub mod authority;
 pub mod configuration;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Fail-closed platform capability detection and adapter activation.
+pub mod platform_startup;
 /// Deterministic deny-first capability-grant policy evaluation.
 pub mod policy;
 /// Cancellation trees and lossless typed failure propagation.

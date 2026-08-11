@@ -10,6 +10,7 @@ mod evidence;
 mod grant;
 mod ids;
 mod path;
+mod platform;
 mod platform_path;
 mod prompt;
 mod serialization;
@@ -40,6 +41,12 @@ pub use ids::{
 pub use path::{
     MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,
     WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind,
+};
+pub use platform::{
+    PLATFORM_ADAPTER_API_VERSION, PlatformAdapter, PlatformArchitecture, PlatformCapability,
+    PlatformCapabilityObservation, PlatformCapabilityStatus, PlatformFamily,
+    PlatformManifestIdentity, PlatformRuntimeIdentity, PlatformStartupError,
+    PlatformStartupErrorKind, REQUIRED_PLATFORM_CAPABILITIES,
 };
 pub use platform_path::{
     AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject, PathAdapterError,
