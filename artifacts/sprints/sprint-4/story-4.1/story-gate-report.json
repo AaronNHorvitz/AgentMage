@@ -6,7 +6,7 @@
       "dispatcher_denial_trace_count": 7,
       "positive_dispatch_path_available": false,
       "status": "pass-shared-linux",
-      "versioned_contract_count": 13
+      "versioned_contract_count": 15
     },
     {
       "criterion_id": "4.1.AC2",
@@ -14,7 +14,7 @@
       "independent_client": "frozen-package-fixture-verifier",
       "persisted_invalid_fixture_count": 7,
       "status": "pass-shared-linux",
-      "valid_fixture_count": 13
+      "valid_fixture_count": 15
     }
   ],
   "architecture_acceptance": {
@@ -34,15 +34,15 @@
       },
       {
         "path": "docs/architecture/kernel-contract-reference.md",
-        "sha256": "964430ea33190cdb3f4d0aca4076e51a69d25c70cdff1ca32cf1793d94f8f369"
+        "sha256": "5bc03c45d8855551679c93838bf232645b409ceb7a7fd7c95ca5ab8912921324"
       },
       {
         "path": "docs/architecture/kernel-dependency-report.md",
-        "sha256": "392fa0d4555bb900315d2f1bbcfd921ba7e2102c5a7abd04e9e26aadabce3709"
+        "sha256": "b95d95c2b1947fe5807831f51d7c017aa4bd18daabcdfa68edf538def054a01c"
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "982f28636b9e626bc8ab8b51f4f19eb7816877af9665a8a33800625a6e918696"
+        "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
       },
       {
         "path": "kernel/engine/src/propagation.rs",
@@ -58,7 +58,7 @@
       },
       {
         "path": "fixtures/contracts/fixture_verifier.rs",
-        "sha256": "8c9c8ba8e28b5f6ce41272c459fc2c29b371cad93bfd582d2f247b439affeb07"
+        "sha256": "d67587c6a638b2b56f705e8df0a6a90de7233fe03cc64f1f5ae99216d987f125"
       },
       {
         "path": "fixtures/contracts/compatibility.json",
@@ -66,45 +66,45 @@
       },
       {
         "path": "fixtures/contracts/v1/manifest.json",
-        "sha256": "4bd8db1a10d2a034899dd2733a0b8461d82f2f01ac5d1019257d8906bf595396"
+        "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-        "sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd"
+        "sha256": "9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-        "sha256": "d9a18a590cbc39768f65ef199c1d74fa58a6571b2a0dc101a30be70becbc190e"
+        "sha256": "f1e0b0a7fffb5bba09ab4278982e5ab83434703ba4bc0e935f62813a4a527dff"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-        "sha256": "4ca4ac911309cb4db566358e600e0613001045f64b6c496e93337200a6904451"
+        "sha256": "6ce5004d2c3d5a90b5d0b4c63e1bce5dd1b1e19b2e3d6f5e3d01aaaa0e9f1f39"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-        "sha256": "531463023d941ebb2ee047d2776dff60f83cc3a5e655490675b85fa3d350c01f"
+        "sha256": "d310f04c6da06c3cfd2379b488cbe336366d2ce87dc36c6ff3a5ee2204e0cc49"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-        "sha256": "f5a846b9d3592e03d6508ec401bf06fa61fffe3427ec45729a23e4d7ad760180"
+        "sha256": "15f10951d849cce545506862d8f1beb9de35c2bada13d93e521f47c6767cd315"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-        "sha256": "0870f7595b6182b2ef2c1e94c01c7e9ade114c0ae3146227467988bde3d6fd79"
+        "sha256": "9289eaf38bc40a1e7690c51d45e32c6de00c9d2ada55c1fd95fdb3002b651b4d"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-        "sha256": "8f6af0392e598e32feeeefca2d13da1a0d7f966d581f1277f7fccd36d5a2882d"
+        "sha256": "be074c0cbb0970c74d0717cda798b8d050f2bbcfe17dc08bddbe6dd630b81dde"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
-        "sha256": "0076279c1ea99c794d1a8fede0389ad086682666d54e1dc73f8b0dbaf6a43021"
+        "sha256": "37ff68761e6f79af32dd094fade3e78adc12917e30d9a5c8ed174d1c0a980a51"
       }
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "26272273c9e4709504cf99da8f2771a2384ea4eb",
-    "reviewed_tree": "9d10ec531c1adb8e5a8dcf73609d8be9940e59a4",
+    "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+    "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -114,8 +114,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "26272273c9e4709504cf99da8f2771a2384ea4eb",
-  "reviewed_tree": "9d10ec531c1adb8e5a8dcf73609d8be9940e59a4",
+  "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+  "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,

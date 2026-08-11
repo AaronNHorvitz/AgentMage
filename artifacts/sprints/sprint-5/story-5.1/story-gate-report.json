@@ -115,19 +115,19 @@
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
-        "sha256": "04447366fbf2967f8f75c7521824e554e7a86e3c0a1b18a256912c7f3665cca5"
+        "sha256": "e46920461272bab2f04e068c5f9435eb967be311108c084bbd4b1de6d53d6a4d"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
-        "sha256": "dc353fd72d81b3452ddda671a668415881d6242a87104a371f9ea051a8c7c2d0"
+        "sha256": "f6d5f961e2c583e316a1afbeceabfb4825bbe15ad70a5661e7409f0666aad95b"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "345e2b561d5ed2263004e232d03ee880fcc09ba2",
-    "reviewed_tree": "5894f9f707cedee1c9c7d93f9c0884813319b47c",
+    "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+    "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
     "reviewer_id": "agentmage-story-5.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -137,8 +137,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "345e2b561d5ed2263004e232d03ee880fcc09ba2",
-  "reviewed_tree": "5894f9f707cedee1c9c7d93f9c0884813319b47c",
+  "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+  "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 8,

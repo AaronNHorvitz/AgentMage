@@ -40,7 +40,7 @@
     "artifacts": [
       {
         "path": "SECURITY.md",
-        "sha256": "2b61b47e54dfc9c05c9b8691f2a9e676d66f0af642683d84a44771ae6a2afbdc"
+        "sha256": "91f3d99ba8dc4e2fb0f09e644c6c7ecf4ac1122305e06140c1664d9e65ed2fcc"
       },
       {
         "path": "support/vulnerability-support-policy.json",
@@ -96,15 +96,15 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
-        "sha256": "c0c2f075d003dee24bd2b5bd26a2d2d47247d8aa8a54c6677ff6160a3e7286a8"
+        "sha256": "8ef43599dffd2e206b57f837e03f08837c9650e4db29d7bbaa664d03660fb3e7"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/support-policy-platform-report.json",
-        "sha256": "043215efee419cefce195aa6118823a3544e290318aec28347ec7ad0a4ecac19"
+        "sha256": "fb66424d3f0f5ebeea8f9fb8bbb9cea6a326e96083eb001df8ae3de5a2743b2b"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-        "sha256": "a40ccca77d853b4e8d41d13e67804638a056cc4e4b0259f8423b8a9485dde501"
+        "sha256": "fd1bfdd25dd20e52b8c3a3bf65cd83d3a9b58b7853022e28e219364c5f673898"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/manual-patch-metadata-report.json",
@@ -120,11 +120,11 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-        "sha256": "8164ff20bedaf64a5ce1d8440a3af2e10651d7cd274b03b221b622f4eae64cd3"
+        "sha256": "e90ff13725062370f899ca9f937aa05a01f1b5483a75b2bbb41fe36b937a0127"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
-        "sha256": "80d2aea451124c453d9b9728746fd06bedc6a59d92de461e05e9352f00903f86"
+        "sha256": "c15497513847444f268c2d95e66da6ad8c611bf7f7f4c1f64e7ddc450b106ac7"
       },
       {
         "path": "scripts/manual_patch_verifier.py",
@@ -154,8 +154,8 @@
     "external_human_review_claim": "none",
     "finding_count": 0,
     "findings": [],
-    "reviewed_commit": "254408669fbb9538eae9d41f7900653b41c47221",
-    "reviewed_tree": "2482a1e5e47c419adbe41bbc69ce5a5b1a82095d",
+    "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+    "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
     "reviewer_id": "agentmage-story-3.2-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -169,8 +169,8 @@
   "product_startup_integration_claim": "none",
   "product_support_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "254408669fbb9538eae9d41f7900653b41c47221",
-  "reviewed_tree": "2482a1e5e47c419adbe41bbc69ce5a5b1a82095d",
+  "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
+  "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 10,
