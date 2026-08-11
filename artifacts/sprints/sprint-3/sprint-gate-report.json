@@ -56,7 +56,7 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json",
-        "sha256": "01008184c68e25cda77b5f2bc1b2a10bfb515dcd5c0f691ce43f70a0869232ef"
+        "sha256": "78c15c38455f68e1ebf55c1a3f5e814f2025b34fd25305f804b422fd5e238ea9"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json",
@@ -64,7 +64,7 @@
       },
       {
         "path": "scripts/story_3_1_gate.py",
-        "sha256": "c62ff7e6d01eb02dc08bc4bc4e2a9c047322794b6b509f546a95f4f10b017533"
+        "sha256": "e81c7ae03e6a7827536dfe6742988b363e8332f33123171ddfe7467d99126dc8"
       },
       {
         "path": "scripts/story_3_2_gate.py",
@@ -111,8 +111,8 @@
         "sha256": "c15497513847444f268c2d95e66da6ad8c611bf7f7f4c1f64e7ddc450b106ac7"
       }
     ],
-    "reviewed_commit": "d25d50671a0879cb2b73c8488b4cdc6cee4f31a9",
-    "reviewed_tree": "847bcea3e5c65079cc1a1f37b122bfe0c47fcb7f",
+    "reviewed_commit": "46073551d1b73ebb01c98fd43145418b67ac168f",
+    "reviewed_tree": "fb5189c4cb64fb6159a9f4040d6071b9960b4358",
     "reviewer_id": "agentmage-sprint-3-independent-gate-v1"
   },
   "macos": {
@@ -124,8 +124,8 @@
   "product_acceptance_claim": "none",
   "product_startup_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "d25d50671a0879cb2b73c8488b4cdc6cee4f31a9",
-  "reviewed_tree": "847bcea3e5c65079cc1a1f37b122bfe0c47fcb7f",
+  "reviewed_commit": "46073551d1b73ebb01c98fd43145418b67ac168f",
+  "reviewed_tree": "fb5189c4cb64fb6159a9f4040d6071b9960b4358",
   "schema_version": 1,
   "sprint_id": 3,
   "status": "blocked-macos",
