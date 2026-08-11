@@ -66,6 +66,27 @@ class PlatformManifestArtifactTests(unittest.TestCase):
         for candidate in mutations:
             self.assertTrue(MODULE.validate_manifest(candidate, filename))
 
+    def test_contract_source_check_rejects_capability_or_os_branch_drift(self):
+        contract = (ROOT / "kernel/contracts/src/platform.rs").read_text(encoding="utf-8")
+        selector = (ROOT / "kernel/engine/src/platform_startup.rs").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(MODULE.validate_contract_sources(contract, selector), [])
+        self.assertTrue(
+            MODULE.validate_contract_sources(
+                contract.replace("PlatformCapability::Packaging", "PlatformCapability::Updates"),
+                selector,
+            )
+        )
+        self.assertTrue(
+            MODULE.validate_contract_sources(
+                contract,
+                selector.replace(
+                    "pub fn activate_platform", "// target_os\npub fn activate_platform", 1
+                ),
+            )
+        )
+
     def test_report_validation_rejects_macos_or_release_overclaim(self):
         report = {
             "schema_version": 1,

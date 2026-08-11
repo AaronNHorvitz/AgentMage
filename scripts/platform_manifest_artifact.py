@@ -79,6 +79,40 @@ FORBIDDEN_KEYS = {
     "token",
     "username",
 }
+KERNEL_SELECTOR_FORBIDDEN_TOKENS = (
+    "cfg!(",
+    "std::env",
+    "target_arch",
+    "target_os",
+    "PlatformFamily::Fedora",
+    "PlatformFamily::Ubuntu",
+    "PlatformFamily::MacOsAppleSilicon",
+)
+RUST_CAPABILITY_VARIANTS = (
+    "WorkspaceAuthorization",
+    "SecurePathResolution",
+    "ToolConfinement",
+    "SecretStorage",
+    "ProcessLimits",
+    "LocalInference",
+    "ModelInstallation",
+    "Packaging",
+    "Updates",
+    "NetworkIsolation",
+)
+RUST_STARTUP_FAILURE_VARIANTS = (
+    "ApiVersionMismatch",
+    "PlatformMismatch",
+    "ArchitectureMismatch",
+    "OsBuildMismatch",
+    "ToolchainMismatch",
+    "VisualStudioCodeMismatch",
+    "PackageMismatch",
+    "CapabilityMismatch",
+    "ForeignCapabilityEvidence",
+    "CapabilityUnavailable",
+    "CapabilityInvalid",
+)
 
 
 class PlatformManifestError(ValueError):
@@ -213,6 +247,27 @@ def validate_manifest(value: Any, filename: str) -> list[str]:
         or value["release_claim"] != "none"
     ):
         failures.append(f"{filename}: manifest made an unsupported or private-data claim")
+    return failures
+
+
+def validate_contract_sources(contract_source: str, selector_source: str) -> list[str]:
+    failures: list[str] = []
+    production_selector = selector_source.split("#[cfg(test)]", 1)[0]
+    if f"PLATFORM_ADAPTER_API_VERSION: u16 = 1" not in contract_source:
+        failures.append("platform adapter API version changed")
+    for variant in RUST_CAPABILITY_VARIANTS:
+        if contract_source.count(f"PlatformCapability::{variant}") != 1:
+            failures.append(f"required capability closure changed: {variant}")
+    for variant in RUST_STARTUP_FAILURE_VARIANTS:
+        if f"Self::{variant} =>" not in contract_source:
+            failures.append(f"startup failure closure changed: {variant}")
+    for token in KERNEL_SELECTOR_FORBIDDEN_TOKENS:
+        if token in production_selector:
+            failures.append(f"kernel selector contains an OS branch token: {token}")
+    if production_selector.count("adapter.probe_capability(capability)") != 1:
+        failures.append("kernel selector capability probe path changed")
+    if "for capability in REQUIRED_PLATFORM_CAPABILITIES" not in production_selector:
+        failures.append("kernel selector no longer iterates the closed capability set")
     return failures
 
 
@@ -374,6 +429,13 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
         if committed != (root / relative).read_bytes():
             raise PlatformManifestError(f"source differs from reference revision: {relative}")
         sources.append({"path": relative, "sha256": sha256_bytes(committed)})
+    contract_source = (root / "kernel/contracts/src/platform.rs").read_text(encoding="utf-8")
+    selector_source = (root / "kernel/engine/src/platform_startup.rs").read_text(
+        encoding="utf-8"
+    )
+    contract_failures = validate_contract_sources(contract_source, selector_source)
+    if contract_failures:
+        raise PlatformManifestError("; ".join(contract_failures))
     summaries = [manifest_summary(root / relative) for relative in MANIFEST_PATHS]
     run_host_contract(root)
     ubuntu_image_id = run_ubuntu_contract(reference_revision, root)
@@ -387,8 +449,11 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
         "api": {
             "version": 1,
             "required_capability_count": len(CAPABILITIES),
-            "startup_failure_class_count": 11,
-            "operating_system_branches_in_kernel_selector": 0,
+            "startup_failure_class_count": len(RUST_STARTUP_FAILURE_VARIANTS),
+            "operating_system_branches_in_kernel_selector": sum(
+                selector_source.split("#[cfg(test)]", 1)[0].count(token)
+                for token in KERNEL_SELECTOR_FORBIDDEN_TOKENS
+            ),
         },
         "manifests": summaries,
         "conformance": {
