@@ -141,9 +141,9 @@
       "sha256": "1a9dbe0d76e0c3c4b2bd0661162136f525fe45a3ed0284e5e07aaad512f1ec08"
     },
     {
-      "bytes": 18079,
+      "bytes": 17974,
       "path": "scripts/story_5_1_security_evidence.py",
-      "sha256": "d3c8d867d840030e18b1ac70720a27cb8f821b9c797b0294dc7408302d899b2e"
+      "sha256": "3e661ee340b13974f50169fcf8387509b4120ad58f13668ea9496cc786cd8d60"
     },
     {
       "bytes": 3807,
@@ -154,11 +154,6 @@
       "bytes": 4586,
       "path": "tests/test_story_5_1_security_evidence.py",
       "sha256": "e10d983ba744fa9462427791606b20a82073bc7098c2616477955be60de302cf"
-    },
-    {
-      "bytes": 12001,
-      "path": "package.json",
-      "sha256": "ca11ffc1e336ac52f3c7a99d42f609e08d4f18fdff5f2d52a061fa3fe0e6c712"
     }
   ],
   "durable_audit_claim": "none",
@@ -263,14 +258,13 @@
       "story_contribution": "partial-story-evidence"
     },
     {
-      "demonstrated": "Deterministic Story 5 checkers fail closed on omitted subjects, changed admissions, failed verification, stale hashes, unsupported completion, release, external-review, or macOS claims, and are enrolled in the repository requirements command.",
+      "demonstrated": "Deterministic Story 5 checkers fail closed on omitted subjects, changed admissions, failed verification, stale hashes, unsupported completion, release, external-review, or macOS claims.",
       "evidence": [
         "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
         "scripts/grant_boundary_review.py",
         "scripts/story_5_1_security_evidence.py",
         "tests/test_grant_boundary_review.py",
-        "tests/test_story_5_1_security_evidence.py",
-        "package.json"
+        "tests/test_story_5_1_security_evidence.py"
       ],
       "product_requirement_status": "not-complete",
       "remaining": "Production release creation must be technically blocked by every security threshold, with forced-failure evidence and any exception requiring a signed dated risk decision outside normal development credentials.",
@@ -279,7 +273,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "96d4d366304c69f08672e2554b2f52bbb2d3cfd3",
+  "source_revision": "3772d6766efaa25c8e6ad11c513441fe2a37fc35",
   "status": "pass-shared-linux-security-mapping",
   "story_id": "5.1",
   "summary": {
@@ -287,7 +281,7 @@
     "mapped_requirement_count": 8,
     "partial_story_evidence_count": 7,
     "product_requirements_complete": 0,
-    "retained_artifact_count": 32,
+    "retained_artifact_count": 31,
     "story_gate_complete": false
   },
   "task_id": "5.1.3.5"
