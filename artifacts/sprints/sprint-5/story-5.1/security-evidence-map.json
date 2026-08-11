@@ -1,0 +1,294 @@
+{
+  "artifacts": [
+    {
+      "bytes": 65272,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "bytes": 11324,
+      "path": "docs/architecture/grant-policy-reference.md",
+      "sha256": "da5b65d292d037e9781fbaffb16bacbe760b2aae8e573eaae51ae5d130dd0327"
+    },
+    {
+      "bytes": 8503,
+      "path": "docs/architecture/grant-state-transitions.md",
+      "sha256": "5a88e5edc83fcf247c604939bdee117ef7ecce1306127afe0207dba33e211458"
+    },
+    {
+      "bytes": 1211,
+      "path": "fixtures/grants/v1/manifest.json",
+      "sha256": "730cf10dbbf8e6b5deeb20d8eaa352865aa1d3efe7845a8b1f68c64f0c5d84a1"
+    },
+    {
+      "bytes": 1673,
+      "path": "fixtures/grants/v1/approval-preview.workspace-read.json",
+      "sha256": "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707"
+    },
+    {
+      "bytes": 334,
+      "path": "fixtures/grants/v1/policy-denial.argument-mismatch.json",
+      "sha256": "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96"
+    },
+    {
+      "bytes": 1116,
+      "path": "fixtures/grants/v1/denial-receipt.argument-mismatch.json",
+      "sha256": "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41"
+    },
+    {
+      "bytes": 209823,
+      "path": "fixtures/grants/adversarial/v1/corpus.json",
+      "sha256": "630169a44503f1fe3682ba7a3aab9da5d007ff40548e86c1c5790250fe4c9d25"
+    },
+    {
+      "bytes": 1047,
+      "path": "fixtures/grants/adversarial/v1/manifest.json",
+      "sha256": "11251ece511c248e8ee6ad34e87b8a6ee6ddd771075c4f0e5321856c4644802a"
+    },
+    {
+      "bytes": 6002,
+      "path": "kernel/contracts/src/approval.rs",
+      "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe"
+    },
+    {
+      "bytes": 13096,
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "bytes": 16148,
+      "path": "kernel/engine/src/approval.rs",
+      "sha256": "1f54405fa755163ca03010d8c8a3f5ea1791ab4532c412d4d404bbcf3a925615"
+    },
+    {
+      "bytes": 13807,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+    },
+    {
+      "bytes": 53496,
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "bytes": 37932,
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "bytes": 18249,
+      "path": "kernel/engine/tests/adversarial_grant_corpus.rs",
+      "sha256": "388cf0ade510ed1bd7c62b3fc502f14f5d83784590bc8d9c6ef2d025b4a77b7d"
+    },
+    {
+      "bytes": 7988,
+      "path": "kernel/engine/tests/authority_escalation_matrix.rs",
+      "sha256": "3ae491dd10c8cc1ef5246d895efdaac28383546c7e2135da8c1be05ddb871880"
+    },
+    {
+      "bytes": 12575,
+      "path": "kernel/engine/tests/grant_race_replay.rs",
+      "sha256": "ebb5c9e96848eeec1d515ed3705350910b6652fe8d18bf2e5812400244de7371"
+    },
+    {
+      "bytes": 13187,
+      "path": "kernel/engine/tests/grant_stale_dispatch.rs",
+      "sha256": "ed26c5e324e18d7319de92923174bcf670e534be0349f268c32002031393aaa4"
+    },
+    {
+      "bytes": 2085,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
+      "sha256": "dd6a86eff1230d6fbf47d5256b8573a8fe801f2cc7cab2e4103e2cf91f4b88d8"
+    },
+    {
+      "bytes": 2167,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
+      "sha256": "e627927c557c2b550803b7470175df8903cce2f45e570635c1b0eca535fc0f54"
+    },
+    {
+      "bytes": 3368,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
+      "sha256": "7b742627e44a296b91c99ea468373e516ce2f1e7b772d999befd9f38b15bd1f3"
+    },
+    {
+      "bytes": 2567,
+      "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
+      "sha256": "7ec1694608dd0d28a523e302ff8c6368ae6567ae652ff931fe7cec22631bfef8"
+    },
+    {
+      "bytes": 5074,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
+      "sha256": "79d1723b95100c567ed2a2a2b619f9d0ae3aadd1bb6c19e3c1eb17b058286f9b"
+    },
+    {
+      "bytes": 20004,
+      "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
+      "sha256": "25735990094f0bb1f16752097c71994c27354e6fb07456a07315acf5239c415f"
+    },
+    {
+      "bytes": 4453,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
+      "sha256": "ab104c5dbb33ee909e745a0bd40fd52436b92dc3dc8dcbc63d858029fdc0ff26"
+    },
+    {
+      "bytes": 7989,
+      "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+      "sha256": "04447366fbf2967f8f75c7521824e554e7a86e3c0a1b18a256912c7f3665cca5"
+    },
+    {
+      "bytes": 17097,
+      "path": "scripts/grant_boundary_review.py",
+      "sha256": "1a9dbe0d76e0c3c4b2bd0661162136f525fe45a3ed0284e5e07aaad512f1ec08"
+    },
+    {
+      "bytes": 18079,
+      "path": "scripts/story_5_1_security_evidence.py",
+      "sha256": "d3c8d867d840030e18b1ac70720a27cb8f821b9c797b0294dc7408302d899b2e"
+    },
+    {
+      "bytes": 3807,
+      "path": "tests/test_grant_boundary_review.py",
+      "sha256": "48cb5adeede939f649e7efbd8566ad1b7a22014fcfd5879aa665264bc4698634"
+    },
+    {
+      "bytes": 4586,
+      "path": "tests/test_story_5_1_security_evidence.py",
+      "sha256": "e10d983ba744fa9462427791606b20a82073bc7098c2616477955be60de302cf"
+    },
+    {
+      "bytes": 12001,
+      "path": "package.json",
+      "sha256": "ca11ffc1e336ac52f3c7a99d42f609e08d4f18fdff5f2d52a061fa3fe0e6c712"
+    }
+  ],
+  "durable_audit_claim": "none",
+  "external_human_review_status": "not-performed",
+  "fuzzing_claim": "seeded-fixed-mutation-corpus-not-fuzzing",
+  "independent_review_type": "independent-automated-boundary-review",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "Within the current shared contracts and in-memory Linux reference engine, CapabilityGrant is the sole authority-bearing record. Approval displays, models, prompts, shells, tools, plugins, and simulated children remain descriptive and cannot mint, widen, transfer, combine, or substitute authority.",
+      "evidence": [
+        "kernel/contracts/src/grant.rs",
+        "kernel/engine/src/authority.rs",
+        "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The running product must authenticate callers and grants across process boundaries and prove that every concrete executor accepts only a kernel-issued, current, atomically consumed grant.",
+      "requirement_id": "SR-ACC-001",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "demonstrated": "The 29-field grant schema binds exact actor, session, task, action, tool, operation, targets, arguments, preimages, effects, parent revision, expiry, nonce, preview, policy, use, and lifecycle values; 560 independently seeded mutations admit zero attempts.",
+      "evidence": [
+        "kernel/contracts/src/grant.rs",
+        "fixtures/grants/adversarial/v1/manifest.json",
+        "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Grant serialization must receive kernel-controlled authentication or signatures, canonical platform targets, authenticated identity provenance, durable nonce state, and cross-process verification.",
+      "requirement_id": "SR-ACC-002",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The in-memory issuer validates and consumes an operation grant under one exclusive transaction. Two-consumer races admit at most one attempt, and success, denial, timeout, crash, and uncertain scenarios permit no replay or second modeled effect.",
+      "evidence": [
+        "kernel/engine/src/grants.rs",
+        "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The product must place validation, durable consumption, worker admission, effect reconciliation, and terminal receipt persistence in one crash-consistent cross-process protocol immediately before every real operation.",
+      "requirement_id": "SR-ACC-003",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Approval requests are exact non-authoritative displays, 28 typed authority-escalation attempts are denied, and four post-approval scope changes invalidate authority before a worker or effect can start.",
+      "evidence": [
+        "kernel/contracts/src/approval.rs",
+        "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The shell must capture an authenticated, accessible user decision and the full transfer/escalation suite must cover at least 200 real interface and process-boundary cases while proving zero external action.",
+      "requirement_id": "SR-ACC-007",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The strict-local policy admits only exact workspace reads; twelve hazardous operation classes are explicitly denied, two additional operation classes are denied by absence, and descriptive AI-origin records cannot expand authority.",
+      "evidence": [
+        "kernel/engine/src/policy.rs",
+        "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The complete v0.1 product and user interface must prove human control and zero write, send, upload, deploy, execute, transfer, or privilege-change effects through real adapters and workers.",
+      "requirement_id": "SR-AI-004",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Hostile authority claims in prompts and other descriptive records remain inert, are excluded from denial receipts, and cannot alter the constant kernel rejection path.",
+      "evidence": [
+        "kernel/engine/src/authority.rs",
+        "kernel/engine/tests/authority_escalation_matrix.rs",
+        "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "This is not the required prompt-injection evaluation. At least 200 labeled direct and indirect injections across filenames, source, documentation, tool results, Git metadata, model output, and real adapters must prove zero unauthorized action and zero secret disclosure.",
+      "requirement_id": "SR-AI-005",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Typed review evidence preserves task, action, tool-call, policy-decision, result, correlation, lifecycle, actor, and session attribution without retaining candidate authority content.",
+      "evidence": [
+        "fixtures/grants/v1/denial-receipt.argument-mismatch.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
+        "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The product audit schema and durable tamper-evident ledger must add release identity, wall and monotonic time, pseudonymous identity controls, object identity, complete event coverage, redaction, retention, and protected export.",
+      "requirement_id": "SR-OPS-001",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "Deterministic Story 5 checkers fail closed on omitted subjects, changed admissions, failed verification, stale hashes, unsupported completion, release, external-review, or macOS claims, and are enrolled in the repository requirements command.",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "scripts/grant_boundary_review.py",
+        "scripts/story_5_1_security_evidence.py",
+        "tests/test_grant_boundary_review.py",
+        "tests/test_story_5_1_security_evidence.py",
+        "package.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Production release creation must be technically blocked by every security threshold, with forced-failure evidence and any exception requiring a signed dated risk decision outside normal development credentials.",
+      "requirement_id": "SR-TST-012",
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "96d4d366304c69f08672e2554b2f52bbb2d3cfd3",
+  "status": "pass-shared-linux-security-mapping",
+  "story_id": "5.1",
+  "summary": {
+    "demonstrated_story_scope_count": 1,
+    "mapped_requirement_count": 8,
+    "partial_story_evidence_count": 7,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 32,
+    "story_gate_complete": false
+  },
+  "task_id": "5.1.3.5"
+}
