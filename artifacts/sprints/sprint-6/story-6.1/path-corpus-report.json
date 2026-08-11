@@ -1,0 +1,71 @@
+{
+  "artifact_id": "canonicalization-display-link-path-corpus",
+  "coverage": {
+    "accepted_control_count": 128,
+    "admitted_escape_count": 0,
+    "case_class_count": 10,
+    "case_count": 640,
+    "cases_per_class": 64,
+    "invalid_encoding_count": 64,
+    "rejected_escape_attempt_count": 512
+  },
+  "filesystem_observation_count": 0,
+  "limitations": [
+    "case-collision candidates prove spelling preservation only",
+    "macOS case and Unicode collision behavior is not executed",
+    "display-link replay cases are retained in a separate authority-boundary artifact"
+  ],
+  "macos_evidence_substituted": false,
+  "platform_status": {
+    "fedora": "verified-local",
+    "macos_collision_handling": "blocked-macos",
+    "shared_contract": "verified",
+    "ubuntu": "not-executed"
+  },
+  "reference_revision": "1ff13fe592ddbf93aa2f37b46790e8b065efa6e5",
+  "release_claim": "none",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "fixtures/paths/README.md",
+      "sha256": "a08fccf044f550ae9f2b83c34aca58cc0d777fa9fb1f37059d59dd3059fc9b9d"
+    },
+    {
+      "path": "fixtures/paths/v1/corpus.json",
+      "sha256": "75fb2f2b235fee715cd41d9c3a562321744868b8594e48fa8289cba0d5d869ea"
+    },
+    {
+      "path": "fixtures/paths/v1/manifest.json",
+      "sha256": "af735922f5d25b5936533d5b0da0f7b5e77b5d428bdc27c8244d3eb18921010d"
+    },
+    {
+      "path": "kernel/contracts/src/path.rs",
+      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+    },
+    {
+      "path": "kernel/contracts/tests/path_corpus.rs",
+      "sha256": "11e4ef3977d46ff21b767cc7bdac8022c8ccda7e088673af9090a9580523cbca"
+    },
+    {
+      "path": "scripts/path_corpus_artifact.py",
+      "sha256": "e78ff3961d67c077b089d9092908dbc189134a82c0eeca1ca41eca03faedd854"
+    },
+    {
+      "path": "tests/test_path_corpus_artifact.py",
+      "sha256": "808b360d15808e44393e0c1d05a4e57c1fd6af6d0f03d2e766db2492d3f4d078"
+    }
+  ],
+  "status": "pass-shared-fedora-parser-scope",
+  "task_ids": [
+    "6.1.2.2",
+    "6.1.3.1"
+  ],
+  "verification": {
+    "case_spelling_preservation": "pass",
+    "deterministic_regeneration": "pass",
+    "invalid_utf8_rejection": "pass",
+    "real_constructor_execution": "pass",
+    "real_deserializer_execution": "pass",
+    "zero_accepted_escape": "pass"
+  }
+}
