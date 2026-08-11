@@ -1,0 +1,86 @@
+{
+  "artifact_id": "shared-logical-path-platform-conformance",
+  "coverage": {
+    "available_adapter_result_count": 3,
+    "equivalent_policy_decision_count": 3,
+    "networked_test_count": 0,
+    "out_of_workspace_access_count": 0
+  },
+  "fixture": {
+    "intent": "content-hash",
+    "path": "fixtures/paths/v1/logical-input.txt",
+    "sha256": "793c05f449e8b7fcc87d32c1686df8ac0554da638f937309a28b453789f2bd19",
+    "workspace_path": [
+      "docs",
+      "logical-input.txt"
+    ]
+  },
+  "limitations": [
+    "macOS adapter implementation and execution remain blocked"
+  ],
+  "macos_evidence_substituted": false,
+  "platform_status": {
+    "deterministic_fake": "verified",
+    "fedora_44": "verified-local",
+    "macos": "blocked-macos",
+    "ubuntu_26_04": "verified-no-network-container"
+  },
+  "reference_revision": "b449117350cb5d7319b37b7b0697f6d2d5b51407",
+  "release_claim": "none",
+  "results": [
+    {
+      "adapter": "deterministic-fake",
+      "identity_evidence": "deterministic-domain-separated-digest",
+      "platform": "shared-contract",
+      "policy_decision": "admit-canonical-read",
+      "status": "pass"
+    },
+    {
+      "adapter": "linux",
+      "identity_evidence": "linux-mount-object-digests-and-exact-preimage",
+      "platform": "fedora-44-x86_64",
+      "policy_decision": "admit-canonical-read",
+      "status": "pass"
+    },
+    {
+      "adapter": "linux",
+      "container_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
+      "container_image_id": "sha256:fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464",
+      "container_network": "none",
+      "identity_evidence": "linux-mount-object-digests-and-exact-preimage",
+      "platform": "ubuntu-26.04-x86_64",
+      "policy_decision": "admit-canonical-read",
+      "source_revision": "b449117350cb5d7319b37b7b0697f6d2d5b51407",
+      "status": "pass"
+    }
+  ],
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "fixtures/paths/README.md",
+      "sha256": "d36fe899439eff1ed6546efaf53cbcd8bff7b5a8c11ebeb63b0a4c2a30f81213"
+    },
+    {
+      "path": "fixtures/paths/v1/logical-input.txt",
+      "sha256": "793c05f449e8b7fcc87d32c1686df8ac0554da638f937309a28b453789f2bd19"
+    },
+    {
+      "path": "kernel/contracts/tests/platform_path_contract.rs",
+      "sha256": "f945976fcc428e87d4eb6ddf1f018da2a034c16665cd1dc6b5c52c94bb268b45"
+    },
+    {
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "9e51388195c3c16f3528d0ef57270ea0df460d8d517081d119d9dcbff5c9655f"
+    },
+    {
+      "path": "scripts/path_platform_conformance.py",
+      "sha256": "7d4a98fd5b3a3ae4f1f99ac16846d4a1e3e0cdb7c55a97cf70b15daa55885fec"
+    },
+    {
+      "path": "tests/test_path_platform_conformance.py",
+      "sha256": "0907dbcafa09a627794a05b6ed580e8895bb944cc335476a52fe2489f1553d29"
+    }
+  ],
+  "status": "pass-all-available-non-macos-platforms",
+  "task_id": "6.1.3.4"
+}
