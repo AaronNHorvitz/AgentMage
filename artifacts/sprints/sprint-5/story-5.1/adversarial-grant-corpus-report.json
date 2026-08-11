@@ -1,0 +1,73 @@
+{
+  "artifact_id": "adversarial-grant-corpus",
+  "coverage": {
+    "admitted_attempt_count": 0,
+    "atomic_consumption_case_count": 440,
+    "case_count": 560,
+    "cases_per_class": 40,
+    "forged_candidate_case_count": 120,
+    "mutation_class_count": 14
+  },
+  "limitations": [
+    "Cases exercise in-memory issuer and policy behavior without a production worker.",
+    "Forged nonce, use-count, and parent candidates are evaluated but cannot enter consumption.",
+    "Canonical platform path resolution remains assigned to Sprint 6.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "reference_revision": "e88bd1e7cdbc001156de5cbbc3c1f5fe05bc0025",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "fixtures/grants/adversarial/README.md",
+      "sha256": "79d9fffe1fdf32db2594d0914a0f33dfc1661bbde992d4e32a6776a30949afb6"
+    },
+    {
+      "path": "fixtures/grants/adversarial/v1/corpus.json",
+      "sha256": "630169a44503f1fe3682ba7a3aab9da5d007ff40548e86c1c5790250fe4c9d25"
+    },
+    {
+      "path": "fixtures/grants/adversarial/v1/manifest.json",
+      "sha256": "11251ece511c248e8ee6ad34e87b8a6ee6ddd771075c4f0e5321856c4644802a"
+    },
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "path": "kernel/engine/tests/adversarial_grant_corpus.rs",
+      "sha256": "388cf0ade510ed1bd7c62b3fc502f14f5d83784590bc8d9c6ef2d025b4a77b7d"
+    },
+    {
+      "path": "scripts/adversarial_grant_corpus.py",
+      "sha256": "63e9b65bbdfc0479715f2c167a53616458e2771fabb51404aca400a48bb40ab7"
+    },
+    {
+      "path": "tests/test_adversarial_grant_corpus.py",
+      "sha256": "4e92d918184112c8c2f33a2c80ecb38aa343fbd4b7747bf8ad1c01073681517d"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.2.4",
+  "verification": {
+    "exact_byte_reproducibility": "pass",
+    "first_denial_scope": "pass",
+    "mutation_class_closure": "pass",
+    "terminal_state": "pass",
+    "typed_seeded_generation": "pass",
+    "zero_admitted_attempts": "pass"
+  }
+}
