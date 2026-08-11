@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
 from scripts.display_link_authority_artifact import check_report as check_display
 from scripts.path_contract_artifact import check_report as check_contract
 from scripts.path_corpus_artifact import check_report as check_corpus
+from scripts.path_platform_conformance import check_report as check_platform
 from scripts.path_race_artifact import check_report as check_race
 
 
@@ -40,10 +41,12 @@ SUBJECTS = {
     "path-race-report.json": (
         "linux-file-identity-race-harness", "pass-fedora-unprivileged-scope"
     ),
+    "path-platform-conformance.json": (
+        "shared-logical-path-platform-conformance", "pass-all-available-non-macos-platforms"
+    ),
 }
 OPEN_BOUNDARIES = (
     "macOS path adapter, aliases, bookmarks, case collisions, and Unicode collisions",
-    "Ubuntu execution evidence",
     "public workspace selection and durable authorization",
     "real tool and Visual Studio Code link activation integration",
     "coverage-guided path fuzzing and sanitizer evidence",
@@ -116,6 +119,13 @@ def validate_subjects(subjects: Any) -> list[str]:
         failures.append("display authority denial closure changed")
     if subjects["path-race-report.json"].get("coverage", {}).get("out_of_root_access_count") != 0:
         failures.append("path race harness observed out-of-root access")
+    platform_coverage = subjects["path-platform-conformance.json"].get("coverage", {})
+    if (
+        platform_coverage.get("available_adapter_result_count") != 3
+        or platform_coverage.get("equivalent_policy_decision_count") != 3
+        or platform_coverage.get("networked_test_count") != 0
+    ):
+        failures.append("non-macOS platform conformance closure changed")
     return failures
 
 
@@ -123,7 +133,7 @@ def run_subject_checkers(root: Path = ROOT) -> None:
     if root != ROOT:
         return
     checkers: tuple[Callable[[Path], None], ...] = (
-        check_contract, check_corpus, check_display, check_race
+        check_contract, check_corpus, check_display, check_race, check_platform
     )
     for checker in checkers:
         checker(root)
@@ -149,6 +159,7 @@ def independent_review(root: Path = ROOT) -> dict[str, Any]:
         "display_link_rejection_count": 1280,
         "race_executed_scenario_count": 6,
         "out_of_root_access_count": 0,
+        "available_non_macos_adapter_result_count": 3,
         "open_boundary_count": len(OPEN_BOUNDARIES),
     }
 
@@ -245,13 +256,14 @@ def validate_report(value: Any) -> list[str]:
     ):
         failures.append("path boundary review identity changed")
     if value.get("coverage") != {
-        "reviewed_subject_count": 4,
+        "reviewed_subject_count": 5,
         "generated_path_case_count": 640,
         "admitted_escape_count": 0,
         "display_link_rejection_count": 1280,
         "race_executed_scenario_count": 6,
         "out_of_root_access_count": 0,
-        "open_boundary_count": 5,
+        "available_non_macos_adapter_result_count": 3,
+        "open_boundary_count": 4,
     }:
         failures.append("path boundary review coverage changed")
     verification = value.get("verification")

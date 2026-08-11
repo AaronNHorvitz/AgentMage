@@ -13,13 +13,14 @@ class PathBoundaryReviewTests(unittest.TestCase):
         self.assertEqual(
             review.independent_review(),
             {
-                "reviewed_subject_count": 4,
+                "reviewed_subject_count": 5,
                 "generated_path_case_count": 640,
                 "admitted_escape_count": 0,
                 "display_link_rejection_count": 1280,
                 "race_executed_scenario_count": 6,
                 "out_of_root_access_count": 0,
-                "open_boundary_count": 5,
+                "available_non_macos_adapter_result_count": 3,
+                "open_boundary_count": 4,
             },
         )
 
