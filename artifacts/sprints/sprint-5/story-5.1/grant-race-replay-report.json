@@ -1,0 +1,162 @@
+{
+  "artifact_id": "grant-race-replay-verification",
+  "coverage": {
+    "attempt_scenarios_with_one_consumption": 4,
+    "maximum_effect_count": 1,
+    "maximum_worker_start_count": 1,
+    "policy_denial_scenarios_with_zero_consumption": 1,
+    "racing_consumer_count_per_scenario": 2,
+    "replay_success_count": 0,
+    "scenario_count": 5,
+    "uncertain_terminal_scenario_count": 3
+  },
+  "limitations": [
+    "Worker starts and effects are deterministic test probes, not a production executor.",
+    "Timeout, crash, and uncertain probes conservatively use the uncertain lifecycle.",
+    "No durable cross-process transaction or effect reconciliation is claimed.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "reference_revision": "c27e2d7e742a73dc5205f187b6076a334a6abfd8",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "path": "kernel/engine/tests/grant_race_replay.rs",
+      "sha256": "ebb5c9e96848eeec1d515ed3705350910b6652fe8d18bf2e5812400244de7371"
+    },
+    {
+      "path": "scripts/grant_race_replay.py",
+      "sha256": "28fdd35b8b5da0839cfe3f9cb67b3bd6c555451d15fa58bb124e1cea2ba13d90"
+    },
+    {
+      "path": "tests/test_grant_race_replay.py",
+      "sha256": "bdc556c5968fbdaeb87f496a72680dcf931ad15135e3ced2dc5dbd838376cf27"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.3.2",
+  "traces": [
+    {
+      "atomic_consumption_count": 1,
+      "effect_count_after_replay": 1,
+      "post_attempt_uncertain_transition_count": 0,
+      "race_denial_scopes": [
+        "grant"
+      ],
+      "racing_consumer_count": 2,
+      "replay_allowed": false,
+      "replay_denial_scope": "grant",
+      "result_outcome": "succeeded",
+      "scenario": "success",
+      "schema_version": 1,
+      "simulated_effect_count": 1,
+      "terminal_revision": 2,
+      "terminal_status": "consumed",
+      "terminal_use_count": 1,
+      "worker_start_count": 1
+    },
+    {
+      "atomic_consumption_count": 0,
+      "effect_count_after_replay": 0,
+      "post_attempt_uncertain_transition_count": 0,
+      "race_denial_scopes": [
+        "argument",
+        "grant"
+      ],
+      "racing_consumer_count": 2,
+      "replay_allowed": false,
+      "replay_denial_scope": "grant",
+      "result_outcome": "denied",
+      "scenario": "denial",
+      "schema_version": 1,
+      "simulated_effect_count": 0,
+      "terminal_revision": 2,
+      "terminal_status": "invalidated",
+      "terminal_use_count": 0,
+      "worker_start_count": 0
+    },
+    {
+      "atomic_consumption_count": 1,
+      "effect_count_after_replay": 0,
+      "post_attempt_uncertain_transition_count": 1,
+      "race_denial_scopes": [
+        "grant"
+      ],
+      "racing_consumer_count": 2,
+      "replay_allowed": false,
+      "replay_denial_scope": "grant",
+      "result_outcome": "timed_out",
+      "scenario": "timeout",
+      "schema_version": 1,
+      "simulated_effect_count": 0,
+      "terminal_revision": 3,
+      "terminal_status": "uncertain",
+      "terminal_use_count": 1,
+      "worker_start_count": 1
+    },
+    {
+      "atomic_consumption_count": 1,
+      "effect_count_after_replay": 1,
+      "post_attempt_uncertain_transition_count": 1,
+      "race_denial_scopes": [
+        "grant"
+      ],
+      "racing_consumer_count": 2,
+      "replay_allowed": false,
+      "replay_denial_scope": "grant",
+      "result_outcome": "failed",
+      "scenario": "crash",
+      "schema_version": 1,
+      "simulated_effect_count": 1,
+      "terminal_revision": 3,
+      "terminal_status": "uncertain",
+      "terminal_use_count": 1,
+      "worker_start_count": 1
+    },
+    {
+      "atomic_consumption_count": 1,
+      "effect_count_after_replay": 1,
+      "post_attempt_uncertain_transition_count": 1,
+      "race_denial_scopes": [
+        "grant"
+      ],
+      "racing_consumer_count": 2,
+      "replay_allowed": false,
+      "replay_denial_scope": "grant",
+      "result_outcome": "uncertain",
+      "scenario": "uncertain",
+      "schema_version": 1,
+      "simulated_effect_count": 1,
+      "terminal_revision": 3,
+      "terminal_status": "uncertain",
+      "terminal_use_count": 1,
+      "worker_start_count": 1
+    }
+  ],
+  "verification": {
+    "no_second_effect": "pass",
+    "no_second_worker_start": "pass",
+    "policy_denial_without_admission": "pass",
+    "single_atomic_admission": "pass",
+    "terminal_replay_denial": "pass",
+    "two_consumer_race": "pass",
+    "unreconciled_result_terminalization": "pass"
+  }
+}
