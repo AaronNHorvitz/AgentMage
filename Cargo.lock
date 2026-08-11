@@ -44,6 +44,7 @@ name = "agentmage-platform-linux"
 version = "0.0.0"
 dependencies = [
  "agentmage-kernel-contracts",
+ "agentmage-kernel-engine",
  "rustix",
  "seccompiler",
  "sha2",

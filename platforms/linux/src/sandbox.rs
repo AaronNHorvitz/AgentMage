@@ -8,7 +8,12 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 
-use agentmage_kernel_contracts::{AuthorizedWorkspaceHandle, WorkspacePath};
+use agentmage_kernel_contracts::{
+    AuthorizedWorkspaceHandle, GrantOperation, OperationOutcome, StateChange, WorkspacePath,
+};
+use agentmage_kernel_engine::authority_transaction::{
+    EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
+};
 use rustix::fd::OwnedFd;
 use rustix::fs::{FileType, Mode, OFlags, fstat, open};
 use rustix::io::pread;
@@ -371,8 +376,7 @@ impl LinuxSandboxRunner {
         })
     }
 
-    /// Executes one typed read in a fresh worker with no network namespace connectivity.
-    pub fn run(
+    fn run(
         &self,
         workspace: &LinuxAuthorizedWorkspace,
         operation: &LinuxSandboxOperation,
@@ -548,6 +552,101 @@ impl LinuxSandboxRunner {
     #[must_use]
     pub const fn seccomp_policy_id(&self) -> &'static str {
         SECCOMP_POLICY_ID
+    }
+}
+
+/// Linux sandbox effect callable only with a kernel-issued authorization.
+///
+/// The underlying runner has no public execution method:
+///
+/// ```compile_fail
+/// use agentmage_platform_linux::{
+///     LinuxAuthorizedWorkspace, LinuxSandboxOperation, LinuxSandboxRunner,
+/// };
+/// fn bypass(
+///     runner: &LinuxSandboxRunner,
+///     workspace: &LinuxAuthorizedWorkspace,
+///     operation: &LinuxSandboxOperation,
+/// ) {
+///     let _ = runner.run(workspace, operation);
+/// }
+/// ```
+pub struct LinuxSandboxEffectDriver {
+    runner: LinuxSandboxRunner,
+    workspace: LinuxAuthorizedWorkspace,
+    operation: LinuxSandboxOperation,
+    result: Option<LinuxSandboxResult>,
+    error: Option<LinuxSandboxError>,
+}
+
+impl LinuxSandboxEffectDriver {
+    /// Creates an inert driver over an already-held workspace authorization.
+    #[must_use]
+    pub const fn new(
+        runner: LinuxSandboxRunner,
+        workspace: LinuxAuthorizedWorkspace,
+        operation: LinuxSandboxOperation,
+    ) -> Self {
+        Self {
+            runner,
+            workspace,
+            operation,
+            result: None,
+            error: None,
+        }
+    }
+
+    /// Takes the bounded worker result after the authority transaction closes.
+    pub fn take_result(&mut self) -> Option<LinuxSandboxResult> {
+        self.result.take()
+    }
+
+    /// Takes the redacted platform error after a failed mediated attempt.
+    pub fn take_error(&mut self) -> Option<LinuxSandboxError> {
+        self.error.take()
+    }
+}
+
+impl fmt::Debug for LinuxSandboxEffectDriver {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxSandboxEffectDriver")
+            .field("operation", &self.operation)
+            .field("has_result", &self.result.is_some())
+            .field("has_error", &self.error.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl EffectDriver for LinuxSandboxEffectDriver {
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        if authorization.operation().operation() != GrantOperation::WorkspaceRead {
+            return EffectLaunch::failed();
+        }
+        match self.runner.run(&self.workspace, &self.operation) {
+            Ok(result) => {
+                let effect_result = EffectResult::from_redacted_material(
+                    if result.success() {
+                        OperationOutcome::Succeeded
+                    } else {
+                        OperationOutcome::Failed
+                    },
+                    result.stdout_sha256(),
+                    StateChange::NotChanged,
+                );
+                self.result = Some(result);
+                EffectLaunch::completed(effect_result)
+            }
+            Err(error) => {
+                let effect_result = EffectResult::from_redacted_material(
+                    OperationOutcome::Failed,
+                    error.kind().code().as_bytes(),
+                    StateChange::NotChanged,
+                );
+                self.error = Some(error);
+                EffectLaunch::completed(effect_result)
+            }
+        }
     }
 }
 

@@ -165,6 +165,7 @@ impl LinuxHandshakeRequest {
         frame
     }
 
+    #[allow(dead_code)]
     fn decode(frame: &[u8; HANDSHAKE_FRAME_BYTES]) -> Self {
         let mut version = [0_u8; 4];
         version.copy_from_slice(&frame[..4]);
@@ -355,7 +356,8 @@ impl Drop for LinuxIpcAuthenticator {
 }
 
 /// Mode-restricted Unix listener rooted in an already-private runtime directory.
-pub struct PrivateUnixListener {
+#[allow(dead_code)]
+struct PrivateUnixListener {
     listener: UnixListener,
 }
 
@@ -367,9 +369,10 @@ impl fmt::Debug for PrivateUnixListener {
     }
 }
 
+#[allow(dead_code)]
 impl PrivateUnixListener {
     /// Binds a new `0600` socket after validating its private owner-only parent.
-    pub fn bind(path: &Path) -> Result<Self, LinuxIpcError> {
+    fn bind(path: &Path) -> Result<Self, LinuxIpcError> {
         let parent = path
             .parent()
             .ok_or_else(|| ipc_error(LinuxIpcErrorKind::UnsafeSocketParent))?;
@@ -400,7 +403,7 @@ impl PrivateUnixListener {
     }
 
     /// Accepts, identifies, and authenticates exactly one peer connection.
-    pub fn accept_authenticated(
+    fn accept_authenticated(
         &self,
         authenticator: &LinuxIpcAuthenticator,
     ) -> Result<(UnixStream, LinuxAuthenticatedPeer), LinuxIpcError> {

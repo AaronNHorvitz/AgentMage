@@ -16,16 +16,17 @@ pub use inventory::{
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
     LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,
-    LinuxPeerIdentity, PrivateUnixListener,
+    LinuxPeerIdentity,
 };
 pub use sandbox::{
-    LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
-    LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
+    LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
+    LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner,
+    LinuxWorkerRuntimeFile,
 };
 pub use secret_service::{
-    LinuxSecretKey, LinuxSecretOperation, LinuxSecretReceipt, LinuxSecretService,
-    LinuxSecretServiceError, LinuxSecretServiceErrorKind, LinuxSecretServiceManifest,
-    LinuxSecretValue,
+    LinuxSecretEffectDriver, LinuxSecretEffectOutput, LinuxSecretEffectRequest, LinuxSecretKey,
+    LinuxSecretOperation, LinuxSecretReceipt, LinuxSecretService, LinuxSecretServiceError,
+    LinuxSecretServiceErrorKind, LinuxSecretServiceManifest, LinuxSecretValue,
 };
 pub use strict_local::{
     LinuxStrictLocalRoot, LinuxStrictLocalRootError, LinuxStrictLocalRootErrorKind,
@@ -68,6 +69,12 @@ const STRICT_RESOLVE_FLAGS: ResolveFlags = ResolveFlags::BENEATH
 #[must_use]
 pub const fn contract_component_id() -> &'static str {
     agentmage_kernel_contracts::COMPONENT_ID
+}
+
+/// Returns the identity of the kernel mediation boundary used by effect drivers.
+#[must_use]
+pub const fn mediation_component_id() -> &'static str {
+    agentmage_kernel_engine::COMPONENT_ID
 }
 
 /// Linux path adapter with an exact instance identity and bounded hash limit.
@@ -776,7 +783,8 @@ mod tests {
     use super::{
         COMPONENT_ID, DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxPathAdapter,
         LinuxResolutionStrategy, LinuxStatSnapshot, ResolverPreference, STRICT_RESOLVE_FLAGS,
-        contract_component_id, same_mount, select_strategy, verified_fallback,
+        contract_component_id, mediation_component_id, same_mount, select_strategy,
+        verified_fallback,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -842,9 +850,10 @@ mod tests {
     }
 
     #[test]
-    fn adapter_depends_only_on_contracts() {
+    fn adapter_depends_inward_on_contracts_and_kernel_mediation() {
         assert_eq!(COMPONENT_ID, "platform-linux");
         assert_eq!(contract_component_id(), "kernel-contracts");
+        assert_eq!(mediation_component_id(), "kernel-engine");
     }
 
     #[test]

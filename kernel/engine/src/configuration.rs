@@ -1183,7 +1183,7 @@ impl ConfigurationManager {
     }
 
     /// Durably migrates a version 0 configuration file while retaining its exact preimage.
-    pub fn migrate_path_v0(
+    pub(crate) fn migrate_path_v0(
         &self,
         target: &Path,
     ) -> Result<MigrationApplyReceipt, ConfigurationError> {
@@ -1268,7 +1268,7 @@ impl ConfigurationManager {
     }
 
     /// Restores an exact version 0 migration backup and succeeds on an identical retry.
-    pub fn rollback_migration(
+    pub(crate) fn rollback_migration(
         &self,
         target: &Path,
         backup: &Path,
@@ -1475,7 +1475,7 @@ impl ConfigurationManager {
     }
 
     /// Atomically applies a valid configuration after retaining a content-addressed backup.
-    pub fn apply_with_backup(
+    pub(crate) fn apply_with_backup(
         &self,
         target: &Path,
         candidate: &[u8],
@@ -1510,7 +1510,7 @@ impl ConfigurationManager {
     }
 
     /// Restores a retained backup only when the current identity matches the caller's preimage.
-    pub fn rollback(
+    pub(crate) fn rollback(
         &self,
         target: &Path,
         backup: &Path,

@@ -9,6 +9,10 @@ use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use agentmage_kernel_contracts::{GrantOperation, OperationOutcome, StateChange};
+use agentmage_kernel_engine::authority_transaction::{
+    EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
+};
 use rustix::fd::OwnedFd;
 use rustix::fs::{FileType, Mode, OFlags, fstat, open};
 use rustix::io::pread;
@@ -278,7 +282,7 @@ impl LinuxSecretService {
     }
 
     /// Proves the session service responds to a fresh no-match query.
-    pub fn probe(&self) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
+    fn probe(&self) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
         let mut random = [0_u8; 16];
         getrandom(&mut random, GetRandomFlags::empty())
             .map_err(|_| error(LinuxSecretServiceErrorKind::ServiceUnavailable))?;
@@ -298,7 +302,7 @@ impl LinuxSecretService {
     }
 
     /// Stores one credential through standard input and consumes its in-memory value.
-    pub fn store(
+    fn store(
         &self,
         key: &LinuxSecretKey,
         value: LinuxSecretValue,
@@ -321,7 +325,7 @@ impl LinuxSecretService {
     }
 
     /// Retrieves one exact credential without exposing it in a receipt or diagnostic.
-    pub fn lookup(
+    fn lookup(
         &self,
         key: &LinuxSecretKey,
     ) -> Result<(LinuxSecretValue, LinuxSecretReceipt), LinuxSecretServiceError> {
@@ -348,10 +352,7 @@ impl LinuxSecretService {
     }
 
     /// Removes every item matching the exact fixed AgentMage attributes.
-    pub fn clear(
-        &self,
-        key: &LinuxSecretKey,
-    ) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
+    fn clear(&self, key: &LinuxSecretKey) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
         let mut arguments = vec![OsString::from("clear")];
         arguments.extend(key.attributes());
         let mut output = self.execute(&arguments, None)?;
@@ -448,6 +449,195 @@ impl LinuxSecretService {
             stderr_sha256: stderr.sha256,
             stderr_bytes: stderr.total,
         })
+    }
+}
+
+/// One exact Secret Service operation proposed for mediated execution.
+pub enum LinuxSecretEffectRequest {
+    /// Verify that the local Secret Service is available.
+    Probe,
+    /// Store one exact credential.
+    Store {
+        /// Exact non-secret credential identity.
+        key: LinuxSecretKey,
+        /// Secret value consumed by the operation.
+        value: LinuxSecretValue,
+    },
+    /// Retrieve one exact credential.
+    Lookup {
+        /// Exact non-secret credential identity.
+        key: LinuxSecretKey,
+    },
+    /// Remove one exact credential identity.
+    Clear {
+        /// Exact non-secret credential identity.
+        key: LinuxSecretKey,
+    },
+}
+
+impl fmt::Debug for LinuxSecretEffectRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let operation = match self {
+            Self::Probe => LinuxSecretOperation::Probe,
+            Self::Store { .. } => LinuxSecretOperation::Store,
+            Self::Lookup { .. } => LinuxSecretOperation::Lookup,
+            Self::Clear { .. } => LinuxSecretOperation::Clear,
+        };
+        formatter
+            .debug_struct("LinuxSecretEffectRequest")
+            .field("operation", &operation)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Typed Secret Service output retained only after mediated execution.
+pub enum LinuxSecretEffectOutput {
+    /// Content-free metadata for a probe, store, or clear operation.
+    Receipt(LinuxSecretReceipt),
+    /// Retrieved secret and its content-free operation metadata.
+    Lookup {
+        /// Retrieved secret value, zeroized when dropped.
+        value: LinuxSecretValue,
+        /// Content-free lookup receipt.
+        receipt: LinuxSecretReceipt,
+    },
+}
+
+impl LinuxSecretEffectOutput {
+    fn receipt(&self) -> &LinuxSecretReceipt {
+        match self {
+            Self::Receipt(receipt) | Self::Lookup { receipt, .. } => receipt,
+        }
+    }
+}
+
+impl fmt::Debug for LinuxSecretEffectOutput {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxSecretEffectOutput")
+            .field("operation", &self.receipt().operation())
+            .finish_non_exhaustive()
+    }
+}
+
+/// Secret Service driver callable only with a kernel-issued authorization.
+///
+/// The underlying service has no public lookup or mutation methods:
+///
+/// ```compile_fail
+/// use agentmage_platform_linux::LinuxSecretService;
+/// fn bypass(service: &LinuxSecretService) {
+///     let _ = service.probe();
+/// }
+/// ```
+pub struct LinuxSecretEffectDriver {
+    service: LinuxSecretService,
+    request: Option<LinuxSecretEffectRequest>,
+    output: Option<LinuxSecretEffectOutput>,
+    error: Option<LinuxSecretServiceError>,
+}
+
+impl LinuxSecretEffectDriver {
+    /// Creates an inert driver without contacting the Secret Service.
+    #[must_use]
+    pub const fn new(service: LinuxSecretService, request: LinuxSecretEffectRequest) -> Self {
+        Self {
+            service,
+            request: Some(request),
+            output: None,
+            error: None,
+        }
+    }
+
+    /// Takes the output after the authority transaction closes.
+    pub fn take_output(&mut self) -> Option<LinuxSecretEffectOutput> {
+        self.output.take()
+    }
+
+    /// Takes the redacted service error after a failed mediated attempt.
+    pub fn take_error(&mut self) -> Option<LinuxSecretServiceError> {
+        self.error.take()
+    }
+}
+
+impl fmt::Debug for LinuxSecretEffectDriver {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxSecretEffectDriver")
+            .field("has_request", &self.request.is_some())
+            .field("has_output", &self.output.is_some())
+            .field("has_error", &self.error.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl EffectDriver for LinuxSecretEffectDriver {
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        if authorization.operation().operation() != GrantOperation::CredentialAccess {
+            return EffectLaunch::failed();
+        }
+        let Some(request) = self.request.take() else {
+            return EffectLaunch::failed();
+        };
+        let result = match request {
+            LinuxSecretEffectRequest::Probe => {
+                self.service.probe().map(LinuxSecretEffectOutput::Receipt)
+            }
+            LinuxSecretEffectRequest::Store { key, value } => self
+                .service
+                .store(&key, value)
+                .map(LinuxSecretEffectOutput::Receipt),
+            LinuxSecretEffectRequest::Lookup { key } => self
+                .service
+                .lookup(&key)
+                .map(|(value, receipt)| LinuxSecretEffectOutput::Lookup { value, receipt }),
+            LinuxSecretEffectRequest::Clear { key } => self
+                .service
+                .clear(&key)
+                .map(LinuxSecretEffectOutput::Receipt),
+        };
+        match result {
+            Ok(output) => {
+                let receipt = output.receipt();
+                let mut material = Vec::with_capacity(48);
+                material.extend_from_slice(secret_operation_code(receipt.operation()).as_bytes());
+                material.extend_from_slice(receipt.stderr_sha256());
+                material.extend_from_slice(&receipt.stderr_bytes().to_be_bytes());
+                let state_change = match receipt.operation() {
+                    LinuxSecretOperation::Probe | LinuxSecretOperation::Lookup => {
+                        StateChange::NotChanged
+                    }
+                    LinuxSecretOperation::Store | LinuxSecretOperation::Clear => {
+                        StateChange::Changed
+                    }
+                };
+                let effect_result = EffectResult::from_redacted_material(
+                    OperationOutcome::Succeeded,
+                    &material,
+                    state_change,
+                );
+                self.output = Some(output);
+                EffectLaunch::completed(effect_result)
+            }
+            Err(error) => {
+                let effect_result = EffectResult::from_redacted_material(
+                    OperationOutcome::Failed,
+                    error.kind().code().as_bytes(),
+                    StateChange::Uncertain,
+                );
+                self.error = Some(error);
+                EffectLaunch::completed(effect_result)
+            }
+        }
+    }
+}
+
+const fn secret_operation_code(operation: LinuxSecretOperation) -> &'static str {
+    match operation {
+        LinuxSecretOperation::Probe => "probe",
+        LinuxSecretOperation::Store => "store",
+        LinuxSecretOperation::Lookup => "lookup",
+        LinuxSecretOperation::Clear => "clear",
     }
 }
 

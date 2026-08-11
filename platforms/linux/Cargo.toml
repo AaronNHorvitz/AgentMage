@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 agentmage-kernel-contracts.workspace = true
+agentmage-kernel-engine.workspace = true
 rustix.workspace = true
 seccompiler.workspace = true
 sha2.workspace = true

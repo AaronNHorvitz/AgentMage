@@ -10,6 +10,8 @@ pub mod authority;
 pub mod authority_transaction;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Kernel-mediated configuration filesystem effects.
+pub mod configuration_effect;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Fail-closed platform capability detection and adapter activation.

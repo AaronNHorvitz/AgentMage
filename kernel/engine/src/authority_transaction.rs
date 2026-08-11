@@ -1,13 +1,12 @@
 //! Kernel-owned authority-transaction ordering and recovery.
 
-#![allow(dead_code)]
-
-use std::{collections::BTreeMap, fmt::Write as _};
+use std::{collections::BTreeMap, fmt, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
-    AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState, ContractError,
-    ErrorCategory, ErrorId, GrantId, OperationOutcome, Receipt, ReceiptId, RetryDisposition,
-    StateChange, ToolCall, to_canonical_json,
+    ApprovalId, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
+    ContractError, ErrorCategory, ErrorId, GrantId, OperationAttemptId, OperationBinding,
+    OperationOutcome, Receipt, ReceiptId, RetryDisposition, StateChange, ToolCall,
+    to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -48,17 +47,235 @@ impl AuthorityTransactionError {
     }
 }
 
-/// In-memory Phase 4 owner of transaction revisions and terminal receipts.
+/// Exact production request for one kernel-owned authority transaction.
 ///
-/// The coordinator deliberately exposes no public worker-launch method. Phase 5
-/// must add the mediated effect boundary, and Phase 7 must replace this in-memory
-/// journal with one crash-durable encrypted transaction.
+/// Fields are private so callers cannot select test-only cancellation or fault
+/// boundaries. Construction validates identity shape and the call/context
+/// identity binding before any transaction state can be retained.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AuthorityTransactionRequest {
+    transaction_id: AuthorityTransactionId,
+    attempt_id: OperationAttemptId,
+    approval_id: ApprovalId,
+    grant_id: GrantId,
+    call: ToolCall,
+    context: PolicyEvaluationContext,
+    cancellation: CancellationPoint,
+    occurred_at_epoch_ms: u64,
+    occurred_at: String,
+}
+
+impl AuthorityTransactionRequest {
+    /// Creates one exact non-cancellable production transaction request.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        transaction_id: AuthorityTransactionId,
+        attempt_id: OperationAttemptId,
+        approval_id: ApprovalId,
+        grant_id: GrantId,
+        call: ToolCall,
+        context: PolicyEvaluationContext,
+        occurred_at_epoch_ms: u64,
+        occurred_at: impl Into<String>,
+    ) -> Result<Self, AuthorityTransactionError> {
+        validate_identifier(transaction_id.as_str())?;
+        validate_identifier(attempt_id.as_str())?;
+        validate_identifier(approval_id.as_str())?;
+        validate_identifier(grant_id.as_str())?;
+        if call.action_id != context.action_id
+            || call.tool_id != context.tool_id
+            || call.tool_version != context.tool_version
+        {
+            return Err(AuthorityTransactionError::InvalidToolCall);
+        }
+        let occurred_at = occurred_at.into();
+        if occurred_at.is_empty() || occurred_at.len() > 64 {
+            return Err(AuthorityTransactionError::InvalidIdentity);
+        }
+        Ok(Self {
+            transaction_id,
+            attempt_id,
+            approval_id,
+            grant_id,
+            call,
+            context,
+            cancellation: CancellationPoint::None,
+            occurred_at_epoch_ms,
+            occurred_at,
+        })
+    }
+}
+
+/// Kernel-issued proof that one exact grant has been consumed for one attempt.
+///
+/// The permit has no public constructor, does not implement `Clone`, `Copy`,
+/// serialization, or deserialization, and is consumed by [`EffectDriver`]. It
+/// borrows the transaction request and therefore cannot outlive the coordinator
+/// call that issued it.
+///
+/// A caller cannot forge a permit:
 ///
 /// ```compile_fail
-/// use agentmage_kernel_engine::authority_transaction::AuthorityTransactionCoordinator;
-/// let mut coordinator = AuthorityTransactionCoordinator::new();
-/// coordinator.launch_worker();
+/// use agentmage_kernel_engine::authority_transaction::EffectAuthorization;
+/// let _ = EffectAuthorization::new();
 /// ```
+///
+/// A permit cannot be duplicated:
+///
+/// ```compile_fail
+/// use agentmage_kernel_engine::authority_transaction::EffectAuthorization;
+/// fn duplicate(permit: EffectAuthorization<'_>) {
+///     let _copy = permit.clone();
+/// }
+/// ```
+///
+/// A consumed permit cannot be reused:
+///
+/// ```compile_fail
+/// use agentmage_kernel_engine::authority_transaction::{EffectAuthorization, EffectDriver};
+/// fn reuse(driver: &mut impl EffectDriver, permit: EffectAuthorization<'_>) {
+///     let _ = driver.execute(permit);
+///     let _ = driver.execute(permit);
+/// }
+/// ```
+pub struct EffectAuthorization<'transaction> {
+    transaction_id: &'transaction AuthorityTransactionId,
+    attempt_id: &'transaction OperationAttemptId,
+    consumed_grant_sha256: &'transaction str,
+    operation: OperationBinding,
+    call: &'transaction ToolCall,
+}
+
+impl EffectAuthorization<'_> {
+    /// Returns the exact authority-transaction identity.
+    #[must_use]
+    pub const fn transaction_id(&self) -> &AuthorityTransactionId {
+        self.transaction_id
+    }
+
+    /// Returns the exact non-replayable operation-attempt identity.
+    #[must_use]
+    pub const fn attempt_id(&self) -> &OperationAttemptId {
+        self.attempt_id
+    }
+
+    /// Returns the digest of the exact consumed grant record.
+    #[must_use]
+    pub const fn consumed_grant_sha256(&self) -> &str {
+        self.consumed_grant_sha256
+    }
+
+    /// Returns the one canonical operation authorized for this attempt.
+    #[must_use]
+    pub const fn operation(&self) -> OperationBinding {
+        self.operation
+    }
+
+    /// Returns the exact validated tool call bound to this attempt.
+    #[must_use]
+    pub const fn call(&self) -> &ToolCall {
+        self.call
+    }
+}
+
+impl fmt::Debug for EffectAuthorization<'_> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("EffectAuthorization")
+            .field("transaction_id", self.transaction_id)
+            .field("attempt_id", self.attempt_id)
+            .field("operation", &self.operation)
+            .field("tool_id", &self.call.tool_id)
+            .field("tool_call_id", &self.call.tool_call_id)
+            .finish_non_exhaustive()
+    }
+}
+
+/// One bounded effect result returned to the authority-transaction reconciler.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EffectResult {
+    outcome: OperationOutcome,
+    result_sha256: String,
+    state_change: StateChange,
+}
+
+impl EffectResult {
+    /// Creates a result whose identity is the digest of bounded redacted material.
+    #[must_use]
+    pub fn from_redacted_material(
+        outcome: OperationOutcome,
+        material: &[u8],
+        state_change: StateChange,
+    ) -> Self {
+        Self {
+            outcome,
+            result_sha256: sha256_hex(material),
+            state_change,
+        }
+    }
+
+    /// Returns the terminal operation outcome reported by the driver.
+    #[must_use]
+    pub const fn outcome(&self) -> OperationOutcome {
+        self.outcome
+    }
+
+    /// Returns the content-free result identity.
+    #[must_use]
+    pub fn result_sha256(&self) -> &str {
+        &self.result_sha256
+    }
+
+    /// Returns the driver's conservative state-change classification.
+    #[must_use]
+    pub const fn state_change(&self) -> StateChange {
+        self.state_change
+    }
+}
+
+/// Result of crossing one mediated platform or capability effect boundary.
+#[derive(Debug, Default)]
+pub struct EffectLaunch {
+    results: Option<Vec<EffectResult>>,
+}
+
+impl EffectLaunch {
+    /// Reports that the effect boundary was not crossed.
+    #[must_use]
+    pub const fn failed() -> Self {
+        Self { results: None }
+    }
+
+    /// Reports one completed, bounded effect result.
+    #[must_use]
+    pub fn completed(result: EffectResult) -> Self {
+        Self {
+            results: Some(vec![result]),
+        }
+    }
+
+    #[cfg(test)]
+    fn completed_results(results: Vec<EffectResult>) -> Self {
+        Self {
+            results: Some(results),
+        }
+    }
+}
+
+/// Effect adapter invoked only after the kernel records and consumes authority.
+///
+/// The authorization is passed by value. Implementations cannot launch through
+/// this interface without receiving the opaque permit from
+/// [`AuthorityTransactionCoordinator::execute_effect`].
+pub trait EffectDriver {
+    /// Performs the one exact effect described by the consumed authorization.
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch;
+}
+
+/// In-memory Phase 4 owner of transaction revisions and terminal receipts.
+///
+/// The coordinator exposes only the mediated effect boundary. Phase 7 must
+/// replace this in-memory journal with one crash-durable encrypted transaction.
 #[derive(Debug, Default)]
 pub struct AuthorityTransactionCoordinator {
     histories: BTreeMap<AuthorityTransactionId, Vec<AuthorityTransactionRecord>>,
@@ -98,7 +315,19 @@ impl AuthorityTransactionCoordinator {
         &self.receipts
     }
 
-    fn run<D: WorkerDriver>(
+    /// Validates, consumes, records, and executes one exact effect transaction.
+    pub fn execute_effect<D: EffectDriver>(
+        &mut self,
+        registry: &ToolRegistry,
+        issuer: &mut GrantIssuer,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+    ) -> Result<Receipt, AuthorityTransactionError> {
+        self.run(registry, issuer, policy, &request, driver, None)
+    }
+
+    fn run<D: EffectDriver>(
         &mut self,
         registry: &ToolRegistry,
         issuer: &mut GrantIssuer,
@@ -235,18 +464,19 @@ impl AuthorityTransactionCoordinator {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
 
-        let attempt = WorkerAttempt {
+        let authorization = EffectAuthorization {
             transaction_id: &request.transaction_id,
             attempt_id: &request.attempt_id,
             consumed_grant_sha256: &consumed.consumed_grant_sha256,
+            operation: definition.required_grant.operation,
             call: &request.call,
         };
-        let launched = driver.launch(&attempt);
+        let launched = driver.execute(authorization);
         if fault == Some(FaultPoint::WorkerReturned) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
-        let results = match launched {
-            WorkerLaunch::Failed => {
+        let results = match launched.results {
+            None => {
                 return self.terminalize(
                     &request.transaction_id,
                     OperationOutcome::Failed,
@@ -255,14 +485,14 @@ impl AuthorityTransactionCoordinator {
                     "authority.transaction.launch_failed",
                 );
             }
-            WorkerLaunch::Started(results) => results,
+            Some(results) => results,
         };
         let result = if request.cancellation == CancellationPoint::AfterLaunch {
-            WorkerResult {
-                outcome: OperationOutcome::Cancelled,
-                result_sha256: stable_result_sha256("cancelled-after-launch"),
-                state_change: StateChange::Uncertain,
-            }
+            EffectResult::from_redacted_material(
+                OperationOutcome::Cancelled,
+                b"cancelled-after-launch",
+                StateChange::Uncertain,
+            )
         } else {
             reconcile_results(&results)
         };
@@ -297,6 +527,7 @@ impl AuthorityTransactionCoordinator {
         )
     }
 
+    #[cfg(test)]
     fn recover(
         &mut self,
         issuer: &mut GrantIssuer,
@@ -517,48 +748,13 @@ enum FaultPoint {
     ResultReconciled,
 }
 
-struct AuthorityTransactionRequest {
-    transaction_id: AuthorityTransactionId,
-    attempt_id: agentmage_kernel_contracts::OperationAttemptId,
-    approval_id: agentmage_kernel_contracts::ApprovalId,
-    grant_id: GrantId,
-    call: ToolCall,
-    context: PolicyEvaluationContext,
-    cancellation: CancellationPoint,
-    occurred_at_epoch_ms: u64,
-    occurred_at: String,
-}
-
-struct WorkerAttempt<'attempt> {
-    transaction_id: &'attempt AuthorityTransactionId,
-    attempt_id: &'attempt agentmage_kernel_contracts::OperationAttemptId,
-    consumed_grant_sha256: &'attempt str,
-    call: &'attempt ToolCall,
-}
-
-trait WorkerDriver {
-    fn launch(&mut self, attempt: &WorkerAttempt<'_>) -> WorkerLaunch;
-}
-
-enum WorkerLaunch {
-    Failed,
-    Started(Vec<WorkerResult>),
-}
-
-#[derive(Clone)]
-struct WorkerResult {
-    outcome: OperationOutcome,
-    result_sha256: String,
-    state_change: StateChange,
-}
-
-fn reconcile_results(results: &[WorkerResult]) -> WorkerResult {
+fn reconcile_results(results: &[EffectResult]) -> EffectResult {
     let Some(first) = results.first() else {
-        return WorkerResult {
-            outcome: OperationOutcome::Uncertain,
-            result_sha256: stable_result_sha256("missing-worker-result"),
-            state_change: StateChange::Uncertain,
-        };
+        return EffectResult::from_redacted_material(
+            OperationOutcome::Uncertain,
+            b"missing-worker-result",
+            StateChange::Uncertain,
+        );
     };
     if results.iter().all(|candidate| {
         candidate.outcome == first.outcome
@@ -567,11 +763,11 @@ fn reconcile_results(results: &[WorkerResult]) -> WorkerResult {
     }) {
         return first.clone();
     }
-    WorkerResult {
-        outcome: OperationOutcome::Uncertain,
-        result_sha256: stable_result_sha256("conflicting-worker-results"),
-        state_change: StateChange::Uncertain,
-    }
+    EffectResult::from_redacted_material(
+        OperationOutcome::Uncertain,
+        b"conflicting-worker-results",
+        StateChange::Uncertain,
+    )
 }
 
 fn valid_transition(from: AuthorityTransactionState, to: AuthorityTransactionState) -> bool {
@@ -656,8 +852,8 @@ mod tests {
 
     use super::{
         AuthorityTransactionCoordinator, AuthorityTransactionError, AuthorityTransactionRequest,
-        CancellationPoint, FaultPoint, WorkerAttempt, WorkerDriver, WorkerLaunch, WorkerResult,
-        valid_transition,
+        CancellationPoint, EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
+        FaultPoint, valid_transition,
     };
     use crate::{
         grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest},
@@ -686,22 +882,22 @@ mod tests {
     #[derive(Default)]
     struct FakeDriver {
         launches: usize,
-        launch: Option<WorkerLaunch>,
+        launch: Option<EffectLaunch>,
         observed_attempt: Option<String>,
     }
 
-    impl WorkerDriver for FakeDriver {
-        fn launch(&mut self, attempt: &WorkerAttempt<'_>) -> WorkerLaunch {
+    impl EffectDriver for FakeDriver {
+        fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
             self.launches += 1;
             self.observed_attempt = Some(format!(
                 "{}:{}:{}:{}:{}",
-                attempt.transaction_id.as_str(),
-                attempt.attempt_id.as_str(),
-                attempt.consumed_grant_sha256,
-                attempt.call.tool_id.as_str(),
-                attempt.call.tool_call_id.as_str()
+                authorization.transaction_id().as_str(),
+                authorization.attempt_id().as_str(),
+                authorization.consumed_grant_sha256(),
+                authorization.call().tool_id.as_str(),
+                authorization.call().tool_call_id.as_str()
             ));
-            self.launch.take().unwrap_or(WorkerLaunch::Failed)
+            self.launch.take().unwrap_or_else(EffectLaunch::failed)
         }
     }
 
@@ -882,8 +1078,8 @@ mod tests {
         }
     }
 
-    fn success() -> WorkerResult {
-        WorkerResult {
+    fn success() -> EffectResult {
+        EffectResult {
             outcome: OperationOutcome::Succeeded,
             result_sha256: "6".repeat(64),
             state_change: StateChange::NotChanged,
@@ -1020,18 +1216,27 @@ mod tests {
         let mut fixture = fixture();
         let mut coordinator = AuthorityTransactionCoordinator::new();
         let mut driver = FakeDriver {
-            launch: Some(WorkerLaunch::Started(vec![success()])),
+            launch: Some(EffectLaunch::completed(success())),
             ..FakeDriver::default()
         };
-        let owned_request = request(&fixture);
+        let owned_request = AuthorityTransactionRequest::new(
+            fixture.transaction_id.clone(),
+            fixture.attempt_id.clone(),
+            fixture.approval_id.clone(),
+            fixture.grant.grant_id.clone(),
+            fixture.call.clone(),
+            fixture.context.clone(),
+            4_000,
+            "1970-01-01T00:00:04Z",
+        )
+        .expect("public request must validate");
         let receipt = coordinator
-            .run(
+            .execute_effect(
                 &fixture.registry,
                 &mut fixture.issuer,
                 &fixture.policy,
-                &owned_request,
+                owned_request,
                 &mut driver,
-                None,
             )
             .expect("exact run succeeds");
         assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
@@ -1045,11 +1250,31 @@ mod tests {
     }
 
     #[test]
+    fn production_request_rejects_call_context_identity_drift() {
+        let fixture = fixture();
+        let mut context = fixture.context.clone();
+        context.tool_version = "2.0.0".to_owned();
+        assert_eq!(
+            AuthorityTransactionRequest::new(
+                fixture.transaction_id,
+                fixture.attempt_id,
+                fixture.approval_id,
+                fixture.grant.grant_id,
+                fixture.call,
+                context,
+                4_000,
+                "1970-01-01T00:00:04Z",
+            ),
+            Err(AuthorityTransactionError::InvalidToolCall)
+        );
+    }
+
+    #[test]
     fn consumed_launch_failure_is_terminal_and_non_replayable() {
         let mut fixture = fixture();
         let mut coordinator = AuthorityTransactionCoordinator::new();
         let mut driver = FakeDriver {
-            launch: Some(WorkerLaunch::Failed),
+            launch: Some(EffectLaunch::failed()),
             ..FakeDriver::default()
         };
         let owned_request = request(&fixture);
@@ -1131,7 +1356,7 @@ mod tests {
         after_launch.cancellation = CancellationPoint::AfterLaunch;
         let mut coordinator = AuthorityTransactionCoordinator::new();
         let mut driver = FakeDriver {
-            launch: Some(WorkerLaunch::Started(vec![success()])),
+            launch: Some(EffectLaunch::completed(success())),
             ..FakeDriver::default()
         };
         let receipt = coordinator
@@ -1157,7 +1382,7 @@ mod tests {
 
         for (results, expected) in [
             (
-                vec![WorkerResult {
+                vec![EffectResult {
                     outcome: OperationOutcome::TimedOut,
                     result_sha256: "7".repeat(64),
                     state_change: StateChange::Uncertain,
@@ -1168,7 +1393,7 @@ mod tests {
             (
                 vec![
                     success(),
-                    WorkerResult {
+                    EffectResult {
                         outcome: OperationOutcome::Failed,
                         result_sha256: "8".repeat(64),
                         state_change: StateChange::Uncertain,
@@ -1180,7 +1405,7 @@ mod tests {
             let mut fixture = fixture();
             let mut coordinator = AuthorityTransactionCoordinator::new();
             let mut driver = FakeDriver {
-                launch: Some(WorkerLaunch::Started(results)),
+                launch: Some(EffectLaunch::completed_results(results)),
                 ..FakeDriver::default()
             };
             let owned_request = request(&fixture);
@@ -1211,7 +1436,7 @@ mod tests {
             let mut fixture = fixture();
             let mut coordinator = AuthorityTransactionCoordinator::new();
             let mut driver = FakeDriver {
-                launch: Some(WorkerLaunch::Started(vec![success()])),
+                launch: Some(EffectLaunch::completed(success())),
                 ..FakeDriver::default()
             };
             let owned_request = request(&fixture);
@@ -1297,7 +1522,7 @@ mod tests {
         second_request.transaction_id = transaction_id.clone();
         second_request.attempt_id = attempt_id;
         let mut driver = FakeDriver {
-            launch: Some(WorkerLaunch::Started(vec![success()])),
+            launch: Some(EffectLaunch::completed(success())),
             ..FakeDriver::default()
         };
         let second = coordinator

@@ -55,6 +55,7 @@ SOURCE_PATHS = (
 )
 EXPECTED_UNMATERIALIZED = {
     ("platform-macos", "kernel-contracts"): "blocked-macos",
+    ("platform-macos", "kernel-engine"): "blocked-macos",
     ("shell-host", "platform-macos"): "blocked-macos",
     ("shell-vscode", "kernel-contracts"): "protocol-not-yet-generated",
 }

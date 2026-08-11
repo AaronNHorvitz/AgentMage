@@ -162,11 +162,12 @@ stateDiagram-v2
 
 ### Phase Boundary
 
-1. Phase 4 specifies and tests ordering with a private in-module worker driver.
-    It deliberately exposes no public product launch method and makes no claim
+1. Phase 4 specified and tested ordering with a private in-module worker driver.
+    It deliberately exposed no public product launch method and made no claim
     of a working effect path.
 2. Phase 5 owns structural effect mediation and the sealed cross-boundary
-    launch capability. Phase 6 owns canonical held-target parity and isolation.
+    launch capability through proposed Decision 0014. Phase 6 owns canonical
+    held-target parity and isolation.
     Phase 7 owns encrypted durable storage, atomic persistence, restart
     recovery, and production receipt publication.
 3. Shells, models, capability packs, and adapters must not construct authority
@@ -207,6 +208,6 @@ stateDiagram-v2
 
 ## Approval Gate
 
-This decision remains proposed until the user explicitly approves the Phase 4
-candidate. No Phase 4 commit, push, or transition to Phase 5 is authorized by
-the existence of this document.
+The user approved this amended decision and the Phase 4 local commit on
+2026-08-11. It was committed locally as `4136253`; no push occurred. Decision
+0014 governs the separate Phase 5 candidate and approval gate.

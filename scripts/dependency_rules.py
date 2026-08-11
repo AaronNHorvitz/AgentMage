@@ -20,8 +20,8 @@ RULES_PATH = ROOT / "architecture" / "dependency-rules.json"
 EXPECTED_IMPORTS = {
     "kernel-contracts": set(),
     "kernel-engine": {"kernel-contracts"},
-    "platform-linux": {"kernel-contracts"},
-    "platform-macos": {"kernel-contracts"},
+    "platform-linux": {"kernel-contracts", "kernel-engine"},
+    "platform-macos": {"kernel-contracts", "kernel-engine"},
     "capability-read-only": {"kernel-contracts"},
     "shell-host": {
         "capability-read-only",
@@ -71,14 +71,14 @@ EXPECTED_LAYERS = {
     "fixture-corpus": 0,
     "documentation": 0,
     "kernel-engine": 1,
-    "platform-linux": 1,
-    "platform-macos": 1,
+    "platform-linux": 2,
+    "platform-macos": 2,
     "capability-read-only": 1,
-    "shell-host": 2,
-    "shell-vscode": 2,
-    "packaging-linux": 3,
-    "packaging-macos": 3,
-    "release-xtask": 4,
+    "shell-host": 3,
+    "shell-vscode": 3,
+    "packaging-linux": 4,
+    "packaging-macos": 4,
+    "release-xtask": 5,
 }
 EXPECTED_CATEGORY_CONSTRAINTS = {
     "kernel": {"capability-packs", "platform-adapters", "shells"},

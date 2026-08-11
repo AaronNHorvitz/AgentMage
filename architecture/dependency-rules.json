@@ -1,6 +1,10 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0004",
+  "amendment_decision_ids": [
+    "ADR-0014"
+  ],
+  "candidate_amendment_status": "accepted",
   "status": "accepted",
   "module_rules": [
     {
@@ -23,23 +27,27 @@
     },
     {
       "id": "platform-linux",
-      "layer": 1,
+      "layer": 2,
       "allowed_imports": [
-        "kernel-contracts"
+        "kernel-contracts",
+        "kernel-engine"
       ],
       "declared_imports": [
-        "kernel-contracts"
+        "kernel-contracts",
+        "kernel-engine"
       ],
       "assembly_inputs": []
     },
     {
       "id": "platform-macos",
-      "layer": 1,
+      "layer": 2,
       "allowed_imports": [
-        "kernel-contracts"
+        "kernel-contracts",
+        "kernel-engine"
       ],
       "declared_imports": [
-        "kernel-contracts"
+        "kernel-contracts",
+        "kernel-engine"
       ],
       "assembly_inputs": []
     },
@@ -56,7 +64,7 @@
     },
     {
       "id": "shell-host",
-      "layer": 2,
+      "layer": 3,
       "allowed_imports": [
         "capability-read-only",
         "kernel-contracts",
@@ -75,7 +83,7 @@
     },
     {
       "id": "shell-vscode",
-      "layer": 2,
+      "layer": 3,
       "allowed_imports": [
         "kernel-contracts"
       ],
@@ -93,7 +101,7 @@
     },
     {
       "id": "packaging-linux",
-      "layer": 3,
+      "layer": 4,
       "allowed_imports": [],
       "declared_imports": [],
       "assembly_inputs": [
@@ -105,7 +113,7 @@
     },
     {
       "id": "packaging-macos",
-      "layer": 3,
+      "layer": 4,
       "allowed_imports": [],
       "declared_imports": [],
       "assembly_inputs": [
@@ -124,7 +132,7 @@
     },
     {
       "id": "release-xtask",
-      "layer": 4,
+      "layer": 5,
       "allowed_imports": [],
       "declared_imports": [],
       "assembly_inputs": [

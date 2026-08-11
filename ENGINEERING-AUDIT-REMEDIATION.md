@@ -1301,10 +1301,10 @@ Phase 3 verification produced the following candidate-gate results:
 
 ## 15. Phase 4 Record
 
-Phase 4 is authorized only for RM-006 and RM-007. Its candidate edits remain
-subject to the Phase 4 gate and user review. Decision 0013 remains proposed;
-authorization to prepare and test it is not approval of that decision and is
-not authorization to commit, push, or enter Phase 5.
+Phase 4 was authorized only for RM-006 and RM-007. The user approved amended
+Decision 0013 and the Phase 4 local commit. The candidate was committed locally
+as `4136253`; no push occurred. That approval separately authorized entry into
+Phase 5, but it did not authorize a Phase 5 commit, push, or entry into Phase 6.
 
 The candidate RM-007 implementation establishes taxonomy version 1 with 22
 closed operations and eight non-inheriting authority classes. A private-field
@@ -1360,8 +1360,8 @@ coordinator is in-memory and does not support an integrated product workflow.
 
 Historical Story 4.1 and Story 5.1 packages, references, fixtures, and generated
 reports remain unchanged and continue to describe their recorded revisions.
-Decision 0013 and the current source describe the Phase 4 candidate. No old
-artifact is refreshed or represented as current Phase 4 evidence.
+Accepted Decision 0013 and commit `4136253` describe the Phase 4 result. No old
+artifact was refreshed or represented as current Phase 4 evidence.
 
 Phase 4 verification produced the following candidate-gate results:
 
@@ -1394,5 +1394,87 @@ Phase 4 verification produced the following candidate-gate results:
   the current Rust taxonomy and transaction tests pass. Separating historical
   validity from current applicability remains assigned to RM-019 in Phase 10.
 - `git diff --check` passed. The retained `artifacts/` tree, version-1 grant
-  fixtures, and frozen Story 4.1/5.1 references have no diff. The branch remains
-  local with no upstream; no Phase 4 commit or push occurred.
+  fixtures, and frozen Story 4.1/5.1 references had no diff. The branch remained
+  local with no upstream; the approved Phase 4 commit was local and no push
+  occurred.
+
+## 16. Phase 5 Record
+
+Phase 5 was authorized only for RM-008. The user approved entry into this phase
+after approving amended Decision 0013 and the Phase 4 local commit. The user
+subsequently approved Decision 0014, the Phase 5 local commit, and entry into
+Phase 6. That approval did not authorize a push or a Phase 6 commit.
+
+The candidate makes the kernel transaction the sole issuer of a cross-crate
+effect permit. `AuthorityTransactionRequest` has private fields and one
+production constructor that rejects call/context identity drift before state
+retention. `EffectAuthorization` has private fields, borrows the exact request
+and consumed-grant digest, has no public constructor, clone, copy, or wire
+format, and is consumed by value through `EffectDriver::execute`. The public
+coordinator entry point issues it only after registry validation, current policy
+evaluation, atomic grant consumption, attempt recording, and launch commitment.
+
+Raw configuration migration, replacement, and rollback methods are now
+crate-private and are exposed only through `ConfigurationEffectDriver`.
+`LinuxSandboxRunner::run` is private and is exposed only through
+`LinuxSandboxEffectDriver`. Linux Secret Service probe, store, lookup, and clear
+methods are private and are exposed only through `LinuxSecretEffectDriver`.
+The Unix listener and its bind/accept methods are module-private and are not
+exported; no public product socket-creation path exists in this phase. Safe
+path, configuration, manifest, inventory, and bounded-result observation APIs
+remain separate and have no conversion into an effect permit.
+
+The dependency graph now permits an effect-bearing platform adapter to import
+the narrow kernel mediation API while continuing to prohibit every
+kernel-to-platform, kernel-to-capability, and kernel-to-shell edge. The Linux
+adapter materializes that inward edge. The macOS edge is declared but remains
+`blocked-macos`. Shell and read-only capability source remain unable to consume
+the permit; the read-only capability continues to import contracts only.
+
+The new effect-boundary validator checks the permit shape, exact permit-user
+inventory, raw API visibility, internal manifest edges, absence of a public
+Unix listener, and direct shell/capability process, socket, and common
+filesystem-mutation patterns. Mutation tests prove that reopening sandbox
+execution, making the permit cloneable, adding an unregistered permit consumer,
+converting an observation module into an authority consumer, adding a shell
+process launch, removing the platform mediation dependency, or exporting the
+listener all fail the guard.
+
+This phase establishes structural mediation only. It does not claim exact
+grant-target parity, exact held-object mounts, durable authority transactions,
+restart recovery, macOS implementation, or an integrated product workflow.
+Those boundaries remain assigned to Phases 6 and 7 or their existing platform
+work. A trusted admitted driver can still report a false result; driver
+provenance and activation remain independent build and platform responsibilities.
+
+Phase 5 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed Rust and TypeScript format checks, Clippy with
+  warnings denied, ESLint, the strict-local and effect-boundary source audits,
+  every workspace build, all enabled default Rust tests, all six compile-fail
+  boundary tests, and the Visual Studio Code shell test. Eleven native Linux
+  tests remain explicitly ignored under their recorded environment conditions.
+- The kernel suite passed 88 unit tests plus its integration suites. The public
+  coordinator path executes one valid transaction, and production request
+  construction rejects call/context identity drift. Existing grant, policy,
+  replay, cancellation, crash, reconciliation, and receipt tests remain green.
+- Nine focused effect-boundary policy and mutation tests pass. The eleven
+  dependency-policy and live architecture-report tests pass, including the
+  eight-edge materialized graph and four explicitly unmaterialized edges.
+- Markdown lint passed all 78 files, all 39 Mermaid blocks parsed, and current
+  documentation and policy validation passed.
+- The retained Story 4.1 kernel architecture report fails closed as stale
+  because it records the previous seven-edge graph. Its downstream dispatcher,
+  boundary-integration, security-map, and gate artifacts consequently remain
+  stale. They were not regenerated, rewritten, or represented as Phase 5
+  evidence.
+- The broad historical Python suite ran 893 tests in 587.750 seconds and
+  remained fail-closed with 48 failures and 98 errors. The reported chains are
+  revision-bound architecture, kernel, grant, configuration, supply-chain,
+  component-inventory, model, update, vulnerability, security-map, and
+  story/sprint evidence. The focused current-source and mediation checks pass;
+  repository-wide historical/current evidence supersession remains RM-019.
+- `git diff --check` passed and the retained `artifacts/`, `fixtures/`, and
+  `references/` trees have no diff. The approved candidate is authorized for a
+  local commit on branch `agent/expand-delivery-windows-ga`, which has no
+  upstream. No push is authorized.

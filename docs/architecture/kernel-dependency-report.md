@@ -1,10 +1,15 @@
 # Kernel Dependency Report
 
-This report separates AgentMage's accepted logical dependency policy from the
-product edges that are currently materialized in repository manifests. Its
-machine-verifiable companion is the
+This report separates AgentMage's live Phase 5 candidate dependency policy from
+the product edges that are currently materialized in repository manifests. Its
+retained machine-verifiable companion is the
 [`kernel-architecture-dependency-report.json`](../../artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json)
 artifact.
+
+That Story 4.1 artifact is revision-bound to the previous seven-edge graph and
+therefore fails the current checker as stale. It is not regenerated or
+represented as Phase 5 evidence; current policy and graph behavior are tested
+directly from source until the later evidence-supersession phase.
 
 ## Evidence Boundary
 
@@ -23,6 +28,7 @@ target. The Linux platform edge is conditional on `target_os = "linux"`.
 flowchart BT
     KE["kernel-engine"] --> KC["kernel-contracts"]
     PL["platform-linux"] --> KC
+    PL -->|"effect mediation only"| KE
     CR["capability-read-only"] --> KC
     SH["shell-host"] --> KC
     SH --> KE
@@ -30,24 +36,26 @@ flowchart BT
     SH --> CR
 ```
 
-The seven materialized internal product edges are:
+The eight materialized internal product edges are:
 
 - `capability-read-only` -> `kernel-contracts`
 - `kernel-engine` -> `kernel-contracts`
 - `platform-linux` -> `kernel-contracts`
+- `platform-linux` -> `kernel-engine`
 - `shell-host` -> `capability-read-only`
 - `shell-host` -> `kernel-contracts`
 - `shell-host` -> `kernel-engine`
 - `shell-host` -> `platform-linux` under `cfg(target_os = "linux")`
 
-Both the accepted ten-edge logical graph and this seven-edge materialized graph
+Both the amended twelve-edge logical graph and this eight-edge materialized graph
 are acyclic. Every materialized edge is in the source module's exact allowlist.
 
 ## Declared but Unmaterialized Edges
 
-Three policy edges are intentionally not presented as implemented:
+Four policy edges are intentionally not presented as implemented:
 
 - `platform-macos` -> `kernel-contracts`: `blocked-macos`
+- `platform-macos` -> `kernel-engine`: `blocked-macos`
 - `shell-host` -> `platform-macos`: `blocked-macos`
 - `shell-vscode` -> `kernel-contracts`: `protocol-not-yet-generated`
 
@@ -76,8 +84,9 @@ by the supply-chain controls and are not duplicated here.
 - `kernel-contracts` has zero internal product dependencies.
 - `kernel-engine` has exactly one internal edge, to `kernel-contracts`.
 - Neither the kernel, Linux adapter, nor read-only capability imports a shell.
-- The Linux adapter and read-only capability depend on contracts, not on the
-  engine or one another.
+- The Linux adapter depends inward on contracts and the kernel's consuming
+  effect-mediation interface. The read-only capability depends only on
+  contracts; neither imports the other.
 - The host shell is the only materialized composition root.
 - No compile cycle or prohibited observed edge exists.
 
