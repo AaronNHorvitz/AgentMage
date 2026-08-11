@@ -818,6 +818,34 @@ mod tests {
     }
 
     #[test]
+    fn logical_fixture_has_equivalent_linux_policy_semantics() {
+        let fixture = include_bytes!("../../../fixtures/paths/v1/logical-input.txt");
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir_all(root.join("docs")).expect("logical fixture directory creates");
+        fs::write(root.join("docs/logical-input.txt"), fixture).expect("logical fixture writes");
+        let workspace = authorize_for_test(&root);
+        let candidate = path(&["docs", "logical-input.txt"]);
+        let held = adapter()
+            .resolve(&workspace, &candidate, PathResolutionIntent::ContentHash)
+            .expect("Linux adapter admits the shared logical fixture");
+        let expected: [u8; 32] = Sha256::digest(fixture).into();
+        assert_eq!(held.workspace_path(), &candidate);
+        assert_eq!(held.intent(), PathResolutionIntent::ContentHash);
+        assert_eq!(held.object_kind(), WorkspaceObjectKind::RegularFile);
+        assert_eq!(
+            held.object_identity().platform(),
+            agentmage_kernel_contracts::PathPlatform::Linux
+        );
+        assert_eq!(held.preimage().expect("exact preimage").byte_len(), 28);
+        assert_eq!(
+            held.preimage().expect("exact preimage").content_sha256(),
+            &expected
+        );
+        held.revalidate().expect("logical fixture remains current");
+    }
+
+    #[test]
     fn descriptor_walk_holds_the_original_file_and_exact_preimage_across_replacement() {
         let test = TestDirectory::new();
         let root = test.path.join("workspace");

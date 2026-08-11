@@ -183,3 +183,34 @@ fn public_adapter_contract_preserves_handle_affinity_and_zero_observation_denial
     assert_eq!(adapter.observations.load(Ordering::SeqCst), 1);
     assert_eq!(foreign_error.to_string(), "path.adapter.foreign_handle");
 }
+
+#[test]
+fn logical_fixture_has_equivalent_fake_policy_semantics() {
+    let fixture = include_bytes!("../../../fixtures/paths/v1/logical-input.txt");
+    assert_eq!(fixture, b"shared logical path fixture\n");
+    let adapter = ClientAdapter {
+        adapter_instance_id: AdapterInstanceId::from_raw("adapter-fake-0001"),
+        observations: AtomicUsize::new(0),
+    };
+    let candidate = WorkspacePath::new(
+        WorkspaceId::from_raw("workspace-0001"),
+        ["docs", "logical-input.txt"],
+    )
+    .expect("shared logical path is canonical");
+    let held = adapter
+        .resolve(
+            &handle("workspace-0001", "adapter-fake-0001"),
+            &candidate,
+            PathResolutionIntent::ContentHash,
+        )
+        .expect("fake adapter admits the shared logical fixture");
+    assert_eq!(held.workspace_path(), &candidate);
+    assert_eq!(held.intent(), PathResolutionIntent::ContentHash);
+    assert_eq!(held.object_kind(), WorkspaceObjectKind::RegularFile);
+    assert_eq!(
+        held.object_identity().platform(),
+        PathPlatform::DeterministicFake
+    );
+    assert!(held.preimage().is_none());
+    assert_eq!(adapter.observations.load(Ordering::SeqCst), 1);
+}
