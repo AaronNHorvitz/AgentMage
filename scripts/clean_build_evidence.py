@@ -371,7 +371,7 @@ def run_platform(
             pass
         else:
             output_tail = " | ".join(
-                str(failed_command.get("output", "")).strip().splitlines()[-8:]
+                str(failed_command.get("output", "")).strip().splitlines()[-80:]
             )
             detail = (
                 f"command {failed_command.get('id', 'unknown')} exited "
