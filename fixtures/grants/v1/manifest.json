@@ -1,0 +1,36 @@
+{
+  "fixture_set": "grant-review-v1",
+  "fixtures": [
+    {
+      "path": "fixtures/grants/v1/approval-preview.workspace-read.json",
+      "sha256": "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707",
+      "size_bytes": 1673
+    },
+    {
+      "path": "fixtures/grants/v1/denial-receipt.argument-mismatch.json",
+      "sha256": "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41",
+      "size_bytes": 1116
+    },
+    {
+      "path": "fixtures/grants/v1/policy-denial.argument-mismatch.json",
+      "sha256": "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96",
+      "size_bytes": 334
+    }
+  ],
+  "generator": "kernel/engine/tests/grant_review_fixtures.rs",
+  "invariants": {
+    "approval_confirmation_is_exact": true,
+    "approval_is_non_authoritative": true,
+    "denial_terminalizes_without_use": true,
+    "denial_uses_actual_policy_engine": true,
+    "receipt_is_non_authoritative": true,
+    "receipt_runtime_builder_status": "not-implemented"
+  },
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "schema_version": 1
+}
