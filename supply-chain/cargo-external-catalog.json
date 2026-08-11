@@ -25,6 +25,7 @@
     {"name": "quote", "version": "1.0.47", "license": "MIT OR Apache-2.0"},
     {"name": "rustix", "version": "1.1.4", "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"},
     {"name": "rustc_version", "version": "0.4.1", "license": "MIT OR Apache-2.0"},
+    {"name": "seccompiler", "version": "0.5.0", "license": "Apache-2.0 OR BSD-3-Clause"},
     {"name": "semver", "version": "1.0.28", "license": "MIT OR Apache-2.0"},
     {"name": "serde", "version": "1.0.229", "license": "MIT OR Apache-2.0"},
     {"name": "serde_core", "version": "1.0.229", "license": "MIT OR Apache-2.0"},

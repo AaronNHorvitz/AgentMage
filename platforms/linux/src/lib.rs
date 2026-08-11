@@ -3,11 +3,16 @@
 //! Fedora and Ubuntu platform path adapter.
 
 mod ipc;
+mod sandbox;
 
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
     LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,
     LinuxPeerIdentity, PrivateUnixListener,
+};
+pub use sandbox::{
+    LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
+    LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
 };
 
 use std::fmt;
