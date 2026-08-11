@@ -11,7 +11,9 @@ use agentmage_kernel_contracts::{
     WorkspaceObjectKind, WorkspacePath,
 };
 use rustix::fd::OwnedFd;
-use rustix::fs::{FileType, Mode, OFlags, Stat, fstat, openat};
+use rustix::fs::{
+    AtFlags, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, openat, openat2, statx,
+};
 use rustix::io::{Errno, pread};
 use sha2::{Digest, Sha256};
 
@@ -22,6 +24,11 @@ pub const COMPONENT_ID: &str = "platform-linux";
 pub const DEFAULT_MAX_PREIMAGE_BYTES: u64 = 64 * 1024 * 1024;
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
+
+const STRICT_RESOLVE_FLAGS: ResolveFlags = ResolveFlags::BENEATH
+    .union(ResolveFlags::NO_SYMLINKS)
+    .union(ResolveFlags::NO_MAGICLINKS)
+    .union(ResolveFlags::NO_XDEV);
 
 /// Returns the identity of the contracts implemented by this adapter.
 #[must_use]
@@ -34,6 +41,22 @@ pub const fn contract_component_id() -> &'static str {
 pub struct LinuxPathAdapter {
     adapter_instance_id: AdapterInstanceId,
     max_preimage_bytes: u64,
+    resolver_preference: ResolverPreference,
+}
+
+/// Security mechanism selected for one Linux path resolution.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LinuxResolutionStrategy {
+    /// Linux `openat2` with beneath, no-symlink, no-magic-link, and no-mount-crossing rules.
+    OpenAt2,
+    /// Descriptor-relative component walk with verified `statx` mount identities.
+    VerifiedDescriptorWalk,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ResolverPreference {
+    Auto,
+    VerifiedDescriptorWalk,
 }
 
 impl LinuxPathAdapter {
@@ -43,6 +66,7 @@ impl LinuxPathAdapter {
         Self {
             adapter_instance_id,
             max_preimage_bytes,
+            resolver_preference: ResolverPreference::Auto,
         }
     }
 
@@ -107,6 +131,7 @@ pub struct LinuxHeldObject {
     object_descriptor: OwnedFd,
     object_snapshot: LinuxStatSnapshot,
     max_preimage_bytes: u64,
+    resolution_strategy: LinuxResolutionStrategy,
 }
 
 impl fmt::Debug for LinuxHeldObject {
@@ -118,11 +143,18 @@ impl fmt::Debug for LinuxHeldObject {
             .field("intent", &self.intent)
             .field("object_kind", &self.object_kind)
             .field("has_preimage", &self.preimage.is_some())
+            .field("resolution_strategy", &self.resolution_strategy)
             .finish_non_exhaustive()
     }
 }
 
 impl LinuxHeldObject {
+    /// Returns the mechanism that enforced this path resolution.
+    #[must_use]
+    pub const fn resolution_strategy(&self) -> LinuxResolutionStrategy {
+        self.resolution_strategy
+    }
+
     /// Revalidates the continuously held root and object identities.
     pub fn revalidate(&self) -> Result<(), PathAdapterError> {
         let root_now = snapshot(&self.root_descriptor, None)?;
@@ -214,6 +246,11 @@ impl PlatformPathAdapter for LinuxPathAdapter {
         {
             return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
         }
+        let resolution_strategy = select_strategy(
+            &workspace.root_descriptor,
+            &root_now,
+            self.resolver_preference,
+        )?;
         let held_root = workspace
             .root_descriptor
             .try_clone()
@@ -225,13 +262,13 @@ impl PlatformPathAdapter for LinuxPathAdapter {
         let last_index = path.components().len() - 1;
 
         for (index, component) in path.components()[..last_index].iter().enumerate() {
-            let next = openat(
+            let next = open_relative(
+                resolution_strategy,
                 &current_directory,
                 component.as_str(),
                 OFlags::PATH | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(|error| open_error(error, index))?;
+                index,
+            )?;
             let next_snapshot = snapshot(&next, Some(index))?;
             if next_snapshot.file_type == FileType::Symlink {
                 return Err(adapter_error(
@@ -245,7 +282,7 @@ impl PlatformPathAdapter for LinuxPathAdapter {
                     Some(index),
                 ));
             }
-            if next_snapshot.device != root_now.device {
+            if !same_mount(&root_now, &next_snapshot, resolution_strategy) {
                 return Err(adapter_error(
                     PathAdapterErrorKind::MountChanged,
                     Some(index),
@@ -255,13 +292,13 @@ impl PlatformPathAdapter for LinuxPathAdapter {
         }
 
         let final_component = &path.components()[last_index];
-        let candidate = openat(
+        let candidate = open_relative(
+            resolution_strategy,
             &current_directory,
             final_component.as_str(),
             OFlags::PATH | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-            Mode::empty(),
-        )
-        .map_err(|error| open_error(error, last_index))?;
+            last_index,
+        )?;
         let candidate_snapshot = snapshot(&candidate, Some(last_index))?;
         if candidate_snapshot.file_type == FileType::Symlink {
             return Err(adapter_error(
@@ -269,7 +306,7 @@ impl PlatformPathAdapter for LinuxPathAdapter {
                 Some(last_index),
             ));
         }
-        if candidate_snapshot.device != root_now.device {
+        if !same_mount(&root_now, &candidate_snapshot, resolution_strategy) {
             return Err(adapter_error(
                 PathAdapterErrorKind::MountChanged,
                 Some(last_index),
@@ -280,6 +317,7 @@ impl PlatformPathAdapter for LinuxPathAdapter {
         let object_descriptor = match intent {
             PathResolutionIntent::Metadata => candidate,
             PathResolutionIntent::ReadDirectory => reopen_and_compare(
+                resolution_strategy,
                 &current_directory,
                 final_component.as_str(),
                 OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
@@ -288,6 +326,7 @@ impl PlatformPathAdapter for LinuxPathAdapter {
             )?,
             PathResolutionIntent::ReadFile | PathResolutionIntent::ContentHash => {
                 reopen_and_compare(
+                    resolution_strategy,
                     &current_directory,
                     final_component.as_str(),
                     OFlags::RDONLY | OFlags::NONBLOCK | OFlags::NOFOLLOW | OFlags::CLOEXEC,
@@ -329,6 +368,7 @@ impl PlatformPathAdapter for LinuxPathAdapter {
             object_descriptor,
             object_snapshot,
             max_preimage_bytes: self.max_preimage_bytes,
+            resolution_strategy,
         })
     }
 }
@@ -345,10 +385,11 @@ struct LinuxStatSnapshot {
     changed_seconds: i64,
     changed_nanoseconds: u64,
     file_type: FileType,
+    mount_id: Option<u64>,
 }
 
 impl LinuxStatSnapshot {
-    fn from_stat(stat: &Stat) -> Self {
+    fn from_stat(stat: &Stat, mount_id: Option<u64>) -> Self {
         Self {
             device: stat.st_dev,
             inode: stat.st_ino,
@@ -360,6 +401,7 @@ impl LinuxStatSnapshot {
             changed_seconds: stat.st_ctime,
             changed_nanoseconds: stat.st_ctime_nsec,
             file_type: FileType::from_raw_mode(stat.st_mode),
+            mount_id,
         }
     }
 
@@ -367,6 +409,7 @@ impl LinuxStatSnapshot {
         self.device == other.device
             && self.inode == other.inode
             && self.file_type == other.file_type
+            && self.mount_id == other.mount_id
     }
 }
 
@@ -374,9 +417,118 @@ fn snapshot(
     descriptor: &OwnedFd,
     component_index: Option<usize>,
 ) -> Result<LinuxStatSnapshot, PathAdapterError> {
-    fstat(descriptor)
-        .map(|stat| LinuxStatSnapshot::from_stat(&stat))
-        .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, component_index))
+    let stat = fstat(descriptor)
+        .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, component_index))?;
+    let mount_id = descriptor_mount_id(descriptor, component_index)?;
+    Ok(LinuxStatSnapshot::from_stat(&stat, mount_id))
+}
+
+fn descriptor_mount_id(
+    descriptor: &OwnedFd,
+    component_index: Option<usize>,
+) -> Result<Option<u64>, PathAdapterError> {
+    match statx(
+        descriptor,
+        "",
+        AtFlags::EMPTY_PATH | AtFlags::NO_AUTOMOUNT,
+        StatxFlags::MNT_ID,
+    ) {
+        Ok(observed) => Ok(StatxFlags::from_bits_retain(observed.stx_mask)
+            .contains(StatxFlags::MNT_ID)
+            .then_some(observed.stx_mnt_id)),
+        Err(Errno::NOSYS | Errno::INVAL | Errno::PERM | Errno::ACCESS) => Ok(None),
+        Err(_) => Err(adapter_error(
+            PathAdapterErrorKind::PlatformFailure,
+            component_index,
+        )),
+    }
+}
+
+fn select_strategy(
+    root: &OwnedFd,
+    root_snapshot: &LinuxStatSnapshot,
+    preference: ResolverPreference,
+) -> Result<LinuxResolutionStrategy, PathAdapterError> {
+    if preference == ResolverPreference::VerifiedDescriptorWalk {
+        return verified_fallback(root_snapshot);
+    }
+
+    match openat2(
+        root,
+        ".",
+        OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+        STRICT_RESOLVE_FLAGS,
+    ) {
+        Ok(probe) => {
+            let probe_snapshot = snapshot(&probe, None)?;
+            if !root_snapshot.same_object(&probe_snapshot) {
+                return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
+            }
+            Ok(LinuxResolutionStrategy::OpenAt2)
+        }
+        Err(Errno::NOSYS | Errno::INVAL | Errno::PERM | Errno::ACCESS) => Err(adapter_error(
+            PathAdapterErrorKind::UnsupportedPrimitive,
+            None,
+        )),
+        Err(_) => Err(adapter_error(PathAdapterErrorKind::PlatformFailure, None)),
+    }
+}
+
+fn verified_fallback(
+    root_snapshot: &LinuxStatSnapshot,
+) -> Result<LinuxResolutionStrategy, PathAdapterError> {
+    root_snapshot
+        .mount_id
+        .map(|_| LinuxResolutionStrategy::VerifiedDescriptorWalk)
+        .ok_or_else(|| adapter_error(PathAdapterErrorKind::UnsupportedPrimitive, None))
+}
+
+fn open_relative(
+    strategy: LinuxResolutionStrategy,
+    parent: &OwnedFd,
+    component: &str,
+    flags: OFlags,
+    component_index: usize,
+) -> Result<OwnedFd, PathAdapterError> {
+    let result = match strategy {
+        LinuxResolutionStrategy::OpenAt2 => openat2(
+            parent,
+            component,
+            flags,
+            Mode::empty(),
+            STRICT_RESOLVE_FLAGS,
+        ),
+        LinuxResolutionStrategy::VerifiedDescriptorWalk => {
+            openat(parent, component, flags, Mode::empty())
+        }
+    };
+    result.map_err(|error| {
+        if strategy == LinuxResolutionStrategy::OpenAt2
+            && matches!(error, Errno::NOSYS | Errno::INVAL | Errno::PERM)
+        {
+            adapter_error(
+                PathAdapterErrorKind::UnsupportedPrimitive,
+                Some(component_index),
+            )
+        } else {
+            open_error(error, component_index)
+        }
+    })
+}
+
+fn same_mount(
+    root: &LinuxStatSnapshot,
+    candidate: &LinuxStatSnapshot,
+    strategy: LinuxResolutionStrategy,
+) -> bool {
+    match (root.mount_id, candidate.mount_id) {
+        (Some(root_id), Some(candidate_id)) => root_id == candidate_id,
+        (None, None) => {
+            strategy == LinuxResolutionStrategy::OpenAt2 && root.device == candidate.device
+        }
+        _ => false,
+    }
 }
 
 fn admitted_kind(
@@ -427,14 +579,14 @@ fn admitted_kind(
 }
 
 fn reopen_and_compare(
+    strategy: LinuxResolutionStrategy,
     parent: &OwnedFd,
     component: &str,
     flags: OFlags,
     candidate: &LinuxStatSnapshot,
     component_index: usize,
 ) -> Result<OwnedFd, PathAdapterError> {
-    let descriptor = openat(parent, component, flags, Mode::empty())
-        .map_err(|error| open_error(error, component_index))?;
+    let descriptor = open_relative(strategy, parent, component, flags, component_index)?;
     let reopened = snapshot(&descriptor, Some(component_index))?;
     if &reopened != candidate {
         return Err(adapter_error(
@@ -494,6 +646,13 @@ fn identity_digest(domain: &[u8], snapshot: &LinuxStatSnapshot) -> [u8; 32] {
     digest.update(snapshot.device.to_be_bytes());
     digest.update(snapshot.inode.to_be_bytes());
     digest.update(snapshot.mode.to_be_bytes());
+    match snapshot.mount_id {
+        Some(mount_id) => {
+            digest.update([1]);
+            digest.update(mount_id.to_be_bytes());
+        }
+        None => digest.update([0]),
+    }
     digest.finalize().into()
 }
 
@@ -533,12 +692,14 @@ mod tests {
         PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectKind,
         WorkspacePath,
     };
-    use rustix::fs::{Mode, OFlags, open};
+    use rustix::fs::{Mode, OFlags, open, openat2};
+    use rustix::io::Errno;
     use sha2::{Digest, Sha256};
 
     use super::{
         COMPONENT_ID, DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxPathAdapter,
-        LinuxStatSnapshot, contract_component_id,
+        LinuxResolutionStrategy, LinuxStatSnapshot, ResolverPreference, STRICT_RESOLVE_FLAGS,
+        contract_component_id, same_mount, select_strategy, verified_fallback,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -568,6 +729,14 @@ mod tests {
             AdapterInstanceId::from_raw("adapter-linux-0001"),
             DEFAULT_MAX_PREIMAGE_BYTES,
         )
+    }
+
+    fn fallback_adapter() -> LinuxPathAdapter {
+        LinuxPathAdapter {
+            adapter_instance_id: AdapterInstanceId::from_raw("adapter-linux-0001"),
+            max_preimage_bytes: DEFAULT_MAX_PREIMAGE_BYTES,
+            resolver_preference: ResolverPreference::VerifiedDescriptorWalk,
+        }
     }
 
     fn authorize_for_test(root: &Path) -> LinuxAuthorizedWorkspace {
@@ -631,6 +800,10 @@ mod tests {
             held.object_identity().platform(),
             agentmage_kernel_contracts::PathPlatform::Linux
         );
+        assert!(matches!(
+            held.resolution_strategy(),
+            LinuxResolutionStrategy::OpenAt2 | LinuxResolutionStrategy::VerifiedDescriptorWalk
+        ));
 
         fs::rename(root.join("docs/input.txt"), root.join("docs/moved.txt"))
             .expect("held file renames");
@@ -721,6 +894,93 @@ mod tests {
     }
 
     #[test]
+    fn verified_mount_id_fallback_is_explicit_and_missing_mount_id_fails_closed() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        fs::write(root.join("input.txt"), b"fallback\n").expect("fixture writes");
+        symlink("input.txt", root.join("link.txt")).expect("fallback symlink creates");
+        let workspace = authorize_for_test(&root);
+        let held = fallback_adapter()
+            .resolve(
+                &workspace,
+                &path(&["input.txt"]),
+                PathResolutionIntent::ReadFile,
+            )
+            .expect("verified descriptor fallback resolves");
+        assert_eq!(
+            held.resolution_strategy(),
+            LinuxResolutionStrategy::VerifiedDescriptorWalk
+        );
+        let symlink_error = fallback_adapter()
+            .resolve(
+                &workspace,
+                &path(&["link.txt"]),
+                PathResolutionIntent::Metadata,
+            )
+            .expect_err("fallback symlink rejects");
+        assert_eq!(symlink_error.kind(), PathAdapterErrorKind::SymbolicLink);
+
+        let mut unavailable = workspace.root_snapshot.clone();
+        unavailable.mount_id = None;
+        let error = verified_fallback(&unavailable).expect_err("unverified fallback rejects");
+        assert_eq!(error.kind(), PathAdapterErrorKind::UnsupportedPrimitive);
+        assert_eq!(error.component_index(), None);
+    }
+
+    #[test]
+    fn automatic_strategy_matches_strict_openat2_probe_and_mount_ids_cannot_drift() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        let workspace = authorize_for_test(&root);
+        let direct_probe = openat2(
+            &workspace.root_descriptor,
+            ".",
+            OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            Mode::empty(),
+            STRICT_RESOLVE_FLAGS,
+        );
+        let selected = select_strategy(
+            &workspace.root_descriptor,
+            &workspace.root_snapshot,
+            ResolverPreference::Auto,
+        );
+        match direct_probe {
+            Ok(_) => assert_eq!(
+                selected.expect("supported openat2 selects"),
+                LinuxResolutionStrategy::OpenAt2
+            ),
+            Err(Errno::NOSYS | Errno::INVAL | Errno::PERM | Errno::ACCESS) => assert_eq!(
+                selected
+                    .expect_err("unsupported openat2 fails closed")
+                    .kind(),
+                PathAdapterErrorKind::UnsupportedPrimitive
+            ),
+            Err(_) => assert_eq!(
+                selected
+                    .expect_err("failed openat2 probe fails closed")
+                    .kind(),
+                PathAdapterErrorKind::PlatformFailure
+            ),
+        }
+
+        let root_snapshot = workspace.root_snapshot.clone();
+        let mut changed_mount = root_snapshot.clone();
+        changed_mount.mount_id = changed_mount.mount_id.map(|mount_id| mount_id + 1);
+        assert!(!same_mount(
+            &root_snapshot,
+            &changed_mount,
+            LinuxResolutionStrategy::VerifiedDescriptorWalk,
+        ));
+        assert!(!same_mount(
+            &root_snapshot,
+            &changed_mount,
+            LinuxResolutionStrategy::OpenAt2,
+        ));
+    }
+
+    #[test]
     fn snapshot_comparison_includes_content_change_indicators() {
         let original = LinuxStatSnapshot {
             device: 1,
@@ -733,6 +993,7 @@ mod tests {
             changed_seconds: 7,
             changed_nanoseconds: 8,
             file_type: rustix::fs::FileType::RegularFile,
+            mount_id: Some(9),
         };
         let mut changed = original.clone();
         changed.changed_nanoseconds += 1;
