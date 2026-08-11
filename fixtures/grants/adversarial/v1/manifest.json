@@ -1,0 +1,28 @@
+{
+  "corpus_id": "agentmage-adversarial-grants-v1",
+  "coverage": {
+    "admitted_attempt_count": 0,
+    "atomic_consumption_case_count": 440,
+    "case_count": 560,
+    "cases_per_class": 40,
+    "forged_candidate_case_count": 120,
+    "mutation_class_count": 14
+  },
+  "generator": "kernel/engine/tests/adversarial_grant_corpus.rs",
+  "limitations": [
+    "Cases exercise in-memory issuer and policy behavior without a production worker.",
+    "Forged nonce, use-count, and parent candidates are evaluated but cannot enter consumption.",
+    "Canonical platform path resolution remains assigned to Sprint 6.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "path": "fixtures/grants/adversarial/v1/corpus.json",
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "schema_version": 1,
+  "sha256": "630169a44503f1fe3682ba7a3aab9da5d007ff40548e86c1c5790250fe4c9d25",
+  "size_bytes": 209823
+}
