@@ -1,0 +1,66 @@
+{
+  "artifact_id": "grant-state-transition-reference",
+  "coverage": {
+    "authority_terminal_statuses": [
+      "Consumed",
+      "Revoked",
+      "Expired",
+      "Invalidated",
+      "Uncertain"
+    ],
+    "grant_status_count": 6,
+    "implemented_transition_count": 8,
+    "operation_transition_count": 5,
+    "reserved_without_producer": [
+      "Revoked"
+    ],
+    "session_parent_transition_count": 3
+  },
+  "limitations": [
+    "Grant lifecycle state is in-memory and is not crash durable.",
+    "Parent expiry during derivation does not rewrite the retained parent.",
+    "Revoked is a reserved wire status without an implemented issuer transition.",
+    "No isolated worker execution or final effect receipt is claimed.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "reference_revision": "9c127fd5f34c26df2bcfc4fa19ddcc9768bd56a8",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "docs/architecture/grant-state-transitions.md",
+      "sha256": "5a88e5edc83fcf247c604939bdee117ef7ecce1306127afe0207dba33e211458"
+    },
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "path": "scripts/grant_state_transitions.py",
+      "sha256": "b6b2b7ce216d97a731a62b29daa1cf64ea61b090b7ff4aa20f4b6cad76eca835"
+    },
+    {
+      "path": "tests/test_grant_state_transitions.py",
+      "sha256": "7986f11315dcf89a9d337835692a4384a948dfb1e5fd7d88220bba3ce17fb616"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.2.2",
+  "verification": {
+    "closed_status_enum": "pass",
+    "documentation_coverage": "pass",
+    "operation_transition_paths": "pass",
+    "parent_transition_paths": "pass",
+    "reserved_revocation_disclosure": "pass",
+    "state_preserving_denials": "pass"
+  }
+}
