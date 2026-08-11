@@ -113,6 +113,8 @@
     "evidence:story7.1-platform-contract:check": "python3 scripts/platform_manifest_artifact.py",
     "evidence:story7.1-security:build": "python3 scripts/story_7_1_security_evidence.py --write --source-revision HEAD",
     "evidence:story7.1-security:check": "python3 scripts/story_7_1_security_evidence.py",
+    "evidence:story9.1-linux-controls:build": "python3 scripts/linux_sandbox_evidence.py --write --source-revision HEAD",
+    "evidence:story9.1-linux-controls:check": "python3 scripts/linux_sandbox_evidence.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
