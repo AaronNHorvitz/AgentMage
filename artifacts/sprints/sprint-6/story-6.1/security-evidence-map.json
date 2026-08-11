@@ -11,9 +11,9 @@
       "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
     },
     {
-      "bytes": 837,
+      "bytes": 997,
       "path": "fixtures/paths/README.md",
-      "sha256": "7542074fef58e4e0b35e11ee4db9f4d9d7a4d6c1a079455df0adaa3601d0cef8"
+      "sha256": "d36fe899439eff1ed6546efaf53cbcd8bff7b5a8c11ebeb63b0a4c2a30f81213"
     },
     {
       "bytes": 209469,
@@ -29,6 +29,11 @@
       "bytes": 25012,
       "path": "fixtures/paths/v1/display-link-corpus.json",
       "sha256": "0c1dc48adb718e01c8003ebf4de464854caa4af5f57d219c69ef5e240553a29b"
+    },
+    {
+      "bytes": 28,
+      "path": "fixtures/paths/v1/logical-input.txt",
+      "sha256": "793c05f449e8b7fcc87d32c1686df8ac0554da638f937309a28b453789f2bd19"
     },
     {
       "bytes": 14868,
@@ -51,54 +56,74 @@
       "sha256": "11e4ef3977d46ff21b767cc7bdac8022c8ccda7e088673af9090a9580523cbca"
     },
     {
+      "bytes": 6861,
+      "path": "kernel/contracts/tests/platform_path_contract.rs",
+      "sha256": "f945976fcc428e87d4eb6ddf1f018da2a034c16665cd1dc6b5c52c94bb268b45"
+    },
+    {
       "bytes": 5192,
       "path": "kernel/engine/tests/display_link_authority.rs",
       "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
     },
     {
-      "bytes": 44192,
+      "bytes": 45606,
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "38105b49a8a6c9d8607931f3a92a504d465cbd17b975c9dc8e834dda4d56920d"
+      "sha256": "9e51388195c3c16f3528d0ef57270ea0df460d8d517081d119d9dcbff5c9655f"
     },
     {
       "bytes": 2426,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
+      "sha256": "9af3d24c91da0e49157f79aa46824bd374dcbd107786f8e45e3060aebba29a52"
     },
     {
       "bytes": 2310,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+      "sha256": "2c0d5f2bef96e21e106d1f1ab02b2d93af8280658432bff468ee6dc1ac0cb12b"
     },
     {
       "bytes": 2487,
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+      "sha256": "c7ab1099758a26f7cc46d7b11bfb11218fa0cf4ea75a0fef9cc949181dacc5b7"
     },
     {
       "bytes": 3096,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
+      "sha256": "87a320d6afa64e666f217faa0c862c69e3a34685c04f1ccd6394f268165b512b"
     },
     {
-      "bytes": 3953,
+      "bytes": 2891,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "sha256": "9e1842808c46f803a975bcae6864dd87ec750de315ef52d40535881057c734b2"
+    },
+    {
+      "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "751caf81fbc7a4ddb67cc2b54e737fd30071c5b6159a38ef4582ac9ce8391687"
+      "sha256": "7858fed75782bc400a82c25b87dc0c5e6617b8a224270bae3494033706e10748"
     },
     {
-      "bytes": 12512,
+      "bytes": 13204,
       "path": "scripts/path_boundary_review.py",
-      "sha256": "4a682f7fe4e924b45bcea502af6fb53aae009c6968ef47353782fc41d1295b14"
+      "sha256": "18cba5c2c780c17dc76385dc4bda764f2ca7108bfee0146ab31c892effe39e0b"
     },
     {
-      "bytes": 14525,
+      "bytes": 12559,
+      "path": "scripts/path_platform_conformance.py",
+      "sha256": "7d4a98fd5b3a3ae4f1f99ac16846d4a1e3e0cdb7c55a97cf70b15daa55885fec"
+    },
+    {
+      "bytes": 14949,
       "path": "scripts/story_6_1_security_evidence.py",
-      "sha256": "45b48154dbcab7a265e3104b0efc2c1952cbc1d3c82a764a69762120f596c574"
+      "sha256": "4a9371ed9057abb52eef00902bf8f068df163f62d7abd2480b00eee3139f24d3"
     },
     {
-      "bytes": 2857,
+      "bytes": 2920,
       "path": "tests/test_path_boundary_review.py",
-      "sha256": "11035dc64df69aaa461f50ed4dccef522d060608000b0fed1dd1f66712894dba"
+      "sha256": "0017461bd8c365982a3c37362ecfe0934c25ad2ad5ec13e99d3eb9024291d81c"
+    },
+    {
+      "bytes": 2727,
+      "path": "tests/test_path_platform_conformance.py",
+      "sha256": "0907dbcafa09a627794a05b6ed580e8895bb944cc335476a52fe2489f1553d29"
     },
     {
       "bytes": 2187,
@@ -122,10 +147,11 @@
         "kernel/contracts/src/platform_path.rs",
         "platforms/linux/src/lib.rs",
         "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json"
+        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json"
       ],
       "product_requirement_status": "not-complete",
-      "remaining": "Public user workspace authorization, macOS security-scoped bookmarks and aliases, real case and Unicode collision behavior, Ubuntu execution, and privileged mount-swap execution remain open.",
+      "remaining": "Public user workspace authorization, macOS security-scoped bookmarks and aliases, and real macOS case and Unicode collision behavior remain open.",
       "requirement_id": "SR-PLT-004",
       "story_contribution": "partial-story-evidence"
     },
@@ -151,7 +177,7 @@
         "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json"
       ],
       "product_requirement_status": "not-complete",
-      "remaining": "All macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted; the equivalent Ubuntu execution is also pending.",
+      "remaining": "All macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted.",
       "requirement_id": "SR-ACC-005",
       "story_contribution": "partial-story-evidence"
     },
@@ -185,7 +211,8 @@
         "fixtures/paths/v1/corpus.json",
         "fixtures/paths/v1/display-link-corpus.json",
         "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-        "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json"
+        "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json"
       ],
       "product_requirement_status": "not-complete",
       "remaining": "Oversized and conflicting classes must be completed across all product parsers, adapters, processes, and supported platforms with receipts and resource bounds.",
@@ -196,13 +223,14 @@
   "reviewer_protocol": {
     "evidence": [
       "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "artifacts/sprints/sprint-6/story-6.1/path-race-report.json"
+      "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json"
     ],
     "protocol_id": "RV-04",
     "status": "partial-blocked-platform-and-privileged-tests"
   },
   "schema_version": 1,
-  "source_revision": "b75e79cc3a19112bc4134c90278de66193a10c43",
+  "source_revision": "4efccff6ea6808bc45431200c5c6174fa26031d9",
   "status": "pass-shared-fedora-security-mapping",
   "story_id": "6.1",
   "summary": {
@@ -210,7 +238,7 @@
     "mapped_requirement_count": 6,
     "partial_or_generated_scope_count": 5,
     "product_requirements_complete": 0,
-    "retained_artifact_count": 21,
+    "retained_artifact_count": 26,
     "story_gate_complete": false
   },
   "task_id": "6.1.3.5"
