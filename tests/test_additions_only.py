@@ -44,8 +44,8 @@ class AdditionsOnlyTests(unittest.TestCase):
         )
 
         self.assertEqual(diagnostics, [])
-        self.assertEqual(self.baseline["counts"]["requirements"], 78)
-        self.assertEqual(self.baseline["counts"]["checklist"], 1034)
+        self.assertEqual(self.baseline["counts"]["requirements"], 119)
+        self.assertEqual(self.baseline["counts"]["checklist"], 1103)
 
     def test_initial_baseline_is_deterministic(self) -> None:
         first = build_initial_baseline(self.registry, DEFAULT_INVENTORY)

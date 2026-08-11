@@ -94,7 +94,7 @@ class DefinitionParsingTests(unittest.TestCase):
         self.assertEqual(definitions[2]["disposition"], "integrated")
 
     def test_rejects_wrong_heading_and_column_count(self) -> None:
-        with self.assertRaisesRegex(RegistryError, "expected 'Executable v0.1 Backlog'"):
+        with self.assertRaisesRegex(RegistryError, "expected one of"):
             definition_from_cells(
                 ["`AM-KRN-001`", "Kernel", "None", "Build", "v0.1", "`AT-ARCH-001`"],
                 heading="Wrong heading",

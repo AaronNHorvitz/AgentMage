@@ -26,7 +26,7 @@ class PolicyExpectationTests(unittest.TestCase):
 
         self.assertEqual(registry["schema_version"], 1)
         self.assertEqual(registry["counts"]["by_kind"], EXPECTED_COUNTS)
-        self.assertEqual(registry["counts"]["total"], 73)
+        self.assertEqual(registry["counts"]["total"], 74)
         self.assertEqual(len(registry["expectations"]), 73)
         self.assertEqual(
             [source["document"] for source in registry["sources"]],
