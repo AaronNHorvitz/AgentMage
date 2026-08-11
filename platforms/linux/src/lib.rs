@@ -729,7 +729,9 @@ mod tests {
     use std::fs;
     use std::os::unix::fs::symlink;
     use std::path::{Path, PathBuf};
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+    use std::thread;
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, HeldWorkspaceObject, PathAdapterErrorKind, PathResolutionIntent,
@@ -1022,6 +1024,82 @@ mod tests {
             &changed_mount,
             LinuxResolutionStrategy::OpenAt2,
         ));
+    }
+
+    #[test]
+    fn concurrent_symlink_replacement_never_changes_held_file_authority() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        let outside = test.path.join("outside-secret.txt");
+        fs::write(&outside, b"outside secret bytes\n").expect("outside fixture writes");
+        let safe = b"inside workspace bytes\n";
+        fs::write(root.join("target.txt"), safe).expect("inside fixture writes");
+        let workspace = authorize_for_test(&root);
+        let candidate = path(&["target.txt"]);
+        let expected: [u8; 32] = Sha256::digest(safe).into();
+
+        let initial = adapter()
+            .resolve(&workspace, &candidate, PathResolutionIntent::ContentHash)
+            .expect("initial safe target resolves");
+        assert_eq!(
+            initial
+                .preimage()
+                .expect("initial preimage")
+                .content_sha256(),
+            &expected
+        );
+
+        let complete = Arc::new(AtomicBool::new(false));
+        let attacker_complete = Arc::clone(&complete);
+        let attacker_root = root.clone();
+        let attacker_outside = outside.clone();
+        let attacker = thread::spawn(move || {
+            for index in 0..256 {
+                let safe_staging = attacker_root.join(format!(".safe-{index}"));
+                fs::write(&safe_staging, safe).expect("safe staging writes");
+                fs::rename(&safe_staging, attacker_root.join("target.txt"))
+                    .expect("safe staging replaces target");
+
+                let link_staging = attacker_root.join(format!(".link-{index}"));
+                symlink(&attacker_outside, &link_staging).expect("link staging creates");
+                fs::rename(&link_staging, attacker_root.join("target.txt"))
+                    .expect("link staging replaces target");
+            }
+            attacker_complete.store(true, Ordering::Release);
+        });
+
+        let mut attempts = 0_u32;
+        let mut admitted_safe = 0_u32;
+        while attempts < 512 || !complete.load(Ordering::Acquire) {
+            attempts += 1;
+            match adapter().resolve(&workspace, &candidate, PathResolutionIntent::ContentHash) {
+                Ok(held) => {
+                    assert_eq!(
+                        held.preimage().expect("held preimage").content_sha256(),
+                        &expected
+                    );
+                    if let Err(error) = held.revalidate() {
+                        assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
+                    }
+                    admitted_safe += 1;
+                }
+                Err(error) => assert!(matches!(
+                    error.kind(),
+                    PathAdapterErrorKind::SymbolicLink
+                        | PathAdapterErrorKind::NotFound
+                        | PathAdapterErrorKind::ObjectKindMismatch
+                        | PathAdapterErrorKind::IdentityChanged
+                        | PathAdapterErrorKind::PlatformFailure
+                )),
+            }
+        }
+        attacker.join().expect("attacker thread joins");
+        assert!(attempts >= 512);
+        assert!(admitted_safe <= attempts);
+        if let Err(error) = initial.revalidate() {
+            assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
+        }
     }
 
     #[test]
