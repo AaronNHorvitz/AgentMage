@@ -23,7 +23,7 @@
       "criterion_id": "4.AC3",
       "public_parser_round_trip": "pass",
       "status": "pass-shared-linux",
-      "valid_fixture_count": 13
+      "valid_fixture_count": 15
     },
     {
       "criterion_id": "4.AC4",
@@ -51,39 +51,39 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json",
-        "sha256": "3294ce1ae060e4ae7b995b8784d112f70f4efd367ef4cfb51b766b85d8333a27"
+        "sha256": "31c2930d2279c1a68a9fbf470b21f11e4aee09a7642f00fb2fde9cac87c458f0"
       },
       {
         "path": "scripts/story_4_1_gate.py",
-        "sha256": "a8ef85a6710128a9643babe5e93e4ef253f365a3ab02a651d74c3996b2711e9f"
+        "sha256": "ac0318473ec83e3a1228db9f69c8082a4f0f5a7b9c4c97bdb6770fa4341a6c7a"
       },
       {
         "path": "tests/test_story_4_1_gate.py",
-        "sha256": "67a35a5528e9092c246904535436868d5c60b66bbeab8d7fad181801f52d8e47"
+        "sha256": "2dde5ce88b3ce62dd886c000c9a59917d532f40f82092f4d38033b6686755ba5"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-        "sha256": "531463023d941ebb2ee047d2776dff60f83cc3a5e655490675b85fa3d350c01f"
+        "sha256": "d310f04c6da06c3cfd2379b488cbe336366d2ce87dc36c6ff3a5ee2204e0cc49"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-        "sha256": "f5a846b9d3592e03d6508ec401bf06fa61fffe3427ec45729a23e4d7ad760180"
+        "sha256": "15f10951d849cce545506862d8f1beb9de35c2bada13d93e521f47c6767cd315"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-        "sha256": "0870f7595b6182b2ef2c1e94c01c7e9ade114c0ae3146227467988bde3d6fd79"
+        "sha256": "9289eaf38bc40a1e7690c51d45e32c6de00c9d2ada55c1fd95fdb3002b651b4d"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-        "sha256": "8f6af0392e598e32feeeefca2d13da1a0d7f966d581f1277f7fccd36d5a2882d"
+        "sha256": "be074c0cbb0970c74d0717cda798b8d050f2bbcfe17dc08bddbe6dd630b81dde"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
-        "sha256": "0076279c1ea99c794d1a8fede0389ad086682666d54e1dc73f8b0dbaf6a43021"
+        "sha256": "37ff68761e6f79af32dd094fade3e78adc12917e30d9a5c8ed174d1c0a980a51"
       }
     ],
-    "reviewed_commit": "af282594b2c48710f3e7126814cc5963b5b074c1",
-    "reviewed_tree": "4b316221b9df718b5826f7a469ff3f64724368d8",
+    "reviewed_commit": "ca29ecbcc96e495d10a422be817f74eb83a9ef7d",
+    "reviewed_tree": "32ebb7d1db1c69439be2cedba14e246fccd0c021",
     "reviewer_id": "agentmage-sprint-4-independent-gate-v1"
   },
   "macos": {
@@ -95,8 +95,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "af282594b2c48710f3e7126814cc5963b5b074c1",
-  "reviewed_tree": "4b316221b9df718b5826f7a469ff3f64724368d8",
+  "reviewed_commit": "ca29ecbcc96e495d10a422be817f74eb83a9ef7d",
+  "reviewed_tree": "32ebb7d1db1c69439be2cedba14e246fccd0c021",
   "schema_version": 1,
   "sprint_id": 4,
   "status": "blocked-macos",
