@@ -9,6 +9,7 @@ mod display_link;
 mod evidence;
 mod grant;
 mod ids;
+mod network;
 mod path;
 mod platform;
 mod platform_path;
@@ -37,6 +38,11 @@ pub use ids::{
     ActionId, ActorId, AdapterInstanceId, CancellationId, CorrelationId, ErrorId, EvidenceId,
     GrantId, GrantNonce, PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId,
     ToolCallId, ToolId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
+};
+pub use network::{
+    CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,
+    NetworkDestinationClass, NetworkEndpointError, NetworkObservation, StorageFilesystemClass,
+    StrictLocalStorageObservation, classify_ip_destination,
 };
 pub use path::{
     MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,

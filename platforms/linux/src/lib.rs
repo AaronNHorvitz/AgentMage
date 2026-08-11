@@ -5,6 +5,7 @@
 mod ipc;
 mod sandbox;
 mod secret_service;
+mod strict_local;
 
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
@@ -19,6 +20,10 @@ pub use secret_service::{
     LinuxSecretKey, LinuxSecretOperation, LinuxSecretReceipt, LinuxSecretService,
     LinuxSecretServiceError, LinuxSecretServiceErrorKind, LinuxSecretServiceManifest,
     LinuxSecretValue,
+};
+pub use strict_local::{
+    LinuxStrictLocalRoot, LinuxStrictLocalRootError, LinuxStrictLocalRootErrorKind,
+    LinuxStrictLocalRootInspector, classify_linux_filesystem_magic,
 };
 
 use std::fmt;
