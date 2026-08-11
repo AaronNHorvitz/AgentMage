@@ -1,0 +1,105 @@
+{
+  "api": {
+    "operating_system_branches_in_kernel_selector": 0,
+    "required_capability_count": 10,
+    "startup_failure_class_count": 11,
+    "version": 1
+  },
+  "artifact_id": "platform-adapter-contract-and-manifest-evidence",
+  "conformance": {
+    "deterministic_fake": "verified",
+    "equivalent_available_contract_result_count": 3,
+    "fedora_contract": "verified-local",
+    "macos": "blocked-macos",
+    "networked_test_count": 0,
+    "ubuntu_contract": "verified-no-network-container",
+    "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
+    "ubuntu_image_id": "sha256:fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464"
+  },
+  "limitations": [
+    "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
+    "macOS implementation, package identity, and execution remain blocked"
+  ],
+  "macos_evidence_substituted": false,
+  "maintainer_credentials_recorded": false,
+  "manifests": [
+    {
+      "architecture": "x86_64",
+      "capability_count": 10,
+      "end_user_dependency_count": 5,
+      "excluded_end_user_dependency_count": 6,
+      "maintainer_dependency_count": 6,
+      "manifest_sha256": "56fd6df160361284f6a730ca72e80fea0b497ca88f58419f9ee7ea5f76e677d6",
+      "package_sha256": "5a19796822df6e4c48e00778cba68c43ecb61ac822a85fd18b1a9f7273de20f3",
+      "path": "release/platform-manifests/v1/fedora-x86_64.json",
+      "platform": "fedora",
+      "release_claim": "none",
+      "repeat_manifest_sha256": "56fd6df160361284f6a730ca72e80fea0b497ca88f58419f9ee7ea5f76e677d6"
+    },
+    {
+      "architecture": "x86_64",
+      "capability_count": 10,
+      "end_user_dependency_count": 5,
+      "excluded_end_user_dependency_count": 6,
+      "maintainer_dependency_count": 6,
+      "manifest_sha256": "c61d8faff47f1e0edf1928678f53ba6f9179ba3c57c164dcd6b815c859fb6a07",
+      "package_sha256": "b3da29b076ef1bf34966e68793e959ba717ea4f91d9c06bbd6497e8974e9318f",
+      "path": "release/platform-manifests/v1/ubuntu-x86_64.json",
+      "platform": "ubuntu",
+      "release_claim": "none",
+      "repeat_manifest_sha256": "c61d8faff47f1e0edf1928678f53ba6f9179ba3c57c164dcd6b815c859fb6a07"
+    }
+  ],
+  "private_environment_values_recorded": false,
+  "reference_revision": "f03283dbdc0b775b428217f7971e1a1d1ca23658",
+  "release_claim": "none",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "docs/architecture/platform-adapter-contract.md",
+      "sha256": "6f48b66d591e25ae53d584fd41815034bbc989c04fb21479da2bae3ba9166f57"
+    },
+    {
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "157054cfc47546ac9707bf12f30d0b8f7dcd477faab86e978c146ece4199f1db"
+    },
+    {
+      "path": "kernel/contracts/src/platform.rs",
+      "sha256": "0516054a15ceb238ea4f6b1b233caae4704f2ad628cda0cae4e0ee9073e7b2b8"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "a1c9f68029d945c540020047dc092e1ea1d3da2b0d6281fd99cd33602748bced"
+    },
+    {
+      "path": "kernel/engine/src/platform_startup.rs",
+      "sha256": "8aa495e12d635c1398823de675d6b2cffe42d51882e8a098758e911c99d950d0"
+    },
+    {
+      "path": "kernel/engine/tests/platform_adapter_conformance.rs",
+      "sha256": "c275562bf26657b1ad38d76d56e9fc8a039278c8645b83d316779740d60bbecf"
+    },
+    {
+      "path": "release/platform-manifests/README.md",
+      "sha256": "f7d60785d346dc4652e029f55b367b71c16ed05118baba5e3fb9dec07a3091ce"
+    },
+    {
+      "path": "release/platform-manifests/v1/fedora-x86_64.json",
+      "sha256": "193fd58398c74c7a0b011beb1b23addc51b8e9b270ee666ea809b51f0504897c"
+    },
+    {
+      "path": "release/platform-manifests/v1/ubuntu-x86_64.json",
+      "sha256": "5416b0d26c7887df9f54043c6faaa2595ebd4c63c00b880ca0d17d53d8ff4366"
+    },
+    {
+      "path": "scripts/platform_manifest_artifact.py",
+      "sha256": "eee8955685b06ca811e830eb2f483a003432dfb35a1f7f4e96470d4f67f3a1fd"
+    },
+    {
+      "path": "tests/test_platform_manifest_artifact.py",
+      "sha256": "60271d1a4600376313ca917ad93f58507480515839bde34f13ff5effb5eb6ec8"
+    }
+  ],
+  "status": "pass-all-available-non-macos-contract-scope",
+  "task_id": "7.1.2"
+}
