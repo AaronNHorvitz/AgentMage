@@ -65,6 +65,14 @@ define_identifier!(ActorId, "Stable pseudonymous identity for one local actor.")
 define_identifier!(GrantId, "Stable identity for one capability grant.");
 define_identifier!(GrantNonce, "Single-grant nonce used to prevent replay.");
 define_identifier!(WorkspaceId, "Stable identity for one approved workspace.");
+define_identifier!(
+    WorkspaceAuthorizationId,
+    "Stable identity for one user-approved workspace authorization event."
+);
+define_identifier!(
+    AdapterInstanceId,
+    "Stable identity for one selected platform-adapter instance."
+);
 define_identifier!(EvidenceId, "Stable identity for one evidence record.");
 define_identifier!(ReceiptId, "Stable identity for one operation receipt.");
 define_identifier!(ErrorId, "Stable identity for one typed contract error.");

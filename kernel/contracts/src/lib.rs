@@ -9,6 +9,7 @@ mod evidence;
 mod grant;
 mod ids;
 mod path;
+mod platform_path;
 mod prompt;
 mod serialization;
 mod task;
@@ -28,13 +29,17 @@ pub use grant::{
     GrantTarget,
 };
 pub use ids::{
-    ActionId, ActorId, CancellationId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
-    PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId,
-    WorkPacketId, WorkspaceId,
+    ActionId, ActorId, AdapterInstanceId, CancellationId, CorrelationId, ErrorId, EvidenceId,
+    GrantId, GrantNonce, PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId,
+    ToolCallId, ToolId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use path::{
     MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,
     WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind,
+};
+pub use platform_path::{
+    AuthorizedWorkspaceHandle, HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind,
+    PathPlatform, PathResolutionIntent, PlatformPathAdapter,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use serialization::{
