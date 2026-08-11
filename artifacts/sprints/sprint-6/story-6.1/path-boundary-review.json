@@ -4,9 +4,9 @@
     "admitted_escape_count": 0,
     "display_link_rejection_count": 1280,
     "generated_path_case_count": 640,
-    "open_boundary_count": 6,
+    "open_boundary_count": 5,
     "out_of_root_access_count": 0,
-    "race_executed_scenario_count": 5,
+    "race_executed_scenario_count": 6,
     "reviewed_subject_count": 4
   },
   "external_human_review_status": "not-performed",
@@ -16,14 +16,13 @@
   "macos_execution_status": "blocked-macos",
   "open_product_boundaries": [
     "macOS path adapter, aliases, bookmarks, case collisions, and Unicode collisions",
-    "privileged isolated bind-mount replacement execution",
     "Ubuntu execution evidence",
     "public workspace selection and durable authorization",
     "real tool and Visual Studio Code link activation integration",
     "coverage-guided path fuzzing and sanitizer evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "5c7dc03d6f09910f8e98bae7fb058996ddb17746",
+  "reference_revision": "e94d26844698e32e17141706a456c2ff1e93cec6",
   "release_claim": "none",
   "review_protocol": "RV-04",
   "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
@@ -40,7 +39,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
@@ -52,23 +51,23 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
     },
     {
       "path": "scripts/path_boundary_review.py",
-      "sha256": "6c869327a67aa5b0b29a752ef5e2b58a97e497f40173ef5c35875a043fb55269"
+      "sha256": "4a682f7fe4e924b45bcea502af6fb53aae009c6968ef47353782fc41d1295b14"
     },
     {
       "path": "tests/test_path_boundary_review.py",
-      "sha256": "c20889d0f321aa2b6836197388a0bd7a9062cd4d861448c3da0a3ebe37439581"
+      "sha256": "11035dc64df69aaa461f50ed4dccef522d060608000b0fed1dd1f66712894dba"
     }
   ],
   "status": "pass-shared-fedora-review-scope",
   "subjects": [
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
-      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+      "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
+      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
@@ -82,8 +81,8 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
-      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+      "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
+      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
     }
   ],
   "task_id": "6.1.3.5",
