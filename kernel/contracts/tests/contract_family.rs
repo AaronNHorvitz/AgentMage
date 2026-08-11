@@ -420,6 +420,7 @@ fn complete_contract_family_preserves_linked_identities() {
     {
         let fixtures = vec![
             fixture_entry("action", &action),
+            fixture_entry("approval_request", &approval),
             fixture_entry("boundary_failure", &boundary_failure),
             fixture_entry("capability_grant", &grant),
             fixture_entry("cancellation_signal", &cancellation),

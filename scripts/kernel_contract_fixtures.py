@@ -37,8 +37,10 @@ SOURCE_PATHS = (
 )
 EXPECTED_VALID_NAMES = (
     "action",
+    "approval_request",
     "boundary_failure",
     "cancellation_signal",
+    "capability_grant",
     "contract_error",
     "evidence_reference",
     "plan",

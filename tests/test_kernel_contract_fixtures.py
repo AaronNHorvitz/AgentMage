@@ -25,6 +25,7 @@ class KernelContractFixtureTests(unittest.TestCase):
             self.assertIn('path = "tests/fixture_verifier.rs"', manifest)
 
     def test_bundle_parser_rejects_duplicate_and_incomplete_types(self) -> None:
+        self.assertEqual(len(EXPECTED_VALID_NAMES), 15)
         duplicate = [
             {"name": "task", "canonical_json": "{}"},
             {"name": "task", "canonical_json": "{}"},

@@ -1,9 +1,9 @@
 use std::{fs, path::Path};
 
 use agentmage_kernel_contracts::{
-    Action, BoundaryFailure, CancellationSignal, ContractError, EvidenceReference, Plan, Prompt,
-    Receipt, Task, ToolCall, ToolDefinition, ToolResult, VersionedContract, WorkPacket, from_json,
-    to_canonical_json,
+    Action, ApprovalRequest, BoundaryFailure, CancellationSignal, CapabilityGrant, ContractError,
+    EvidenceReference, Plan, Prompt, Receipt, Task, ToolCall, ToolDefinition, ToolResult,
+    VersionedContract, WorkPacket, from_json, to_canonical_json,
 };
 
 fn verify<T>(root: &Path, name: &str)
@@ -25,8 +25,10 @@ fn every_valid_and_compatibility_fixture_matches_the_public_contract() {
         .map(std::path::PathBuf::from)
         .expect("fixture root must be explicit");
     verify::<Action>(&root, "action");
+    verify::<ApprovalRequest>(&root, "approval_request");
     verify::<BoundaryFailure>(&root, "boundary_failure");
     verify::<CancellationSignal>(&root, "cancellation_signal");
+    verify::<CapabilityGrant>(&root, "capability_grant");
     verify::<ContractError>(&root, "contract_error");
     verify::<EvidenceReference>(&root, "evidence_reference");
     verify::<Plan>(&root, "plan");
