@@ -48,7 +48,7 @@
     {"path": "/tool/tools/0/integrity_sha256", "dimension": "tool-integrity", "expected_rejection": "configuration-authority-broadening"},
     {"path": "/tool/tools/0/enabled", "dimension": "tool-enablement", "expected_rejection": "configuration-authority-broadening"},
     {"path": "/tool/tools/0/required_capabilities", "dimension": "tool-capabilities", "expected_rejection": "configuration-authority-broadening"},
-    {"path": "/tool/tools/0/side_effect_class", "dimension": "tool-side-effect", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/tool/tools/0/operation", "dimension": "tool-operation-binding", "expected_rejection": "configuration-authority-broadening"},
 
     {"path": "/permission/default_effect", "dimension": "permission-default", "expected_rejection": "configuration-contract-violation"},
     {"path": "/permission/authority_inheritance", "dimension": "permission-inheritance", "expected_rejection": "configuration-contract-violation"},

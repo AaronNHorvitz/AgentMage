@@ -6,9 +6,9 @@ use std::{
 };
 
 use agentmage_kernel_contracts::{
-    ActionId, ActionKind, ActorId, CapabilityGrant, DataSensitivity, GrantClass, GrantId,
-    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
-    SessionId, TaskId, ToolId, to_canonical_json,
+    ActionId, ActionKind, ActorId, ApprovalId, CapabilityGrant, DataSensitivity, GrantClass,
+    GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    OperationBinding, SessionId, TaskId, ToolId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -101,12 +101,14 @@ pub struct SessionReadGrantRequest {
 pub struct DerivedOperationGrantRequest {
     /// New child grant identity selected by the kernel.
     pub grant_id: GrantId,
+    /// Exact explicit approval decision that confirmed this operation.
+    pub approval_id: ApprovalId,
     /// Exact action receiving proposed authority.
     pub action_id: ActionId,
     /// Exact descriptive class of the action.
     pub action_kind: ActionKind,
     /// Closed operation class requested by the action.
-    pub operation: GrantOperation,
+    pub operation: OperationBinding,
     /// Exact registered tool identity.
     pub tool_id: ToolId,
     /// Exact registered tool-contract version.
@@ -415,11 +417,12 @@ impl GrantIssuer {
             revision: 1,
             grant_class: GrantClass::SessionRead,
             actor_id: request.actor_id,
+            approval_id: None,
             session_id: request.session_id,
             task_id: request.task_id,
             action_id: None,
             action_kind: None,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_id: None,
             tool_version: None,
             targets: request.targets,
@@ -428,7 +431,7 @@ impl GrantIssuer {
             argument_sha256: scope_sha256.clone(),
             preimages: Vec::new(),
             expected_side_effects: vec![GrantSideEffect {
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes,
                 details_sha256: scope_sha256,
             }],
@@ -481,6 +484,7 @@ impl GrantIssuer {
             revision: 1,
             grant_class: GrantClass::Operation,
             actor_id: parent.actor_id.clone(),
+            approval_id: Some(request.approval_id),
             session_id: parent.session_id.clone(),
             task_id: parent.task_id.clone(),
             action_id: Some(request.action_id),
@@ -604,6 +608,7 @@ fn validate_derived_request(
 ) -> Result<(), GrantIssueError> {
     for identifier in [
         request.grant_id.as_str(),
+        request.approval_id.as_str(),
         request.action_id.as_str(),
         request.tool_id.as_str(),
         request.nonce.as_str(),
@@ -810,9 +815,9 @@ mod tests {
         ToolPolicyBinding,
     };
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, CapabilityGrant, DataSensitivity, GrantClass, GrantId,
-        GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
-        SessionId, TaskId, ToolId, WorkspaceId,
+        ActionId, ActionKind, ActorId, ApprovalId, CapabilityGrant, DataSensitivity, GrantClass,
+        GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
+        GrantTarget, OperationBinding, SessionId, TaskId, ToolId, WorkspaceId,
     };
 
     fn target(path: &[&str]) -> GrantTarget {
@@ -843,9 +848,10 @@ mod tests {
     fn operation_request(id: &str, nonce: &str, path: &[&str]) -> DerivedOperationGrantRequest {
         DerivedOperationGrantRequest {
             grant_id: GrantId::from_raw(id),
+            approval_id: ApprovalId::from_raw(format!("approval-{id}")),
             action_id: ActionId::from_raw(format!("action-{id}")),
             action_kind: ActionKind::DeterministicTool,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_id: ToolId::from_raw("fixture.read"),
             tool_version: "1.0.0".to_owned(),
             targets: vec![target(path)],
@@ -856,7 +862,7 @@ mod tests {
                 observed_revision: Some("fixture-v1".to_owned()),
             }],
             expected_side_effects: vec![GrantSideEffect {
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
                 details_sha256: "5".repeat(64),
             }],
@@ -887,7 +893,7 @@ mod tests {
                 tool_id: ToolId::from_raw("fixture.read"),
                 tool_version: "1.0.0".to_owned(),
             }),
-            operations: rules(GrantOperation::WorkspaceRead),
+            operations: rules(OperationBinding::new(GrantOperation::WorkspaceRead)),
             targets: rules(target(&["src"])),
             denied_argument_sha256s: BTreeSet::new(),
             denied_preimage_sha256s: BTreeSet::new(),
@@ -946,7 +952,10 @@ mod tests {
             .issue_session_read(session_request())
             .expect("session scope must issue");
         assert_eq!(parent.grant_class, GrantClass::SessionRead);
-        assert_eq!(parent.operation, GrantOperation::WorkspaceRead);
+        assert_eq!(
+            parent.operation,
+            OperationBinding::new(GrantOperation::WorkspaceRead)
+        );
         assert_eq!(parent.use_limit, 2);
         assert_eq!(parent.use_count, 0);
         assert!(parent.action_id.is_none());

@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/agentConfigurationSchemaVersion"
     },
     "product_id": {
       "const": "agentmage"

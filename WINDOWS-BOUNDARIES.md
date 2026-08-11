@@ -168,7 +168,7 @@ The Windows release gate requires:
 - Credential-broker cross-account, process-identity, redaction, revocation, restore-reauthentication, crash, and residue tests.
 - Encrypted local and reference-cloud snapshot, interruption, corruption, namespace, retention, deletion, staged restore, rollback, and clean-device disaster-recovery tests.
 - Approved-catalog, guided-model-installation, source substitution, quarantine, activation, rollback, removal, and Muse-candidate disposition tests.
-- Complete whole-codebase census, NTFS read-only attestation, disposable verification, parser isolation, secret redaction, structural graph, bounded semantic packet, checkpoint, invalidation, reconciliation, finding, coverage, resource, removal, and `RV-44` through `RV-48` tests.
+- Complete whole-codebase census, NTFS read-only attestation, disposable verification, parser isolation, secret redaction, structural graph, bounded semantic packet, checkpoint, invalidation, reconciliation, finding, coverage, resource, removal, and `RV-44` through `RV-48` tests, plus Windows-native repository and GitHub mutation safety under `RV-49`.
 - Visual Studio Code Chat keyboard, screen-reader, zoom, focus, cancellation, progress, error, and high-contrast verification.
 - Install, upgrade, rollback, repair, safe mode, backup, restore, migration, uninstall, and residue tests.
 

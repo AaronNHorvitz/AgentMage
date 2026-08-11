@@ -361,6 +361,26 @@ Passing on macOS or Linux must never satisfy a Windows gate.
 | `SR-DEL-013` | Prevent delivery evidence and summaries from hiding failures. | Preserve raw responses, normalized records, failures, skips, retries, suppressions, versions, environment, and reviewer dispositions. | Recompute every adapter and cross-provider gate from raw evidence and inject omitted failures; require mismatch detection and blocked release. |
 | `SR-DEL-014` | Protect delivery operations from resource exhaustion. | Bound pagination, logs, artifacts, archives, event rates, telemetry cardinality, concurrent workers, model context, disk, memory, processor, and graphics load. | Exceed each bound during reads, execution, reconciliation, and cancellation; require cleanup, responsiveness, accurate receipt, and no authority expansion. |
 
+### 8.12A Repository and GitHub Safety
+
+The normative implementation detail for this control family is
+[`docs/security/repository-safety.md`](./docs/security/repository-safety.md).
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-GIT-001` | Keep models and repository content outside Git and GitHub authority. | Expose only closed kernel operations through dedicated adapters; give models no raw Git, shell, transport, credential, signer, socket, or provider-token handle. | Request every admitted and prohibited operation through prompts, files, hooks, hosted text, errors, workflow output, and model calls; require no direct invocation or authority change. |
+| `SR-GIT-002` | Preserve user files and complete unrelated Git state. | Bind and reconcile a minimized preservation manifest covering checkout, index, paths, refs, notes, stash, reflogs, tags, configuration, hooks, filters, worktrees, submodules, Large File Storage, locks, and in-progress operations. | Mutate each field before approval, before launch, concurrently, and after interruption; require stale denial, exact accounting, and zero unexplained change or work loss. |
+| `SR-GIT-003` | Make destructive and implicit Git behavior structurally unrepresentable. | Register only clone, fetch, owned-worktree create/remove, local branch fast-forward, signed commit, and push; omit pull, merge, rebase, reset, clean, discard, stash/tag/note mutation, deletion, remote configuration, arbitrary ref update, mirror, force, and hook execution. | Enumerate schemas, manifests, tool registries, policy paths, shells, aliases, provider extensions, and binaries; require absence or denial before any process or request. |
+| `SR-GIT-004` | Isolate Git from hostile configuration and executable repository behavior. | Pin executable identity and arguments; sanitize environment; disable or reject aliases, URL rewrites, unsafe ownership, helpers, hooks, filters, drivers, pagers, editors, signers, alternates, replacement refs, unsupported protocols, maintenance, submodule recursion, and Large File Storage transfer. | Seed every executable/configuration path and environment variable with canaries and side effects; require zero execution, disclosure, network expansion, or unowned write. |
+| `SR-GIT-005` | Make clone and fetch exact, namespaced, and non-destructive. | Clone without checkout into a new owned destination; fetch one exact remote ref through an empty ref map into one AgentMage namespace with no prune, tags, `FETCH_HEAD`, shallow mutation, maintenance, or user-ref update. | Exercise hostile objects, paths, refs, refspecs, redirects, partial transfers, collisions, quotas, and concurrent ref movement; require quarantine or exact isolated result. |
+| `SR-GIT-006` | Isolate coding and cleanup in owned worktrees. | Create one task branch/worktree from an immutable base and remove only a proven-owned, clean, process-free worktree after recovery retention. | Exercise dirty, detached, linked, missing, moved, locked, inaccessible, interrupted, and process-active worktrees; require preservation and visible recovery rather than deletion. |
+| `SR-GIT-007` | Create commits from exact approved state only. | Use a temporary owned index, approved path identities and bytes, exact parent/message/author, pinned signer, signature verification, no hooks/filters, and compare-and-swap update of one task branch. | Change index, path, bytes, message, parent, identity, signer, attributes, branch, or tests after preview; require zero commit and no active-index mutation. |
+| `SR-GIT-008` | Keep commit and push separate and make push one exact ordinary fast-forward. | Require a second grant bound to canonical host/account/repository/credential/full ref/expected old/new objects; prohibit defaults, multiple destinations, tags, deletion, options, recursion, force, lease, and bypass. | Attempt every implicit destination and prohibited refspec/flag plus branch movement and protection/ruleset change; require no request or wrong-ref effect. |
+| `SR-GIT-009` | Use short-lived, least-privilege, host-bound authentication. | Prefer repository-scoped GitHub App installation tokens; bind approved fallback methods to exact host, account, repository, operation, permissions, single-sign-on, expiry, certificate or Secure Shell host identity, and non-secret reference. | Run cross-host/account/repository/token/helper/proxy/redirect/certificate/host-key confusion and expiry/revocation cases; require zero credential disclosure or crossover. |
+| `SR-GIT-010` | Treat provider protections as additional controls, not authority. | Observe and bind rulesets, branch protection, signatures, reviews, checks, push rules, merge queues, and bypass capabilities; never exercise bypass automatically. | Change each protection after preview, grant a bypass-capable actor, and inject misleading hosted output; require stale denial and no bypass use. |
+| `SR-GIT-011` | Reconcile uncertain remote effects before retry. | Record verified effect, verified non-effect, partial effect, or unknown effect; perform a fresh bounded remote observation after transport uncertainty and block retry while unknown. | Crash, cancel, partition, time out, duplicate, truncate, and corrupt responses before and after server effect; require no duplicate push and one truthful terminal receipt. |
+| `SR-GIT-012` | Bound repository objects, disclosures, and resources. | Limit object count/bytes/decompression/depth, output, history, paths, workers, disk, time, credentials, diagnostics, and retained manifest content; scan outgoing commit ranges for secrets and policy violations. | Use malformed or oversized objects, bombs, deep trees, secret canaries, binary payloads, sensitive paths, and resource exhaustion; require quarantine or denial without leakage or residue. |
+
 ### 8.13 Productivity, Communications, Finance, and Cloud Observation
 
 | ID | Requirement | Build integration | Reviewer test or evidence |
@@ -894,6 +914,22 @@ Pass: `AT-CBA-001` through `AT-AUR-001` reproduce with zero canonical mutation, 
 silent omission, stale result, unresolved hidden contradiction, or removal residue; every limitation
 is published; `AT-GA-004` blocks Sprint 166 and `G-GA` on any non-pass or unreviewed result.
 
+### `RV-49` Repository and GitHub Mutation Safety
+
+Run every admitted Git and GitHub operation against clean, dirty, hostile-configured, concurrently
+changing, cross-host, stale-ref, protection-changing, interrupted, and unknown-result fixtures.
+Snapshot the active checkout, user index, every path disposition, refs including notes/stash/tags,
+reflogs, configuration, hooks, filters, worktrees, submodules, Large File Storage state, credentials,
+processes, network destinations, and hosted refs. Probe every prohibited operation, implicit refspec,
+force form, hook/filter/helper path, URL rewrite, protocol, signer substitution, credential crossover,
+and bypass capability.
+
+Pass: at least 10,000 composed mutations produce zero unauthorized file, index, ref, configuration,
+credential, network, hosted, or publication effect; every admitted effect matches its exact current
+grant and reconciled preservation manifest; user-owned and unrelated work survives byte-for-byte;
+no destructive or implicit operation is registered; no unknown push is retried; all receipts and
+raw evidence reconcile on Fedora, Ubuntu, and Windows.
+
 ## 11. Reviewer Evidence Bundle
 
 Every release candidate should produce one immutable directory or archive with this minimum structure:
@@ -1036,6 +1072,7 @@ Integrate this security baseline into the project without turning it into a pape
 11. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
 12. Run `RV-36` through `RV-43` incrementally with the owning trusted-operations sprint and rerun the complete set at Sprint 166; run `RV-42` again for the post-GA Experimental Model Lab gate.
 13. Run `RV-44` through `RV-48` with their owning whole-codebase audit stories and rerun the complete set from raw evidence at Sprint 166.
+14. Run `RV-49` first across Sprints 42, 47, 71, 85-86, and 106 as its local, authentication, commit, push, and hosted boundaries become available; rerun it at Sprints 126 and 166 and for every source-control adapter promotion.
 
 Recommended implementation gates:
 
@@ -1057,6 +1094,7 @@ Recommended implementation gates:
 | `SEC-G13` First GA | Fedora, Ubuntu, Windows, strict-local removal, delivery and productivity cross-provider lifecycles, financial and cloud prohibitions, trusted operations, whole-codebase audit, extreme verification, and signed evidence reconciliation pass at Sprint 166. |
 | `SEC-G14` Experimental models | Post-GA lab authority absence, resource confinement, truthful provenance gaps, normal-admission-only promotion, and removal pass independently from first GA. |
 | `SEC-G15` Whole-codebase audit | Complete census, deterministic structure, bounded semantic review, cross-module reconciliation, canonical immutability, secret protection, checkpoint invalidation, evidence-backed reporting, platform parity, resource controls, and removal pass. |
+| `SEC-G16` Repository safety | Exact preservation manifests, hardened Git process isolation, namespaced fetches, owned worktrees and indexes, signed commits, host/account/repository/ref-bound authentication, separately approved ordinary fast-forward pushes, uncertain-effect reconciliation, prohibited-operation absence, and `RV-49` pass. |
 
 ## 14. Release Decision Rule
 

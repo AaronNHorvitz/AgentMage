@@ -1,8 +1,8 @@
 //! Tool definition, call, and result contracts.
 
 use crate::{
-    ActionId, ContractError, ContractPayload, CorrelationId, EvidenceReference, SchemaReference,
-    ToolCallId, ToolId, ValidationIssue,
+    ActionId, ContractError, ContractPayload, CorrelationId, EvidenceReference, OperationBinding,
+    SchemaReference, ToolCallId, ToolId, ValidationIssue,
 };
 
 /// Terminal outcome shared by tool results and receipts.
@@ -43,10 +43,8 @@ pub enum ToolRiskLevel {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RequiredGrantTemplate {
-    /// Capability class that must be enabled by release policy.
-    pub capability_class: String,
-    /// Exact operation class a future grant must name.
-    pub operation: String,
+    /// Exact canonical operation and authority class a future grant must name.
+    pub operation: OperationBinding,
     /// Descriptive target-scope class a future grant must narrow.
     pub target_scope: String,
     /// Whether the future operation grant must be single use.
@@ -87,8 +85,8 @@ pub struct ToolDefinition {
     pub output_schema: SchemaReference,
     /// Review risk assigned to the operation.
     pub risk_level: ToolRiskLevel,
-    /// Declared effect classes used for policy and review.
-    pub declared_effects: Vec<String>,
+    /// Canonical operation bindings declared for policy and review.
+    pub declared_effects: Vec<OperationBinding>,
     /// Non-authoritative description of the future exact grant requirement.
     pub required_grant: RequiredGrantTemplate,
     /// Maximum elapsed execution time in milliseconds.
@@ -156,7 +154,7 @@ mod tests {
     #[test]
     fn call_binds_exact_tool_version_and_correlation_identity() {
         let call = ToolCall {
-            schema_version: 1,
+            schema_version: crate::CONTRACT_SCHEMA_VERSION,
             tool_call_id: ToolCallId::from_raw("call-0001"),
             correlation_id: CorrelationId::from_raw("correlation-0001"),
             action_id: ActionId::from_raw("action-0001"),

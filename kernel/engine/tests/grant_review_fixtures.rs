@@ -1,9 +1,10 @@
 use std::{collections::BTreeSet, env, fmt::Write as _, fs, path::PathBuf};
 
 use agentmage_kernel_contracts::{
-    ActionId, ActionKind, ActorId, ApprovalRequest, ContractError, ContractPayload, CorrelationId,
-    DataSensitivity, ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference, GrantId,
-    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
+    ContractError, ContractPayload, CorrelationId, DataSensitivity, ErrorCategory, ErrorId,
+    EvidenceId, EvidenceKind, EvidenceReference, GrantId, GrantNonce, GrantOperation,
+    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationAttemptId, OperationBinding,
     OperationOutcome, Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, SchemaId,
     SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
     ToolRiskLevel, WorkspaceId, to_canonical_json,
@@ -81,7 +82,7 @@ fn registry() -> ToolRegistry {
     registry
         .register_tool(Box::new(FixtureTool {
             definition: ToolDefinition {
-                schema_version: 1,
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
                 tool_id: ToolId::from_raw("fixture.read"),
                 tool_version: "1.0.0".to_owned(),
                 display_name: "Fixture reader".to_owned(),
@@ -89,10 +90,9 @@ fn registry() -> ToolRegistry {
                 input_schema: schema(),
                 output_schema: schema(),
                 risk_level: ToolRiskLevel::Low,
-                declared_effects: vec!["read-only".to_owned()],
+                declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
                 required_grant: RequiredGrantTemplate {
-                    capability_class: "read-only".to_owned(),
-                    operation: "fixture.read".to_owned(),
+                    operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                     target_scope: "workspace-file".to_owned(),
                     single_use: true,
                 },
@@ -154,7 +154,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
     let argument_bytes = br#"{"path":["src","fixture.txt"]}"#.to_vec();
     let argument_sha256 = hex_sha256(&argument_bytes);
     let tool_call = ToolCall {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         tool_call_id: ToolCallId::from_raw("call-0001"),
         correlation_id: CorrelationId::from_raw("correlation-0001"),
         action_id: action_id.clone(),
@@ -173,14 +173,15 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
         observed_revision: Some("fixture-v1".to_owned()),
     }];
     let effects = vec![GrantSideEffect {
-        operation: GrantOperation::WorkspaceRead,
+        operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         target_indexes: vec![0],
         details_sha256: "4".repeat(64),
     }];
     let approval = render_approval_request(
         &registry,
         ApprovalRequest {
-            schema_version: 1,
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            approval_id: ApprovalId::from_raw("approval-0001"),
             proposed_grant_id: GrantId::from_raw("grant-operation-0001"),
             parent_grant_id: parent.grant_id.clone(),
             parent_grant_sha256: parent_sha256,
@@ -188,7 +189,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
             session_id: session_id.clone(),
             task_id: task_id.clone(),
             action_kind: ActionKind::DeterministicTool,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_call: tool_call.clone(),
             targets: vec![operation_target.clone()],
             excluded_targets: parent.excluded_targets.clone(),
@@ -209,6 +210,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
             &parent.grant_id,
             DerivedOperationGrantRequest {
                 grant_id: approval.proposed_grant_id.clone(),
+                approval_id: approval.approval_id.clone(),
                 action_id: action_id.clone(),
                 action_kind: approval.action_kind,
                 operation: approval.operation,
@@ -260,7 +262,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
     assert_eq!(invalidated.status, GrantStatus::Invalidated);
     assert_eq!(invalidated.use_count, 0);
     let denial = PolicyDenialFixture {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         grant_id: operation.grant_id.clone(),
         policy_sha256: decision.policy_sha256,
         allowed: decision.allowed,
@@ -273,7 +275,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
     };
     let denial_bytes = serde_json::to_vec(&denial).expect("denial fixture must serialize");
     let error = ContractError {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         error_id: ErrorId::from_raw("error-policy-denial-0001"),
         code: decision.code.to_owned(),
         category: ErrorCategory::Policy,
@@ -283,18 +285,23 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
         caused_by: None,
     };
     let mut receipt = Receipt {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         receipt_id: ReceiptId::from_raw("receipt-policy-denial-0001"),
         sequence: 1,
         correlation_id: tool_call.correlation_id.clone(),
+        authority_transaction_id: AuthorityTransactionId::from_raw("transaction-0001"),
+        operation_attempt_id: OperationAttemptId::from_raw("attempt-0001"),
+        approval_id: approval.approval_id.clone(),
+        grant_id: operation.grant_id.clone(),
         session_id,
         task_id,
         action_id,
         tool_call_id: Some(tool_call.tool_call_id),
+        operation: operation.operation,
         outcome: OperationOutcome::Denied,
         operation_sha256,
         evidence: vec![EvidenceReference {
-            schema_version: 1,
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
             evidence_id: EvidenceId::from_raw("evidence-policy-denial-0001"),
             kind: EvidenceKind::Decision,
             source_id: "agentmage-kernel-policy".to_owned(),
@@ -347,14 +354,50 @@ fn approval_and_denial_review_fixtures_match_kernel_behavior() {
     let fixture_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .join("fixtures/grants/v1");
+    let historical_sha256 = [
+        (
+            APPROVAL_NAME,
+            "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707",
+        ),
+        (
+            DECISION_NAME,
+            "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96",
+        ),
+        (
+            RECEIPT_NAME,
+            "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41",
+        ),
+    ];
     for fixture in fixtures {
         let retained = fs::read(fixture_root.join(fixture.name))
             .unwrap_or_else(|error| panic!("cannot read {}: {error}", fixture.name));
+        let expected_historical = historical_sha256
+            .iter()
+            .find_map(|(name, digest)| (*name == fixture.name).then_some(*digest))
+            .expect("fixture has historical identity");
         assert_eq!(
+            hex_sha256(&retained),
+            expected_historical,
+            "{}",
+            fixture.name
+        );
+        assert_ne!(
             retained,
             fixture.canonical_json.as_bytes(),
             "{}",
             fixture.name
         );
+
+        let current: serde_json::Value = serde_json::from_str(&fixture.canonical_json)
+            .expect("current fixture must be canonical JSON");
+        if fixture.name == APPROVAL_NAME {
+            assert_eq!(current["approval_id"], "approval-0001");
+            assert_eq!(current["operation"]["taxonomy_version"], 1);
+            assert_eq!(current["operation"]["authority_class"], "observe");
+        }
+        if fixture.name == RECEIPT_NAME {
+            assert_eq!(current["approval_id"], "approval-0001");
+            assert_eq!(current["operation"]["taxonomy_version"], 1);
+        }
     }
 }

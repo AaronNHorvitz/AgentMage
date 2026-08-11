@@ -4,7 +4,8 @@ use std::{collections::BTreeSet, fmt::Write};
 
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, CapabilityGrant, GrantClass, GrantId, GrantOperation,
-    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, SessionId, TaskId, ToolId,
+    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, SessionId, TaskId,
+    ToolId,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -12,11 +13,16 @@ use sha2::{Digest, Sha256};
 use crate::grants::GrantIssuer;
 
 /// Operations explicitly prohibited by the strict-local read-only policy profile.
-pub const STRICT_LOCAL_DENIED_OPERATIONS: [GrantOperation; 12] = [
+pub const STRICT_LOCAL_DENIED_OPERATIONS: [GrantOperation; 21] = [
     GrantOperation::WorkspaceWrite,
     GrantOperation::WorkspaceDelete,
     GrantOperation::CommandExecute,
     GrantOperation::NetworkAccess,
+    GrantOperation::GitClone,
+    GrantOperation::GitFetch,
+    GrantOperation::GitWorktreeCreate,
+    GrantOperation::GitWorktreeRemove,
+    GrantOperation::GitBranchFastForward,
     GrantOperation::GitCommit,
     GrantOperation::GitPush,
     GrantOperation::Publish,
@@ -25,6 +31,10 @@ pub const STRICT_LOCAL_DENIED_OPERATIONS: [GrantOperation; 12] = [
     GrantOperation::Deploy,
     GrantOperation::DatabaseWrite,
     GrantOperation::CredentialAccess,
+    GrantOperation::DatabaseRead,
+    GrantOperation::ModelInference,
+    GrantOperation::DraftCreate,
+    GrantOperation::Administration,
 ];
 
 /// Exact tool identity and contract version admitted by policy.
@@ -82,7 +92,7 @@ pub struct PolicyDocument {
     /// Tool identity/version allow/deny rules.
     pub tools: ScopeRules<ToolPolicyBinding>,
     /// Operation-class allow/deny rules.
-    pub operations: ScopeRules<GrantOperation>,
+    pub operations: ScopeRules<OperationBinding>,
     /// Workspace-target allow/deny rules.
     pub targets: ScopeRules<GrantTarget>,
     /// Argument digests denied even when an exact grant names them.
@@ -264,8 +274,11 @@ impl PolicyEngine {
                 denied: BTreeSet::new(),
             },
             operations: ScopeRules {
-                allowed: BTreeSet::from([GrantOperation::WorkspaceRead]),
-                denied: BTreeSet::from(STRICT_LOCAL_DENIED_OPERATIONS),
+                allowed: BTreeSet::from([OperationBinding::new(GrantOperation::WorkspaceRead)]),
+                denied: STRICT_LOCAL_DENIED_OPERATIONS
+                    .into_iter()
+                    .map(OperationBinding::new)
+                    .collect(),
             },
             targets: ScopeRules {
                 allowed: scope.targets,
@@ -382,21 +395,21 @@ impl PolicyEngine {
             return deny(PolicyDenialScope::Preview);
         }
         if !external_scope_allowed(
-            grant.operation == GrantOperation::NetworkAccess,
+            grant.operation.operation() == GrantOperation::NetworkAccess,
             context.network_scope.as_ref(),
             &self.document.network_scopes,
         ) {
             return deny(PolicyDenialScope::Network);
         }
         if !external_scope_allowed(
-            grant.operation == GrantOperation::CredentialAccess,
+            grant.operation.operation() == GrantOperation::CredentialAccess,
             context.credential_scope.as_ref(),
             &self.document.credential_scopes,
         ) {
             return deny(PolicyDenialScope::Credential);
         }
         if !external_scope_allowed(
-            is_publication_operation(grant.operation),
+            is_publication_operation(grant.operation.operation()),
             context.publication_scope.as_ref(),
             &self.document.publication_scopes,
         ) {
@@ -542,8 +555,9 @@ mod tests {
     };
     use crate::grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest};
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, DataSensitivity, GrantId, GrantNonce, GrantOperation,
-        GrantPreimage, GrantSideEffect, GrantTarget, SessionId, TaskId, ToolId, WorkspaceId,
+        ActionId, ActionKind, ActorId, ApprovalId, DataSensitivity, GrantId, GrantNonce,
+        GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, OperationBinding, SessionId,
+        TaskId, ToolId, WorkspaceId,
     };
 
     fn set<T: Ord>(value: T) -> BTreeSet<T> {
@@ -575,7 +589,7 @@ mod tests {
                 tool_id: ToolId::from_raw("fixture.read"),
                 tool_version: "1.0.0".to_owned(),
             }),
-            operations: rules(operation),
+            operations: rules(OperationBinding::new(operation)),
             targets: rules(target(&["src"])),
             denied_argument_sha256s: BTreeSet::new(),
             denied_preimage_sha256s: BTreeSet::new(),
@@ -612,9 +626,10 @@ mod tests {
                 &parent.grant_id,
                 DerivedOperationGrantRequest {
                     grant_id: GrantId::from_raw("grant-child-0001"),
+                    approval_id: ApprovalId::from_raw("approval-0001"),
                     action_id: ActionId::from_raw("action-0001"),
                     action_kind: ActionKind::DeterministicTool,
-                    operation,
+                    operation: OperationBinding::new(operation),
                     tool_id: ToolId::from_raw("fixture.read"),
                     tool_version: "1.0.0".to_owned(),
                     targets: vec![target(&["src"])],
@@ -625,7 +640,7 @@ mod tests {
                         observed_revision: Some("fixture-v1".to_owned()),
                     }],
                     expected_side_effects: vec![GrantSideEffect {
-                        operation,
+                        operation: OperationBinding::new(operation),
                         target_indexes: vec![0],
                         details_sha256: "4".repeat(64),
                     }],
@@ -800,7 +815,10 @@ mod tests {
         collisions.push((tool_denied, PolicyDenialScope::Tool));
 
         let mut operation_denied = document(operation);
-        operation_denied.operations.denied.insert(operation);
+        operation_denied
+            .operations
+            .denied
+            .insert(OperationBinding::new(operation));
         collisions.push((operation_denied, PolicyDenialScope::Operation));
 
         let mut path_denied = document(operation);
@@ -970,11 +988,14 @@ mod tests {
         .expect("strict policy must build");
         assert_eq!(
             engine.document.operations.allowed,
-            set(GrantOperation::WorkspaceRead)
+            set(OperationBinding::new(GrantOperation::WorkspaceRead))
         );
         assert_eq!(
             engine.document.operations.denied,
-            BTreeSet::from(STRICT_LOCAL_DENIED_OPERATIONS)
+            STRICT_LOCAL_DENIED_OPERATIONS
+                .into_iter()
+                .map(OperationBinding::new)
+                .collect::<BTreeSet<_>>()
         );
         assert!(engine.document.network_scopes.allowed.is_empty());
         assert!(engine.document.credential_scopes.allowed.is_empty());
@@ -987,10 +1008,7 @@ mod tests {
                 .allowed
         );
 
-        for operation in STRICT_LOCAL_DENIED_OPERATIONS
-            .into_iter()
-            .chain([GrantOperation::DatabaseRead, GrantOperation::ModelInference])
-        {
+        for operation in STRICT_LOCAL_DENIED_OPERATIONS {
             let (issuer, grant) = issued_operation(&engine, operation);
             let decision = engine.evaluate(&issuer, &grant, &context(&grant));
             assert!(

@@ -64,6 +64,18 @@ define_identifier!(ToolCallId, "Stable identity for one tool-call attempt.");
 define_identifier!(ActorId, "Stable pseudonymous identity for one local actor.");
 define_identifier!(GrantId, "Stable identity for one capability grant.");
 define_identifier!(GrantNonce, "Single-grant nonce used to prevent replay.");
+define_identifier!(
+    ApprovalId,
+    "Stable identity for one explicit approval decision."
+);
+define_identifier!(
+    AuthorityTransactionId,
+    "Stable identity for one kernel-owned authority transaction."
+);
+define_identifier!(
+    OperationAttemptId,
+    "Stable identity for one non-replayable operation attempt."
+);
 define_identifier!(WorkspaceId, "Stable identity for one approved workspace.");
 define_identifier!(
     WorkspaceAuthorizationId,

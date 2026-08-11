@@ -56,6 +56,7 @@ authorizes resumption.
 | `SECURITY.md` | Public vulnerability reporting, supported-version, patch-delivery, emergency-disablement, and end-of-support policy |
 | `RUNTIME-BOUNDARIES.md` | Derived trust-boundary, privilege, process, socket, lifecycle, and data-flow specification |
 | `DELIVERY-SYSTEM.md` | Normative provider-neutral delivery graph, adapter, authority-class, operation, conformance, and support-matrix contract |
+| `docs/security/repository-safety.md` | Normative Git and GitHub operation, preservation, process-hardening, authentication, and verification contract |
 | `PRODUCTIVITY-SYSTEM.md` | Normative communications, personal-information, document, workflow, finance, and read-only cloud-observer architecture |
 | `TRUSTED-OPERATIONS.md` | Normative command-authority, public-research, credential-broker, continuity, model-manager, and experimental-model architecture |
 | `CODEBASE-AUDIT.md` | Normative whole-codebase census, structural, semantic, reconciliation, read-only, checkpoint, finding, and coverage architecture |
@@ -103,6 +104,7 @@ AgentMage separates deterministic work, model inference, authorization, evidence
 22. Let a nontechnical user ask Chat to compare, acquire, import, verify, activate, roll back, or remove approved local models through a deterministic, separately isolated model manager.
 23. Keep user-selected unapproved model experimentation in a post-GA disposable lab with no connected, credential, command, or canonical-workspace-write authority and no automatic promotion.
 24. Audit an entire declared codebase through complete path disposition, deterministic structure, coherent bounded semantic review, cross-module reconciliation, encrypted checkpoint resume, transitive invalidation, canonical read-only enforcement, calibrated findings, and explicit coverage and uncertainty.
+25. Make repository mutation inaccessible to models and available only through exact adapter operations that preserve user and Git state, use isolated owned worktrees, bind authenticated host/repository/ref identities, create signed commits from temporary indexes, require a separate approval for one ordinary fast-forward push, and omit generic pull and destructive or implicit Git behavior.
 
 ## 4. Non-Goals
 
@@ -552,6 +554,7 @@ The first-GA delivery contract is defined in [`DELIVERY-SYSTEM.md`](./DELIVERY-S
 - A provider-neutral delivery graph linking services, work items, changes, commits, reviews, builds, checks, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback.
 - A versioned adapter SDK and conformance suite with manifested provider, host, version, capability, scope, event, limit, degradation, and removal behavior.
 - Full GitHub.com and user-approved GitHub Enterprise Server behavior within the shipped matrix, including local signed commits and separately approved pushes, issues, pull requests, reviews, workflows, checks, releases, and hosted mutations.
+- The canonical repository-safety boundary: pre/post preservation manifests; exact namespaced fetch; owned worktrees and temporary indexes; pinned signer; one separately approved ordinary fast-forward task-branch push; short-lived host/account/repository-bound authentication; uncertain-effect reconciliation; and structural absence of generic pull, destructive or implicit Git, force, bypass, hook/filter execution, and arbitrary ref updates.
 - Reference adapters for Jira, Azure DevOps, GitLab, Jenkins, artifact registries, Kubernetes and GitOps, infrastructure as code, OpenTelemetry and vendor observability, incidents, security findings, service catalogs, feature flags, migrations, and releases.
 - Separate `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` authority classes, with no capability class inheriting another.
 - Exact previews, fresh remote preconditions, single-use grants, idempotency or deterministic reconciliation, verified postconditions, receipts, rollback or compensation, cancellation, and crash recovery.
@@ -743,7 +746,7 @@ requires:
 - Complete whole-codebase audit census, deterministic graph, bounded semantic packet, evidence-card,
   cross-module reconciliation, canonical read-only, secret-protection, checkpoint, invalidation,
   finding, report, coverage, resource, accessibility, and removal evidence.
-- Independent reproduction of `RV-01` through `RV-48` and exact reconciliation from raw evidence to
+- Independent reproduction of `RV-01` through `RV-49` and exact reconciliation from raw evidence to
   the release decision.
 
 Any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed
@@ -802,6 +805,6 @@ completion. A comprehensive report remains blocked by any required missing, excl
 unsupported, failed, stale, changed, unreconciled, unreviewed, or read-only-attestation state.
 
 Implementation is distributed across existing Sprints 157, 159, 161, 163, and 165 so stable sprint
-identities remain intact. Sprint 166 independently reruns `RV-44` through `RV-48` and closes `G-GA`
+identities remain intact. Sprint 166 independently reruns `RV-44` through `RV-49` and closes `G-GA`
 only when `AM-GAD-004`, `AT-GA-004`, and every earlier release requirement pass from current raw
 evidence.

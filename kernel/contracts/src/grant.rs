@@ -1,8 +1,8 @@
 //! Capability-grant authority contracts.
 
 use crate::{
-    ActionId, ActionKind, ActorId, DataSensitivity, GrantId, GrantNonce, SessionId, TaskId, ToolId,
-    WorkspaceId,
+    ActionId, ActionKind, ActorId, ApprovalId, DataSensitivity, GrantId, GrantNonce,
+    OperationBinding, SessionId, TaskId, ToolId, WorkspaceId,
 };
 
 /// Authority role assigned to one grant record.
@@ -13,47 +13,6 @@ pub enum GrantClass {
     SessionRead,
     /// Exact single-use operation derived within a current parent scope.
     Operation,
-}
-
-/// Closed operation class authorized by one exact grant.
-///
-/// There is deliberately no wildcard, custom, or approve-all variant. Policy may deny
-/// any represented operation, and v0.1 admits only separately approved read behavior.
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
-)]
-#[serde(rename_all = "snake_case")]
-pub enum GrantOperation {
-    /// Observe content beneath one approved workspace.
-    WorkspaceRead,
-    /// Change exact workspace content in a later controlled-write release.
-    WorkspaceWrite,
-    /// Delete exact workspace content in a later release.
-    WorkspaceDelete,
-    /// Execute one exact command in a later release.
-    CommandExecute,
-    /// Contact one exact network destination in a separately approved flow.
-    NetworkAccess,
-    /// Create one exact source-control commit in a later release.
-    GitCommit,
-    /// Push one exact source-control state in a later release.
-    GitPush,
-    /// Publish one exact artifact in a later release.
-    Publish,
-    /// Send one exact message in a later release.
-    Send,
-    /// Upload one exact artifact in a later release.
-    Upload,
-    /// Deploy one exact artifact in a later release.
-    Deploy,
-    /// Read one exact database scope in a later capability.
-    DatabaseRead,
-    /// Change one exact database scope in a later capability.
-    DatabaseWrite,
-    /// Access one exact credential through a separately approved provider.
-    CredentialAccess,
-    /// Invoke one exact local model profile without giving the model operation authority.
-    ModelInference,
 }
 
 /// Candidate workspace-relative target bound into a grant.
@@ -87,8 +46,8 @@ pub struct GrantPreimage {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GrantSideEffect {
-    /// Closed effect class; policy must agree with the grant operation.
-    pub operation: GrantOperation,
+    /// Canonical operation binding; policy must agree with the grant operation.
+    pub operation: OperationBinding,
     /// Ordered target indexes affected by this effect.
     pub target_indexes: Vec<u32>,
     /// Lowercase SHA-256 digest of canonical effect details shown in the preview.
@@ -131,6 +90,9 @@ pub struct CapabilityGrant {
     pub grant_class: GrantClass,
     /// Exact local actor identity whose decision created the authority.
     pub actor_id: ActorId,
+    /// Exact approval decision for an operation grant; absent for a session-read parent.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub approval_id: Option<ApprovalId>,
     /// Owning local session.
     pub session_id: SessionId,
     /// Exact user-directed task.
@@ -141,8 +103,8 @@ pub struct CapabilityGrant {
     /// Exact descriptive action class paired with `action_id`.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub action_kind: Option<ActionKind>,
-    /// Closed operation class.
-    pub operation: GrantOperation,
+    /// Versioned canonical operation and authority class.
+    pub operation: OperationBinding,
     /// Exact tool identity for an operation grant; absent only for a session read parent.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub tool_id: Option<ToolId>,
@@ -190,26 +152,26 @@ pub struct CapabilityGrant {
 #[cfg(test)]
 mod tests {
     use super::{
-        CapabilityGrant, GrantClass, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
-        GrantTarget,
+        CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
     };
     use crate::{
-        ActionId, ActionKind, ActorId, DataSensitivity, GrantId, GrantNonce, SessionId, TaskId,
-        ToolId, WorkspaceId,
+        ActionId, ActionKind, ActorId, ApprovalId, DataSensitivity, GrantId, GrantNonce,
+        GrantOperation, OperationBinding, SessionId, TaskId, ToolId, WorkspaceId,
     };
 
     fn grant() -> CapabilityGrant {
         CapabilityGrant {
-            schema_version: 1,
+            schema_version: crate::CONTRACT_SCHEMA_VERSION,
             grant_id: GrantId::from_raw("grant-0001"),
             revision: 1,
             grant_class: GrantClass::Operation,
             actor_id: ActorId::from_raw("actor-local-0001"),
+            approval_id: Some(ApprovalId::from_raw("approval-0001")),
             session_id: SessionId::from_raw("session-0001"),
             task_id: TaskId::from_raw("task-0001"),
             action_id: Some(ActionId::from_raw("action-0001")),
             action_kind: Some(ActionKind::DeterministicTool),
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_id: Some(ToolId::from_raw("fixture.read")),
             tool_version: Some("1.0.0".to_owned()),
             targets: vec![GrantTarget {
@@ -228,7 +190,7 @@ mod tests {
                 observed_revision: Some("fixture-v1".to_owned()),
             }],
             expected_side_effects: vec![GrantSideEffect {
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
                 details_sha256: "3".repeat(64),
             }],
@@ -252,7 +214,10 @@ mod tests {
         assert_eq!(grant.use_limit, 1);
         assert_eq!(grant.use_count, 0);
         assert_eq!(grant.targets[0].path_components, ["fixtures", "input.txt"]);
-        assert_eq!(grant.operation, GrantOperation::WorkspaceRead);
+        assert_eq!(
+            grant.operation,
+            OperationBinding::new(GrantOperation::WorkspaceRead)
+        );
         assert_eq!(grant.status, GrantStatus::Issued);
     }
 
@@ -261,7 +226,7 @@ mod tests {
         let grant = grant();
         let value = serde_json::to_value(&grant).expect("grant fixture must encode");
         let object = value.as_object().expect("grant must be an object");
-        assert_eq!(object.len(), 29);
+        assert_eq!(object.len(), 30);
 
         for key in object.keys() {
             let mut candidate = value.clone();
@@ -276,10 +241,7 @@ mod tests {
         }
 
         let mut wildcard = value.clone();
-        wildcard
-            .as_object_mut()
-            .expect("grant must be an object")
-            .insert("operation".to_owned(), serde_json::json!("all"));
+        wildcard["operation"]["operation"] = serde_json::json!("all");
         let error = crate::from_json::<CapabilityGrant>(
             &serde_json::to_vec(&wildcard).expect("wildcard candidate must encode"),
         )

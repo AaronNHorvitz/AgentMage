@@ -17,7 +17,7 @@
   ],
   "properties": {
     "schema_version": {
-      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/agentConfigurationSchemaVersion"
     },
     "shell_id": {
       "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/identifier"

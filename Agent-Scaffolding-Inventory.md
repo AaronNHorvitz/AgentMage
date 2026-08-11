@@ -807,6 +807,8 @@ The process runner is the controlled bridge to command-line programs. It exists 
 
 This section covers read-only repository inspection and later approval-gated source-control actions. It exists to preserve user changes, make diffs reviewable, and enforce signed-commit and publication rules instead of treating Git as an unrestricted command surface.
 
+The only representable Git mutations are exact clone, namespaced fetch, owned-worktree create/remove, compare-and-swap local branch fast-forward, signed commit, and ordinary fast-forward push. Generic pull, merge, rebase, reset, clean, checkout/restore discard, stash/tag/note mutation, branch deletion, remote configuration, hook execution, force, mirror, and arbitrary ref updates have no grantable operation. [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) is the normative preservation and verification contract.
+
 - [ ] `BUILD` `git_status()` using porcelain output without modifying the repository.
 - [ ] `BUILD` `git_current_branch()` and upstream detection.
 - [ ] `BUILD` `git_branch_list()` for local and remote branch discovery.
@@ -815,6 +817,10 @@ This section covers read-only repository inspection and later approval-gated sou
 - [ ] `BUILD` `git_show(commit)` for read-only commit inspection.
 - [ ] `BUILD` `git_worktree_list()` and worktree-to-branch mapping.
 - [ ] `BUILD` dirty-tree and untracked-file detection before any branch operation.
+- [ ] `CAPABILITY GATE` Build and reconcile a content-minimized repository preservation manifest before preview, immediately before grant consumption, and after every terminal result; unknown, unsupported, inaccessible, racing, or unexplained state blocks mutation.
+- [ ] `CAPABILITY GATE` Preserve the active checkout, user index, staged/unstaged/untracked/ignored files, Markdown and other user notes, `refs/notes/*`, stashes, reflogs, tags, replacement refs, unrelated branches, remote-tracking refs, repository configuration, hooks, filters, submodules, Large File Storage state, and in-progress Git operations unless one separately registered exact operation owns that state.
+- [ ] `CAPABILITY GATE` Give the model no raw Git executable, generic shell, transport, credential, socket, signer, or ref-update authority; route every representable operation through the kernel transaction coordinator and dedicated adapter.
+- [ ] `BUILD` a pinned Git process boundary with literal arguments, canonical working directory, sanitized environment, bounded input/output, descendant containment, cancellation, and receipts; reject aliases, broad `safe.directory`, URL rewrites, remote helpers, repository credential helpers, hooks, executable filters, external diff/merge drivers, pagers, editors, repository-selected signers, alternates, replacement refs, and unsupported extensions.
 - [ ] `BUILD` changed-file classification by issue, generated output, user work, and unrelated work.
 - [ ] `BUILD` source-control safety packages containing status, diffs, conflict versions, hashes, and restoration instructions.
 - [ ] `BUILD` patch, conflict-snapshot, and `SHA256SUMS` behavior with deterministic tests.
@@ -822,6 +828,7 @@ This section covers read-only repository inspection and later approval-gated sou
 - [ ] `BUILD` exact commit-message drafting from the approved change set.
 - [ ] `BUILD` hardware-backed and OpenPGP signing-configuration inspection.
 - [ ] `BUILD` signed-commit verification equivalent to `git verify-commit`.
+- [ ] `BUILD` commits from an AgentMage-owned temporary index seeded from the exact immutable base, stage only approved path identities and bytes, use one pinned approved signer, and compare-and-swap only the owned task branch.
 - [ ] `BUILD` a manual approval pause before every commit.
 - [ ] `BUILD` a second manual approval pause before every push that updates an open pull request.
 - [ ] `BUILD` a source-control hosting publication preview with exact title/body/comment/review-state changes.
@@ -831,15 +838,21 @@ This section covers read-only repository inspection and later approval-gated sou
 
 This section extends local Git inspection to approved remote repositories and separate working copies. It exists so the agent can obtain current code and review hosted changes without overwriting local work, leaking credentials, or publishing anything without approval.
 
+The three legacy `fetch --prune`, `pull`, and pull-currentness checklist statements below are retained verbatim for additions-only provenance. Decision 0013 and the narrower repository-safety contract supersede their literal command interpretation: no prune or generic pull operation is implementable, and their intended currentness/fast-forward value is delivered only by exact namespaced fetch plus a separately granted compare-and-swap branch fast-forward.
+
 - [ ] `BUILD` remote discovery for repository URLs, default branch, upstream branch, fetch state, and local-versus-remote divergence.
 - [ ] `BUILD` approval-gated cloning into an empty, user-selected directory using only approved local Secure Shell agent, credential-helper, or operating-system keychain access.
 - [ ] `BUILD` read-only `fetch --prune` support that updates remote references without merging, rebasing, switching branches, or changing the working tree.
+- [ ] `BUILD` exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`, with atomic local ref update and no prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph write, or user remote-tracking-ref update.
 - [ ] `BUILD` a currentness report that shows ahead, behind, diverged, stale, and uncommitted states before any pull or branch action.
+- [ ] `BUILD` a currentness report that shows ahead, behind, diverged, stale, and uncommitted states before any fetch or branch action.
 - [ ] `BUILD` an approval-gated fast-forward-only pull and refuse automatic reset, stash, rebase, conflict resolution, or discard.
+- [ ] `BUILD` a separately previewed and granted compare-and-swap fast-forward of one exact local branch from an expected object to a proven descendant; generic pull and automatic reset, stash, rebase, merge, conflict resolution, or discard remain absent.
 - [ ] `BUILD` read-only source-control-host inspection for issues, pull requests, checks, reviews, releases, and exact commit links with freshness timestamps.
 - [ ] `BUILD` isolated Git worktrees for separate tasks, with one branch per worktree, visible ownership, disk limits, and no automatic copying of ignored secret files.
 - [ ] `CAPABILITY GATE` Treat a Git worktree only as change and concurrency isolation; it supplements but never replaces operating-system sandboxing, path boundaries, capability grants, secret controls, or network policy.
 - [ ] `BUILD` temporary coding worktrees that remain separate from the user's active checkout and preserve its branch, index, untracked files, and unfinished changes.
+- [ ] `BUILD` cleanup that removes only a proven AgentMage-owned, process-free, clean worktree after recovery retention; retain dirty, inaccessible, uncertain, or interrupted worktrees for explicit recovery.
 - [ ] `BUILD` per-worktree records for task identity, source commit, branch, owner, grants, file ownership, active processes, resource budgets, retention, cleanup, and final disposition.
 - [ ] `BUILD` deterministic collision checks before change transfer so overlapping edits, renamed paths, changed preimages, and concurrent user changes stop for review instead of being silently combined.
 - [ ] `BUILD` worktree snapshots and handoff records so a deleted or moved worktree can be restored safely.
@@ -860,6 +873,7 @@ This section defines the hosted GitHub capabilities that sit above ordinary loca
 - [ ] `BUILD` a provider adapter supporting GitHub.com and user-approved GitHub Enterprise hosts without sending one host's credentials to another.
 - [ ] `BUILD` read-only access through an approved GitHub command-line client, REST application programming interface, or GraphQL application programming interface behind one normalized tool contract.
 - [ ] `BUILD` authentication through an approved Secure Shell agent, operating-system credential helper, fine-grained personal access token, or GitHub App installation; never store tokens in prompts, memory, logs, repositories, or plain-text configuration.
+- [ ] `BUILD` authentication that prefers a repository-scoped GitHub App with minimum permissions and short-lived installation tokens; allow an approved Secure Shell agent, operating-system credential helper, or expiring fine-grained personal access token only as a host/account/repository/operation-bound fallback; never store tokens in prompts, memory, logs, repositories, ordinary environments, process arguments, receipts, backups, or plain-text configuration.
 - [ ] `BUILD` authentication and permission diagnostics that show the active host, account or app, installation, granted repositories, scopes, expiration, single-sign-on state, and missing permission without showing secret values.
 - [ ] `BUILD` organization, user, team, repository, visibility, archived-state, fork, template, language, topic, license, default-branch, and last-update discovery within the granted scope.
 - [ ] `BUILD` bounded search across repository names, descriptions, code, paths, commits, branches, tags, releases, issues, pull requests, discussions, and users where the host permits it.
@@ -870,6 +884,7 @@ This section defines the hosted GitHub capabilities that sit above ordinary loca
 - [ ] `BUILD` pull-request inspection covering base and head branches, fork status, commits, changed files, patch, comments, review threads, approvals, requested changes, requested reviewers, labels, milestone, linked issues, draft state, mergeability, and update status.
 - [ ] `BUILD` checks inspection covering required checks, status contexts, workflow runs, jobs, steps, annotations, test summaries, logs, artifacts, attempts, cancellations, reruns, and the exact commit tested.
 - [ ] `BUILD` branch-protection, repository-ruleset, required-review, required-check, signed-commit, linear-history, merge-method, and deletion-policy inspection.
+- [ ] `CAPABILITY GATE` Bind the current branch protection, ruleset, signed-commit requirement, required reviews/checks, push rules, and bypass capability to every push preview; never exercise a bypass merely because the authenticated actor possesses it.
 - [ ] `BUILD` `CODEOWNERS`, repository instructions, contribution guides, pull-request templates, issue templates, security policies, support files, and nested instruction discovery before proposing or reviewing changes.
 - [ ] `BUILD` read-only security inspection for dependency alerts, code-scanning alerts, secret-scanning alerts, repository security advisories, dependency graph, dependency review, and software-bill-of-materials data when permission exists.
 - [ ] `BUILD` release inspection covering release notes, tags, assets, checksums, provenance, pre-release state, publication time, and comparison with the previous release.
@@ -892,6 +907,9 @@ This section defines the hosted GitHub capabilities that sit above ordinary loca
 - [ ] `BUILD` approval-gated review submission, review-thread replies, thread resolution, approval, change request, and review dismissal with the exact hosted effect shown first.
 - [ ] `BUILD` approval-gated workflow dispatch, failed-job rerun, cancellation, environment approval, and artifact download with the workflow, ref, inputs, and side effects shown first.
 - [ ] `BUILD` approval-gated commits and pushes that enforce the repository's signing method, show the exact staged diff and message, verify the resulting signature, and require a separate approval before updating a remote branch.
+- [ ] `BUILD` approval-gated commits and pushes that enforce the repository's signing method, show the exact staged diff and message, verify the resulting signature, and require a separate approval before one explicit ordinary fast-forward update of one full task-branch ref.
+- [ ] `CAPABILITY GATE` Prohibit push defaults, configured push-URL substitution, multiple destinations, `--all`, `--branches`, `--mirror`, tags, follow-tags, deletion refspecs, push options, upstream mutation, recursive submodules, force, and every form of force-with-lease.
+- [ ] `CAPABILITY GATE` Bind push to exact host, account, repository, credential reference, full destination ref, expected old object, and expected new object; after timeout, disconnect, crash, or malformed response, reconcile through a fresh bounded observation and refuse retry while the effect remains unknown.
 - [ ] `BUILD` approval-gated fixes from review findings that re-read the current branch, refuse unrelated changes, run the applicable checks, and show the new diff before commit or push.
 - [ ] `BUILD` approval-gated merge preparation showing current approvals, required checks, unresolved threads, branch protection, merge method, resulting commit, release impact, and branch-deletion choice.
 - [ ] `BUILD` approval-gated release drafting with tag, target commit, generated or edited notes, assets, checksums, provenance, pre-release state, and publication preview.
@@ -1736,8 +1754,12 @@ Decision 0008 preserves the entire earlier inventory as internal milestone work 
 ### Source, Work, and CI
 
 - [ ] `BUILD` complete GitHub.com and GitHub Enterprise Server conformance within the published repository, branch, commit, issue, pull-request, review, check, workflow, release, and security matrix.
+- [ ] `CAPABILITY GATE` Enforce [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) across local Git, GitHub.com, GitHub Enterprise Server, Azure Repos, GitLab, and every future source adapter without provider-specific weakening.
 - [ ] `BUILD` exact staged-diff and commit-message approval, required signing, signature verification, and a separate approval for every remote push.
+- [ ] `BUILD` exact preservation manifests, namespaced fetches, owned worktrees, compare-and-swap branch fast-forwards, temporary commit indexes, exact staged-tree and commit-message approval, pinned required signing, signature verification, and a separate exact approval for every ordinary fast-forward remote push.
 - [ ] `CAPABILITY GATE` Keep force push, secret changes, repository administration, organization administration, and ruleset administration absent unless separately promoted to L5.
+- [ ] `CAPABILITY GATE` Keep generic pull, destructive/implicit Git, hooks/filters/helpers, force and force-with-lease push, implicit/multi-ref/tag/deletion/mirror push, bypass use, secret changes, repository administration, organization administration, and ruleset administration absent unless a future taxonomy decision and separately promoted L5 contract admit them.
+- [ ] `VERIFY` `RV-49` across at least 10,000 composed repository/provider mutations with zero user-work loss, credential crossover, unsafe retry, or unauthorized local/remote effect.
 - [ ] `BUILD` Jira Cloud, Jira Data Center, GitHub Issues, and Azure Boards field, transition, comment, attachment, link, hierarchy, iteration, and project semantics without flattening provider-only behavior incorrectly.
 - [ ] `BUILD` Azure Repos and GitLab repository, branch, commit, merge-request or pull-request, policy, and signed-push adapters.
 - [ ] `BUILD` GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins definition, run, job, step, annotation, log, artifact, rerun, cancel, approval, and dispatch adapters.

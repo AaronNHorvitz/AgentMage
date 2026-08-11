@@ -1,7 +1,8 @@
 //! Task, work-packet, plan, and action contracts.
 
 use crate::{
-    ActionId, EvidenceKind, PlanId, PlanStepId, SessionId, TaskId, ValidationIssue, WorkPacketId,
+    ActionId, AuthorityClass, EvidenceKind, PlanId, PlanStepId, SessionId, TaskId, ValidationIssue,
+    WorkPacketId,
 };
 
 /// Lifecycle state of a user-directed task.
@@ -206,8 +207,8 @@ pub struct WorkPacket {
     pub acceptance_checks: Vec<String>,
     /// Evidence classes required before completion.
     pub required_evidence: Vec<EvidenceKind>,
-    /// Descriptive capability class required to perform the work.
-    pub required_capability_class: String,
+    /// Descriptive non-inheriting authority class required to perform the work.
+    pub required_capability_class: AuthorityClass,
     /// Declared resource ceilings; enforcement is owned by the bounded-run story.
     pub budgets: Vec<BudgetLimit>,
     /// Declared conditions that stop further action proposals.
@@ -394,7 +395,7 @@ mod tests {
     #[test]
     fn action_is_descriptive_and_has_no_embedded_authority() {
         let action = Action {
-            schema_version: 1,
+            schema_version: crate::CONTRACT_SCHEMA_VERSION,
             action_id: ActionId::from_raw("action-0001"),
             task_id: TaskId::from_raw("task-0001"),
             plan_step_id: None,

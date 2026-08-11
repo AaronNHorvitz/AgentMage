@@ -325,9 +325,9 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 
 **Objective:** Add bounded coding workflows and a complete local command-line shell without creating an alternate authority path.
 
-**Primary outcomes:** bounded direct command execution; visible remote Git reads; isolated worktrees; deep repository comprehension; change intent and reproduction; structured code changes; language-service reads; trusted validation commands; review packets; local source control; complete interactive and headless CLI; later model profiles and measured local routing.
+**Primary outcomes:** bounded direct command execution; visible exact remote Git reads; repository preservation manifests; namespaced fetches; isolated AgentMage-owned worktrees and temporary commit indexes; deep repository comprehension; change intent and reproduction; structured code changes; language-service reads; trusted validation commands; review packets; signed local source control; complete interactive and headless CLI; later model profiles and measured local routing.
 
-**Boundary:** Worktrees provide change isolation, not the security sandbox. Commands, writes, commits, and remote operations remain separately bounded and granted. Headless use fails closed when authority is missing or ambiguous.
+**Boundary:** Worktrees provide change isolation, not the security sandbox. Clone, fetch, worktree lifecycle, branch fast-forward, commit, and push are distinct kernel operations governed by [`docs/security/repository-safety.md`](./docs/security/repository-safety.md). Generic pull, force, reset, clean, discard, implicit ref updates, repository hooks/filters, and model access to raw Git are absent. Commands, writes, commits, and remote operations remain separately bounded and granted. Headless use fails closed when authority is missing or ambiguous.
 
 **Exit condition:** `G-V0.4` passes only when coding, command, worktree, validation, shell, model, security, recovery, and documentation suites pass.
 
@@ -355,7 +355,7 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 
 **Objective:** Add user-initiated, read-only GitHub and connector foundations while preserving the strict-local baseline when networking is disabled.
 
-**Primary outcomes:** visible temporary network capability; sensitivity-labeled local connector cache; credential isolation; GitHub authentication diagnostics; repository and source evidence; issues, pull requests, checks, reviews, and security findings; isolated pull-request worktrees and local review intelligence.
+**Primary outcomes:** visible temporary network capability; sensitivity-labeled local connector cache; credential isolation; short-lived host/account/repository-bound GitHub authentication diagnostics; repository and source evidence; ruleset and branch-protection evidence; issues, pull requests, checks, reviews, and security findings; isolated pull-request worktrees and local review intelligence.
 
 **Boundary:** Network use is temporary, destination-scoped, cancellable, and receipted. Credentials remain outside model context. Hosted writes are impossible in this release, and removing the connector pack restores the strict-local baseline.
 
@@ -386,7 +386,7 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 **Implementation sequence:**
 
 1. Freeze the delivery graph, adapter SDK, capability-level model, support-matrix schema, identity correlation, event contract, and conformance harness.
-2. Complete GitHub.com and GitHub Enterprise Server conformance for repositories, work, reviews, workflows, releases, local commits, signed pushes, and separately approved mutations.
+2. Complete GitHub.com and GitHub Enterprise Server conformance for repositories, work, reviews, workflows, releases, preservation-manifest-bound local commits, signed ordinary fast-forward pushes, and separately approved mutations under the canonical repository-safety contract.
 3. Add Jira Cloud/Data Center, Azure Repos/Boards/Pipelines/Artifacts, GitLab/GitLab CI, and Jenkins reference adapters.
 4. Add OCI and repository artifact adapters, SBOM/provenance/signature policy, Kubernetes/Helm/Kustomize, Argo CD/Flux, and Terraform/OpenTofu.
 5. Add release, feature-flag, progressive-delivery, database-migration, health, drift, rollback, and promotion contracts.
@@ -526,7 +526,7 @@ reconciliation, read-only attestation, and visible gap accounting.
 
 **Exit condition:** `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and final `G-GA` pass only when
 Sprints 157-166 and every prior promoted gate have current reproducible evidence, all `RV-01`
-through `RV-48` protocols pass, and no blocker is hidden.
+through `RV-49` protocols pass, and no blocker is hidden.
 
 ### 7.17 Epic 16 - Post-GA Experimental Model Lab
 
@@ -568,6 +568,7 @@ Security assurance is built with each component rather than added after feature 
 | `SEC-G13` First GA | Epics 14-15 | Fedora, Ubuntu, Windows, strict-local removal, connected-capability lifecycles, financial and cloud prohibitions, trusted operations, whole-codebase audit, extreme verification, and signed evidence reconciliation pass at Sprint 166. |
 | `SEC-G14` Experimental models | Post-GA Epic 16 | The lab has no connected or canonical-write authority, all artifacts remain quarantined until normal admission, and removal leaves no residue. |
 | `SEC-G15` Whole-codebase audit | Epic 15 | Complete census, deterministic structure, bounded semantic review, cross-module reconciliation, canonical immutability, secret protection, checkpoint invalidation, evidence-backed reporting, platform parity, resource controls, removal, and `RV-44` through `RV-48` pass. |
+| `SEC-G16` Repository safety | Epics 4, 7-10, and every source-adapter promotion | Exact preservation manifests, hardened Git process isolation, namespaced fetches, owned worktrees and indexes, signed commits, host/account/repository/ref-bound authentication, separately approved ordinary fast-forward pushes, uncertain-effect reconciliation, prohibited-operation absence, and `RV-49` pass. |
 
 AgentMage targets a bounded, single-user desktop application and produces reproducible product-security evidence. It does not claim external certification or managed-environment approval that has not been independently granted, and no evaluation or deployment transfers ownership, sponsorship, or authorship.
 

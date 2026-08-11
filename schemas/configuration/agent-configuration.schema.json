@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schema_version": {
-      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/agentConfigurationSchemaVersion"
     },
     "core": {
       "$ref": "https://agentmage.dev/schemas/configuration/core.schema.json"

@@ -2,8 +2,8 @@
 
 use crate::{ErrorId, SchemaId};
 
-/// Current schema version for the first kernel contract family.
-pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
+/// Current schema version for the live kernel contract family.
+pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
 
 /// Reference to a closed versioned schema without embedding parser authority.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn first_contract_family_is_explicitly_versioned() {
-        assert_eq!(CONTRACT_SCHEMA_VERSION, 1);
+        assert_eq!(CONTRACT_SCHEMA_VERSION, 2);
     }
 
     #[test]

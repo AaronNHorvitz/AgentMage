@@ -453,7 +453,7 @@ export function buildConfigurationSchemaReport() {
     mutations.push(["wrong-type", wrongType]);
 
     const unsupported = structuredClone(source);
-    unsupported.schema_version = 2;
+    unsupported.schema_version = source.schema_version + 1;
     mutations.push(["unsupported-version", unsupported]);
 
     for (const [mutation, changed] of mutations) {

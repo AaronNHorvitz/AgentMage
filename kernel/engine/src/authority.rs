@@ -208,9 +208,9 @@ mod tests {
         NonAuthoritativeArtifact, reject_as_authority, reject_authority_attempt,
     };
     use agentmage_kernel_contracts::{
-        ActorId, CONTRACT_SCHEMA_VERSION, CorrelationId, Plan, PlanId, PlanState, Prompt, PromptId,
-        PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId,
-        TaskId, ToolDefinition, ToolId, ToolRiskLevel,
+        ActorId, CONTRACT_SCHEMA_VERSION, CorrelationId, GrantOperation, OperationBinding, Plan,
+        PlanId, PlanState, Prompt, PromptId, PromptMessage, PromptRole, RequiredGrantTemplate,
+        SchemaId, SchemaReference, SessionId, TaskId, ToolDefinition, ToolId, ToolRiskLevel,
     };
 
     fn assert_sealed<T: NonAuthoritativeArtifact + ?Sized>() {}
@@ -259,10 +259,9 @@ mod tests {
                 schema_sha256: "2".repeat(64),
             },
             risk_level: ToolRiskLevel::Low,
-            declared_effects: vec!["read-only".to_owned()],
+            declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
             required_grant: RequiredGrantTemplate {
-                capability_class: "read-only".to_owned(),
-                operation: "fixture.read".to_owned(),
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_scope: "workspace-file".to_owned(),
                 single_use: true,
             },

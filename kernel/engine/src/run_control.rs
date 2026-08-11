@@ -311,7 +311,7 @@ mod tests {
             expected_output: "One observed fixture".to_owned(),
             acceptance_checks: vec!["Observe fixture".to_owned()],
             required_evidence: vec![EvidenceKind::Observation],
-            required_capability_class: "read-only".to_owned(),
+            required_capability_class: agentmage_kernel_contracts::AuthorityClass::Observe,
             budgets: vec![
                 BudgetLimit {
                     resource: BudgetResource::PlanSteps,

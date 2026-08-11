@@ -1,10 +1,11 @@
 use std::env;
 
 use agentmage_kernel_contracts::{
-    ActionId, ActionKind, ActorId, ApprovalRequest, ContractPayload, CorrelationId,
-    DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, Prompt,
-    PromptId, PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId, SchemaReference,
-    SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId,
+    ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, ContractPayload, CorrelationId,
+    DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget,
+    OperationBinding, Prompt, PromptId, PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId,
+    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
+    ToolRiskLevel, WorkspaceId,
 };
 use agentmage_kernel_engine::authority::{
     AuthorityEscalationKind, AuthorityProposalSource, DescriptiveAuthorityReceipt,
@@ -24,7 +25,7 @@ fn schema() -> SchemaReference {
 
 fn prompt() -> Prompt {
     Prompt {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         prompt_id: PromptId::from_raw("prompt-authority-0001"),
         correlation_id: CorrelationId::from_raw("correlation-authority-0001"),
         task_id: TaskId::from_raw("task-0001"),
@@ -38,7 +39,7 @@ fn prompt() -> Prompt {
 
 fn tool_definition() -> ToolDefinition {
     ToolDefinition {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         tool_id: ToolId::from_raw("fixture.read"),
         tool_version: "1.0.0".to_owned(),
         display_name: "Fixture reader".to_owned(),
@@ -46,10 +47,9 @@ fn tool_definition() -> ToolDefinition {
         input_schema: schema(),
         output_schema: schema(),
         risk_level: ToolRiskLevel::Low,
-        declared_effects: vec!["read-only".to_owned()],
+        declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
         required_grant: RequiredGrantTemplate {
-            capability_class: "read-only".to_owned(),
-            operation: "fixture.read".to_owned(),
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_scope: "workspace-file".to_owned(),
             single_use: true,
         },
@@ -59,7 +59,8 @@ fn tool_definition() -> ToolDefinition {
 
 fn approval_request() -> ApprovalRequest {
     ApprovalRequest {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+        approval_id: ApprovalId::from_raw("approval-0001"),
         proposed_grant_id: GrantId::from_raw("grant-proposed-0001"),
         parent_grant_id: GrantId::from_raw("grant-parent-0001"),
         parent_grant_sha256: "2".repeat(64),
@@ -67,9 +68,9 @@ fn approval_request() -> ApprovalRequest {
         session_id: SessionId::from_raw("session-0001"),
         task_id: TaskId::from_raw("task-0001"),
         action_kind: ActionKind::DeterministicTool,
-        operation: GrantOperation::WorkspaceRead,
+        operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         tool_call: ToolCall {
-            schema_version: 1,
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
             tool_call_id: ToolCallId::from_raw("call-authority-0001"),
             correlation_id: CorrelationId::from_raw("correlation-authority-0001"),
             action_id: ActionId::from_raw("action-authority-0001"),
@@ -94,7 +95,7 @@ fn approval_request() -> ApprovalRequest {
             observed_revision: Some("fixture-v1".to_owned()),
         }],
         expected_side_effects: vec![GrantSideEffect {
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_indexes: vec![0],
             details_sha256: "5".repeat(64),
         }],

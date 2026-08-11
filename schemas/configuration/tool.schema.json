@@ -12,7 +12,7 @@
   ],
   "properties": {
     "schema_version": {
-      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/schemaVersion"
+      "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/agentConfigurationSchemaVersion"
     },
     "registry_path": {
       "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/repositoryRelativePath"
@@ -33,7 +33,7 @@
           "integrity_sha256",
           "enabled",
           "required_capabilities",
-          "side_effect_class"
+          "operation"
         ],
         "properties": {
           "tool_id": {
@@ -56,17 +56,75 @@
               "$ref": "https://agentmage.dev/schemas/configuration/common.schema.json#/$defs/capabilityId"
             }
           },
-          "side_effect_class": {
-            "enum": [
-              "none",
-              "read",
-              "write",
-              "process",
-              "network"
-            ]
+          "operation": {
+            "$ref": "#/$defs/operationBinding"
           }
         }
       }
+    }
+  },
+  "$defs": {
+    "operationBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "taxonomy_version",
+        "operation",
+        "authority_class"
+      ],
+      "properties": {
+        "taxonomy_version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "workspace_read",
+            "workspace_write",
+            "workspace_delete",
+            "command_execute",
+            "network_access",
+            "git_clone",
+            "git_fetch",
+            "git_worktree_create",
+            "git_worktree_remove",
+            "git_branch_fast_forward",
+            "git_commit",
+            "git_push",
+            "publish",
+            "send",
+            "upload",
+            "deploy",
+            "database_read",
+            "database_write",
+            "credential_access",
+            "model_inference",
+            "draft_create",
+            "administration"
+          ]
+        },
+        "authority_class": {
+          "enum": [
+            "observe",
+            "draft",
+            "local-write",
+            "remote-write",
+            "execute",
+            "deploy",
+            "secrets",
+            "admin"
+          ]
+        }
+      },
+      "allOf": [
+        {"if": {"properties": {"operation": {"enum": ["workspace_read", "database_read"]}}}, "then": {"properties": {"authority_class": {"const": "observe"}}}},
+        {"if": {"properties": {"operation": {"const": "draft_create"}}}, "then": {"properties": {"authority_class": {"const": "draft"}}}},
+        {"if": {"properties": {"operation": {"enum": ["workspace_write", "workspace_delete", "git_clone", "git_fetch", "git_worktree_create", "git_worktree_remove", "git_branch_fast_forward", "git_commit"]}}}, "then": {"properties": {"authority_class": {"const": "local-write"}}}},
+        {"if": {"properties": {"operation": {"enum": ["git_push", "publish", "send", "upload", "database_write"]}}}, "then": {"properties": {"authority_class": {"const": "remote-write"}}}},
+        {"if": {"properties": {"operation": {"enum": ["command_execute", "network_access", "model_inference"]}}}, "then": {"properties": {"authority_class": {"const": "execute"}}}},
+        {"if": {"properties": {"operation": {"const": "deploy"}}}, "then": {"properties": {"authority_class": {"const": "deploy"}}}},
+        {"if": {"properties": {"operation": {"const": "credential_access"}}}, "then": {"properties": {"authority_class": {"const": "secrets"}}}},
+        {"if": {"properties": {"operation": {"const": "administration"}}}, "then": {"properties": {"authority_class": {"const": "admin"}}}}
+      ]
     }
   }
 }

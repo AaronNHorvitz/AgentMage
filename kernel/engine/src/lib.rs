@@ -6,6 +6,8 @@
 pub mod approval;
 /// Sealed classification and denial of descriptive artifacts as authority.
 pub mod authority;
+/// Kernel-owned authority-transaction ordering and recovery contract.
+pub mod authority_transaction;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 /// Kernel-only session and operation grant issuance.

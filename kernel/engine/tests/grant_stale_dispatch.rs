@@ -1,10 +1,11 @@
 use std::{collections::BTreeSet, env, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
-    ActionId, ActionKind, ActorId, ApprovalRequest, CapabilityGrant, ContractPayload,
+    ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, CapabilityGrant, ContractPayload,
     CorrelationId, DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantPreimage,
-    GrantSideEffect, GrantStatus, GrantTarget, RequiredGrantTemplate, SchemaId, SchemaReference,
-    SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId,
+    GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, RequiredGrantTemplate, SchemaId,
+    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
+    ToolRiskLevel, WorkspaceId,
 };
 use agentmage_kernel_engine::{
     approval::render_approval_request,
@@ -110,7 +111,7 @@ fn registry() -> ToolRegistry {
     registry
         .register_tool(Box::new(FixtureTool {
             definition: ToolDefinition {
-                schema_version: 1,
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
                 tool_id: ToolId::from_raw("fixture.read"),
                 tool_version: "1.0.0".to_owned(),
                 display_name: "Fixture reader".to_owned(),
@@ -118,10 +119,9 @@ fn registry() -> ToolRegistry {
                 input_schema: schema(),
                 output_schema: schema(),
                 risk_level: ToolRiskLevel::Low,
-                declared_effects: vec!["read-only".to_owned()],
+                declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
                 required_grant: RequiredGrantTemplate {
-                    capability_class: "read-only".to_owned(),
-                    operation: "fixture.read".to_owned(),
+                    operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                     target_scope: "workspace-file".to_owned(),
                     single_use: true,
                 },
@@ -186,7 +186,7 @@ fn fixture() -> Fixture {
     let argument_bytes = br#"{"path":["src","fixture.txt"]}"#.to_vec();
     let argument_sha256 = hex_sha256(&argument_bytes);
     let tool_call = ToolCall {
-        schema_version: 1,
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         tool_call_id: ToolCallId::from_raw("call-0001"),
         correlation_id: CorrelationId::from_raw("correlation-0001"),
         action_id: action_id.clone(),
@@ -205,14 +205,15 @@ fn fixture() -> Fixture {
         observed_revision: Some("fixture-v1".to_owned()),
     }];
     let effects = vec![GrantSideEffect {
-        operation: GrantOperation::WorkspaceRead,
+        operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         target_indexes: vec![0],
         details_sha256: "4".repeat(64),
     }];
     let approval = render_approval_request(
         &registry,
         ApprovalRequest {
-            schema_version: 1,
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            approval_id: ApprovalId::from_raw("approval-0001"),
             proposed_grant_id: GrantId::from_raw("grant-operation-0001"),
             parent_grant_id: parent.grant_id.clone(),
             parent_grant_sha256: parent_sha256,
@@ -220,7 +221,7 @@ fn fixture() -> Fixture {
             session_id: session_id.clone(),
             task_id: task_id.clone(),
             action_kind: ActionKind::DeterministicTool,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_call: tool_call.clone(),
             targets: vec![target(&["src", "fixture.txt"])],
             excluded_targets: parent.excluded_targets.clone(),
@@ -240,6 +241,7 @@ fn fixture() -> Fixture {
             &parent.grant_id,
             DerivedOperationGrantRequest {
                 grant_id: approval.proposed_grant_id,
+                approval_id: approval.approval_id,
                 action_id: action_id.clone(),
                 action_kind: approval.action_kind,
                 operation: approval.operation,

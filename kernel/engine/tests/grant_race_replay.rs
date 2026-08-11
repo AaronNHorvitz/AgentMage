@@ -6,9 +6,9 @@ use std::{
 };
 
 use agentmage_kernel_contracts::{
-    ActionId, ActionKind, ActorId, CapabilityGrant, DataSensitivity, GrantId, GrantNonce,
-    GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, SessionId, TaskId,
-    ToolId, WorkspaceId,
+    ActionId, ActionKind, ActorId, ApprovalId, CapabilityGrant, DataSensitivity, GrantId,
+    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    OperationBinding, SessionId, TaskId, ToolId, WorkspaceId,
 };
 use agentmage_kernel_engine::{
     grants::{
@@ -149,9 +149,10 @@ fn fixture() -> Fixture {
             &parent.grant_id,
             DerivedOperationGrantRequest {
                 grant_id: GrantId::from_raw("grant-operation-0001"),
+                approval_id: ApprovalId::from_raw("approval-0001"),
                 action_id: action_id.clone(),
                 action_kind: ActionKind::DeterministicTool,
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 tool_id: tool_id.clone(),
                 tool_version: "1.0.0".to_owned(),
                 targets: vec![operation_target],
@@ -162,7 +163,7 @@ fn fixture() -> Fixture {
                     observed_revision: Some("fixture-v1".to_owned()),
                 }],
                 expected_side_effects: vec![GrantSideEffect {
-                    operation: GrantOperation::WorkspaceRead,
+                    operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                     target_indexes: vec![0],
                     details_sha256: "4".repeat(64),
                 }],

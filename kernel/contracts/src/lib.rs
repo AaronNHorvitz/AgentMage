@@ -10,6 +10,7 @@ mod evidence;
 mod grant;
 mod ids;
 mod network;
+mod operation;
 mod path;
 mod platform;
 mod platform_path;
@@ -17,6 +18,7 @@ mod prompt;
 mod serialization;
 mod task;
 mod tool;
+mod transaction;
 
 pub use approval::ApprovalRequest;
 pub use boundary::{
@@ -31,18 +33,22 @@ pub use display_link::{
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use grant::{
-    CapabilityGrant, GrantClass, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
-    GrantTarget,
+    CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
 };
 pub use ids::{
-    ActionId, ActorId, AdapterInstanceId, CancellationId, CorrelationId, ErrorId, EvidenceId,
-    GrantId, GrantNonce, PlanId, PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId,
-    ToolCallId, ToolId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
+    ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
+    CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, OperationAttemptId, PlanId,
+    PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
+    WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,
     NetworkDestinationClass, NetworkEndpointError, NetworkObservation, StorageFilesystemClass,
     StrictLocalStorageObservation, classify_ip_destination,
+};
+pub use operation::{
+    AuthorityClass, GrantOperation, OPERATION_TAXONOMY_VERSION, OperationBinding,
+    OperationTaxonomyError,
 };
 pub use path::{
     MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,
@@ -72,6 +78,7 @@ pub use tool::{
     OperationOutcome, RequiredGrantTemplate, StateChange, ToolCall, ToolDefinition, ToolResult,
     ToolRiskLevel,
 };
+pub use transaction::{AuthorityTransactionRecord, AuthorityTransactionState};
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-contracts";

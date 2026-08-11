@@ -7,6 +7,7 @@
 | Product authority | [`PRD.md`](./PRD.md) |
 | Requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
+| Repository safety authority | [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) |
 | Execution authority | [`TASKS.md`](./TASKS.md) |
 
 ## 1. Purpose
@@ -107,6 +108,34 @@ Each adapter and provider version is promoted independently. Unsupported operati
 Credential selection is explicit by provider, exact host, tenant or organization, account, project scope, and capability class. Credentials live in the platform secret store and are delivered only to the operation-scoped adapter worker. Models receive non-secret account labels and permission summaries only.
 
 Redirects, aliases, cloned hostnames, changed TLS identity, cross-host API links, webhook callback targets, and provider-supplied download URLs are revalidated against the grant. One host's credential is never sent to another host. GitHub.com and each GitHub Enterprise Server instance are distinct security domains even when their repository names match.
+
+### 7.1 Repository and GitHub Mutation Boundary
+
+All Git and GitHub mutations are governed by the canonical
+[`Repository and GitHub Safety Contract`](./docs/security/repository-safety.md).
+The model cannot invoke Git, choose a transport, resolve credentials, or mint
+authority. The kernel admits only exact clone, namespaced fetch, owned-worktree
+create/remove, compare-and-swap local fast-forward, signed commit, and ordinary
+fast-forward push operations. Each consumes a distinct grant and reconciles a
+pre/post repository preservation manifest.
+
+Generic pull, merge, rebase, reset, clean, discard, stash/tag/note mutation,
+branch deletion, remote configuration, hook/filter execution, mirror, force,
+force-with-lease, and arbitrary ref updates are absent. Fetch does not prune,
+follow tags, write `FETCH_HEAD`, recurse into submodules, trigger Large File
+Storage transfer, or update user remote-tracking refs. Commits use an
+AgentMage-owned temporary index and pinned signer. Pushes name one canonical
+host, repository, credential, old object, new object, and full task-branch ref,
+require approval distinct from commit, and never retry an unknown effect before
+fresh remote reconciliation.
+
+GitHub App installation authentication is preferred for long-lived product
+integration because it permits repository-scoped permissions and short-lived
+tokens. Fine-grained expiring personal access tokens, approved Secure Shell
+agent identities, or approved credential helpers are bounded fallbacks. The
+adapter observes branch protection, rulesets, required signatures, reviews,
+checks, and bypass capability, but never exercises a bypass merely because the
+actor possesses it.
 
 ## 8. Operation State Machine
 

@@ -157,10 +157,6 @@ pub fn validate_packet(packet: &WorkPacket) -> Vec<ValidationIssue> {
         ("reason", packet.reason.as_str()),
         ("owner", packet.owner.as_str()),
         ("expected_output", packet.expected_output.as_str()),
-        (
-            "required_capability_class",
-            packet.required_capability_class.as_str(),
-        ),
         ("rollback.description", packet.rollback.description.as_str()),
     ] {
         validate_text(field, value, true, &mut issues);
@@ -968,7 +964,7 @@ mod tests {
             expected_output: "A bounded observation with validation".to_owned(),
             acceptance_checks: vec!["Observe fixture".to_owned(), "Validate result".to_owned()],
             required_evidence: vec![EvidenceKind::Observation, EvidenceKind::Validation],
-            required_capability_class: "read-only".to_owned(),
+            required_capability_class: agentmage_kernel_contracts::AuthorityClass::Observe,
             budgets: vec![
                 BudgetLimit {
                     resource: BudgetResource::PlanSteps,

@@ -1,8 +1,9 @@
 //! Evidence-reference and operation-receipt contracts.
 
 use crate::{
-    ActionId, ContractError, CorrelationId, EvidenceId, OperationOutcome, ReceiptId, SessionId,
-    TaskId, ToolCallId,
+    ActionId, ApprovalId, AuthorityTransactionId, ContractError, CorrelationId, EvidenceId,
+    GrantId, OperationAttemptId, OperationBinding, OperationOutcome, ReceiptId, SessionId, TaskId,
+    ToolCallId,
 };
 
 /// Class of evidence referenced by a contract record.
@@ -64,6 +65,14 @@ pub struct Receipt {
     pub sequence: u64,
     /// Correlation identity shared by related records.
     pub correlation_id: CorrelationId,
+    /// Kernel-owned authority transaction closed by this receipt.
+    pub authority_transaction_id: AuthorityTransactionId,
+    /// Exact non-replayable operation attempt closed by this receipt.
+    pub operation_attempt_id: OperationAttemptId,
+    /// Exact approval decision bound to the consumed authority.
+    pub approval_id: ApprovalId,
+    /// Exact consumed grant identity.
+    pub grant_id: GrantId,
     /// Owning local session.
     pub session_id: SessionId,
     /// Owning task.
@@ -73,6 +82,8 @@ pub struct Receipt {
     /// Tool-call identity when the action attempted a tool.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub tool_call_id: Option<ToolCallId>,
+    /// Versioned canonical operation and authority class attempted.
+    pub operation: OperationBinding,
     /// Exact terminal outcome.
     pub outcome: OperationOutcome,
     /// Lowercase SHA-256 digest of the canonical operation description.
@@ -98,7 +109,7 @@ mod tests {
     #[test]
     fn evidence_reference_is_content_addressed_not_path_authority() {
         let evidence = EvidenceReference {
-            schema_version: 1,
+            schema_version: crate::CONTRACT_SCHEMA_VERSION,
             evidence_id: EvidenceId::from_raw("evidence-0001"),
             kind: EvidenceKind::Observation,
             source_id: "synthetic-corpus-v1".to_owned(),

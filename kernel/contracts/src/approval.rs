@@ -1,8 +1,8 @@
 //! Non-authoritative approval-display contracts.
 
 use crate::{
-    ActionKind, ActorId, DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect,
-    GrantTarget, SessionId, TaskId, ToolCall,
+    ActionKind, ActorId, ApprovalId, DataSensitivity, GrantId, GrantPreimage, GrantSideEffect,
+    GrantTarget, OperationBinding, SessionId, TaskId, ToolCall,
 };
 
 /// Versioned exact snapshot rendered for one user approval decision.
@@ -14,6 +14,8 @@ use crate::{
 pub struct ApprovalRequest {
     /// Contract schema version.
     pub schema_version: u16,
+    /// Stable identity assigned to this exact approval decision.
+    pub approval_id: ApprovalId,
     /// Proposed future grant identity shown for correlation only.
     pub proposed_grant_id: GrantId,
     /// Exact parent session grant identity used to bound the proposal.
@@ -28,8 +30,8 @@ pub struct ApprovalRequest {
     pub task_id: TaskId,
     /// Descriptive action class.
     pub action_kind: ActionKind,
-    /// Closed proposed operation class.
-    pub operation: GrantOperation,
+    /// Versioned canonical proposed operation and authority class.
+    pub operation: OperationBinding,
     /// Exact proposed tool call, including canonical argument bytes and digest.
     pub tool_call: ToolCall,
     /// Exact included workspace-relative targets shown to the actor.
@@ -58,15 +60,16 @@ pub struct ApprovalRequest {
 mod tests {
     use super::ApprovalRequest;
     use crate::{
-        ActionId, ActionKind, ActorId, ContractPayload, CorrelationId, DataSensitivity, GrantId,
-        GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, SchemaId, SchemaReference,
-        SessionId, TaskId, ToolCall, ToolCallId, ToolId, VersionedContract, WorkspaceId, from_json,
-        to_canonical_json,
+        ActionId, ActionKind, ActorId, ApprovalId, ContractPayload, CorrelationId, DataSensitivity,
+        GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, OperationBinding,
+        SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolId,
+        VersionedContract, WorkspaceId, from_json, to_canonical_json,
     };
 
     fn fixture() -> ApprovalRequest {
         ApprovalRequest {
             schema_version: crate::CONTRACT_SCHEMA_VERSION,
+            approval_id: ApprovalId::from_raw("approval-0001"),
             proposed_grant_id: GrantId::from_raw("grant-proposed-0001"),
             parent_grant_id: GrantId::from_raw("grant-parent-0001"),
             parent_grant_sha256: "1".repeat(64),
@@ -74,7 +77,7 @@ mod tests {
             session_id: SessionId::from_raw("session-0001"),
             task_id: TaskId::from_raw("task-0001"),
             action_kind: ActionKind::DeterministicTool,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_call: ToolCall {
                 schema_version: crate::CONTRACT_SCHEMA_VERSION,
                 tool_call_id: ToolCallId::from_raw("call-0001"),
@@ -105,7 +108,7 @@ mod tests {
                 observed_revision: None,
             }],
             expected_side_effects: vec![GrantSideEffect {
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
                 details_sha256: "5".repeat(64),
             }],

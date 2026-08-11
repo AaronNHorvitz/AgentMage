@@ -133,6 +133,7 @@ Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds 
 - [ ] **G-DOD-17:** Every productivity operation is intersected with the current narrowest autonomy policy, binds every effect-bearing field, and invalidates stale approval before effect.
 - [ ] **G-DOD-18:** Every cross-pack transfer has an explicit classification, source, destination, purpose, minimization, retention, policy decision, and receipt; external content cannot create the transfer or its authority.
 - [ ] **G-DOD-19:** Finance and Cloud Observer changes prove money-movement and cloud-mutation families absent from schemas, manifests, registrations, policies, shells, workflows, provider requests, and compiled artifacts.
+- [ ] **G-DOD-20:** Every Git or hosted-source mutation reconciles an exact pre/post repository preservation manifest, uses one closed adapter operation and current single-use grant, preserves user and unrelated Git state, and proves destructive, implicit, force, hook/filter, credential-crossover, and unsafe-retry paths absent.
 
 ## Test and Evidence Contract
 
@@ -196,6 +197,7 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-46` Structural index, semantic partition, and cross-module reconciliation | Sprints 163 and 165 | Every parser, graph, packet, evidence-card, reconciliation, or model-profile change and Sprint 166 |
 | `RV-47` Audit checkpoint, invalidation, findings, and reporting | Sprints 161 and 165 | Every checkpoint, resume, invalidation, finding, report, or coverage-state change and Sprint 166 |
 | `RV-48` Whole-codebase audit removal and first-GA qualification | Sprints 165-166 | Every audit-capability lifecycle change and final Sprint 166 closure |
+| `RV-49` Repository and GitHub mutation safety | Sprint 42 for clone/fetch/worktrees; Sprint 47 for commits; Sprint 71 for authentication; Sprints 85-86 and 106 for pushes and hosted effects | Every Git/source-adapter change and Sprints 126 and 166 |
 
 ## Epic Roadmap
 
@@ -2756,7 +2758,7 @@ claims.
 
 **Sprint goal:** Isolate coding tasks from the user's active checkout and add bounded remote repository synchronization.
 
-**Source coverage:** `CR-P1-WKT`; inventory Section 13A and read-only remote portions of Section 13.
+**Source coverage:** `CR-P1-WKT`; inventory Sections 13 and 13A; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md); `SR-GIT-001` through `SR-GIT-006`; local clone/fetch/worktree portions of `RV-49`.
 
 **Dependencies:** Sprint 41; legacy dependency record: Sprint 41 (legacy S-034).
 
@@ -2768,39 +2770,44 @@ claims.
 
 - [ ] **Task 42.1.1 - Implement the bounded story**
   - [ ] **Sub-task 42.1.1.1** (legacy `S-035-I01`): Implement remote URL, default branch, upstream, fetch state, and local-versus-remote divergence discovery.
-  - [ ] **Sub-task 42.1.1.2** (legacy `S-035-I02`): Implement approval-gated clone into an empty selected directory and bounded read-only fetch without merge, rebase, branch switch, or working-tree mutation.
+  - [ ] **Sub-task 42.1.1.2** (legacy `S-035-I02`): Implement approval-gated no-checkout clone into an empty owned directory and exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`; disable prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph writes, and user-ref updates.
   - [ ] **Sub-task 42.1.1.3** (legacy `S-035-I03`): Implement currentness reports for ahead, behind, diverged, stale, dirty, and untracked states.
   - [ ] **Sub-task 42.1.1.4** (legacy `S-035-I04`): Implement temporary one-branch-per-task worktrees separate from the active checkout.
   - [ ] **Sub-task 42.1.1.5** (legacy `S-035-I05`): Record task, source commit, branch, owner, grants, file ownership, processes, resource budgets, retention, cleanup, and disposition per worktree.
   - [ ] **Sub-task 42.1.1.6** (legacy `S-035-I06`): Exclude ignored secrets and detect overlapping edits, renamed paths, changed preimages, and concurrent user changes before transfer.
   - [ ] **Sub-task 42.1.1.7** (legacy `S-035-I07`): Implement snapshot, restoration, merge-back or patch-transfer preview, cleanup, and remote-operation receipts.
   - [ ] **Sub-task 42.1.1.8** (legacy `S-035-I08`): Describe worktrees only as change and concurrency isolation, never as the operating-system security sandbox.
+  - [ ] **Sub-task 42.1.1.9:** Build and reconcile a content-minimized preservation manifest before preview, immediately before grant consumption, and after every outcome; cover active checkout, index, path dispositions, refs, notes, stash, reflogs, tags, configuration, hooks, filters, worktrees, submodules, Large File Storage, locks, and in-progress operations.
+  - [ ] **Sub-task 42.1.1.10:** Implement generic-pull absence and a separately previewed/granted `git_branch_fast_forward` compare-and-swap from one expected local object to one proven descendant; preserve every ref and checkout on stale or concurrent movement.
+  - [ ] **Sub-task 42.1.1.11:** Harden the pinned Git worker against ambient Git variables, aliases, broad `safe.directory`, URL rewrites, remote helpers, credential helpers, hooks, filters, drivers, pagers, editors, signers, alternates, replacement refs, unsupported protocols, and repository-triggered maintenance.
 
 - [ ] **Task 42.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 42.1.2.1:** Worktree manager and ownership registry.
   - [ ] **Sub-task 42.1.2.2:** Remote discovery, fetch, currentness, and operation receipts.
   - [ ] **Sub-task 42.1.2.3:** Collision and active-checkout preservation fixtures.
   - [ ] **Sub-task 42.1.2.4:** Worktree handoff and recovery format.
+  - [ ] **Sub-task 42.1.2.5:** Versioned repository preservation-manifest schema, hardened Git invocation profile, and prohibited-operation inventory.
 
 - [ ] **Task 42.1.3 - Verify and close the story**
   - [ ] **Sub-task 42.1.3.1:** `S-035-UT01` creates, identifies, lists, hands off, and removes owned worktrees across clean/dirty/detached/missing/renamed states; assert stable ownership and no active-checkout mutation.
-  - [ ] **Sub-task 42.1.3.2:** `S-035-ST01` seeds hooks, filters, submodules, alternates, malicious refs, case collisions, unsafe directories, credential helpers, and hostile remote URLs; assert no execution, secret access, or unapproved network.
-  - [ ] **Sub-task 42.1.3.3:** `S-035-IT01` performs visible approved remote discovery/fetch with exact host/repository/ref/byte budgets, then verifies currentness and returns offline; assert zero push, publication, or implicit credential reuse.
-  - [ ] **Sub-task 42.1.3.4:** `S-035-RT01` interrupts fetch, worktree creation/removal, branch movement, and cleanup while the user changes the active checkout; assert user changes survive and recovery identifies every owned artifact.
-  - [ ] **Sub-task 42.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-NET-005` through `SR-NET-007` where enabled, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain before/after repository snapshots, ownership records, network traces, collision results, and recovery bundles.
+  - [ ] **Sub-task 42.1.3.2:** `S-035-ST01` seeds aliases, URL rewrites, hooks, executable filters, drivers, pagers, editors, signers, submodules, Large File Storage, alternates, replacement refs, malicious refs/objects, case/Unicode collisions, unsafe ownership, credential helpers, protocols, ambient Git variables, and hostile remote URLs; assert no execution, secret access, unapproved network, or unowned mutation.
+  - [ ] **Sub-task 42.1.3.3:** `S-035-IT01` performs visible approved clone/fetch with exact host/repository/ref/object/byte budgets and verifies only the transaction namespace changed; assert no prune, tag, `FETCH_HEAD`, remote-tracking, branch, checkout, push, publication, maintenance, or implicit credential effect.
+  - [ ] **Sub-task 42.1.3.4:** `S-035-RT01` interrupts fetch, worktree creation/removal, compare-and-swap branch movement, and cleanup while the user changes files, index, refs, notes, stash, tags, configuration, hooks, and the active checkout; assert all user state survives and recovery identifies every owned artifact.
+  - [ ] **Sub-task 42.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-NET-005` through `SR-NET-007` where enabled, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`, and `SR-GIT-001` through `SR-GIT-006`; execute the local portion of `RV-49`; retain manifests, before/after repository snapshots, ownership records, network traces, collision results, prohibited-operation enumeration, and recovery bundles.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 42.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then coding work occurs only in an AgentMage-owned isolated worktree with exact base identity; the user's active checkout and unrelated changes remain byte-for-byte preserved.
 - [ ] **Story AC 42.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every network Git read is separately visible, bounded, receipted, currentness-checked, and incapable of mutating a remote repository.
+- [ ] **Story AC 42.1.AC3:** Given hostile repository configuration or concurrent user activity, when clone, fetch, worktree, or local fast-forward is attempted, then only the exact owned state named by the current grant may change and every other preservation-manifest field remains identical or the operation blocks.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 42.AC1:** Creating, using, transferring, and deleting a task worktree leaves the active checkout's branch, index, untracked files, and unfinished changes intact.
-- [ ] **Sprint AC 42.AC2:** Fetch and currentness operations do not merge, rebase, reset, stash, discard, or run hooks.
+- [ ] **Sprint AC 42.AC2:** Clone/fetch and currentness operations use exact namespaced refs and do not prune, follow tags, write `FETCH_HEAD`, update user refs, merge, rebase, reset, stash, discard, recurse, transfer Large File Storage objects, maintain the repository, or execute repository configuration.
 - [ ] **Sprint AC 42.AC3:** Collision and stale-preimage conditions stop for review.
 - [ ] **Sprint AC 42.AC4:** Repository credentials never enter model context, configuration, memory, command output, or audit logs.
-- [ ] **Sprint AC 42.AC5:** Worktree operations remain inside the operating-system sandbox and exact grants.
+- [ ] **Sprint AC 42.AC5:** Worktree operations remain inside the operating-system sandbox and exact grants, and the Sprint 42 portion of `RV-49` proves complete active-checkout and unrelated-Git-state preservation.
 
 **Gate decision:** Sprint 42 is PASS only when Story 42.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 43 - Deep Repository Comprehension
@@ -3031,7 +3038,7 @@ claims.
 
 **Sprint goal:** Turn validated changes into complete local review packages while keeping commits and publication explicitly user-controlled.
 
-**Source coverage:** inventory Sections 13, 14, 14B, and 28 coding review skills.
+**Source coverage:** inventory Sections 13, 14, 14B, and 28 coding review skills; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) commit boundary; `SR-GIT-001` through `SR-GIT-004` and `SR-GIT-007`; commit portion of `RV-49`.
 
 **Dependencies:** Sprint 46; legacy dependency record: Sprint 42 (legacy S-035), Sprint 45 (legacy S-038), Sprint 46 (legacy S-039).
 
@@ -3047,8 +3054,8 @@ claims.
   - [ ] **Sub-task 47.1.1.3** (legacy `S-040-I03`): Suppress duplicate and low-confidence findings while preserving evidence and severity.
   - [ ] **Sub-task 47.1.1.4** (legacy `S-040-I04`): Classify generated output, formatting, tests, docs, behavior, migrations, and unrelated user changes into logical commit plans.
   - [ ] **Sub-task 47.1.1.5** (legacy `S-040-I05`): Draft commit messages only from the approved change set.
-  - [ ] **Sub-task 47.1.1.6** (legacy `S-040-I06`): Inspect hardware-backed or OpenPGP signing configuration and verify signed commits.
-  - [ ] **Sub-task 47.1.1.7** (legacy `S-040-I07`): Require an exact diff and message preview plus a manual approval before any local commit.
+  - [ ] **Sub-task 47.1.1.6** (legacy `S-040-I06`): Inspect an approved hardware-backed or OpenPGP signing identity outside repository configuration, pin the signer boundary, and verify signed commits without repository-selected programs or unsigned fallback.
+  - [ ] **Sub-task 47.1.1.7** (legacy `S-040-I07`): Build the candidate tree in a temporary AgentMage-owned index seeded from the exact parent, stage only approved path identities and bytes, require exact tree diff/message/identity/signer approval, and compare-and-swap only the owned task branch.
   - [ ] **Sub-task 47.1.1.8** (legacy `S-040-I08`): Keep automatic commit, push, merge, release, reset, discard, and force operations prohibited.
 
 - [ ] **Task 47.1.2 - Produce reviewable artifacts**
@@ -3060,9 +3067,9 @@ claims.
 - [ ] **Task 47.1.3 - Verify and close the story**
   - [ ] **Sub-task 47.1.3.1:** `S-040-UT01` builds review packets from exact base/head identities, diffs, tests, risks, receipts, unresolved issues, and rollback; assert stable hashes and rejection of missing/stale components.
   - [ ] **Sub-task 47.1.3.2:** `S-040-UT02` exercises correctness/security/privacy/evidence/accessibility/performance review modes on labeled defects; assert expected findings, severity rationale, source anchors, and no invented defect.
-  - [ ] **Sub-task 47.1.3.3:** `S-040-ST01` changes staged diff, commit message, identity, signature configuration, test evidence, or branch after preview; assert commit approval invalidation and zero commit.
-  - [ ] **Sub-task 47.1.3.4:** `S-040-IT01` creates approved local signed commits from logical plans, verifies signatures and exact staged bytes, and snapshots remotes; assert no push, PR, review, merge, release, or publication.
-  - [ ] **Sub-task 47.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-SUP-002`/`SR-SUP-005`, `SR-TST-010`/`SR-TST-011`; retain packet hashes, finding corpus, staged/preimage comparisons, signature verification, remote snapshots, and approval receipt.
+  - [ ] **Sub-task 47.1.3.3:** `S-040-ST01` changes temporary or user index, approved bytes, commit message, parent, author/committer identity, signer, signature configuration, attributes/filters, test evidence, or task branch after preview; assert approval invalidation, zero commit, and zero user-index change.
+  - [ ] **Sub-task 47.1.3.4:** `S-040-IT01` creates approved local signed commits from logical plans through the temporary index, verifies exact tree/parent/message/signature and compare-and-swap branch update, and snapshots remotes and unrelated Git state; assert no push, PR, review, merge, release, publication, hook/filter execution, or unrelated mutation.
+  - [ ] **Sub-task 47.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-SUP-002`/`SR-SUP-005`, `SR-TST-010`/`SR-TST-011`, and `SR-GIT-001` through `SR-GIT-004` plus `SR-GIT-007`; execute the commit portion of `RV-49`; retain packet hashes, preservation manifests, temporary/user-index comparisons, signature verification, remote snapshots, and approval receipts.
 
 ##### Story Acceptance Criteria
 
@@ -3073,9 +3080,9 @@ claims.
 
 - [ ] **Sprint AC 47.AC1:** Review packets account for every changed file and every unrun check.
 - [ ] **Sprint AC 47.AC2:** Commit plans exclude unrelated user work.
-- [ ] **Sprint AC 47.AC3:** No commit occurs without exact manual approval and required signature verification.
+- [ ] **Sprint AC 47.AC3:** No commit occurs without an exact temporary-index tree, parent, message, identity, pinned signer, manual approval, and signature verification; the active user index remains unchanged.
 - [ ] **Sprint AC 47.AC4:** Commit failure or changed staged diff invalidates approval.
-- [ ] **Sprint AC 47.AC5:** Push and every hosted mutation remain absent from v0.4.
+- [ ] **Sprint AC 47.AC5:** Push and every hosted mutation remain absent from v0.4, and the commit portion of `RV-49` proves hooks, filters, repository-selected signers, amend/history rewrite, and unrelated ref changes absent.
 
 **Gate decision:** Sprint 47 is PASS only when Story 47.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 48 - Complete Local CLI and Headless Contracts
@@ -4294,7 +4301,7 @@ claims.
 
 **Sprint goal:** Authenticate to approved GitHub hosts and normalize bounded read-only access without exposing credentials.
 
-**Source coverage:** inventory Section 13B authentication, provider, cache, pagination, and audit requirements.
+**Source coverage:** inventory Section 13B authentication, provider, cache, pagination, and audit requirements; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) authentication boundary; `SR-GIT-001`, `SR-GIT-009`, and authentication portion of `RV-49`.
 
 **Dependencies:** Sprint 70; legacy dependency record: Sprint 70 (legacy S-057).
 
@@ -4307,11 +4314,12 @@ claims.
 - [ ] **Task 71.1.1 - Implement the bounded story**
   - [ ] **Sub-task 71.1.1.1** (legacy `S-058-I01`): Implement GitHub.com and user-approved Enterprise host adapters without credential crossover.
   - [ ] **Sub-task 71.1.1.2** (legacy `S-058-I02`): Support approved command-line, REST, or GraphQL transports behind one normalized kernel tool contract.
-  - [ ] **Sub-task 71.1.1.3** (legacy `S-058-I03`): Integrate approved SSH agent, credential helper, fine-grained token, or GitHub App authentication through the secret-store adapter.
+  - [ ] **Sub-task 71.1.1.3** (legacy `S-058-I03`): Prefer repository-scoped GitHub App authentication with minimum permissions and short-lived installation tokens; integrate an approved Secure Shell agent, credential helper, or expiring fine-grained token only as an exact host/account/repository/operation-bound fallback through the secret-store adapter.
   - [ ] **Sub-task 71.1.1.4** (legacy `S-058-I04`): Report active host, account or app, installation, repositories, scopes, expiry, single-sign-on state, and missing permissions without secrets.
   - [ ] **Sub-task 71.1.1.5** (legacy `S-058-I05`): Implement pagination, conditional requests, cache validation, rate-limit state, retry-after, cancellation, and freshness.
   - [ ] **Sub-task 71.1.1.6** (legacy `S-058-I06`): Create complete read receipts with host, repository, actor, object, immutable identity, request type, result, and external-state-change flag.
   - [ ] **Sub-task 71.1.1.7** (legacy `S-058-I07`): Refuse credentials, hosts, scopes, or transports not included in the active network and connector grant.
+  - [ ] **Sub-task 71.1.1.8:** Bind and verify canonical API/clone host, certificate or Secure Shell host key, enterprise/organization, account/app, installation, repository set, operation, permissions, single-sign-on state, expiry, and credential reference; reject redirects, aliases, proxies, upload hosts, URL rewrites, and helpers that cross the bound security domain.
 
 - [ ] **Task 71.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 71.1.2.1:** GitHub provider and authentication adapters.
@@ -4322,9 +4330,9 @@ claims.
 - [ ] **Task 71.1.3 - Verify and close the story**
   - [ ] **Sub-task 71.1.3.1:** `S-058-UT01` normalizes successful, partial, paginated, empty, malformed, rate-limited, expired, revoked, unauthorized, forbidden, and unavailable API responses; assert stable typed states and freshness.
   - [ ] **Sub-task 71.1.3.2:** `S-058-UT02` derives least-privilege credentials for approved hosts/repositories/read scopes and tests expiry/revocation/account change; assert no long-lived secret enters tools, logs, config, model context, or cache.
-  - [ ] **Sub-task 71.1.3.3:** `S-058-ST01` attacks OAuth/device flow or approved auth path with redirect/host/account confusion, token substitution, cross-host replay, scope inflation, credential helper/environment access, and malicious error bodies; assert fail closed.
+  - [ ] **Sub-task 71.1.3.3:** `S-058-ST01` attacks OAuth/device flow or approved auth path with redirect/API/clone/upload-host, certificate, Secure Shell host-key, proxy, enterprise/organization/account/repository, token, app-installation, single-sign-on, permission, expiry, helper/environment, and malicious-error confusion; assert fail closed with zero credential crossover or disclosure.
   - [ ] **Sub-task 71.1.3.4:** `S-058-IT01` authenticates, reads a synthetic/approved fixture repository, reports effective permissions, revokes access, and verifies all further reads/cache refreshes stop without affecting local-only workflows.
-  - [ ] **Sub-task 71.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-006`, `SR-DAT-002`/`SR-DAT-007`, `SR-NET-005`/`SR-NET-006`, `SR-OPS-001` through `SR-OPS-003`, `SR-TST-004`; retain auth-flow traces, scope reports, token canary scans, host-isolation results, revocation evidence, and provider schema inventory.
+  - [ ] **Sub-task 71.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-006`, `SR-DAT-002`/`SR-DAT-007`, `SR-NET-005`/`SR-NET-006`, `SR-OPS-001` through `SR-OPS-003`, `SR-TST-004`, `SR-GIT-001`, and `SR-GIT-009`; execute the authentication portion of `RV-49`; retain auth-flow traces, scope reports, token canary scans, certificate/host-key evidence, host/account/repository isolation, revocation evidence, and provider schema inventory.
 
 ##### Story Acceptance Criteria
 
@@ -4333,7 +4341,7 @@ claims.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 71.AC1:** Authentication succeeds only for the approved host and repository scope.
+- [ ] **Sprint AC 71.AC1:** Authentication succeeds only for the approved host, account/app, installation, repository, operation, permissions, single-sign-on, expiry, and verified transport identity.
 - [ ] **Sprint AC 71.AC2:** Tokens and private credential values never reach the model or persisted output.
 - [ ] **Sprint AC 71.AC3:** Expired, revoked, wrong-host, missing-single-sign-on, and insufficient-scope states fail readably.
 - [ ] **Sprint AC 71.AC4:** Every request is bounded, cancellable, fresh-labeled, and receipted.
@@ -5017,7 +5025,7 @@ claims.
 
 **Sprint goal:** Deliver github mutation preview and authority as a bounded part of the legacy goal: Add narrowly scoped hosted GitHub mutations with exact previews, idempotency, recovery, and separate publication approvals.
 
-**Source coverage:** inventory Section 13B hosted-write requirements.
+**Source coverage:** inventory Section 13B hosted-write requirements; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) push boundary; `SR-GIT-002`, `SR-GIT-008` through `SR-GIT-012`; push portion of `RV-49`.
 
 **Dependencies:** Sprint 84; legacy dependency record: `G-V0.7`, Sprint 47 (legacy S-040), Sprint 70 (legacy S-057), Sprint 73 (legacy S-060), Sprint 74 (legacy S-061).
 
@@ -5032,7 +5040,9 @@ claims.
   - [ ] **Sub-task 85.1.1.2** (legacy `S-067-I02`): Re-read hosted objects and local branches immediately before approval and again before submission.
   - [ ] **Sub-task 85.1.1.3** (legacy `S-067-I03`): Bind each network write grant to host, repository, actor, object identity, exact payload, expected hosted effect, preview hash, expiry, and idempotency key.
   - [ ] **Sub-task 85.1.1.4** (legacy `S-067-I04`): Implement approval-gated issue, pull-request, review, thread, workflow, commit, push, merge, and release operations as separate capability classes.
-  - [ ] **Sub-task 85.1.1.5** (legacy `S-067-I05`): Require signed commits, exact staged diff and message approval, signature verification, and a second approval before remote branch update.
+  - [ ] **Sub-task 85.1.1.5** (legacy `S-067-I05`): Require signed commits, exact staged diff/message/tree/parent/signer approval, signature verification, and a second approval bound to canonical host/account/repository/credential/full task-branch ref/expected old object/expected new object before one ordinary fast-forward push.
+  - [ ] **Sub-task 85.1.1.6:** Re-read remote ref, effective permissions, branch protection, rulesets, signatures, required reviews/checks, push rules, and bypass capability immediately before push grant consumption; invalidate changed state and never exercise bypass automatically.
+  - [ ] **Sub-task 85.1.1.7:** Prohibit implicit destination or refspec, configured push-URL substitution, multiple destinations, default/protected/release/tag refs, deletion, push options, upstream mutation, submodule recursion, `--all`, `--branches`, `--mirror`, tags/follow-tags, force, and every force-with-lease form.
 
 - [ ] **Task 85.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 85.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
@@ -5042,7 +5052,7 @@ claims.
   - [ ] **Sub-task 85.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [ ] **Sub-task 85.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
   - [ ] **Sub-task 85.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 85.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`; retain mutation vectors, idempotency/reconciliation traces, API audit, signature checks, remote pre/post snapshots, and independent review.
+  - [ ] **Sub-task 85.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`, `SR-GIT-002`, and `SR-GIT-008` through `SR-GIT-012`; begin the push portion of `RV-49`; retain mutation vectors, grant payloads, protection/ruleset snapshots, prohibited-refspec/flag enumeration, signature checks, remote pre/post snapshots, and independent review.
 
 ##### Story Acceptance Criteria
 
@@ -5054,7 +5064,7 @@ claims.
 
 - [ ] **Sprint AC 85.AC1:** Every numbered implementation sub-task in Story 85.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 85.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 85.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [ ] **Sprint AC 85.AC3:** No workspace, unrelated Git state, authority, privacy, network, platform, remote ref, or canonical-state behavior outside this story's exact preservation manifest and grant changes.
 - [ ] **Sprint AC 85.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 85.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
@@ -5067,7 +5077,7 @@ claims.
 
 **Sprint goal:** Deliver github idempotency, recovery, and prohibited operations as a bounded part of the legacy goal: Add narrowly scoped hosted GitHub mutations with exact previews, idempotency, recovery, and separate publication approvals.
 
-**Source coverage:** inventory Section 13B hosted-write requirements.
+**Source coverage:** inventory Section 13B hosted-write requirements; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) push/reconciliation boundary; `SR-GIT-002`, `SR-GIT-003`, and `SR-GIT-008` through `SR-GIT-012`; completion of push portion of `RV-49`.
 
 **Dependencies:** Sprint 85; legacy dependency record: `G-V0.7`, Sprint 47 (legacy S-040), Sprint 70 (legacy S-057), Sprint 73 (legacy S-060), Sprint 74 (legacy S-061).
 
@@ -5078,10 +5088,10 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 86.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 86.1.1.1** (legacy `S-067-I06`): Implement duplicate protection and uncertain-result reconciliation for comments, labels, issues, pull requests, workflow dispatches, releases, and retries.
+  - [ ] **Sub-task 86.1.1.1** (legacy `S-067-I06`): Implement duplicate protection and uncertain-result reconciliation for comments, labels, issues, pull requests, workflow dispatches, releases, pushes, and retries; after uncertain push transport, freshly observe the exact remote ref and block retry while effect remains unknown.
   - [ ] **Sub-task 86.1.1.2** (legacy `S-067-I07`): Implement recovery for credential expiry, permission change, renamed repository, deleted branch, moved line, base movement, and partial publication.
   - [ ] **Sub-task 86.1.1.3** (legacy `S-067-I08`): Emit complete read and write receipts identifying whether external state changed.
-  - [ ] **Sub-task 86.1.1.4** (legacy `S-067-I09`): Keep force push, automatic review, automatic fixes, automatic merge, automatic release, repository administration, secret changes, and ruleset changes prohibited.
+  - [ ] **Sub-task 86.1.1.4** (legacy `S-067-I09`): Keep force and force-with-lease push, mirror/all/tag/deletion/multi-destination/implicit-ref push, bypass use, automatic review/fixes/merge/release, repository administration, secret changes, and ruleset changes prohibited.
 
 - [ ] **Task 86.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 86.1.2.1:** Hosted mutation schemas and preview interfaces.
@@ -5092,10 +5102,10 @@ claims.
 - [ ] **Task 86.1.3 - Verify and close the story**
   - [ ] **Sub-task 86.1.3.1:** `S-067-UT01` canonicalizes previews/grants for each issue/PR/review/comment/label/assignment/milestone/project/workflow/branch/merge/release action; mutate every field and assert no request.
   - [ ] **Sub-task 86.1.3.2:** `S-067-UT02` simulates success, provider conflict, validation error, timeout-before/after effect, duplicate response, rate limit, and unknown result with idempotency keys; assert exact reconciliation and no duplicate.
-  - [ ] **Sub-task 86.1.3.3:** `S-067-ST01` attempts stale-state writes, cross-repository/account action, hidden recipient/visibility/attachment, force push, admin/ruleset/secret changes, automatic review/fix/merge/release, and grant replay; assert denial.
-  - [ ] **Sub-task 86.1.3.4:** `S-067-IT01` signs an exact local commit after approval, verifies it, requests separate push approval, refreshes remote state, updates a fixture branch, and verifies hosted postconditions; assert distinct receipts and scopes.
-  - [ ] **Sub-task 86.1.3.5:** `S-067-RT01` revokes credentials, moves base/branch/line, and crashes around submission; assert uncertain state blocks retry until current remote state proves effect or non-effect.
-  - [ ] **Sub-task 86.1.3.6 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`; retain mutation vectors, idempotency/reconciliation traces, API audit, signature checks, remote pre/post snapshots, and independent review.
+  - [ ] **Sub-task 86.1.3.3:** `S-067-ST01` attempts stale-state writes, cross-host/repository/account action, hidden fields, implicit/configured destinations, tags/deletion/multiple refspecs/push options, force and lease variants, bypass, admin/ruleset/secret changes, automatic review/fix/merge/release, and grant replay; assert denial before request.
+  - [ ] **Sub-task 86.1.3.4:** `S-067-IT01` signs an exact local commit after approval, verifies it, requests a distinct push approval, refreshes remote ref/protection/ruleset/permission state, updates one full fixture task-branch ref by ordinary fast-forward, and reconciles hosted postconditions; assert distinct receipts/scopes and unchanged unrelated refs/state.
+  - [ ] **Sub-task 86.1.3.5:** `S-067-RT01` revokes credentials, moves base/remote branch/line/protection/ruleset, and crashes or partitions before and after submission; assert verified effect/non-effect/partial/unknown state and no retry until fresh exact observation proves a safe disposition.
+  - [ ] **Sub-task 86.1.3.6 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`, `SR-GIT-002`, `SR-GIT-003`, and `SR-GIT-008` through `SR-GIT-012`; complete the push portion of `RV-49`; retain preservation manifests, mutation vectors, idempotency/reconciliation traces, API audit, signature checks, remote pre/post snapshots, and independent review.
 
 ##### Story Acceptance Criteria
 
@@ -5107,8 +5117,8 @@ claims.
 - [ ] **Sprint AC 86.AC1:** Every mutation changes exactly the previewed hosted object and fields.
 - [ ] **Sprint AC 86.AC2:** Changed hosted state invalidates stale approval before submission.
 - [ ] **Sprint AC 86.AC3:** Duplicate retries cannot create duplicate external effects.
-- [ ] **Sprint AC 86.AC4:** Commit and push require distinct approvals and verified signatures.
-- [ ] **Sprint AC 86.AC5:** Prohibited automatic and administrative operations remain absent.
+- [ ] **Sprint AC 86.AC4:** Commit and push require distinct approvals; the push names one canonical host/account/repository/credential/full task ref/old object/new object, and the commit has a verified signature.
+- [ ] **Sprint AC 86.AC5:** Prohibited destructive, implicit, force, bypass, automatic, and administrative operations remain absent, and uncertain push effects block retry until reconciled.
 
 **Gate decision:** Sprint 86 is PASS only when Story 86.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 87 - Connector Governance and Isolation
@@ -6080,7 +6090,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Complete the published GitHub.com and GitHub Enterprise Server matrix, including local signed commits, separate pushes, hosted writes, workflows, reviews, and releases.
 
-**Source coverage:** `AM-GHE-001`, `AT-GHE-001`; inventory Sections 13, 13A, 13B, and 36B; `SR-DEL-001` through `SR-DEL-009`, `RV-23` through `RV-26`.
+**Source coverage:** `AM-GHE-001`, `AT-GHE-001`; inventory Sections 13, 13A, 13B, and 36B; [`docs/security/repository-safety.md`](./docs/security/repository-safety.md); `SR-DEL-001` through `SR-DEL-009`; `SR-GIT-001` through `SR-GIT-012`; `RV-23` through `RV-26` and complete `RV-49`.
 
 **Dependencies:** Sprint 105; Sprints 41-47, 70-75, and 85-86.
 
@@ -6096,20 +6106,20 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 106.1.1.3:** Preserve REST/GraphQL/provider-only identities and unknown fields without flattening unsupported GHES differences.
 - [ ] **Task 106.1.2 - Complete effectful GitHub behavior**
   - [ ] **Sub-task 106.1.2.1:** Implement exact drafts and approval-gated issue, comment, label, assignment, milestone, project-field, pull-request, review, thread, workflow, environment, and release operations.
-  - [ ] **Sub-task 106.1.2.2:** Implement exact local staged diff/message approval, required commit signing, signature verification, and a distinct approval for remote push.
+  - [ ] **Sub-task 106.1.2.2:** Implement exact temporary-index tree/diff/message/parent/identity/signer approval, required commit signing and verification, plus a distinct preservation-manifest-bound approval for one ordinary fast-forward push to one full task-branch ref.
   - [ ] **Sub-task 106.1.2.3:** Implement approval-gated workflow dispatch/rerun/cancel and environment approval as `execute`, never generic `remote-write`.
-  - [ ] **Sub-task 106.1.2.4:** Keep force push, repository/organization administration, secret changes, ruleset changes, automatic merge, automatic release, and automatic review absent unless separately promoted to L5.
+  - [ ] **Sub-task 106.1.2.4:** Keep generic pull, destructive/implicit Git, force and force-with-lease push, bypass use, repository/organization administration, secret changes, ruleset changes, automatic merge, automatic release, and automatic review absent unless a future taxonomy decision and separately promoted L5 contract explicitly admit them.
 - [ ] **Task 106.1.3 - Verify and close the story**
   - [ ] **Sub-task 106.1.3.1:** `S-106-CT01` runs every published GitHub object and operation across GitHub.com and the supported GHES version matrix, permission levels, pagination, rate limits, and unavailable features.
-  - [ ] **Sub-task 106.1.3.2:** `S-106-ST01` runs cross-host credentials, redirects, stale refs, moved lines, branch protection changes, injected content, hidden fields, and every prohibited operation.
+  - [ ] **Sub-task 106.1.3.2:** `S-106-ST01` runs hostile Git configuration and objects, preservation-manifest races, cross-host/account/repository credentials, redirects/proxies/certificate/host-key changes, stale refs, moved lines, branch protection/ruleset/check/review changes, bypass capability, injected content, hidden fields, implicit refspecs, every force form, and every prohibited operation.
   - [ ] **Sub-task 106.1.3.3:** `S-106-IT01` reads an issue, creates an isolated change, tests it, signs a local commit, separately pushes, opens a pull request, submits a review, dispatches CI, verifies checks, drafts a release, and reconciles every effect.
   - [ ] **Sub-task 106.1.3.4:** `S-106-RT01` injects GHES version skew, revocation, single-sign-on changes, rate limits, branch movement, timeout, duplicate response, partial publication, crash, and cancellation.
-  - [ ] **Sub-task 106.1.3.5:** Execute applicable `RV-23` through `RV-26`; retain API traces, pre/post snapshots, signatures, support matrix, receipts, and independent review.
+  - [ ] **Sub-task 106.1.3.5:** Execute applicable `RV-23` through `RV-26` and complete `RV-49`; retain API/Git traces, preservation manifests, prohibited-operation registry enumeration, pre/post local/remote snapshots, signatures, support matrix, receipts, and independent review.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 106.1.AC1:** Given a supported GitHub.com or GHES tuple, when a published read or write operation runs, then its provider semantics, permissions, immutable identities, exact effects, and receipts match the support matrix.
-- [ ] **Story AC 106.1.AC2:** Given a local commit and remote push, when approvals occur, then staged diff/message/signature and remote destination/ref are reviewed and granted separately.
+- [ ] **Story AC 106.1.AC2:** Given a local commit and remote push, when approvals occur, then exact temporary-index tree/diff/message/parent/signer and canonical host/account/repository/credential/full ref/old object/new object are reviewed and granted separately, with protection and ruleset state refreshed before push.
 - [ ] **Story AC 106.1.AC3:** Given an unsupported GHES feature or administrative operation, when requested directly or indirectly, then it is absent or denied without fallback to a different host or method.
 
 #### Sprint Acceptance Criteria
@@ -6118,9 +6128,9 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 106.AC2:** No credential crosses GitHub hosts or accounts.
 - [ ] **Sprint AC 106.AC3:** Every hosted effect has exact pre/post snapshots, reconciliation, and one receipt.
 - [ ] **Sprint AC 106.AC4:** Commit, push, review, workflow execution, environment approval, merge preparation, and release remain separate capability classes.
-- [ ] **Sprint AC 106.AC5:** All prohibited and unsupported operations pass negative tests.
+- [ ] **Sprint AC 106.AC5:** All prohibited and unsupported operations pass negative tests, and complete `RV-49` reaches its 10,000-mutation threshold with zero user-work loss or unauthorized effect.
 
-**Gate decision:** Sprint 106 is PASS only when Story 106.1, all criteria, `AT-GHE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 106 is PASS only when Story 106.1, all criteria, `AT-GHE-001`, complete `RV-49`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
 ### [ ] Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards
 
@@ -6993,7 +7003,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Prove complete work-to-release and incident-to-rollback workflows across the promoted provider matrix on Fedora, Ubuntu, and Windows before final GA assembly.
 
-**Source coverage:** `AM-XTE-001`, `AM-WIN-001`, `AT-XTE-001`, `AT-WIN-001`; integrated behavior from all prior Section 36 owners; `SR-DEL-*`, `SR-PLT-013` through `SR-PLT-017`, `RV-01` through `RV-30`.
+**Source coverage:** `AM-XTE-001`, `AM-WIN-001`, `AT-XTE-001`, `AT-WIN-001`; integrated behavior from all prior Section 36 owners; `SR-DEL-*`, `SR-GIT-*`, `SR-PLT-013` through `SR-PLT-017`, `RV-01` through `RV-30`, and `RV-49`.
 
 **Dependencies:** Sprint 124; all prior first-GA adapter and platform gates.
 
@@ -7018,7 +7028,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 125.1.3.2:** `S-125-ST01` executes all integrated attacks with zero unauthorized access, disclosure, effect, execution, deployment, secret/admin action, duplicate, or false completion.
   - [ ] **Sub-task 125.1.3.3:** `S-125-RT01` executes all integrated failure/recovery schedules with current pre/post snapshots and no repeated completed operation.
   - [ ] **Sub-task 125.1.3.4:** `S-125-AT02` reruns the complete Windows gate and Linux parity gates against release-candidate packages.
-  - [ ] **Sub-task 125.1.3.5:** Re-run applicable `RV-01` through `RV-30`; retain signed raw evidence, cross-system graph, platform manifests, support matrix, removal proof, and independent decisions for `G-DELIVERY` and `G-WINDOWS`.
+  - [ ] **Sub-task 125.1.3.5:** Re-run applicable `RV-01` through `RV-30` and `RV-49`; retain signed raw evidence, cross-system graph, platform manifests, repository preservation results, support matrix, removal proof, and independent decisions for `G-DELIVERY` and `G-WINDOWS`.
 
 ##### Story Acceptance Criteria
 
@@ -7062,7 +7072,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Task 126.1.2 - Independently rerun the complete release**
   - [ ] **Sub-task 126.1.2.1:** Perform three clean standard-user install/upgrade/rollback/uninstall lifecycles per first-GA platform using published instructions only.
   - [ ] **Sub-task 126.1.2.2:** Rerun every promoted provider conformance matrix and every `AT-*` first-GA threshold against exact release candidates and synthetic provider environments.
-  - [ ] **Sub-task 126.1.2.3:** Rerun `RV-01` through `RV-30`, cross-provider lifecycles, strict-local removal, accessibility, performance, recovery, incident tabletop, and documentation checks.
+  - [ ] **Sub-task 126.1.2.3:** Rerun `RV-01` through `RV-30`, `RV-49`, cross-provider lifecycles, strict-local removal, accessibility, performance, recovery, incident tabletop, and documentation checks.
   - [ ] **Sub-task 126.1.2.4:** Recompute every summary from raw evidence, validate staleness against all source/dependency/config/model/platform/provider manifests, and reconcile every failure, skip, suppression, quarantine, and reviewer finding.
 - [ ] **Task 126.1.3 - Decide and sign the delivery and Windows checkpoint**
   - [ ] **Sub-task 126.1.3.1:** Produce the final provider/version/capability matrix with exact supported, degraded, unsupported, disabled, and post-GA states.
@@ -7085,7 +7095,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 126.AC4:** Bills of materials, provenance, signatures, hashes, manifests, support matrices, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 126.AC5:** The Sprint 126 delivery-and-Windows checkpoint closes only after independent reproduction and explicit user approval; expanded `G-GA` remains blocked pending Sprints 127-156.
 
-**Gate decision:** Sprint 126 is PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable delivery-and-Windows `AT-*`, every `RV-01` through `RV-30`, and the Universal Story Definition of Done pass with current signed evidence. This checkpoint does not close expanded `G-GA`, which remains BLOCKED until Sprint 156. Otherwise Sprint 126 is BLOCKED.
+**Gate decision:** Sprint 126 is PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable delivery-and-Windows `AT-*`, every `RV-01` through `RV-30`, `RV-49`, and the Universal Story Definition of Done pass with current signed evidence. This checkpoint does not close expanded `G-GA`, which remains BLOCKED until Sprint 156. Otherwise Sprint 126 is BLOCKED.
 
 ## [ ] Epic 12 - Productivity, Communications, and Unified Work
 
@@ -9022,7 +9032,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Independently reproduce the complete AgentMage v1.0 release, including trusted operations and whole-codebase auditing, and issue a truthful final release decision from current signed raw evidence.
 
-**Source coverage:** `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`; Decisions 0010-0011; entire canonical document set through Inventory Section 40B; `RV-01` through `RV-48`.
+**Source coverage:** `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`; Decisions 0010-0011; entire canonical document set through Inventory Section 40B; `RV-01` through `RV-49`.
 
 **Dependencies:** Sprints 0-165 and every promoted first-GA gate; post-GA Sprints 167-168 excluded.
 
@@ -9039,7 +9049,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Task 166.1.2 - Independently rerun the complete release**
   - [ ] **Sub-task 166.1.2.1:** Perform three clean standard-user install, upgrade, rollback, uninstall, residue, backup, and restore lifecycles per first-GA platform using published instructions only.
   - [ ] **Sub-task 166.1.2.2:** Rerun every promoted provider, command level, research, credential, continuity, model, finance, cloud, autonomy, object, operation, and scope matrix against exact release candidates.
-  - [ ] **Sub-task 166.1.2.3:** Rerun `RV-01` through `RV-48`, accessibility, performance, recovery, incident tabletop, removal, strict-local restoration, and documentation gates.
+  - [ ] **Sub-task 166.1.2.3:** Rerun `RV-01` through `RV-49`, accessibility, performance, recovery, incident tabletop, removal, strict-local restoration, and documentation gates.
   - [ ] **Sub-task 166.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, stale result, suppression, quarantine, flake, unavailable dependency, and reviewer finding.
   - [ ] **Sub-task 166.1.2.5:** Independently run comprehensive audits against each release-reference repository and known-answer corpus, then reconcile census, graphs, packets, cards, contradictions, checkpoints, findings, reports, read-only attestations, platform results, and removal evidence.
 - [ ] **Task 166.1.3 - Prove release blocking and sign decision**
@@ -9062,7 +9072,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 166.AC4:** Bills of materials, provenance, signatures, hashes, manifests, audit census, graphs, findings, coverage, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 166.AC5:** `G-GA` closes only after independent reproduction, explicit user approval, and zero hidden blocker.
 
-**Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-48`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
+**Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-49`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
 
 ## [ ] Epic 16 - Post-GA Experimental Model Lab
 

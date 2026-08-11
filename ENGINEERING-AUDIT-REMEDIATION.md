@@ -6,7 +6,7 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
-Current authorized phase: **Phase 3 - Baseline Characterization and Product CI (pending user gate review)**
+Current authorized phase: **Phase 4 - Authority Transaction and Taxonomy (pending user gate review)**
 
 ## 1. Purpose and Authority Boundary
 
@@ -1037,7 +1037,8 @@ resource exhaustion, package lifecycle, and cross-platform contract fixtures.
 
 The phases below remain approval-gated. Phase 1 was approved and committed
 locally as `f71a1ce`. Phase 2 was approved and committed locally as `9458b0e`.
-Phase 3 alone is currently authorized; Phases 4 through 12 remain unapproved.
+Phase 3 was approved and committed locally as `e7705f0`. Phase 4 alone is
+currently authorized; Phases 5 through 12 remain unapproved.
 
 ### Phase 1: Consolidated Remediation Ledger
 
@@ -1243,9 +1244,10 @@ aggregate result was not silently waived or represented as passing.
 
 ## 14. Phase 3 Record
 
-Phase 3 is authorized only for RM-004 and RM-005. Its candidate edits remain
-subject to the Phase 3 gate and user review; authorization to edit is not
-authorization to commit, push, or enter Phase 4.
+Phase 3 was authorized only for RM-004 and RM-005. The user approved its local
+commit as `e7705f0`; no push occurred. That approval separately authorized entry
+into Phase 4, but it did not authorize a Phase 4 commit, push, or entry into
+Phase 5.
 
 The candidate RM-004 implementation adds a machine-readable product CI policy,
 a policy validator and bounded lane runner, an independent product workflow,
@@ -1296,3 +1298,101 @@ Phase 3 verification produced the following candidate-gate results:
   refreshed, rewritten, or represented as current during Phase 3.
 - `git diff --check` passed, the retained `artifacts/` tree has no diff, the
   branch remains local with no upstream, and no push occurred.
+
+## 15. Phase 4 Record
+
+Phase 4 is authorized only for RM-006 and RM-007. Its candidate edits remain
+subject to the Phase 4 gate and user review. Decision 0013 remains proposed;
+authorization to prepare and test it is not approval of that decision and is
+not authorization to commit, push, or enter Phase 5.
+
+The candidate RM-007 implementation establishes taxonomy version 1 with 22
+closed operations and eight non-inheriting authority classes. A private-field
+`OperationBinding` derives the one permitted class for each operation and
+rejects class mismatch, unsupported versions, unknown values, wildcards, and
+ambiguous legacy mappings. Configuration, tool definitions, required grant
+templates, approvals, capability grants, expected effects, policies, work
+packets, transaction records, and receipts now use the same closed taxonomy;
+every effect-bearing record uses one exact `OperationBinding`, while descriptive
+work packets use the corresponding closed authority-class vocabulary.
+Because these are incompatible required-field and wire-shape changes, the live
+kernel contract family and live agent-configuration bundle advance to schema
+version 2. The frozen Story 4.1 version-1 package and historical configuration
+migration fixtures remain the version-bound records for their retained
+evidence; current parsing does not silently reinterpret either as version 2.
+Configuration evidence, result, diff, rollback, profile-catalog, and other
+record families retain their independent version-1 schemas.
+
+The amended candidate also makes repository safety structural before Git
+implementation begins. Clone, namespaced fetch, owned-worktree creation and
+removal, compare-and-swap branch fast-forward, commit, and push are distinct
+operations. Generic pull, merge, rebase, reset, clean, checkout-discard, stash,
+tag or note mutation, branch deletion, remote configuration, hook execution,
+force, mirror, and arbitrary ref update remain unrepresentable. The normative
+repository-safety contract requires exact pre/post repository manifests,
+isolated task worktrees, temporary commit indexes, authenticated credential
+brokering, explicit refspecs, protected user/Git state, hostile-config denial,
+remote-currentness checks, and no retry while a push result is uncertain.
+The amendment adds `SR-GIT-001` through `SR-GIT-012` and quantitative reviewer
+protocol `RV-49`, with first-execution ownership distributed across Sprints 42,
+47, 71, 85-86, and 106 and integrated reruns assigned to Sprints 126 and 166.
+Legacy additions-only checklist statements remain textually preserved; Decision
+0013 explicitly supersedes unsafe literal `fetch --prune` and generic-pull
+interpretations with namespaced fetch and a distinct compare-and-swap branch
+fast-forward.
+
+The candidate RM-006 implementation establishes a kernel-owned in-memory
+authority transaction with fixed prepared, grant-consumed, attempt-recorded,
+launch-committed, reconciling, and terminal states. It binds transaction,
+attempt, approval, grant, operation, tool-call, action, task, session, and
+correlation identities. Current policy and grant state are checked immediately
+before atomic consumption; a non-replayable attempt and launch commitment are
+recorded before crossing the worker boundary; and terminal receipts bind the
+same authority identities in a hash chain.
+Cancellation, launch failure, timeout, duplicate results, crashes, recovery,
+and uncertain effects have explicit fail-closed semantics.
+
+Phase 4 intentionally keeps the worker driver and transaction runner private.
+Tests exercise the ordering model without creating a public effect path. Phase
+5 still owns structural effect mediation; Phase 6 owns held-target isolation;
+and Phase 7 owns encrypted crash-durable transactional persistence. The current
+coordinator is in-memory and does not support an integrated product workflow.
+
+Historical Story 4.1 and Story 5.1 packages, references, fixtures, and generated
+reports remain unchanged and continue to describe their recorded revisions.
+Decision 0013 and the current source describe the Phase 4 candidate. No old
+artifact is refreshed or represented as current Phase 4 evidence.
+
+Phase 4 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed Rust and TypeScript formatting, Clippy with
+  warnings denied, ESLint, the strict-local source audit, all workspace builds,
+  all enabled default Rust tests, the no-public-launch compile-fail test, and the
+  Visual Studio Code shell test. Eleven environment-dependent native Linux tests
+  remain explicitly ignored rather than represented as passing.
+- `cargo test --workspace --all-targets --locked` passed every enabled unit and
+  integration test. The seven authority-transaction tests cover the complete
+  declared state matrix, pre-launch denial, exact success, launch failure,
+  replay, cancellation, timeout, duplicate results, six crash points, receipt
+  chaining, and idempotent terminal recovery.
+- The focused configuration suite passed all 26 loader, migration, authority,
+  rollback, and startup tests. The planning-schema suite passed all 30 live
+  schema, profile, mutation, and semantic checks; its one retained-report check
+  failed closed because the historical configuration schema report is stale.
+- Markdown lint passed all 76 files, all 37 Mermaid blocks parsed, documentation
+  and policy validation passed, and architecture and product-CI contracts
+  passed.
+- `requirements:check` passed registry, additions-only, architecture, module,
+  dependency, injection, resolution, build-contract, and dependency-class checks
+  before stopping at stale supply-chain provenance, SBOM, and dependency hashes.
+- The broad historical Python suite ran 886 tests in 565.770 seconds and
+  remained fail-closed with 35 failures and 78 errors. The failures cluster in
+  revision-bound configuration, grant, kernel, path, supply-chain, model,
+  component-inventory, vulnerability, update, security-map, and story/sprint
+  evidence. Moving `GrantOperation` into the canonical taxonomy also makes the
+  historical Story 5.1 source parser report its old expected location missing;
+  the current Rust taxonomy and transaction tests pass. Separating historical
+  validity from current applicability remains assigned to RM-019 in Phase 10.
+- `git diff --check` passed. The retained `artifacts/` tree, version-1 grant
+  fixtures, and frozen Story 4.1/5.1 references have no diff. The branch remains
+  local with no upstream; no Phase 4 commit or push occurred.

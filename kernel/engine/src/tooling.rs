@@ -13,7 +13,6 @@ use sha2::{Digest, Sha256};
 
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_TEXT_BYTES: usize = 4_096;
-const MAX_EFFECTS: usize = 32;
 const MAX_ARGUMENT_BYTES: usize = 1_048_576;
 const MAX_TIMEOUT_MS: u64 = 300_000;
 
@@ -273,17 +272,16 @@ fn validate_definition(definition: &ToolDefinition) -> Vec<ValidationIssue> {
     validate_text("description", &definition.description, &mut issues);
     validate_schema("input_schema", &definition.input_schema, &mut issues);
     validate_schema("output_schema", &definition.output_schema, &mut issues);
-    if definition.declared_effects.is_empty() || definition.declared_effects.len() > MAX_EFFECTS {
+    if definition.declared_effects.len() != 1 {
         issues.push(issue(
             "tool.definition.effects.invalid",
             "declared_effects",
-            "Declared effects are empty or exceed the item limit",
+            "A tool must declare exactly one canonical operation",
         ));
     }
     let mut effects = BTreeSet::new();
     for effect in &definition.declared_effects {
-        validate_identifier("declared_effects", effect, &mut issues);
-        if !effects.insert(effect.as_str()) {
+        if !effects.insert(*effect) {
             issues.push(issue(
                 "tool.definition.effects.duplicate",
                 "declared_effects",
@@ -291,27 +289,16 @@ fn validate_definition(definition: &ToolDefinition) -> Vec<ValidationIssue> {
             ));
         }
     }
-    for (field, value) in [
-        (
-            "required_grant.capability_class",
-            definition.required_grant.capability_class.as_str(),
-        ),
-        (
-            "required_grant.operation",
-            definition.required_grant.operation.as_str(),
-        ),
-        (
-            "required_grant.target_scope",
-            definition.required_grant.target_scope.as_str(),
-        ),
-    ] {
-        validate_identifier(field, value, &mut issues);
-    }
-    if definition.required_grant.operation != definition.tool_id.as_str() {
+    validate_identifier(
+        "required_grant.target_scope",
+        &definition.required_grant.target_scope,
+        &mut issues,
+    );
+    if definition.declared_effects.as_slice() != [definition.required_grant.operation] {
         issues.push(issue(
             "tool.definition.grant.operation_mismatch",
             "required_grant.operation",
-            "Grant-template operation must equal the exact tool identity",
+            "Grant-template operation must equal the one declared canonical operation",
         ));
     }
     if !definition.required_grant.single_use {
@@ -591,9 +578,9 @@ mod tests {
         ToolRegistryError, sha256_hex,
     };
     use agentmage_kernel_contracts::{
-        ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, OperationOutcome,
-        RequiredGrantTemplate, SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId,
-        ToolDefinition, ToolId, ToolRiskLevel,
+        ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, GrantOperation,
+        OperationBinding, OperationOutcome, RequiredGrantTemplate, SchemaId, SchemaReference,
+        StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel,
     };
     use serde_json::{Value, json};
 
@@ -625,10 +612,9 @@ mod tests {
             input_schema: schema("fixture.input"),
             output_schema: schema("fixture.output"),
             risk_level: ToolRiskLevel::Low,
-            declared_effects: vec!["read-only".to_owned()],
+            declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
             required_grant: RequiredGrantTemplate {
-                capability_class: "read-only".to_owned(),
-                operation: identity.to_owned(),
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_scope: "workspace-file".to_owned(),
                 single_use: true,
             },
@@ -854,7 +840,6 @@ mod tests {
         let mut claimed = definition("fixture.claimed-authority");
         claimed.description =
             "This text claims it can authorize and immediately execute the tool".to_owned();
-        claimed.required_grant.capability_class = "claimed-superuser".to_owned();
         let mut registry = ToolRegistry::new();
         registry
             .register_tool(Box::new(FakeTool {

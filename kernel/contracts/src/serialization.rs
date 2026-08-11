@@ -39,6 +39,7 @@ macro_rules! impl_versioned_contract {
 impl_versioned_contract!(
     crate::Action,
     crate::ApprovalRequest,
+    crate::AuthorityTransactionRecord,
     crate::BoundaryFailure,
     crate::CapabilityGrant,
     crate::CancellationSignal,
@@ -194,7 +195,7 @@ mod tests {
 
     #[test]
     fn canonical_bytes_are_stable_and_round_trip() {
-        let expected = br#"{"schema_version":1,"task_id":"task-0001","session_id":"session-0001","objective":"Inspect one synthetic fixture","acceptance_criteria":["Produce evidence"],"constraints":["Read only"],"status":"ready"}"#;
+        let expected = br#"{"schema_version":2,"task_id":"task-0001","session_id":"session-0001","objective":"Inspect one synthetic fixture","acceptance_criteria":["Produce evidence"],"constraints":["Read only"],"status":"ready"}"#;
         let first = to_canonical_json(&task()).expect("fixture must serialize");
         let second = to_canonical_json(&task()).expect("fixture must serialize again");
         assert_eq!(first, expected);
@@ -205,22 +206,22 @@ mod tests {
     #[test]
     fn malformed_missing_extra_duplicate_and_trailing_inputs_fail_closed() {
         let cases: &[(&[u8], &str)] = &[
-            (br#"{"schema_version":1"#, "contract.parse.eof"),
-            (br#"{"schema_version":1}"#, "contract.field.missing"),
+            (br#"{"schema_version":2"#, "contract.parse.eof"),
+            (br#"{"schema_version":2}"#, "contract.field.missing"),
             (
-                br#"{"schema_version":1,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready","extra":true}"#,
+                br#"{"schema_version":2,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready","extra":true}"#,
                 "contract.field.unknown",
             ),
             (
-                br#"{"schema_version":1,"schema_version":1,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready"}"#,
+                br#"{"schema_version":2,"schema_version":2,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready"}"#,
                 "contract.field.duplicate",
             ),
             (
-                br#"{"schema_version":1,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"unsupported"}"#,
+                br#"{"schema_version":2,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"unsupported"}"#,
                 "contract.value.unsupported",
             ),
             (
-                br#"{"schema_version":1,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready"}[]"#,
+                br#"{"schema_version":2,"task_id":"task-0001","session_id":"session-0001","objective":"fixture","acceptance_criteria":[],"constraints":[],"status":"ready"}[]"#,
                 "contract.parse.syntax",
             ),
         ];
@@ -247,6 +248,14 @@ mod tests {
         assert_eq!(error.field_path, ["schema_version"]);
 
         let error = to_canonical_json(&unsupported).expect_err("version must not serialize");
+        assert_eq!(error.code, "contract.version.unsupported");
+        assert_eq!(error.field_path, ["schema_version"]);
+
+        let mut historical = task();
+        historical.schema_version = 1;
+        let encoded = serde_json::to_vec(&historical).expect("historical fixture serialization");
+        let error = from_json::<Task>(&encoded)
+            .expect_err("version 1 must not be silently reinterpreted as version 2");
         assert_eq!(error.code, "contract.version.unsupported");
         assert_eq!(error.field_path, ["schema_version"]);
     }

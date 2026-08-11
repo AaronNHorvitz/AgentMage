@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "core": {
-    "schema_version": 1,
+    "schema_version": 2,
     "product_id": "agentmage",
     "profile_id": "synthetic-test-linux",
     "configuration_mode": "synthetic-test",
@@ -10,7 +10,7 @@
     "inheritance_mode": "restrict-only"
   },
   "platform": {
-    "schema_version": 1,
+    "schema_version": 2,
     "platform_id": "fedora-x86_64",
     "adapter_id": "linux-platform-v1",
     "sandbox_profile_id": "synthetic-no-side-effect-v1",
@@ -21,7 +21,7 @@
     "ambient_dependency_policy": "deny"
   },
   "model": {
-    "schema_version": 1,
+    "schema_version": 2,
     "enabled": false,
     "model_profile_id": "fake-model-v1",
     "manifest_path": "fixtures/fake-model-manifest.json",
@@ -39,7 +39,7 @@
     }
   },
   "workspace": {
-    "schema_version": 1,
+    "schema_version": 2,
     "maximum_roots": 1,
     "default_access": "deny",
     "symlink_policy": "deny",
@@ -54,7 +54,7 @@
     ]
   },
   "tool": {
-    "schema_version": 1,
+    "schema_version": 2,
     "registry_path": "fixtures/tool-registry.json",
     "unregistered_tool_policy": "deny",
     "tools": [
@@ -66,12 +66,16 @@
         "required_capabilities": [
           "workspace.read"
         ],
-        "side_effect_class": "read"
+        "operation": {
+          "taxonomy_version": 1,
+          "operation": "workspace_read",
+          "authority_class": "observe"
+        }
       }
     ]
   },
   "permission": {
-    "schema_version": 1,
+    "schema_version": 2,
     "default_effect": "deny",
     "authority_inheritance": "restrict-only",
     "model_authority": "none",
@@ -91,7 +95,7 @@
     }
   },
   "budget": {
-    "schema_version": 1,
+    "schema_version": 2,
     "maximum_input_bytes": 1048576,
     "maximum_output_bytes": 262144,
     "maximum_file_count": 1000,
@@ -104,7 +108,7 @@
     "maximum_concurrency": 1
   },
   "logging": {
-    "schema_version": 1,
+    "schema_version": 2,
     "level": "info",
     "structured": true,
     "destination": {
@@ -123,7 +127,7 @@
     "record_environment_values": false
   },
   "retention": {
-    "schema_version": 1,
+    "schema_version": 2,
     "sessions_days": 30,
     "receipts_days": 90,
     "logs_days": 14,
@@ -133,7 +137,7 @@
     "secure_deletion_claim": "best-effort-no-physical-erasure-claim"
   },
   "skill": {
-    "schema_version": 1,
+    "schema_version": 2,
     "enablement": "manual-only",
     "unsigned_skill_policy": "disabled",
     "self_modification": "deny",
@@ -142,7 +146,7 @@
     "capability_ceiling": []
   },
   "shell": {
-    "schema_version": 1,
+    "schema_version": 2,
     "shell_id": "vscode-shell-v1",
     "surface_id": "vscode-native-chat",
     "transport": "local-ipc",

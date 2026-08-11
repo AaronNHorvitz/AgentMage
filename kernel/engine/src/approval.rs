@@ -80,6 +80,7 @@ fn validate_shape(
         return Err(ApprovalRenderError::InvalidInput);
     }
     for identifier in [
+        request.approval_id.as_str(),
         request.proposed_grant_id.as_str(),
         request.parent_grant_id.as_str(),
         request.actor_id.as_str(),
@@ -100,9 +101,14 @@ fn validate_shape(
     }
     validate_scope(&request.targets, &request.excluded_targets)?;
     validate_preimages_and_effects(request)?;
-    registry
+    let definition = registry
         .validate_arguments(&request.tool_call)
         .map_err(|_| ApprovalRenderError::InvalidToolCall)?;
+    if definition.required_grant.operation != request.operation
+        || definition.declared_effects.as_slice() != [request.operation]
+    {
+        return Err(ApprovalRenderError::InvalidToolCall);
+    }
     Ok(())
 }
 
@@ -227,10 +233,10 @@ mod tests {
         tooling::{Tool, ToolRegistry},
     };
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, ApprovalRequest, ContractPayload, CorrelationId,
+        ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, ContractPayload, CorrelationId,
         DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget,
-        RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId,
-        ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId,
+        OperationBinding, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId,
+        ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId,
     };
 
     struct FixtureTool {
@@ -264,10 +270,9 @@ mod tests {
                     input_schema: schema(),
                     output_schema: schema(),
                     risk_level: ToolRiskLevel::Low,
-                    declared_effects: vec!["read-only".to_owned()],
+                    declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
                     required_grant: RequiredGrantTemplate {
-                        capability_class: "read-only".to_owned(),
-                        operation: "fixture.read".to_owned(),
+                        operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                         target_scope: "workspace-file".to_owned(),
                         single_use: true,
                     },
@@ -289,6 +294,7 @@ mod tests {
         let arguments = br#"{"path":["src","fixture.txt"]}"#.to_vec();
         ApprovalRequest {
             schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            approval_id: ApprovalId::from_raw("approval-0001"),
             proposed_grant_id: GrantId::from_raw("grant-proposed-0001"),
             parent_grant_id: GrantId::from_raw("grant-parent-0001"),
             parent_grant_sha256: "2".repeat(64),
@@ -296,7 +302,7 @@ mod tests {
             session_id: SessionId::from_raw("session-0001"),
             task_id: TaskId::from_raw("task-0001"),
             action_kind: ActionKind::DeterministicTool,
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_call: ToolCall {
                 schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
                 tool_call_id: ToolCallId::from_raw("call-0001"),
@@ -320,7 +326,7 @@ mod tests {
                 observed_revision: Some("fixture-v1".to_owned()),
             }],
             expected_side_effects: vec![GrantSideEffect {
-                operation: GrantOperation::WorkspaceRead,
+                operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
                 details_sha256: "4".repeat(64),
             }],

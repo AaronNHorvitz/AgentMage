@@ -1,17 +1,17 @@
 use agentmage_kernel_contracts::{
-    Action, ActionId, ActionKind, ActionState, ActorId, ApprovalRequest, BoundaryFailure,
-    BoundaryKind, BoundaryOutcomeKind, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION,
-    CancellationId, CancellationReason, CancellationSignal, CapabilityGrant, ContractError,
-    ContractPayload, CorrelationId, DataSensitivity, ErrorCategory, ErrorId, EvidenceId,
-    EvidenceKind, EvidenceReference, GrantClass, GrantId, GrantNonce, GrantOperation,
-    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationOutcome, Plan, PlanId,
-    PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole,
-    Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId,
-    SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
-    TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
-    WorkPacketState, WorkspaceId, WorkspacePath, WorkspacePathErrorKind, from_json,
-    to_canonical_json,
+    Action, ActionId, ActionKind, ActionState, ActorId, ApprovalId, ApprovalRequest,
+    AuthorityClass, AuthorityTransactionId, BoundaryFailure, BoundaryKind, BoundaryOutcomeKind,
+    BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+    CancellationSignal, CapabilityGrant, ContractError, ContractPayload, CorrelationId,
+    DataSensitivity, ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference,
+    GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
+    GrantTarget, OperationAttemptId, OperationBinding, OperationOutcome, Plan, PlanId, PlanState,
+    PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole, Receipt,
+    ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference,
+    SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
+    ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue,
+    ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
+    WorkspacePath, WorkspacePathErrorKind, from_json, to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -140,7 +140,7 @@ fn complete_contract_family_preserves_linked_identities() {
         expected_output: "One bounded observation".to_owned(),
         acceptance_checks: task.acceptance_criteria.clone(),
         required_evidence: vec![EvidenceKind::Observation],
-        required_capability_class: "read-only".to_owned(),
+        required_capability_class: AuthorityClass::Observe,
         budgets: vec![BudgetLimit {
             resource: BudgetResource::ToolCalls,
             limit: 1,
@@ -231,10 +231,9 @@ fn complete_contract_family_preserves_linked_identities() {
         input_schema: schema.clone(),
         output_schema: schema,
         risk_level: ToolRiskLevel::Low,
-        declared_effects: vec!["read-only-observation".to_owned()],
+        declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
         required_grant: RequiredGrantTemplate {
-            capability_class: "read-only".to_owned(),
-            operation: "fixture.read".to_owned(),
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_scope: "workspace-file".to_owned(),
             single_use: true,
         },
@@ -260,11 +259,12 @@ fn complete_contract_family_preserves_linked_identities() {
         revision: 1,
         grant_class: GrantClass::Operation,
         actor_id: ActorId::from_raw("actor-local-0001"),
+        approval_id: Some(ApprovalId::from_raw("approval-0001")),
         session_id: session_id.clone(),
         task_id: task_id.clone(),
         action_id: Some(action_id.clone()),
         action_kind: Some(ActionKind::DeterministicTool),
-        operation: GrantOperation::WorkspaceRead,
+        operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         tool_id: Some(tool_id.clone()),
         tool_version: Some(tool.tool_version.clone()),
         targets: vec![GrantTarget {
@@ -283,7 +283,7 @@ fn complete_contract_family_preserves_linked_identities() {
             observed_revision: Some("fixture-v1".to_owned()),
         }],
         expected_side_effects: vec![GrantSideEffect {
-            operation: GrantOperation::WorkspaceRead,
+            operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_indexes: vec![0],
             details_sha256: "8".repeat(64),
         }],
@@ -301,6 +301,10 @@ fn complete_contract_family_preserves_linked_identities() {
     };
     let approval = ApprovalRequest {
         schema_version: CONTRACT_SCHEMA_VERSION,
+        approval_id: grant
+            .approval_id
+            .clone()
+            .expect("fixture approval identity"),
         proposed_grant_id: grant.grant_id.clone(),
         parent_grant_id: grant
             .parent_grant_id
@@ -364,10 +368,15 @@ fn complete_contract_family_preserves_linked_identities() {
         receipt_id: ReceiptId::from_raw("receipt-0001"),
         sequence: 1,
         correlation_id: correlation_id.clone(),
+        authority_transaction_id: AuthorityTransactionId::from_raw("transaction-0001"),
+        operation_attempt_id: OperationAttemptId::from_raw("attempt-0001"),
+        approval_id: approval.approval_id.clone(),
+        grant_id: grant.grant_id.clone(),
         session_id,
         task_id: task_id.clone(),
         action_id: action_id.clone(),
         tool_call_id: Some(call_id.clone()),
+        operation: grant.operation,
         outcome: result.outcome,
         operation_sha256: "4".repeat(64),
         evidence: vec![evidence],

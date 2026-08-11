@@ -18,7 +18,9 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Number, Value};
 use sha2::{Digest, Sha256};
 
-const CURRENT_SCHEMA_VERSION: u32 = 1;
+use agentmage_kernel_contracts::OperationBinding;
+
+const CURRENT_SCHEMA_VERSION: u32 = 2;
 const DEFAULT_MAXIMUM_BYTES: usize = 1_048_576;
 const MAXIMUM_SCHEMA_INTEGER: u64 = 2_147_483_647;
 const MAXIMUM_SCHEMA_BYTES: u64 = 1_099_511_627_776;
@@ -190,7 +192,7 @@ struct ToolDefinition {
     integrity_sha256: String,
     enabled: bool,
     required_capabilities: Vec<String>,
-    side_effect_class: String,
+    operation: OperationBinding,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -936,7 +938,7 @@ impl ApplyReceipt {
     }
 }
 
-/// Fail-closed version 1 configuration loader and local recovery manager.
+/// Fail-closed version 2 configuration loader and local recovery manager.
 #[derive(Clone, Debug)]
 pub struct ConfigurationManager {
     maximum_bytes: usize,
@@ -962,7 +964,7 @@ impl ConfigurationManager {
         Ok(Self { maximum_bytes })
     }
 
-    /// Loads and validates one complete version 1 configuration from bytes.
+    /// Loads and validates one complete version 2 configuration from bytes.
     pub fn load_bytes(&self, input: &[u8]) -> Result<LoadedConfiguration, ConfigurationError> {
         if input.len() > self.maximum_bytes {
             return Err(ConfigurationError::new(
@@ -989,7 +991,7 @@ impl ConfigurationManager {
         let configuration: AgentConfiguration = serde_json::from_value(value).map_err(|_| {
             ConfigurationError::new(
                 ErrorCode::ContractViolation,
-                "configuration does not match the closed version 1 contract",
+                "configuration does not match the closed version 2 contract",
             )
         })?;
         validate_configuration(&configuration)?;
@@ -1058,8 +1060,8 @@ impl ConfigurationManager {
                 "legacy configuration must be an object",
             )
         })?;
-        object.insert("schema_version".into(), Value::from(1));
-        let mut changes = vec!["/schema_version:0-to-1".to_owned()];
+        object.insert("schema_version".into(), Value::from(CURRENT_SCHEMA_VERSION));
+        let mut changes = vec!["/schema_version:0-to-2".to_owned()];
         for section in section_names() {
             let section_object = object
                 .get_mut(section)
@@ -1071,7 +1073,7 @@ impl ConfigurationManager {
                     )
                 })?;
             if section_object
-                .insert("schema_version".into(), Value::from(1))
+                .insert("schema_version".into(), Value::from(CURRENT_SCHEMA_VERSION))
                 .is_some()
             {
                 return Err(ConfigurationError::new(
@@ -1079,7 +1081,7 @@ impl ConfigurationManager {
                     "legacy section already contains a reserved schema version",
                 ));
             }
-            changes.push(format!("/{section}/schema_version:added-1"));
+            changes.push(format!("/{section}/schema_version:added-2"));
         }
         let core = object
             .get_mut("core")
@@ -1103,6 +1105,68 @@ impl ConfigurationManager {
             ));
         }
         changes.push("/core/profile:renamed-to-profile_id".to_owned());
+        let tools = object
+            .get_mut("tool")
+            .and_then(Value::as_object_mut)
+            .and_then(|tool| tool.get_mut("tools"))
+            .and_then(Value::as_array_mut)
+            .ok_or_else(|| {
+                ConfigurationError::new(
+                    ErrorCode::ContractViolation,
+                    "legacy tool configuration is invalid",
+                )
+            })?;
+        for (index, tool) in tools.iter_mut().enumerate() {
+            let tool = tool.as_object_mut().ok_or_else(|| {
+                ConfigurationError::new(
+                    ErrorCode::ContractViolation,
+                    "legacy tool definition is invalid",
+                )
+            })?;
+            if tool.contains_key("operation") {
+                return Err(ConfigurationError::new(
+                    ErrorCode::ContractViolation,
+                    "legacy tool operation mapping is ambiguous",
+                ));
+            }
+            let legacy_effect = tool
+                .remove("side_effect_class")
+                .and_then(|value| value.as_str().map(str::to_owned))
+                .ok_or_else(|| {
+                    ConfigurationError::new(
+                        ErrorCode::ContractViolation,
+                        "legacy tool side-effect class is missing or invalid",
+                    )
+                })?;
+            let capabilities = tool
+                .get("required_capabilities")
+                .and_then(Value::as_array)
+                .ok_or_else(|| {
+                    ConfigurationError::new(
+                        ErrorCode::ContractViolation,
+                        "legacy tool capability mapping is invalid",
+                    )
+                })?;
+            if legacy_effect != "read"
+                || capabilities.as_slice() != [Value::String("workspace.read".to_owned())]
+            {
+                return Err(ConfigurationError::new(
+                    ErrorCode::AuthorityBroadening,
+                    "legacy tool operation cannot be migrated without broadening authority",
+                ));
+            }
+            tool.insert(
+                "operation".to_owned(),
+                serde_json::json!({
+                    "taxonomy_version": 1,
+                    "operation": "workspace_read",
+                    "authority_class": "observe"
+                }),
+            );
+            changes.push(format!(
+                "/tool/tools/{index}/side_effect_class:mapped-to-operation-taxonomy-1"
+            ));
+        }
         let migrated = serde_json::to_vec(&value).map_err(|_| {
             ConfigurationError::new(
                 ErrorCode::ContractViolation,
@@ -1112,7 +1176,7 @@ impl ConfigurationManager {
         let configuration = self.load_bytes(&migrated)?;
         Ok(MigrationOutcome {
             source_version: 0,
-            target_version: 1,
+            target_version: CURRENT_SCHEMA_VERSION,
             changes,
             configuration,
         })
@@ -1555,8 +1619,10 @@ fn bind_configuration_result(
 }
 
 fn validate_configuration(value: &AgentConfiguration) -> Result<(), ConfigurationError> {
-    if value.schema_version != 1
-        || section_versions(value).iter().any(|version| *version != 1)
+    if value.schema_version != CURRENT_SCHEMA_VERSION
+        || section_versions(value)
+            .iter()
+            .any(|version| *version != CURRENT_SCHEMA_VERSION)
         || value.core.product_id != "agentmage"
         || value.core.startup_failure_policy != "fail-closed"
         || value.core.inheritance_mode != "restrict-only"
@@ -1676,8 +1742,6 @@ fn validate_configuration(value: &AgentConfiguration) -> Result<(), Configuratio
                 && capabilities
                     .iter()
                     .any(|capability| !allowed_capabilities.contains(capability)))
-            || !["none", "read", "write", "process", "network"]
-                .contains(&tool.side_effect_class.as_str())
         {
             return contract_error();
         }
@@ -1790,7 +1854,7 @@ fn validate_configuration(value: &AgentConfiguration) -> Result<(), Configuratio
 fn contract_error<T>() -> Result<T, ConfigurationError> {
     Err(ConfigurationError::new(
         ErrorCode::ContractViolation,
-        "configuration violates a version 1 safety invariant",
+        "configuration violates a version 2 safety invariant",
     ))
 }
 
@@ -1847,7 +1911,7 @@ fn tools_are_subset(parent: &ToolConfiguration, child: &ToolConfiguration) -> bo
                     && parent_tool.version == child_tool.version
                     && parent_tool.integrity_sha256 == child_tool.integrity_sha256
                     && parent_tool.required_capabilities == child_tool.required_capabilities
-                    && parent_tool.side_effect_class == child_tool.side_effect_class
+                    && parent_tool.operation == child_tool.operation
                     && (!child_tool.enabled || parent_tool.enabled)
             })
         })
@@ -2576,9 +2640,9 @@ mod tests {
             }
             "unsupported-version" => {
                 if schema == "agent-configuration" {
-                    value["schema_version"] = Value::from(2);
+                    value["schema_version"] = Value::from(CURRENT_SCHEMA_VERSION + 1);
                 } else {
-                    value[schema]["schema_version"] = Value::from(2);
+                    value[schema]["schema_version"] = Value::from(CURRENT_SCHEMA_VERSION + 1);
                 }
             }
             "ambiguous" => {
@@ -2614,11 +2678,11 @@ mod tests {
             ),
             (_, "unsupported-version" | "oversized") => (
                 "configuration-contract-violation",
-                "configuration violates a version 1 safety invariant",
+                "configuration violates a version 2 safety invariant",
             ),
             _ => (
                 "configuration-contract-violation",
-                "configuration does not match the closed version 1 contract",
+                "configuration does not match the closed version 2 contract",
             ),
         }
     }
@@ -2775,7 +2839,11 @@ mod tests {
                         "integrity_sha256": "2".repeat(64),
                         "enabled": false,
                         "required_capabilities": [],
-                        "side_effect_class": "none"
+                        "operation": {
+                            "taxonomy_version": 1,
+                            "operation": "workspace_read",
+                            "authority_class": "observe"
+                        }
                     }));
             }
             "/tool/tools/0/tool_id" => {
@@ -2797,9 +2865,12 @@ mod tests {
                 candidate["tool"]["tools"][0]["required_capabilities"] =
                     serde_json::json!(["workspace.read", "workspace.write"]);
             }
-            "/tool/tools/0/side_effect_class" => {
-                candidate["tool"]["tools"][0]["side_effect_class"] =
-                    Value::String("write".to_owned());
+            "/tool/tools/0/operation" => {
+                candidate["tool"]["tools"][0]["operation"] = serde_json::json!({
+                    "taxonomy_version": 1,
+                    "operation": "workspace_write",
+                    "authority_class": "local-write"
+                });
             }
             "/permission/default_effect" => {
                 candidate["permission"]["default_effect"] = Value::String("allow".to_owned());
@@ -2994,7 +3065,7 @@ mod tests {
                 .code(),
             "configuration-contract-violation"
         );
-        let duplicate = br#"{"schema_version":1,"schema_version":1}"#;
+        let duplicate = br#"{"schema_version":2,"schema_version":2}"#;
         assert_eq!(
             manager()
                 .load_bytes(duplicate)
@@ -3010,7 +3081,11 @@ mod tests {
                 .code(),
             "configuration-unsupported-version"
         );
-        let unsupported = mutate(fixture_value(), &["schema_version"], Value::from(2));
+        let unsupported = mutate(
+            fixture_value(),
+            &["schema_version"],
+            Value::from(CURRENT_SCHEMA_VERSION + 1),
+        );
         assert_eq!(
             manager()
                 .load_bytes(&unsupported)
@@ -3150,7 +3225,11 @@ mod tests {
                     "integrity_sha256": "0".repeat(64),
                     "enabled": false,
                     "required_capabilities": [],
-                    "side_effect_class": "none"
+                    "operation": {
+                        "taxonomy_version": 1,
+                        "operation": "workspace_read",
+                        "authority_class": "observe"
+                    }
                 }]),
             ),
             mutate(
@@ -3722,12 +3801,17 @@ mod tests {
         let core = legacy["core"].as_object_mut().expect("core must be object");
         let profile = core.remove("profile_id").expect("profile must exist");
         core.insert("profile".to_owned(), profile);
+        legacy["tool"]["tools"][0]
+            .as_object_mut()
+            .expect("legacy tool must be object")
+            .remove("operation");
+        legacy["tool"]["tools"][0]["side_effect_class"] = Value::String("read".to_owned());
         let input = serde_json::to_vec(&legacy).expect("legacy must serialize");
         let first = manager().migrate_v0(&input).expect("migration succeeds");
         let second = manager().migrate_v0(&input).expect("migration succeeds");
         assert_eq!(first.source_version(), 0);
-        assert_eq!(first.target_version(), 1);
-        assert_eq!(first.changes().len(), 13);
+        assert_eq!(first.target_version(), CURRENT_SCHEMA_VERSION);
+        assert_eq!(first.changes().len(), 14);
         assert_eq!(
             first.configuration().sha256(),
             second.configuration().sha256()
@@ -3747,15 +3831,18 @@ mod tests {
         let migrated = manager()
             .migrate_v0(MIGRATION_V0_PROFILE)
             .expect("published version zero fixture migrates");
-        let expected = manager()
-            .load_bytes(MIGRATION_V1_EXPECTED)
-            .expect("published version one fixture loads");
-        assert_eq!(migrated.configuration().sha256(), expected.sha256());
+        assert_eq!(migrated.changes().len(), 14);
         assert_eq!(
-            migrated.configuration().canonical_bytes(),
-            expected.canonical_bytes()
+            migrated.configuration().configuration.tool.tools[0].operation,
+            OperationBinding::new(agentmage_kernel_contracts::GrantOperation::WorkspaceRead)
         );
-        assert_eq!(migrated.changes().len(), 13);
+        assert_eq!(
+            manager()
+                .load_bytes(MIGRATION_V1_EXPECTED)
+                .expect_err("historical version 1 fixture is not current configuration")
+                .code(),
+            "configuration-unsupported-version"
+        );
 
         for (fixture, error_code) in [
             (
