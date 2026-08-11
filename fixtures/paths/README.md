@@ -5,6 +5,11 @@
 workspace content, or ambient paths. `v1/manifest.json` binds the corpus digest,
 class distribution, and expected results.
 
+`v1/display-link-corpus.json` contains synthetic `file:///` links and rendered
+line targets. The executable matrix feeds both forms to every current path
+authority boundary and requires rejection before grant issuance or filesystem
+observation.
+
 Case-collision candidates are accepted as distinct components by the shared
 contract and case-sensitive Fedora filesystem. They exist to prove that the
 shared layer does not silently fold their spelling. They are not evidence for
