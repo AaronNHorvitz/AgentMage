@@ -1,0 +1,18 @@
+{
+  "byte_length": 209469,
+  "corpus_id": "agentmage-canonical-paths-v1",
+  "coverage": {
+    "accepted_control_count": 128,
+    "admitted_escape_count": 0,
+    "case_class_count": 10,
+    "case_count": 640,
+    "cases_per_class": 64,
+    "invalid_encoding_count": 64,
+    "rejected_escape_attempt_count": 512
+  },
+  "data_classification": "public-synthetic",
+  "macos_collision_execution_status": "blocked-macos",
+  "media_type": "application/json",
+  "schema_version": 1,
+  "sha256": "75fb2f2b235fee715cd41d9c3a562321744868b8594e48fa8289cba0d5d869ea"
+}
