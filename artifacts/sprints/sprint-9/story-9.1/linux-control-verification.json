@@ -144,7 +144,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "93e24cd179ca78faac287ea6639ca466b9c776d0",
+  "source_revision": "617731b671df3378652f771cb94773080d155298",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -164,15 +164,15 @@
     },
     {
       "path": "platforms/linux/src/ipc.rs",
-      "sha256": "2fdbb37733ba7a589da37c3ff5be47eeaa94e878465d6951730b6db3e09195cf"
+      "sha256": "ee0714ed262b8222488545792ddf583e803861b376754a9e97b7cb70530b667d"
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "924d4787ecc97e2f9d6afccc91f659ebd99e8202fb0745e3fdbecb1a59fc48b9"
+      "sha256": "669ad2faa862b71e171819ced145e31ac606c293787946e42981f82462ad0ca5"
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "094c37693424bb7a290c4f8e30df2c5596dcfffa8175df32878eeb461c592f13"
+      "sha256": "45cf7b8995fb0bacf6d7dd43ef0c320cf93d827e05d1b2026c9d688df17fab3c"
     },
     {
       "path": "platforms/linux/src/secret_service.rs",
@@ -180,7 +180,7 @@
     },
     {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "26d56a37ca80c62add605380315f4d2841b1848c31ca4089e8c01842d1e8c490"
+      "sha256": "64c8a08d2ce47a7330d8a34bf593ab9afe838815f9cc2e911ef02f7faecff0d0"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",

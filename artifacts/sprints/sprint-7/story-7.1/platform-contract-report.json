@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "9826b4aa0f4038b7cd3aede41091f7dc70ad6c29",
+  "reference_revision": "617731b671df3378652f771cb94773080d155298",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -61,7 +61,7 @@
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "157054cfc47546ac9707bf12f30d0b8f7dcd477faab86e978c146ece4199f1db"
+      "sha256": "dc463ed156650593f2b8f51692d82262c3849d271588561fe378df0a56f28033"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
@@ -69,7 +69,7 @@
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "a1c9f68029d945c540020047dc092e1ea1d3da2b0d6281fd99cd33602748bced"
+      "sha256": "fac731b4c971dace8cff2391f5643ff3456943118942df83691c6be80239cc06"
     },
     {
       "path": "kernel/engine/src/platform_startup.rs",

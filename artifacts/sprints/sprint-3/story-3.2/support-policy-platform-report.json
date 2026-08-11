@@ -89,7 +89,7 @@
       {
         "bytes": 13424,
         "path": "scripts/vulnerability_support_platform_evidence.py",
-        "sha256": "7b73c9846f00711185d1cc54b536f2640a20150df7a9f7e7940c86ede486574c"
+        "sha256": "457be99abd66dc98e308530cd878d9aafafd51baa851267bf4cd8b3366d298d2"
       },
       {
         "bytes": 2788,
@@ -99,14 +99,14 @@
     ],
     "implementation_artifacts": [
       {
-        "bytes": 2156,
+        "bytes": 2760,
         "path": ".gitignore",
-        "sha256": "5311ee0633f96df7ccfcac6cc7cee631a7c0377360c67f059925fed38dae4029"
+        "sha256": "7cf70b61cdb44ca1663c270390643bedb407dfc6644335e62a761ab40d7587fc"
       },
       {
         "bytes": 2547,
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
-        "sha256": "c0c2f075d003dee24bd2b5bd26a2d2d47247d8aa8a54c6677ff6160a3e7286a8"
+        "sha256": "8ef43599dffd2e206b57f837e03f08837c9650e4db29d7bbaa664d03660fb3e7"
       },
       {
         "bytes": 10934,
@@ -139,8 +139,8 @@
         "sha256": "0c7749fee7750015eaa2b24f9cb5f8b11a1dbeb294b282d5df9fdf5511a78652"
       }
     ],
-    "revision": "27d8cdd5581e5645e317277c33f1370b2ca2c540",
-    "tree": "c4585e56b8cd1440460f786fd0a26e213d5cb96c"
+    "revision": "617731b671df3378652f771cb94773080d155298",
+    "tree": "05b886f34170210f787e3fc150520f65ba8ea747"
   },
   "status": "blocked-macos",
   "story_id": "3.2",

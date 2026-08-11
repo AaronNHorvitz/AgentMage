@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "bytes": 65272,
+      "bytes": 80205,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
     },
     {
       "bytes": 5083,
@@ -66,39 +66,39 @@
       "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
     },
     {
-      "bytes": 45606,
+      "bytes": 46814,
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "9e51388195c3c16f3528d0ef57270ea0df460d8d517081d119d9dcbff5c9655f"
+      "sha256": "669ad2faa862b71e171819ced145e31ac606c293787946e42981f82462ad0ca5"
     },
     {
       "bytes": 2426,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "9af3d24c91da0e49157f79aa46824bd374dcbd107786f8e45e3060aebba29a52"
+      "sha256": "0e1e6139f3d49277052cb25a19f0a90658cba3e2a8b3263f57beccd3ace32a8d"
     },
     {
       "bytes": 2310,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "sha256": "2c0d5f2bef96e21e106d1f1ab02b2d93af8280658432bff468ee6dc1ac0cb12b"
+      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627"
     },
     {
       "bytes": 2487,
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "c7ab1099758a26f7cc46d7b11bfb11218fa0cf4ea75a0fef9cc949181dacc5b7"
+      "sha256": "aa0703950cfe6c8db17df1e1af2c13f6e42abfb03ef2156f0c63c03718cd19c7"
     },
     {
       "bytes": 3096,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "87a320d6afa64e666f217faa0c862c69e3a34685c04f1ccd6394f268165b512b"
+      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521"
     },
     {
       "bytes": 2891,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "9e1842808c46f803a975bcae6864dd87ec750de315ef52d40535881057c734b2"
+      "sha256": "50d6a081d4f0a9408c2a1979638e3645cb2495b8dace89626a88981013b4d2a1"
     },
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "7858fed75782bc400a82c25b87dc0c5e6617b8a224270bae3494033706e10748"
+      "sha256": "c0ae668bbb40d6d5654faf3fbe684b13ea03b8f35dc7a478646d581c422db81d"
     },
     {
       "bytes": 13204,
@@ -230,7 +230,7 @@
     "status": "partial-blocked-platform-and-privileged-tests"
   },
   "schema_version": 1,
-  "source_revision": "4efccff6ea6808bc45431200c5c6174fa26031d9",
+  "source_revision": "617731b671df3378652f771cb94773080d155298",
   "status": "pass-shared-fedora-security-mapping",
   "story_id": "6.1",
   "summary": {
