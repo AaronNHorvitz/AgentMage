@@ -56,14 +56,14 @@
       "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
     },
     {
-      "bytes": 42633,
+      "bytes": 44192,
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "c6322c6183c98d6c5124d9f3dffb09a81b2b008af977439ef9322b0f8710aa94"
+      "sha256": "38105b49a8a6c9d8607931f3a92a504d465cbd17b975c9dc8e834dda4d56920d"
     },
     {
       "bytes": 2426,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+      "sha256": "5ca732fc54609b05e725d1fa1e9351fc1d1bd91b1745385deff8c58d9a9608b8"
     },
     {
       "bytes": 2310,
@@ -76,29 +76,29 @@
       "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
     },
     {
-      "bytes": 2923,
+      "bytes": 3096,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+      "sha256": "07aa86d83c97a9088b50758a74f33eda25e3474ce346b7f7ad32266ea696357f"
     },
     {
-      "bytes": 4013,
+      "bytes": 3953,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "2c351a5d1bc4795300069b3c9b84c4ac6e4e61341063f8b766ecf5dcb022bb8b"
+      "sha256": "751caf81fbc7a4ddb67cc2b54e737fd30071c5b6159a38ef4582ac9ce8391687"
     },
     {
-      "bytes": 12572,
+      "bytes": 12512,
       "path": "scripts/path_boundary_review.py",
-      "sha256": "6c869327a67aa5b0b29a752ef5e2b58a97e497f40173ef5c35875a043fb55269"
+      "sha256": "4a682f7fe4e924b45bcea502af6fb53aae009c6968ef47353782fc41d1295b14"
     },
     {
-      "bytes": 14518,
+      "bytes": 14525,
       "path": "scripts/story_6_1_security_evidence.py",
-      "sha256": "15a51bcdfdf1704cd335569db336a7618235d358f6e99228dc8a7eba962e3e7d"
+      "sha256": "45b48154dbcab7a265e3104b0efc2c1952cbc1d3c82a764a69762120f596c574"
     },
     {
       "bytes": 2857,
       "path": "tests/test_path_boundary_review.py",
-      "sha256": "c20889d0f321aa2b6836197388a0bd7a9062cd4d861448c3da0a3ebe37439581"
+      "sha256": "11035dc64df69aaa461f50ed4dccef522d060608000b0fed1dd1f66712894dba"
     },
     {
       "bytes": 2187,
@@ -151,7 +151,7 @@
         "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json"
       ],
       "product_requirement_status": "not-complete",
-      "remaining": "A privileged isolated bind-mount swap and all macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted.",
+      "remaining": "All macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted; the equivalent Ubuntu execution is also pending.",
       "requirement_id": "SR-ACC-005",
       "story_contribution": "partial-story-evidence"
     },
@@ -202,7 +202,7 @@
     "status": "partial-blocked-platform-and-privileged-tests"
   },
   "schema_version": 1,
-  "source_revision": "d87e722d8d36452a04cf734724a593312a369df8",
+  "source_revision": "b75e79cc3a19112bc4134c90278de66193a10c43",
   "status": "pass-shared-fedora-security-mapping",
   "story_id": "6.1",
   "summary": {
