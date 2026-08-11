@@ -85,6 +85,8 @@
     "evidence:story4.1-gate:check": "python3 scripts/story_4_1_gate.py",
     "evidence:sprint4-gate:build": "python3 scripts/sprint_4_gate.py --write",
     "evidence:sprint4-gate:check": "python3 scripts/sprint_4_gate.py",
+    "evidence:story5.1-boundary-review:build": "python3 scripts/grant_boundary_review.py --write",
+    "evidence:story5.1-boundary-review:check": "python3 scripts/grant_boundary_review.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
