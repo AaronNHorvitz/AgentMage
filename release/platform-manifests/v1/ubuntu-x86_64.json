@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "record_type": "platform-release-manifest",
+  "manifest_id": "agentmage-ubuntu-x86_64-v1-fixture",
+  "status": "contract-fixture",
+  "platform": {
+    "family": "ubuntu",
+    "architecture": "x86_64",
+    "supported_distributions": [
+      {
+        "id": "ubuntu",
+        "version": "26.04"
+      }
+    ],
+    "os_build": {
+      "id": "ubuntu-26.04-x86_64",
+      "sha256": "f9a3dc31b157a0f666e5de62133d75b4b9ee5d1d7f561786a56abc42c8194b55"
+    }
+  },
+  "adapter_api_version": 1,
+  "runtime_identities": {
+    "product_toolchain": {
+      "id": "rust-1.95.0-59807616e1fa2540724bfbac14d7976d7e4a3860",
+      "sha256": "307599528f588cfd60708f3f84da0646de6c124fedf39f22af8230991c8687d2"
+    },
+    "vscode": {
+      "version": "1.132.0",
+      "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+      "sha256": "dad3a5b680537640c49e47040bb5eac7c3ac7e7f59a5b9b689af8eae3aba439a"
+    },
+    "package": {
+      "format": "deb",
+      "sha256": "b3da29b076ef1bf34966e68793e959ba717ea4f91d9c06bbd6497e8974e9318f",
+      "identity_class": "synthetic-contract-fixture"
+    }
+  },
+  "capabilities": [
+    {
+      "capability": "workspace-authorization",
+      "mechanism": "user-selected-directory-descriptor",
+      "sha256": "f78f5cf362f9d8b7ff88e53385a432f83f22abb1f5d0de6fe94fa1399796f97a"
+    },
+    {
+      "capability": "secure-path-resolution",
+      "mechanism": "linux-openat2-beneath-no-symlinks-no-magiclinks-no-xdev",
+      "sha256": "1bf518c0040fa05aea0e551b9086680be7629798a88752b0924c3553e70e87a9"
+    },
+    {
+      "capability": "tool-confinement",
+      "mechanism": "bubblewrap-seccomp-read-only-workspace",
+      "sha256": "1ebff483cf5975d55553ad88fb3eee867aa2b656c622c042cca34887e3856fe4"
+    },
+    {
+      "capability": "secret-storage",
+      "mechanism": "linux-secret-service",
+      "sha256": "456796a3dd695e2c98e147eba4141bc9e1b660b23b571d55e92b9016b0080142"
+    },
+    {
+      "capability": "process-limits",
+      "mechanism": "systemd-user-cgroup-v2",
+      "sha256": "1efc16a205735892bc51f7c3dee0879edbe75f92396947fcec67af53407a5ea3"
+    },
+    {
+      "capability": "local-inference",
+      "mechanism": "native-llama-cpp",
+      "sha256": "779e0cc0bed562ec856993801804ee714aceb37542c0fc30396f7e440d965f14"
+    },
+    {
+      "capability": "model-installation",
+      "mechanism": "isolated-verified-model-installer",
+      "sha256": "b9ffe453b7efb535e4ffb9408e7ec693d7a7be5f28ad73defc536bb15e3f1889"
+    },
+    {
+      "capability": "packaging",
+      "mechanism": "verified-deb-package",
+      "sha256": "b3da29b076ef1bf34966e68793e959ba717ea4f91d9c06bbd6497e8974e9318f"
+    },
+    {
+      "capability": "updates",
+      "mechanism": "signed-manual-atomic-update-and-rollback",
+      "sha256": "f36752fa7963c4c89b3392c2316f1bffe8319f62e7442792d3fc1b3f7954000c"
+    },
+    {
+      "capability": "network-isolation",
+      "mechanism": "private-network-namespace-with-no-connectivity",
+      "sha256": "5e7ed43808afd066b1e6bd933ac93b2d33f7f5205e64e574cb2b36706ef7f156"
+    }
+  ],
+  "dependency_classes": {
+    "maintainer_release": [
+      "cargo",
+      "debuild",
+      "nodejs",
+      "npm",
+      "rust-1.95.0",
+      "signing-identity"
+    ],
+    "end_user_runtime": [
+      "bubblewrap",
+      "linux-secret-service",
+      "native-llama-cpp",
+      "systemd-user-session",
+      "vscode-stable"
+    ],
+    "excluded_end_user": [
+      "cargo",
+      "compiler-toolchain",
+      "nodejs",
+      "npm",
+      "python",
+      "release-signing-credentials"
+    ]
+  },
+  "credential_values_present": false,
+  "private_environment_values_present": false,
+  "macos_evidence_substituted": false,
+  "release_claim": "none"
+}
