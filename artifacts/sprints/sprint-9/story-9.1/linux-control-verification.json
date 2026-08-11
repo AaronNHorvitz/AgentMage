@@ -32,6 +32,7 @@
     "privileges": "no-new-privileges-private-devices-cap-drop-all",
     "scratch": "private-tmpfs-16777216-bytes",
     "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
+    "secret_service": "fixed-attributes-pipe-only-zeroized-bounded-watchdog-client",
     "workspace": "single-authorized-root-read-only",
     "workspace_transfer": "systemd-openfile-held-descriptors-to-bwrap-ro-bind-fd"
   },
@@ -65,7 +66,7 @@
   ],
   "limitations": [
     "Ubuntu clean-environment sandbox and package execution remain pending.",
-    "Secret Service, inference runtime, package lifecycle, and adapter startup probes remain pending.",
+    "Inference runtime, package lifecycle, and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted."
   ],
   "macos_evidence_substituted": false,
@@ -119,23 +120,47 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "5278d9bfb943dc90d5042a85da5838e225249483",
+  "secret_service_live_tests": [
+    {
+      "status": "pass",
+      "test": "live_service_probe_returns_only_a_content_free_receipt"
+    },
+    {
+      "status": "pass",
+      "test": "live_service_round_trip_is_exact_and_cleanup_is_verified"
+    }
+  ],
+  "secret_service_tests": [
+    {
+      "status": "pass",
+      "test": "key_debug_and_errors_never_disclose_candidate_content"
+    },
+    {
+      "status": "pass",
+      "test": "keys_values_and_manifests_are_bounded_and_redacted"
+    },
+    {
+      "status": "pass",
+      "test": "sensitive_output_is_bounded_without_a_content_digest"
+    }
+  ],
+  "source_revision": "93e24cd179ca78faac287ea6639ca466b9c776d0",
   "sources": [
     {
       "path": "Cargo.lock",
-      "sha256": "1576f838ef19085d21b12bb20aa5a8b24e90a47645e5d87025d20a50d405b913"
+      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "c3ca4816fa53bf5fb0dda1c29d35149baf41003c31e094b664773333f47ad590"
+      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "59feecd4ad271286c0d70ea0b0c15a9cc15e6cd487ef14c640c502cc8e06b780"
+      "sha256": "6e38349678266d33285ed33bd0b0c51c6c82cab2009c15f5ba0aecd9eb8374d4"
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "1f71f0fba3a624cfcc480b9083f6b2da9c90ac1039dcb2fdf06502c6d55d1fc3"
+      "sha256": "1cf6db916995a473297a4bfb78492d073240c2ccaa6eca6c52618264b02eb4d2"
     },
     {
       "path": "platforms/linux/src/ipc.rs",
@@ -143,23 +168,28 @@
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "d300e5049bfb0e0d6d1fed962182cacfaf2eec561922922a99f3d2138458da57"
+      "sha256": "924d4787ecc97e2f9d6afccc91f659ebd99e8202fb0745e3fdbecb1a59fc48b9"
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
       "sha256": "094c37693424bb7a290c4f8e30df2c5596dcfffa8175df32878eeb461c592f13"
     },
     {
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "b439ef053383f737f1e9e92246564e9ab8982d597947e6cffc2e18ff32314142"
+    },
+    {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "55baf96bee596c5ae482366b59f62259556b7c5796b24f1723e66b623191fd41"
+      "sha256": "26d56a37ca80c62add605380315f4d2841b1848c31ca4089e8c01842d1e8c490"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",
-      "sha256": "1ede7000c6852f7c199ca03199f51088e9fe201a9736c3538077098cbce322aa"
+      "sha256": "225d36da4e0b39b3fa4ccdd2a3fac0398f7c85cf18cb99263211570f9e082047"
     }
   ],
   "status": "pass-fedora-only",
   "task_ids": [
+    "9.1.1.5",
     "9.1.2.2",
     "9.1.2.3",
     "9.1.3.1",
@@ -177,6 +207,14 @@
       "path_class": "root-owned-usr-bin",
       "sha256": "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc",
       "version": "bubblewrap 0.11.0"
+    },
+    {
+      "group_or_world_writable": false,
+      "id": "secret-tool",
+      "owner_uid": 0,
+      "path_class": "root-owned-usr-bin",
+      "sha256": "1d1938a7080f669f6b309f6de17386de793386a05436dfa6fb9428b0081e027a",
+      "version": "libsecret 0.21.7-10.fc44.x86_64"
     },
     {
       "group_or_world_writable": false,

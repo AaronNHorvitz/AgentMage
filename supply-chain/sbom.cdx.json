@@ -130,7 +130,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d2ce85153b1e28ee24626e4eb2020ec48ad89b79b1e7ee793cada50ef3effb54"
+          "content": "9d6d4442f3276c2b3480b9f163323a5bd8e8eb16a7062e57a4e99d51871e701d"
         }
       ],
       "licenses": [
@@ -13012,7 +13012,8 @@
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:rustix@1.1.4",
         "cargo:seccompiler@0.5.0",
-        "cargo:sha2@0.11.0"
+        "cargo:sha2@0.11.0",
+        "cargo:zeroize@1.9.0"
       ],
       "ref": "cargo:agentmage-platform-linux@0.0.0"
     },
@@ -15601,7 +15602,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:6a98fec8-edba-56f3-ad55-433dcf7c4795",
+  "serialNumber": "urn:uuid:da798cb6-ee82-58b1-8d4d-fa01a5732810",
   "specVersion": "1.6",
   "version": 1
 }

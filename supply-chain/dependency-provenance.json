@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "d2ce85153b1e28ee24626e4eb2020ec48ad89b79b1e7ee793cada50ef3effb54"
+          "content": "9d6d4442f3276c2b3480b9f163323a5bd8e8eb16a7062e57a4e99d51871e701d"
         }
       ],
       "integrity": null,
@@ -8462,7 +8462,8 @@
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:rustix@1.1.4",
         "cargo:seccompiler@0.5.0",
-        "cargo:sha2@0.11.0"
+        "cargo:sha2@0.11.0",
+        "cargo:zeroize@1.9.0"
       ]
     },
     {
@@ -11031,8 +11032,8 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "1576f838ef19085d21b12bb20aa5a8b24e90a47645e5d87025d20a50d405b913",
-    "Cargo.toml": "c3ca4816fa53bf5fb0dda1c29d35149baf41003c31e094b664773333f47ad590",
+    "Cargo.lock": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8",
+    "Cargo.toml": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "7f7405a0c61d323df3bb663f0e007037f943457e166199e2feb6c203f6b56761",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",

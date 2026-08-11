@@ -137,9 +137,21 @@
         "manifest": "platforms/linux/Cargo.toml",
         "source": "platform-linux",
         "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.9.0"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "zeroize"
       }
     ],
-    "direct_cargo_count": 10,
+    "direct_cargo_count": 11,
     "locked_external_cargo_package_count": 41,
     "swift_external": [],
     "vscode_development": [
@@ -288,11 +300,11 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "1576f838ef19085d21b12bb20aa5a8b24e90a47645e5d87025d20a50d405b913"
+      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "c3ca4816fa53bf5fb0dda1c29d35149baf41003c31e094b664773333f47ad590"
+      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -308,7 +320,7 @@
     },
     {
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "238e1397d7f1b6e6f494197c1c37dc85f12b0664eab52a2e34f8f3ebbb2999ff"
+      "sha256": "b95d95c2b1947fe5807831f51d7c017aa4bd18daabcdfa68edf538def054a01c"
     },
     {
       "path": "kernel/contracts/Cargo.toml",
@@ -324,7 +336,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "1f71f0fba3a624cfcc480b9083f6b2da9c90ac1039dcb2fdf06502c6d55d1fc3"
+      "sha256": "1cf6db916995a473297a4bfb78492d073240c2ccaa6eca6c52618264b02eb4d2"
     },
     {
       "path": "platforms/macos/Package.resolved",
@@ -355,7 +367,7 @@
       "sha256": "21cbcb1e09210d62ae9d10b814e6fe28efd6ef72cfda067d19b52446ccc3a6f6"
     }
   ],
-  "source_revision": "5278d9bfb943dc90d5042a85da5838e225249483",
+  "source_revision": "93e24cd179ca78faac287ea6639ca466b9c776d0",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }
