@@ -57,11 +57,14 @@ verify each edge before its status can change.
 
 ## External Dependencies
 
-The Cargo manifests directly use `serde` and `serde_json` in contracts, and
-`ed25519-dalek`, `serde`, `serde_json`, and `sha2` in the kernel engine. Their
-exact resolved versions and checksums come from `Cargo.lock`. The VS Code shell
-has no runtime npm package dependency; its seven npm packages are development
-tooling. The Swift package has no external package dependency.
+The Cargo manifests directly use `serde` and `serde_json` in contracts;
+`ed25519-dalek`, `serde`, `serde_json`, and `sha2` in the kernel engine; and
+`rustix`, `seccompiler`, and `sha2` in the Linux adapter. `seccompiler` is a
+pure-Rust classic-BPF policy compiler used to produce the fixed Bubblewrap
+worker filter; it does not add a native `libseccomp` link. Exact resolved
+versions and checksums come from `Cargo.lock`. The VS Code shell has no runtime
+npm package dependency; its seven npm packages are development tooling. The
+Swift package has no external package dependency.
 
 This architecture report identifies edges only. Package provenance,
 vulnerability disposition, license review, and artifact integrity remain owned
