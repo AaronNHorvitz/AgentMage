@@ -1,0 +1,217 @@
+{
+  "artifacts": [
+    {
+      "bytes": 65272,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+    },
+    {
+      "bytes": 5083,
+      "path": "docs/architecture/path-authority-contract.md",
+      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+    },
+    {
+      "bytes": 837,
+      "path": "fixtures/paths/README.md",
+      "sha256": "7542074fef58e4e0b35e11ee4db9f4d9d7a4d6c1a079455df0adaa3601d0cef8"
+    },
+    {
+      "bytes": 209469,
+      "path": "fixtures/paths/v1/corpus.json",
+      "sha256": "75fb2f2b235fee715cd41d9c3a562321744868b8594e48fa8289cba0d5d869ea"
+    },
+    {
+      "bytes": 555,
+      "path": "fixtures/paths/v1/manifest.json",
+      "sha256": "af735922f5d25b5936533d5b0da0f7b5e77b5d428bdc27c8244d3eb18921010d"
+    },
+    {
+      "bytes": 25012,
+      "path": "fixtures/paths/v1/display-link-corpus.json",
+      "sha256": "0c1dc48adb718e01c8003ebf4de464854caa4af5f57d219c69ef5e240553a29b"
+    },
+    {
+      "bytes": 14868,
+      "path": "kernel/contracts/src/path.rs",
+      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+    },
+    {
+      "bytes": 7260,
+      "path": "kernel/contracts/src/display_link.rs",
+      "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
+    },
+    {
+      "bytes": 16352,
+      "path": "kernel/contracts/src/platform_path.rs",
+      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62"
+    },
+    {
+      "bytes": 4149,
+      "path": "kernel/contracts/tests/path_corpus.rs",
+      "sha256": "11e4ef3977d46ff21b767cc7bdac8022c8ccda7e088673af9090a9580523cbca"
+    },
+    {
+      "bytes": 5192,
+      "path": "kernel/engine/tests/display_link_authority.rs",
+      "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
+    },
+    {
+      "bytes": 42633,
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "c6322c6183c98d6c5124d9f3dffb09a81b2b008af977439ef9322b0f8710aa94"
+    },
+    {
+      "bytes": 2426,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+      "sha256": "f5cf5fcb79eee69f47cc210250904305a17d8abed0ff4bb33f089a0754b21a96"
+    },
+    {
+      "bytes": 2310,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+      "sha256": "02fb36011b3e7098a3e29df6d0a3ac7483bf4637063c0d55ce00779deb7c1c48"
+    },
+    {
+      "bytes": 2487,
+      "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
+      "sha256": "aafd4a3e93a30fb7a8eb8a78086fe54958d575f9dd35004811166cb0e5db39d6"
+    },
+    {
+      "bytes": 2923,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "sha256": "2cd28b00fcc47e520f7d4322b5f464160c322fc611c2d58121eaf65b47a9fee9"
+    },
+    {
+      "bytes": 4013,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+      "sha256": "2c351a5d1bc4795300069b3c9b84c4ac6e4e61341063f8b766ecf5dcb022bb8b"
+    },
+    {
+      "bytes": 12572,
+      "path": "scripts/path_boundary_review.py",
+      "sha256": "6c869327a67aa5b0b29a752ef5e2b58a97e497f40173ef5c35875a043fb55269"
+    },
+    {
+      "bytes": 14518,
+      "path": "scripts/story_6_1_security_evidence.py",
+      "sha256": "15a51bcdfdf1704cd335569db336a7618235d358f6e99228dc8a7eba962e3e7d"
+    },
+    {
+      "bytes": 2857,
+      "path": "tests/test_path_boundary_review.py",
+      "sha256": "c20889d0f321aa2b6836197388a0bd7a9062cd4d861448c3da0a3ebe37439581"
+    },
+    {
+      "bytes": 2187,
+      "path": "tests/test_story_6_1_security_evidence.py",
+      "sha256": "3c975bc2a8cb8ff10b3828686d4b2cf6abcd9c593b8c39b88ffa18ce5fc0ab79"
+    }
+  ],
+  "external_human_review_status": "not-performed",
+  "fuzzing_claim": "generated-fixed-corpus-not-fuzzing",
+  "independent_review_type": "independent-automated-boundary-review",
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "network_used": false,
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The shared adapter accepts only canonical WorkspacePath values and the Fedora adapter resolves beneath one held root with strict openat2 flags, held descriptors, mount/object identity, and exact preimages.",
+      "evidence": [
+        "kernel/contracts/src/platform_path.rs",
+        "platforms/linux/src/lib.rs",
+        "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Public user workspace authorization, macOS security-scoped bookmarks and aliases, real case and Unicode collision behavior, Ubuntu execution, and privileged mount-swap execution remain open.",
+      "requirement_id": "SR-PLT-004",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "WorkspacePath contains only one validated workspace identity and bounded canonical relative components. The typed corpus rejects 512 escape-shaped cases and all 1,280 display-link authority replays before observation.",
+      "evidence": [
+        "kernel/contracts/src/path.rs",
+        "fixtures/paths/v1/corpus.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Platform collection collision checks and the complete cross-platform integration suite must prove the same result through every real tool boundary.",
+      "requirement_id": "SR-ACC-004",
+      "story_contribution": "demonstrated-shared-parser-scope"
+    },
+    {
+      "demonstrated": "Fedora holds root and object descriptors across check and use, enforces no-follow and no-cross-mount resolution, rejects hard links, checks identity/preimages, and records zero out-of-root access across unprivileged race scenarios.",
+      "evidence": [
+        "kernel/contracts/src/platform_path.rs",
+        "platforms/linux/src/lib.rs",
+        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "A privileged isolated bind-mount swap and all macOS alias, stale-bookmark, mount-change, case, and Unicode race cases remain unexecuted.",
+      "requirement_id": "SR-ACC-005",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "The current Linux adapter has no public ambient-path authorization constructor and strict resolution cannot traverse outside its held root through tested symlink and replacement attacks.",
+      "evidence": [
+        "docs/architecture/path-authority-contract.md",
+        "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The running product must add explicit prohibited-root canaries for home, credentials, browsers, SSH, cloud sync, clipboard, and adjacent repositories across every process and model context path.",
+      "requirement_id": "SR-ACC-006",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "demonstrated": "A deterministic 640-case fixed corpus exercises constructor and deserializer boundary classes, including malformed UTF-8, with zero admitted escape.",
+      "evidence": [
+        "fixtures/paths/v1/corpus.json",
+        "kernel/contracts/tests/path_corpus.rs",
+        "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "This is not coverage-guided fuzzing. Pinned fuzz duration, coverage, sanitizer, crash, minimization, and regression-corpus evidence remains required.",
+      "requirement_id": "SR-TST-002",
+      "story_contribution": "generated-corpus-only"
+    },
+    {
+      "demonstrated": "Malformed, hostile, ambiguous, encoded, stale-identity, and concurrent replacement inputs produce bounded rejection or a continuously held safe object in the shared and Fedora scopes.",
+      "evidence": [
+        "fixtures/paths/v1/corpus.json",
+        "fixtures/paths/v1/display-link-corpus.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+        "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Oversized and conflicting classes must be completed across all product parsers, adapters, processes, and supported platforms with receipts and resource bounds.",
+      "requirement_id": "SR-TST-004",
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "reviewer_protocol": {
+    "evidence": [
+      "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+      "artifacts/sprints/sprint-6/story-6.1/path-race-report.json"
+    ],
+    "protocol_id": "RV-04",
+    "status": "partial-blocked-platform-and-privileged-tests"
+  },
+  "schema_version": 1,
+  "source_revision": "d87e722d8d36452a04cf734724a593312a369df8",
+  "status": "pass-shared-fedora-security-mapping",
+  "story_id": "6.1",
+  "summary": {
+    "demonstrated_shared_scope_count": 1,
+    "mapped_requirement_count": 6,
+    "partial_or_generated_scope_count": 5,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 21,
+    "story_gate_complete": false
+  },
+  "task_id": "6.1.3.5"
+}
