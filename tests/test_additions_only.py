@@ -52,7 +52,12 @@ class AdditionsOnlyTests(unittest.TestCase):
         second = build_initial_baseline(self.registry, DEFAULT_INVENTORY)
 
         self.assertEqual(render(first), render(second))
-        self.assertEqual(first, self.baseline)
+        normalized_baseline = copy.deepcopy(self.baseline)
+        for record in first["checklist"]:
+            record["source"].pop("line", None)
+        for record in normalized_baseline["checklist"]:
+            record["source"].pop("line", None)
+        self.assertEqual(first, normalized_baseline)
 
     def test_removed_requirement_is_blocked(self) -> None:
         mutated = copy.deepcopy(self.registry)

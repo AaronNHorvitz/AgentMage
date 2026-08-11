@@ -27,7 +27,7 @@ class PolicyExpectationTests(unittest.TestCase):
         self.assertEqual(registry["schema_version"], 1)
         self.assertEqual(registry["counts"]["by_kind"], EXPECTED_COUNTS)
         self.assertEqual(registry["counts"]["total"], 74)
-        self.assertEqual(len(registry["expectations"]), 73)
+        self.assertEqual(len(registry["expectations"]), 74)
         self.assertEqual(
             [source["document"] for source in registry["sources"]],
             ["PRD.md", "Agent-Scaffolding-Inventory.md"],
@@ -36,7 +36,7 @@ class PolicyExpectationTests(unittest.TestCase):
             self.assertRegex(source["sha256"], r"^[a-f0-9]{64}$")
         self.assertEqual(
             len({record["id"] for record in registry["expectations"]}),
-            73,
+            74,
         )
 
     def test_every_expectation_is_source_pinned_and_executable(self) -> None:
