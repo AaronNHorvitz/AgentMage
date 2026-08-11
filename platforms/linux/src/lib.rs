@@ -2,11 +2,17 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod inventory;
 mod ipc;
 mod sandbox;
 mod secret_service;
 mod strict_local;
 
+pub use inventory::{
+    LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget, LinuxSessionInventory,
+    LinuxSessionInventoryCollector, LinuxSessionProcessObservation, LinuxSocketObservation,
+    LinuxSocketProtocol, LinuxSocketState, LinuxWritableObservation, LinuxWritableTargetClass,
+};
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
     LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,

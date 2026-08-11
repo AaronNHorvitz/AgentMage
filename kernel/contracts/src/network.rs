@@ -48,6 +48,8 @@ pub enum LocalTransport {
 )]
 #[serde(rename_all = "snake_case")]
 pub enum NetworkDestinationClass {
+    /// Local Unix-domain endpoint without a separate authentication result.
+    LocalSocket,
     /// Authenticated private Unix-domain endpoint.
     AuthenticatedLocalSocket,
     /// IPv4 or IPv6 loopback.

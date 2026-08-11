@@ -43,6 +43,20 @@ The kernel ledger is append-only and bounded to 4,096 records per in-memory inst
 
 It stores no hostname, IP address, Unix-socket path, payload, prompt, repository content, credential, or environment value. Capacity exhaustion, sequence overflow, and backward time are explicit errors. A production enforcement boundary must treat inability to record an attempted connection as a blocking failure.
 
+## Linux Session Inventory
+
+The Linux adapter can snapshot an explicit, bounded PID set. It records each attributed component's PID, parent PID, real UID, and executable SHA-256 identity. It inventories every socket descriptor found for those processes and joins socket inodes to the process network namespace's TCP, UDP, IPv6, and Unix tables. Unsupported socket families remain visible as `other` with an unknown destination rather than being dropped.
+
+Internet addresses are immediately reduced to closed destination classes; only ports are retained. Unix endpoint names and writable-descriptor targets are replaced with SHA-256 digests. The collector does not read command lines, environment values, file contents, prompts, repository content, credentials, packet payloads, or socket payloads. Descriptor races, malformed kernel records, duplicate process attribution, and closed-bound overflow fail the snapshot.
+
+This inventory is an observation primitive, not an authority source or an enforcement claim. A later session manifest and platform confinement layer must reconcile every observed process, executable, socket, listener, port, and writable target against the exact declared session topology. The 60-minute packet/syscall acceptance harness remains separately required because a point-in-time `/proc` snapshot cannot prove the absence of short-lived connections.
+
+## Product-Source Gate
+
+The checked strict-local source policy closes the first-party normal-operation source roots, external-URI test allowances, network API locations, and prohibited network-client dependencies. It runs during the standard product lint gate. Mutation tests inject telemetry upload, crash upload, remote fonts/assets, marketplace sockets, update downloads, ambient proxy use, VS Code external opening, and child-process downloads; each injection must fail the gate.
+
+The two network-related Rust API allowances are narrow: shared contracts and Linux inventory may classify IP addresses, while the Linux IPC module may use Unix-domain sockets and kernel peer credentials. The allowlist does not authorize a connection. Runtime namespace, seccomp, process, socket, and packet evidence remain mandatory even when the static source gate passes.
+
 ## Linux Data-Root Inspection
 
 The Fedora/Ubuntu inspector accepts only an explicit absolute directory. It starts from a held `/` descriptor and opens each path component with `O_PATH`, `O_NOFOLLOW`, and `O_CLOEXEC`. Every component must be a directory. Symbolic links, unsafe components, non-UTF-8 names, open failures, and unavailable metadata fail closed without retaining the path in the resulting contract or error.

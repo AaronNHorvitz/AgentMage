@@ -1,0 +1,103 @@
+{
+  "allowed_external_uris": {
+    "kernel/contracts/src/display_link.rs": [
+      "https://example.test/x"
+    ],
+    "kernel/engine/src/policy.rs": [
+      "https://*.example.invalid"
+    ]
+  },
+  "denied_npm_runtime_packages": [
+    "@sentry/node",
+    "@sentry/vscode-extension",
+    "axios",
+    "electron-updater",
+    "got",
+    "node-fetch",
+    "open",
+    "posthog-node",
+    "socket.io-client",
+    "telemetry",
+    "undici",
+    "ws"
+  ],
+  "denied_rust_packages": [
+    "async-tungstenite",
+    "attohttpc",
+    "curl",
+    "hyper",
+    "isahc",
+    "opentelemetry",
+    "reqwest",
+    "sentry",
+    "surf",
+    "telemetry",
+    "tokio-tungstenite",
+    "tonic",
+    "tungstenite",
+    "ureq"
+  ],
+  "scan_roots": [
+    "capabilities/read-only/src",
+    "kernel/contracts/src",
+    "kernel/engine/src",
+    "platforms/linux/src",
+    "shells/host/src",
+    "shells/vscode/src"
+  ],
+  "schema_version": 1,
+  "symbol_rules": [
+    {
+      "allowed_paths": [
+        "kernel/contracts/src/network.rs",
+        "platforms/linux/src/inventory.rs"
+      ],
+      "id": "rust-standard-internet-address-api",
+      "pattern": "std::net(?:::|\\s|;)"
+    },
+    {
+      "allowed_paths": [
+        "platforms/linux/src/ipc.rs"
+      ],
+      "id": "rustix-socket-api",
+      "pattern": "rustix::net::"
+    },
+    {
+      "allowed_paths": [
+        "platforms/linux/src/ipc.rs"
+      ],
+      "id": "unix-domain-ipc-api",
+      "pattern": "std::os::unix::net::"
+    },
+    {
+      "allowed_paths": [],
+      "id": "rust-network-client-api",
+      "pattern": "(?:TcpStream|TcpListener|UdpSocket|ToSocketAddrs|reqwest::|hyper::|ureq::|curl::|tokio::net::|async_std::net::)"
+    },
+    {
+      "allowed_paths": [],
+      "id": "javascript-network-api",
+      "pattern": "(?:node:(?:http|https|net|tls|dns|dgram)|require\\([\\\"'](?:http|https|net|tls|dns|dgram)[\\\"']\\)|\\bfetch\\s*\\(|\\bWebSocket\\s*\\(|EventSource\\s*\\()"
+    },
+    {
+      "allowed_paths": [],
+      "id": "ambient-proxy-or-dns-override",
+      "pattern": "(?:HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|http_proxy|https_proxy|all_proxy|no_proxy|RES_OPTIONS|HOSTALIASES)"
+    },
+    {
+      "allowed_paths": [],
+      "id": "remote-web-asset",
+      "pattern": "(?:@import\\s+url|url\\(\\s*[\\\"']?(?:https?|wss?):|src\\s*=\\s*[\\\"'](?:https?|wss?):)"
+    },
+    {
+      "allowed_paths": [],
+      "id": "external-network-command",
+      "pattern": "(?:Command::new|(?:exec|execFile|spawn)\\s*)\\([\\\"'](?:curl|wget|ssh|scp|nc|ncat|socat)[\\\"']"
+    },
+    {
+      "allowed_paths": [],
+      "id": "vscode-external-network-surface",
+      "pattern": "(?:env\\.openExternal|vscode\\.open|workbench\\.extensions\\.(?:action|install)|downloadAndInstallExtension)"
+    }
+  ]
+}

@@ -365,6 +365,7 @@ mod tests {
     fn every_undeclared_destination_class_is_blocked() {
         let policy = StrictLocalNetworkPolicy::new(endpoint());
         for destination in [
+            NetworkDestinationClass::LocalSocket,
             NetworkDestinationClass::Loopback,
             NetworkDestinationClass::Unspecified,
             NetworkDestinationClass::LinkLocal,

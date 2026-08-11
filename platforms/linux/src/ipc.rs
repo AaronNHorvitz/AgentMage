@@ -428,7 +428,7 @@ impl PrivateUnixListener {
     }
 }
 
-fn process_executable_sha256(pid: i32) -> Result<[u8; 32], LinuxIpcError> {
+pub(crate) fn process_executable_sha256(pid: i32) -> Result<[u8; 32], LinuxIpcError> {
     let mut file = File::open(format!("/proc/{pid}/exe"))
         .map_err(|_| ipc_error(LinuxIpcErrorKind::WrongExecutable))?;
     let mut hasher = Sha256::new();
