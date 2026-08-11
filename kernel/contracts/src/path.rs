@@ -30,14 +30,24 @@ pub enum WorkspacePathErrorKind {
     CurrentDirectoryComponent,
     /// One component is the parent-directory marker.
     ParentTraversalComponent,
+    /// One component carries an absolute-root prefix.
+    RootedComponent,
+    /// One component carries a drive or alternate-stream prefix.
+    ColonInComponent,
     /// One component contains a path separator.
     SeparatorInComponent,
+    /// One component contains encoded path-control syntax.
+    EncodedPathSyntax,
     /// One component contains a NUL scalar.
     NulInComponent,
     /// One component contains a control scalar.
     ControlInComponent,
     /// One component exceeds the bounded UTF-8 size.
     OversizedComponent,
+    /// One component has a platform-ambiguous trailing dot or space.
+    AmbiguousSuffix,
+    /// One component contains invisible path-direction formatting.
+    InvisibleFormat,
     /// One component is not in canonical Unicode NFC form.
     NonCanonicalUnicode,
 }
@@ -53,10 +63,15 @@ impl WorkspacePathErrorKind {
             Self::EmptyComponent => "path.component.empty",
             Self::CurrentDirectoryComponent => "path.component.current_directory",
             Self::ParentTraversalComponent => "path.component.parent_traversal",
+            Self::RootedComponent => "path.component.rooted",
+            Self::ColonInComponent => "path.component.colon",
             Self::SeparatorInComponent => "path.component.separator",
+            Self::EncodedPathSyntax => "path.component.encoded_syntax",
             Self::NulInComponent => "path.component.nul",
             Self::ControlInComponent => "path.component.control",
             Self::OversizedComponent => "path.component.size_exceeded",
+            Self::AmbiguousSuffix => "path.component.ambiguous_suffix",
+            Self::InvisibleFormat => "path.component.invisible_format",
             Self::NonCanonicalUnicode => "path.component.noncanonical_unicode",
         }
     }
@@ -210,15 +225,25 @@ fn validate_component(
         Some(WorkspacePathErrorKind::CurrentDirectoryComponent)
     } else if candidate == ".." {
         Some(WorkspacePathErrorKind::ParentTraversalComponent)
-    } else if candidate.contains(['/', '\\']) {
+    } else if candidate.starts_with(['/', '\\']) {
+        Some(WorkspacePathErrorKind::RootedComponent)
+    } else if candidate.contains(':') {
+        Some(WorkspacePathErrorKind::ColonInComponent)
+    } else if candidate.chars().any(is_path_separator) {
         Some(WorkspacePathErrorKind::SeparatorInComponent)
+    } else if contains_encoded_path_syntax(candidate) {
+        Some(WorkspacePathErrorKind::EncodedPathSyntax)
     } else if candidate.contains('\0') {
         Some(WorkspacePathErrorKind::NulInComponent)
     } else if candidate.chars().any(char::is_control) {
         Some(WorkspacePathErrorKind::ControlInComponent)
     } else if candidate.len() > MAX_WORKSPACE_PATH_COMPONENT_BYTES {
         Some(WorkspacePathErrorKind::OversizedComponent)
-    } else if candidate.nfc().ne(candidate.chars()) {
+    } else if candidate.ends_with(['.', ' ']) {
+        Some(WorkspacePathErrorKind::AmbiguousSuffix)
+    } else if candidate.chars().any(is_invisible_format) {
+        Some(WorkspacePathErrorKind::InvisibleFormat)
+    } else if candidate.nfc().ne(candidate.chars()) || candidate.nfkc().ne(candidate.chars()) {
         Some(WorkspacePathErrorKind::NonCanonicalUnicode)
     } else {
         None
@@ -227,6 +252,33 @@ fn validate_component(
         Some(kind) => Err(path_error(kind, Some(index))),
         None => Ok(WorkspacePathComponent(candidate.to_owned())),
     }
+}
+
+fn is_path_separator(character: char) -> bool {
+    matches!(
+        character,
+        '/' | '\\' | '\u{2044}' | '\u{2215}' | '\u{29f8}' | '\u{ff0f}' | '\u{ff3c}'
+    )
+}
+
+fn is_invisible_format(character: char) -> bool {
+    matches!(
+        character,
+        '\u{200b}'..='\u{200f}' | '\u{202a}'..='\u{202e}' | '\u{2060}'..='\u{2069}' | '\u{feff}'
+    )
+}
+
+fn contains_encoded_path_syntax(candidate: &str) -> bool {
+    candidate.as_bytes().windows(3).any(|window| {
+        window[0] == b'%'
+            && matches!(
+                (
+                    window[1].to_ascii_lowercase(),
+                    window[2].to_ascii_lowercase()
+                ),
+                (b'2', b'e') | (b'2', b'f') | (b'5', b'c')
+            )
+    })
 }
 
 const fn path_error(
@@ -268,9 +320,23 @@ mod tests {
             ("", WorkspacePathErrorKind::EmptyComponent),
             (".", WorkspacePathErrorKind::CurrentDirectoryComponent),
             ("..", WorkspacePathErrorKind::ParentTraversalComponent),
+            ("/rooted", WorkspacePathErrorKind::RootedComponent),
+            ("\\rooted", WorkspacePathErrorKind::RootedComponent),
+            ("C:", WorkspacePathErrorKind::ColonInComponent),
             ("nested/file", WorkspacePathErrorKind::SeparatorInComponent),
             ("nested\\file", WorkspacePathErrorKind::SeparatorInComponent),
+            (
+                "nested\u{ff0f}file",
+                WorkspacePathErrorKind::SeparatorInComponent,
+            ),
+            ("%2e%2e", WorkspacePathErrorKind::EncodedPathSyntax),
             ("bad\0value", WorkspacePathErrorKind::NulInComponent),
+            ("trailing.", WorkspacePathErrorKind::AmbiguousSuffix),
+            ("trailing ", WorkspacePathErrorKind::AmbiguousSuffix),
+            (
+                "hidden\u{202e}name",
+                WorkspacePathErrorKind::InvisibleFormat,
+            ),
             (
                 "cafe\u{301}.md",
                 WorkspacePathErrorKind::NonCanonicalUnicode,
@@ -299,5 +365,42 @@ mod tests {
         ] {
             assert!(serde_json::from_slice::<WorkspacePath>(invalid).is_err());
         }
+        assert!(
+            serde_json::from_slice::<WorkspacePath>(
+                b"{\"workspace_id\":\"workspace-0001\",\"components\":[\"\xff\"]}"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn path_and_component_bounds_fail_before_allocation_or_authority() {
+        let workspace = WorkspaceId::from_raw("workspace-0001");
+        let empty = WorkspacePath::new(workspace.clone(), Vec::<String>::new())
+            .expect_err("empty path must fail");
+        assert_eq!(empty.kind(), WorkspacePathErrorKind::EmptyPath);
+
+        let oversized = "x".repeat(super::MAX_WORKSPACE_PATH_COMPONENT_BYTES + 1);
+        let oversized_error = WorkspacePath::new(workspace.clone(), [oversized])
+            .expect_err("oversized component must fail");
+        assert_eq!(
+            oversized_error.kind(),
+            WorkspacePathErrorKind::OversizedComponent
+        );
+
+        let too_many = vec!["x"; super::MAX_WORKSPACE_PATH_COMPONENTS + 1];
+        let count_error =
+            WorkspacePath::new(workspace, too_many).expect_err("too many components must fail");
+        assert_eq!(
+            count_error.kind(),
+            WorkspacePathErrorKind::TooManyComponents
+        );
+
+        let workspace_error = WorkspacePath::new(WorkspaceId::from_raw("/ambient"), ["x"])
+            .expect_err("ambient workspace identity must fail");
+        assert_eq!(
+            workspace_error.kind(),
+            WorkspacePathErrorKind::InvalidWorkspaceIdentity
+        );
     }
 }
