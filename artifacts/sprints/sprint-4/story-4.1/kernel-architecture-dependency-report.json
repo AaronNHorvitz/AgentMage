@@ -308,7 +308,7 @@
     },
     {
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "392fa0d4555bb900315d2f1bbcfd921ba7e2102c5a7abd04e9e26aadabce3709"
+      "sha256": "238e1397d7f1b6e6f494197c1c37dc85f12b0664eab52a2e34f8f3ebbb2999ff"
     },
     {
       "path": "kernel/contracts/Cargo.toml",
@@ -355,7 +355,7 @@
       "sha256": "21cbcb1e09210d62ae9d10b814e6fe28efd6ef72cfda067d19b52446ccc3a6f6"
     }
   ],
-  "source_revision": "490aba33e1500a09217ea1479ee4c73c58a9be7d",
+  "source_revision": "5278d9bfb943dc90d5042a85da5838e225249483",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }
