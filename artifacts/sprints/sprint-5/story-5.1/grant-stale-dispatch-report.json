@@ -1,0 +1,133 @@
+{
+  "artifact_id": "post-approval-stale-dispatch-verification",
+  "coverage": {
+    "atomic_consumption_count": 0,
+    "effect_count": 0,
+    "exact_replay_success_count": 0,
+    "mutation_count": 4,
+    "terminal_invalidated_count": 4,
+    "worker_start_count": 0
+  },
+  "limitations": [
+    "Final dispatch is represented by in-memory atomic consumption without a worker.",
+    "The approval decision is rendered and hash-bound but is not authenticated or durable.",
+    "Canonical platform preimage observation remains assigned to Sprint 6.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "reference_revision": "1bebc26f2947f44c03709d6418e0a02f66e80480",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "kernel/contracts/src/approval.rs",
+      "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe"
+    },
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "kernel/engine/src/approval.rs",
+      "sha256": "1f54405fa755163ca03010d8c8a3f5ea1791ab4532c412d4d404bbcf3a925615"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+    },
+    {
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "path": "kernel/engine/tests/grant_stale_dispatch.rs",
+      "sha256": "ed26c5e324e18d7319de92923174bcf670e534be0349f268c32002031393aaa4"
+    },
+    {
+      "path": "scripts/grant_stale_dispatch.py",
+      "sha256": "c9304d086b0be2c02781ebc9dc56267577deea817756e5ffeb8aa8a594d3ac96"
+    },
+    {
+      "path": "tests/test_grant_stale_dispatch.py",
+      "sha256": "8c8a7c3a577fd6f79610a4f2f991d990c2ebb24a72e9c62bcfe3f9a198799e0f"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.3.4",
+  "traces": [
+    {
+      "approval_confirmation_matches_grant": true,
+      "atomic_consumption_count": 0,
+      "denial_code": "policy.deny.grant",
+      "denial_scope": "grant",
+      "effect_count": 0,
+      "exact_replay_allowed": false,
+      "final_boundary": "GrantIssuer::consume_for_execution",
+      "mutation": "policy",
+      "schema_version": 1,
+      "terminal_revision": 2,
+      "terminal_status": "invalidated",
+      "terminal_use_count": 0,
+      "worker_start_count": 0
+    },
+    {
+      "approval_confirmation_matches_grant": true,
+      "atomic_consumption_count": 0,
+      "denial_code": "policy.deny.preimage",
+      "denial_scope": "preimage",
+      "effect_count": 0,
+      "exact_replay_allowed": false,
+      "final_boundary": "GrantIssuer::consume_for_execution",
+      "mutation": "preimage",
+      "schema_version": 1,
+      "terminal_revision": 2,
+      "terminal_status": "invalidated",
+      "terminal_use_count": 0,
+      "worker_start_count": 0
+    },
+    {
+      "approval_confirmation_matches_grant": true,
+      "atomic_consumption_count": 0,
+      "denial_code": "policy.deny.task",
+      "denial_scope": "task",
+      "effect_count": 0,
+      "exact_replay_allowed": false,
+      "final_boundary": "GrantIssuer::consume_for_execution",
+      "mutation": "task",
+      "schema_version": 1,
+      "terminal_revision": 2,
+      "terminal_status": "invalidated",
+      "terminal_use_count": 0,
+      "worker_start_count": 0
+    },
+    {
+      "approval_confirmation_matches_grant": true,
+      "atomic_consumption_count": 0,
+      "denial_code": "policy.deny.preview",
+      "denial_scope": "preview",
+      "effect_count": 0,
+      "exact_replay_allowed": false,
+      "final_boundary": "GrantIssuer::consume_for_execution",
+      "mutation": "preview",
+      "schema_version": 1,
+      "terminal_revision": 2,
+      "terminal_status": "invalidated",
+      "terminal_use_count": 0,
+      "worker_start_count": 0
+    }
+  ],
+  "verification": {
+    "changed_policy_rejection": "pass",
+    "changed_preimage_rejection": "pass",
+    "changed_preview_rejection": "pass",
+    "changed_task_rejection": "pass",
+    "exact_replay_denial": "pass",
+    "final_boundary_terminalization": "pass",
+    "rendered_approval_binding": "pass",
+    "zero_worker_start_and_effect": "pass"
+  }
+}
