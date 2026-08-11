@@ -179,6 +179,51 @@ pub struct GrantConsumptionRecord {
     pub policy_sha256: String,
 }
 
+/// Stable reason a post-attempt grant lifecycle transition cannot be retained.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GrantLifecycleError {
+    /// No kernel-issued grant has the requested identity.
+    NotFound,
+    /// The grant is not the exact consumed attempt expected by this transition.
+    InvalidState,
+    /// The caller's expected consumed-revision digest does not match retained state.
+    RevisionMismatch,
+    /// Retained state or canonical hashing is inconsistent.
+    CorruptState,
+}
+
+impl GrantLifecycleError {
+    /// Returns the stable redacted code used by future receipts.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::NotFound => "grant.lifecycle.not_found",
+            Self::InvalidState => "grant.lifecycle.invalid_state",
+            Self::RevisionMismatch => "grant.lifecycle.revision_mismatch",
+            Self::CorruptState => "grant.lifecycle.corrupt_state",
+        }
+    }
+}
+
+/// Non-authoritative evidence of one retained terminal lifecycle transition.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GrantLifecycleRecord {
+    /// Exact transitioned grant identity.
+    pub grant_id: GrantId,
+    /// Previous retained revision.
+    pub previous_revision: u32,
+    /// New retained terminal revision.
+    pub terminal_revision: u32,
+    /// Canonical digest of the previous revision.
+    pub previous_grant_sha256: String,
+    /// Canonical digest of the new terminal revision.
+    pub terminal_grant_sha256: String,
+    /// New terminal status.
+    pub status: GrantStatus,
+    /// Kernel-clock instant associated with the transition.
+    pub occurred_at_epoch_ms: u64,
+}
+
 /// In-memory kernel issuer used before durable grant storage is introduced.
 ///
 /// Authority exists only when a candidate exactly matches this issuer's retained record.
@@ -241,6 +286,20 @@ impl GrantIssuer {
 
         let decision = policy.evaluate(self, &issued, context);
         if let Some(scope) = decision.denial_scope {
+            if issued.schema_version == agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION
+                && issued.grant_class == GrantClass::Operation
+                && issued.status == GrantStatus::Issued
+                && issued.use_limit == 1
+                && issued.use_count == 0
+            {
+                let status = if context.now_epoch_ms >= issued.expires_at_epoch_ms {
+                    GrantStatus::Expired
+                } else {
+                    GrantStatus::Invalidated
+                };
+                self.transition_status(&issued, &issued_sha256, status, context.now_epoch_ms)
+                    .map_err(|_| GrantConsumeError::CorruptState)?;
+            }
             return Err(GrantConsumeError::PolicyDenied(scope));
         }
         if !decision.allowed {
@@ -279,6 +338,47 @@ impl GrantIssuer {
         );
         self.current.insert(consumed.grant_id.clone(), consumed);
         Ok(record)
+    }
+
+    /// Advances one exact consumed attempt to terminal `uncertain` state.
+    ///
+    /// The expected consumed digest binds this transition to the one worker attempt that already
+    /// consumed the grant. An uncertain result never restores, reissues, or retries authority.
+    pub fn mark_execution_uncertain(
+        &mut self,
+        grant_id: &GrantId,
+        expected_consumed_sha256: &str,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<GrantLifecycleRecord, GrantLifecycleError> {
+        if validate_digest(expected_consumed_sha256).is_err() {
+            return Err(GrantLifecycleError::RevisionMismatch);
+        }
+        let consumed = self
+            .current
+            .get(grant_id)
+            .cloned()
+            .ok_or(GrantLifecycleError::NotFound)?;
+        if consumed.status != GrantStatus::Consumed
+            || consumed.grant_class != GrantClass::Operation
+            || consumed.use_limit != 1
+            || consumed.use_count != 1
+            || occurred_at_epoch_ms < consumed.issued_at_epoch_ms
+        {
+            return Err(GrantLifecycleError::InvalidState);
+        }
+        let consumed_sha256 =
+            grant_sha256(&consumed).map_err(|_| GrantLifecycleError::CorruptState)?;
+        if consumed_sha256 != expected_consumed_sha256
+            || self.revision_hash(grant_id, consumed.revision) != Some(consumed_sha256.as_str())
+        {
+            return Err(GrantLifecycleError::RevisionMismatch);
+        }
+        self.transition_status(
+            &consumed,
+            &consumed_sha256,
+            GrantStatus::Uncertain,
+            occurred_at_epoch_ms,
+        )
     }
 
     /// Issues one session-read parent after closed shape and scope validation.
@@ -460,6 +560,41 @@ impl GrantIssuer {
             .insert((grant.grant_id.clone(), grant.revision), digest);
         self.current.insert(grant.grant_id.clone(), grant);
         Ok(())
+    }
+
+    fn transition_status(
+        &mut self,
+        previous: &CapabilityGrant,
+        previous_sha256: &str,
+        status: GrantStatus,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<GrantLifecycleRecord, GrantLifecycleError> {
+        if self.revision_hash(&previous.grant_id, previous.revision) != Some(previous_sha256) {
+            return Err(GrantLifecycleError::CorruptState);
+        }
+        let mut terminal = previous.clone();
+        terminal.revision = terminal
+            .revision
+            .checked_add(1)
+            .ok_or(GrantLifecycleError::CorruptState)?;
+        terminal.status = status;
+        let terminal_sha256 =
+            grant_sha256(&terminal).map_err(|_| GrantLifecycleError::CorruptState)?;
+        let record = GrantLifecycleRecord {
+            grant_id: terminal.grant_id.clone(),
+            previous_revision: previous.revision,
+            terminal_revision: terminal.revision,
+            previous_grant_sha256: previous_sha256.to_owned(),
+            terminal_grant_sha256: terminal_sha256.clone(),
+            status,
+            occurred_at_epoch_ms,
+        };
+        self.revision_hashes.insert(
+            (terminal.grant_id.clone(), terminal.revision),
+            terminal_sha256,
+        );
+        self.current.insert(terminal.grant_id.clone(), terminal);
+        Ok(record)
     }
 }
 
@@ -668,7 +803,7 @@ mod tests {
 
     use super::{
         DerivedOperationGrantRequest, GrantConsumeError, GrantIssueError, GrantIssuer,
-        SessionReadGrantRequest,
+        GrantLifecycleError, SessionReadGrantRequest,
     };
     use crate::policy::{
         PolicyDenialScope, PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules,
@@ -931,6 +1066,57 @@ mod tests {
     }
 
     #[test]
+    fn child_derivation_rejects_siblings_exclusions_and_scope_aggregation() {
+        let mut issuer = GrantIssuer::new();
+        let mut parent_request = session_request();
+        parent_request.targets = vec![target(&["src"])];
+        parent_request.excluded_targets = vec![target(&["src", "private"])];
+        let parent = issuer
+            .issue_session_read(parent_request)
+            .expect("narrow parent must issue");
+        let original_parent = issuer.current(&parent.grant_id).expect("parent").clone();
+
+        for (id, nonce, targets) in [
+            (
+                "grant-child-sibling",
+                "nonce-child-sibling",
+                vec![target(&["tests"])],
+            ),
+            (
+                "grant-child-excluded",
+                "nonce-child-excluded",
+                vec![target(&["src", "private", "secret.txt"])],
+            ),
+            (
+                "grant-child-aggregate",
+                "nonce-child-aggregate",
+                vec![target(&["src", "allowed.txt"]), target(&["docs"])],
+            ),
+        ] {
+            let mut request = operation_request(id, nonce, &["src"]);
+            request.targets = targets;
+            assert_eq!(
+                issuer
+                    .derive_operation(&parent.grant_id, request)
+                    .expect_err("broadened child must fail"),
+                GrantIssueError::ScopeBroadened
+            );
+            assert_eq!(issuer.current(&parent.grant_id), Some(&original_parent));
+        }
+
+        issuer
+            .derive_operation(
+                &parent.grant_id,
+                operation_request(
+                    "grant-child-narrow",
+                    "nonce-child-narrow",
+                    &["src", "allowed.txt"],
+                ),
+            )
+            .expect("narrow child must derive");
+    }
+
+    #[test]
     fn final_validation_consumes_once_and_retains_both_revision_hashes() {
         let (mut issuer, policy, grant) = issued_for_consumption();
         let issued_hash = issuer
@@ -971,13 +1157,8 @@ mod tests {
     }
 
     #[test]
-    fn stale_context_policy_expiry_and_corrupt_state_fail_without_consumption() {
+    fn stale_context_policy_and_expiry_terminalize_without_consumption() {
         let (mut issuer, policy, grant) = issued_for_consumption();
-        let original = issuer
-            .current(&grant.grant_id)
-            .expect("issued grant")
-            .clone();
-
         let mut changed_arguments = consumption_context(&grant);
         changed_arguments.argument_sha256 = "a".repeat(64);
         assert_eq!(
@@ -986,7 +1167,32 @@ mod tests {
                 .expect_err("changed arguments must fail"),
             GrantConsumeError::PolicyDenied(PolicyDenialScope::Argument)
         );
+        let invalidated = issuer.current(&grant.grant_id).expect("invalidated grant");
+        assert_eq!(invalidated.status, GrantStatus::Invalidated);
+        assert_eq!(invalidated.revision, 2);
+        assert_eq!(invalidated.use_count, 0);
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &consumption_context(&grant))
+                .expect_err("invalidated grant must not recover"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
+        );
 
+        let (mut issuer, policy, grant) = issued_for_consumption();
+        let mut stale_preimage = consumption_context(&grant);
+        stale_preimage.preimages[0].content_sha256 = "d".repeat(64);
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &stale_preimage)
+                .expect_err("stale preimage must fail"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Preimage)
+        );
+        let invalidated = issuer.current(&grant.grant_id).expect("invalidated grant");
+        assert_eq!(invalidated.status, GrantStatus::Invalidated);
+        assert_eq!(invalidated.revision, 2);
+        assert_eq!(invalidated.use_count, 0);
+
+        let (mut issuer, _original_policy, grant) = issued_for_consumption();
         let changed_policy = PolicyEngine::new(policy_document(2)).expect("policy must build");
         assert_eq!(
             issuer
@@ -998,7 +1204,12 @@ mod tests {
                 .expect_err("changed policy must fail"),
             GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
         );
+        let invalidated = issuer.current(&grant.grant_id).expect("invalidated grant");
+        assert_eq!(invalidated.status, GrantStatus::Invalidated);
+        assert_eq!(invalidated.revision, 2);
+        assert_eq!(invalidated.use_count, 0);
 
+        let (mut issuer, policy, grant) = issued_for_consumption();
         let mut expired = consumption_context(&grant);
         expired.now_epoch_ms = grant.expires_at_epoch_ms;
         assert_eq!(
@@ -1007,8 +1218,16 @@ mod tests {
                 .expect_err("expired grant must fail"),
             GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
         );
-        assert_eq!(issuer.current(&grant.grant_id), Some(&original));
+        let expired_grant = issuer.current(&grant.grant_id).expect("expired grant");
+        assert_eq!(expired_grant.status, GrantStatus::Expired);
+        assert_eq!(expired_grant.revision, 2);
+        assert_eq!(expired_grant.use_count, 0);
 
+        let (mut issuer, policy, grant) = issued_for_consumption();
+        let original = issuer
+            .current(&grant.grant_id)
+            .expect("issued grant")
+            .clone();
         let key = (grant.grant_id.clone(), grant.revision);
         issuer.revision_hashes.insert(key, "f".repeat(64));
         assert_eq!(
@@ -1018,6 +1237,61 @@ mod tests {
             GrantConsumeError::CorruptState
         );
         assert_eq!(issuer.current(&grant.grant_id), Some(&original));
+    }
+
+    #[test]
+    fn uncertain_attempt_is_bound_to_consumed_revision_and_never_reusable() {
+        let (mut issuer, policy, grant) = issued_for_consumption();
+        let context = consumption_context(&grant);
+        let consumed = issuer
+            .consume_for_execution(&grant.grant_id, &policy, &context)
+            .expect("grant must consume");
+
+        assert_eq!(
+            issuer.mark_execution_uncertain(&grant.grant_id, &"f".repeat(64), 4_000),
+            Err(GrantLifecycleError::RevisionMismatch)
+        );
+        assert_eq!(
+            issuer
+                .current(&grant.grant_id)
+                .expect("grant remains consumed")
+                .status,
+            GrantStatus::Consumed
+        );
+
+        let uncertain = issuer
+            .mark_execution_uncertain(&grant.grant_id, &consumed.consumed_grant_sha256, 4_000)
+            .expect("exact consumed attempt must become uncertain");
+        assert_eq!(uncertain.previous_revision, 2);
+        assert_eq!(uncertain.terminal_revision, 3);
+        assert_eq!(uncertain.status, GrantStatus::Uncertain);
+        assert_eq!(uncertain.occurred_at_epoch_ms, 4_000);
+        let retained = issuer.current(&grant.grant_id).expect("uncertain grant");
+        assert_eq!(retained.status, GrantStatus::Uncertain);
+        assert_eq!(retained.revision, 3);
+        assert_eq!(retained.use_count, 1);
+
+        assert_eq!(
+            issuer
+                .consume_for_execution(&grant.grant_id, &policy, &context)
+                .expect_err("uncertain grant must never retry"),
+            GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant)
+        );
+        assert_eq!(
+            issuer.mark_execution_uncertain(
+                &grant.grant_id,
+                &consumed.consumed_grant_sha256,
+                5_000,
+            ),
+            Err(GrantLifecycleError::InvalidState)
+        );
+        assert_eq!(
+            issuer
+                .current(&grant.grant_id)
+                .expect("uncertain grant remains terminal")
+                .revision,
+            3
+        );
     }
 
     #[test]
