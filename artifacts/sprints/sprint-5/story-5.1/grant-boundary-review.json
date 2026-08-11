@@ -27,7 +27,7 @@
     "macOS implementation and execution evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "21e72fe3960326fcae920b0ba33c852f4e13174d",
+  "reference_revision": "3af3c6ab791ed035e7a9abcd94dfacbdd08e6317",
   "release_claim": "none",
   "review_type": "independent-automated-boundary-review",
   "reviewer_identity": "agentmage-grant-boundary-review-v1",
@@ -139,15 +139,11 @@
     },
     {
       "path": "scripts/grant_boundary_review.py",
-      "sha256": "c8b52bf59b6e8ebbc09d00ebd8ed72524896f9a45b3af08c69ed7915689253c8"
+      "sha256": "1a9dbe0d76e0c3c4b2bd0661162136f525fe45a3ed0284e5e07aaad512f1ec08"
     },
     {
       "path": "tests/test_grant_boundary_review.py",
       "sha256": "48cb5adeede939f649e7efbd8566ad1b7a22014fcfd5879aa665264bc4698634"
-    },
-    {
-      "path": "package.json",
-      "sha256": "eae7edce4c51264fb57d0200ccf3ec444b3bb256649338da86095788bdf6cc54"
     }
   ],
   "status": "pass-shared-linux-story-scope",
