@@ -1,0 +1,62 @@
+{
+  "artifact_id": "grant-schema-policy-decision-reference",
+  "coverage": {
+    "grant_field_count": 29,
+    "grant_operation_count": 15,
+    "policy_denial_scope_count": 15,
+    "strict_allowed_operations": [
+      "WorkspaceRead"
+    ],
+    "strict_denied_by_absence": [
+      "DatabaseRead",
+      "ModelInference"
+    ],
+    "strict_explicit_denial_count": 12
+  },
+  "limitations": [
+    "Grant and policy state is in-memory and is not crash durable.",
+    "No production sandbox worker or authority-bearing tool execution is claimed.",
+    "Path candidates are not canonical platform descriptors until Sprint 6.",
+    "Startup configuration is not yet bound to the strict-local policy constructor.",
+    "No macOS implementation or execution evidence is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "reference_revision": "1424f1ffc9c6c9631b2ea79eccec68cca13d4054",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "docs/architecture/grant-policy-reference.md",
+      "sha256": "da5b65d292d037e9781fbaffb16bacbe760b2aae8e573eaae51ae5d130dd0327"
+    },
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+    },
+    {
+      "path": "scripts/grant_policy_reference.py",
+      "sha256": "83076ed5f1753db876b8441d118641a651cabd119c8a8e3dd09736ec91e66213"
+    },
+    {
+      "path": "tests/test_grant_policy_reference.py",
+      "sha256": "157d69fab1d7ed3d66b29beb3993fe2e17a359443233243d4e2c7dec21768081"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.2.1",
+  "verification": {
+    "closed_operation_order": "pass",
+    "documentation_coverage": "pass",
+    "grant_field_order": "pass",
+    "policy_scope_and_code_order": "pass",
+    "strict_local_denials": "pass"
+  }
+}
