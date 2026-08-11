@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Deterministic non-authoritative approval-display construction.
+pub mod approval;
 /// Sealed classification and denial of descriptive artifacts as authority.
 pub mod authority;
 /// Versioned, fail-closed configuration loading and recovery.

@@ -1,8 +1,8 @@
 //! Sealed classification and fail-closed rejection of descriptive authority candidates.
 
 use agentmage_kernel_contracts::{
-    Action, ContractError, ErrorCategory, ErrorId, Plan, Prompt, RequiredGrantTemplate,
-    RetryDisposition, Task, ToolDefinition, WorkPacket,
+    Action, ApprovalRequest, ContractError, ErrorCategory, ErrorId, Plan, Prompt,
+    RequiredGrantTemplate, RetryDisposition, Task, ToolDefinition, WorkPacket,
 };
 
 /// Closed class of artifact that may describe work but never authorize it.
@@ -18,6 +18,8 @@ pub enum DescriptiveArtifactKind {
     Plan,
     /// Proposed action record.
     Action,
+    /// Exact approval-display snapshot.
+    ApprovalRequest,
     /// Ordered local-model prompt.
     Prompt,
     /// Registered tool metadata.
@@ -35,6 +37,7 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::WorkPacket {}
     impl Sealed for agentmage_kernel_contracts::Plan {}
     impl Sealed for agentmage_kernel_contracts::Action {}
+    impl Sealed for agentmage_kernel_contracts::ApprovalRequest {}
     impl Sealed for agentmage_kernel_contracts::Prompt {}
     impl Sealed for agentmage_kernel_contracts::ToolDefinition {}
     impl Sealed for agentmage_kernel_contracts::RequiredGrantTemplate {}
@@ -64,6 +67,7 @@ impl_non_authoritative!(Task => Task);
 impl_non_authoritative!(WorkPacket => WorkPacket);
 impl_non_authoritative!(Plan => Plan);
 impl_non_authoritative!(Action => Action);
+impl_non_authoritative!(ApprovalRequest => ApprovalRequest);
 impl_non_authoritative!(Prompt => Prompt);
 impl_non_authoritative!(ToolDefinition => ToolDefinition);
 impl_non_authoritative!(RequiredGrantTemplate => RequiredGrantTemplate);
@@ -175,6 +179,7 @@ mod tests {
         assert_sealed::<agentmage_kernel_contracts::WorkPacket>();
         assert_sealed::<agentmage_kernel_contracts::Plan>();
         assert_sealed::<agentmage_kernel_contracts::Action>();
+        assert_sealed::<agentmage_kernel_contracts::ApprovalRequest>();
         assert_sealed::<agentmage_kernel_contracts::Prompt>();
         assert_sealed::<agentmage_kernel_contracts::ToolDefinition>();
         assert_sealed::<agentmage_kernel_contracts::RequiredGrantTemplate>();

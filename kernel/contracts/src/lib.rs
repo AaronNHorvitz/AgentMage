@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Interface-independent contracts shared across AgentMage components.
 
+mod approval;
 mod boundary;
 mod common;
 mod evidence;
@@ -12,6 +13,7 @@ mod serialization;
 mod task;
 mod tool;
 
+pub use approval::ApprovalRequest;
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
 };

@@ -1,16 +1,16 @@
 use agentmage_kernel_contracts::{
-    Action, ActionId, ActionKind, ActionState, ActorId, BoundaryFailure, BoundaryKind,
-    BoundaryOutcomeKind, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId,
-    CancellationReason, CancellationSignal, CapabilityGrant, ContractError, ContractPayload,
-    CorrelationId, DataSensitivity, ErrorCategory, ErrorId, EvidenceId, EvidenceKind,
-    EvidenceReference, GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage,
-    GrantSideEffect, GrantStatus, GrantTarget, OperationOutcome, Plan, PlanId, PlanState, PlanStep,
-    PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole, Receipt, ReceiptId,
-    RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
-    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId,
-    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue, ValidationSeverity,
-    VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, from_json,
-    to_canonical_json,
+    Action, ActionId, ActionKind, ActionState, ActorId, ApprovalRequest, BoundaryFailure,
+    BoundaryKind, BoundaryOutcomeKind, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION,
+    CancellationId, CancellationReason, CancellationSignal, CapabilityGrant, ContractError,
+    ContractPayload, CorrelationId, DataSensitivity, ErrorCategory, ErrorId, EvidenceId,
+    EvidenceKind, EvidenceReference, GrantClass, GrantId, GrantNonce, GrantOperation,
+    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationOutcome, Plan, PlanId,
+    PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole,
+    Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId,
+    SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
+    TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
+    WorkPacketState, WorkspaceId, from_json, to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -271,6 +271,34 @@ fn complete_contract_family_preserves_linked_identities() {
         policy_sha256: "b".repeat(64),
         status: GrantStatus::Issued,
     };
+    let approval = ApprovalRequest {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        proposed_grant_id: grant.grant_id.clone(),
+        parent_grant_id: grant
+            .parent_grant_id
+            .clone()
+            .expect("fixture parent grant identity"),
+        parent_grant_sha256: grant
+            .parent_grant_sha256
+            .clone()
+            .expect("fixture parent grant digest"),
+        actor_id: grant.actor_id.clone(),
+        session_id: grant.session_id.clone(),
+        task_id: grant.task_id.clone(),
+        action_kind: grant.action_kind.expect("fixture action kind"),
+        operation: grant.operation,
+        tool_call: call.clone(),
+        targets: grant.targets.clone(),
+        excluded_targets: grant.excluded_targets.clone(),
+        sensitivity: grant.sensitivity,
+        preimages: grant.preimages.clone(),
+        expected_side_effects: grant.expected_side_effects.clone(),
+        rollback_description: grant.rollback_description.clone(),
+        issued_at_epoch_ms: grant.issued_at_epoch_ms,
+        expires_at_epoch_ms: grant.expires_at_epoch_ms,
+        policy_sha256: grant.policy_sha256.clone(),
+        confirmation_sha256: grant.preview_sha256.clone(),
+    };
     let evidence = EvidenceReference {
         schema_version: CONTRACT_SCHEMA_VERSION,
         evidence_id,
@@ -401,9 +429,11 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_round_trip(&boundary_failure);
     assert_round_trip(&prompt);
     assert_round_trip(&grant);
+    assert_round_trip(&approval);
     assert_embedded_grant_field_is_rejected(&plan);
     assert_embedded_grant_field_is_rejected(&prompt);
     assert_embedded_grant_field_is_rejected(&tool);
+    assert_embedded_grant_field_is_rejected(&approval);
     assert_optional_keys_are_required(
         &packet,
         &[
