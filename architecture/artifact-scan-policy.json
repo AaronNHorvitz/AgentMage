@@ -19,12 +19,15 @@
     "(MIT OR Apache-2.0) AND Unicode-3.0",
     "Apache-2.0",
     "Apache-2.0 OR MIT",
+    "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
     "BSD-3-Clause",
     "MIT",
     "MIT OR Apache-2.0 OR BSD-1-Clause",
+    "MIT OR Apache-2.0 OR Zlib",
     "MIT OR Apache-2.0",
     "MIT/Apache-2.0",
-    "Unlicense OR MIT"
+    "Unlicense OR MIT",
+    "Zlib OR Apache-2.0 OR MIT"
   ],
   "excluded_development_noassertion_disposition": "open-review",
   "binary_magic": [

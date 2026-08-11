@@ -870,19 +870,12 @@ fn is_iso_date(value: &str) -> bool {
 
 fn contains_secret_like_value(value: &str) -> bool {
     let lowered = value.to_ascii_lowercase();
-    [
-        "password=",
-        "password:",
-        "api_key",
-        "api-key",
-        "secret=",
-        "secret:",
-        "token=",
-        "token:",
-        "-----begin private key-----",
-    ]
-    .iter()
-    .any(|pattern| lowered.contains(pattern))
+    ["password", "secret", "token"]
+        .iter()
+        .any(|name| lowered.contains(&format!("{name}=")) || lowered.contains(&format!("{name}:")))
+        || lowered.contains("api_key")
+        || lowered.contains("api-key")
+        || lowered.contains("-----begin private key-----")
 }
 
 fn is_sha256(value: &str) -> bool {
