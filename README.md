@@ -275,6 +275,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Whole-Codebase Audit Architecture](./CODEBASE-AUDIT.md) - exhaustive repository census, deterministic structure, bounded semantic review, reconciliation, read-only verification, checkpoints, findings, and coverage truth.
 - [Windows 11 Boundaries](./WINDOWS-BOUNDARIES.md) - package, process, IPC, path, sandbox, key, runtime, network, and verification requirements for first GA.
 - [Machine-Readable Requirement Registry](./requirements/README.md) - deterministic inventory and field contract for every canonical `AM-*`, `AT-*`, and `CR-*` identifier.
+- [Product CI and Clean-Build Evidence](./docs/product-ci-and-clean-build.md) - independent product gates, native-test truth, exact source binding, network isolation, and branch-protection guidance.
 - [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.
 - [Apache License 2.0](./LICENSE) - permissions and conditions for use, modification, and distribution.
 
@@ -287,3 +288,18 @@ npm run docs:clean-check
 ```
 
 The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, the generated requirement registry, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.
+
+Product compilation and tests run through a separate contract and workflow:
+
+```bash
+npm run product-ci:check
+npm run product:check
+python3 scripts/product_ci.py --inventory-native
+```
+
+A successful native-inventory command records eleven tests as pending native
+execution; it does not claim that those tests ran. Clean-build evidence uses the
+complete committed Git tree and disables container networking after dependency
+bootstrap. See
+[`docs/product-ci-and-clean-build.md`](./docs/product-ci-and-clean-build.md) for
+the exact status and evidence semantics.

@@ -9,6 +9,8 @@ import json
 import os
 import re
 import shutil
+import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -17,15 +19,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SUPPLY_CHAIN_PATHS = (
-    "supply-chain/dependency-hashes.sha256",
-    "supply-chain/dependency-provenance.json",
-    "supply-chain/sbom.cdx.json",
-)
 TRANSIENT_ROOTS = (
     ".build",
     ".git",
-    "node_modules",
     "review-evidence",
     "target",
 )
@@ -38,6 +34,7 @@ EXPECTED_TOOL_VERSIONS = {
     "rustc": re.compile(r"^rustc 1\.95\.0\b"),
     "rustfmt": re.compile(r"^rustfmt 1\.9\.0-stable\b"),
 }
+HEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def canonical_json(value: Any) -> str:
@@ -63,6 +60,7 @@ def parse_os_release(path: Path = Path("/etc/os-release")) -> dict[str, str]:
 
 
 def input_paths(source_root: Path, policy: dict[str, Any]) -> list[str]:
+    """Return the legacy schema-v1 curated input closure."""
     contract = read_json(source_root / "architecture/build-contract.json")
     paths = set(contract["required_files"])
     paths.update(contract["lockfiles"])
@@ -71,6 +69,7 @@ def input_paths(source_root: Path, policy: dict[str, Any]) -> list[str]:
 
 
 def input_tree_sha256(source_root: Path, policy: dict[str, Any]) -> str:
+    """Hash the legacy schema-v1 curated input closure for historical replay."""
     digest = hashlib.sha256()
     for relative in input_paths(source_root, policy):
         path = source_root / relative
@@ -80,6 +79,30 @@ def input_tree_sha256(source_root: Path, policy: dict[str, Any]) -> str:
         content = path.read_bytes()
         digest.update(len(encoded_path).to_bytes(8, "big"))
         digest.update(encoded_path)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return digest.hexdigest()
+
+
+def committed_tree_content_sha256(source_root: Path) -> str:
+    digest = hashlib.sha256()
+    paths = sorted(
+        path.relative_to(source_root)
+        for path in source_root.rglob("*")
+        if path.is_file() or path.is_symlink()
+    )
+    for relative in paths:
+        path = source_root / relative
+        if path.is_symlink() or not path.is_file():
+            raise OSError(
+                f"non-regular committed source input: {relative.as_posix()}"
+            )
+        encoded_path = relative.as_posix().encode("utf-8")
+        executable = bool(path.stat().st_mode & stat.S_IXUSR)
+        content = path.read_bytes()
+        digest.update(len(encoded_path).to_bytes(8, "big"))
+        digest.update(encoded_path)
+        digest.update(b"x" if executable else b"-")
         digest.update(len(content).to_bytes(8, "big"))
         digest.update(content)
     return digest.hexdigest()
@@ -157,17 +180,33 @@ def run_command(
 
 def preexisting_outputs(source_root: Path) -> list[str]:
     candidates = [
-        source_root / "node_modules",
         source_root / "target",
         source_root / "shells/vscode/dist",
     ]
     return [path.relative_to(source_root).as_posix() for path in candidates if path.exists()]
 
 
+def make_tree_user_writable(root: Path) -> None:
+    for path in (root, *root.rglob("*")):
+        if not path.is_symlink():
+            path.chmod(path.stat().st_mode | stat.S_IWUSR)
+
+
+def post_bootstrap_network_is_denied() -> bool:
+    try:
+        interfaces = socket.if_nameindex()
+    except OSError:
+        return False
+    return bool(interfaces) and all(name == "lo" for _, name in interfaces)
+
+
 def execute(
     source_root: Path,
     platform_id: str,
     source_revision: str,
+    source_tree: str,
+    source_archive_sha256: str,
+    source_content_sha256: str,
 ) -> dict[str, Any]:
     policy = read_json(source_root / "architecture/clean-build-policy.json")
     platform = policy["linux_platforms"].get(platform_id)
@@ -191,14 +230,21 @@ def execute(
         cargo_home = isolated / "cargo-home"
         npm_cache = isolated / "npm-cache"
         target = isolated / "target"
-        for directory in (home, cargo_home, npm_cache, target):
+        for directory in (home, npm_cache, target):
             directory.mkdir()
+        shutil.copytree(
+            Path(os.environ["CARGO_HOME"]),
+            cargo_home,
+            symlinks=True,
+        )
+        make_tree_user_writable(cargo_home)
         shutil.copytree(
             source_root,
             work,
             symlinks=True,
             ignore=shutil.ignore_patterns(*TRANSIENT_ROOTS),
         )
+        make_tree_user_writable(work)
         if preexisting_outputs(work):
             raise OSError("isolated source did not start without build output")
 
@@ -228,30 +274,35 @@ def execute(
                 "rustfmt",
             )
         ]
-        supply_before = {
-            relative: sha256_bytes((work / relative).read_bytes())
-            for relative in SUPPLY_CHAIN_PATHS
-        }
-        replacements = (source_root, isolated, work, home, cargo_home, npm_cache, target)
+        replacements = (
+            source_root,
+            isolated,
+            work,
+            home,
+            cargo_home,
+            npm_cache,
+            target,
+        )
         commands = []
-        for command in policy["commands"]:
+        for command in policy["verification_commands"]:
             result = run_command(command, work, environment, replacements)
             commands.append(result)
             if result["status"] != "pass":
                 break
-        supply_after = {
-            relative: sha256_bytes((work / relative).read_bytes())
-            for relative in SUPPLY_CHAIN_PATHS
-        }
+        command_status = {item["id"]: item["status"] for item in commands}
         checks = {
-            "all_commands_passed": len(commands) == len(policy["commands"])
+            "all_commands_passed": len(commands)
+            == len(policy["verification_commands"])
             and all(item["status"] == "pass" for item in commands),
             "ambient_dependency_detected": False,
             "clean_home": True,
             "clean_npm_cache": True,
             "clean_source_archive": True,
             "clean_target": True,
-            "supply_chain_unchanged": supply_before == supply_after,
+            "post_bootstrap_network_denied": post_bootstrap_network_is_denied(),
+            "supply_chain_outputs_validated": command_status.get("sbom-build")
+            == "pass"
+            and command_status.get("sbom-check") == "pass",
         }
         status = "pass" if all(
             value is True
@@ -276,8 +327,10 @@ def execute(
                 "writable_storage": "fresh-temporary-filesystem",
             },
             "source": {
-                "input_sha256": input_tree_sha256(source_root, policy),
+                "archive_sha256": source_archive_sha256,
+                "content_sha256": source_content_sha256,
                 "revision": source_revision,
+                "tree": source_tree,
             },
             "toolchains": tools,
             "commands": commands,
@@ -288,15 +341,60 @@ def execute(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--platform", required=True)
-    parser.add_argument("--source-revision", required=True)
+    parser.add_argument("--platform")
+    parser.add_argument("--source-revision")
+    parser.add_argument("--source-tree")
+    parser.add_argument("--source-archive-sha256")
+    parser.add_argument("--source-content-sha256")
     parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--verify-source-content")
     args = parser.parse_args()
-    if not re.fullmatch(r"[0-9a-f]{40}", args.source_revision):
+    if args.verify_source_content:
+        if not HEX_SHA256.fullmatch(args.verify_source_content):
+            print("expected source content must be a SHA-256 value", file=sys.stderr)
+            return 2
+        try:
+            actual = committed_tree_content_sha256(args.source_root)
+        except OSError as error:
+            print(f"clean source content verification failed: {error}", file=sys.stderr)
+            return 1
+        if actual != args.verify_source_content:
+            print("clean source content identity does not match", file=sys.stderr)
+            return 1
+        print("clean source content identity passed")
+        return 0
+    if not all(
+        (
+            args.platform,
+            args.source_revision,
+            args.source_tree,
+            args.source_archive_sha256,
+            args.source_content_sha256,
+        )
+    ):
+        print("clean standard build identity arguments are required", file=sys.stderr)
+        return 2
+    if not re.fullmatch(r"[0-9a-f]{40,64}", args.source_revision):
         print("source revision must be a full lowercase Git object id", file=sys.stderr)
         return 2
+    if not re.fullmatch(r"[0-9a-f]{40,64}", args.source_tree):
+        print("source tree must be a full lowercase Git object id", file=sys.stderr)
+        return 2
+    if not re.fullmatch(r"[0-9a-f]{64}", args.source_archive_sha256):
+        print("source archive must be a SHA-256 value", file=sys.stderr)
+        return 2
+    if not re.fullmatch(r"[0-9a-f]{64}", args.source_content_sha256):
+        print("source content must be a SHA-256 value", file=sys.stderr)
+        return 2
     try:
-        report = execute(args.source_root, args.platform, args.source_revision)
+        report = execute(
+            args.source_root,
+            args.platform,
+            args.source_revision,
+            args.source_tree,
+            args.source_archive_sha256,
+            args.source_content_sha256,
+        )
     except (KeyError, OSError, subprocess.SubprocessError, ValueError) as error:
         print(f"clean standard build failed: {error}", file=sys.stderr)
         return 1

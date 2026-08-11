@@ -1,0 +1,141 @@
+name: Product
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Product CI Contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Validate product CI contract
+        run: python3 scripts/product_ci.py --check
+
+  format:
+    name: Product Format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.15.0"
+          cache: npm
+      - name: Set up npm
+        run: npm install --global npm@11.12.1
+      - name: Set up Rust
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Validate toolchains
+        run: python3 scripts/product_ci.py --check-environment all
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run format lane
+        run: python3 scripts/product_ci.py --run-lane format
+
+  lint:
+    name: Product Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.15.0"
+          cache: npm
+      - name: Set up npm
+        run: npm install --global npm@11.12.1
+      - name: Set up Rust
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Validate toolchains
+        run: python3 scripts/product_ci.py --check-environment all
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run lint lane
+        run: python3 scripts/product_ci.py --run-lane lint
+
+  build:
+    name: Product Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.15.0"
+          cache: npm
+      - name: Set up npm
+        run: npm install --global npm@11.12.1
+      - name: Set up Rust
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Validate toolchains
+        run: python3 scripts/product_ci.py --check-environment all
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run build lane
+        run: python3 scripts/product_ci.py --run-lane build
+
+  rust_unit_contract:
+    name: Rust Unit and Contract Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Rust
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Validate Rust toolchain
+        run: python3 scripts/product_ci.py --check-environment rust
+      - name: Run Rust unit and contract lane
+        run: python3 scripts/product_ci.py --run-lane rust-unit-contract
+
+  vscode_shell:
+    name: VS Code Shell Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.15.0"
+          cache: npm
+      - name: Set up npm
+        run: npm install --global npm@11.12.1
+      - name: Validate Node toolchain
+        run: python3 scripts/product_ci.py --check-environment node
+      - name: Validate npm toolchain
+        run: python3 scripts/product_ci.py --check-environment npm
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run VS Code shell lane
+        run: python3 scripts/product_ci.py --run-lane vscode-shell
+
+  native_linux_status:
+    name: Native Linux Evidence (Pending Execution)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Rust
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Validate Rust toolchain
+        run: python3 scripts/product_ci.py --check-environment rust
+      - name: Inventory tests requiring native execution
+        run: python3 scripts/product_ci.py --inventory-native

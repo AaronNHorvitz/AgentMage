@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "enforced",
   "test_id": "S-001-IT01",
   "toolchains": {
@@ -26,7 +26,7 @@
       "version_id": "26.04"
     }
   },
-  "commands": [
+  "bootstrap_commands": [
     {
       "id": "npm-clean-install",
       "argv": [
@@ -36,26 +36,19 @@
         "--no-audit",
         "--no-fund"
       ],
-      "network": "bootstrap-only"
-    },
-    {
-      "id": "npm-locked-tree",
-      "argv": [
-        "npm",
-        "ls",
-        "--all",
-        "--json"
-      ],
-      "network": "disabled-by-client"
+      "network": "bootstrap-container-build"
     },
     {
       "id": "cargo-fetch",
-      "argv": [
-        "cargo",
-        "fetch",
-        "--locked"
-      ],
-      "network": "bootstrap-only"
+      "argv": ["cargo", "fetch", "--locked"],
+      "network": "bootstrap-container-build"
+    }
+  ],
+  "verification_commands": [
+    {
+      "id": "npm-locked-tree",
+      "argv": ["npm", "ls", "--all", "--json"],
+      "network": "container-disabled"
     },
     {
       "id": "cargo-locked-tree",
@@ -68,102 +61,99 @@
         "1",
         "--no-deps"
       ],
-      "network": "disabled-by-client"
+      "network": "container-disabled"
     },
     {
       "id": "build",
-      "argv": [
-        "npm",
-        "run",
-        "product:build"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "product:build"],
+      "network": "container-disabled"
     },
     {
       "id": "lint",
-      "argv": [
-        "npm",
-        "run",
-        "product:lint"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "product:lint"],
+      "network": "container-disabled"
     },
     {
       "id": "format-check",
-      "argv": [
-        "npm",
-        "run",
-        "product:format-check"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "product:format-check"],
+      "network": "container-disabled"
     },
     {
       "id": "test",
-      "argv": [
-        "npm",
-        "run",
-        "product:test"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "product:test"],
+      "network": "container-disabled"
     },
     {
       "id": "sbom-build",
-      "argv": [
-        "npm",
-        "run",
-        "supply-chain:build"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "supply-chain:build"],
+      "network": "container-disabled"
     },
     {
       "id": "sbom-check",
-      "argv": [
-        "npm",
-        "run",
-        "supply-chain:check"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "supply-chain:check"],
+      "network": "container-disabled"
     },
     {
       "id": "diagnostic",
-      "argv": [
-        "npm",
-        "run",
-        "diagnostic:check"
-      ],
-      "network": "disabled-by-client"
+      "argv": ["npm", "run", "diagnostic:check"],
+      "network": "container-disabled"
     }
   ],
-  "additional_input_paths": [
-    "architecture/clean-build-policy.json",
-    "architecture/component-inventory-policy.json",
-    "architecture/dependency-classes.json",
-    "architecture/optional-component-inventory.json",
-    "architecture/rollback-design.json",
-    "architecture/signed-update-design.json",
-    "release/clean-build/Containerfile.linux",
-    "scripts/clean_build_evidence.py",
-    "scripts/clean_standard_build.py",
-    "scripts/component_inventory.py",
-    "scripts/configuration_authority_mutation_evidence.py",
-    "scripts/configuration_review_artifacts.py",
-    "scripts/configuration_schema_failure_evidence.py",
-    "scripts/no_install_diagnostic.py",
-    "scripts/update_design.py",
-    "schemas/configuration/configuration-diff.schema.json",
-    "schemas/configuration/configuration-rollback-report.schema.json",
-    "configuration/permission-bearing-values.json",
-    "scripts/supply_chain.py",
-    "supply-chain/dependency-hashes.sha256",
-    "supply-chain/dependency-provenance.json",
-    "supply-chain/sbom.cdx.json"
-  ],
+  "source_binding": {
+    "identity": "exact-git-commit-and-tree",
+    "tracked_scope": "complete-recursive-git-tree",
+    "tracked_exclusions": [],
+    "reject_dirty_index": true,
+    "reject_dirty_worktree": true,
+    "reject_untracked_paths": true,
+    "reject_tracked_symlinks": true,
+    "reject_gitlinks": true,
+    "ignored_exclusions": [
+      ".env",
+      ".env.*",
+      "*.key",
+      "*.pem",
+      "*.p12",
+      "*.pfx",
+      "*.mobileprovision",
+      "*.gguf",
+      "*.safetensors",
+      "*.onnx",
+      "*.sqlite",
+      "*.sqlite3",
+      "*.db",
+      "*.db-wal",
+      "*.db-shm",
+      "*.log",
+      "*.pyc",
+      "*.tmp",
+      "*.swp",
+      ".DS_Store",
+      "Thumbs.db",
+      ".build/**",
+      ".local-models/**",
+      ".mermaid-output/**",
+      ".vscode-test/**",
+      "__pycache__/**",
+      "artifacts/**",
+      "build/**",
+      "coverage/**",
+      "dist/**",
+      "fixtures/support/manual-patch/trust/**",
+      "models/**",
+      "node_modules/**",
+      "review-evidence/**",
+      "shells/vscode/dist/**",
+      "target/**"
+    ]
+  },
   "container_controls": {
     "capabilities": "all-dropped",
-    "host_source": "read-only-committed-archive",
+    "host_source": "complete-committed-tree-in-image",
     "no_new_privileges": true,
     "root_filesystem": "read-only",
     "runtime": "rootless-podman",
+    "runtime_network": "disabled-after-bootstrap",
     "writable_storage": "fresh-tmpfs"
   },
   "execution_user": {

@@ -136,6 +136,7 @@
     "model:feasibility-test": "python3 -m unittest tests.test_model_feasibility",
     "policy:build": "python3 scripts/policy_expectations.py",
     "policy:check": "python3 scripts/policy_expectations.py --check",
+    "product-ci:check": "python3 scripts/product_ci.py --check",
     "references:check": "python3 scripts/security_references.py",
     "requirements:build": "python3 scripts/requirement_registry.py",
     "requirements:coverage": "python3 scripts/requirement_coverage.py",

@@ -6,6 +6,7 @@ ARG NODE_SHA256
 ARG NPM_VERSION=11.12.1
 ARG RUST_VERSION=1.95.0
 ARG RUSTUP_INIT_SHA256
+ARG SOURCE_CONTENT_SHA256
 
 ENV PATH=/opt/node/bin:/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -50,11 +51,26 @@ RUN set -eux; \
     rm /tmp/rustup-init; \
     test "$(cargo --version | cut -d' ' -f2)" = "${RUST_VERSION}"; \
     test "$(rustc --version | cut -d' ' -f2)" = "${RUST_VERSION}"; \
-    chmod -R a-w /opt/cargo /opt/rustup; \
     chmod -R a+rX /opt/cargo /opt/rustup
 
 RUN groupadd --gid 10001 agentmage-build \
-    && useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash agentmage-build
+    && useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash agentmage-build \
+    && chown -R 10001:10001 /opt/cargo
+
+COPY --chown=10001:10001 . /source
+
+USER 10001:10001
+WORKDIR /source
+
+RUN python3 /source/scripts/clean_standard_build.py \
+      --source-root /source \
+      --verify-source-content "${SOURCE_CONTENT_SHA256}" \
+    && npm ci --ignore-scripts --no-audit --no-fund \
+    && cargo fetch --locked
+
+USER 0:0
+RUN chmod -R a-w /opt/cargo /opt/rustup /source \
+    && chmod -R a+rX /opt/cargo /opt/rustup /source
 
 USER 10001:10001
 WORKDIR /tmp

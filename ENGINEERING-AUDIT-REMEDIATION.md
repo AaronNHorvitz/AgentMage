@@ -6,7 +6,7 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
-Current authorized phase: **Phase 2 - Truth and Status Reconciliation (pending user gate review)**
+Current authorized phase: **Phase 3 - Baseline Characterization and Product CI (pending user gate review)**
 
 ## 1. Purpose and Authority Boundary
 
@@ -1036,8 +1036,8 @@ resource exhaustion, package lifecycle, and cross-platform contract fixtures.
 ## 7. Approval-Gated Stabilization Phases
 
 The phases below remain approval-gated. Phase 1 was approved and committed
-locally as `f71a1ce`. Phase 2 alone is currently authorized; Phases 3 through 12
-remain unapproved.
+locally as `f71a1ce`. Phase 2 was approved and committed locally as `9458b0e`.
+Phase 3 alone is currently authorized; Phases 4 through 12 remain unapproved.
 
 ### Phase 1: Consolidated Remediation Ledger
 
@@ -1220,9 +1220,9 @@ release claim. The user approved the ledger and its local commit
 
 ## 13. Phase 2 Record
 
-Phase 2 is authorized only for RM-001 through RM-003 and the documentation-only
-portion of RM-025. Its edits remain subject to the Phase 2 gate and user review;
-authorization to edit is not authorization to commit, push, or enter Phase 3.
+Phase 2 was authorized only for RM-001 through RM-003 and the documentation-only
+portion of RM-025. The user approved its local commit as `9458b0e`; no push
+occurred.
 
 The candidate Phase 2 implementation establishes Decision 0012 and one
 machine-readable status model, reconciles current orientation, model, platform,
@@ -1237,6 +1237,62 @@ coverage, additions-only, schema, and product checks pass. The legacy aggregate
 gate remains fail-closed when it reaches revision-bound retained evidence; for
 example, the Story 4.1 security checker reports that its retained evidence
 closure is stale. Phase 2 does not refresh that historical artifact or represent
-it as current. Separating historical validity from current applicability remains
-assigned to RM-019 in Phase 10. This known aggregate result requires explicit
-user disposition at the Phase 2 gate; it is not silently waived.
+it as current. Separating historical validity from current applicability across
+the complete evidence system remains assigned to RM-019 in Phase 10. This known
+aggregate result was not silently waived or represented as passing.
+
+## 14. Phase 3 Record
+
+Phase 3 is authorized only for RM-004 and RM-005. Its candidate edits remain
+subject to the Phase 3 gate and user review; authorization to edit is not
+authorization to commit, push, or enter Phase 4.
+
+The candidate RM-004 implementation adds a machine-readable product CI policy,
+a policy validator and bounded lane runner, an independent product workflow,
+and mutation tests. Format, lint, build, Rust unit/contract, and Visual Studio
+Code shell results are separate signals from documentation. The generic runner
+verifies the exact inventory of eleven native Linux tests while reporting them
+as pending native execution, never as passed.
+
+The candidate RM-005 implementation upgrades future clean-build evidence to
+schema v2 and binds it to the exact commit, complete recursive Git tree,
+committed-archive SHA-256, and an in-image verified canonical content digest. It
+rejects dirty, untracked, unapproved ignored,
+symbolic-link, and Git-link source states. Dependency bootstrap occurs during
+the image build; verification runs in a rootless, unprivileged, read-only
+container with `--network=none`. The retained schema-v1 report remains unchanged
+and is explicitly historical. This clean-build-specific separation does not
+claim to complete the repository-wide evidence supersession work in RM-019.
+
+The repository's clean Linux report cannot be refreshed before the Phase 3 diff
+is committed because the new source-binding contract correctly rejects the
+current dirty and untracked worktree. End-to-end verification instead committed
+the exact candidate diff inside a disposable repository. Its schema-v2 Fedora
+44 and Ubuntu 26.04 runs both passed with `current-reviewed-source`
+applicability, including in-image source-content verification, all locked
+product commands, post-bootstrap network denial, and disposable supply-chain
+generation and validation. The retained repository report remains unchanged.
+A fresh repository report remains a post-commit action and requires separate
+authorization before replacement.
+
+Phase 3 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed format, strict lint, Rust and TypeScript build,
+  153 default Rust tests, and the Visual Studio Code shell test; eleven native
+  Linux tests remained explicitly ignored by the default Rust lane.
+- The 25 focused product-CI and clean-build policy, mutation, source-identity,
+  permission, and historical-replay tests passed.
+- Product-CI contract validation, native-test inventory, retained schema-v1
+  clean-build replay, Markdown, Mermaid, current-document policy validation,
+  planning schema validation, and workflow YAML parsing passed.
+- The disposable schema-v2 clean-build run passed both required Linux platforms
+  and reported `current-reviewed-source` for the exact disposable candidate
+  commit. No report or retained artifact was copied back to this repository.
+- The broad historical Python suite ran 888 tests and remained fail-closed with
+  22 failures and 65 errors. The reported chains are stale retained supply-chain,
+  model-policy, component-inventory, vulnerability, security-map, and sprint-gate
+  artifacts. `requirements:check` stopped at the same stale supply-chain
+  provenance, SBOM, and dependency-hash outputs. Those artifacts were not
+  refreshed, rewritten, or represented as current during Phase 3.
+- `git diff --check` passed, the retained `artifacts/` tree has no diff, the
+  branch remains local with no upstream, and no push occurred.
