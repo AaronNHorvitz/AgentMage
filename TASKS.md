@@ -510,6 +510,25 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 4 - Kernel Contracts and Typed Boundaries
 
+**Current Story 4.1 evidence correction:** The historical evidence narratives
+in this sprint retain the identities and counts that were true at their cited
+commits. The current reviewed package supersedes those counts: package source
+revision `d399e40` contains 24 closed, non-executable members and three pinned
+direct dependencies, has SHA-256
+`9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458`, and
+passes offline locked tests, strict Clippy, archive-path mutation checks, and
+exact source-closure verification. Reference revision `76076d8` documents all
+120 public exports and all 15 `VersionedContract` types. Fixture revision
+`09f344a` independently reproduces 15 canonical success fixtures, including
+`ApprovalRequest` and `CapabilityGrant`, plus the seven persisted failure
+fixtures and generated oversized case; its manifest SHA-256 is
+`9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec`.
+`ApprovalRequest` remains non-authoritative, and parsing or constructing a
+`CapabilityGrant` does not validate policy or authorize execution; the
+source-contract package itself has no executor. Story review commit `f9d3e29`
+revalidated this expanded closure without promoting product, release, or macOS
+claims.
+
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-004`.

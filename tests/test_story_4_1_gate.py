@@ -36,7 +36,7 @@ class Story41GateTests(unittest.TestCase):
                 for item in report["acceptance_criteria"]
             )
         )
-        self.assertEqual(report["acceptance_criteria"][1]["valid_fixture_count"], 13)
+        self.assertEqual(report["acceptance_criteria"][1]["valid_fixture_count"], 15)
         self.assertEqual(
             report["acceptance_criteria"][1]["persisted_invalid_fixture_count"], 7
         )

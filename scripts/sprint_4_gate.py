@@ -307,7 +307,7 @@ def validate_report(
         or criteria[1].get("persisted_invalid_fixture_count") != 7
         or criteria[1].get("generated_oversized_case_count") != 1
         or criteria[1].get("compatibility_rejection") != "pass"
-        or criteria[2].get("valid_fixture_count") != 13
+        or criteria[2].get("valid_fixture_count") != 15
         or criteria[2].get("canonical_byte_stability") != "pass"
         or criteria[2].get("public_parser_round_trip") != "pass"
         or criteria[3].get("typed_boundary_trace_count") != 5
