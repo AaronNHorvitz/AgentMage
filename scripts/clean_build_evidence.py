@@ -359,7 +359,12 @@ def run_platform(
         ROOT,
     )
     if run.returncode != 0:
-        detail = run.stderr.strip().splitlines()[-1] if run.stderr.strip() else "unknown"
+        output_tail = " | ".join(
+            "\n".join((run.stdout, run.stderr)).strip().splitlines()[-80:]
+        )
+        detail = f"container exited {run.returncode}"
+        if output_tail:
+            detail = f"{detail}: {output_tail}"
         try:
             failed_report = json.loads(run.stdout)
             failed_command = next(
