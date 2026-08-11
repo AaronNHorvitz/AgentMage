@@ -28,6 +28,7 @@ EXPECTED_INTERNAL_CARGO = {
 }
 EXPECTED_EXTERNAL_CARGO = {
     "ed25519-dalek",
+    "rustix",
     "serde",
     "serde_json",
     "sha2",

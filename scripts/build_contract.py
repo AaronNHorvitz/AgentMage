@@ -37,7 +37,7 @@ EXPECTED_CARGO_PACKAGES = {
     ),
     "kernel/contracts": (
         "agentmage-kernel-contracts",
-        {"serde", "serde_json"},
+        {"serde", "serde_json", "unicode-normalization"},
     ),
     "kernel/engine": (
         "agentmage-kernel-engine",
@@ -49,7 +49,10 @@ EXPECTED_CARGO_PACKAGES = {
             "sha2",
         },
     ),
-    "platforms/linux": ("agentmage-platform-linux", {"agentmage-kernel-contracts"}),
+    "platforms/linux": (
+        "agentmage-platform-linux",
+        {"agentmage-kernel-contracts", "rustix", "sha2"},
+    ),
     "release/xtask": ("agentmage-xtask", set()),
     "shells/host": (
         "agentmage-host",

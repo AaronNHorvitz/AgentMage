@@ -10,6 +10,8 @@ publish.workspace = true
 
 [dependencies]
 agentmage-kernel-contracts.workspace = true
+rustix.workspace = true
+sha2.workspace = true
 
 [lints]
 workspace = true

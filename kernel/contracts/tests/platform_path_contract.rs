@@ -1,9 +1,10 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use agentmage_kernel_contracts::{
-    AdapterInstanceId, AuthorizedWorkspaceHandle, HeldWorkspaceObject, PathAdapterError,
-    PathAdapterErrorKind, PathPlatform, PathResolutionIntent, PlatformPathAdapter,
-    WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+    AdapterInstanceId, AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject,
+    PathAdapterError, PathAdapterErrorKind, PathPlatform, PathResolutionIntent,
+    PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity,
+    WorkspaceObjectKind, WorkspacePath,
 };
 
 #[derive(Debug)]
@@ -37,6 +38,7 @@ struct ClientHeldObject {
     authorization_id: WorkspaceAuthorizationId,
     adapter_instance_id: AdapterInstanceId,
     intent: PathResolutionIntent,
+    object_identity: WorkspaceObjectIdentity,
 }
 
 impl HeldWorkspaceObject for ClientHeldObject {
@@ -54,6 +56,18 @@ impl HeldWorkspaceObject for ClientHeldObject {
 
     fn intent(&self) -> PathResolutionIntent {
         self.intent
+    }
+
+    fn object_kind(&self) -> WorkspaceObjectKind {
+        WorkspaceObjectKind::RegularFile
+    }
+
+    fn object_identity(&self) -> &WorkspaceObjectIdentity {
+        &self.object_identity
+    }
+
+    fn preimage(&self) -> Option<&FilePreimage> {
+        None
     }
 }
 
@@ -99,6 +113,11 @@ impl PlatformPathAdapter for ClientAdapter {
             authorization_id: workspace.authorization_id().clone(),
             adapter_instance_id: workspace.adapter_instance_id().clone(),
             intent,
+            object_identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [1; 32],
+                [2; 32],
+            ),
         })
     }
 }
@@ -131,6 +150,9 @@ fn public_adapter_contract_preserves_handle_affinity_and_zero_observation_denial
         .expect("matching handle");
     assert_eq!(held.workspace_path(), &path);
     assert_eq!(held.intent(), PathResolutionIntent::ReadFile);
+    assert_eq!(held.object_kind(), WorkspaceObjectKind::RegularFile);
+    assert_eq!(held.object_identity().object_identity_sha256(), &[2; 32]);
+    assert!(held.preimage().is_none());
     assert_eq!(adapter.observations.load(Ordering::SeqCst), 1);
 
     let mismatched = WorkspacePath::new(

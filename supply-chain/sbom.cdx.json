@@ -68,7 +68,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "bb0e828870f6f2b58e8bd8b94fb0d94913d39a11cd63224d827c3ed9f87cf9bb"
+          "content": "addf788a6b5a3ff1f2e1642c7a703e03674696f5f40f28fc293d7b96672de794"
         }
       ],
       "licenses": [
@@ -130,7 +130,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "599baede5a187db58de97fbed5e9bb4db9a3e93484d35d4a7402328e2c54cfc7"
+          "content": "49b2f840c87e5a7d5c208e12c78177c505188f01a56b7ad9dfaaf811350f2578"
         }
       ],
       "licenses": [
@@ -186,6 +186,35 @@
       "scope": "required",
       "type": "library",
       "version": "0.0.0"
+    },
+    {
+      "bom-ref": "cargo:bitflags@2.13.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "bitflags",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/bitflags@2.13.1",
+      "scope": "required",
+      "type": "library",
+      "version": "2.13.1"
     },
     {
       "bom-ref": "cargo:block-buffer@0.12.1",
@@ -482,6 +511,35 @@
       "version": "3.0.0"
     },
     {
+      "bom-ref": "cargo:errno@0.3.14",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "errno",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/errno@0.3.14",
+      "scope": "required",
+      "type": "library",
+      "version": "0.3.14"
+    },
+    {
       "bom-ref": "cargo:fiat-crypto@0.3.0",
       "hashes": [
         {
@@ -598,6 +656,35 @@
       "version": "0.2.189"
     },
     {
+      "bom-ref": "cargo:linux-raw-sys@0.12.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "linux-raw-sys",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/linux-raw-sys@0.12.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.12.1"
+    },
+    {
       "bom-ref": "cargo:memchr@2.8.3",
       "hashes": [
         {
@@ -712,6 +799,35 @@
       "scope": "required",
       "type": "library",
       "version": "0.4.1"
+    },
+    {
+      "bom-ref": "cargo:rustix@1.1.4",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
+        }
+      ],
+      "name": "rustix",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/rustix@1.1.4",
+      "scope": "required",
+      "type": "library",
+      "version": "1.1.4"
     },
     {
       "bom-ref": "cargo:semver@1.0.28",
@@ -1149,6 +1265,64 @@
       "scope": "required",
       "type": "library",
       "version": "0.1.25"
+    },
+    {
+      "bom-ref": "cargo:windows-link@0.2.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "windows-link",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/windows-link@0.2.1",
+      "scope": "required",
+      "type": "library",
+      "version": "0.2.1"
+    },
+    {
+      "bom-ref": "cargo:windows-sys@0.61.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "windows-sys",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/windows-sys@0.61.2",
+      "scope": "required",
+      "type": "library",
+      "version": "0.61.2"
     },
     {
       "bom-ref": "cargo:zeroize@1.9.0",
@@ -12806,13 +12980,19 @@
     },
     {
       "dependsOn": [
-        "cargo:agentmage-kernel-contracts@0.0.0"
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:sha2@0.11.0"
       ],
       "ref": "cargo:agentmage-platform-linux@0.0.0"
     },
     {
       "dependsOn": [],
       "ref": "cargo:agentmage-xtask@0.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:bitflags@2.13.1"
     },
     {
       "dependsOn": [
@@ -12887,6 +13067,13 @@
       "ref": "cargo:ed25519@3.0.0"
     },
     {
+      "dependsOn": [
+        "cargo:libc@0.2.189",
+        "cargo:windows-sys@0.61.2"
+      ],
+      "ref": "cargo:errno@0.3.14"
+    },
+    {
       "dependsOn": [],
       "ref": "cargo:fiat-crypto@0.3.0"
     },
@@ -12903,6 +13090,10 @@
     {
       "dependsOn": [],
       "ref": "cargo:libc@0.2.189"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:linux-raw-sys@0.12.1"
     },
     {
       "dependsOn": [],
@@ -12925,6 +13116,16 @@
         "cargo:semver@1.0.28"
       ],
       "ref": "cargo:rustc_version@0.4.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:bitflags@2.13.1",
+        "cargo:errno@0.3.14",
+        "cargo:libc@0.2.189",
+        "cargo:linux-raw-sys@0.12.1",
+        "cargo:windows-sys@0.61.2"
+      ],
+      "ref": "cargo:rustix@1.1.4"
     },
     {
       "dependsOn": [],
@@ -13016,6 +13217,16 @@
         "cargo:tinyvec@1.10.0"
       ],
       "ref": "cargo:unicode-normalization@0.1.25"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:windows-link@0.2.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:windows-link@0.2.1"
+      ],
+      "ref": "cargo:windows-sys@0.61.2"
     },
     {
       "dependsOn": [],
@@ -15352,7 +15563,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:8755f0bb-685b-552e-9318-ab7ebe9995d4",
+  "serialNumber": "urn:uuid:599bf42b-75d6-548b-a3be-6f1feac6a491",
   "specVersion": "1.6",
   "version": 1
 }

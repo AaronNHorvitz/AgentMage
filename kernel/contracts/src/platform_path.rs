@@ -28,6 +28,87 @@ pub enum PathResolutionIntent {
     ContentHash,
 }
 
+/// Closed filesystem-object kind admitted by a read-only path adapter.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkspaceObjectKind {
+    /// A regular file held for metadata, reading, or hashing.
+    RegularFile,
+    /// A directory held for metadata or bounded enumeration.
+    Directory,
+}
+
+/// Content-free digest evidence for one platform filesystem identity.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorkspaceObjectIdentity {
+    platform: PathPlatform,
+    mount_identity_sha256: [u8; 32],
+    object_identity_sha256: [u8; 32],
+}
+
+impl WorkspaceObjectIdentity {
+    /// Creates evidence from adapter-computed, domain-separated identity digests.
+    #[must_use]
+    pub const fn new(
+        platform: PathPlatform,
+        mount_identity_sha256: [u8; 32],
+        object_identity_sha256: [u8; 32],
+    ) -> Self {
+        Self {
+            platform,
+            mount_identity_sha256,
+            object_identity_sha256,
+        }
+    }
+
+    /// Returns the platform family that produced this identity.
+    #[must_use]
+    pub const fn platform(&self) -> PathPlatform {
+        self.platform
+    }
+
+    /// Returns the exact mount-identity digest without native identifiers.
+    #[must_use]
+    pub const fn mount_identity_sha256(&self) -> &[u8; 32] {
+        &self.mount_identity_sha256
+    }
+
+    /// Returns the exact object-identity digest without native identifiers.
+    #[must_use]
+    pub const fn object_identity_sha256(&self) -> &[u8; 32] {
+        &self.object_identity_sha256
+    }
+}
+
+/// Exact bounded content preimage computed from one continuously held file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilePreimage {
+    byte_len: u64,
+    content_sha256: [u8; 32],
+}
+
+impl FilePreimage {
+    /// Creates exact preimage evidence from the hashed byte count and digest.
+    #[must_use]
+    pub const fn new(byte_len: u64, content_sha256: [u8; 32]) -> Self {
+        Self {
+            byte_len,
+            content_sha256,
+        }
+    }
+
+    /// Returns the number of bytes included in the digest.
+    #[must_use]
+    pub const fn byte_len(&self) -> u64 {
+        self.byte_len
+    }
+
+    /// Returns the exact binary SHA-256 digest.
+    #[must_use]
+    pub const fn content_sha256(&self) -> &[u8; 32] {
+        &self.content_sha256
+    }
+}
+
 /// Stable, content-free path-adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PathAdapterErrorKind {
@@ -45,6 +126,8 @@ pub enum PathAdapterErrorKind {
     SymbolicLink,
     /// Resolution encountered an alias-like platform redirect.
     Alias,
+    /// Resolution encountered a multiply linked regular file.
+    HardLink,
     /// The held object identity changed during validation.
     IdentityChanged,
     /// The workspace mount identity changed during validation.
@@ -53,6 +136,8 @@ pub enum PathAdapterErrorKind {
     NotFound,
     /// The object kind is incompatible with the requested read intent.
     ObjectKindMismatch,
+    /// A bounded read or hash would exceed the configured resource limit.
+    ResourceLimitExceeded,
     /// The operating system denied the bounded operation.
     PermissionDenied,
     /// A bounded platform operation failed without safe additional detail.
@@ -71,10 +156,12 @@ impl PathAdapterErrorKind {
             Self::UnsafeComponent => "path.adapter.unsafe_component",
             Self::SymbolicLink => "path.adapter.symbolic_link",
             Self::Alias => "path.adapter.alias",
+            Self::HardLink => "path.adapter.hard_link",
             Self::IdentityChanged => "path.adapter.identity_changed",
             Self::MountChanged => "path.adapter.mount_changed",
             Self::NotFound => "path.adapter.not_found",
             Self::ObjectKindMismatch => "path.adapter.object_kind_mismatch",
+            Self::ResourceLimitExceeded => "path.adapter.resource_limit_exceeded",
             Self::PermissionDenied => "path.adapter.permission_denied",
             Self::PlatformFailure => "path.adapter.platform_failure",
         }
@@ -153,6 +240,15 @@ pub trait HeldWorkspaceObject: fmt::Debug + Send {
 
     /// Returns the read-only intent validated for this held object.
     fn intent(&self) -> PathResolutionIntent;
+
+    /// Returns the validated filesystem-object kind.
+    fn object_kind(&self) -> WorkspaceObjectKind;
+
+    /// Returns the platform-scoped mount and object identity evidence.
+    fn object_identity(&self) -> &WorkspaceObjectIdentity;
+
+    /// Returns an exact preimage when regular-file reading or hashing was requested.
+    fn preimage(&self) -> Option<&FilePreimage>;
 }
 
 /// Shared contract implemented by each platform's secure path adapter.
@@ -186,8 +282,9 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::{
-        AuthorizedWorkspaceHandle, HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind,
-        PathPlatform, PathResolutionIntent, PlatformPathAdapter,
+        AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject, PathAdapterError,
+        PathAdapterErrorKind, PathPlatform, PathResolutionIntent, PlatformPathAdapter,
+        WorkspaceObjectIdentity, WorkspaceObjectKind,
     };
     use crate::{AdapterInstanceId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath};
 
@@ -222,6 +319,7 @@ mod tests {
         authorization_id: WorkspaceAuthorizationId,
         adapter_instance_id: AdapterInstanceId,
         intent: PathResolutionIntent,
+        object_identity: WorkspaceObjectIdentity,
     }
 
     impl HeldWorkspaceObject for FakeHeldObject {
@@ -239,6 +337,18 @@ mod tests {
 
         fn intent(&self) -> PathResolutionIntent {
             self.intent
+        }
+
+        fn object_kind(&self) -> WorkspaceObjectKind {
+            WorkspaceObjectKind::RegularFile
+        }
+
+        fn object_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.object_identity
+        }
+
+        fn preimage(&self) -> Option<&FilePreimage> {
+            None
         }
     }
 
@@ -284,6 +394,11 @@ mod tests {
                 authorization_id: workspace.authorization_id().clone(),
                 adapter_instance_id: workspace.adapter_instance_id().clone(),
                 intent,
+                object_identity: WorkspaceObjectIdentity::new(
+                    PathPlatform::DeterministicFake,
+                    [1; 32],
+                    [2; 32],
+                ),
             })
         }
     }
@@ -321,6 +436,9 @@ mod tests {
         assert_eq!(held.authorization_id(), handle.authorization_id());
         assert_eq!(held.adapter_instance_id(), adapter.adapter_instance_id());
         assert_eq!(held.intent(), PathResolutionIntent::ReadFile);
+        assert_eq!(held.object_kind(), WorkspaceObjectKind::RegularFile);
+        assert_eq!(held.object_identity().mount_identity_sha256(), &[1; 32]);
+        assert!(held.preimage().is_none());
         assert_eq!(adapter.observations.load(Ordering::SeqCst), 1);
     }
 

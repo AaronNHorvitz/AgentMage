@@ -25,6 +25,7 @@ agentmage-platform-linux = { path = "platforms/linux" }
 ed25519-dalek = { version = "=3.0.0", default-features = false, features = ["fast", "signature", "zeroize"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
+rustix = { version = "=1.1.4", default-features = false, features = ["fs", "std"] }
 sha2 = "=0.11.0"
 unicode-normalization = "=0.1.25"
 

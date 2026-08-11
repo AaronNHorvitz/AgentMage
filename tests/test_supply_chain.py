@@ -45,7 +45,7 @@ class SupplyChainTests(unittest.TestCase):
             for item in self.provenance["components"]
             if item["ecosystem"] == "cargo" and item["source"]["type"] == "registry"
         ]
-        self.assertEqual(len(external), 32)
+        self.assertEqual(len(external), 41)
         for component in external:
             self.assertTrue(component["source"]["url"].startswith("https://crates.io/crates/"))
             self.assertEqual(component["integrity"], f"sha256:{component['hashes'][0]['content']}")

@@ -38,8 +38,9 @@ pub use path::{
     WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind,
 };
 pub use platform_path::{
-    AuthorizedWorkspaceHandle, HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind,
-    PathPlatform, PathResolutionIntent, PlatformPathAdapter,
+    AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject, PathAdapterError,
+    PathAdapterErrorKind, PathPlatform, PathResolutionIntent, PlatformPathAdapter,
+    WorkspaceObjectIdentity, WorkspaceObjectKind,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use serialization::{
