@@ -53,7 +53,7 @@
   },
   "surfaces": [
     {
-      "files_scanned": 50,
+      "files_scanned": 54,
       "findings": [],
       "surface": "source"
     },
