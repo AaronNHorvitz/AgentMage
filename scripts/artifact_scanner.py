@@ -35,6 +35,7 @@ EXPECTED_SEEDS = (
 EXPECTED_PRODUCTION_LICENSES = (
     "(MIT OR Apache-2.0) AND Unicode-3.0",
     "Apache-2.0",
+    "Apache-2.0 OR BSD-3-Clause",
     "Apache-2.0 OR MIT",
     "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
     "BSD-3-Clause",
