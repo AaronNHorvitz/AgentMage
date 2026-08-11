@@ -17,7 +17,7 @@
         },
         {
           "path": "kernel/contracts/Cargo.toml",
-          "sha256": "225d6d1d029c925c5456d9693f0fafd2da9620d20cf9f1eabbd66608e3327760"
+          "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088"
         },
         {
           "path": "kernel/engine/Cargo.toml",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "f74c55589adc30ca042577e31bf054f4a0da5cff8e181dca653c163af1d0493d"
+          "sha256": "279a50aca4b718df2b1cb861c55b8658bdf635e98bbdf66a8e148d59caa8140c"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "0b78ab331f98331761b535260add4c9c7a032819b789ef0b7e893f0d413644f6"
+          "sha256": "fe63fc20390ba7ceb5fb0ef44de0ec4bf6d62611e804024ca52d8d6721ea658f"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "cdff2f04404f578b595e6e137a0cdfc17680498c5d29af8f3a496d1879a12260"
+          "sha256": "0084364db7a53d4e89355118fb6ca5f4ee6a5d98fe1f9e9af671a47f6e81a5e0"
         }
       ],
       "task_id": "1.1.2.3"
