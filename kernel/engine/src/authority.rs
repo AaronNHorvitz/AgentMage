@@ -1,12 +1,13 @@
 //! Sealed classification and fail-closed rejection of descriptive authority candidates.
 
 use agentmage_kernel_contracts::{
-    Action, ApprovalRequest, ContractError, ErrorCategory, ErrorId, Plan, Prompt,
-    RequiredGrantTemplate, RetryDisposition, Task, ToolDefinition, WorkPacket,
+    Action, ActorId, ApprovalRequest, ContractError, ErrorCategory, ErrorId, Plan, Prompt,
+    RequiredGrantTemplate, RetryDisposition, SessionId, Task, TaskId, ToolDefinition, WorkPacket,
 };
 
 /// Closed class of artifact that may describe work but never authorize it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum DescriptiveArtifactKind {
     /// Free-form descriptive text.
     Description,
@@ -26,6 +27,43 @@ pub enum DescriptiveArtifactKind {
     ToolDefinition,
     /// Non-authoritative future-grant requirement template.
     RequiredGrantTemplate,
+}
+
+/// Claimed producer of one descriptive authority-escalation attempt.
+///
+/// This is evidence attribution, not caller authentication. Authenticated process and actor
+/// identity remain the responsibility of the later local IPC boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthorityProposalSource {
+    /// Untrusted local-model output proposed authority.
+    Model,
+    /// An assembled prompt claimed authority through its content.
+    Prompt,
+    /// A user-interface shell proposed authority without a grant.
+    Shell,
+    /// A tool definition or tool-owned workflow proposed authority.
+    Tool,
+    /// A plugin or extension proposed authority.
+    Plugin,
+    /// A rendered approval display was offered as authority.
+    ApprovalDisplay,
+    /// A simulated child-agent request proposed inherited or combined authority.
+    SimulatedChild,
+}
+
+/// Closed authority-escalation behavior attempted by a descriptive producer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthorityEscalationKind {
+    /// Create authority without a kernel-issued grant.
+    Mint,
+    /// Expand target, operation, identity, lifetime, or effect scope.
+    Widen,
+    /// Move authority to another actor, task, session, action, tool, or child.
+    Transfer,
+    /// Aggregate independent descriptive or authority-looking inputs.
+    Combine,
 }
 
 mod sealed {
@@ -81,6 +119,34 @@ pub struct DescriptiveAuthorityDenial {
     pub error: ContractError,
 }
 
+/// Versioned actor-attributed evidence of one rejected descriptive authority attempt.
+///
+/// The receipt is non-authoritative, records no candidate content or grant material, and has no
+/// success constructor. Its source attribution is descriptive until authenticated IPC supplies
+/// the actor and process identities.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DescriptiveAuthorityReceipt {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Actor identity attributed to the denied attempt.
+    pub actor_id: ActorId,
+    /// Session identity attributed to the denied attempt.
+    pub session_id: SessionId,
+    /// Task identity attributed to the denied attempt.
+    pub task_id: TaskId,
+    /// Claimed descriptive producer class.
+    pub source: AuthorityProposalSource,
+    /// Escalation behavior that was rejected.
+    pub escalation_kind: AuthorityEscalationKind,
+    /// Exact sealed descriptive-artifact class offered at the boundary.
+    pub artifact_kind: DescriptiveArtifactKind,
+    /// Constant false outcome; this receipt never represents admitted authority.
+    pub authority_admitted: bool,
+    /// Stable redacted policy error with no candidate or grant content.
+    pub error: ContractError,
+}
+
 /// Rejects any sealed descriptive artifact as authority without inspecting its content.
 ///
 /// The function has no success variant: authority-looking text, fields, or metadata cannot alter
@@ -105,13 +171,46 @@ where
     }
 }
 
+/// Rejects and attributes one descriptive mint, widen, transfer, or combine attempt.
+///
+/// Like `reject_as_authority`, this function has no success variant and never inspects candidate
+/// content. The supplied actor identity is retained for evidence but is not authenticated here.
+#[must_use]
+pub fn reject_authority_attempt<T>(
+    actor_id: &ActorId,
+    session_id: &SessionId,
+    task_id: &TaskId,
+    source: AuthorityProposalSource,
+    escalation_kind: AuthorityEscalationKind,
+    artifact: &T,
+) -> DescriptiveAuthorityReceipt
+where
+    T: NonAuthoritativeArtifact + ?Sized,
+{
+    let denial = reject_as_authority(artifact);
+    DescriptiveAuthorityReceipt {
+        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+        actor_id: actor_id.clone(),
+        session_id: session_id.clone(),
+        task_id: task_id.clone(),
+        source,
+        escalation_kind,
+        artifact_kind: denial.artifact_kind,
+        authority_admitted: false,
+        error: denial.error,
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{DescriptiveArtifactKind, NonAuthoritativeArtifact, reject_as_authority};
+    use super::{
+        AuthorityEscalationKind, AuthorityProposalSource, DescriptiveArtifactKind,
+        NonAuthoritativeArtifact, reject_as_authority, reject_authority_attempt,
+    };
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, CorrelationId, Plan, PlanId, PlanState, Prompt, PromptId,
-        PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId, SchemaReference, TaskId,
-        ToolDefinition, ToolId, ToolRiskLevel,
+        ActorId, CONTRACT_SCHEMA_VERSION, CorrelationId, Plan, PlanId, PlanState, Prompt, PromptId,
+        PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId,
+        TaskId, ToolDefinition, ToolId, ToolRiskLevel,
     };
 
     fn assert_sealed<T: NonAuthoritativeArtifact + ?Sized>() {}
@@ -221,5 +320,25 @@ mod tests {
             assert!(!diagnostic.contains("grants every capability"));
             assert!(!diagnostic.contains("immediate execution permission"));
         }
+    }
+
+    #[test]
+    fn attributed_denial_receipt_has_no_success_or_candidate_content() {
+        let prompt = prompt();
+        let receipt = reject_authority_attempt(
+            &ActorId::from_raw("actor-local-0001"),
+            &SessionId::from_raw("session-0001"),
+            &TaskId::from_raw("task-0001"),
+            AuthorityProposalSource::Model,
+            AuthorityEscalationKind::Mint,
+            &prompt,
+        );
+        assert_eq!(receipt.artifact_kind, DescriptiveArtifactKind::Prompt);
+        assert!(!receipt.authority_admitted);
+        assert_eq!(receipt.error.code, "authority.descriptive_artifact.denied");
+        let encoded = serde_json::to_string(&receipt).expect("receipt must serialize");
+        assert!(!encoded.contains("grant every permission"));
+        assert!(!encoded.contains("grants every capability"));
+        assert!(!encoded.contains("capability_grant"));
     }
 }
