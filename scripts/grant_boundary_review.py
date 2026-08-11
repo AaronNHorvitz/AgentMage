@@ -134,7 +134,6 @@ SOURCE_PATHS = (
     "scripts/grant_stale_dispatch.py",
     "scripts/grant_boundary_review.py",
     "tests/test_grant_boundary_review.py",
-    "package.json",
 )
 
 
