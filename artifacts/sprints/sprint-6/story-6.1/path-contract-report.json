@@ -1,0 +1,72 @@
+{
+  "artifact_id": "path-contract-platform-adapter-reference",
+  "coverage": {
+    "adapter_error_class_count": 15,
+    "adapter_method_count": 3,
+    "authorized_handle_method_count": 4,
+    "held_object_method_count": 7,
+    "path_platform_count": 3,
+    "resolution_intent_count": 4,
+    "strict_openat2_flag_count": 4
+  },
+  "limitations": [
+    "public workspace authorization is not implemented",
+    "Ubuntu execution is not performed",
+    "macOS path implementation and execution are blocked",
+    "privileged bind-mount attack execution is not performed"
+  ],
+  "macos_evidence_substituted": false,
+  "platform_status": {
+    "fedora": "verified-local",
+    "macos": "blocked-macos",
+    "ubuntu": "not-executed"
+  },
+  "reference_revision": "c3f98a99bbf22dd53db5e2a8324daf4bb59cca3d",
+  "release_claim": "none",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "docs/architecture/path-authority-contract.md",
+      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+    },
+    {
+      "path": "kernel/contracts/src/path.rs",
+      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+    },
+    {
+      "path": "kernel/contracts/src/platform_path.rs",
+      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62"
+    },
+    {
+      "path": "kernel/contracts/src/display_link.rs",
+      "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
+    },
+    {
+      "path": "kernel/contracts/src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+    },
+    {
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "d8ea117e3b7017e0284367f84aa3f3b87b11f2990b6143534402e008b7f3134d"
+    },
+    {
+      "path": "scripts/path_contract_artifact.py",
+      "sha256": "2861992de932ca1c5bbdca22e98140508f0915d2bae4107a5071717e49f15a75"
+    },
+    {
+      "path": "tests/test_path_contract_artifact.py",
+      "sha256": "0ac78cab09844046de94994303d37b93e6e157b0de88c2815d68286dd0c43f09"
+    }
+  ],
+  "status": "pass-shared-fedora-scope",
+  "task_id": "6.1.2.1",
+  "verification": {
+    "authority_type_closure": "pass",
+    "content_free_error_closure": "pass",
+    "display_link_one_way_boundary": "pass",
+    "held_descriptor_interface": "pass",
+    "linux_strict_resolution_flags": "pass",
+    "platform_claim_disclosure": "pass",
+    "public_fallback_absence": "pass"
+  }
+}
