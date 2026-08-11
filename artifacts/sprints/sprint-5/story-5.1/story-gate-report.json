@@ -1,0 +1,271 @@
+{
+  "acceptance_criteria": [
+    {
+      "admitted_mutation_count": 0,
+      "criterion_id": "5.1.AC1",
+      "implemented_transition_count": 8,
+      "mutation_seed_count": 560,
+      "production_executor_claim": "none",
+      "race_scenario_count": 5,
+      "replay_success_count": 0,
+      "stale_dispatch_case_count": 4,
+      "stale_worker_start_count": 0,
+      "status": "pass-shared-linux-in-memory"
+    },
+    {
+      "admitted_authority_count": 0,
+      "approval_forbidden_authority_field_count": 0,
+      "authority_escalation_case_count": 28,
+      "criterion_id": "5.1.AC2",
+      "grant_operation_count": 15,
+      "status": "pass-shared-linux-contract-and-policy",
+      "strict_denied_by_absence_count": 2,
+      "strict_explicit_denial_count": 12
+    }
+  ],
+  "independent_review": {
+    "artifacts": [
+      {
+        "path": "docs/architecture/grant-policy-reference.md",
+        "sha256": "da5b65d292d037e9781fbaffb16bacbe760b2aae8e573eaae51ae5d130dd0327"
+      },
+      {
+        "path": "docs/architecture/grant-state-transitions.md",
+        "sha256": "5a88e5edc83fcf247c604939bdee117ef7ecce1306127afe0207dba33e211458"
+      },
+      {
+        "path": "fixtures/grants/v1/manifest.json",
+        "sha256": "730cf10dbbf8e6b5deeb20d8eaa352865aa1d3efe7845a8b1f68c64f0c5d84a1"
+      },
+      {
+        "path": "fixtures/grants/adversarial/v1/corpus.json",
+        "sha256": "630169a44503f1fe3682ba7a3aab9da5d007ff40548e86c1c5790250fe4c9d25"
+      },
+      {
+        "path": "fixtures/grants/adversarial/v1/manifest.json",
+        "sha256": "11251ece511c248e8ee6ad34e87b8a6ee6ddd771075c4f0e5321856c4644802a"
+      },
+      {
+        "path": "kernel/contracts/src/approval.rs",
+        "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe"
+      },
+      {
+        "path": "kernel/contracts/src/grant.rs",
+        "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+      },
+      {
+        "path": "kernel/engine/src/approval.rs",
+        "sha256": "1f54405fa755163ca03010d8c8a3f5ea1791ab4532c412d4d404bbcf3a925615"
+      },
+      {
+        "path": "kernel/engine/src/authority.rs",
+        "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+      },
+      {
+        "path": "kernel/engine/src/grants.rs",
+        "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+      },
+      {
+        "path": "kernel/engine/src/policy.rs",
+        "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+      },
+      {
+        "path": "kernel/engine/tests/adversarial_grant_corpus.rs",
+        "sha256": "388cf0ade510ed1bd7c62b3fc502f14f5d83784590bc8d9c6ef2d025b4a77b7d"
+      },
+      {
+        "path": "kernel/engine/tests/authority_escalation_matrix.rs",
+        "sha256": "3ae491dd10c8cc1ef5246d895efdaac28383546c7e2135da8c1be05ddb871880"
+      },
+      {
+        "path": "kernel/engine/tests/grant_race_replay.rs",
+        "sha256": "ebb5c9e96848eeec1d515ed3705350910b6652fe8d18bf2e5812400244de7371"
+      },
+      {
+        "path": "kernel/engine/tests/grant_stale_dispatch.rs",
+        "sha256": "ed26c5e324e18d7319de92923174bcf670e534be0349f268c32002031393aaa4"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
+        "sha256": "dd6a86eff1230d6fbf47d5256b8573a8fe801f2cc7cab2e4103e2cf91f4b88d8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
+        "sha256": "e627927c557c2b550803b7470175df8903cce2f45e570635c1b0eca535fc0f54"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
+        "sha256": "7b742627e44a296b91c99ea468373e516ce2f1e7b772d999befd9f38b15bd1f3"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
+        "sha256": "7ec1694608dd0d28a523e302ff8c6368ae6567ae652ff931fe7cec22631bfef8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
+        "sha256": "79d1723b95100c567ed2a2a2b619f9d0ae3aadd1bb6c19e3c1eb17b058286f9b"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
+        "sha256": "25735990094f0bb1f16752097c71994c27354e6fb07456a07315acf5239c415f"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
+        "sha256": "ab104c5dbb33ee909e745a0bd40fd52436b92dc3dc8dcbc63d858029fdc0ff26"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "sha256": "04447366fbf2967f8f75c7521824e554e7a86e3c0a1b18a256912c7f3665cca5"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "sha256": "dc353fd72d81b3452ddda671a668415881d6242a87104a371f9ea051a8c7c2d0"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "345e2b561d5ed2263004e232d03ee880fcc09ba2",
+    "reviewed_tree": "5894f9f707cedee1c9c7d93f9c0884813319b47c",
+    "reviewer_id": "agentmage-story-5.1-independent-gate-v1"
+  },
+  "macos_evidence_substituted": false,
+  "macos_execution_status": "blocked-macos",
+  "macos_support_claim": "none",
+  "only_blocker": "macos-execution-evidence-unavailable",
+  "product_acceptance_claim": "none",
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "345e2b561d5ed2263004e232d03ee880fcc09ba2",
+  "reviewed_tree": "5894f9f707cedee1c9c7d93f9c0884813319b47c",
+  "schema_version": 1,
+  "security_mapping": {
+    "mapped_requirement_count": 8,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 31
+  },
+  "shared_linux_story_work_complete": true,
+  "status": "blocked-macos",
+  "story_checkbox_complete": false,
+  "story_id": "5.1",
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope-exact-grant"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "not-applicable-no-production-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-no-persisted-user-data"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-independent-automated-boundary-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "evidence": [
+        "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
+      ],
+      "status": "pass-gate-reporting"
+    }
+  ]
+}
