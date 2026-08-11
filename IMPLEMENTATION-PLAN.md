@@ -2,16 +2,16 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Implementation in progress; blocked Mac platform lane retained |
-| Version | 1.1 |
-| Date | 2026-08-10 |
+| Status | Implementation in progress; first-GA delivery and Windows scope accepted |
+| Version | 1.2 |
+| Date | 2026-08-11 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
-| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), and [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) |
-| Planning cadence | 103 sequential two-week sprints across 10 epics |
+| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) |
+| Planning sequence | 127 sequential dependency gates across 12 epics; no calendar estimate implied |
 
 ## 1. Purpose
 
@@ -53,16 +53,16 @@ If documents conflict, the narrower safety boundary or release scope wins until 
 
 ## 3. Implementation Outcomes
 
-The first implementation objective is v0.1, a read-only local evidence assistant in native Visual Studio Code Chat on Apple Silicon macOS, Fedora, and Ubuntu. Its initial candidate is manifest-pinned Gemma 4 E4B, which is enabled only after admission passes. Gemma 4 12B Unified is the named disabled fallback candidate. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
+The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Its initial candidate is manifest-pinned Gemma 4 E4B, which is enabled only after admission passes. Gemma 4 12B Unified is the named disabled fallback candidate. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
 
-The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, and bounded agents. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
+The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, bounded agents, a provider-neutral delivery system, and Windows 11. The first supported public release is v1.0 GA after Sprints 103-126. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
 
 The implementation must preserve these outcomes throughout the roadmap:
 
 - Deterministic operations run before model inference when an answer is mechanically checkable.
 - Models, prompts, shells, plugins, connectors, schedules, and child agents carry no ambient authority.
 - `CapabilityGrant` is the only authority-bearing object and is validated and consumed by the kernel.
-- Platform adapters enforce equivalent authority, path, privacy, evidence, and offline contracts on macOS, Fedora, and Ubuntu.
+- Platform adapters enforce equivalent authority, path, privacy, evidence, and offline contracts on Fedora, Ubuntu, and Windows 11 for v1.0 GA; Apple Silicon macOS remains an independently evidenced post-GA lane.
 - Encrypted SQLite is canonical for operational state; beginning in v0.2, Markdown is canonical only for human-owned knowledge and approved portable memory; JSON Lines is derived export only.
 - Every tool attempt produces one receipt, and every file-grounded claim has a resolvable, stale-aware citation.
 - The strict-local profile has no cloud model, external API, telemetry, analytics, cloud storage, hosted account, or cloud fallback.
@@ -71,7 +71,10 @@ The implementation must preserve these outcomes throughout the roadmap:
 - Native `llama.cpp` and Docker Model Runner implement one `LocalModelRuntime` contract. Native inference is the Linux security reference; Docker is a supported compatibility adapter only after its additional privilege, endpoint, isolation, parity, and zero-egress gates pass.
 - `agentmage doctor` is a deterministic diagnostics response rendered in native Visual Studio Code Chat for v0.1; it is not evidence that the deferred full CLI exists.
 - Security and release claims remain bounded to reproducible evidence and never imply external certification or customer deployment approval.
-- Windows 11 and Intel Mac support remain absent until separately promoted, implemented, and assessed; passing macOS or Linux evidence cannot satisfy a future Windows gate.
+- Provider adapters implement one delivery contract and never add provider conditionals or ambient credentials to the kernel.
+- `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` remain independent authority classes.
+- Windows 11 x64 is required for v1.0 GA; passing Linux or Apple Silicon evidence cannot satisfy a Windows gate. Intel Mac and Windows on Arm remain deferred.
+- Markdown authoring preserves and safely renders inline and display LaTeX mathematics through pinned offline components.
 
 ## 4. Architecture Implementation Strategy
 
@@ -82,7 +85,7 @@ flowchart TB
     SHELLS["Shells<br/>VS Code, later CLI and desktop"] --> KERNEL["Interface-independent kernel"]
     PACKS["Capability packs<br/>read-only first, later authority gated"] --> KERNEL
     KERNEL --> POLICY["Policy, grants, receipts, classification, and recovery"]
-    POLICY --> PLATFORM["macOS and Linux platform adapters"]
+    POLICY --> PLATFORM["Linux, Windows, and retained macOS platform adapters"]
     PLATFORM --> TOOLS["Sandboxed deterministic workers"]
     PLATFORM --> ADAPTER["LocalModelRuntime contract"]
     ADAPTER --> NATIVE["Native llama.cpp"]
@@ -90,6 +93,8 @@ flowchart TB
     POLICY <--> STATE[("Encrypted operational store")]
     TOOLS --> EVIDENCE["Receipts and citations"]
     MODEL --> EVIDENCE
+    POLICY --> GRAPH["Provider-neutral delivery graph"]
+    GRAPH --> PROVIDERS["Operation-scoped provider adapters"]
 ```
 
 ### 4.1 Kernel First
@@ -98,9 +103,9 @@ The kernel contracts are frozen before feature code. They define tasks, work pac
 
 ### 4.2 Platform Boundaries Before Capabilities
 
-macOS and Linux adapters are implemented and tested before tools depend on them. The adapters own local inference, workspace authorization, secure path resolution, process confinement, operating-system secret storage, resource limits, installation, and updates. `RUNTIME-BOUNDARIES.md` defines their process, privilege, socket, lifecycle, and classified data-flow contract.
+Platform adapters are implemented and tested before tools depend on them. The adapters own local inference, workspace authorization, secure path resolution, process confinement, operating-system secret storage, resource limits, installation, and updates. `RUNTIME-BOUNDARIES.md` defines their shared process, privilege, socket, lifecycle, and classified data-flow contract; `WINDOWS-BOUNDARIES.md` defines the Windows specialization.
 
-The MacBook Pro M5 is the primary launch and deployment reference. Fedora is the Linux performance reference. Ubuntu must pass the same supported workflow. Native `llama.cpp` is the Linux security reference, while Docker Model Runner supplies a separately gated compatibility path matching Docker-based development. Platform-specific mechanisms may differ, but no platform or runtime may weaken the common contract.
+Fedora is the Linux development and performance reference. Ubuntu must pass the same supported workflow. Windows 11 x64 is the first-GA Windows reference. Native `llama.cpp` is the Linux and Windows security reference, while Docker Model Runner supplies a separately gated Linux compatibility path matching Docker-based development. The Apple Silicon MacBook Pro M5 requirements remain retained post-GA. Platform-specific mechanisms may differ, but no platform or runtime may weaken the common contract.
 
 ### 4.3 Deterministic Tools Before Model Synthesis
 
@@ -112,7 +117,11 @@ Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `ag
 
 ### 4.5 Authority Added Incrementally
 
-Read-only local work is implemented first. File writes, command execution, remote reads, frontier export/import, connectors, hosted writes, browser actions, schedules, plugins, Model Context Protocol servers, and child agents are introduced in separate increments. Each new authority path reuses the kernel's exact grant, classification, receipt, cancellation, retention, isolation, and recovery contracts.
+Read-only local work is implemented first. File writes, command execution, remote reads, frontier export/import, connectors, hosted writes, CI execution, deployment, infrastructure application, secret operations, administration, browser actions, schedules, plugins, Model Context Protocol servers, and child agents are introduced in separate increments. Each new authority path reuses the kernel's exact grant, classification, receipt, cancellation, retention, isolation, and recovery contracts.
+
+### 4.6 Provider-Neutral Delivery
+
+The delivery graph and adapter SDK arrive only after local authority, writes, execution, and connected-read foundations are proven. Adapters advance from manifested to observable, writable, executable, deployable, and administrative conformance one level at a time. The kernel understands typed delivery objects and capability classes, not provider-specific API calls. [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) owns this contract.
 
 ## 5. Cross-Cutting Workstreams
 
@@ -122,12 +131,14 @@ These workstreams continue across multiple epics even though their first deliver
 |---|---|---|
 | Governance and traceability | Epic 0 | Requirement registry, decision records, additions-only checks, document consistency, public-authority provenance, and final closure |
 | Kernel and contracts | Epics 0-1 | Typed boundaries, policy, work packets, tools, grants, receipts, cancellation, configuration, and compatibility |
-| Platform engineering | Epic 1 | macOS signing/sandbox/XPC/Keychain/Metal and Linux Bubblewrap/seccomp/cgroups/Secret Service, native and Docker runtime boundaries, later packaging and updates |
+| Platform engineering | Epics 1 and 10 | Linux Bubblewrap/seccomp/cgroups/Secret Service, Windows MSIX/AppContainer/named-pipe/DPAPI/NTFS boundaries, retained macOS signing/sandbox/XPC/Keychain/Metal, native and Docker runtime boundaries, packaging and updates |
 | Model lifecycle | Epic 0 feasibility, Epic 1 implementation | Provenance policy, early E4B/fallback evidence, approved-artifact catalog, installer/importer, native/Docker parity, Chat diagnostics, explicit selection, later measured routing |
 | Data and privacy | Epic 1 | Classification, encrypted operational state, retention, local data root, knowledge authority, export, backup, and deletion |
 | Deterministic evidence | Epic 1 | Read-only tools, Git, repository map, evidence states, citations, reconciliation, and truthful completion |
 | User interfaces | Epic 1 | Native Visual Studio Code Chat, later complete CLI and desktop applications using the same kernel |
 | Capability expansion | Epics 2-8 | Knowledge, writes, coding, frontier consultation, documents, connectors, web, schedules, and agents |
+| Delivery graph and adapters | Epics 7-10 | Provider SDK, identity correlation, GitHub/GHES, Jira, Azure DevOps, GitLab, Jenkins, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases |
+| Delivery operations | Epic 10 | Idempotency, uncertain-result reconciliation, CI execution, promotion, health, drift, rollback, feature flags, migrations, and ChatOps notifications |
 | Security assurance | Epic 0 | Threat cases, `SR-*` mappings, assigned `RV-*` owners, continuous fuzzing, adversarial testing, independent review criteria, and incremental evidence bundles |
 | Release engineering | Epic 0 | Apache-2.0 licensing, reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, vulnerability response, signed manual patches, rollback, and support |
 
@@ -142,11 +153,13 @@ flowchart LR
     E4 --> E5["Epic 5<br/>v0.5 Frontier<br/>Sprints 51-53"]
     E5 --> E6["Epic 6<br/>v0.6 Admin and Documents<br/>Sprints 54-69"]
     E6 --> E7["Epic 7<br/>v0.7 GitHub and Connectors<br/>Sprints 70-75"]
-    E7 --> E8["Epic 8<br/>v1+ Extended Capabilities<br/>Sprints 76-100"]
-    E8 --> E9["Epic 9<br/>Product Completion<br/>Sprints 101-102"]
+    E7 --> E8["Epic 8<br/>Extended Capabilities<br/>Sprints 76-100"]
+    E8 --> E9["Epic 9<br/>Inherited Closure<br/>Sprints 101-102"]
+    E9 --> E10["Epic 10<br/>Delivery and Windows<br/>Sprints 103-125"]
+    E10 --> E11["Epic 11<br/>v1.0 GA<br/>Sprint 126"]
 ```
 
-The two-week sprint cadence is the current planning baseline, not a product delivery guarantee. Work proceeds in numbered dependency order. Under Decision 0003, unavailable Mac-specific work remains `BLOCKED-MACOS` while later shared or Linux work may proceed only when it does not consume or assume the missing Mac result. No affected story, sprint, epic, or release gate closes until its retained Mac work passes. If a story cannot fit its timebox for reasons other than the isolated platform lane, it is blocked and split into newly appended identifiers before implementation continues.
+Sprints are numbered dependency and evidence gates, not calendar estimates. Work proceeds in numbered dependency order. Under Decision 0008, unavailable Mac-specific work remains `BLOCKED-MACOS` for the retained post-GA lane while shared, Linux, and Windows work may proceed when it does not consume or assume a missing Mac result. No Mac claim closes until its retained work passes, but Mac is not a `G-GA` dependency. If a story becomes too broad for independent review, it is blocked and split into newly appended identifiers before implementation continues.
 
 | Epic | High-level outcome | Sprint range | Exit gate |
 |---|---|---|---|
@@ -158,8 +171,10 @@ The two-week sprint cadence is the current planning baseline, not a product deli
 | 5 | v0.5 Manual Frontier Consultation | 51-53 | `G-V0.5` |
 | 6 | v0.6 Administrative and Document Work | 54-69 | `G-V0.6` |
 | 7 | v0.7 Read-Only GitHub and Connectors | 70-75 | `G-V0.7` |
-| 8 | v1+ Desktop, Extensions, Actions, Scheduling, and Agents | 76-100 | `G-V1+` |
-| 9 | Requirement closure and final product verification | 101-102 | `G-PRODUCT` |
+| 8 | Extended interfaces, packages, actions, scheduling, and agents | 76-100 | `G-V1+` |
+| 9 | Inherited-roadmap closure checkpoint | 101-102 | `G-LEGACY-CLOSURE` |
+| 10 | Provider-neutral delivery system and Windows 11 | 103-125 | `G-DELIVERY` and `G-WINDOWS` |
+| 11 | v1.0 GA verification and release decision | 126 | `G-GA` |
 
 ## 7. Epic Implementation Milestones
 
@@ -268,13 +283,40 @@ The two-week sprint cadence is the current planning baseline, not a product deli
 
 **Exit condition:** `G-V1+` passes only after every promoted authority path and the complete cross-capability privacy, security, recovery, and release suite pass.
 
-### 7.10 Epic 9 - Product Completion
+### 7.10 Epic 9 - Inherited-Roadmap Closure
 
-**Objective:** Prove that the complete promoted roadmap is traceable, reproducible, supportable, and honest about every exclusion and residual risk.
+**Objective:** Prove that the inherited Sprints 0-100 scope is traceable, reproducible, supportable, and honest about every exclusion and residual risk before adding the Decision 0008 delivery scope.
 
 **Primary outcomes:** rebuilt requirement graph; closure of promoted scope; explicit disposition of every deferred item; complete clean-platform, upgrade, offline, connected, safe-mode, backup, restore, migration, and uninstall workflows; final bills of materials, manifests, capability matrix, evidence bundle, and release decision.
 
-**Exit condition:** `G-PRODUCT` passes only when every promoted requirement has current reproducible evidence, every exclusion has a passing denial/absence test, no blocking check is unresolved, and the user reviews the final release decision. Any customer-specific managed-device decision remains separate and optional.
+**Exit condition:** `G-LEGACY-CLOSURE` passes only when every inherited promoted requirement has current reproducible evidence and every inherited exclusion has a tested disposition. This is a checkpoint, not the final product or public-release decision.
+
+### 7.11 Epic 10 - Provider-Neutral Delivery System and Windows 11
+
+**Objective:** Turn the proven local assistant foundation into a complete, bounded software-delivery system on Linux and Windows.
+
+**Implementation sequence:**
+
+1. Freeze the delivery graph, adapter SDK, capability-level model, support-matrix schema, identity correlation, event contract, and conformance harness.
+2. Complete GitHub.com and GitHub Enterprise Server conformance for repositories, work, reviews, workflows, releases, local commits, signed pushes, and separately approved mutations.
+3. Add Jira Cloud/Data Center, Azure Repos/Boards/Pipelines/Artifacts, GitLab/GitLab CI, and Jenkins reference adapters.
+4. Add OCI and repository artifact adapters, SBOM/provenance/signature policy, Kubernetes/Helm/Kustomize, Argo CD/Flux, and Terraform/OpenTofu.
+5. Add release, feature-flag, progressive-delivery, database-migration, health, drift, rollback, and promotion contracts.
+6. Add OpenTelemetry correlation and reference observability, incident, security-result, and Backstage catalog adapters.
+7. Implement the Windows package, process, path, IPC, key, model, tool-worker, network-worker, Visual Studio Code, accessibility, clean-install, update, rollback, and uninstall boundaries.
+8. Run provider version-skew, cross-tenant, hostile-content, event-replay, rate-limit, partition, partial-effect, crash, cancellation, resource, removal, and cross-provider lifecycle suites.
+
+**Boundary:** Provider adapters never carry kernel authority. Each operation belongs to exactly one of `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, or `admin`. Support claims are bounded to a versioned matrix. Connected packs are independently removable.
+
+**Exit condition:** `G-DELIVERY` and `G-WINDOWS` pass only when every promoted provider tuple and Windows platform requirement has current conformance, security, recovery, documentation, and independent-review evidence.
+
+### 7.12 Epic 11 - v1.0 GA Verification
+
+**Objective:** Produce the first supported public release from the exact promoted scope and prove that it survives clean-platform, cross-provider, adversarial, failure, recovery, and removal testing.
+
+**Primary outcomes:** complete requirement graph; Fedora, Ubuntu, and Windows clean-package evidence; provider/version/capability matrix; cross-provider work-to-release and incident-to-rollback evidence; strict-local removal proof; source and binary bills of materials; model bill of materials; signatures and provenance; support and end-of-support state; limitations; rollback plan; signed release decision.
+
+**Exit condition:** `G-GA` passes only when every blocking result is current and reproducible, every unsupported path has a passing negative test, the user reviews the release decision, and no failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed result is hidden or waived by feature completeness.
 
 ## 8. Product Security and Independent Verification
 
@@ -284,12 +326,14 @@ Security assurance is built with each component rather than added after feature 
 |---|---|---|
 | `SEC-G0` Scope | Epic 0 | Threat model, use-case boundary, data inventory, shared responsibility, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Epics 0-1 | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake-platform tests pass. |
-| `SEC-G2` macOS | Epic 1 and every Mac release | Signing, notarization, App Sandbox, XPC, bookmarks, Keychain/crypto provider, selected endpoint-baseline compatibility, and offline proof pass on the M5 reference. |
+| `SEC-G2` Platforms | Epic 1 shared/Linux work, Epic 10 Windows work, and the retained Mac lane | Linux sandbox/path/key/offline proof and Windows MSIX/AppContainer/IPC/NTFS/DPAPI proof pass independently; retained Apple Silicon signing, notarization, App Sandbox, XPC, bookmarks, Keychain, and Metal proof remains separate. |
 | `SEC-G3` Model | Epic 0 feasibility, Epic 1 implementation, and every added model or adapter | Provenance policy, immutable identities, installer separation, native/Docker parity, endpoint isolation, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
 | `SEC-G4` Supply chain | Begins in Epic 0; repeated for release | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility, provenance, signed manual patch, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Before each supported release | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete where applicable. |
 | `SEC-G6` Independent assessment | Critical boundary completion and every release candidate | A reviewer who did not author the exact boundary records identity, commit, findings, disposition, and re-review; a separate release reviewer re-runs applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Separate customer decision | A device owner or deploying organization records environment controls, exceptions, allowed data, residual risk, and deployment approval outside AgentMage's authority. |
+| `SEC-G8` Delivery adapters | Epics 7-10 and every adapter promotion | Provider identity, credential isolation, capability level, exact effects, idempotency/reconciliation, event integrity, version support, removal, and cross-tenant tests pass. |
+| `SEC-G9` GA system | Epic 11 | Cross-provider lifecycle, strict-local removal, Windows/Linux parity, extreme verification, evidence reconciliation, and final support matrix pass. |
 
 AgentMage targets a bounded, single-user desktop application and produces reproducible product-security evidence. It does not claim external certification or managed-environment approval that has not been independently granted, and no evaluation or deployment transfers ownership, sponsorship, or authorship.
 
@@ -317,7 +361,7 @@ Every implementation sub-task inherits five issue-local cases where applicable:
 
 Every sprint must produce its declared code or documentation, artifacts, tests, raw evidence, environment identity, hashes, summaries, limitations, security mappings, assigned reviewer-protocol results, and reviewer dispositions. Each `RV-*` protocol has one first-execution owner; the release sprint re-runs current suites instead of discovering the control for the first time. Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/`.
 
-Raw evidence is authoritative over a summary. Failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking checks cannot be represented as passing. Linux evidence never substitutes for a Mac deployment gate, and Mac evidence never replaces the supported Linux workflow.
+Raw evidence is authoritative over a summary. Failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking checks cannot be represented as passing. Linux, Windows, and Apple Silicon evidence are independent and never substitute for one another.
 
 ## 10. Release Engineering Strategy
 
@@ -325,7 +369,7 @@ Each release is produced from pinned source, dependencies, toolchains, model/run
 
 - Reproducible clean builds and source-to-package provenance.
 - Signed and verified packages, with Developer ID signing, notarization, stapling, Gatekeeper validation, Hardened Runtime, and App Sandbox on macOS.
-- Platform manifests for macOS, Fedora, and Ubuntu.
+- First-GA platform manifests for Fedora, Ubuntu, and Windows 11, plus separately retained Apple Silicon manifests when that lane is released.
 - Software Bill of Materials, Cryptographic Bill of Materials, Model Bill of Materials, licenses, hashes, dependency graph, and vulnerability dispositions.
 - Clean standard-user installation, upgrade, offline operation, diagnostics, recovery, rollback, and uninstall.
 - Complete capability and limitation matrices.
@@ -349,6 +393,11 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Data-authority drift | Conflicting operational or knowledge records | One canonical authority per domain, no transactional dual-write, rebuildable indexes, and validated imports. |
 | Secret or private-data persistence | Disclosure through logs, memory, exports, or diagnostics | Classify and minimize before persistence, use operating-system key storage, detect secrets, redact output, and fail closed without encryption. |
 | Network or connector expansion | Hidden egress or remote mutation | Strict-local baseline, explicit temporary network grants, destination scopes, sensitivity-labeled cache, read-only connector phase, and receipts. |
+| Provider semantic mismatch | A normalized operation hides provider-only behavior or changes the wrong object | Namespaced extensions, published capability matrices, conformance by object/operation/version, exact previews, and provider-specific negative fixtures. |
+| Cross-tenant or credential confusion | One account, host, project, or environment receives another's credential or operation | Exact host/tenant/account binding, operation-scoped workers, secret-store references, redirect revalidation, canaries, and cross-domain attack suites. |
+| Partial remote effects | Retry duplicates a comment, build, release, deployment, or destructive change | Provider idempotency where available, deterministic operation fingerprints, reconciliation-before-retry, unknown-state blocking, and verified postconditions. |
+| Windows boundary complexity | Path aliasing, IPC impersonation, ambient access, or package lifecycle defects | Dedicated Windows architecture, AppContainer/restricted-token workers, named-pipe identity, handle-relative NTFS tests, DPAPI, clean x64 fixtures, and separate release evidence. |
+| Delivery-system scope | Too many adapters create shallow or misleading support | Capability-level promotion, reference adapters, support matrix, provider version bounds, removal tests, and `G-GA` blocked until every promoted tuple passes. |
 | Granular-plan drift | Future developers or LLMs implement stale or orphaned work | Stable IDs, additions-only checks, document hashes, requirement registry, cross-document validation, and Sprint 0 traceability. |
 | Long roadmap and resource pressure | Excessive concurrent scope, thermal load, disk growth, or abandoned partial capabilities | Sequential gates, bounded stories, split decisions, resource budgets, cancellation, cleanup, and capability removal tests. |
 | Optional environment-review uncertainty | Product evidence is mistaken for customer approval or a transfer of ownership | Shared-responsibility model, explicit ownership boundary, reserved customer decisions, and reproducible review package. |
@@ -365,9 +414,9 @@ Changes to the implementation sequence follow these rules:
 6. Accepted identifiers are not renumbered. A supersession preserves the original text and records the approved replacement and rationale.
 7. A changed source, dependency, configuration, schema, model, runtime, platform, threat model, authority path, storage path, network path, installer, or package makes affected evidence stale and triggers impact-based reruns.
 8. A sprint may contain multiple bounded stories only when their combined gate remains achievable; otherwise the work is split without renumbering accepted identifiers.
-9. Decision 0003 permits a blocked platform lane: a missing Mac result does not prevent independent shared/Linux development, but every affected Mac, cross-platform, sprint, epic, and release status remains blocked and no evidence is substituted.
+9. Decision 0008 supersedes the first-GA effect of Decision 0003: a missing Mac result does not prevent shared, Linux, Windows, delivery, or v1.0 GA work, but every affected Mac status remains blocked and no evidence is substituted.
 
-Release dates, staffing assumptions, and parallelization are intentionally not promised here. The two-week sprint cadence is a planning baseline. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
+Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
 ## 13. Starting the Build
 
@@ -383,16 +432,16 @@ The first high-level sequence is:
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
-For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When the item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decision 0003. Record affected gates as `BLOCKED-MACOS`; never infer a pass from downstream development progress.
+For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decisions 0003 and 0008. Record affected Mac gates as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
 
 ## 14. Completion Definition
 
 The implementation plan is complete only when:
 
 - Every promoted requirement maps to current code, tests, documentation, evidence, owner, and release identity.
-- Every epic gate from `G-FOUNDATION` through `G-V1+` is closed with reproducible evidence.
+- Every internal milestone gate, `G-LEGACY-CLOSURE`, `G-DELIVERY`, `G-WINDOWS`, and `G-GA` is closed with reproducible evidence.
 - Every deferred item is either a tested exclusion or has been formally promoted into the stable inventory and appended execution plan.
-- Every supported platform, model, interface, capability pack, data domain, authority path, recovery path, and package agrees across the governing documents and release artifacts.
+- Every supported platform, provider/version/capability tuple, model, interface, capability pack, delivery object, data domain, authority path, recovery path, and package agrees across the governing documents and release artifacts.
 - Every prohibited path has a test proving that it is absent or denied.
 - Every release-blocking security, privacy, authority, evidence, recovery, supply-chain, accessibility, and clean-install threshold passes without being overridden by feature completeness.
-- The final `G-PRODUCT` decision is reviewed by the user; any later customer-specific managed-device decision remains separate and optional.
+- The final `G-GA` decision is reviewed by the user; any later customer-specific managed-device decision remains separate and optional.

@@ -2,11 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Status | Derived architecture and verification specification; implementation has not started |
-| Effective date | 2026-08-10 |
+| Status | Derived architecture and verification specification; shared/Linux implementation in progress |
+| Effective date | 2026-08-11 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
+| Delivery authority | `DELIVERY-SYSTEM.md` |
+| Windows specialization | `WINDOWS-BOUNDARIES.md` |
 
 ## 1. Purpose
 
@@ -41,6 +43,11 @@ flowchart LR
 
     C["User-reviewed handoff preview"] -. "manual disclosure outside AgentMage" .-> E["Separate external product"]
     K -->|"classified and redacted preview"| C
+
+    K -->|"exact connected grant; ephemeral"| P["Provider adapter worker"]
+    P -->|"bounded TLS request"| H["Approved provider host"]
+    H -->|"untrusted provider response"| P
+    P -->|"typed result and effect state"| K
 ```
 
 Data labels on an edge describe the strictest expected class before the receiving boundary applies classification and minimization. `Ephemeral`, `Operational`, `Durable`, and `Restricted` retain their meanings from PRD Section 13. Model output, repository content, and external-product output are untrusted regardless of sensitivity.
@@ -59,6 +66,7 @@ The dotted handoff edge is not an AgentMage network path. It depicts a separate 
 | Docker Model Runner | Local inference for one digest-pinned model profile | AgentMage authority of any kind; non-loopback exposure; runtime artifact acquisition |
 | Model installer/importer | Bounded acquisition or user-selected import into staging | Workspace, session, tool, grant, operational-store, and inference authority |
 | Review verifier | Read signed packages and synthetic evidence in an explicit test directory | Modifying user workspaces or trusting AgentMage summaries over raw evidence |
+| Provider adapter worker | One destination-, account-, capability-, and operation-scoped credential reference and network grant | Raw workspace access, model authority, unrelated credentials, alternate hosts, ambient network, and grant reuse |
 
 Every shipped process, helper, executable, interpreter, container, image, listener, socket, entitlement, and durable path appears in the release manifest and `agentmage doctor` diagnostics. An undeclared component or endpoint blocks startup or release.
 
@@ -83,6 +91,15 @@ Every shipped process, helper, executable, interpreter, container, image, listen
 
 AgentMage never describes a Docker-backed installation as wholly unprivileged unless the recorded Docker configuration proves that claim. Rootless Docker is evaluated separately; it is not assumed merely because AgentMage itself runs as a standard user.
 
+### Windows 11
+
+- The first-GA package is signed and timestamped MSIX installed per user and run as a standard non-administrator user.
+- The Visual Studio Code bridge and kernel authenticate over an access-controlled named pipe using user, logon-session, integrity-level, executable/package, protocol, sequence, and fresh launch identity.
+- Fresh AppContainer or equivalently reviewed restricted-token tool workers run under Job Objects with one workspace handle, one consumed grant, bounded scratch, no network, and denied ambient profile, registry, credential, clipboard, device, and process access.
+- Handle-relative NTFS operations reject unsupported device, UNC, alternate-stream, reparse, link, alias, case, Unicode, rename, replace, and race states.
+- DPAPI protects the operational data key and approved Credential Manager references protect provider credentials without exposing values to the model or process arguments.
+- Native signed `llama.cpp` is the first-GA Windows model adapter. Docker, Docker Model Runner, and Windows Subsystem for Linux are not first-GA Windows runtime dependencies.
+
 ## 5. Local IPC and Socket Inventory
 
 | Connection | Transport | Required controls |
@@ -91,6 +108,9 @@ AgentMage never describes a Docker-backed installation as wholly unprivileged un
 | Kernel to tool worker | Private per-operation IPC | One consumed grant, worker identity, bounded schema, timeout, descendant cleanup, and one terminal receipt |
 | Kernel to native model adapter | Private local IPC, preferably a mode `0600` Unix socket | Model/runtime hash verification, process identity, no non-local bind, limits, cancellation, and no model authority |
 | Kernel adapter to Docker Model Runner | Guarded loopback endpoint scoped by the approved Linux boundary | Exact host and port, immutable image/model digest, no non-loopback or ordinary-container access, no acquisition, egress proof, and local-client probes |
+| Windows extension/bridge to kernel | Access-controlled named pipe | Exact user and logon session, integrity level, executable/package identity, fresh challenge, version, sequence, size limits, cancellation, and replay defense |
+| Kernel to provider adapter worker | Private operation-scoped IPC | One consumed connected grant, exact host/tenant/account/capability, credential reference, byte/time budget, cancellation, result schema, and one terminal receipt |
+| Provider adapter worker to approved host | Transport Layer Security to the exact granted destination | Host and certificate validation, redirect/proxy/DNS revalidation, bounded methods and bytes, no alternate credential use, effect reconciliation, and no workspace/model-store access |
 
 Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access but does not prevent other local processes from sending inference requests. The Docker-backed strict-local profile therefore remains `BLOCKED` unless its implemented namespace, proxy, firewall, socket, or equivalent platform boundary satisfies the approved threat model. The extension and tool workers never receive the raw endpoint.
 
@@ -123,3 +143,50 @@ Neither adapter may borrow another adapter's result. A Docker failure blocks onl
 Each release preserves a machine-readable process, privilege, entitlement, package, path, socket, container, and data-flow inventory. Before-and-after system snapshots, raw socket observations, packet captures, sandbox results, endpoint probes, install logs, and residue scans reconcile with that inventory.
 
 The evidence distinguishes product behavior from Visual Studio Code, Docker, operating-system, endpoint-security, and unrelated user-process behavior. Local execution alone is never represented as proof of confidentiality or exclusive access.
+
+## 9. Connected Delivery Topology
+
+Connected operation is a removable capability pack, not a new kernel mode with ambient network authority.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Chat as VS Code Chat
+    participant Kernel
+    participant Worker as Provider worker
+    participant Store as OS secret store
+    participant Host as Exact provider host
+
+    User->>Chat: Review exact effect
+    Chat->>Kernel: Confirm preview digest
+    Kernel->>Kernel: Refresh preconditions and consume grant
+    Kernel->>Worker: Operation plus credential reference
+    Worker->>Store: Resolve bounded credential
+    Worker->>Host: Exact request
+    Host-->>Worker: Untrusted response
+    Worker->>Host: Reconcile effect when required
+    Worker-->>Kernel: Result, postcondition, and effect state
+    Kernel-->>Chat: Receipt and verified outcome
+```
+
+File/tool workers and model workers never receive connected credentials or provider network access. Provider workers receive no arbitrary workspace handle. When a provider operation needs a repository artifact, the kernel supplies an exact bounded artifact or immutable hash through the work packet after classification and approval.
+
+Read, draft, local-write, remote-write, execute, deploy, secrets, and admin capabilities are distinct registrations. The provider worker process may implement several classes in code, but each invocation receives exactly one class and cannot dispatch another class internally.
+
+## 10. Provider Worker Lifecycle
+
+1. The kernel verifies adapter package identity, manifest, provider version, support tuple, destination, account label, requested capability class, credential reference, limits, and current policy.
+2. Read operations receive a temporary connected grant. Effectful operations also require refreshed preconditions and a user-confirmed preview digest.
+3. A fresh or cleanly reset worker starts with one destination policy and no unrelated provider state.
+4. The worker resolves the credential from the platform secret store after identity validation and never returns its value.
+5. Redirects, callbacks, downloads, subrequests, and provider links are revalidated against the exact host and operation grant.
+6. The worker returns a typed result and explicit effect state: effect, non-effect, partial, duplicate, or unknown.
+7. Unknown and partial effects trigger reconciliation and block automatic retry.
+8. Cancellation stops new requests, terminates bounded descendants, records whether an in-flight external effect is uncertain, and preserves only authorized evidence.
+9. Worker shutdown clears credential material, closes sockets, deletes scratch, emits one terminal receipt, and proves residue state.
+
+## 11. Cross-Platform Parity
+
+Fedora, Ubuntu, and Windows 11 run the same delivery-object, adapter-lifecycle, grant, preview, receipt, reconciliation, and removal fixtures. Platform-specific process and network enforcement differs, but no platform may weaken host, tenant, account, credential, operation, effect, or evidence semantics.
+
+Apple Silicon macOS retains the same shared contracts for its post-GA lane. Its unavailable evidence remains `BLOCKED-MACOS` and cannot be borrowed from Linux or Windows.

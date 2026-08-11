@@ -30,10 +30,16 @@ HEADING: Final = re.compile(r"^#{1,6}\s+(.+?)\s*$")
 IDENTIFIER_CELL: Final = re.compile(r"^`((AM|AT|CR)-[A-Z0-9.-]+)`$")
 REFERENCE_ID: Final = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
 EXPECTED_COLUMNS: Final = {"AM": 6, "AT": 3, "CR": 5}
-EXPECTED_HEADING: Final = {
-    "AM": "Executable v0.1 Backlog",
-    "AT": "31B. v0.1 Quantitative Acceptance Matrix",
-    "CR": "35. Competitive Review Integration Register",
+EXPECTED_HEADINGS: Final = {
+    "AM": {
+        "Executable v0.1 Backlog",
+        "36. First-GA Delivery and Windows Backlog",
+    },
+    "AT": {
+        "31B. v0.1 Quantitative Acceptance Matrix",
+        "36A. First-GA Quantitative Acceptance Matrix",
+    },
+    "CR": {"35. Competitive Review Integration Register"},
 }
 
 
@@ -101,10 +107,10 @@ def definition_from_cells(
             f"{identifier} at line {line_number} has {len(cells)} columns; "
             f"expected {expected_columns}"
         )
-    if heading != EXPECTED_HEADING[prefix]:
+    if heading not in EXPECTED_HEADINGS[prefix]:
         raise RegistryError(
             f"{identifier} is defined under {heading!r}; expected "
-            f"{EXPECTED_HEADING[prefix]!r}"
+            f"one of {sorted(EXPECTED_HEADINGS[prefix])!r}"
         )
 
     if prefix == "AM":
@@ -115,7 +121,11 @@ def definition_from_cells(
         acceptance_tests = referenced_ids(cells[5], "AT")
     elif prefix == "AT":
         title = cells[1]
-        release = "v0.1"
+        release = (
+            "v1.0"
+            if heading == "36A. First-GA Quantitative Acceptance Matrix"
+            else "v0.1"
+        )
         dependencies = []
         disposition = "required"
         acceptance_tests = []

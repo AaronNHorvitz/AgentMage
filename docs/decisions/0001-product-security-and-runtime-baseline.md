@@ -6,6 +6,7 @@
 | Date | 2026-08-10 |
 | Scope | Planning baseline additions and clarifications before product implementation |
 | Supersedes | Any implication that the Docker or native Linux adapter is the sole v0.1 path |
+| Superseded in part by | [Decision 0008](./0008-first-ga-delivery-system-and-windows.md), which reclassifies v0.x as internal milestones and appends the first-GA delivery/Windows scope |
 
 ## Context
 

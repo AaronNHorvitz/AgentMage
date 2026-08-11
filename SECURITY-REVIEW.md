@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Document status | Public product-security planning baseline; no external certification claim |
-| Source review date | 2026-08-10 |
+| Source review date | 2026-08-11 |
 | Product ownership | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment |
 | Intended product boundary | Local, single-user desktop software |
-| Primary validation target | Apple Silicon macOS on a personally controlled MacBook Pro |
-| Linux release references | Fedora and Ubuntu with native `llama.cpp`; Docker Model Runner is a separately gated compatibility adapter |
-| Deferred platform | Windows 11 |
-| Initial release scope | Read-only local evidence assistant in native Visual Studio Code Chat |
+| First-GA validation targets | Fedora, Ubuntu, and Windows 11 x64 with native `llama.cpp` |
+| Compatibility runtime | Docker Model Runner is a separately gated Linux adapter |
+| Retained post-GA platform | Apple Silicon macOS on a MacBook Pro M5 |
+| First supported release scope | Local-first development and delivery assistant in native Visual Studio Code Chat |
 
 ## 1. Purpose
 
@@ -29,22 +29,23 @@ This document does not:
 
 The device owner or deploying organization retains authority over installation, allowed data, endpoint policy, and use in its own environment.
 
-This guide is interpreted with [SECURITY.md](SECURITY.md), [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), and [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md). Those documents define public vulnerability handling, model admission, and the process/socket/data-flow boundary; a release cannot substitute looser behavior for any of them.
+This guide is interpreted with [SECURITY.md](SECURITY.md), [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md), [DELIVERY-SYSTEM.md](DELIVERY-SYSTEM.md), and [WINDOWS-BOUNDARIES.md](WINDOWS-BOUNDARIES.md). Those documents define public vulnerability handling, model admission, shared runtime, delivery, and Windows boundaries; a release cannot substitute looser behavior for any of them.
 
 ## 2. Recommended Review Position
 
 AgentMage should be presented as independently developed, locally installed desktop software with a bounded Visual Studio Code integration, not as a cloud service or an extension of any employer's systems or intellectual property.
 
-Recommended initial product-validation boundary:
+Recommended first-GA product-validation boundary:
 
-- One personally controlled Apple Silicon Mac.
+- One clean Fedora or Ubuntu environment and one clean Windows 11 x64 environment.
 - One standard, non-administrator user.
 - One stable Visual Studio Code build.
-- One allowlisted AgentMage extension and signed local host package.
-- One user-selected, read-only workspace at a time.
+- One allowlisted AgentMage extension and signed platform package.
+- One user-selected workspace at a time, beginning with read-only mode before any write or delivery authority is enabled.
 - One manifest-pinned local model and runtime.
 - Public, synthetic, or user-owned non-sensitive data only.
-- No cloud inference, hosted account, telemetry, analytics, crash upload, remote tool, connector, browser, shell, write operation, autonomous agent, or automatic model switch.
+- No cloud inference, product telemetry, analytics, crash upload, hidden remote tool, ambient connector, autonomous external effect, or automatic model switch.
+- Synthetic provider tenants, repositories, projects, pipelines, artifacts, environments, telemetry, and incidents for connected-capability conformance before user-controlled provider data.
 - No sensitive or regulated data until a separately tested profile explicitly supports it.
 
 The engineering target is a conservative, defense-in-depth desktop security posture with least privilege, deny-by-default authority, local data minimization, reproducible builds, transparent supply-chain records, adversarial testing, and independent verification.
@@ -55,13 +56,14 @@ A reviewer should be able to complete the initial assessment in this order:
 
 - [ ] Confirm the proposed use case and allowed information types.
 - [ ] Confirm who owns or manages the target device and whether installation is permitted.
-- [ ] Confirm that normal v0.1 operation has no cloud or hosted service dependency.
-- [ ] Confirm the macOS, Visual Studio Code, extension, model, runtime, and cryptographic module versions.
+- [ ] Confirm that strict-local operation has no cloud or hosted service dependency and remains complete when connected packs are removed.
+- [ ] Confirm the Fedora, Ubuntu, Windows 11, Visual Studio Code, extension, model, runtime, and cryptographic module versions.
 - [ ] Confirm the model admission record, immutable artifact identity, runtime adapter, and fallback state against the model-provenance policy.
 - [ ] Review the architecture diagram, data-flow diagram, threat model, and shared-responsibility matrix.
 - [ ] Validate signatures, notarization, hashes, SBOM, model manifest, and release provenance.
 - [ ] Run the automated reviewer suite and retain its signed evidence bundle.
 - [ ] Independently observe the offline, sandbox, path, IPC, logging, deletion, and prompt-injection tests.
+- [ ] Independently observe provider identity, credential isolation, exact-preview, idempotency, uncertain-result, rollback, removal, and cross-tenant tests for every promoted adapter.
 - [ ] Record privacy, retention, accessibility, supply-chain, and AI-risk decisions.
 - [ ] Record open findings, owners, deadlines, and compensating controls in the remediation register, or reject the release if a release-blocking gate fails.
 
@@ -69,9 +71,9 @@ No reviewer should need internet access to run the product tests after the appro
 
 ## 4. Applicability Decisions
 
-| Topic | Default position for v0.1 | Reviewer decision |
+| Topic | Default product position | Reviewer decision |
 |---|---|---|
-| Local-only architecture | Required after model installation in v0.1. | Confirm that no hosted control plane, remote inference, telemetry, analytics, cloud storage, or silent update check is present. |
+| Local-only architecture | Required for the strict-local profile after model installation. | Confirm that no hosted control plane, remote inference, telemetry, analytics, cloud storage, or silent update check is present and that connected packs are removable. |
 | Data sensitivity | Synthetic and non-sensitive user-owned data only by default. | Identify any additional data classes and require a separate threat model and test profile before use. |
 | Privacy and retention | Data minimization, local encryption, explicit retention, export, and deletion are required. | Define any customer-specific notice, retention, backup, or deletion rules. |
 | AI risk | Applicable because a local generative model is used. | Review intended use, foreseeable misuse, quality limits, human oversight, and required safeguards. |
@@ -79,7 +81,9 @@ No reviewer should need internet access to run the product tests after the appro
 | Accessibility | Core workflows and generated guidance target WCAG 2.2 AA. | Review the Accessibility Conformance Report and independent test results. |
 | Cryptography | Platform-backed, reviewed cryptographic providers and precise claims are required. | Confirm the provider and operating environment are acceptable for the intended data. |
 | Managed-device compatibility | Optional and outside the personal development boundary. | Supply endpoint-management, monitoring, software-allowlist, and installation constraints before testing. |
-| Windows 11 | Deferred and unsupported. | Require a separate platform assessment before any Windows release. |
+| Windows 11 x64 | Required for v1.0 GA. | Require the complete `WINDOWS-BOUNDARIES.md` package, IPC, sandbox, path, key, model, connected-worker, clean-install, accessibility, recovery, and removal evidence. |
+| Apple Silicon macOS | Retained post-GA and currently `BLOCKED-MACOS`. | Require genuine MacBook Pro M5 signing, notarization, App Sandbox, XPC, Keychain, Metal, clean-install, and release evidence before claiming support. |
+| Connected delivery | Required only for individually promoted provider/version/capability tuples. | Verify the support matrix, least-privilege credential, exact effect, conformance level, recovery, and removal evidence for each tuple. |
 
 ## 5. Public Product-Security Reference Baseline
 
@@ -121,7 +125,7 @@ The project uses public, broadly applicable security and quality references. A c
 | Product threat model and secure architecture | Yes | Review | Yes |
 | Data and use-case approval | No | Yes | No |
 | Local risk classification and control tailoring | Evidence input | Yes | Yes |
-| macOS and Visual Studio Code deployment approval | Compatibility evidence | Yes | Yes |
+| Fedora, Ubuntu, Windows 11, retained macOS, and Visual Studio Code deployment approval | Compatibility evidence | Yes | Yes |
 | Package signing, notarization, and integrity | Yes | Verify and allowlist | Yes |
 | Model and runtime provenance | Yes | Approve and inventory | Yes |
 | Cryptographic provider selection | Implement and document | Approve operating environment | Yes |
@@ -314,9 +318,9 @@ Each requirement must have an implementation owner, automated test where possibl
 | `SR-CIV-008` | Ensure generated reports and documentation are accessible. | Test Markdown rendering, HTML/PDF exports if supported, headings, tables, links, reading order, and alternatives. | Validate representative output with automated and manual checks. |
 | `SR-CIV-009` | Provide clear limitations, prohibited data, recovery, reporting, and safe-use instructions. | Bundle versioned offline documentation and expose it from diagnostics. | A new reviewer completes the workflow without external assistance. |
 
-### 8.11 Future Windows 11 Gate
+### 8.11 Windows 11 First-GA Gate
 
-Windows support remains absent until all common requirements pass and a separate Windows platform package proves:
+Windows 11 x64 support is release-blocking for v1.0 GA. All common requirements and the separate Windows platform package must prove:
 
 - Authenticode-signed and appropriately packaged binaries.
 - Standard-user installation and execution compatible with common enterprise software deployment.
@@ -330,6 +334,33 @@ Windows support remains absent until all common requirements pass and a separate
 
 Passing on macOS or Linux must never satisfy a Windows gate.
 
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-PLT-013` | Package Windows 11 x64 per user with signed and timestamped MSIX and Authenticode identities. | Bind package, executable, library, extension, model, configuration, signer, and timestamp identities to the release manifest. | Install, repair, upgrade, roll back, and uninstall from three clean standard-user accounts; reconcile every file, package, process, registration, and residue. |
+| `SR-PLT-014` | Authenticate Windows local IPC and confine every tool worker. | Validate named-pipe ACL, user, logon session, integrity level, executable/package identity, protocol, sequence, and launch challenge; use fresh restricted workers and Job Objects. | Attempt wrong-user, wrong-integrity, unsigned, replaced, replaying, malformed, oversized, and descendant escape clients and workers. |
+| `SR-PLT-015` | Enforce the Windows workspace boundary against NTFS and path aliases. | Use handle-relative operations and reject unsupported device, UNC, alternate stream, reparse, link, alias, case, Unicode, rename, replace, and race states. | Run at least 1,000 path and race fixtures with zero boundary escape or wrong-object operation. |
+| `SR-PLT-016` | Protect Windows keys and credentials without exposing values. | Protect data-encryption keys with DPAPI through a reviewed provider and use Credential Manager only through bounded references. | Seed credential and key canaries across model, logs, diagnostics, receipts, errors, crash output, command lines, environments, and repositories; require zero disclosure. |
+| `SR-PLT-017` | Keep strict-local and connected Windows workers separate. | Give native `llama.cpp` and file workers no network; give provider workers one exact destination, credential reference, operation, budget, and expiry. | Prove zero outbound bytes in strict-local mode and run cross-adapter destination, credential, proxy, redirect, and removal attacks in connected mode. |
+
+### 8.12 Connected Delivery Security
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-DEL-001` | Publish an exact provider/version/object/operation support matrix. | Generate the matrix from signed adapter manifests and conformance evidence. | Select every tuple and verify its registered methods, scopes, limits, unsupported operations, test identity, and support state. |
+| `SR-DEL-002` | Keep capability classes independent. | Encode `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as non-inheriting grants and policy classes. | Attempt every pairwise class escalation and require zero unauthorized registration or execution. |
+| `SR-DEL-003` | Isolate credentials by provider, exact host, tenant, account, project, environment, and capability. | Resolve credentials in the operation worker from the platform secret store after grant validation. | Run at least 2,000 cross-domain, redirect, proxy, callback, clone-host, and credential-confusion attempts with zero disclosure or wrong-host request. |
+| `SR-DEL-004` | Treat all provider, event, log, artifact, telemetry, incident, finding, and catalog content as untrusted. | Keep content outside policy and grant channels; classify, bound, parse safely, and cite before model use. | Put injection, malicious links, archives, scripts, credentials, and false completion statements in every field class; require zero authority change or secret disclosure. |
+| `SR-DEL-005` | Bind every external effect to current exact state and one consumed grant. | Re-read affected objects before preview and submission; bind actor, target, payload, visibility, revision, environment, expected effect, preview digest, expiry, and recovery. | Mutate every bound field and remote precondition after preview; require denial and no provider request. |
+| `SR-DEL-006` | Prevent duplicate or unsafe remote effects. | Use provider idempotency where available and deterministic fingerprints plus reconciliation otherwise; treat timeouts as unknown. | Inject loss before and after effect, duplicate responses, retry, replay, eventual consistency, and partial success; require no duplicate and no retry while effect remains unknown. |
+| `SR-DEL-007` | Verify postconditions and make rollback or compensation a new operation. | Record effect, non-effect, partial effect, unknown effect, changed remote identities, and recovery choices in immutable receipts. | Change remote state after the original effect and prove rollback cannot overwrite later work without a new exact preview and grant. |
+| `SR-DEL-008` | Separate CI execution, deployment, infrastructure application, secret operations, and administration from generic writes. | Use dedicated tool registrations, grants, previews, policies, budgets, and evidence for each authority path. | Attempt to embed each stronger effect inside comments, issue updates, repository writes, pipeline inputs, manifests, and nested provider calls; require denial. |
+| `SR-DEL-009` | Verify webhook and polling integrity. | Validate signatures, host, tenant, timestamp, nonce, event identity, ordering, replay, gap, backfill, duplicate, and tombstone behavior. | Forge, reorder, delay, duplicate, omit, replay, and mutate event streams; require deterministic state and no duplicate task or action. |
+| `SR-DEL-010` | Make every adapter completely removable. | Remove credentials, cache, event registrations, webhooks, schedules, processes, tools, network scopes, and retained data according to policy. | Remove each adapter independently and rerun strict-local plus neighboring-adapter suites; require zero residue or damage. |
+| `SR-DEL-011` | Preserve source-to-release and incident-to-rollback identity. | Link work, commit, CI, artifact digest, provenance, deployment, telemetry, incident, and release through evidence-backed graph edges. | Mutate names, transfer repositories, reuse identifiers, move branches, replace tags, and skew clocks; require exact immutable identity or visible unresolved state. |
+| `SR-DEL-012` | Bound provider version drift and degradation. | Refuse unsupported versions or enter declared diagnostic/read-only degradation without silently inheriting support. | Exercise minimum, maximum, future, missing-feature, and behavior-changed providers and verify exact registration and support claims. |
+| `SR-DEL-013` | Prevent delivery evidence and summaries from hiding failures. | Preserve raw responses, normalized records, failures, skips, retries, suppressions, versions, environment, and reviewer dispositions. | Recompute every adapter and cross-provider gate from raw evidence and inject omitted failures; require mismatch detection and blocked release. |
+| `SR-DEL-014` | Protect delivery operations from resource exhaustion. | Bound pagination, logs, artifacts, archives, event rates, telemetry cardinality, concurrent workers, model context, disk, memory, processor, and graphics load. | Exceed each bound during reads, execution, reconciliation, and cancellation; require cleanup, responsiveness, accurate receipt, and no authority expansion. |
+
 ## 9. Proposed Reviewer Command Contract
 
 These commands are interfaces to implement. They do not exist yet. They should be packaged in a signed, read-only verifier and must not modify the workstation except inside an explicit temporary test directory.
@@ -337,8 +368,8 @@ These commands are interfaces to implement. They do not exist yet. They should b
 ```text
 agentmage-review inventory
 agentmage-review verify-release --package <path> --model <path>
-agentmage-review preflight --profile macos
-agentmage-review verify-platform --profile macos
+agentmage-review preflight --profile <fedora|ubuntu|windows|macos>
+agentmage-review verify-platform --profile <fedora|ubuntu|windows|macos>
 agentmage-review verify-crypto
 agentmage-review verify-sbom
 agentmage-review verify-model
@@ -352,8 +383,13 @@ agentmage-review verify-retention
 agentmage-review verify-injection
 agentmage-review verify-resilience
 agentmage-review verify-accessibility
+agentmage-review verify-adapter --manifest <path>
+agentmage-review verify-delivery-graph
+agentmage-review verify-external-effects
+agentmage-review verify-provider-isolation
+agentmage-review verify-support-matrix
 agentmage-review uninstall-test
-agentmage-review full --profile macos --evidence-dir <path>
+agentmage-review full --profile <fedora|ubuntu|windows|macos> --evidence-dir <path>
 agentmage-review validate-evidence --evidence-dir <path>
 ```
 
@@ -376,7 +412,7 @@ Command requirements:
 
 1. Start from the received package, detached manifest, model artifact, and public verification key.
 2. Verify package and component hashes.
-3. Verify Developer ID signatures, designated requirements, notarization, stapling, Hardened Runtime, App Sandbox, App Group, and entitlements.
+3. Verify the platform-specific package and executable identities: Linux package signatures and manifests, Windows MSIX/Authenticode signatures and timestamps, or retained Apple Developer ID/notarization/App Sandbox identities.
 4. Compare every executable and library with the signed component inventory and SBOM.
 5. Verify provenance signatures and source/build identity.
 
@@ -384,17 +420,17 @@ Pass: every shipped component is declared, signed, hash-matched, and policy-appr
 
 ### `RV-02` Clean Standard-User Installation
 
-1. Use the exact supported Mac model and OS build with the selected baseline.
-2. Use a fresh standard account without Homebrew, Rosetta, Xcode tools, Docker Desktop, ambient Python, or ambient Git.
+1. Use the exact supported Fedora, Ubuntu, or Windows 11 environment and OS build, or the retained Apple Silicon environment when reviewing that lane.
+2. Use a fresh standard account without undeclared development tools, ambient Python, ambient Git, or an unmanifested model runtime.
 3. Install, launch, run diagnostics, select a synthetic workspace, and remove the application using only the published procedure.
 
-Pass: no administrator access is required after approved installation; no baseline control is weakened; every component and location matches the manifest.
+Pass: three independent first-GA installations per supported platform require no administrator access after approved installation; no baseline control is weakened; every component and location matches the manifest.
 
 ### `RV-03` Sandbox and Ambient-Access Resistance
 
 1. Place unique canaries in the workspace, adjacent directory, home folders, browser data, SSH folder, environment, clipboard, removable location, and another user's simulated area.
 2. Exercise normal tools and malicious model/tool requests.
-3. Attempt filesystem, process, device, environment, bookmark, and entitlement escapes.
+3. Attempt filesystem, process, device, environment, bookmark/entitlement, AppContainer/restricted-token, registry, clipboard, and worker-boundary escapes as applicable.
 
 Pass: only authorized workspace canaries are readable; zero sandbox escapes; zero prohibited canaries reach output, storage, logs, or the model.
 
@@ -406,7 +442,7 @@ Pass: zero workspace escapes and 100 percent success for valid unambiguous fixtu
 
 ### `RV-05` IPC Identity and Replay
 
-Attempt connections from unsigned, wrongly signed, wrong-bundle, wrong-App-Group, wrong-user, stale, replaying, malformed, oversized, version-incompatible, and rapidly reconnecting clients.
+Attempt connections from unsigned, wrongly signed, wrong-bundle or package, wrong-App-Group, wrong-user, wrong-logon-session, wrong-integrity, stale, replaying, malformed, oversized, version-incompatible, and rapidly reconnecting clients.
 
 Pass: zero unauthorized accepted connections; bounded failures; correct audit events; no service crash or resource exhaustion.
 
@@ -521,6 +557,54 @@ Test valid update, wrong signer, downgrade, interrupted update, corrupt package,
 
 Pass: only authorized upgrades occur; downgrade and wrong-signer attempts fail; rollback preserves security and data integrity; unsupported versions are visibly blocked or constrained by policy.
 
+### `RV-23` Provider Manifest and Conformance
+
+For each promoted provider/version/capability tuple, regenerate the signed adapter manifest, run L0-L5 tests through the exact promoted level, compare registered operations with the support matrix, and invoke every unsupported operation name and provider extension.
+
+Pass: every supported tuple passes its exact contract; every unsupported operation is absent or denied; versions outside the matrix are refused or enter only the declared degraded state; no provider-specific behavior is misrepresented as common behavior.
+
+### `RV-24` Credential, Host, Tenant, and Account Isolation
+
+Run at least 2,000 combinations of provider, host, clone host, redirect, proxy, DNS answer, callback, tenant, account, project, environment, credential, single-sign-on state, and capability class. Seed unique credential canaries and inspect requests, workers, errors, logs, receipts, model context, and caches.
+
+Pass: zero secret disclosure, wrong-host request, cross-tenant access, account confusion, project crossover, or capability reuse; each denial is attributable without exposing the secret.
+
+### `RV-25` External Effect, Idempotency, and Reconciliation
+
+For every remote write, CI execution, deployment, infrastructure apply, migration, flag change, secret operation, and administrative fixture, mutate each previewed field and precondition. Inject loss before send, during transport, after remote effect, before local persistence, and during reconciliation; duplicate and reorder responses and retries.
+
+Pass: only the exact current approved effect occurs; stale approvals produce no request; unknown results block retry; no duplicate effect occurs; partial effects are visible; rollback or compensation requires a new preview and grant.
+
+### `RV-26` Event, Webhook, and Polling Integrity
+
+Forge, delay, replay, duplicate, reorder, omit, truncate, and mutate provider events. Rotate webhook secrets, skew clocks, expire cursors, create pagination loops, force bounded-poll overlap, and test backfill and tombstones.
+
+Pass: invalid events are rejected, valid duplicates are idempotent, gaps and uncertainty are visible, local state converges without erasing history, and no event creates operation authority.
+
+### `RV-27` Delivery Graph and Cross-System Identity
+
+Build complete work-item-to-release and incident-to-rollback fixture graphs. Rename and transfer repositories/projects, reuse display numbers, move branches, replace tags, rebuild artifacts, shift time windows, and create conflicting provider links.
+
+Pass: every authoritative node and edge resolves to exact immutable provider evidence; inferred or conflicting edges remain labeled; no display-name collision links the wrong object or authorizes an operation.
+
+### `RV-28` Deployment, Infrastructure, and Rollback Safety
+
+Exercise Kubernetes, GitOps, Terraform/OpenTofu, release, feature-flag, progressive-delivery, and migration fixtures across production/non-production, stale plans, changed policy, drift, health failure, locks, destructive actions, crash, cancellation, partial application, and later independent changes.
+
+Pass: plan never implies apply, non-production authority never reaches production, destructive and secret/admin effects remain separate, health and timeout behavior are deterministic, and rollback never overwrites later work without a new exact approval.
+
+### `RV-29` Provider Failure, Version Skew, and Resource Exhaustion
+
+Exercise minimum, maximum, future, and behavior-changed provider versions with rate limits, quota exhaustion, revocation, permission reduction, outage, partition, slow response, event flood, pagination explosion, oversized logs/artifacts/archives, telemetry cardinality, full disk, low memory, and concurrent cancellation.
+
+Pass: operation and support state degrade exactly as declared; no unsafe retry, false completion, authority expansion, unbounded growth, unrecoverable state, or omitted blocking result occurs.
+
+### `RV-30` Adapter Removal and Strict-Local Restoration
+
+Remove every provider adapter separately and all connected packs together. Inspect credentials, caches, databases, event registrations, webhooks, schedules, workers, processes, sockets, firewall rules, temporary files, logs, and retained data, then rerun the complete strict-local suite.
+
+Pass: removal follows declared retention without harming user data or neighboring adapters; zero undeclared connected authority or residue remains; strict-local behavior and its 60-minute zero-egress proof still pass.
+
 ## 11. Reviewer Evidence Bundle
 
 Every release candidate should produce one immutable directory or archive with this minimum structure:
@@ -565,12 +649,23 @@ review-evidence/
     vulnerability-disclosure.md
     model-admission.json
   platform/
-    macos-profile.json
-    signatures.txt
-    notarization.txt
-    entitlements/
+    fedora-profile.json
+    ubuntu-profile.json
+    windows-profile.json
+    macos-post-ga-profile.json
+    signatures-and-package-identities.txt
+    platform-boundaries/
     baseline-before.json
     baseline-after.json
+  delivery/
+    support-matrix.json
+    adapter-manifests/
+    provider-conformance/
+    delivery-graph-results.json
+    external-effect-results.json
+    event-integrity-results.json
+    cross-provider-results.json
+    removal-results.json
   tests/
     summary.json
     raw/
@@ -610,7 +705,8 @@ AgentMage should provide evidence for these questions but should not answer them
 - [ ] What records schedule and legal-hold rules apply to prompts, outputs, receipts, and generated artifacts?
 - [ ] Is the AI use case high-impact under current policy?
 - [ ] Which model, runtime, license, lineage, quantization, and supplier are approved?
-- [ ] Which macOS build, device-management or hardening baseline, Visual Studio Code build, extension policy, endpoint monitoring, firewall, and inventory tools apply?
+- [ ] Which Fedora, Ubuntu, Windows 11, or retained macOS build, device-management or hardening baseline, Visual Studio Code build, extension policy, endpoint monitoring, firewall, and inventory tools apply?
+- [ ] Which provider hosts, tenants, accounts, repositories, projects, environments, API versions, credential methods, capability classes, and data scopes are approved?
 - [ ] Which cryptographic provider and operating environment must be used?
 - [ ] Which application events must feed external logging, and by what approved local collection mechanism?
 - [ ] Does the customer require an SBOM, secure-development mapping, supplier attestation, third-party assessment, penetration test, or source review?
@@ -628,9 +724,10 @@ Integrate this security baseline into the project without turning it into a pape
 5. Generate human-readable and machine-readable control evidence from the same source records.
 6. Assign the first execution of every `RV-*` protocol to the earliest sprint that implements its boundary; release sprints rerun the complete applicable suite and assemble evidence rather than discovering controls for the first time.
 7. Make failed critical gates block signing and packaging.
-8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter, but require independent M5/macOS evidence for every Mac deployment claim.
-9. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
-10. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
+8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows against its native reference runtime; require independent M5/macOS evidence for every later Mac claim.
+9. Run `RV-23` through `RV-30` for every promoted adapter and first-GA release candidate.
+10. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
+11. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
 
 Recommended implementation gates:
 
@@ -638,12 +735,14 @@ Recommended implementation gates:
 |---|---|
 | `SEC-G0` Scope | Approved threat model, use-case boundary, data inventory, shared responsibilities, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake platform tests pass. |
-| `SEC-G2` macOS | Signing, notarization, App Sandbox, XPC, bookmarks, Keychain/crypto provider, selected endpoint-baseline compatibility, and offline proof pass on the M5 reference. |
+| `SEC-G2` Platforms | Fedora/Ubuntu confinement and Windows MSIX/AppContainer/IPC/NTFS/DPAPI evidence pass independently; retained Apple Silicon signing, notarization, App Sandbox, XPC, bookmarks, Keychain, and Metal evidence remains separate. |
 | `SEC-G3` Model | Installer separation, model/runtime provenance, native/container contract parity, Docker API isolation, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
 | `SEC-G4` Supply chain | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility/provenance, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete. |
 | `SEC-G6` Independent assessment | A reviewer independent of the implementation under test runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Customer decisions, environment controls, exceptions, allowed data, and deployment approval are recorded outside the product's control. |
+| `SEC-G8` Delivery adapters | Every promoted provider/version/capability tuple passes manifest, identity, credential, event, effect, failure, removal, and support-matrix conformance. |
+| `SEC-G9` First GA | Fedora, Ubuntu, Windows, strict-local removal, cross-provider lifecycle, extreme verification, and signed evidence reconciliation pass. |
 
 ## 14. Release Decision Rule
 
@@ -652,11 +751,11 @@ A release is not review-ready when any of the following is true:
 - A component, model, runtime, library, signer, entitlement, socket, store, data flow, or network behavior is undeclared.
 - A critical/high vulnerability lacks an approved, time-bounded disposition.
 - Required cryptography cannot be traced to the reviewed provider, configuration, and operating environment.
-- Any sandbox, path, IPC, grant, prompt-injection, secret-leakage, package-integrity, or outbound-network test succeeds for the attacker.
+- Any sandbox, path, IPC, grant, credential-isolation, cross-tenant, prompt-injection, secret-leakage, package-integrity, unauthorized-network, duplicate-effect, unsafe-retry, deployment, rollback, or adapter-removal test succeeds for the attacker.
 - A failed, skipped, or unavailable test is represented as passed.
 - The reviewer cannot reproduce the result from the signed package and evidence.
 - The product claims external certification or deployment approval without current evidence.
 
 The desired final reviewer conclusion is narrower and defensible:
 
-> The tested AgentMage release implements the documented local, read-only product controls; the supplied evidence is reproducible; residual risks and environment responsibilities are explicit; and each device owner or organization can independently decide whether to install it for the stated use case.
+> The tested AgentMage release implements the documented local and connected delivery controls for the exact published platform and provider capability matrix; the supplied evidence is reproducible; unsupported operations, residual risks, and environment responsibilities are explicit; and each device owner or organization can independently decide whether to install it for the stated use case.

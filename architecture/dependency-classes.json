@@ -12,10 +12,12 @@
     "cargo_external_packages": [
       "ed25519-dalek",
       "rustix",
+      "seccompiler",
       "serde",
       "serde_json",
       "sha2",
-      "unicode-normalization"
+      "unicode-normalization",
+      "zeroize"
     ],
     "vscode_extension_packages": [],
     "swift_packages": []

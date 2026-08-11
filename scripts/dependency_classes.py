@@ -29,10 +29,12 @@ EXPECTED_INTERNAL_CARGO = {
 EXPECTED_EXTERNAL_CARGO = {
     "ed25519-dalek",
     "rustix",
+    "seccompiler",
     "serde",
     "serde_json",
     "sha2",
     "unicode-normalization",
+    "zeroize",
 }
 EXPECTED_ROOT_NPM = {
     "@mermaid-js/mermaid-cli",

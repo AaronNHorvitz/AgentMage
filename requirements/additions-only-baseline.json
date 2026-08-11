@@ -34,6 +34,17 @@
       "statement": "debugging support with competing hypotheses, discriminating checks, variable or state tracing, log correlation, and a record of rejected explanations."
     },
     {
+      "id": "CL-00B1AA8E31DC507E1E75",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1721,
+        "semantic_sha256": "00b1aa8e31dc507e1e75b7337388c2816a03c2510e6ee6d568d5bf2a1eb32684"
+      },
+      "statement": "Azure Repos and GitLab repository, branch, commit, merge-request or pull-request, policy, and signed-push adapters."
+    },
+    {
       "id": "CL-00B492E3AC5CA6FFDEB2",
       "label": "BUILD",
       "source": {
@@ -109,6 +120,17 @@
         "semantic_sha256": "023c7743158e937191a45abbaf0d2a94ada220d85c4525b1f8de29f925d1dc12"
       },
       "statement": "freshness rules that require live verification for changing facts and preserve publication date separately from event date."
+    },
+    {
+      "id": "CL-0245B8F613CC0CF1FFFE",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1744,
+        "semantic_sha256": "0245b8f613cc0cf1fffeb8626dcf37a746888cb63b143ad2122ff625bd02f949"
+      },
+      "statement": "Distinguish temporal and structural correlation from causation; require deterministic evidence before making a causal claim."
     },
     {
       "id": "CL-02D727838B7C2DDCFCE3",
@@ -430,6 +452,17 @@
       "statement": "Keep embeddings, reranking inputs, index records, and retrieved excerpts on the workstation; prohibit remote embedding, remote reranking, and source upload in local mode."
     },
     {
+      "id": "CL-096AF8D56D2EC723E2F6",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1760,
+        "semantic_sha256": "096af8d56d2ec723e2f6b4f1758616520943f7ebcf683e56dd418a38d07a54ea"
+      },
+      "statement": "Markdown inline and display mathematics parsing, syntax preservation, labels, references, escaping, preview, and accessible rendering through pinned offline components."
+    },
+    {
       "id": "CL-099B090CF07623EE638B",
       "label": "BUILD",
       "source": {
@@ -483,6 +516,17 @@
         "semantic_sha256": "0aa6c918ebafa75c2f453df864348df334f2d93aed481556d3a731ed6d51450a"
       },
       "statement": "Propagate cancellation and expiry from user to coordinator to every descendant process, model call, tool call, lease, and pending change set, and prove termination in attributable receipts."
+    },
+    {
+      "id": "CL-0AAA68D7B58AA1242F30",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1773,
+        "semantic_sha256": "0aaa68d7b58aa1242f30f0ada20bf3cb4a488d362ae4dec166b12930ed2416e1"
+      },
+      "statement": "remove every connected capability pack and rerun the complete strict-local suite with zero residual credential, cache, event, process, schedule, listener, or network authority."
     },
     {
       "id": "CL-0ACD5332A0E38F4848C9",
@@ -628,6 +672,17 @@
       "statement": "On repeated validation failures, failed tests, contradictions, rejected verification, or exhausted budgets, stop local work and present either a clarification request or a frontier-handoff recommendation; never send it automatically."
     },
     {
+      "id": "CL-0D6498A2145738298AC9",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1691,
+        "semantic_sha256": "0d6498a2145738298ac950bfdc6f4630f6013be91709faf3391abd72f3af67f9"
+      },
+      "statement": "stable provider identities containing exact host, tenant or organization, project, immutable object identifier, mutable display identifier, version, freshness, and source receipt."
+    },
+    {
       "id": "CL-0D833049FBB5B7837F49",
       "label": "BUILD",
       "source": {
@@ -670,6 +725,17 @@
         "semantic_sha256": "0e658c8f9887475a7be654bf9079533e606a06f83741da9a87eaac58c4d13bdc"
       },
       "statement": "separate connectors for source-control hosting, messaging, email, calendars, document repositories, archive services, databases, and cloud services only after approval."
+    },
+    {
+      "id": "CL-0E898353C17B3D43BB34",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1706,
+        "semantic_sha256": "0e898353c17b3d43bb343b6657770dd964a2fa1bb5da2c30ba78e85e5f05efcd"
+      },
+      "statement": "host identity, Transport Layer Security, redirect, proxy, Domain Name System, callback, and provider-supplied download-target validation."
     },
     {
       "id": "CL-0F113F9DEC62620E6223",
@@ -769,6 +835,17 @@
         "semantic_sha256": "107ae7d41e61e07de920bbae095c587dd90e1bdcd870e3c2e002c021446008c3"
       },
       "statement": "a deferred-work section that does not clutter the active list."
+    },
+    {
+      "id": "CL-10B6F8AA21AA61DE9F44",
+      "label": "ROADMAP",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1750,
+        "semantic_sha256": "10b6f8aa21aa61de9f44c53af8c9b0d845b1ede1dd7829b5ae84295bb17f2f87"
+      },
+      "statement": "Add Port, Cortex, Compass, New Relic, Dynatrace, ServiceNow, Bitbucket, Gerrit, Buildkite, CircleCI, Pulumi, LaunchDarkly, Unleash, Flyway, and Liquibase only through the same staged conformance process."
     },
     {
       "id": "CL-110EE20E7A928DF1969F",
@@ -1134,6 +1211,17 @@
       "statement": "an evidence-state and citation guide covering Observed, Derived, Inferred, Unknown/Blocked, deterministic methods, source hashes and ranges, conflicts, and stale evidence."
     },
     {
+      "id": "CL-18DD34568C9CDE8EB6FF",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1689,
+        "semantic_sha256": "18dd34568c9cde8eb6ff43f4d75a8950fe82d1a9cf6275dcc4cb097b443df665"
+      },
+      "statement": "Keep `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as independent non-inheriting capability classes."
+    },
+    {
       "id": "CL-18EB77B55D0FFC8283B3",
       "label": "CAPABILITY GATE",
       "source": {
@@ -1264,6 +1352,28 @@
         "semantic_sha256": "1b2cf06dbf5b0e924c342855768667cdfd7cdfa28a1495bb8e5a061a8bf6c4de"
       },
       "statement": "model-specific prompt and tool-call adapters so one model's formatting quirks do not leak into the shared agent contract."
+    },
+    {
+      "id": "CL-1B36BA6EF202867604E3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1699,
+        "semantic_sha256": "1b36ba6ef202867604e37de6ecdf3d74888153b631c8a95166e5e3e95da027f6"
+      },
+      "statement": "webhook signature, timestamp, nonce, replay, duplicate, ordering, gap, backfill, and tombstone handling plus bounded polling fallback."
+    },
+    {
+      "id": "CL-1B47A83CE05A158C7554",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1710,
+        "semantic_sha256": "1b47a83ce05a158c7554a01c18652955cbd2ffd94a5e1e89058593df2890201e"
+      },
+      "statement": "Treat timeout and transport failure as unknown effect until reconciliation proves effect, non-effect, duplicate effect, or partial effect."
     },
     {
       "id": "CL-1B7B9FE61BBA8DFC7552",
@@ -1497,6 +1607,17 @@
       "statement": "configuration validation before server start."
     },
     {
+      "id": "CL-21683ACA9EEC7D632A07",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1761,
+        "semantic_sha256": "21683aca9eec7d632a07c9937cee6bd4a9bfc1f18c63a6b66b43decbca3050fc"
+      },
+      "statement": "Reject shell escape, file read, network resource, package loading, executable extension, unbounded macro expansion, and unsupported LaTeX commands."
+    },
+    {
       "id": "CL-21BADFCABB44D8489B08",
       "label": "BUILD",
       "source": {
@@ -1627,6 +1748,17 @@
         "semantic_sha256": "2493805c858517a42b5e1f77cc73fabdc16462f9eb8ddd91f89cd01d69303242"
       },
       "statement": "special readers for `Current Handoff.md`, `Current Work.md`, today's daily note, and the master task list."
+    },
+    {
+      "id": "CL-25074871F2A314DA7568",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1731,
+        "semantic_sha256": "25074871f2a314da7568888b9fd4a763856164048bdb5398cb66483c636b4d08"
+      },
+      "statement": "SPDX and CycloneDX bill-of-material ingestion, reconciliation, validation, and exact artifact linking."
     },
     {
       "id": "CL-2531F56FB00195AAAB5E",
@@ -2102,6 +2234,17 @@
       "statement": "a `WorkspaceManifest` containing root, repository list, important folders, instruction files, file counts, and generated-directory exclusions."
     },
     {
+      "id": "CL-333D35AF3DED94A06CC3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1748,
+        "semantic_sha256": "333d35af3ded94a06cc38c8f7fb95c8faa0cab3edc208af3694e6535c72de7f9"
+      },
+      "statement": "OPA/Conftest-style policy evaluation with exact policy bundle identity, input digest, result, explanation, and release-gate mapping."
+    },
+    {
       "id": "CL-333F496D686B947E6F11",
       "label": "BUILD",
       "source": {
@@ -2155,6 +2298,17 @@
         "semantic_sha256": "33ee2e8f9705d128523aa3ec6440c3acb20c73a6970dc3769dbe043254f314e2"
       },
       "statement": "tool-result redaction before results enter model context or logs."
+    },
+    {
+      "id": "CL-3422EE4E24DF406620DE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1708,
+        "semantic_sha256": "3422ee4e24df406620defe61cd3145f61bac4ab70ff1917f2ecbfc6480099fa6"
+      },
+      "statement": "fresh remote precondition reads immediately before approval and immediately before submission."
     },
     {
       "id": "CL-345C2C48194E0AFD5E65",
@@ -2410,6 +2564,17 @@
       "statement": "`git_current_branch()` and upstream detection."
     },
     {
+      "id": "CL-3954E95E68322A3721C9",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1729,
+        "semantic_sha256": "3954e95e68322a3721c918115837530150af3e695562a5cf5ce9cf9bc9b8725b"
+      },
+      "statement": "OCI Distribution, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus adapters with digest-first identity."
+    },
+    {
       "id": "CL-3983D11524E93811A3D1",
       "label": "CAPABILITY GATE",
       "source": {
@@ -2485,6 +2650,17 @@
         "semantic_sha256": "3a1ec8ec2c958bcba329e894bbb67125f9dbf704f15937e838935ea58680a591"
       },
       "statement": "safe evidence projection so only approved fields enter model prompts."
+    },
+    {
+      "id": "CL-3A2414AF109D1AE6E635",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1746,
+        "semantic_sha256": "3a2414af109d1ae6e635b1f9647ddf1456d5cd5234b0090b8ac673e4bcc339c7"
+      },
+      "statement": "Keep rollback, mitigation, notification, status change, and work creation as separate exact approvals; incident content cannot trigger them automatically."
     },
     {
       "id": "CL-3B88CF601AC12631553B",
@@ -2729,6 +2905,17 @@
       "statement": "stale-memory warnings and re-verification before use."
     },
     {
+      "id": "CL-3F5B1C83E35A92D11CD9",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1775,
+        "semantic_sha256": "3f5b1c83e35a92d11cd935fcfe7c5621f024c703a386ff2b68ac3af250bccdd2"
+      },
+      "statement": "Keep `G-GA` blocked for every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result."
+    },
+    {
       "id": "CL-3F5C6E2493B759123D08",
       "label": "BUILD",
       "source": {
@@ -2738,6 +2925,17 @@
         "semantic_sha256": "3f5c6e2493b759123d087fc641b3d9ec1233b029f7b915793e3633061df7aa8f"
       },
       "statement": "authentication through an approved Secure Shell agent, operating-system credential helper, fine-grained personal access token, or GitHub App installation; never store tokens in prompts, memory, logs, repositories, or plain-text configuration."
+    },
+    {
+      "id": "CL-3F61B66FB7F53A12D419",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1690,
+        "semantic_sha256": "3f61b66fb7f53a12d419609f44eba15c2dc3847b4ca98efaa68767839b7d2e86"
+      },
+      "statement": "typed delivery objects for service, work item, repository, change, commit, review, build, check, artifact, provenance, environment, deployment, telemetry, incident, finding, release, and rollback."
     },
     {
       "id": "CL-3F719AB5B098FB903532",
@@ -2914,6 +3112,17 @@
         "semantic_sha256": "4234d59a23d7e6a8a022ab9c8f26d84fdd997e3a4cebd970cdde0c1a4177eab7"
       },
       "statement": "timeout termination and child-process cleanup."
+    },
+    {
+      "id": "CL-425ED5F451AED88F1181",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1693,
+        "semantic_sha256": "425ed5f451aed88f11811558ceef39ff3504a7a6e2075a953e82f9f3dc1aff9f"
+      },
+      "statement": "the adapter lifecycle for describe, diagnose, discover, plan, preview, execute, reconcile, rollback or compensate, and remove."
     },
     {
       "id": "CL-425EE3DE8CAD5B610242",
@@ -3136,6 +3345,17 @@
       "statement": "automatic reviews, automatic fixes, automatic issue or pull-request updates, automatic merges, automatic releases, branch deletion, repository administration, secret changes, ruleset changes, and force pushes until each action has a separately approved policy and proven rollback path."
     },
     {
+      "id": "CL-48417A4C0B804974144E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1720,
+        "semantic_sha256": "48417a4c0b804974144e7dd7369114132ded2ae21d8d5e5c7e14eaab7d07d149"
+      },
+      "statement": "Jira Cloud, Jira Data Center, GitHub Issues, and Azure Boards field, transition, comment, attachment, link, hierarchy, iteration, and project semantics without flattening provider-only behavior incorrectly."
+    },
+    {
       "id": "CL-4867C40082A2B10CE60B",
       "label": "BUILD",
       "source": {
@@ -3332,6 +3552,17 @@
         "semantic_sha256": "4b62d3c1733a94bce5a6a966b1da8c497a3c319d9ed163408829dd720d66df8b"
       },
       "statement": "Accept new user messages while work is running and decide whether they replace the task, add to it, or ask only for status."
+    },
+    {
+      "id": "CL-4BEF5121FC78B7D1EA45",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1697,
+        "semantic_sha256": "4bef5121fc78b7d1ea45e1ac671a74c4c01786a6a94117fb3f108423bc90c18a"
+      },
+      "statement": "namespaced provider extensions for behavior that cannot be normalized truthfully."
     },
     {
       "id": "CL-4C0910E77D4DF4EA2E1B",
@@ -3675,6 +3906,17 @@
       "statement": "In v0.1, persist only the minimum operational state required for one resumable read-only session; long-term memory, conversation branching, and human knowledge ingestion remain outside the release."
     },
     {
+      "id": "CL-52BD59A99EDFD0514913",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1732,
+        "semantic_sha256": "52bd59a99edfd0514913b1ad78e3bdbf3c59d4b42c0f91f22ea8edb0608cde71"
+      },
+      "statement": "Sigstore/Cosign verification, SLSA provenance validation, signer policy, policy identity, and source/build/artifact chain evidence."
+    },
+    {
       "id": "CL-52FA0A9B926E637BA42D",
       "label": "CAPABILITY GATE",
       "source": {
@@ -3763,6 +4005,17 @@
       "statement": "priority rules that remove duplicate and low-value text before removing authoritative evidence."
     },
     {
+      "id": "CL-55099753875440DD12BD",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1704,
+        "semantic_sha256": "55099753875440dd12bd3d8e98c10f9d9af7cc2fb9244cbd7c06db60de679b47"
+      },
+      "statement": "Bind every credential to one exact provider, host, tenant, account, project scope, and permitted capability class."
+    },
+    {
       "id": "CL-558677F55838BB03327B",
       "label": "BUILD",
       "source": {
@@ -3794,6 +4047,17 @@
         "semantic_sha256": "56633182468ce8b7a99934b550b766090bba1f0b57cc28fb73b412f4d2146cba"
       },
       "statement": "workspace tree hashing for repeatable scans."
+    },
+    {
+      "id": "CL-56744FA3DE867533A644",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1738,
+        "semantic_sha256": "56744fa3de867533a64456b79f1133fca0cdc724e4c732305d53ddc720580081"
+      },
+      "statement": "feature-flag and database-migration adapter contracts with explicit compatibility, direction, backup, lock, timeout, and rollback conditions."
     },
     {
       "id": "CL-569BAF2CF3B00EA7B91B",
@@ -3873,6 +4137,17 @@
       "statement": "reconciliation workbook functions `escapeSpreadsheetText()`, `createReconciliationWorkbook()`, and `scanWorkbookFormulaErrors()`."
     },
     {
+      "id": "CL-571E32DF085FFE7022B8",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1762,
+        "semantic_sha256": "571e32df085ffe7022b8589c1969072d6e01048fb5793b96c49ba31e777bff51"
+      },
+      "statement": "deterministic cross-platform mathematical round trips and rendering on Fedora, Ubuntu, and Windows 11."
+    },
+    {
       "id": "CL-57296108A9DE9785F55B",
       "label": "BUILD",
       "source": {
@@ -3926,6 +4201,17 @@
         "semantic_sha256": "57c60924eb696676dc0c28753e7d79c829b5f0485ab10b1eb18fc17a18b9eb03"
       },
       "statement": "`git_show(commit)` for read-only commit inspection."
+    },
+    {
+      "id": "CL-57DC78E25139B13601CB",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1757,
+        "semantic_sha256": "57dc78e25139b13601cb9162bc9d86682bdf2c9b3caeaf9f3ae6d97b3a705718"
+      },
+      "statement": "handle-relative NTFS path resolution defending against reparse points, junctions, links, alternate streams, device and UNC paths, short names, case, Unicode, hard links, rename, replace, and time-of-check/time-of-use races."
     },
     {
       "id": "CL-58467815482D5DBB6D08",
@@ -4478,6 +4764,17 @@
       "statement": "user cancellation and clean shutdown."
     },
     {
+      "id": "CL-6292D84637AC0E10B5E3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1692,
+        "semantic_sha256": "6292d84637ac0e10b5e3af03a91d494f831e5311b19445bc7663dc0bce471c2f"
+      },
+      "statement": "provider-neutral evidence-backed edges and keep inferred relationships visibly non-authoritative."
+    },
+    {
       "id": "CL-62BAA3942CBF21DF52D1",
       "label": "CAPABILITY GATE",
       "source": {
@@ -4553,6 +4850,17 @@
         "semantic_sha256": "64097b31dbd4a5db2a4551e5a7d82d2ea31b7f5f99462cacd3668a10e0cf1720"
       },
       "statement": "a prompt and instruction checker that detects contradictions, missing boundaries, vague completion rules, hidden network needs, excessive permissions, and unsupported tool assumptions before an agent is enabled."
+    },
+    {
+      "id": "CL-646232CC45A08DEDF624",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1772,
+        "semantic_sha256": "646232cc45a08dedf624598c0447f1b99dbddb98c02ec0557e125a81fc52de79"
+      },
+      "statement": "complete work-item-to-release and incident-to-rollback workflows across the first-GA reference adapter matrix with exact cross-system identity and no hidden authority."
     },
     {
       "id": "CL-649F7B17A0ED6A9A517D",
@@ -4696,6 +5004,17 @@
         "semantic_sha256": "687ffff7e6cc1a76ed590a765b2d77197fd56c7dd82be5524341cee58b794da5"
       },
       "statement": "Prefer source inspection, tool receipts, tests, and small experiments over model confidence whenever the claim can be checked."
+    },
+    {
+      "id": "CL-6895AD4FD4B2ECD0E96F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1749,
+        "semantic_sha256": "6895ad4fd4b2ecd0e96f5c972d600cb9b6fce20d7d10a0c6e17663ea16a8f2e9"
+      },
+      "statement": "Backstage service, component, owner, system, repository, pipeline, artifact, environment, telemetry, incident, and release links with exact provider citations."
     },
     {
       "id": "CL-68B146739EA6C9D7FCEE",
@@ -4885,6 +5204,17 @@
       "statement": "approval-required action fixtures for write, command, commit, push, publish, and network access."
     },
     {
+      "id": "CL-6BD0BD37A4DEEBB34C9E",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1767,
+        "semantic_sha256": "6bd0bd37a4deebb34c9e1b6b0e679ddcffba512c0ffbd58d00288d051d705e5c"
+      },
+      "statement": "prompt injection in every provider-controlled text field, code file, comment, issue, review, log, artifact, telemetry record, incident, finding, and catalog field."
+    },
+    {
       "id": "CL-6C18AB6934D9BBF96351",
       "label": "BUILD",
       "source": {
@@ -4905,6 +5235,17 @@
         "semantic_sha256": "6d1b09bdb3fe5911eaa6af1fe292af686d966fc792e860ece95ac5c67aaf4605"
       },
       "statement": "an instruction-provenance record containing workspace-relative path, content hash, discovered scope, trust decision, conflicts, and citations used in the current task."
+    },
+    {
+      "id": "CL-6D82127173D7C47A43BD",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1758,
+        "semantic_sha256": "6d82127173d7c47a43bd52feb909cfe9919e27684dd63cc6696056f8ea727fa9"
+      },
+      "statement": "DPAPI-protected operational keys, reviewed Credential Manager references, local-only data-root checks, native signed `llama.cpp`, and separately confined connected workers."
     },
     {
       "id": "CL-6DA28179A600C0713826",
@@ -5259,6 +5600,17 @@
       "statement": "Provide `agent vault search`, `note show`, `links`, `backlinks`, and `tasks` commands that read local Markdown directly without opening or installing Obsidian."
     },
     {
+      "id": "CL-73A019E8A4402E8FCB9F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1742,
+        "semantic_sha256": "73a019e8a4402e8fcb9f719649a31c30a178424c7c85ffed4470e50a5918576c"
+      },
+      "statement": "OpenTelemetry as the canonical telemetry interchange and correlation vocabulary."
+    },
+    {
       "id": "CL-73BBD89434630B3F6CEF",
       "label": "BUILD",
       "source": {
@@ -5391,6 +5743,17 @@
       "statement": "Start scheduled and unattended execution with read-only jobs and local notifications only; prohibit scheduled filesystem writes, generic shell commands, connector writes, publication, and remote state changes until unattended authority has a separate threat model and passing adversarial tests."
     },
     {
+      "id": "CL-75FB001921EFAF878D91",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1719,
+        "semantic_sha256": "75fb001921efaf878d91e7af5f327086b38cb00193e22155745546826173c003"
+      },
+      "statement": "Keep force push, secret changes, repository administration, organization administration, and ruleset administration absent unless separately promoted to L5."
+    },
+    {
       "id": "CL-76452EDFA9B1A039EDA2",
       "label": "DEFER",
       "source": {
@@ -5422,6 +5785,17 @@
         "semantic_sha256": "76911921eeef591ee2a28d1989e2d92e62b8af801b177a0a26554a5cb5221e83"
       },
       "statement": "branch-protection, repository-ruleset, required-review, required-check, signed-commit, linear-history, merge-method, and deletion-policy inspection."
+    },
+    {
+      "id": "CL-77B04EA90D8CAB30A1FD",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1755,
+        "semantic_sha256": "77b04ea90d8cab30a1fd240c49e64b6b2ef77cdd3c18bfa4b9eaac692b9981a0"
+      },
+      "statement": "authenticated named-pipe IPC with user, logon-session, integrity-level, executable, package, protocol, sequence, and launch-challenge validation."
     },
     {
       "id": "CL-77ED5127FBF6F39A3323",
@@ -5666,6 +6040,17 @@
       "statement": "performance review using measured baselines, profiles, query plans, memory, disk, network, and regression budgets rather than model guesses."
     },
     {
+      "id": "CL-7CEC7C385E4CD4D1C743",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1769,
+        "semantic_sha256": "7cec7c385e4cd4d1c74310f755a4e9d03cb8ecb0957902488aa2c5c553ba6de8"
+      },
+      "statement": "crash and cancellation before submission, during transport, after remote effect, during reconciliation, during local persistence, and during rollback or compensation."
+    },
+    {
       "id": "CL-7D7F6378986CA6FB244C",
       "label": "BUILD",
       "source": {
@@ -5730,6 +6115,17 @@
         "semantic_sha256": "7e78fbfc143fd1077601abd967024f0f878938b213ca3e3622d8fbc5220c06bc"
       },
       "statement": "Prefer tool evidence, tests, source inspection, and small experiments over model speculation whenever the claim can be checked."
+    },
+    {
+      "id": "CL-7E9437B03B8599B95161",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1695,
+        "semantic_sha256": "7e9437b03b8599b9516142f3e1d5f26ba96ed24261561d713fb418e76ce78654"
+      },
+      "statement": "L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative conformance levels."
     },
     {
       "id": "CL-7EC81EA86E02762D999A",
@@ -6040,6 +6436,17 @@
       "statement": "Treat `AGENTS.md`, README instructions, source comments, issue text, generated content, and every other workspace file as untrusted data by default. Workspace text cannot change kernel policy, grant authority, enable tools, expand a root, override the current user request, or instruct the kernel to ignore higher-priority controls."
     },
     {
+      "id": "CL-8553A01026A27C919875",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1754,
+        "semantic_sha256": "8553a01026a27c919875da0ca9f5c0e043fa1b692a1603fef8da86887f298393"
+      },
+      "statement": "a signed per-user MSIX package and release manifest for current serviced Windows 11 x64."
+    },
+    {
       "id": "CL-85745831D2C198C5B9B5",
       "label": "BUILD",
       "source": {
@@ -6117,6 +6524,17 @@
       "statement": "a correction mechanism that replaces a false remembered claim while retaining a record that it was corrected."
     },
     {
+      "id": "CL-864532C3B1933B2A0CD4",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1743,
+        "semantic_sha256": "864532c3b1933b2a0cd4bd209987af3de7c2062fa9ccc36599ed0b8cd7814ad4"
+      },
+      "statement": "Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry reference adapters for bounded metrics, logs, traces, errors, monitors, dashboards, and releases."
+    },
+    {
       "id": "CL-864BCC9831807C79B046",
       "label": "BUILD",
       "source": {
@@ -6150,6 +6568,17 @@
       "statement": "backup and rollback for agent configuration."
     },
     {
+      "id": "CL-8707B525B0B15CAE44FB",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1700,
+        "semantic_sha256": "8707b525b0b15cae44fbaff987e6050bb26a53135573a349c7165a9c10af246c"
+      },
+      "statement": "complete adapter removal including credentials, caches, events, webhooks, schedules, workers, registrations, and network scopes."
+    },
+    {
       "id": "CL-871401ED8F3AAD53F4EE",
       "label": "BUILD",
       "source": {
@@ -6159,6 +6588,17 @@
         "semantic_sha256": "871401ed8f3aad53f4ee988155963a3fe3273dcba7ce3ad9f737ee77c4f92ece"
       },
       "statement": "Observed claims only from authorized deterministic tool results with a valid receipt; bind each file citation to workspace-relative path, content hash, line range or structured object identity, and observation time."
+    },
+    {
+      "id": "CL-8716D1CAF58C076DF67F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1698,
+        "semantic_sha256": "8716d1caf58c076df67fe87ce49615e3f00025eb7558417969439b11c64c32d3"
+      },
+      "statement": "fake, fault, replay, eventual-consistency, future-version, and malicious provider adapters before live-provider execution."
     },
     {
       "id": "CL-87929B57F3500C962039",
@@ -6557,6 +6997,17 @@
       "statement": "Run tests, linters, formatters, type checks, builds, and security scans only from repository-discovered or user-approved trusted command templates, with a separate approval when execution authority was not already granted."
     },
     {
+      "id": "CL-9047B8C403085E4FDD98",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1722,
+        "semantic_sha256": "9047b8c403085e4fdd98d5cd644b4fc8563497b8058d1eeabbcfb22c1715e751"
+      },
+      "statement": "GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins definition, run, job, step, annotation, log, artifact, rerun, cancel, approval, and dispatch adapters."
+    },
+    {
       "id": "CL-90C6B9CFCCE0604FB9EC",
       "label": "BUILD",
       "source": {
@@ -6566,6 +7017,17 @@
         "semantic_sha256": "90c6b9cfcce0604fb9ec4a0a4fec5705fa140f8574cf047c48844a53f09dca41"
       },
       "statement": "a repository glossary that links business terms, code names, routes, tables, services, jobs, configuration, and tests."
+    },
+    {
+      "id": "CL-90F8A230C4159D72860D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1735,
+        "semantic_sha256": "90f8a230c4159d72860df23a97fffcb18ad638e516d55295fb8a584abcb90ddc"
+      },
+      "statement": "Terraform and OpenTofu configuration, provider, module, state, lock, plan, policy, apply, output, drift, import, and recovery operations."
     },
     {
       "id": "CL-912915A3D119ADF9D847",
@@ -6687,6 +7149,17 @@
         "semantic_sha256": "92aa787cebb471098623cc67e1a82c210ae88288971a7a2271b279c70216a884"
       },
       "statement": "query result limits, timeouts, column redaction, and audit receipts."
+    },
+    {
+      "id": "CL-92AD5701B64FEEAD2449",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1730,
+        "semantic_sha256": "92ad5701b64feead2449c905feb779082134fddb15f6c4965575f0d33a629ba9"
+      },
+      "statement": "Treat tags, names, channels, versions, and build numbers as non-authoritative display identities until resolved to immutable digests."
     },
     {
       "id": "CL-92F60B423EBAD21E5262",
@@ -6819,6 +7292,17 @@
         "semantic_sha256": "961d725e5c37f5377463773cfc3a7b112324281e891f8ac6dad81b5edeae315b"
       },
       "statement": "optional high-risk answer verification by a second installed model, with both models and disagreements shown to the user."
+    },
+    {
+      "id": "CL-962CD452380EC62727E0",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1734,
+        "semantic_sha256": "962cd452380ec62727e0a0f28e4cdd127360129a0483a15a3e384ecccb991e40"
+      },
+      "statement": "Argo CD and Flux application, source, synchronization, health, drift, prune, suspend, resume, and rollback operations with separate destructive grants."
     },
     {
       "id": "CL-963AD4280E510D32BE4E",
@@ -7072,6 +7556,17 @@
         "semantic_sha256": "99fd479d7f4a1c0bdfd8f91881948e9f277408227393f8dea3a589c2d3e48106"
       },
       "statement": "read-only source-control-host inspection for issues, pull requests, checks, reviews, releases, and exact commit links with freshness timestamps."
+    },
+    {
+      "id": "CL-9A33CC6F6EAD7E003777",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1711,
+        "semantic_sha256": "9a33cc6f6ead7e0037778c40d447c66876a5b554d1a0dbe767658305fadc5722"
+      },
+      "statement": "verified postconditions and immutable operation receipts for every external attempt, including denial, cancellation, failure, timeout, partial effect, unknown effect, and success."
     },
     {
       "id": "CL-9A3995BC45CC9F7F2837",
@@ -7426,6 +7921,17 @@
       "statement": "contact-card, project-card, meeting-note, communication-note, and task-list extractors."
     },
     {
+      "id": "CL-A2CBAF225E1DC6426BDE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1756,
+        "semantic_sha256": "a2cbaf225e1dc6426bde5cc49ba341501176bf7450a5601d00cc67fe022143a2"
+      },
+      "statement": "fresh AppContainer or equivalently reviewed restricted-token tool workers controlled by Job Objects and denied ambient profile, registry, credential, clipboard, device, process, and network access."
+    },
+    {
       "id": "CL-A2D6180A4442B2B70D3C",
       "label": "BUILD",
       "source": {
@@ -7635,6 +8141,17 @@
       "statement": "CommonMark spacing checks for headings and lists."
     },
     {
+      "id": "CL-A7A47B5D51C2E77A0091",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1705,
+        "semantic_sha256": "a7a47b5d51c2e77a0091b25bcefd3f10e9a9b5d5f5438d15748c7fd4c7eed0d0"
+      },
+      "statement": "secret-store references and operation-scoped credential delivery without exposing secret values to the model, command line, environment, logs, receipts, diagnostics, or repositories."
+    },
+    {
       "id": "CL-A7B6B46930B32283E9FA",
       "label": "BUILD",
       "source": {
@@ -7800,6 +8317,17 @@
       "statement": "`search_file_names(pattern, roots, globs)` backed by `rg --files`."
     },
     {
+      "id": "CL-AC0E1F2E11DA8D351265",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1713,
+        "semantic_sha256": "ac0e1f2e11da8d351265cba5682f6e37c7c0d1529527028ad741862c759c5180"
+      },
+      "statement": "at least 2,000 cross-host, cross-tenant, cross-account, cross-project, cross-environment, redirect, and credential-confusion attempts with zero wrong-domain request or disclosure."
+    },
+    {
       "id": "CL-AC4650F24F9EE566A6CC",
       "label": "RECOMMENDED DEFAULT",
       "source": {
@@ -7954,6 +8482,17 @@
       "statement": "a `ToolRegistry` with `register_tool()`, `get_tool()`, `list_tools()`, `validate_arguments()`, and `execute_tool()`."
     },
     {
+      "id": "CL-AEF623C5600763FC5BC6",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Windows 11 and Markdown Mathematics",
+        "line": 1759,
+        "semantic_sha256": "aef623c5600763fc5bc69557ce3ef17463c68cd7b3e6edb45830ea868eb4e2be"
+      },
+      "statement": "three clean standard-user Windows package lifecycles and the complete path, sandbox, IPC, strict-local network, recovery, accessibility, update, rollback, uninstall, and residue suites."
+    },
+    {
       "id": "CL-AEFA40D7A3EEA78D07F8",
       "label": "BUILD",
       "source": {
@@ -7996,6 +8535,17 @@
         "semantic_sha256": "afb9e2fffcdd9f1316620dac9ec5a190792fdf3510ae45a7f98bead6f5744d6e"
       },
       "statement": "a context-debug view showing what instructions, memory, sources, and tool results were sent to Gemma for a turn."
+    },
+    {
+      "id": "CL-AFDE3ED414891D7CAB26",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1737,
+        "semantic_sha256": "afde3ed414891d7cab26ea6a0a5d53fa26ab724a5a3b844ad290913db10a94ea"
+      },
+      "statement": "immutable release manifests, environment promotion, health windows, rollback targets, progressive delivery, and compensating actions."
     },
     {
       "id": "CL-AFE77AAAC20072C0FA99",
@@ -8053,6 +8603,17 @@
       "statement": "a secret-store adapter that uses the operating-system keychain or another approved local secret manager; tools receive only the credential they need for the shortest practical time."
     },
     {
+      "id": "CL-B088E71789828417B236",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1770,
+        "semantic_sha256": "b088e71789828417b236823db9953b0509b32d7654efc564a789c74ed1d8269a"
+      },
+      "statement": "concurrent user and provider changes, branch movement, object rename or deletion, moved line positions, policy change, environment drift, and artifact replacement."
+    },
+    {
       "id": "CL-B09B359B6626E09E61BC",
       "label": "BUILD",
       "source": {
@@ -8062,6 +8623,17 @@
         "semantic_sha256": "b09b359b6626e09e61bc0c4d65f1cb3382036920c84aeba07ca2975686ebc303"
       },
       "statement": "`validate_transition()` for validating work-state changes."
+    },
+    {
+      "id": "CL-B174F78398785419B204",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1717,
+        "semantic_sha256": "b174f78398785419b204dfd02a8577939c0112bb87e126a53505a16eff00ca61"
+      },
+      "statement": "complete GitHub.com and GitHub Enterprise Server conformance within the published repository, branch, commit, issue, pull-request, review, check, workflow, release, and security matrix."
     },
     {
       "id": "CL-B1938A54884721D10FBD",
@@ -8084,6 +8656,17 @@
         "semantic_sha256": "b19981174454c9b4cd913e4ed1d3df11ba760accf47a1dc3e87065a2a8416d52"
       },
       "statement": "Before acquisition, assess operating system, architecture, available memory, free disk, supported acceleration, and expected artifact/runtime fit, and refuse an artifact that cannot satisfy the approved profile on the current machine."
+    },
+    {
+      "id": "CL-B1B2BA3D0EF0F717CBA5",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1724,
+        "semantic_sha256": "b1b2ba3d0ef0f717cba59c1a46b24405829d483697372c1d8e2d547785294ca1"
+      },
+      "statement": "log and artifact size limits, streaming cancellation, archive defenses, secret scanning, untrusted-content labeling, and retention."
     },
     {
       "id": "CL-B1B8398A4E28278828CC",
@@ -8372,6 +8955,17 @@
       "statement": "`python3` for local orchestration and document or structured-content utilities."
     },
     {
+      "id": "CL-B9B0FFAB67D8372074F8",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1725,
+        "semantic_sha256": "b9b0ffab67d8372074f86668926a1b858d5bd505b276cc8d6da4e8cf65ff41dc"
+      },
+      "statement": "at least 1,000 CI timeout and retry combinations with zero duplicate dispatch or false completion."
+    },
+    {
       "id": "CL-BA5E7CD6FF72BD599F2D",
       "label": "BUILD",
       "source": {
@@ -8403,6 +8997,17 @@
         "semantic_sha256": "baaf9988e05bfb9d0f38d6e75176b63cca389ade1dbadcc43ffb40fa63b17de2"
       },
       "statement": "a document-conversion guide with known loss of formatting or metadata."
+    },
+    {
+      "id": "CL-BB11340835827BF61CBB",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1707,
+        "semantic_sha256": "bb11340835827bf61cbbdde30de1878214679443bca0361979ec45c45344c1ac"
+      },
+      "statement": "exact effect previews containing actor, target, object, payload, attachment, visibility, source revision, environment, expected state change, cost or budget, and recovery path where applicable."
     },
     {
       "id": "CL-BB1F3CC09FC7F9638648",
@@ -8834,6 +9439,17 @@
       "statement": "a human-readable session recap generated from the audit log."
     },
     {
+      "id": "CL-C171FC0A817D6A2CC39B",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1766,
+        "semantic_sha256": "c171fc0a817d6a2cc39bee7c0856008763c902388a4f0a8b355d1a92ae450f98"
+      },
+      "statement": "contract mutation and fuzzing for every schema, parser, IPC message, webhook, provider response, log, archive, manifest, mathematics input, and model-generated operation."
+    },
+    {
       "id": "CL-C1978707F3A5E0B1207B",
       "label": "BUILD",
       "source": {
@@ -8865,6 +9481,17 @@
         "semantic_sha256": "c2002c386fc51e6d3e35f8c8ee99f37f2552f17070e4d9c925314e41bc6c0da8"
       },
       "statement": "Let the user choose the model manually and change models without losing the active task, plan, evidence, or rolling memory."
+    },
+    {
+      "id": "CL-C220301CA0815E808255",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1696,
+        "semantic_sha256": "c220301ca0815e8082554b13a0e963984fe360e9f98f98365ff942821906c5dd"
+      },
+      "statement": "Register only operations that passed their exact provider/version/capability conformance level; keep every unsupported operation absent."
     },
     {
       "id": "CL-C241D0DB212986A640F3",
@@ -9241,6 +9868,17 @@
       "statement": "bounded opening, finding, clicking, screenshotting, and downloading with a visible action trail."
     },
     {
+      "id": "CL-CA78B79D6C7816F25A33",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Delivery Kernel and Adapter SDK",
+        "line": 1694,
+        "semantic_sha256": "ca78b79d6c7816f25a3319466f8a7b588ea4e75bf247a5c3a83ba51fb4ccee81"
+      },
+      "statement": "adapter manifests containing tested provider products/versions, host types, objects, operations, scopes, event modes, limits, degradation, support state, and evidence digests."
+    },
+    {
       "id": "CL-CA977514DB5D173193B8",
       "label": "BUILD",
       "source": {
@@ -9250,6 +9888,17 @@
         "semantic_sha256": "ca977514db5d173193b865b0cdeccb2ee3d73c8f59642cf73084bdc9d074edf5"
       },
       "statement": "a `ToolDefinition` class with name, purpose, JSON input schema, output schema, risk level, side effects, required grant template, and timeout."
+    },
+    {
+      "id": "CL-CB1CF58D2CA134376544",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1709,
+        "semantic_sha256": "cb1cf58d2ca1343765444b692b18c1e6cbe50dc7b7025eeeff148d68b52f62d2"
+      },
+      "statement": "provider-native idempotency where available and deterministic operation fingerprints plus reconciliation where it is not."
     },
     {
       "id": "CL-CB245AE685FDD52F5203",
@@ -9296,6 +9945,17 @@
       "statement": "adversarial tests for prompt injection, memory poisoning, stale evidence, conflicting instructions, secret extraction, path escape, and approval bypass."
     },
     {
+      "id": "CL-CC11D845057BAAED6979",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1747,
+        "semantic_sha256": "cc11d845057baaed69793c7955e365cd8d594d6ad1bbe74fa60f51d30a0708cb"
+      },
+      "statement": "CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF normalization preserving tool version, rule, location, severity, confidence, reachability, suppression, and original identity."
+    },
+    {
       "id": "CL-CCBD3131B170C9A15AAF",
       "label": "BUILD",
       "source": {
@@ -9305,6 +9965,17 @@
         "semantic_sha256": "ccbd3131b170c9a15aaf7c1da36ca52d92853b9f4b809780b47ce021b81e5f15"
       },
       "statement": "database and file-format migration planning covering forward change, backward compatibility, existing data, rollback, verification, and partial failure."
+    },
+    {
+      "id": "CL-CCC425302656EE26F8CC",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1733,
+        "semantic_sha256": "ccc425302656ee26f8cca30b51be454983102837469d723c85361650c003b819"
+      },
+      "statement": "Kubernetes, Helm, and Kustomize read, diff, plan, promote, health, drift, rollback, and resource-ownership operations."
     },
     {
       "id": "CL-CD24BA1E4390E0EF5E72",
@@ -10055,6 +10726,17 @@
       "statement": "Obsidian Vault Steward skill \u2014 daily notes, projects, contacts, meetings, tasks, links, handoffs, and change previews through direct Markdown access."
     },
     {
+      "id": "CL-DFCB6316637206C52FE7",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1723,
+        "semantic_sha256": "dfcb6316637206c52fe718b4ce6487c6494c1d5be7edc79c6f59aec85e3af300"
+      },
+      "statement": "Bind every CI execution to exact workflow or pipeline identity, immutable source revision, inputs, environment, permissions, runner constraints, budget, cancellation, and expected artifacts."
+    },
+    {
       "id": "CL-DFE9DF06582833837852",
       "label": "BUILD",
       "source": {
@@ -10119,6 +10801,17 @@
         "semantic_sha256": "e0858d6483bf2bccb8cd9a88e0871269e4cf1eb1e0d56e5d043c067b8c29b341"
       },
       "statement": "Windows and Intel Mac support until the Apple Silicon macOS, Fedora, and Ubuntu implementation passes the complete offline, security, storage, and recovery suites."
+    },
+    {
+      "id": "CL-E08C1BC89FEE3B1CBC44",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Identity, Secrets, and External Effects",
+        "line": 1712,
+        "semantic_sha256": "e08c1bc89fee3b1cbc440cc056f4bb6490c09cc1e60596ef01d8c6327a99e995"
+      },
+      "statement": "Make rollback and compensation new previewed, approval-gated operations that preserve later independent changes."
     },
     {
       "id": "CL-E08FB1FD2D64E32B156F",
@@ -10350,6 +11043,17 @@
         "semantic_sha256": "e4fcf90d2a634727664aa459c835807e62c65bc8785ceaaacba069399b4c14a5"
       },
       "statement": "Keep preference memory as user-approved communication, formatting, and workflow preferences, separate from facts about projects or people."
+    },
+    {
+      "id": "CL-E51D352049BAA65AAB03",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Observability, Incidents, Security, and Catalogs",
+        "line": 1745,
+        "semantic_sha256": "e51d352049baa65aab03c89e4199ec8f7d6445b64664a87be3fb532d90dbba7c"
+      },
+      "statement": "PagerDuty-compatible incident discovery, correlation, evidence package, draft communication, bounded work creation, escalation, and closure workflows."
     },
     {
       "id": "CL-E52B084714D91E564272",
@@ -10592,6 +11296,17 @@
         "semantic_sha256": "eb57bb3199d60516f4b916befc866ae99f6eac8f90881cbdfb880b97b52e210e"
       },
       "statement": "a schema registry for each record type with required fields, optional fields, privacy level, retention rule, links, evidence references, and last-verified time."
+    },
+    {
+      "id": "CL-EB7B2670664F07FAEFCE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1718,
+        "semantic_sha256": "eb7b2670664f07faefcef45ad101b903bf9262a94cd92b354f395c315adec9e0"
+      },
+      "statement": "exact staged-diff and commit-message approval, required signing, signature verification, and a separate approval for every remote push."
     },
     {
       "id": "CL-EC1037281C1A3989F1C1",
@@ -10891,6 +11606,17 @@
       "statement": "a post-run receipt covering lease, idempotency key, effective grant, start and end state, resources, operations, network use, outputs, failures, retries, and cleanup."
     },
     {
+      "id": "CL-F44A256D434D8E99D1DD",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1771,
+        "semantic_sha256": "f44a256d434d8e99d1dd7a329f3a0bdf1a0a2cf58123b9043f630416ce16ffe4"
+      },
+      "statement": "resource exhaustion from repositories, logs, artifacts, archives, event floods, telemetry cardinality, model context, concurrent adapters, disk, memory, processor, and graphics load."
+    },
+    {
       "id": "CL-F4668B02CFBBBA8161DA",
       "label": "CAPABILITY GATE",
       "source": {
@@ -11089,6 +11815,17 @@
       "statement": "session summary, resume-card, and handoff export generation from canonical records."
     },
     {
+      "id": "CL-F91DB09A926530FB4379",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1768,
+        "semantic_sha256": "f91db09a926530fb4379be203a2b7f12f5aa87a21ad76e72e3c97c020420c4bf"
+      },
+      "statement": "pagination loops, cursor reuse, duplicate and reordered events, replay, forgery, clock skew, eventual consistency, rate limits, quota exhaustion, permission reduction, credential expiry, provider outage, and version skew."
+    },
+    {
       "id": "CL-F929D4E30A5D75C405AA",
       "label": "BUILD",
       "source": {
@@ -11109,6 +11846,17 @@
         "semantic_sha256": "f94a730a5471b2c5334cd16a2c34f9f4ef70f4c60d911370328b7cad3a23ea64"
       },
       "statement": "a separate authenticated-browser profile whose cookies and session tokens never enter model context or logs."
+    },
+    {
+      "id": "CL-F9BD2CF230A2BAB5F6D2",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Extreme Verification and First-GA Closure",
+        "line": 1774,
+        "semantic_sha256": "f9bd2cf230a2bab5f6d273bcebe55e1cede5b60cf7f6c2684917be478f4c1be2"
+      },
+      "statement": "publish exact provider/version/capability, platform, model, runtime, support, limitation, degradation, upgrade, rollback, and removal matrices with evidence digests."
     },
     {
       "id": "CL-FA276EAFD75FA0D4714C",
@@ -11342,6 +12090,17 @@
       "statement": "approval-gated review submission, review-thread replies, thread resolution, approval, change request, and review dismissal with the exact hosted effect shown first."
     },
     {
+      "id": "CL-FF8C3A1710903B1B44D7",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Artifacts, Deployment, and Infrastructure",
+        "line": 1736,
+        "semantic_sha256": "ff8c3a1710903b1b44d78c9d6fc2b4091b0989895be7b1b21a72f8ba23052339"
+      },
+      "statement": "Keep plan separate from apply, non-production separate from production, synchronization separate from prune, and deploy separate from secret or administrative changes."
+    },
+    {
       "id": "CL-FF8F46A9011449EF1C2D",
       "label": "BUILD",
       "source": {
@@ -11376,8 +12135,8 @@
     }
   ],
   "counts": {
-    "checklist": 1034,
-    "requirements": 78
+    "checklist": 1103,
+    "requirements": 119
   },
   "policy": {
     "mode": "additions_only",
@@ -11388,6 +12147,42 @@
     "weakened_requirement": "blocked"
   },
   "requirements": [
+    {
+      "acceptance_tests": [
+        "AT-ADP-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ADP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement a versioned provider-adapter SDK, lifecycle, capability-level model, support-matrix schema, event contract, removal contract, and conformance harness."
+    },
+    {
+      "acceptance_tests": [
+        "AT-ART-001",
+        "AT-SUP-001"
+      ],
+      "dependencies": [
+        "AM-CIC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ART-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement immutable-digest artifact discovery, verification, download, promotion, retention, and provenance links for OCI Distribution, GitHub Container Registry, Azure Container Registry, JFrog Artifactory, and Sonatype Nexus."
+    },
     {
       "acceptance_tests": [
         "AT-AUTH-001"
@@ -11408,6 +12203,25 @@
     },
     {
       "acceptance_tests": [
+        "AT-CAT-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001",
+        "AM-OBS-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CAT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement a Backstage reference catalog adapter linking services, owners, repositories, pipelines, artifacts, environments, telemetry, incidents, and releases; retain Port, Cortex, and Compass as conformance-gated extensions."
+    },
+    {
+      "acceptance_tests": [
         "AT-CFG-001"
       ],
       "dependencies": [
@@ -11422,6 +12236,25 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Load and validate versioned configuration without silently broadening authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CIC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GHE-001",
+        "AM-SRC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CIC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement inspect, correlate, dispatch, rerun, cancel, approve, log, and artifact behavior for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins as separate read and execute capabilities."
     },
     {
       "acceptance_tests": [
@@ -11440,6 +12273,41 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEL-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "disposition": "build",
+      "id": "AM-DEL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement a provider-neutral delivery graph linking services, work, source, reviews, builds, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback with immutable source identities and freshness."
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEP-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-SUP-014"
+      ],
+      "disposition": "build",
+      "id": "AM-DEP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement plan, diff, promote, health, drift, synchronize, and rollback support for Kubernetes, Helm, Kustomize, Argo CD, and Flux with immutable artifacts and environment-specific deployment grants."
     },
     {
       "acceptance_tests": [
@@ -11520,6 +12388,57 @@
     },
     {
       "acceptance_tests": [
+        "AT-GA-001",
+        "AT-WIN-001"
+      ],
+      "dependencies": [],
+      "disposition": "build",
+      "id": "AM-GA-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Define v1.0 GA as the first supported public release, freeze its Fedora, Ubuntu, and Windows 11 x64 platform matrix, retain Apple Silicon macOS as post-GA work, and publish exact promoted and unsupported capabilities."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-001"
+      ],
+      "dependencies": [
+        "AM-XTE-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GAD-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Produce the v1.0 GA release decision from current Fedora, Ubuntu, Windows, strict-local, connected, provider-conformance, support-matrix, supply-chain, recovery, accessibility, and independent-review evidence."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GHE-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GHE-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Support GitHub.com and user-approved GitHub Enterprise Server repositories, commits, issues, pull requests, reviews, checks, workflows, releases, local signed commits, approval-gated pushes, and hosted mutations within a published matrix."
+    },
+    {
+      "acceptance_tests": [
         "AT-GIT-001"
       ],
       "dependencies": [
@@ -11553,6 +12472,61 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Render a local, reviewable Codex handoff packet without invoking Codex, controlling its tab, writing the clipboard, or transmitting content."
+    },
+    {
+      "acceptance_tests": [
+        "AT-IAC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-IAC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement inspect, plan, policy-check, apply, reconcile, and recover support for Terraform and OpenTofu while keeping destructive and production actions separately approved."
+    },
+    {
+      "acceptance_tests": [
+        "AT-IDN-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-ADP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-IDN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Bind every connected credential and operation to exact provider, host, tenant, account, project, environment, capability class, purpose, scope, expiry, and secret-store reference without exposing secret values."
+    },
+    {
+      "acceptance_tests": [
+        "AT-INC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-OBS-001",
+        "AM-WRK-001"
+      ],
+      "disposition": "build",
+      "id": "AM-INC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement incident correlation, evidence, draft communication, bounded issue creation, escalation, rollback recommendation, and notification adapters with PagerDuty and compatible incident systems as independently gated capabilities."
     },
     {
       "acceptance_tests": [
@@ -11645,6 +12619,24 @@
     },
     {
       "acceptance_tests": [
+        "AT-MTH-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MTH-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Author, preserve, review, and render inline and display LaTeX-style mathematics in Markdown through a pinned offline safe subset with round-trip and accessibility support."
+    },
+    {
+      "acceptance_tests": [
         "AT-NET-001",
         "AT-NET-002"
       ],
@@ -11660,6 +12652,24 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Enforce offline operation and restrict the selected local inference runtime to the guarded inference path."
+    },
+    {
+      "acceptance_tests": [
+        "AT-OBS-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001"
+      ],
+      "disposition": "build",
+      "id": "AM-OBS-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation."
     },
     {
       "acceptance_tests": [
@@ -11714,6 +12724,25 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Enforce canonical workspace-relative capability paths through the platform path adapter while generating absolute paths only for display links."
+    },
+    {
+      "acceptance_tests": [
+        "AT-REL-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEP-001",
+        "AM-IAC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-REL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement semantic-version, changelog, release-manifest, promotion, progressive-delivery, feature-flag, database-migration, health, rollback, and compensating-action contracts."
     },
     {
       "acceptance_tests": [
@@ -11772,6 +12801,24 @@
     },
     {
       "acceptance_tests": [
+        "AT-SEC-003",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-SUP-014"
+      ],
+      "disposition": "build",
+      "id": "AM-SEC-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Normalize CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings without erasing provider provenance, conflicting severity, suppression, reachability, or source identity."
+    },
+    {
+      "acceptance_tests": [
         "AT-CRASH-001",
         "AT-RESUME-001"
       ],
@@ -11788,6 +12835,42 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Persist and resume one active local session without duplicating completed actions."
+    },
+    {
+      "acceptance_tests": [
+        "AT-SRC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-SRC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement conformance-gated source adapters for Azure Repos and GitLab, while keeping Bitbucket and Gerrit as disabled extension candidates until promoted."
+    },
+    {
+      "acceptance_tests": [
+        "AT-SUP-001",
+        "AT-SEC-003"
+      ],
+      "dependencies": [
+        "AM-ART-001"
+      ],
+      "disposition": "build",
+      "id": "AM-SUP-014",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Normalize and verify SPDX, CycloneDX, SARIF, Sigstore/Cosign signatures, SLSA provenance, vulnerability results, and policy decisions against exact source, build, and artifact identities."
     },
     {
       "acceptance_tests": [
@@ -11926,6 +13009,85 @@
       "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat."
     },
     {
+      "acceptance_tests": [
+        "AT-WIN-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WIN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WRK-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WRK-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Implement conformance-gated work-management adapters for GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards with stable identity, links, drafts, bounded writes, and complete audit receipts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GHE-001",
+        "AM-WRK-001",
+        "AM-SRC-001",
+        "AM-CIC-001",
+        "AM-ART-001",
+        "AM-DEP-001",
+        "AM-IAC-001",
+        "AM-REL-001",
+        "AM-OBS-001",
+        "AM-INC-001",
+        "AM-SEC-003",
+        "AM-CAT-001",
+        "AM-WIN-001",
+        "AM-MTH-001"
+      ],
+      "disposition": "verify",
+      "id": "AM-XTE-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog"
+      },
+      "title": "Run cross-provider, cross-platform, adversarial, mutation, fuzz, replay, confusion, partition, rate-limit, version-skew, crash, partial-effect, rollback, resource, removal, and end-to-end delivery tests with no hidden blocking result."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ADP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Run the adapter lifecycle and capability-level suite against fake, fault, reference, future-version, and malicious providers."
+    },
+    {
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
@@ -11937,6 +13099,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Static and runtime dependency checks across kernel, Core Read-Only pack, and Visual Studio Code shell."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ART-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Discover, verify, download, compare, promote, retain, and remove artifacts across OCI, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus fixtures."
     },
     {
       "acceptance_tests": [],
@@ -11955,6 +13130,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CAT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Build Backstage service-catalog relationships and run extension-contract fixtures for Port, Cortex, and Compass."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CFG-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -11963,6 +13151,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Invalid, unknown, and permission-broadening configuration mutations."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CIC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Inspect and execute GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins fixtures across refs, inputs, environments, permissions, logs, artifacts, cancellation, rerun, and uncertain results."
     },
     {
       "acceptance_tests": [],
@@ -11989,6 +13190,32 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Transaction and migration invariants with crashes injected at every durable-write boundary."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-DEL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Build and mutate delivery graphs spanning work item, source, review, CI, artifact, provenance, deployment, telemetry, incident, release, and rollback fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-DEP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Plan, preview, promote, health-check, detect drift, synchronize, fail, cancel, and roll back Kubernetes, Helm, Kustomize, Argo CD, and Flux fixtures."
     },
     {
       "acceptance_tests": [],
@@ -12059,6 +13286,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-GA-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Rebuild all requirements and run the exact v1.0 GA platform, strict-local, connected, delivery, support-matrix, supply-chain, recovery, accessibility, documentation, and independent-review gates."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GHE-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the complete published GitHub.com and GitHub Enterprise Server matrix across version, permission, object, branch, issue, pull request, review, workflow, release, local commit, signed push, and failure fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-GIT-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -12080,6 +13333,45 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-IAC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Inspect, plan, policy-check, apply, crash, reconcile, and recover Terraform and OpenTofu fixtures including destructive, stale-state, lock, provider, and secret cases."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-IDN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Cross product provider, host, tenant, account, project, environment, credential, redirect, proxy, callback, and operation fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-INC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Detect, correlate, draft, notify, create bounded work, recommend rollback, recover, and close incident fixtures across duplicate, delayed, partial, conflicting, and injected data."
     },
     {
       "acceptance_tests": [],
@@ -12137,6 +13429,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-MTH-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Round-trip and render Markdown containing inline/display mathematics, labels, references, escaping, code fences, malformed input, hostile commands, deep macros, accessibility labels, and cross-platform fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-NET-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -12158,6 +13463,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Reachability probes from a local-area-network peer, unrelated same-user process, ordinary container where applicable, separate network namespace, tool worker, XPC helper, extension host, and kernel."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-OBS-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Correlate OpenTelemetry, Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry metrics, logs, traces, errors, monitors, releases, and time windows."
     },
     {
       "acceptance_tests": [],
@@ -12241,6 +13559,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-REL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Run version, changelog, manifest, promotion, flag, progressive-delivery, migration, health, rollback, and compensation fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-REP-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -12306,6 +13637,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-SEC-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Ingest and reconcile CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings with conflicting severity, locations, suppressions, reachability, and tool versions."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SPEC-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -12314,6 +13658,32 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-SRC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Azure Repos and GitLab repository, branch, commit, review, policy, local-worktree, signed-commit, and push fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-SUP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Validate SPDX, CycloneDX, Sigstore/Cosign, SLSA, policy, vulnerability, source, build, and artifact fixture chains."
     },
     {
       "acceptance_tests": [],
@@ -12353,6 +13723,45 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WIN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WRK-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards reads, links, drafts, field updates, comments, transitions, attachments, permissions, pagination, and recovery."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-XTE-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix"
+      },
+      "title": "Run cross-provider and cross-platform contract mutation, fuzzing, hostile content, credential confusion, event replay, version skew, rate limit, partition, crash, cancellation, partial effect, rollback, resource, removal, and end-to-end lifecycle campaigns."
     },
     {
       "acceptance_tests": [],

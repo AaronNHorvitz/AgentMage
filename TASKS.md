@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Implementation in progress; blocked Mac platform lane retained |
-| Cadence | Two weeks per sprint (interpretation of the requested cadence; revise through a planning decision if needed) |
-| Scope | Complete AgentMage roadmap from foundation through final product closure |
+| Status | Implementation in progress; delivery-system and Windows first-GA scope accepted |
+| Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
+| Scope | Complete AgentMage roadmap from foundation through v1.0 GA delivery-system closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
 | Product authority | `PRD.md` |
 | Detailed requirement authority | `Agent-Scaffolding-Inventory.md` |
@@ -12,13 +12,15 @@
 | Product vulnerability and support policy | `SECURITY.md` |
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime/process/socket boundary | `RUNTIME-BOUNDARIES.md` |
+| Connected-delivery boundary | `DELIVERY-SYSTEM.md` |
+| Windows 11 boundary | `WINDOWS-BOUNDARIES.md` |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
-| Execution rule | Work proceeds in numbered order under Decision 0003; independent shared/Linux work may continue past a `BLOCKED-MACOS` dependency, but no affected story, sprint, epic, or release gate may be marked PASS |
+| Execution rule | Work proceeds in numbered order under Decisions 0003 and 0008; Mac items remain `BLOCKED-MACOS`, but first-GA shared/Linux/Windows work may continue when technically independent and no platform evidence is substituted |
 
 ## Planning Hierarchy and Numbering
 
 - `Epic E` is a release or major product increment and is not itself story-sized.
-- `Sprint N` is one two-week planning timebox with one or more bounded stories; a story that no longer fits is split through an appended planning decision before implementation continues.
+- `Sprint N` is one dependency-bounded planning and evidence gate with one or more reviewable stories; a story that becomes too broad is split through an appended planning decision before implementation continues.
 - `Story N.S` is one user-, maintainer-, or reviewer-facing value delivered by Sprint N.
 - `Task N.1.T` groups implementation, artifacts, or verification work under the story.
 - `Sub-task N.1.T.U` is the smallest planned independently checkable work item.
@@ -31,7 +33,7 @@
 
 | Flag | Classification | Resolution |
 |---|---|---|
-| The phrase `tasks weeks each` did not identify a number. | Vague | Interpreted as two-week sprints and recorded as a reversible planning assumption. |
+| The phrase `tasks weeks each` did not identify a number and an earlier interpretation introduced unsupported calendar estimates. | Resolved ambiguity | Sprints are dependency and evidence gates with no calendar duration; release dates and effort estimates require a separate explicit decision. |
 | Release labels such as v0.1, v0.2, and v1+ contain many independent outcomes. | Epic | Retained as numbered epics; only bounded stories receive sprint commitments. |
 | Words such as complete, deep, safe, full, compatible, and review-ready can be subjective. | Vague | Bound each occurrence to source coverage, named tests, required artifacts, Given/When/Then criteria, raw evidence, and a binary PASS/BLOCKED gate. |
 | Broad legacy increments combine multiple user outcomes. | Epic candidate | Split the flagged increments into sequential stories listed below; no legacy job, artifact, test, or gate was removed. |
@@ -39,13 +41,14 @@
 | Customer-only decisions such as managed-device installation, allowed data, privacy, retention, accessibility acceptance, and AI-tool approval are outside product authority. | Reviewer-owned | Place evidence-production work in sprints, but reserve the actual determination for the device owner or deploying organization. |
 | The delivery/security audit identified missing v0.1 policy, runtime, fuzzing, incident, accessibility, support, diagnostics, and handoff work. | Accepted planning decision | Record the independently assessed decisions in `docs/decisions/0001-product-security-and-runtime-baseline.md`; add bounded stories without deleting or renumbering prior work. |
 | Required MacBook Pro M5 hardware is unavailable while independent shared and Linux work remains executable. | Accepted sequencing decision | Apply `docs/decisions/0003-blocked-platform-lane-continuation.md`: retain every Mac item and gate as `BLOCKED-MACOS`, prohibit substitution or release claims, and continue only dependency-independent work in numeric order. |
+| The product expanded to a delivery control plane and Windows 11 became a first-release requirement. | Accepted scope decision | Apply `docs/decisions/0008-first-ga-delivery-system-and-windows.md`: preserve Sprints 0-102, classify them as internal/inherited milestones, append the delivery and Windows work, and close the first supported release only at `G-GA`. |
 
 ### Blocked Platform Lane
 
 - `BLOCKED-MACOS` is a truthful incomplete state, never a pass, waiver, test skip, or supported-platform claim.
 - The first unchecked item remains authoritative within each platform lane. When an item requires unavailable Mac execution or artifacts, record the blocker and continue to the next numbered item whose inputs are independent of that result.
 - Platform-neutral contracts must preserve macOS requirements even when only Linux execution is currently possible.
-- Stories, sprints, epics, and releases remain unchecked whenever their closure depends on one or more `BLOCKED-MACOS` items.
+- Mac stories, sprints, epics, and support claims remain unchecked whenever their closure depends on one or more `BLOCKED-MACOS` items. Under Decision 0008, Mac is not a v1.0 `G-GA` dependency.
 - Linux evidence, mocks, cross-compilation, and static checks may prove their own declared scope only; they never satisfy a Mac checkbox or cross-platform gate.
 - Mac work resumes at the earliest blocked identifier when the physical hardware or untouched evidence becomes available.
 
@@ -78,9 +81,11 @@
 | `S-074` | Sprints 99-100 | Cross-Interface Authority and Isolation; v1+ Privacy, Recovery, and Release Evidence |
 | `S-075` | Sprints 101-102 | Requirement and Deferred-Scope Closure; Final Product Verification and Release Decision |
 
-No vague or epic-sized item remains silently assigned as a single active story. If implementation discovery proves that a numbered story cannot fit its two-week timebox, the story is blocked and split into newly appended story/sprint identifiers before work continues.
+No vague or epic-sized item remains silently assigned as a single active story. If implementation discovery proves that a numbered story cannot remain independently reviewable, the story is blocked and split into newly appended story/sprint identifiers before work continues.
 
 ## Universal Story Definition of Done
+
+Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds `G-DOD-14` through `G-DOD-16` prospectively to Sprints 103-126 and to any future story that introduces a connected operation or adapter. Those controls do not retroactively rewrite or reopen immutable evidence for completed local-only stories; a later change to one of those stories that introduces connected authority must satisfy the added controls.
 
 - [ ] **G-DOD-01:** Scope, dependencies, risks, exclusions, source requirements, and applicable `SR-*` controls are recorded before implementation.
 - [ ] **G-DOD-02:** Every implementation sub-task has positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect unit cases where applicable.
@@ -91,10 +96,13 @@ No vague or epic-sized item remains silently assigned as a single active story. 
 - [ ] **G-DOD-07:** Persisted data is sensitivity-labeled, minimized, encrypted when required, assigned retention, and excluded from logs/model context unless explicitly authorized.
 - [ ] **G-DOD-08:** User-owned files and unrelated working-tree changes remain preserved.
 - [ ] **G-DOD-09:** Raw results, normalized results, environment identity, fixture hashes, tool versions, summaries, failures, skips, retries, suppressions, and limitations reconcile exactly.
-- [ ] **G-DOD-10:** Supported-platform checks pass on the story's declared matrix; Linux evidence never substitutes for a Mac deployment gate and no platform silently weakens a common contract.
+- [ ] **G-DOD-10:** Supported-platform checks pass on the story's declared matrix; Fedora, Ubuntu, Windows, and retained Apple Silicon evidence remain separate and no platform silently weakens a common contract.
 - [ ] **G-DOD-11:** Required documentation, manifests, software/model/crypto bills of materials, threat cases, recovery guidance, and evidence indexes are current.
 - [ ] **G-DOD-12:** Critical trust boundaries receive the required independent review with reviewer, commit, findings, disposition, and re-review recorded.
 - [ ] **G-DOD-13:** Gate status is PASS or BLOCKED; no failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed blocking check is represented as passing.
+- [ ] **G-DOD-14:** Every connected operation binds exact provider, host, tenant, account, project or environment, capability class, credential reference, preconditions, effect, limits, and support-matrix tuple.
+- [ ] **G-DOD-15:** Every external effect has an exact preview, consumed single-use grant, idempotency or reconciliation strategy, verified postcondition, receipt, cancellation path, and rollback or compensation plan.
+- [ ] **G-DOD-16:** Every promoted adapter passes its versioned conformance level and can be removed without damaging strict-local behavior or another adapter.
 
 ## Test and Evidence Contract
 
@@ -132,6 +140,14 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-20` Accessibility | Sprint 23 | Every user-facing surface and Sprint 25 |
 | `RV-21` Incident tabletop | Sprint 25 | Every material incident/runbook change |
 | `RV-22` Update, rollback, and end of support | Sprint 25 for signed manual patch delivery | Sprint 96 when automatic update capability is introduced |
+| `RV-23` Provider manifest and conformance | Sprint 103 | Every adapter or provider-version promotion and Sprint 126 |
+| `RV-24` Credential, host, tenant, and account isolation | Sprint 104 | Every credential or identity-path change and Sprint 126 |
+| `RV-25` External effect, idempotency, and reconciliation | Sprint 105 | Every remote-write, execute, deploy, secret, or admin operation and Sprint 126 |
+| `RV-26` Event, webhook, and polling integrity | Sprint 105 | Every event adapter or polling change and Sprint 126 |
+| `RV-27` Delivery graph and cross-system identity | Sprint 103 | Every delivery-object or correlation change and Sprint 126 |
+| `RV-28` Deployment, infrastructure, and rollback safety | Sprint 112 | Every deployment, infrastructure, flag, migration, or rollback change and Sprint 126 |
+| `RV-29` Provider failure, version skew, and resource exhaustion | Sprint 123 | Every provider matrix expansion and Sprint 126 |
+| `RV-30` Adapter removal and strict-local restoration | Sprint 124 | Every connected-pack lifecycle change and Sprint 126 |
 
 ## Epic Roadmap
 
@@ -146,13 +162,15 @@ The owning sprint performs the first complete execution possible for its boundar
 | Epic 6 | v0.6 - Administrative and Document Work | Sprints 54-69 |
 | Epic 7 | v0.7 - Read-Only GitHub and Connectors | Sprints 70-75 |
 | Epic 8 | v1+ - Desktop, Extensions, Actions, Scheduling, and Agents | Sprints 76-100 |
-| Epic 9 | Product Completion | Sprints 101-102 |
+| Epic 9 | Inherited-Roadmap Closure Checkpoint | Sprints 101-102 |
+| Epic 10 | Provider-Neutral Delivery System and Windows 11 | Sprints 103-125 |
+| Epic 11 | v1.0 GA Verification and Release Decision | Sprint 126 |
 
 ## [ ] Epic 0 - Foundation
 
 ### [ ] Sprint 0 - Canonical Scope and Traceability Baseline
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-000`.
 
@@ -268,7 +286,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 0 is `BLOCKED-MACOS` until Stories 0.1 through 0.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Decision 0003 permits dependency-independent shared and Linux development to continue without representing this sprint or any affected downstream gate as PASS.
 ### [ ] Sprint 1 - Repository and Package Architecture
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-001`.
 
@@ -322,7 +340,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 1 is PASS only when Story 1.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-002`.
 
@@ -406,7 +424,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Current gate evidence:** All five sprint criteria and the shared/Linux foundation pass. Sprint 2 remains `BLOCKED-MACOS`; [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) aggregates both story gates from pushed evidence commit `d628b91caefacd15256fd4ec3008e4a208070004`, leaves both story and sprint checkboxes open, preserves `G-DOD-10` as the sole shared gate blocker, and prohibits macOS evidence substitution or unsupported product/release claims.
 ### [ ] Sprint 3 - Configuration, Versioning, and Build Integrity
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-003`.
 
@@ -492,7 +510,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 4 - Kernel Contracts and Typed Boundaries
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-004`.
 
@@ -550,7 +568,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Current gate evidence:** All five sprint criteria and the shared/Linux kernel-contract foundation pass. Implementation commit `59cae1e` adds the independent [`sprint_4_gate.py`](scripts/sprint_4_gate.py) aggregate evaluator and seven focused currentness, criterion, story-blocker, review-closure, checklist-state, mutation, and overclaim tests; evidence commit `2c3c4ed` publishes [`sprint-gate-report.json`](artifacts/sprints/sprint-4/sprint-gate-report.json), SHA-256 `b0169c59acff9c96761bf02b2c45d748b84d11d18203cd1e36cf829ce64a5aae`. The gate independently reviews commit `af282594b2c48710f3e7126814cc5963b5b074c1` and tree `4b316221b9df718b5826f7a469ff3f64724368d8`, aggregates the Story 4.1 gate, verifies all five criteria from raw architecture, fixture, dispatcher, and boundary evidence, records zero findings, and keeps product-wide architecture acceptance, positive authority, release, and external-human-review claims absent. Sprint 4 remains `BLOCKED-MACOS`; `G-DOD-10` is the sole blocking control, Story 4.1 is the sole blocking story, Linux evidence substitution is prohibited, and both Story and Sprint checkboxes remain open.
 ### [ ] Sprint 5 - Capability Grants and Policy Engine
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-005`.
 
@@ -608,7 +626,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Current sprint-gate evidence:** Source commit `8bc070f` adds the independent [`sprint_5_gate.py`](scripts/sprint_5_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, story/blocker, checklist, review, Definition-of-Done, mutation, and overclaim tests; evidence commit `76b54a1` publishes [`sprint-gate-report.json`](artifacts/sprints/sprint-5/sprint-gate-report.json), SHA-256 `3bda13960c43acff01a14cb02b637563cfc950e01176e4dd9b8690212582b05d`. The gate independently reviews commit `89e68a38001b0991f964c47a04fc5a33156d9f89` and tree `a99b5cda5f9b195f0afdbbb6ceefe978ec1b3d70`, retains 13 exact artifact hashes, records zero findings, and passes all five Sprint criteria in their bounded shared/Linux scopes. Sprint 5 remains `BLOCKED-MACOS`; `G-DOD-10` and Story 5.1 are the sole blocking control and story, Linux evidence substitution is prohibited, external human review is not claimed, and both the Story and Sprint checkboxes remain open.
 ### [ ] Sprint 6 - Canonical Workspace Paths
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-006`.
 
@@ -661,7 +679,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 6 is PASS only when Story 6.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 7 - Platform Adapter Contract and Release Manifests
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-007`.
 
@@ -715,7 +733,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 7 is PASS only when Story 7.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 8 - macOS Security Topology and Packaging
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-008`.
 
@@ -769,7 +787,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 8 is PASS only when Story 8.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 9 - Fedora and Ubuntu Security Topology
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-009`.
 
@@ -847,7 +865,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 9 is PASS only when Stories 9.1 and 9.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 10 - Strict-Local Network and Data-Residency Boundary
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-010`.
 
@@ -901,7 +919,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 10 is PASS only when Story 10.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 11 - Encrypted Canonical Operational Store
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-011`.
 
@@ -955,7 +973,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 11 is PASS only when Story 11.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 12 - Agent Runtime, Planning, and Session Behavior
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-012`.
 
@@ -1009,7 +1027,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 12 is PASS only when Story 12.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 13 - Model Manifest and Runtime Contract
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-013`.
 
@@ -1086,7 +1104,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 13 is PASS only when Stories 13.1 and 13.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-014`.
 
@@ -1140,7 +1158,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 14 is PASS only when Story 14.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-015`.
 
@@ -1218,7 +1236,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 15 is PASS only when Stories 15.1 and 15.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 16 - Sandboxed Read-Only Tool Protocol
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-016`.
 
@@ -1272,7 +1290,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 16 is PASS only when Story 16.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 17 - Read-Only Git and Untrusted Instructions
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-017`.
 
@@ -1326,7 +1344,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 17 is PASS only when Story 17.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 18 - Pinned Repository Structure
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-018`, part 1 of 2.
 
@@ -1376,7 +1394,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 18 is PASS only when Story 18.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 19 - Repository Map Coverage and Source Resolution
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-018`, part 2 of 2.
 
@@ -1427,7 +1445,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 19 is PASS only when Story 19.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 20 - Evidence-State Assignment
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-019`, part 1 of 2.
 
@@ -1477,7 +1495,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 20 is PASS only when Story 20.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 21 - Citation Freshness and Tamper-Evident Receipts
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-019`, part 2 of 2.
 
@@ -1528,7 +1546,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 21 is PASS only when Story 21.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 22 - Context Management and Crash-Safe Resume
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-020`.
 
@@ -1583,7 +1601,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 22 is PASS only when Story 22.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-021`, part 1 of 3.
 
@@ -1657,7 +1675,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 23 is PASS only when Stories 23.1 and 23.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-021`, part 2 of 3.
 
@@ -1728,7 +1746,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 24 is PASS only when Stories 24.1 and 24.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 25 - v0.1 Cross-Platform Release
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-021`, part 3 of 3.
 
@@ -1806,7 +1824,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 26 - Canonical Human Knowledge Domain
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-022`.
 
@@ -1861,7 +1879,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 26 is PASS only when Story 26.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 27 - Obsidian Note Parsing
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-023`, part 1 of 2.
 
@@ -1911,7 +1929,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 27 is PASS only when Story 27.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 28 - Vault Indexing, Links, and Recovery
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-023`, part 2 of 2.
 
@@ -1962,7 +1980,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 28 is PASS only when Story 28.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 29 - Deterministic Knowledge Retrieval
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-024`.
 
@@ -2016,7 +2034,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 29 is PASS only when Story 29.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 30 - Optional Local Semantic Retrieval
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-025`.
 
@@ -2071,7 +2089,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 30 is PASS only when Story 30.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 31 - Rolling Memory and Human-Readable Memory Files
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-026`.
 
@@ -2126,7 +2144,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 31 is PASS only when Story 31.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 32 - Conversation Search and Branching
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-027`, part 1 of 2.
 
@@ -2176,7 +2194,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 32 is PASS only when Story 32.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 33 - Private Archives and Evidence Bundles
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-027`, part 2 of 2.
 
@@ -2226,7 +2244,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 33 is PASS only when Story 33.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-028`.
 
@@ -2284,7 +2302,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 35 - Exact-Preimage Write Approval
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-029`, part 1 of 2.
 
@@ -2335,7 +2353,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 35 is PASS only when Story 35.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 36 - Atomic Write Application and Rollback
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-029`, part 2 of 2.
 
@@ -2386,7 +2404,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 36 is PASS only when Story 36.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 37 - File Creation, Patch, Copy, Move, and Delete Controls
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-030`.
 
@@ -2441,7 +2459,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 37 is PASS only when Story 37.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 38 - Controlled Markdown and Knowledge Writes
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-031`.
 
@@ -2496,7 +2514,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 38 is PASS only when Story 38.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 39 - Write Privacy, Recovery, and Audit
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-032`.
 
@@ -2550,7 +2568,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 39 is PASS only when Story 39.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 40 - v0.3 Write Release Gate
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-033`.
 
@@ -2605,7 +2623,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 41 - Bounded Command Runner
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-034`.
 
@@ -2660,7 +2678,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 41 is PASS only when Story 41.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 42 - Git Worktrees and Remote Repository Safety
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-035`.
 
@@ -2715,7 +2733,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 42 is PASS only when Story 42.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 43 - Deep Repository Comprehension
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-036`.
 
@@ -2770,7 +2788,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 43 is PASS only when Story 43.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 44 - Coding Intent, Reproduction, and Change Planning
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-037`.
 
@@ -2825,7 +2843,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 44 is PASS only when Story 44.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 45 - Structured Code Changes and Language Services
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-038`.
 
@@ -2880,7 +2898,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 45 is PASS only when Story 45.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 46 - Trusted Test and Validation Runner
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-039`.
 
@@ -2935,7 +2953,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 46 is PASS only when Story 46.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 47 - Review Packets, Commit Planning, and Local Source Control
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-040`.
 
@@ -2990,7 +3008,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 47 is PASS only when Story 47.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 48 - Complete Local CLI and Headless Contracts
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-041`.
 
@@ -3045,7 +3063,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 48 is PASS only when Story 48.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 49 - Later Model Profiles and Measured Local Routing
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-042`.
 
@@ -3100,7 +3118,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 50 - Coding Skills, Documentation, and v0.4 Release
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-043`.
 
@@ -3157,7 +3175,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 51 - Frontier Recommendation and Disclosure Packet
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-044`.
 
@@ -3212,7 +3230,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 51 is PASS only when Story 51.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 52 - Frontier Result Import and Local Revalidation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-045`.
 
@@ -3267,7 +3285,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 52 is PASS only when Story 52.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 53 - v0.5 Frontier Release Gate
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-046`.
 
@@ -3322,7 +3340,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 54 - Executive Assistant and Task Portfolio
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-047`.
 
@@ -3377,7 +3395,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 54 is PASS only when Story 54.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 55 - Meeting Records and Continuity
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-048`, part 1 of 2.
 
@@ -3428,7 +3446,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 55 is PASS only when Story 55.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 56 - Document, Correspondence, and Filing Control
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-048`, part 2 of 2.
 
@@ -3478,7 +3496,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 56 is PASS only when Story 56.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 57 - Markdown and Plain-Text Artifacts
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-049`.
 
@@ -3532,7 +3550,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 57 is PASS only when Story 57.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 58 - Word Extraction and Structural Preservation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-050`, part 1 of 2.
 
@@ -3581,7 +3599,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 58 is PASS only when Story 58.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 59 - Word Generation and Visual Verification
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-050`, part 2 of 2.
 
@@ -3632,7 +3650,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 59 is PASS only when Story 59.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 60 - PDF Extraction and Page Citations
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-051`, part 1 of 2.
 
@@ -3681,7 +3699,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 60 is PASS only when Story 60.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 61 - PDF Generation, Redaction, and Visual Verification
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-051`, part 2 of 2.
 
@@ -3732,7 +3750,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 61 is PASS only when Story 61.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 62 - Spreadsheet, CSV, and JSON Parsing
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-052`, part 1 of 2.
 
@@ -3781,7 +3799,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 62 is PASS only when Story 62.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 63 - Reconciliation, Safe Output, and Verification
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-052`, part 2 of 2.
 
@@ -3832,7 +3850,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 63 is PASS only when Story 63.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 64 - Presentation Workflows
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-053`, part 1 of 2.
 
@@ -3880,7 +3898,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 64 is PASS only when Story 64.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 65 - Images, Redaction, and Visual Verification
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-053`, part 2 of 2.
 
@@ -3932,7 +3950,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 65 is PASS only when Story 65.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 66 - Safe Additional File Parsers
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-054`, part 1 of 2.
 
@@ -3983,7 +4001,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 66 is PASS only when Story 66.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 67 - Local Audio Transcription and Common Receipts
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-054`, part 2 of 2.
 
@@ -4032,7 +4050,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 67 is PASS only when Story 67.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 68 - Local Database and Structured Evidence
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-055`.
 
@@ -4087,7 +4105,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 68 is PASS only when Story 68.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 69 - v0.6 Administrative and Document Release Gate
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-056`.
 
@@ -4143,7 +4161,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 70 - Visible Network Capability and Connector Cache
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-057`.
 
@@ -4198,7 +4216,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 70 is PASS only when Story 70.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 71 - GitHub Authentication and Read-Only Provider Core
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-058`.
 
@@ -4252,7 +4270,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 71 is PASS only when Story 71.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 72 - GitHub Repository and Source Evidence
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-059`.
 
@@ -4307,7 +4325,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 72 is PASS only when Story 72.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 73 - GitHub Issues, Pull Requests, Checks, and Reviews
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-060`.
 
@@ -4362,7 +4380,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 73 is PASS only when Story 73.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 74 - Pull-Request Worktrees and Local Review Intelligence
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-061`.
 
@@ -4417,7 +4435,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 74 is PASS only when Story 74.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 75 - v0.7 Read-Only Connector Release Gate
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-062`.
 
@@ -4473,7 +4491,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ### [ ] Sprint 76 - Desktop Conversation and Workspace Experience
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-063`, part 1 of 2.
 
@@ -4524,7 +4542,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 76 is PASS only when Story 76.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 77 - Desktop Status, Recovery, and Packaging
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-063`, part 2 of 2.
 
@@ -4574,7 +4592,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 77 is PASS only when Story 77.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 78 - Capability Package Trust and Lifecycle
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-064`, part 1 of 2.
 
@@ -4623,7 +4641,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 78 is PASS only when Story 78.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 79 - Hooks, Safe Mode, and Package Recovery
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-064`, part 2 of 2.
 
@@ -4674,7 +4692,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 79 is PASS only when Story 79.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 80 - Read-Only MCP Identity and Manifests
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-065`, part 1 of 2.
 
@@ -4723,7 +4741,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 80 is PASS only when Story 80.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 81 - MCP Request Mediation and Failure Isolation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-065`, part 2 of 2.
 
@@ -4774,7 +4792,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 81 is PASS only when Story 81.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 82 - Public Research and Citations
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-066`, part 1 of 3.
 
@@ -4822,7 +4840,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 82 is PASS only when Story 82.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 83 - Sandboxed Browser Inspection
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-066`, part 2 of 3.
 
@@ -4870,7 +4888,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 83 is PASS only when Story 83.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 84 - Confirmed Computer Use
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-066`, part 3 of 3.
 
@@ -4921,7 +4939,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 84 is PASS only when Story 84.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 85 - GitHub Mutation Preview and Authority
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-067`, part 1 of 2.
 
@@ -4971,7 +4989,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 85 is PASS only when Story 85.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 86 - GitHub Idempotency, Recovery, and Prohibited Operations
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-067`, part 2 of 2.
 
@@ -5023,7 +5041,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 86 is PASS only when Story 86.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 87 - Connector Governance and Isolation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-068`, part 1 of 2.
 
@@ -5072,7 +5090,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 87 is PASS only when Story 87.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 88 - Approval-Gated Connector Writes and Recovery
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-068`, part 2 of 2.
 
@@ -5123,7 +5141,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 88 is PASS only when Story 88.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 89 - Queue, Lease, and Retry Semantics
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-069`, part 1 of 2.
 
@@ -5173,7 +5191,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 89 is PASS only when Story 89.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 90 - Read-Only Schedules, Notifications, and Receipts
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-069`, part 2 of 2.
 
@@ -5224,7 +5242,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 90 is PASS only when Story 90.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 91 - Separately Threat-Modeled Scheduled Actions
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-070`.
 
@@ -5279,7 +5297,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 91 is PASS only when Story 91.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 92 - Agent Definitions and Registry
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-071`, part 1 of 2.
 
@@ -5328,7 +5346,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 92 is PASS only when Story 92.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 93 - Agent Validation, Dry Runs, and Enablement
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-071`, part 2 of 2.
 
@@ -5379,7 +5397,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 93 is PASS only when Story 93.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 94 - Child Authority and Isolation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-072`, part 1 of 2.
 
@@ -5429,7 +5447,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 94 is PASS only when Story 94.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 95 - Agent Coordination, Review, and Direction
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-072`, part 2 of 2.
 
@@ -5482,7 +5500,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 95 is PASS only when Story 95.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 96 - Signed Updates and Supply-Chain Maintenance
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-073`, part 1 of 3.
 
@@ -5529,7 +5547,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 96 is PASS only when Story 96.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 97 - Backup and Migration
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-073`, part 2 of 3.
 
@@ -5576,7 +5594,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 97 is PASS only when Story 97.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 98 - Safe Mode, Diagnostics, and Operational Recovery
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-073`, part 3 of 3.
 
@@ -5628,7 +5646,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 98 is PASS only when Story 98.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 99 - Cross-Interface Authority and Isolation
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-074`, part 1 of 2.
 
@@ -5676,7 +5694,7 @@ The owning sprint performs the first complete execution possible for its boundar
 **Gate decision:** Sprint 99 is PASS only when Story 99.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 100 - v1+ Privacy, Recovery, and Release Evidence
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-074`, part 2 of 2.
 
@@ -5727,11 +5745,11 @@ The owning sprint performs the first complete execution possible for its boundar
 
 **Gate decision:** Sprint 100 is PASS only when Story 100.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-## [ ] Epic 9 - Product Completion
+## [ ] Epic 9 - Inherited-Roadmap Closure Checkpoint
 
 ### [ ] Sprint 101 - Requirement and Deferred-Scope Closure
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-075`, part 1 of 2.
 
@@ -5777,21 +5795,21 @@ The owning sprint performs the first complete execution possible for its boundar
 - [ ] **Sprint AC 101.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 101 is PASS only when Story 101.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
-### [ ] Sprint 102 - Final Product Verification and Release Decision
+### [ ] Sprint 102 - Inherited-Scope Verification Checkpoint
 
-**Timebox:** Two weeks.
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-075`, part 2 of 2.
 
-**Sprint goal:** Deliver final product verification and release decision as a bounded part of the legacy goal: Demonstrate complete promoted scope, preserve explicit exclusions, and create the final auditable product release decision.
+**Sprint goal:** Verify and close the inherited Sprints 0-100 scope while preserving its explicit exclusions; Decision 0008 supersedes this checkpoint as final product authority.
 
 **Source coverage:** entire README, PRD, inventory Sections 1-35C, and this plan.
 
 **Dependencies:** Sprint 101; legacy dependency record: `G-FOUNDATION`, `G-V0.1`, `G-V0.2`, `G-V0.3`, `G-V0.4`, `G-V0.5`, `G-V0.6`, `G-V0.7`, `G-V1+`.
 
-#### [ ] Story 102.1 - Final Product Verification and Release Decision
+#### [ ] Story 102.1 - Inherited-Scope Verification Checkpoint
 
-**User-facing value:** As an AgentMage user, maintainer, or reviewer, I need final product verification and release decision so that AgentMage delivers the following bounded outcome: Demonstrate complete promoted scope, preserve explicit exclusions, and create the final auditable product release decision.
+**User-facing value:** As an AgentMage user, maintainer, or reviewer, I need the inherited roadmap reconciled before delivery expansion so that no earlier requirement or exclusion is lost and no checkpoint is mistaken for v1.0 GA.
 
 ##### Tasks and Sub-tasks
 
@@ -5800,13 +5818,13 @@ The owning sprint performs the first complete execution possible for its boundar
   - [ ] **Sub-task 102.1.1.2** (legacy `S-075-I05`): Re-run complete deterministic, model, evidence, privacy, path, sandbox, network, package, connector, browser, schedule, hosted-write, and multi-agent suites.
   - [ ] **Sub-task 102.1.1.3** (legacy `S-075-I06`): Verify every shell and model remains authority-free and every capability remains removable without corrupting canonical state.
   - [ ] **Sub-task 102.1.1.4** (legacy `S-075-I07`): Validate complete documentation, examples, limitations, troubleshooting, threat models, data maps, software bill of materials, licenses, and release manifests.
-  - [ ] **Sub-task 102.1.1.5** (legacy `S-075-I08`): Produce the final release decision with passed gates, unresolved risks, explicit exclusions, supported platforms, supported models, supported capabilities, and rollback plan.
+  - [ ] **Sub-task 102.1.1.5** (legacy `S-075-I08`): Preserve the legacy final-release artifact as an inherited-scope checkpoint containing passed gates, unresolved risks, explicit exclusions, platforms, models, capabilities, and rollback plan; label it non-GA under Decision 0008.
 
 - [ ] **Task 102.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 102.1.2.1:** Complete requirement-to-code-to-test-to-document traceability report.
   - [ ] **Sub-task 102.1.2.2:** Final cross-platform acceptance and clean-install bundle.
   - [ ] **Sub-task 102.1.2.3:** Deferred and excluded capability register.
-  - [ ] **Sub-task 102.1.2.4:** Final signed release manifests, software bill of materials, capability matrix, and release decision.
+  - [ ] **Sub-task 102.1.2.4:** Signed inherited-scope manifests, software bill of materials, capability matrix, and non-GA checkpoint decision.
 
 - [ ] **Task 102.1.3 - Verify and close the story**
   - [ ] **Sub-task 102.1.3.1:** `S-075-UT01` rebuilds the complete requirement graph and validates unique source/implementation/test/document/owner/release/evidence links; assert zero promoted orphan and exact explicit-exclusion coverage.
@@ -5820,7 +5838,7 @@ The owning sprint performs the first complete execution possible for its boundar
 
 - [ ] **Story AC 102.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every promoted requirement has current reproducible code/test/document/evidence/owner/release linkage and no unresolved blocking dependency; every deferred item has an approved disposition and tested exclusion unless formally promoted.
 - [ ] **Story AC 102.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then final release status remains `BLOCKED` for any failed, skipped, stale, unavailable, flaky, suppressed, unreviewed, or unreconciled blocking control regardless of feature completeness.
-- [ ] **Story AC 102.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then `G-PRODUCT` may close only after the user reviews the complete public product-release decision; any later customer-specific managed-device decision remains separate and optional.
+- [ ] **Story AC 102.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then legacy `G-PRODUCT` may close only as an inherited-scope checkpoint after user review; it cannot authorize v1.0 GA.
 
 #### Sprint Acceptance Criteria
 
@@ -5828,9 +5846,1174 @@ The owning sprint performs the first complete execution possible for its boundar
 - [ ] **Sprint AC 102.AC2:** Every explicit exclusion has a test proving the prohibited path is absent or denied.
 - [ ] **Sprint AC 102.AC3:** All supported platforms, models, interfaces, capability packs, storage domains, and recovery paths agree across documents and packages.
 - [ ] **Sprint AC 102.AC4:** No failed security, privacy, authority, evidence, recovery, or clean-install threshold is waived by feature completeness.
-- [ ] **Sprint AC 102.AC5:** `G-PRODUCT` closes only after the user approves the final release decision and every blocking gate is green.
+- [ ] **Sprint AC 102.AC5:** Legacy `G-PRODUCT` closes only after the user approves the inherited-scope checkpoint and every blocking gate in that scope is green; final release authority remains `G-GA`.
 
 **Gate decision:** Sprint 102 is PASS only when Story 102.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remains the historically stable inherited-roadmap closure checkpoint and retains `G-PRODUCT` as its legacy gate identity. It cannot authorize or describe v1.0 GA.
+
+## [ ] Epic 10 - Provider-Neutral Delivery System and Windows 11
+
+### [ ] Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Freeze the provider-neutral delivery model and prove that adapters can be added, versioned, degraded, and removed without provider logic entering the kernel.
+
+**Source coverage:** `AM-GA-001`, `AM-DEL-001`, `AM-ADP-001`, `AT-DEL-001`, `AT-ADP-001`; `DELIVERY-SYSTEM.md` Sections 3-6 and 13; `SR-DEL-001`, `SR-DEL-002`, `RV-23`, `RV-27`.
+
+**Dependencies:** Sprint 102 as the inherited-scope checkpoint; Sprints 4, 5, 21, 70, 79, 81, 87, and 88 for kernel, grants, evidence, connected profiles, packages, mediation, and connector controls.
+
+#### [ ] Story 103.1 - Provider-Neutral Delivery Foundation
+
+**User-facing value:** As a user and reviewer, I need one truthful delivery model so that source, work, CI, artifacts, deployments, telemetry, incidents, and releases can be correlated without granting authority or hiding provider differences.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 103.1.1 - Implement delivery graph contracts**
+  - [ ] **Sub-task 103.1.1.1:** Define versioned types for service, work item, repository, change, commit, review, build, check, artifact, provenance, environment, deployment, telemetry, incident, finding, release, rollback, and evidence-backed edge.
+  - [ ] **Sub-task 103.1.1.2:** Bind every node to provider, exact host, tenant or organization, project, immutable identity, display identity, version, freshness, sensitivity, tombstone state, and source receipt.
+  - [ ] **Sub-task 103.1.1.3:** Distinguish observed, derived, inferred, conflicting, stale, deleted, inaccessible, and unknown graph relationships; prohibit inferred edges from authorizing operations.
+  - [ ] **Sub-task 103.1.1.4:** Implement graph migrations, bounded indexes, cache deletion, source refresh, stale propagation, and deterministic export/import.
+- [ ] **Task 103.1.2 - Implement the adapter SDK and matrix**
+  - [ ] **Sub-task 103.1.2.1:** Define `describe`, `diagnose`, `discover`, `plan`, `preview`, `execute`, `reconcile`, `rollback_or_compensate`, and `remove` contracts.
+  - [ ] **Sub-task 103.1.2.2:** Define signed adapter manifests and the provider/host/version/object/operation/scope/event/limit/degradation/support matrix.
+  - [ ] **Sub-task 103.1.2.3:** Implement L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative registration with no level inheritance.
+  - [ ] **Sub-task 103.1.2.4:** Implement namespaced provider extensions and reject unknown extensions that lack a schema, policy, and conformance identity.
+  - [ ] **Sub-task 103.1.2.5:** Build fake, fault, future-version, eventual-consistency, and hostile provider adapters plus complete removal fixtures.
+- [ ] **Task 103.1.3 - Verify and close the story**
+  - [ ] **Sub-task 103.1.3.1:** `S-103-UT01` round-trips every delivery object and relationship through minimum, maximum, empty, malformed, extra-field, future-version, rename, transfer, delete, tombstone, and collision fixtures.
+  - [ ] **Sub-task 103.1.3.2:** `S-103-UT02` mutates every manifest and support-matrix field and compares registration with conformance level; unsupported operations must remain absent.
+  - [ ] **Sub-task 103.1.3.3:** `S-103-ST01` injects model and provider attempts to invent edges, capabilities, versions, support, or completion; assert no authority or support claim changes.
+  - [ ] **Sub-task 103.1.3.4:** `S-103-RT01` upgrades, downgrades, corrupts, disables, and removes adapters around graph migrations and active reads; assert deterministic rollback and no orphaned authority.
+  - [ ] **Sub-task 103.1.3.5:** Execute `RV-23` and `RV-27`; retain raw graph corpus, adapter conformance matrix, registration diff, removal scan, evidence hashes, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 103.1.AC1:** Given heterogeneous provider fixtures, when the graph is built and refreshed, then every authoritative node and edge resolves to immutable source evidence while inference and conflict remain visibly non-authoritative.
+- [ ] **Story AC 103.1.AC2:** Given an adapter manifest and tested provider version, when registration occurs, then only operations at the proven conformance level register and every unsupported operation remains absent.
+- [ ] **Story AC 103.1.AC3:** Given adapter removal or an unsupported provider version, when diagnostics and cleanup run, then AgentMage enters the declared blocked or degraded state without residual authority or a misleading support claim.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 103.AC1:** Delivery graph schemas and migrations are deterministic, bounded, versioned, and evidence-preserving.
+- [ ] **Sprint AC 103.AC2:** The kernel imports only provider-neutral contracts and contains no provider-specific API branch.
+- [ ] **Sprint AC 103.AC3:** Every adapter operation is traceable to a matrix tuple and conformance result.
+- [ ] **Sprint AC 103.AC4:** Fake/fault/future providers and complete adapter removal pass.
+- [ ] **Sprint AC 103.AC5:** `RV-23` and `RV-27` have current independently reviewed evidence.
+
+**Gate decision:** Sprint 103 is PASS only when Story 103.1, all criteria, `AT-DEL-001`, `AT-ADP-001`, and the Universal Story Definition of Done pass with current evidence. Otherwise it is BLOCKED.
+
+### [ ] Sprint 104 - Connected Identity, Credentials, and Capability Classes
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Prove that no provider, host, tenant, account, project, environment, credential, or capability class can be confused with another.
+
+**Source coverage:** `AM-IDN-001`, `AT-IDN-001`; `DELIVERY-SYSTEM.md` Sections 4 and 7; `SR-DEL-002` through `SR-DEL-004`, `RV-24`.
+
+**Dependencies:** Sprint 103; Sprints 5, 11, 21, 70, and 87.
+
+#### [ ] Story 104.1 - Exact Connected Identity and Secret Isolation
+
+**User-facing value:** As a user, I need AgentMage to show and use the exact account and destination so that a credential or approval can never cross into another provider domain.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 104.1.1 - Implement connected identity and credential contracts**
+  - [ ] **Sub-task 104.1.1.1:** Define canonical provider, host, port, TLS identity, tenant, account, project, environment, credential reference, single-sign-on state, and capability-class identities.
+  - [ ] **Sub-task 104.1.1.2:** Resolve credentials only inside operation-scoped provider workers after kernel grant and worker identity validation.
+  - [ ] **Sub-task 104.1.1.3:** Validate redirects, proxies, DNS results, callback targets, clone hosts, provider-supplied URLs, and cross-host API links before sending a request or credential.
+  - [ ] **Sub-task 104.1.1.4:** Expose non-secret account/scope/expiry diagnostics and deny missing, ambiguous, excessive, stale, revoked, or cross-domain credentials.
+- [ ] **Task 104.1.2 - Implement capability-class separation**
+  - [ ] **Sub-task 104.1.2.1:** Encode `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as non-inheriting grant classes.
+  - [ ] **Sub-task 104.1.2.2:** Make each class use distinct tool registration, policy checks, preview fields, receipts, diagnostics, and support-matrix entries.
+  - [ ] **Sub-task 104.1.2.3:** Prevent nested provider calls, workflow inputs, issue content, plugins, and model output from escalating one class into another.
+  - [ ] **Sub-task 104.1.2.4:** Add secret canaries and cross-domain fixtures for every provider worker, cache, log, receipt, diagnostic, error, and model-context path.
+- [ ] **Task 104.1.3 - Verify and close the story**
+  - [ ] **Sub-task 104.1.3.1:** `S-104-UT01` mutates every connected identity field and credential state; assert stable denial reason, no request, no secret serialization, and one receipt.
+  - [ ] **Sub-task 104.1.3.2:** `S-104-ST01` runs all pairwise capability-class escalation attempts through direct requests, provider content, nested actions, imports, and model tool calls.
+  - [ ] **Sub-task 104.1.3.3:** `S-104-ST02` runs at least 2,000 host/tenant/account/project/environment/credential/redirect/proxy/DNS/callback confusion cases.
+  - [ ] **Sub-task 104.1.3.4:** `S-104-IT01` authenticates multiple synthetic accounts on identical and different hosts and performs bounded reads concurrently; assert complete credential, cache, and result isolation.
+  - [ ] **Sub-task 104.1.3.5:** Execute `RV-24`; retain process/network traces, secret-canary scan, request destinations, denial matrix, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 104.1.AC1:** Given multiple hosts and accounts with identical display names, when a connected operation is previewed and executed, then the exact destination and credential domain remain unambiguous and no credential crosses domains.
+- [ ] **Story AC 104.1.AC2:** Given authority for one capability class, when any direct or indirect escalation is attempted, then the stronger operation is absent or denied before provider contact.
+- [ ] **Story AC 104.1.AC3:** Given unavailable or excessive credentials, when diagnostics run, then AgentMage reports non-secret remediation and fails closed without persisting or exposing the credential.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 104.AC1:** All 2,000 confusion attacks produce zero wrong-domain request or disclosure.
+- [ ] **Sprint AC 104.AC2:** Every pairwise capability escalation is denied.
+- [ ] **Sprint AC 104.AC3:** Secret canaries are absent from all prohibited surfaces.
+- [ ] **Sprint AC 104.AC4:** Concurrent provider workers cannot share credentials, caches, grants, or context.
+- [ ] **Sprint AC 104.AC5:** `RV-24` passes with independently reproducible evidence.
+
+**Gate decision:** Sprint 104 is PASS only when Story 104.1, all criteria, `AT-IDN-001`, and the Universal Story Definition of Done pass with current evidence. Otherwise it is BLOCKED.
+
+### [ ] Sprint 105 - External Effects, Events, and Uncertain Results
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Implement one safe lifecycle for remote mutations and event ingestion before any live provider write or execution adapter is promoted.
+
+**Source coverage:** `AM-ADP-001`, `AM-IDN-001`, `AT-ADP-001`, `AT-XTE-001`; `DELIVERY-SYSTEM.md` Sections 5 and 8; `SR-DEL-005` through `SR-DEL-009`, `RV-25`, `RV-26`.
+
+**Dependencies:** Sprint 104; Sprints 35-40, 85-88, and 89.
+
+#### [ ] Story 105.1 - Exact External Effect and Event Lifecycle
+
+**User-facing value:** As a user, I need AgentMage to execute exactly one reviewed external effect and recover truthfully when the provider or network gives an uncertain result.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 105.1.1 - Implement effect planning and execution**
+  - [ ] **Sub-task 105.1.1.1:** Define canonical effect plans containing actor, target, object, payload, attachments, visibility, source revision, environment, expected change, cost/budget, preconditions, expiry, and recovery.
+  - [ ] **Sub-task 105.1.1.2:** Re-read affected remote objects before preview and again before grant consumption; invalidate approval on any identity, policy, permission, state, or payload change.
+  - [ ] **Sub-task 105.1.1.3:** Implement provider idempotency keys and deterministic operation fingerprints with effect, non-effect, duplicate, partial, and unknown reconciliation states.
+  - [ ] **Sub-task 105.1.1.4:** Implement verified postconditions and receipts for denial, cancellation, validation failure, timeout, partial effect, unknown effect, duplicate effect, and success.
+  - [ ] **Sub-task 105.1.1.5:** Implement rollback/compensation only as a fresh plan and grant that refuses to overwrite later independent changes.
+- [ ] **Task 105.1.2 - Implement event integrity**
+  - [ ] **Sub-task 105.1.2.1:** Define webhook/event identity, signature, host, tenant, timestamp, nonce, sequence, cursor, ordering, duplication, tombstone, and backfill contracts.
+  - [ ] **Sub-task 105.1.2.2:** Implement replay windows, secret rotation, gap detection, bounded polling overlap, pagination-loop detection, and idempotent event application.
+  - [ ] **Sub-task 105.1.2.3:** Keep event content untrusted and unable to create a grant, approval, completion claim, or follow-on operation.
+- [ ] **Task 105.1.3 - Verify and close the story**
+  - [ ] **Sub-task 105.1.3.1:** `S-105-UT01` field-mutates every plan, preview, grant, request, result, reconciliation, receipt, and compensation schema.
+  - [ ] **Sub-task 105.1.3.2:** `S-105-FT01` injects loss/crash before send, during transport, after effect, before local commit, and during reconciliation across at least 1,000 runs; assert zero duplicate effect.
+  - [ ] **Sub-task 105.1.3.3:** `S-105-ST01` forges, delays, replays, duplicates, reorders, omits, truncates, and mutates events, cursors, signatures, timestamps, and tombstones.
+  - [ ] **Sub-task 105.1.3.4:** `S-105-RT01` changes remote state after effect and before rollback; assert a stale rollback cannot execute and later work is preserved.
+  - [ ] **Sub-task 105.1.3.5:** Execute `RV-25` and `RV-26`; retain raw provider snapshots, operation fingerprints, event streams, fault schedules, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 105.1.AC1:** Given a current exact preview, when the user approves and the provider responds normally, then exactly the previewed effect occurs and its postcondition and receipt are verified.
+- [ ] **Story AC 105.1.AC2:** Given a timeout, crash, duplicate response, or partial provider effect, when recovery runs, then no retry occurs until reconciliation proves the current effect state.
+- [ ] **Story AC 105.1.AC3:** Given forged, replayed, missing, or reordered events, when ingestion runs, then local state remains deterministic, gaps are visible, and no event gains operation authority.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 105.AC1:** Field or remote-state changes invalidate approval before any provider request.
+- [ ] **Sprint AC 105.AC2:** At least 1,000 fault schedules produce zero duplicate external effect.
+- [ ] **Sprint AC 105.AC3:** Unknown and partial effects remain visible and block unsafe retry.
+- [ ] **Sprint AC 105.AC4:** Rollback and compensation preserve later independent changes.
+- [ ] **Sprint AC 105.AC5:** `RV-25` and `RV-26` pass with current independent evidence.
+
+**Gate decision:** Sprint 105 is PASS only when Story 105.1, all criteria, the effect/event portions of `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Complete the published GitHub.com and GitHub Enterprise Server matrix, including local signed commits, separate pushes, hosted writes, workflows, reviews, and releases.
+
+**Source coverage:** `AM-GHE-001`, `AT-GHE-001`; inventory Sections 13, 13A, 13B, and 36B; `SR-DEL-001` through `SR-DEL-009`, `RV-23` through `RV-26`.
+
+**Dependencies:** Sprint 105; Sprints 41-47, 70-75, and 85-86.
+
+#### [ ] Story 106.1 - Bounded Complete GitHub Capability
+
+**User-facing value:** As a developer, I need one chat surface to understand and safely update personal or enterprise GitHub repositories without hiding the exact account, branch, review, workflow, or publication effect.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 106.1.1 - Complete observable GitHub behavior**
+  - [ ] **Sub-task 106.1.1.1:** Normalize GitHub.com and version-bounded GitHub Enterprise Server host discovery, authentication, organizations, repositories, refs, commits, trees, blobs, releases, rulesets, security, and Actions objects.
+  - [ ] **Sub-task 106.1.1.2:** Normalize issues, discussions where supported, pull requests, reviews, threads, checks, workflows, environments, artifacts, notifications, pagination, rate limits, and permission gaps.
+  - [ ] **Sub-task 106.1.1.3:** Preserve REST/GraphQL/provider-only identities and unknown fields without flattening unsupported GHES differences.
+- [ ] **Task 106.1.2 - Complete effectful GitHub behavior**
+  - [ ] **Sub-task 106.1.2.1:** Implement exact drafts and approval-gated issue, comment, label, assignment, milestone, project-field, pull-request, review, thread, workflow, environment, and release operations.
+  - [ ] **Sub-task 106.1.2.2:** Implement exact local staged diff/message approval, required commit signing, signature verification, and a distinct approval for remote push.
+  - [ ] **Sub-task 106.1.2.3:** Implement approval-gated workflow dispatch/rerun/cancel and environment approval as `execute`, never generic `remote-write`.
+  - [ ] **Sub-task 106.1.2.4:** Keep force push, repository/organization administration, secret changes, ruleset changes, automatic merge, automatic release, and automatic review absent unless separately promoted to L5.
+- [ ] **Task 106.1.3 - Verify and close the story**
+  - [ ] **Sub-task 106.1.3.1:** `S-106-CT01` runs every published GitHub object and operation across GitHub.com and the supported GHES version matrix, permission levels, pagination, rate limits, and unavailable features.
+  - [ ] **Sub-task 106.1.3.2:** `S-106-ST01` runs cross-host credentials, redirects, stale refs, moved lines, branch protection changes, injected content, hidden fields, and every prohibited operation.
+  - [ ] **Sub-task 106.1.3.3:** `S-106-IT01` reads an issue, creates an isolated change, tests it, signs a local commit, separately pushes, opens a pull request, submits a review, dispatches CI, verifies checks, drafts a release, and reconciles every effect.
+  - [ ] **Sub-task 106.1.3.4:** `S-106-RT01` injects GHES version skew, revocation, single-sign-on changes, rate limits, branch movement, timeout, duplicate response, partial publication, crash, and cancellation.
+  - [ ] **Sub-task 106.1.3.5:** Execute applicable `RV-23` through `RV-26`; retain API traces, pre/post snapshots, signatures, support matrix, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 106.1.AC1:** Given a supported GitHub.com or GHES tuple, when a published read or write operation runs, then its provider semantics, permissions, immutable identities, exact effects, and receipts match the support matrix.
+- [ ] **Story AC 106.1.AC2:** Given a local commit and remote push, when approvals occur, then staged diff/message/signature and remote destination/ref are reviewed and granted separately.
+- [ ] **Story AC 106.1.AC3:** Given an unsupported GHES feature or administrative operation, when requested directly or indirectly, then it is absent or denied without fallback to a different host or method.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 106.AC1:** The complete published GitHub.com/GHES matrix passes at its declared level.
+- [ ] **Sprint AC 106.AC2:** No credential crosses GitHub hosts or accounts.
+- [ ] **Sprint AC 106.AC3:** Every hosted effect has exact pre/post snapshots, reconciliation, and one receipt.
+- [ ] **Sprint AC 106.AC4:** Commit, push, review, workflow execution, environment approval, merge preparation, and release remain separate capability classes.
+- [ ] **Sprint AC 106.AC5:** All prohibited and unsupported operations pass negative tests.
+
+**Gate decision:** Sprint 106 is PASS only when Story 106.1, all criteria, `AT-GHE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Deliver truthful, identity-safe work-item planning and approved updates across GitHub Issues, Jira Cloud/Data Center, and Azure Boards.
+
+**Source coverage:** `AM-WRK-001`, `AT-WRK-001`; `DELIVERY-SYSTEM.md`; `SR-DEL-001` through `SR-DEL-013`, `RV-23` through `RV-27`.
+
+**Dependencies:** Sprint 106.
+
+#### [ ] Story 107.1 - Cross-Provider Work Planning
+
+**User-facing value:** As a delivery lead or developer, I need issues and work items correlated without losing provider-specific fields or accidentally updating the wrong project.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 107.1.1 - Implement work-item reads and graph links**
+  - [ ] **Sub-task 107.1.1.1:** Implement GitHub Issue, Jira Cloud, Jira Data Center, and Azure Boards identities, types, fields, states, transitions, hierarchy, links, iterations, comments, attachments, history, and permissions.
+  - [ ] **Sub-task 107.1.1.2:** Preserve provider-only workflows, custom fields, projects, area/iteration paths, boards, sprints, and link semantics as namespaced extensions.
+  - [ ] **Sub-task 107.1.1.3:** Link work items to repositories, branches, commits, reviews, builds, releases, incidents, and evidence only through exact provider references or labeled inference.
+- [ ] **Task 107.1.2 - Implement bounded drafts and writes**
+  - [ ] **Sub-task 107.1.2.1:** Draft and preview create, edit, comment, assign, label/tag, link, attach, transition, close, and reopen operations with exact field-level effects.
+  - [ ] **Sub-task 107.1.2.2:** Re-read workflow, field schema, permissions, object revision, and attachment identity before submission.
+  - [ ] **Sub-task 107.1.2.3:** Implement provider-specific idempotency/reconciliation and prevent hidden recipients, watchers, visibility changes, project moves, or cascading transitions.
+- [ ] **Task 107.1.3 - Verify and close the story**
+  - [ ] **Sub-task 107.1.3.1:** `S-107-CT01` runs all published objects, custom-field types, transitions, links, attachments, pagination, permissions, and version fixtures for all four providers.
+  - [ ] **Sub-task 107.1.3.2:** `S-107-ST01` attacks cross-project identity, reused issue numbers, hidden watchers, malicious attachments, injected comments, stale transitions, and provider-link confusion.
+  - [ ] **Sub-task 107.1.3.3:** `S-107-IT01` creates and links synthetic work across providers, drafts updates, approves one exact transition, and verifies only declared fields change.
+  - [ ] **Sub-task 107.1.3.4:** `S-107-RT01` injects schema change, permission loss, object move/delete, transition removal, rate limit, timeout, duplicate response, and crash.
+  - [ ] **Sub-task 107.1.3.5:** Retain support matrices, normalized/provider-extension fixtures, pre/post snapshots, attachment scans, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 107.1.AC1:** Given work items with identical numbers or names in different domains, when AgentMage reads or links them, then immutable provider identity prevents cross-project or cross-tenant confusion.
+- [ ] **Story AC 107.1.AC2:** Given provider-specific workflows and custom fields, when AgentMage previews an update, then it preserves exact semantics and exposes unsupported or unknown behavior rather than guessing.
+- [ ] **Story AC 107.1.AC3:** Given a changed schema, transition, permission, attachment, or object revision, when submission begins, then stale approval is invalidated and no external effect occurs.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 107.AC1:** Every promoted work provider passes its exact object/operation/version matrix.
+- [ ] **Sprint AC 107.AC2:** Cross-provider links preserve evidence and never become operation authority.
+- [ ] **Sprint AC 107.AC3:** Hidden recipients, cross-project moves, and cascading effects are absent or separately previewed.
+- [ ] **Sprint AC 107.AC4:** Duplicate and uncertain results reconcile without duplicate work items or comments.
+- [ ] **Sprint AC 107.AC5:** `AT-WRK-001` passes with independent evidence.
+
+**Gate decision:** Sprint 107 is PASS only when Story 107.1, all criteria, `AT-WRK-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 108 - Azure Repos and GitLab Source Adapters
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add Azure Repos and GitLab source/review capabilities without weakening the Git or provider authority contracts proven for GitHub.
+
+**Source coverage:** `AM-SRC-001`, `AT-SRC-001`; inventory Sections 13, 13A, 13B, and 36B; `SR-DEL-*`, `RV-23` through `RV-27`.
+
+**Dependencies:** Sprint 107; Sprints 41-47 and 74.
+
+#### [ ] Story 108.1 - Multi-Provider Source and Review
+
+**User-facing value:** As a developer, I need the same bounded repository, review, commit, and push workflow on Azure Repos and GitLab while retaining each provider's policies and identities.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 108.1.1 - Implement source-provider reads**
+  - [ ] **Sub-task 108.1.1.1:** Implement repository, project/group, ref, commit, tree, blob, tag, release, policy/protection, pull/merge request, review, thread, status, check, and permission reads for Azure Repos and GitLab.
+  - [ ] **Sub-task 108.1.1.2:** Implement immutable PR/merge-request checkout into isolated worktrees with base/head refresh, moved-line handling, instruction discovery, and local review evidence.
+  - [ ] **Sub-task 108.1.1.3:** Preserve Azure and GitLab-specific review, approval, pipeline, fork, protection, and merge semantics as namespaced fields.
+- [ ] **Task 108.1.2 - Implement source-provider writes**
+  - [ ] **Sub-task 108.1.2.1:** Implement exact draft and approval flows for branch push, pull/merge request, comments, review/thread, labels, reviewers, draft state, closure, and merge preparation within the matrix.
+  - [ ] **Sub-task 108.1.2.2:** Enforce signed local commits where the repository policy requires them and always separate commit approval from remote push approval.
+  - [ ] **Sub-task 108.1.2.3:** Keep force push, protected-branch bypass, repository/project/group administration, secret changes, and automatic merge/release absent.
+- [ ] **Task 108.1.3 - Verify and close the story**
+  - [ ] **Sub-task 108.1.3.1:** `S-108-CT01` runs Azure Repos and GitLab matrices across cloud/self-hosted versions, permissions, forks, protected branches, merge methods, pagination, and unavailable features.
+  - [ ] **Sub-task 108.1.3.2:** `S-108-ST01` tests credential crossover, malicious diffs, stale refs, line movement, hooks, submodules, large-file pointers, branch policy changes, and every prohibited operation.
+  - [ ] **Sub-task 108.1.3.3:** `S-108-IT01` performs issue-linked isolated changes, tests, signed commit, separate push, review submission, refresh, and postcondition verification on both providers.
+  - [ ] **Sub-task 108.1.3.4:** `S-108-RT01` injects version skew, permission loss, branch movement, partial publication, timeout, duplicate response, crash, and cancellation.
+  - [ ] **Sub-task 108.1.3.5:** Retain provider matrices, API traces, worktree snapshots, signatures, pre/post state, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 108.1.AC1:** Given a supported Azure Repos or GitLab tuple, when repository or review operations run, then provider-specific policy and identity remain exact while shared Git behavior matches the common contract.
+- [ ] **Story AC 108.1.AC2:** Given a changed branch, review, permission, or policy after preview, when an effect is attempted, then approval is invalidated and no stale push or hosted update occurs.
+- [ ] **Story AC 108.1.AC3:** Given a force, bypass, administrative, or unsupported operation, when requested, then the operation remains absent or is denied before provider contact.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 108.AC1:** Azure Repos and GitLab pass their published read/write matrices.
+- [ ] **Sprint AC 108.AC2:** Active user checkouts and unrelated changes remain untouched.
+- [ ] **Sprint AC 108.AC3:** Commit and push remain distinct approvals with signature evidence.
+- [ ] **Sprint AC 108.AC4:** No cross-provider credential, cache, identity, or receipt collision occurs.
+- [ ] **Sprint AC 108.AC5:** `AT-SRC-001` passes with current independent evidence.
+
+**Gate decision:** Sprint 108 is PASS only when Story 108.1, all criteria, `AT-SRC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 109 - Multi-Provider CI Execution and Evidence
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Safely inspect and execute GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins with exact source, inputs, environment, permissions, budgets, and result attribution.
+
+**Source coverage:** `AM-CIC-001`, `AT-CIC-001`; `DELIVERY-SYSTEM.md` Section 9; `SR-DEL-005` through `SR-DEL-014`, `RV-23` through `RV-26`, `RV-29`.
+
+**Dependencies:** Sprint 108; Sprints 47 and 89-90.
+
+#### [ ] Story 109.1 - Bounded Continuous-Integration Control
+
+**User-facing value:** As a developer, I need to inspect, dispatch, rerun, cancel, and approve CI from chat while knowing exactly which source, inputs, environment, and runner will execute.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 109.1.1 - Implement CI observation and normalization**
+  - [ ] **Sub-task 109.1.1.1:** Implement workflow/pipeline/job/step/run/attempt/annotation/log/artifact/environment/approval identities for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins.
+  - [ ] **Sub-task 109.1.1.2:** Parse definitions as untrusted source and expose triggers, permissions, variables by name, secret references by name, concurrency, runners/agents, retention, dependencies, and reusable components without secret values.
+  - [ ] **Sub-task 109.1.1.3:** Correlate each run with exact repository, immutable revision, actor, inputs, environment, worker identity, result, logs, artifacts, and receipt.
+- [ ] **Task 109.1.2 - Implement CI execution classes**
+  - [ ] **Sub-task 109.1.2.1:** Preview and grant dispatch, rerun, cancel, and environment approval separately with exact ref, inputs, environment, permissions, budget, expected artifacts, and cancellation contract.
+  - [ ] **Sub-task 109.1.2.2:** Implement provider idempotency/reconciliation for dispatch and rerun, including queue identity and timeout before/after run creation.
+  - [ ] **Sub-task 109.1.2.3:** Stream bounded logs and artifacts through secret scanning, archive/path defenses, size limits, cancellation, classification, and retention before model use.
+  - [ ] **Sub-task 109.1.2.4:** Keep CI definition changes, runner/agent administration, secret changes, and deployment approval outside generic CI execution.
+- [ ] **Task 109.1.3 - Verify and close the story**
+  - [ ] **Sub-task 109.1.3.1:** `S-109-CT01` runs each provider's definition/read/dispatch/rerun/cancel/approval/log/artifact matrix across versions and permissions.
+  - [ ] **Sub-task 109.1.3.2:** `S-109-ST01` injects malicious YAML/scripts/logs/artifacts, hidden inputs, secret echoes, redirect downloads, archive bombs, stale refs, runner confusion, and nested deployment attempts.
+  - [ ] **Sub-task 109.1.3.3:** `S-109-FT01` executes at least 1,000 timeout/retry/crash/duplicate schedules around run creation and reconciliation; assert zero duplicate execution.
+  - [ ] **Sub-task 109.1.3.4:** `S-109-RT01` exercises rate limits, queue delay, permission reduction, provider outage, cancellation races, oversized output, full disk, and restart.
+  - [ ] **Sub-task 109.1.3.5:** Retain exact run graphs, provider traces, secret scans, artifact inventories, effect reconciliation, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 109.1.AC1:** Given a supported CI provider, when a run is inspected, then every result and artifact is attributable to the exact source revision, inputs, environment, actor, worker, and attempt.
+- [ ] **Story AC 109.1.AC2:** Given an approved dispatch or rerun, when uncertainty or retry occurs, then no duplicate run is created and AgentMage reports unknown state until reconciliation completes.
+- [ ] **Story AC 109.1.AC3:** Given hostile definitions, logs, or artifacts, when they are processed, then they remain bounded untrusted data and cannot disclose secrets or trigger a stronger capability.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 109.AC1:** All four CI providers pass the published observe and execute matrices.
+- [ ] **Sprint AC 109.AC2:** At least 1,000 uncertain-result schedules create zero duplicate runs.
+- [ ] **Sprint AC 109.AC3:** CI execution cannot imply deployment, secret, or administration authority.
+- [ ] **Sprint AC 109.AC4:** Logs and artifacts pass bounds, archive, secret, retention, and cancellation tests.
+- [ ] **Sprint AC 109.AC5:** `AT-CIC-001` passes with independent evidence.
+
+**Gate decision:** Sprint 109 is PASS only when Story 109.1, all criteria, `AT-CIC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 110 - Artifact Registries and Immutable Promotion
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Make immutable artifact identity the bridge between CI and deployment across OCI, GitHub, Azure, Artifactory, and Nexus repositories.
+
+**Source coverage:** `AM-ART-001`, `AT-ART-001`; `DELIVERY-SYSTEM.md` Section 9; `SR-DEL-001` through `SR-DEL-014`, `RV-23` through `RV-27`.
+
+**Dependencies:** Sprint 109.
+
+#### [ ] Story 110.1 - Digest-First Artifact Lifecycle
+
+**User-facing value:** As a release operator, I need every downloadable or promotable artifact tied to an immutable digest and provenance rather than a mutable tag or build label.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 110.1.1 - Implement artifact-provider reads**
+  - [ ] **Sub-task 110.1.1.1:** Implement repository, package, manifest, blob, digest, tag, version, build-info, property, retention, signature, provenance, and permission reads for OCI Distribution, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus.
+  - [ ] **Sub-task 110.1.1.2:** Resolve tags and names to immutable digests and record observed mapping time, source host, repository, media type, size, platform, and deletion state.
+  - [ ] **Sub-task 110.1.1.3:** Implement bounded streaming download with hash verification, archive/path defenses, cancellation, quarantine, cleanup, and no model access to raw binary content.
+- [ ] **Task 110.1.2 - Implement promotion and retention**
+  - [ ] **Sub-task 110.1.2.1:** Preview source digest, target repository, target labels/tags, metadata, retention, signature/provenance state, expected bytes, and overwrite/collision behavior.
+  - [ ] **Sub-task 110.1.2.2:** Implement approval-gated copy/promotion by immutable digest, postcondition verification, idempotency, partial-upload recovery, and cleanup.
+  - [ ] **Sub-task 110.1.2.3:** Keep delete, retention-policy change, signing-key use, repository administration, and mutable-tag replacement as separately disabled or separately approved operations.
+- [ ] **Task 110.1.3 - Verify and close the story**
+  - [ ] **Sub-task 110.1.3.1:** `S-110-CT01` runs repository/package/media-type/platform/digest/tag/version/permission/retention matrices for all promoted providers.
+  - [ ] **Sub-task 110.1.3.2:** `S-110-ST01` tests digest mismatch, tag swap, manifest confusion, cross-repository credential use, malicious media types, traversal archives, oversized layers, decompression bombs, and signature spoofing.
+  - [ ] **Sub-task 110.1.3.3:** `S-110-IT01` traces CI output to an immutable artifact, verifies it, promotes it once, refreshes both repositories, and proves exact bytes and metadata.
+  - [ ] **Sub-task 110.1.3.4:** `S-110-RT01` injects partial upload, rate limit, timeout, tag race, deletion, retention conflict, full disk, cancellation, crash, and restart.
+  - [ ] **Sub-task 110.1.3.5:** Retain digest maps, transfer traces, scanner output, pre/post inventories, cleanup scans, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 110.1.AC1:** Given a mutable artifact label, when AgentMage reads or promotes it, then authority binds only to the resolved immutable digest and a changed mapping invalidates approval.
+- [ ] **Story AC 110.1.AC2:** Given a partial, failed, duplicated, or cancelled transfer, when reconciliation runs, then no corrupt artifact is promoted and cleanup/retry behavior is deterministic.
+- [ ] **Story AC 110.1.AC3:** Given a destructive, administrative, retention, or signing-key operation, when requested through promotion authority, then it remains absent or is separately gated.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 110.AC1:** All promoted artifact providers pass their exact read and promotion matrices.
+- [ ] **Sprint AC 110.AC2:** Every promoted artifact is digest-, hash-, size-, media-, source-, and receipt-bound.
+- [ ] **Sprint AC 110.AC3:** Mutable labels never carry operation authority.
+- [ ] **Sprint AC 110.AC4:** Malicious, partial, oversized, and mismatched artifacts remain quarantined and bounded.
+- [ ] **Sprint AC 110.AC5:** `AT-ART-001` passes with independent evidence.
+
+**Gate decision:** Sprint 110 is PASS only when Story 110.1, all criteria, `AT-ART-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 111 - Supply-Chain Evidence and Security Findings
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Tie software bills of materials, signatures, provenance, policy, and security findings to exact source, build, and artifact identities without losing conflicting evidence.
+
+**Source coverage:** `AM-SUP-014`, `AM-SEC-003`, `AT-SUP-001`, `AT-SEC-003`; `SR-SUP-*`, `SR-DEL-004`, `SR-DEL-011`, `SR-DEL-013`, `RV-19`, `RV-23`, `RV-27`.
+
+**Dependencies:** Sprint 110; Sprint 3 supply-chain foundation.
+
+#### [ ] Story 111.1 - Verifiable Supply Chain and Finding Reconciliation
+
+**User-facing value:** As a reviewer, I need every artifact and finding traced to exact evidence so that signatures, bills of materials, vulnerabilities, and policy results cannot be mixed, hidden, or overstated.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 111.1.1 - Implement supply-chain evidence**
+  - [ ] **Sub-task 111.1.1.1:** Parse and validate SPDX and CycloneDX documents with schema, producer, subject, component, dependency, license, hash, and generation-context preservation.
+  - [ ] **Sub-task 111.1.1.2:** Verify Sigstore/Cosign signatures and attestations, signer identities, transparency evidence where applicable, certificate validity, policy, and artifact digest.
+  - [ ] **Sub-task 111.1.1.3:** Validate SLSA provenance predicates and source/build/artifact links without claiming an assurance level not proven by the evidence.
+  - [ ] **Sub-task 111.1.1.4:** Implement versioned OPA/Conftest-style policy inputs, bundle identity, result, explanation, and release-gate mapping.
+- [ ] **Task 111.1.2 - Implement security-finding normalization**
+  - [ ] **Sub-task 111.1.2.1:** Ingest CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings with original tool, rule, version, location, severity, confidence, reachability, suppression, and immutable source identity.
+  - [ ] **Sub-task 111.1.2.2:** Correlate duplicates without erasing conflicting severity, location, reachability, fix, or suppression evidence.
+  - [ ] **Sub-task 111.1.2.3:** Detect stale locations and changed source/artifact identities before presenting or gating a finding.
+  - [ ] **Sub-task 111.1.2.4:** Keep finding text, remediation, suppressions, and policy output untrusted and unable to change release state without deterministic gate logic.
+- [ ] **Task 111.1.3 - Verify and close the story**
+  - [ ] **Sub-task 111.1.3.1:** `S-111-UT01` mutates each SBOM, signature, attestation, provenance, policy, and finding field, schema version, identity, and digest.
+  - [ ] **Sub-task 111.1.3.2:** `S-111-ST01` injects forged signers, swapped subjects, incomplete graphs, malicious package URLs, suppression abuse, conflicting severities, stale lines, and injected remediation.
+  - [ ] **Sub-task 111.1.3.3:** `S-111-IT01` reconstructs source-to-build-to-artifact-to-deployment evidence and independently verifies signatures, bills of materials, findings, and policy.
+  - [ ] **Sub-task 111.1.3.4:** `S-111-RT01` changes source, rebuilds under the same label, revokes a signer, updates a finding tool, and makes prior evidence stale; assert blocked reuse.
+  - [ ] **Sub-task 111.1.3.5:** Execute `RV-19` and applicable `RV-23`/`RV-27`; retain raw tool output, normalization diffs, signature/provenance verification, policy bundles, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 111.1.AC1:** Given an artifact, when supply-chain evidence is evaluated, then every component, signature, provenance statement, policy result, and finding resolves to that exact digest and recorded producer.
+- [ ] **Story AC 111.1.AC2:** Given conflicting or duplicate security findings, when normalization runs, then original evidence remains visible and no blocking result disappears through deduplication or suppression.
+- [ ] **Story AC 111.1.AC3:** Given changed source, artifact, signer, policy, or tool identity, when prior evidence is reused, then it becomes stale and cannot satisfy the release gate.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 111.AC1:** SPDX, CycloneDX, signatures, provenance, and policy evidence reconcile to immutable artifacts.
+- [ ] **Sprint AC 111.AC2:** All promoted security tools preserve original provenance and conflicts.
+- [ ] **Sprint AC 111.AC3:** Unsupported assurance claims and hidden blocking findings are rejected.
+- [ ] **Sprint AC 111.AC4:** Staleness propagates from source/build/artifact/tool/policy changes.
+- [ ] **Sprint AC 111.AC5:** `AT-SUP-001` and `AT-SEC-003` pass with independent evidence.
+
+**Gate decision:** Sprint 111 is PASS only when Story 111.1, all criteria, `AT-SUP-001`, `AT-SEC-003`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 112 - Kubernetes, Helm, and Kustomize Deployment Safety
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add inspect, plan, promote, health, drift, and rollback behavior for Kubernetes, Helm, and Kustomize with deployment authority isolated from generic writes and CI.
+
+**Source coverage:** `AM-DEP-001`, `AT-DEP-001`; `DELIVERY-SYSTEM.md` Section 9; `SR-DEL-002`, `SR-DEL-005` through `SR-DEL-014`, `RV-25`, `RV-28`.
+
+**Dependencies:** Sprint 111.
+
+#### [ ] Story 112.1 - Exact Kubernetes Deployment Lifecycle
+
+**User-facing value:** As an operator, I need to see the exact resources and artifact that will change and to retain a tested health and rollback path before any cluster effect occurs.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 112.1.1 - Implement deployment observation and planning**
+  - [ ] **Sub-task 112.1.1.1:** Implement cluster/context, namespace, workload, service, ingress, configuration metadata, policy, event, revision, owner, health, rollout, and drift reads without exposing secret values.
+  - [ ] **Sub-task 112.1.1.2:** Implement pinned offline Helm rendering and Kustomize build with exact source revision, dependency/chart digest, values/input hashes, renderer version, and bounded output.
+  - [ ] **Sub-task 112.1.1.3:** Produce deterministic resource-level create/update/delete/no-change plans and flag immutable-field, ownership, policy, secret-reference, namespace, and production boundaries.
+  - [ ] **Sub-task 112.1.1.4:** Bind deploy plans to immutable artifact digests, exact cluster identity, namespace, policy, actor, health criteria, timeout, and rollback target.
+- [ ] **Task 112.1.2 - Implement promotion, health, and rollback**
+  - [ ] **Sub-task 112.1.2.1:** Register non-production and production deploy as separate grants and keep secret/admin changes outside deployment.
+  - [ ] **Sub-task 112.1.2.2:** Verify post-deployment resource identity, rollout status, health windows, events, metrics references, drift, and artifact digest.
+  - [ ] **Sub-task 112.1.2.3:** Implement cancellation, unknown-effect reconciliation, partial deployment reporting, and fresh approval for rollback or compensation.
+- [ ] **Task 112.1.3 - Verify and close the story**
+  - [ ] **Sub-task 112.1.3.1:** `S-112-UT01` mutates cluster, context, namespace, source, chart, values, resource, policy, artifact, health, timeout, and rollback fields.
+  - [ ] **Sub-task 112.1.3.2:** `S-112-ST01` tests context confusion, namespace escape, malicious templates, resource bombs, hidden hooks, secret output, policy bypass, image-tag swap, and nested admin actions.
+  - [ ] **Sub-task 112.1.3.3:** `S-112-IT01` promotes an immutable synthetic artifact to non-production, verifies health, detects drift, simulates failure, previews rollback, approves it separately, and verifies final state.
+  - [ ] **Sub-task 112.1.3.4:** `S-112-FT01` crashes/cancels before apply, during apply, after partial effect, during health, and during rollback; assert exact reconciliation and no unsafe retry.
+  - [ ] **Sub-task 112.1.3.5:** Execute deployment portions of `RV-25` and `RV-28`; retain plans, manifests, cluster snapshots, health evidence, drift, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 112.1.AC1:** Given a rendered deployment plan, when any source, artifact, cluster, namespace, policy, or resource precondition changes, then approval becomes stale before cluster contact.
+- [ ] **Story AC 112.1.AC2:** Given an approved deployment, when it executes, then only previewed resources in the exact environment change and health/postconditions bind to the immutable artifact.
+- [ ] **Story AC 112.1.AC3:** Given partial effect, health failure, or later independent change, when recovery runs, then the state remains explicit and rollback requires a fresh non-destructive review.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 112.AC1:** Helm/Kustomize rendering is pinned, offline, deterministic, bounded, and source-preserving.
+- [ ] **Sprint AC 112.AC2:** Deployment, production promotion, secret change, and cluster administration are separate capabilities.
+- [ ] **Sprint AC 112.AC3:** Every cluster effect has exact resource pre/post state and artifact identity.
+- [ ] **Sprint AC 112.AC4:** Crash, partial-effect, drift, health, and rollback fixtures recover safely.
+- [ ] **Sprint AC 112.AC5:** `AT-DEP-001` deployment subset and `RV-28` pass.
+
+**Gate decision:** Sprint 112 is PASS only when Story 112.1, all criteria, the applicable `AT-DEP-001` cases, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 113 - Argo CD and Flux GitOps Control
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add GitOps observation, synchronization, health, drift, suspension, and rollback without turning repository write or CI authority into deployment authority.
+
+**Source coverage:** `AM-DEP-001`, `AT-DEP-001`; `SR-DEL-*`, `RV-25`, `RV-27`, `RV-28`.
+
+**Dependencies:** Sprint 112.
+
+#### [ ] Story 113.1 - Bounded GitOps Reconciliation
+
+**User-facing value:** As an operator, I need AgentMage to distinguish changing desired state from synchronizing an environment and to preview every prune, hook, and rollback effect.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 113.1.1 - Implement GitOps reads and planning**
+  - [ ] **Sub-task 113.1.1.1:** Implement Argo CD and Flux application/source/revision/destination/resource/health/sync/drift/history/event/permission reads.
+  - [ ] **Sub-task 113.1.1.2:** Correlate exact Git source, rendered resources, artifact digests, cluster/namespace, current live state, desired state, and prior synchronization.
+  - [ ] **Sub-task 113.1.1.3:** Preview sync, prune, force, replace, hook, suspend, resume, reconcile, and rollback as distinct effects; keep force/replace/prune disabled by default.
+- [ ] **Task 113.1.2 - Implement approved GitOps effects**
+  - [ ] **Sub-task 113.1.2.1:** Implement ordinary sync/reconcile under exact revision, destination, resource diff, policy, health, timeout, and idempotency conditions.
+  - [ ] **Sub-task 113.1.2.2:** Implement suspend/resume and rollback as distinct grants with refreshed controller and live-cluster state.
+  - [ ] **Sub-task 113.1.2.3:** Detect controller-driven effects, concurrent reconciliation, changed desired state, auto-sync policy, and unknown completion before any retry.
+- [ ] **Task 113.1.3 - Verify and close the story**
+  - [ ] **Sub-task 113.1.3.1:** `S-113-CT01` runs application/source/destination/sync/health/drift/history matrices for supported Argo CD and Flux versions.
+  - [ ] **Sub-task 113.1.3.2:** `S-113-ST01` tests repository/cluster confusion, malicious hooks, prune escalation, auto-sync races, stale desired state, controller impersonation, and hidden secret/admin effects.
+  - [ ] **Sub-task 113.1.3.3:** `S-113-IT01` detects drift, previews ordinary sync, approves it, verifies health, changes desired state concurrently, and proves stale rollback/sync denial.
+  - [ ] **Sub-task 113.1.3.4:** `S-113-RT01` injects controller outage, partial sync, delayed events, duplicate reconciliation, permission loss, cancellation, crash, and restart.
+  - [ ] **Sub-task 113.1.3.5:** Retain source/live/desired snapshots, controller events, resource diffs, effect reconciliation, receipts, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 113.1.AC1:** Given GitOps desired and live state, when AgentMage plans a sync, then it identifies the exact source revision, controller, destination, resource effects, health conditions, and auto-sync policy.
+- [ ] **Story AC 113.1.AC2:** Given ordinary sync authority, when prune, force, replace, hook, secret, or administration is embedded or inferred, then the stronger effect remains absent or separately gated.
+- [ ] **Story AC 113.1.AC3:** Given controller or desired-state changes during execution, when reconciliation runs, then AgentMage reports current effect truth and blocks unsafe retry or rollback.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 113.AC1:** Argo CD and Flux pass their published observe and bounded-effect matrices.
+- [ ] **Sprint AC 113.AC2:** Desired-state write and environment synchronization remain distinct authorities.
+- [ ] **Sprint AC 113.AC3:** Prune, force, replace, hook, secret, and admin paths pass negative or separate-gate tests.
+- [ ] **Sprint AC 113.AC4:** Controller races, delayed events, and partial sync reconcile without duplicate effect.
+- [ ] **Sprint AC 113.AC5:** The complete `AT-DEP-001` gate passes with independent evidence.
+
+**Gate decision:** Sprint 113 is PASS only when Story 113.1, all criteria, `AT-DEP-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 114 - Terraform and OpenTofu Infrastructure Safety
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add infrastructure inspection, plan, policy, apply, and recovery while preserving exact state identity and separating destructive or production effects.
+
+**Source coverage:** `AM-IAC-001`, `AT-IAC-001`; `DELIVERY-SYSTEM.md` Section 9; `SR-DEL-*`, `RV-25`, `RV-28`, `RV-29`.
+
+**Dependencies:** Sprint 113.
+
+#### [ ] Story 114.1 - Exact Infrastructure Plan and Apply
+
+**User-facing value:** As an infrastructure developer, I need AgentMage to explain and apply only an exact reviewed plan against the current state without leaking secrets or retrying an uncertain apply.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 114.1.1 - Implement infrastructure reads and plans**
+  - [ ] **Sub-task 114.1.1.1:** Inspect Terraform/OpenTofu configuration, modules, providers, lock files, backends by non-secret identity, workspaces, state serial/lineage, resources, outputs by sensitivity, imports, and drift.
+  - [ ] **Sub-task 114.1.1.2:** Run init/validate/plan in an isolated worker using approved pinned providers/modules and explicit network grants where acquisition is required.
+  - [ ] **Sub-task 114.1.1.3:** Bind saved plans to tool/provider/module versions, source and lock hashes, backend/workspace identity, state lineage/serial, variables by redacted digest, policy result, and exact create/update/replace/delete effects.
+  - [ ] **Sub-task 114.1.1.4:** Classify destructive, replacement, production, data-loss, secret, cost, and policy-sensitive changes for separate approval or denial.
+- [ ] **Task 114.1.2 - Implement apply and recovery**
+  - [ ] **Sub-task 114.1.2.1:** Apply only an unchanged saved plan under current state lock and preconditions; prohibit ad hoc apply and implicit auto-approve.
+  - [ ] **Sub-task 114.1.2.2:** Stream bounded redacted progress, preserve provider request uncertainty, and verify state serial, resources, outputs, drift, and receipts after apply.
+  - [ ] **Sub-task 114.1.2.3:** Implement lock conflict, interruption, partial effect, provider failure, state recovery, import, and compensation workflows without automatic retry or state surgery.
+- [ ] **Task 114.1.3 - Verify and close the story**
+  - [ ] **Sub-task 114.1.3.1:** `S-114-UT01` mutates plan/source/lock/provider/module/backend/workspace/state/variable/policy/effect fields and asserts stale-plan denial.
+  - [ ] **Sub-task 114.1.3.2:** `S-114-ST01` tests malicious providers/modules, backend confusion, secret output, state injection, path traversal, plan substitution, destructive concealment, and nested cloud administration.
+  - [ ] **Sub-task 114.1.3.3:** `S-114-IT01` plans and applies a non-production synthetic change, verifies state and drift, then proves the same plan cannot apply after source or state movement.
+  - [ ] **Sub-task 114.1.3.4:** `S-114-FT01` injects lock loss, provider outage, rate limit, partial effect, timeout, cancellation, crash, full disk, and restart; assert unknown-state blocking.
+  - [ ] **Sub-task 114.1.3.5:** Execute infrastructure portions of `RV-25`, `RV-28`, and `RV-29`; retain plans, state digests, redaction scans, policy, pre/post snapshots, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 114.1.AC1:** Given a saved infrastructure plan, when any source, dependency, backend, workspace, state, variable, policy, or provider identity changes, then apply is denied.
+- [ ] **Story AC 114.1.AC2:** Given an approved non-production plan, when apply succeeds, then only the exact planned resources change and current state/postconditions are verified without secret disclosure.
+- [ ] **Story AC 114.1.AC3:** Given partial or unknown effect, when recovery runs, then no automatic retry or state mutation occurs until current infrastructure and state are reconciled.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 114.AC1:** Terraform and OpenTofu pass identical common contracts and separate version matrices.
+- [ ] **Sprint AC 114.AC2:** Plan/apply, non-production/production, destructive/non-destructive, secret, and admin authorities remain separate.
+- [ ] **Sprint AC 114.AC3:** State, plan, provider, module, variable, and policy identities are exact and stale-aware.
+- [ ] **Sprint AC 114.AC4:** Fault and resource cases never cause duplicate apply, secret leakage, or unsafe state surgery.
+- [ ] **Sprint AC 114.AC5:** `AT-IAC-001` passes with independent evidence.
+
+**Gate decision:** Sprint 114 is PASS only when Story 114.1, all criteria, `AT-IAC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Complete the release lifecycle with exact promotion, flag, progressive-delivery, migration, health, rollback, and compensation contracts.
+
+**Source coverage:** `AM-REL-001`, `AT-REL-001`; `DELIVERY-SYSTEM.md` Sections 9 and 13; `SR-DEL-*`, `RV-25`, `RV-28`.
+
+**Dependencies:** Sprint 114.
+
+#### [ ] Story 115.1 - Governed Release and Change Lifecycle
+
+**User-facing value:** As a release owner, I need source, artifacts, environments, flags, migrations, health, and rollback tied to one exact release without hiding production or data effects.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 115.1.1 - Implement release identity and promotion**
+  - [ ] **Sub-task 115.1.1.1:** Build semantic-version and changelog drafts from exact commits, work items, reviews, checks, artifacts, provenance, and prior releases with source citations.
+  - [ ] **Sub-task 115.1.1.2:** Define immutable release manifests linking source, CI, artifact, SBOM, provenance, signatures, environments, policies, migrations, flags, health, and rollback.
+  - [ ] **Sub-task 115.1.1.3:** Implement environment promotion with exact source/target, immutable digest, approval class, deployment plan, health window, and postcondition.
+- [ ] **Task 115.1.2 - Implement flags, progressive delivery, and migrations**
+  - [ ] **Sub-task 115.1.2.1:** Implement reference LaunchDarkly and Unleash flag reads/drafts/writes with project/environment/flag/variation/target/prerequisite identity and separate production approval.
+  - [ ] **Sub-task 115.1.2.2:** Implement progressive-delivery steps, traffic or audience bounds, pause, health decision, advance, abort, and rollback without autonomous advancement.
+  - [ ] **Sub-task 115.1.2.3:** Implement Flyway and Liquibase migration discovery, checksum/order/direction/compatibility/lock/backup/timeout/health contracts and separate destructive approval.
+  - [ ] **Sub-task 115.1.2.4:** Make every rollback or compensation a fresh exact plan that accounts for later releases, flag changes, schema state, and user changes.
+- [ ] **Task 115.1.3 - Verify and close the story**
+  - [ ] **Sub-task 115.1.3.1:** `S-115-UT01` mutates every release, version, artifact, environment, flag, rollout, migration, health, rollback, and compensation field.
+  - [ ] **Sub-task 115.1.3.2:** `S-115-ST01` tests tag/version reuse, artifact swap, hidden production target, audience expansion, prerequisite loops, migration checksum/order attacks, secret output, and destructive concealment.
+  - [ ] **Sub-task 115.1.3.3:** `S-115-IT01` creates a synthetic release, promotes progressively, applies a compatible migration, changes a flag under separate approval, detects failed health, and executes separately approved compensation.
+  - [ ] **Sub-task 115.1.3.4:** `S-115-RT01` injects concurrent release, changed flag, partial migration, lock timeout, health delay, provider outage, cancellation, crash, and later independent change.
+  - [ ] **Sub-task 115.1.3.5:** Retain manifests, diffs, health windows, migration/flag identities, pre/post state, receipts, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 115.1.AC1:** Given a release manifest, when promotion begins, then source, artifact, policy, environment, flag, migration, health, and rollback identities are exact and current.
+- [ ] **Story AC 115.1.AC2:** Given deployment authority, when a production flag, migration, progressive step, destructive change, or database effect is requested, then it requires its own exact capability and approval.
+- [ ] **Story AC 115.1.AC3:** Given failed health or partial migration, when recovery runs, then no automatic advance or retry occurs and compensation preserves later independent state.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 115.AC1:** Release manifests reconcile source through environment and rollback.
+- [ ] **Sprint AC 115.AC2:** LaunchDarkly, Unleash, Flyway, and Liquibase pass their promoted matrices.
+- [ ] **Sprint AC 115.AC3:** Production, progressive, flag, migration, destructive, secret, and rollback effects remain distinct.
+- [ ] **Sprint AC 115.AC4:** Concurrent and partial-change recovery is deterministic and non-destructive.
+- [ ] **Sprint AC 115.AC5:** `AT-REL-001` passes with independent evidence.
+
+**Gate decision:** Sprint 115 is PASS only when Story 115.1, all criteria, `AT-REL-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 116 - OpenTelemetry Correlation Foundation
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Establish provider-neutral metric, log, trace, error, monitor, service, environment, release, and incident correlation without converting correlation into causation.
+
+**Source coverage:** `AM-OBS-001`, `AT-OBS-001`; `DELIVERY-SYSTEM.md` Section 10; `SR-DEL-004`, `SR-DEL-011`, `SR-DEL-014`, `RV-27`, `RV-29`.
+
+**Dependencies:** Sprint 115.
+
+#### [ ] Story 116.1 - Bounded Telemetry Identity and Correlation
+
+**User-facing value:** As a developer or operator, I need telemetry linked to the exact service, release, deployment, artifact, and time window while AgentMage remains honest about uncertainty and causation.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 116.1.1 - Implement telemetry contracts**
+  - [ ] **Sub-task 116.1.1.1:** Define OpenTelemetry resource, service, environment, trace, span, metric, log, event, error, monitor, release, deployment, and time-window identities.
+  - [ ] **Sub-task 116.1.1.2:** Implement bounded query plans, time/range/cardinality/result limits, sampling metadata, clock/skew handling, freshness, classification, retention, and cancellation.
+  - [ ] **Sub-task 116.1.1.3:** Correlate telemetry with service/catalog, source, artifact, deployment, release, incident, and receipt through exact attributes or labeled inference.
+  - [ ] **Sub-task 116.1.1.4:** Implement deterministic aggregation and statistical summaries with method, missingness, sampling, uncertainty, and source citations.
+- [ ] **Task 116.1.2 - Enforce telemetry authority boundaries**
+  - [ ] **Sub-task 116.1.2.1:** Treat attributes, messages, stack traces, links, and logs as untrusted and secret-scanned before persistence or model use.
+  - [ ] **Sub-task 116.1.2.2:** Prevent telemetry, monitors, anomalies, and model interpretation from triggering rollback, deployment, notification, issue creation, or durable memory automatically.
+  - [ ] **Sub-task 116.1.2.3:** Label temporal/structural correlation separately from deterministic causation and require evidence for any causal claim.
+- [ ] **Task 116.1.3 - Verify and close the story**
+  - [ ] **Sub-task 116.1.3.1:** `S-116-UT01` mutates telemetry identity, timestamps, resources, sampling, attributes, units, aggregation, missingness, and relationship fields.
+  - [ ] **Sub-task 116.1.3.2:** `S-116-ST01` injects secrets, prompt attacks, cardinality explosions, malformed encodings, oversized payloads, clock skew, trace collisions, and false causal narratives.
+  - [ ] **Sub-task 116.1.3.3:** `S-116-IT01` correlates a synthetic release/deployment with metrics/logs/traces/errors and an incident window, preserving source and uncertainty.
+  - [ ] **Sub-task 116.1.3.4:** `S-116-RT01` exercises backend outage, partial data, sampling change, late arrival, duplicate spans, cancellation, full disk, and memory pressure.
+  - [ ] **Sub-task 116.1.3.5:** Execute telemetry portions of `RV-27` and `RV-29`; retain query plans, raw/normalized data, canary scans, statistical methods, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 116.1.AC1:** Given telemetry from a release window, when AgentMage correlates it, then every observation retains exact service/environment/time/provider identity and every inferred relationship is labeled.
+- [ ] **Story AC 116.1.AC2:** Given high-cardinality, malformed, secret-bearing, or injected telemetry, when processing runs, then limits, redaction, and untrusted-content controls prevent disclosure and unbounded use.
+- [ ] **Story AC 116.1.AC3:** Given a temporal association between deployment and failure, when AgentMage explains it, then it does not claim causation without deterministic evidence.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 116.AC1:** OpenTelemetry identities and queries are deterministic, bounded, stale-aware, and source-cited.
+- [ ] **Sprint AC 116.AC2:** Telemetry cannot create operation authority or durable memory automatically.
+- [ ] **Sprint AC 116.AC3:** Secret, injection, malformed, clock, and cardinality attacks pass.
+- [ ] **Sprint AC 116.AC4:** Statistical summaries expose method, missingness, sampling, and uncertainty.
+- [ ] **Sprint AC 116.AC5:** The OpenTelemetry subset of `AT-OBS-001` passes.
+
+**Gate decision:** Sprint 116 is PASS only when Story 116.1, all criteria, the OpenTelemetry subset of `AT-OBS-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 117 - Datadog and Multi-Vendor Observability
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry through the same bounded OpenTelemetry-centered observability contract.
+
+**Source coverage:** `AM-OBS-001`, `AT-OBS-001`; `SR-DEL-*`, `RV-23`, `RV-24`, `RV-27`, `RV-29`.
+
+**Dependencies:** Sprint 116.
+
+#### [ ] Story 117.1 - Conformant Observability Adapters
+
+**User-facing value:** As an operator, I need to compare and correlate telemetry across supported systems without leaking credentials, flattening vendor semantics, or making unsupported claims.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 117.1.1 - Implement vendor adapters**
+  - [ ] **Sub-task 117.1.1.1:** Implement Datadog metrics, logs, traces, monitors, dashboards, events, errors, services, releases, and incident links within the supported matrix.
+  - [ ] **Sub-task 117.1.1.2:** Implement Prometheus query, Grafana dashboards/annotations, Loki logs, and exact datasource/tenant identity.
+  - [ ] **Sub-task 117.1.1.3:** Implement Elastic search/observability, Splunk search, and Sentry project/issue/event/release reads with provider-specific fields retained.
+  - [ ] **Sub-task 117.1.1.4:** Normalize common telemetry into OpenTelemetry identities and preserve non-equivalent vendor behavior as namespaced extensions.
+- [ ] **Task 117.1.2 - Implement safe queries and diagnostics**
+  - [ ] **Sub-task 117.1.2.1:** Preview provider, host, tenant/account, data scope, query, time window, cardinality/byte/cost bounds, retention, and expected result before activation.
+  - [ ] **Sub-task 117.1.2.2:** Implement pagination/streaming, rate-limit, quota, cancellation, partial-result, freshness, and query-cost diagnostics without secret values.
+  - [ ] **Sub-task 117.1.2.3:** Keep monitor edits, dashboard publication, incident changes, notification, and remediation outside observe authority.
+- [ ] **Task 117.1.3 - Verify and close the story**
+  - [ ] **Sub-task 117.1.3.1:** `S-117-CT01` runs all promoted vendor objects, versions, tenants, permissions, pagination, queries, and degradation modes.
+  - [ ] **Sub-task 117.1.3.2:** `S-117-ST01` tests cross-tenant credentials, datasource confusion, query injection, secret-bearing logs, malicious links, cardinality explosion, and hidden write/remediation calls.
+  - [ ] **Sub-task 117.1.3.3:** `S-117-IT01` correlates equivalent synthetic telemetry across all vendors with exact release/deployment identity and compares normalized results without erasing differences.
+  - [ ] **Sub-task 117.1.3.4:** `S-117-RT01` injects version skew, outage, slow query, rate limit, quota exhaustion, partial results, late data, cancellation, and restart.
+  - [ ] **Sub-task 117.1.3.5:** Retain support matrices, query traces, result comparisons, canary scans, resource metrics, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 117.1.AC1:** Given a supported observability provider, when a query runs, then exact tenant, query, time, limits, source identity, freshness, and partial-result state remain visible.
+- [ ] **Story AC 117.1.AC2:** Given semantically different vendor fields, when normalization runs, then common meaning is preserved and non-equivalent behavior remains namespaced rather than guessed.
+- [ ] **Story AC 117.1.AC3:** Given observe authority, when content or a model requests monitor edits, publication, incident change, notification, or remediation, then no stronger operation registers or executes.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 117.AC1:** Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry pass their published read matrices.
+- [ ] **Sprint AC 117.AC2:** Cross-tenant and credential-confusion suites report zero crossover.
+- [ ] **Sprint AC 117.AC3:** Query/resource bounds and cancellation remain effective under failure.
+- [ ] **Sprint AC 117.AC4:** Vendor differences and degradation remain explicit.
+- [ ] **Sprint AC 117.AC5:** Complete `AT-OBS-001` passes with independent evidence.
+
+**Gate decision:** Sprint 117 is PASS only when Story 117.1, all criteria, `AT-OBS-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 118 - Incidents, Bounded Notifications, and ChatOps
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Correlate incidents and prepare or send separately approved notifications without allowing telemetry or incident content to trigger autonomous remediation.
+
+**Source coverage:** `AM-INC-001`, `AT-INC-001`; `DELIVERY-SYSTEM.md` Section 10; `SR-DEL-*`, `SR-OPS-*`, `RV-21`, `RV-23` through `RV-29`.
+
+**Dependencies:** Sprint 117; Sprint 107 work management and Sprint 115 rollback contracts.
+
+#### [ ] Story 118.1 - Human-Controlled Incident Lifecycle
+
+**User-facing value:** As an incident lead, I need evidence, drafts, notifications, work items, and rollback options correlated in one place while every external communication and remediation remains under human control.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 118.1.1 - Implement incident and communication adapters**
+  - [ ] **Sub-task 118.1.1.1:** Implement PagerDuty, Jira Service Management, and Datadog incident identities, services, responders, status, severity, timeline, evidence, links, notes, and permissions.
+  - [ ] **Sub-task 118.1.1.2:** Implement Slack and Teams destination/channel/thread/member identities and local-only draft notifications with exact recipients, mentions, attachments, visibility, and disclosure warnings.
+  - [ ] **Sub-task 118.1.1.3:** Correlate incidents with service/catalog, work, source, CI, artifact, deployment, telemetry, finding, release, rollback, and receipts through exact evidence.
+  - [ ] **Sub-task 118.1.1.4:** Generate evidence-backed status, impact, hypothesis, action, owner, decision, and next-update drafts while separating fact, inference, conflict, and unknown.
+- [ ] **Task 118.1.2 - Implement bounded incident effects**
+  - [ ] **Sub-task 118.1.2.1:** Separately preview and grant incident state/severity/assignment, work-item creation, Slack/Teams message, deployment rollback, flag change, and closure.
+  - [ ] **Sub-task 118.1.2.2:** Re-read incident, destination membership, work item, environment, release, and remediation preconditions before submission.
+  - [ ] **Sub-task 118.1.2.3:** Implement duplicate-event/message/work prevention, uncertain-result reconciliation, correction/follow-up workflow, and complete audit receipts.
+  - [ ] **Sub-task 118.1.2.4:** Keep auto-remediation, auto-page, auto-message, autonomous rollback, and content-triggered severity changes prohibited.
+- [ ] **Task 118.1.3 - Verify and close the story**
+  - [ ] **Sub-task 118.1.3.1:** `S-118-CT01` runs incident and notification provider matrices across identity, permissions, lifecycle states, recipients, threads, attachments, edits, and deletion.
+  - [ ] **Sub-task 118.1.3.2:** `S-118-ST01` injects false telemetry, prompt attacks, hidden recipients, channel confusion, malicious attachments, cross-tenant incidents, urgency pressure, and nested remediation requests.
+  - [ ] **Sub-task 118.1.3.3:** `S-118-IT01` correlates a synthetic failed release, drafts an incident and message, separately approves work creation and notification, then separately previews rollback.
+  - [ ] **Sub-task 118.1.3.4:** `S-118-RT01` injects duplicate/delayed events, changed responders, destination membership changes, timeout, partial message, provider outage, cancellation, and crash.
+  - [ ] **Sub-task 118.1.3.5:** Execute an expanded `RV-21` plus applicable `RV-24` through `RV-29`; retain timelines, evidence graphs, previews, message canary scans, effect traces, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 118.1.AC1:** Given an incident window, when AgentMage builds the record, then observed evidence, hypotheses, conflicts, decisions, and unknowns remain distinct and source-linked.
+- [ ] **Story AC 118.1.AC2:** Given incident authority, when notification, work creation, rollback, flag, severity, assignment, or closure is requested, then each is previewed and approved as a separate external effect.
+- [ ] **Story AC 118.1.AC3:** Given duplicate, delayed, injected, or partial incident/provider data, when recovery runs, then no autonomous or duplicate communication/remediation occurs.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 118.AC1:** Incident and notification providers pass their exact promoted matrices.
+- [ ] **Sprint AC 118.AC2:** Zero hidden recipients, cross-tenant effects, secret disclosures, or autonomous remediation occur.
+- [ ] **Sprint AC 118.AC3:** Duplicate and uncertain effects reconcile without duplicate pages, messages, work, or rollback.
+- [ ] **Sprint AC 118.AC4:** Incident evidence distinguishes correlation, inference, conflict, and causation.
+- [ ] **Sprint AC 118.AC5:** `AT-INC-001` and the expanded incident tabletop pass.
+
+**Gate decision:** Sprint 118 is PASS only when Story 118.1, all criteria, `AT-INC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 119 - Service Catalog and Ownership Graph
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Link Backstage services and owners to delivery evidence without treating catalog metadata as provider truth or operation authority.
+
+**Source coverage:** `AM-CAT-001`, `AT-CAT-001`; `DELIVERY-SYSTEM.md` Sections 3 and 14; `SR-DEL-004`, `SR-DEL-011` through `SR-DEL-014`, `RV-23`, `RV-27`, `RV-29`.
+
+**Dependencies:** Sprint 118.
+
+#### [ ] Story 119.1 - Evidence-Backed Service Catalog
+
+**User-facing value:** As a delivery lead, I need to navigate from a service and owner to its work, source, pipeline, artifact, environment, telemetry, incident, and release without guessing identity.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 119.1.1 - Implement the Backstage reference adapter**
+  - [ ] **Sub-task 119.1.1.1:** Implement catalog entity, kind, namespace, name, UID, owner, system, domain, component, API, resource, group, user, relation, annotation, location, lifecycle, and permission reads.
+  - [ ] **Sub-task 119.1.1.2:** Resolve repository, CI, artifact, environment, observability, incident, documentation, and release links against exact provider identities rather than trusting catalog URLs alone.
+  - [ ] **Sub-task 119.1.1.3:** Preserve conflicting owners, duplicate names, stale entities, missing targets, provider mismatch, and inferred links as explicit unresolved states.
+  - [ ] **Sub-task 119.1.1.4:** Keep catalog descriptors and annotations untrusted and unable to register tools, credentials, plugins, provider hosts, or operations.
+- [ ] **Task 119.1.2 - Define catalog extension conformance**
+  - [ ] **Sub-task 119.1.2.1:** Define L0/L1 extension fixtures for Port, Cortex, and Compass without promoting live support.
+  - [ ] **Sub-task 119.1.2.2:** Define owner/service identity mapping, namespaced extensions, support-matrix entries, and no-write removal requirements.
+  - [ ] **Sub-task 119.1.2.3:** Add provider-catalog drift, rename, transfer, delete, and ownership-change diagnostics.
+- [ ] **Task 119.1.3 - Verify and close the story**
+  - [ ] **Sub-task 119.1.3.1:** `S-119-CT01` runs Backstage entities, relations, versions, permissions, pagination, location, rename, delete, and stale fixtures.
+  - [ ] **Sub-task 119.1.3.2:** `S-119-ST01` tests duplicate names, forged URLs, malicious annotations, owner confusion, cross-tenant links, injected instructions, graph cycles, and plugin/tool registration attempts.
+  - [ ] **Sub-task 119.1.3.3:** `S-119-IT01` builds a service-centered delivery graph and independently resolves each provider link and owner relation.
+  - [ ] **Sub-task 119.1.3.4:** `S-119-RT01` changes ownership, transfers repositories, removes telemetry, deletes an entity, and makes catalog/provider evidence stale.
+  - [ ] **Sub-task 119.1.3.5:** Retain catalog/provider snapshots, link resolutions, conflict corpus, extension manifests, removal scan, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 119.1.AC1:** Given a Backstage service, when AgentMage builds its delivery view, then every provider relationship resolves independently or remains visibly unresolved/inferred.
+- [ ] **Story AC 119.1.AC2:** Given duplicate or conflicting identity and ownership, when correlation runs, then AgentMage does not guess, overwrite evidence, or grant authority.
+- [ ] **Story AC 119.1.AC3:** Given a future catalog adapter, when only L0/L1 conformance exists, then no write operation or unsupported support claim registers.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 119.AC1:** Backstage passes the published read and relationship matrix.
+- [ ] **Sprint AC 119.AC2:** Catalog/provider conflicts and staleness remain explicit.
+- [ ] **Sprint AC 119.AC3:** Catalog content cannot register or broaden capability.
+- [ ] **Sprint AC 119.AC4:** Port, Cortex, and Compass remain manifested extension candidates only.
+- [ ] **Sprint AC 119.AC5:** `AT-CAT-001` passes with independent evidence.
+
+**Gate decision:** Sprint 119 is PASS only when Story 119.1, all criteria, `AT-CAT-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 120 - Markdown and LaTeX Mathematics
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Support safe, source-preserving, accessible inline and display mathematics in Markdown across Fedora, Ubuntu, and Windows 11.
+
+**Source coverage:** `AM-MTH-001`, `AT-MTH-001`; PRD Section 25; inventory Sections 16 and 36B; `SR-TST-002`, `SR-TST-004`, `SR-CIV-006` through `SR-CIV-009`, `RV-15`, `RV-20`.
+
+**Dependencies:** Sprint 119; Sprints 57 and 60-65 document/visual foundations.
+
+#### [ ] Story 120.1 - Safe Mathematical Authoring and Rendering
+
+**User-facing value:** As a technical author, I need to write and review formulas in Markdown while preserving source, preventing executable LaTeX behavior, and producing accessible local previews.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 120.1.1 - Implement mathematics parsing and preservation**
+  - [ ] **Sub-task 120.1.1.1:** Define the supported inline/display delimiter, environment, command, macro, label, reference, escaping, Unicode, code-fence, and Markdown interaction subset.
+  - [ ] **Sub-task 120.1.1.2:** Build a structured parser that preserves exact source spans, delimiters, whitespace where meaningful, labels, references, diagnostics, and unsupported syntax.
+  - [ ] **Sub-task 120.1.1.3:** Implement round-trip edits and diffs that never reinterpret code fences, currency text, escaped delimiters, frontmatter, or ordinary Markdown as mathematics.
+  - [ ] **Sub-task 120.1.1.4:** Reject shell escape, file input/output, network resources, package loading, executable extensions, unsafe links, recursive/unbounded macros, and unsupported commands.
+- [ ] **Task 120.1.2 - Implement offline preview and accessibility**
+  - [ ] **Sub-task 120.1.2.1:** Select, pin, admit, and package an offline renderer with no runtime download, remote font, remote asset, or executable extension.
+  - [ ] **Sub-task 120.1.2.2:** Render deterministic native Chat previews with syntax errors, source links, copyable source, zoom/reflow, high contrast, keyboard navigation, and screen-reader text.
+  - [ ] **Sub-task 120.1.2.3:** Implement bounded render time, macro depth, input/output size, cancellation, cache identity, cleanup, and cross-platform parity.
+- [ ] **Task 120.1.3 - Verify and close the story**
+  - [ ] **Sub-task 120.1.3.1:** `S-120-UT01` round-trips valid equations across supported syntax, Unicode, labels/references, lists, tables, quotes, links, code fences, frontmatter, and escaping.
+  - [ ] **Sub-task 120.1.3.2:** `S-120-ST01` fuzzes malformed delimiters, nested environments, unsafe commands, path/file attempts, network URLs, package escapes, macro recursion, token bombs, and mixed Markdown attacks.
+  - [ ] **Sub-task 120.1.3.3:** `S-120-VT01` renders the golden corpus on Fedora, Ubuntu, and Windows and compares structure, errors, accessibility tree, bounds, and approved visual tolerances.
+  - [ ] **Sub-task 120.1.3.4:** `S-120-RT01` cancels, crashes, fills cache/disk, changes renderer identity, corrupts cache, and resumes; assert cleanup and no stale preview reuse.
+  - [ ] **Sub-task 120.1.3.5:** Execute applicable `RV-15` and `RV-20`; retain parser corpus, fuzz seeds/shrinks, renderer manifest, visual/accessibility output, resource traces, and review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 120.1.AC1:** Given supported mathematics in Markdown, when AgentMage reads, edits, and renders it, then source round-trips exactly except for explicitly previewed edits and references remain correct.
+- [ ] **Story AC 120.1.AC2:** Given unsafe, malformed, recursive, oversized, or executable LaTeX content, when parsing/rendering runs, then it is rejected or bounded without file, network, process, package, or authority access.
+- [ ] **Story AC 120.1.AC3:** Given the same document on Fedora, Ubuntu, and Windows, when previewed, then rendering, diagnostics, interaction, and accessibility satisfy the declared parity contract.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 120.AC1:** Supported Markdown mathematics round-trips source and exact locations.
+- [ ] **Sprint AC 120.AC2:** Unsafe commands and every executable/resource escape path are denied.
+- [ ] **Sprint AC 120.AC3:** Rendering is pinned, offline, deterministic, bounded, cancellable, and cache-safe.
+- [ ] **Sprint AC 120.AC4:** Keyboard, screen-reader, zoom, contrast, and error workflows pass.
+- [ ] **Sprint AC 120.AC5:** `AT-MTH-001` passes on all first-GA platforms.
+
+**Gate decision:** Sprint 120 is PASS only when Story 120.1, all criteria, `AT-MTH-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Deliver a signed per-user Windows 11 package and authenticated Visual Studio Code-to-kernel boundary without administrator or ambient authority.
+
+**Source coverage:** `AM-WIN-001`, `AT-WIN-001`; `WINDOWS-BOUNDARIES.md` Sections 1-4 and 10-11; `SR-PLT-001`, `SR-PLT-005` through `SR-PLT-017`, `RV-01`, `RV-02`, `RV-05`.
+
+**Dependencies:** Sprint 120; Sprints 7, 23, 96, and 98 shared platform/interface/update foundations.
+
+#### [ ] Story 121.1 - Signed Windows Host and Authenticated IPC
+
+**User-facing value:** As a Windows 11 user, I need AgentMage to install per user and appear in native Visual Studio Code Chat with every local peer and package identity verified.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 121.1.1 - Implement Windows packaging and lifecycle**
+  - [ ] **Sub-task 121.1.1.1:** Define the serviced Windows 11 x64, stable Visual Studio Code, compiler/SDK, package identity, certificate, timestamp, component hash, path, process, and dependency matrix.
+  - [ ] **Sub-task 121.1.1.2:** Build reproducible per-user MSIX packaging, Authenticode signing, timestamp verification, extension installation, package diagnostics, and offline verification.
+  - [ ] **Sub-task 121.1.1.3:** Implement standard-user install, launch, repair, upgrade, rollback, safe mode, uninstall, and residue inventory without services, drivers, scheduled tasks, system-wide writes, or policy weakening.
+  - [ ] **Sub-task 121.1.1.4:** Publish signed process/file/path/pipe/package/hash/version indicators for endpoint reconciliation.
+- [ ] **Task 121.1.2 - Implement Windows bridge and named-pipe IPC**
+  - [ ] **Sub-task 121.1.2.1:** Build the minimal signed native bridge and access-controlled named pipe with exact current-user ACL and no workspace/model/credential authority.
+  - [ ] **Sub-task 121.1.2.2:** Validate user SID, logon session, integrity level, executable identity, package identity, protocol version, message sequence, size, launch challenge, replay state, and cancellation.
+  - [ ] **Sub-task 121.1.2.3:** Prevent handle leakage/inheritance, alternate pipe names, cross-user access, elevation confusion, binary replacement, downgrade, and undeclared listener creation.
+  - [ ] **Sub-task 121.1.2.4:** Register the stable native Visual Studio Code Chat model provider and redacted diagnostics using the same kernel contracts as Linux.
+- [ ] **Task 121.1.3 - Verify and close the story**
+  - [ ] **Sub-task 121.1.3.1:** `S-121-AT01` performs three clean standard-user install/launch/repair/upgrade/rollback/uninstall lifecycles and reconciles package/component/residue manifests.
+  - [ ] **Sub-task 121.1.3.2:** `S-121-ST01` attempts wrong-user, wrong-session, low/high-integrity, unsigned, replaced, stale, replaying, malformed, oversized, reordered, rapidly reconnecting, and inherited-handle clients.
+  - [ ] **Sub-task 121.1.3.3:** `S-121-IT01` streams local Chat, tool progress, cancellation, evidence, errors, and diagnostics through authenticated IPC while tracing extension/bridge/kernel authority.
+  - [ ] **Sub-task 121.1.3.4:** `S-121-RT01` interrupts install/update/rollback, crashes bridge/kernel, changes VS Code build, revokes package identity, and resumes; assert safe recovery.
+  - [ ] **Sub-task 121.1.3.5:** Execute Windows portions of `RV-01`, `RV-02`, and `RV-05`; retain package/signature/timestamp output, IPC traces, process identities, lifecycle snapshots, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 121.1.AC1:** Given a clean standard-user Windows account, when AgentMage is installed and launched, then every component and location matches the signed manifest without requiring post-install administrator authority.
+- [ ] **Story AC 121.1.AC2:** Given an undeclared, replaced, wrong-user, wrong-session, wrong-integrity, replaying, or malformed IPC peer, when it connects, then the connection is rejected before any protected operation or data disclosure.
+- [ ] **Story AC 121.1.AC3:** Given native Visual Studio Code Chat, when the user interacts with AgentMage, then the extension and bridge remain authority-free and all work flows through authenticated kernel contracts.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 121.AC1:** Three clean Windows package lifecycles pass with exact residue accounting.
+- [ ] **Sprint AC 121.AC2:** Signatures, timestamps, components, dependencies, and package identities reconcile independently.
+- [ ] **Sprint AC 121.AC3:** All IPC impersonation/replay/malformed/resource attacks fail safely.
+- [ ] **Sprint AC 121.AC4:** No service, driver, scheduled task, system-wide write, policy weakening, or undeclared listener exists.
+- [ ] **Sprint AC 121.AC5:** Native Chat and diagnostics satisfy the shared platform contract.
+
+**Gate decision:** Sprint 121 is PASS only when Story 121.1, all criteria, the applicable `AT-WIN-001` cases, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Complete the Windows workspace, tool, key, model, storage, and network boundaries and prove equivalence with shared AgentMage contracts.
+
+**Source coverage:** `AM-WIN-001`, `AT-WIN-001`; `WINDOWS-BOUNDARIES.md` Sections 5-11; `SR-PLT-013` through `SR-PLT-017`, `RV-03`, `RV-04`, `RV-06`, `RV-08` through `RV-10`, `RV-16`, `RV-17`, `RV-20`, `RV-24`, `RV-30`.
+
+**Dependencies:** Sprint 121; Sprints 6, 9-16, 22, and 104.
+
+#### [ ] Story 122.1 - Complete Windows Runtime Boundary
+
+**User-facing value:** As a Windows user, I need local files, secrets, model inference, and connected provider operations confined to the exact scopes I approve.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 122.1.1 - Implement Windows workspace and workers**
+  - [ ] **Sub-task 122.1.1.1:** Implement handle-relative NTFS path resolution and reject device, extended-length, volume, UNC, WebDAV, pipe, traversal, reserved-name, trailing-dot/space, alternate-stream, reparse, junction, symlink, mount, cloud-placeholder, case, Unicode, short-name, hard-link, rename, replace, and race escapes.
+  - [ ] **Sub-task 122.1.1.2:** Implement fresh AppContainer or equivalently reviewed restricted-token tool workers with one workspace handle, one grant, bounded scratch, no network, Job Object limits, mitigations, descendant termination, and residue proof.
+  - [ ] **Sub-task 122.1.1.3:** Deny ambient profile, adjacent directory, registry, environment, credential, clipboard, desktop, device, camera, microphone, process, job, and neighboring-user access.
+- [ ] **Task 122.1.2 - Implement Windows keys, state, model, and network workers**
+  - [ ] **Sub-task 122.1.2.1:** Protect the operational data key with DPAPI through a reviewed provider and use Credential Manager only through typed non-secret references.
+  - [ ] **Sub-task 122.1.2.2:** Enforce a local fixed NTFS data root outside OneDrive, redirected profiles, remote shares, removable media, and cloud synchronization for strict-local persistence.
+  - [ ] **Sub-task 122.1.2.3:** Package hash-pinned native signed `llama.cpp` with no listener, workspace, credential, grant, tool, or network authority and explicit CPU/GPU profile identity.
+  - [ ] **Sub-task 122.1.2.4:** Implement separately confined provider workers with exact destination/account/capability/credential/byte/time scopes and complete removal.
+- [ ] **Task 122.1.3 - Verify and close the story**
+  - [ ] **Sub-task 122.1.3.1:** `S-122-ST01` runs at least 1,000 NTFS/path/race and 500 sandbox/ambient-access attacks with unique canaries and zero escape.
+  - [ ] **Sub-task 122.1.3.2:** `S-122-NT01` runs a 60-minute strict-local model/tool/recovery workload with packet, DNS, socket, process, firewall, and listener observation; require zero outbound attempt/byte.
+  - [ ] **Sub-task 122.1.3.3:** `S-122-ST02` injects key/credential canaries, unavailable DPAPI/Credential Manager, risky data roots, model substitution, hostile local services, redirects, proxies, and cross-adapter credentials.
+  - [ ] **Sub-task 122.1.3.4:** `S-122-RT01` crashes/cancels every durable, tool, model, credential, and connected effect boundary; assert cleanup, no repeated completed operation, and accurate uncertainty.
+  - [ ] **Sub-task 122.1.3.5:** `S-122-AT01` runs keyboard, screen-reader, zoom, reflow, high-contrast, focus, status, error, progress, cancellation, and generated-document accessibility.
+  - [ ] **Sub-task 122.1.3.6:** Execute all applicable Windows reviewer protocols; retain attack corpora, network/process traces, canary scans, model/state manifests, accessibility output, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 122.1.AC1:** Given a selected NTFS workspace, when valid and adversarial paths race through tool execution, then valid files resolve by exact identity and no operation escapes the workspace.
+- [ ] **Story AC 122.1.AC2:** Given strict-local Windows operation, when model, tools, recovery, and diagnostics run for 60 minutes, then AgentMage creates no outbound attempt or byte and no undeclared listener.
+- [ ] **Story AC 122.1.AC3:** Given connected-provider authority, when a worker executes, then it can access only the exact destination, credential reference, account, capability, operation, and bounded data; removal leaves no connected authority.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 122.AC1:** At least 1,000 path/race and 500 sandbox attacks yield zero boundary escape.
+- [ ] **Sprint AC 122.AC2:** DPAPI, Credential Manager, local data root, encryption, retention, and canary tests pass.
+- [ ] **Sprint AC 122.AC3:** Native model and strict-local tools produce zero outbound attempt/byte and no listener.
+- [ ] **Sprint AC 122.AC4:** Connected workers pass identity, credential, destination, cancellation, and removal tests.
+- [ ] **Sprint AC 122.AC5:** Windows accessibility, recovery, and shared-contract parity pass.
+
+**Gate decision:** Sprint 122 is PASS only when Story 122.1, all criteria, `AT-WIN-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 123 - Provider Version Skew, Failure, and Resource Campaign
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Break every promoted adapter under version drift, outage, hostile input, limits, concurrency, and resource pressure before release integration.
+
+**Source coverage:** `AM-XTE-001`, `AT-XTE-001`; `DELIVERY-SYSTEM.md` Section 12; `SR-TST-*`, `SR-DEL-012` through `SR-DEL-014`, `RV-15`, `RV-16`, `RV-17`, `RV-23` through `RV-29`.
+
+**Dependencies:** Sprint 122.
+
+#### [ ] Story 123.1 - Extreme Adapter and Provider Resilience
+
+**User-facing value:** As a user and reviewer, I need AgentMage to fail safely and truthfully when providers, networks, schemas, credentials, resources, or local processes behave badly.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 123.1.1 - Build the extreme campaign harness**
+  - [ ] **Sub-task 123.1.1.1:** Generate minimum/maximum/future/provider-changed API fixtures and compare registration, degradation, diagnostics, and support claims.
+  - [ ] **Sub-task 123.1.1.2:** Compose rate limit, quota, revocation, permission reduction, outage, partition, latency, clock skew, eventual consistency, event flood, and pagination-loop schedules.
+  - [ ] **Sub-task 123.1.1.3:** Compose malformed/oversized schemas, logs, archives, artifacts, telemetry cardinality, repositories, concurrent workers, disk, memory, CPU, GPU, and cancellation pressure.
+  - [ ] **Sub-task 123.1.1.4:** Add deterministic seeds, shrinking, coverage, sanitizer support, raw-result schema, environment identity, and reproducible replay for every campaign.
+- [ ] **Task 123.1.2 - Run cross-adapter adversarial tests**
+  - [ ] **Sub-task 123.1.2.1:** Inject prompt attacks and secret canaries into every provider-controlled input class and cross-adapter handoff.
+  - [ ] **Sub-task 123.1.2.2:** Execute cross-host/account/project/environment credential and object-confusion attacks while adapters run concurrently.
+  - [ ] **Sub-task 123.1.2.3:** Crash/cancel before, during, and after every read, event, write, execute, deploy, reconciliation, persistence, and recovery transition.
+  - [ ] **Sub-task 123.1.2.4:** Force every gate to fail, skip, stale, flake, quarantine, suppress, or lose reviewer evidence and assert the release remains blocked.
+- [ ] **Task 123.1.3 - Verify and close the story**
+  - [ ] **Sub-task 123.1.3.1:** `S-123-FT01` runs all provider/version/failure combinations against fake/fault and approved live synthetic environments.
+  - [ ] **Sub-task 123.1.3.2:** `S-123-FZ01` fuzzes every adapter schema/parser/event/result and retains seeds, corpus, coverage, crashes, sanitizers, and shrinks.
+  - [ ] **Sub-task 123.1.3.3:** `S-123-ST01` runs every hostile-content, credential-confusion, authority-escalation, hidden-effect, and false-completion fixture.
+  - [ ] **Sub-task 123.1.3.4:** `S-123-RT01` runs prolonged concurrency/resource/partition/cancellation campaigns and verifies bounded cleanup and responsiveness.
+  - [ ] **Sub-task 123.1.3.5:** Execute `RV-15` through `RV-17` and `RV-23` through `RV-29`; retain complete raw evidence and independent red-team review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 123.1.AC1:** Given any unsupported or changed provider behavior, when conformance runs, then AgentMage refuses or enters only the declared degraded mode and never inherits a stale support claim.
+- [ ] **Story AC 123.1.AC2:** Given provider/network/resource failure at any transition, when recovery runs, then authority remains bounded, completed effects are not repeated, uncertainty is explicit, and the product remains responsive or stops safely.
+- [ ] **Story AC 123.1.AC3:** Given any failed, skipped, stale, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result, when summaries are generated, then the blocker remains visible and prevents gate closure.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 123.AC1:** Every promoted provider version passes supported, boundary, and out-of-matrix behavior.
+- [ ] **Sprint AC 123.AC2:** All parsers and trust boundaries complete the declared fuzz campaign with no unresolved security failure.
+- [ ] **Sprint AC 123.AC3:** Failure/resource campaigns cause no duplicate effect, leak, escalation, corruption, or false completion.
+- [ ] **Sprint AC 123.AC4:** Raw results, seeds, coverage, environment, versions, failures, and review reproduce exactly.
+- [ ] **Sprint AC 123.AC5:** Applicable `RV-15` through `RV-29` pass without hidden blocker.
+
+**Gate decision:** Sprint 123 is PASS only when Story 123.1, all criteria, the resilience portions of `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 124 - Adapter Removal and Strict-Local Restoration
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Prove that every connected capability can be removed independently and together while the strict-local product remains complete and unchanged.
+
+**Source coverage:** `AM-ADP-001`, `AM-XTE-001`, `AT-ADP-001`, `AT-XTE-001`; `SR-DEL-010`, `RV-30`.
+
+**Dependencies:** Sprint 123.
+
+#### [ ] Story 124.1 - Complete Connected-Capability Removal
+
+**User-facing value:** As a privacy-conscious user, I need to remove any or all delivery integrations and return to a provably strict-local product without losing my local workspace or unrelated state.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 124.1.1 - Implement adapter removal and retention**
+  - [ ] **Sub-task 124.1.1.1:** Define per-adapter inventory for credentials, cache records, graph nodes/edges, event cursors, webhooks, schedules, workers, processes, sockets, firewall policy, temporary files, logs, receipts, and retained evidence.
+  - [ ] **Sub-task 124.1.1.2:** Preview remove, revoke, delete, retain, export, and inaccessible-remote actions without deleting user repositories, provider data, or neighboring adapters.
+  - [ ] **Sub-task 124.1.1.3:** Implement ordered cancellation, webhook/event disablement, credential revocation/removal, worker/network deregistration, cache/retention cleanup, graph tombstones, and residue report.
+  - [ ] **Sub-task 124.1.1.4:** Implement reinstall/reconnect with new identity and explicit import rather than silently reusing stale credentials, cache, approvals, or support state.
+- [ ] **Task 124.1.2 - Restore and verify strict-local state**
+  - [ ] **Sub-task 124.1.2.1:** Remove each adapter independently, remove each provider domain, and remove all connected packs together from clean and failure-interrupted states.
+  - [ ] **Sub-task 124.1.2.2:** Inspect process, socket, network, credential, cache, database, file, registry, package, schedule, webhook, and temporary residue on Fedora, Ubuntu, and Windows.
+  - [ ] **Sub-task 124.1.2.3:** Rerun complete strict-local tools, model, repository map, writes, coding, evidence, recovery, diagnostics, and 60-minute zero-egress suites.
+- [ ] **Task 124.1.3 - Verify and close the story**
+  - [ ] **Sub-task 124.1.3.1:** `S-124-UT01` validates removal plans against missing, duplicate, stale, partially removed, shared, retained, and legally held records.
+  - [ ] **Sub-task 124.1.3.2:** `S-124-ST01` attempts post-removal tool registration, credential recovery, cache access, event receipt, background sync, scheduled action, socket use, and model/provider crossover.
+  - [ ] **Sub-task 124.1.3.3:** `S-124-RT01` crashes/cancels every removal stage and resumes to a deterministic complete or visibly blocked state without harming unrelated data.
+  - [ ] **Sub-task 124.1.3.4:** `S-124-AT01` runs strict-local acceptance on all first-GA platforms after each removal combination and complete removal.
+  - [ ] **Sub-task 124.1.3.5:** Execute `RV-30`; retain before/after inventories, revocation evidence, residue scans, strict-local raw results, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 124.1.AC1:** Given an installed adapter, when removal is approved, then its credentials, tools, events, workers, network scope, cache, schedules, and policy registrations are removed according to retention without harming user/provider or neighboring state.
+- [ ] **Story AC 124.1.AC2:** Given interruption during removal, when recovery runs, then AgentMage reaches a deterministic complete removal or visible blocked state and cannot use partially removed authority.
+- [ ] **Story AC 124.1.AC3:** Given all connected packs removed, when strict-local acceptance runs, then local behavior, privacy, storage, model, evidence, recovery, and zero-egress guarantees remain unchanged.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 124.AC1:** Every adapter passes independent and aggregate removal on Fedora, Ubuntu, and Windows.
+- [ ] **Sprint AC 124.AC2:** Zero undeclared credential, event, process, socket, schedule, cache, or network authority remains.
+- [ ] **Sprint AC 124.AC3:** Interrupted removal is recoverable and cannot damage unrelated data.
+- [ ] **Sprint AC 124.AC4:** Strict-local acceptance and 60-minute zero-egress proof pass after removal.
+- [ ] **Sprint AC 124.AC5:** `RV-30` passes with independent evidence.
+
+**Gate decision:** Sprint 124 is PASS only when Story 124.1, all criteria, the removal portions of `AT-ADP-001` and `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 125 - Cross-Provider Delivery and Windows Release Gates
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Prove complete work-to-release and incident-to-rollback workflows across the promoted provider matrix on Fedora, Ubuntu, and Windows before final GA assembly.
+
+**Source coverage:** `AM-XTE-001`, `AM-WIN-001`, `AT-XTE-001`, `AT-WIN-001`; integrated behavior from all prior Section 36 owners; `SR-DEL-*`, `SR-PLT-013` through `SR-PLT-017`, `RV-01` through `RV-30`.
+
+**Dependencies:** Sprint 124; all prior first-GA adapter and platform gates.
+
+#### [ ] Story 125.1 - Integrated Delivery and Platform Closure
+
+**User-facing value:** As a user and reviewer, I need the complete promoted system to work across real lifecycle boundaries and to fail closed under cross-system drift, attack, and recovery.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 125.1.1 - Run complete lifecycle scenarios**
+  - [ ] **Sub-task 125.1.1.1:** Run work-item-to-branch-to-change-to-review-to-CI-to-artifact-to-provenance-to-deployment-to-telemetry-to-release across each valid reference-provider path.
+  - [ ] **Sub-task 125.1.1.2:** Run incident-to-evidence-to-communication-to-work-to-flag/migration/deployment rollback-to-health-to-closure with every external effect separately approved.
+  - [ ] **Sub-task 125.1.1.3:** Run mixed-provider paths and verify exact identities, graph edges, credentials, authority classes, receipts, staleness, and support tuples at every handoff.
+  - [ ] **Sub-task 125.1.1.4:** Repeat the complete workflows on Fedora, Ubuntu, and Windows through native Visual Studio Code Chat using only published operator steps.
+- [ ] **Task 125.1.2 - Run integrated attack and recovery scenarios**
+  - [ ] **Sub-task 125.1.2.1:** Inject content attacks, credential confusion, host redirect, event replay, branch movement, artifact swap, policy change, environment drift, telemetry forgery, and hidden recipient/effect across lifecycle boundaries.
+  - [ ] **Sub-task 125.1.2.2:** Inject rate limits, partitions, provider outage, permission reduction, version skew, partial effect, cancellation, process crash, system restart, low resources, and interrupted rollback.
+  - [ ] **Sub-task 125.1.2.3:** Compare exact effects, no-effects, unknowns, partials, duplicate prevention, rollback preservation, and false-completion outcomes across platforms/providers.
+  - [ ] **Sub-task 125.1.2.4:** Remove connected packs after integrated execution and rerun strict-local plus residue verification.
+- [ ] **Task 125.1.3 - Verify and close the epic gates**
+  - [ ] **Sub-task 125.1.3.1:** `S-125-AT01` executes the complete lifecycle matrix and checks every provider/version/capability tuple against the signed support matrix.
+  - [ ] **Sub-task 125.1.3.2:** `S-125-ST01` executes all integrated attacks with zero unauthorized access, disclosure, effect, execution, deployment, secret/admin action, duplicate, or false completion.
+  - [ ] **Sub-task 125.1.3.3:** `S-125-RT01` executes all integrated failure/recovery schedules with current pre/post snapshots and no repeated completed operation.
+  - [ ] **Sub-task 125.1.3.4:** `S-125-AT02` reruns the complete Windows gate and Linux parity gates against release-candidate packages.
+  - [ ] **Sub-task 125.1.3.5:** Re-run applicable `RV-01` through `RV-30`; retain signed raw evidence, cross-system graph, platform manifests, support matrix, removal proof, and independent decisions for `G-DELIVERY` and `G-WINDOWS`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 125.1.AC1:** Given any promoted reference-provider path, when a complete lifecycle runs, then every object, effect, artifact, environment, observation, incident, and release is exact, attributable, receipted, and support-matrix conformant.
+- [ ] **Story AC 125.1.AC2:** Given attack, drift, failure, uncertainty, or resource pressure at any cross-system handoff, when recovery runs, then no authority crosses classes/domains, no completed effect repeats, and no false completion is reported.
+- [ ] **Story AC 125.1.AC3:** Given the same supported workflow on Fedora, Ubuntu, and Windows, when release-candidate packages run, then shared contracts match and platform-specific evidence remains independent.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 125.AC1:** Every promoted work-to-release and incident-to-rollback provider path passes.
+- [ ] **Sprint AC 125.AC2:** Integrated adversarial and recovery campaigns produce zero unauthorized or duplicate effect and zero hidden blocker.
+- [ ] **Sprint AC 125.AC3:** Fedora, Ubuntu, and Windows release-candidate workflows pass independently.
+- [ ] **Sprint AC 125.AC4:** Connected-pack removal restores strict-local behavior after complete lifecycle execution.
+- [ ] **Sprint AC 125.AC5:** `G-DELIVERY` and `G-WINDOWS` close only with current signed independent evidence.
+
+**Gate decision:** Sprint 125 is PASS only when Story 125.1, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+## [ ] Epic 11 - v1.0 GA Verification and Release Decision
+
+### [ ] Sprint 126 - First Supported GA Evidence and Release Decision
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Rebuild, independently reproduce, and sign the exact v1.0 GA release decision without hiding any unsupported capability, stale result, residual risk, or platform/provider limitation.
+
+**Source coverage:** `AM-GA-001`, `AM-GAD-001`, `AT-GA-001`; entire README, PRD, inventory through Section 36B, implementation plan, security review, runtime/delivery/Windows boundaries, model policy, security policy, Decisions 0001-0008, and all Sprints 0-125.
+
+**Dependencies:** Sprint 125; `G-FOUNDATION`, all internal milestone gates used by promoted scope, `G-LEGACY-CLOSURE`, `G-DELIVERY`, and `G-WINDOWS`. Apple Silicon `BLOCKED-MACOS` items are retained post-GA and are not `G-GA` dependencies under Decision 0008.
+
+#### [ ] Story 126.1 - Truthful v1.0 GA Closure
+
+**User-facing value:** As a user and reviewer, I need a release whose supported platforms, providers, operations, security, limitations, and evidence match the exact package I receive.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 126.1.1 - Rebuild release scope and evidence**
+  - [ ] **Sub-task 126.1.1.1:** Rebuild the complete requirement graph and prove every promoted requirement has current source, design, code, test, evidence, owner, support, and release linkage.
+  - [ ] **Sub-task 126.1.1.2:** Generate signed Fedora, Ubuntu, Windows, model/runtime, component/process/path/socket, adapter, provider/version/capability, data-flow, retention, support, and exclusion manifests.
+  - [ ] **Sub-task 126.1.1.3:** Regenerate source and binary SBOMs, cryptographic BOM, Model BOM, licenses, provenance, signatures, hashes, vulnerability dispositions, and support/end-of-support metadata.
+  - [ ] **Sub-task 126.1.1.4:** Publish exact install, diagnostics, strict-local, connected-profile, credential, provider, capability, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
+- [ ] **Task 126.1.2 - Independently rerun the complete release**
+  - [ ] **Sub-task 126.1.2.1:** Perform three clean standard-user install/upgrade/rollback/uninstall lifecycles per first-GA platform using published instructions only.
+  - [ ] **Sub-task 126.1.2.2:** Rerun every promoted provider conformance matrix and every `AT-*` first-GA threshold against exact release candidates and synthetic provider environments.
+  - [ ] **Sub-task 126.1.2.3:** Rerun `RV-01` through `RV-30`, cross-provider lifecycles, strict-local removal, accessibility, performance, recovery, incident tabletop, and documentation checks.
+  - [ ] **Sub-task 126.1.2.4:** Recompute every summary from raw evidence, validate staleness against all source/dependency/config/model/platform/provider manifests, and reconcile every failure, skip, suppression, quarantine, and reviewer finding.
+- [ ] **Task 126.1.3 - Decide and sign v1.0 GA**
+  - [ ] **Sub-task 126.1.3.1:** Produce the final provider/version/capability matrix with exact supported, degraded, unsupported, disabled, and post-GA states.
+  - [ ] **Sub-task 126.1.3.2:** Produce the final risk, limitation, remediation, rollback, support, vulnerability, and release decision from raw evidence.
+  - [ ] **Sub-task 126.1.3.3:** Force every release gate and support claim to fail in synthetic checks and prove packaging/publication cannot proceed.
+  - [ ] **Sub-task 126.1.3.4:** Obtain independent reviewer signatures over the exact evidence index and user approval over the final release decision.
+  - [ ] **Sub-task 126.1.3.5:** Sign and hash the release manifests, packages, evidence index, checksums, and public release notes only after every blocking gate is green.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 126.1.AC1:** Given the exact v1.0 release candidates, when independent reviewers follow published procedures, then platform, provider, strict-local, connected, security, recovery, accessibility, support, and removal results reproduce from raw evidence.
+- [ ] **Story AC 126.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result, when release status is computed, then `G-GA` remains blocked and no supported-release package is produced.
+- [ ] **Story AC 126.1.AC3:** Given final release notes and support matrices, when compared with code, registrations, manifests, packages, and evidence, then every capability and limitation agrees exactly and Apple Silicon remains accurately labeled post-GA.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 126.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
+- [ ] **Sprint AC 126.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, recovery, and removal gates.
+- [ ] **Sprint AC 126.AC3:** Every promoted provider/version/capability tuple passes its exact conformance and extreme tests; every unsupported operation passes negative tests.
+- [ ] **Sprint AC 126.AC4:** Bills of materials, provenance, signatures, hashes, manifests, support matrices, documentation, and raw evidence reconcile exactly.
+- [ ] **Sprint AC 126.AC5:** `G-GA` closes only after independent reproduction and explicit user approval with no hidden blocker.
+
+**Gate decision:** Sprint 126 and `G-GA` are PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable `AT-*`, every `RV-01` through `RV-30`, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
 
 ## Legacy Traceability Appendices
 
@@ -5941,6 +7124,35 @@ The tables below retain the original `S-NNN` planning identifiers. Each is mappe
 | 35A. Rejected Defaults | Every security gate and `S-075` |
 | 35B. Competitive Release Additions | Corresponding release gate sprint |
 | 35C. Additions-Only Rule | `S-000`, `S-075` |
+| 36. First-GA Delivery and Windows Backlog | Sprints 103-126 |
+| 36A. First-GA Quantitative Matrix | Owning Sprint 103-124 and integrated Sprints 125-126 |
+| 36B. Delivery-System Checklist | Sprints 103-126 |
+
+### First-GA Stable Backlog Coverage
+
+| Backlog ID | Primary sprint | Integrated gate |
+|---|---|---|
+| `AM-GA-001` | Sprint 103 | Sprint 126 |
+| `AM-DEL-001` | Sprint 103 | Sprints 125-126 |
+| `AM-ADP-001` | Sprints 103 and 105 | Sprints 124-126 |
+| `AM-IDN-001` | Sprint 104 | Sprints 123-126 |
+| `AM-GHE-001` | Sprint 106 | Sprints 125-126 |
+| `AM-WRK-001` | Sprint 107 | Sprints 125-126 |
+| `AM-SRC-001` | Sprint 108 | Sprints 125-126 |
+| `AM-CIC-001` | Sprint 109 | Sprints 125-126 |
+| `AM-ART-001` | Sprint 110 | Sprints 125-126 |
+| `AM-SUP-014` | Sprint 111 | Sprints 125-126 |
+| `AM-DEP-001` | Sprints 112-113 | Sprints 125-126 |
+| `AM-IAC-001` | Sprint 114 | Sprints 125-126 |
+| `AM-REL-001` | Sprint 115 | Sprints 125-126 |
+| `AM-OBS-001` | Sprints 116-117 | Sprints 125-126 |
+| `AM-INC-001` | Sprint 118 | Sprints 125-126 |
+| `AM-SEC-003` | Sprint 111 | Sprints 125-126 |
+| `AM-CAT-001` | Sprint 119 | Sprints 125-126 |
+| `AM-MTH-001` | Sprint 120 | Sprint 126 |
+| `AM-WIN-001` | Sprints 121-122 | Sprints 125-126 |
+| `AM-XTE-001` | Sprints 123-125 | Sprint 126 |
+| `AM-GAD-001` | Sprint 126 | Sprint 126 |
 
 ## Sprint Completion Record Template
 

@@ -51,7 +51,7 @@ A compromised signer, release package, dependency, model, runtime, or update cha
 
 The product incident runbook covers detection, suspension, containment, bounded evidence preservation, remediation, recovery, notification, and the interface to the device owner's own response process. Incident evidence follows the same classification, minimization, encryption, access, and retention rules as normal product data; an incident does not create unlimited collection authority.
 
-The v0.1 release gate includes tabletop exercises for suspected egress, a compromised dependency or package, prompt-injection disclosure, and key-store failure.
+Release gates include tabletop exercises for suspected egress, a compromised dependency or package, prompt-injection disclosure, key-store failure, provider credential confusion, duplicate external effect, unsafe deployment, and adapter removal.
 
 ## Scope
 

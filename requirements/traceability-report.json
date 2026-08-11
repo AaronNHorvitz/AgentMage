@@ -2,35 +2,157 @@
   "counts": {
     "by_exclusion_state": {
       "not_excluded": 66,
-      "outside_v0.1_release": 12
+      "outside_v0.1_release": 53
     },
     "by_kind": {
-      "acceptance_test": 33,
+      "acceptance_test": 53,
       "competitive_requirement": 18,
-      "product_requirement": 27
+      "product_requirement": 48
     },
-    "total": 78
+    "total": 119
   },
   "generated_from": [
     {
       "document": "requirements/registry.json",
-      "sha256": "ced58f88e35c2f7e9fc1d052eb6c02ae6259603da1a43407e6a72d880e305365"
+      "sha256": "c0699a7de3e8c906cb011b94f4baa2dc07cd7124a1cef5dba9e1a8b93d45ffd2"
     },
     {
       "document": "requirements/normative-map.json",
-      "sha256": "decb56849c48e0022637c258d7c5289ffe1b51ace4552c8f09a9747514650750"
+      "sha256": "04d8246c4ad6c0dc7e5e453365aca17009ef73f5e849496554c4d6fba22e981b"
     },
     {
       "document": "requirements/policy-expectations.json",
-      "sha256": "566ef44837852618f4ae41e406e4045b903bfe356ffb3de928b65119b2353ef8"
+      "sha256": "c5bb0800dcb8bfe8eae57ae79913fc428cdc67bd30310d32c2c1d06619089c58"
     },
     {
       "document": "TASKS.md",
-      "sha256": "c202b2fb2c5e284ab01b00c4d9dfbdc1f4cb97f85d940cef9c5eb41c853e9260"
+      "sha256": "1ffcc21b488b9121f335b13e57daf8bc794f7be309cd846eb9e12b859d47029f"
     }
   ],
   "report_id": "agentmage-cross-document-traceability",
   "requirements": [
+    {
+      "acceptance_tests": [
+        "AT-ADP-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-103",
+          "artifacts/sprints/sprint-105",
+          "artifacts/sprints/sprint-124"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-ADP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
+              "line": 5863
+            },
+            "sprint": 103,
+            "story_id": "103.1",
+            "story_title": "Delivery Graph, Adapter SDK, and Support Matrix"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
+              "line": 5962
+            },
+            "sprint": 105,
+            "story_id": "105.1",
+            "story_title": "External Effects, Events, and Uncertain Results"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
+              "line": 6876
+            },
+            "sprint": 124,
+            "story_id": "124.1",
+            "story_title": "Adapter Removal and Strict-Local Restoration"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "c1536e27af12a11c002d50e14de7a0c76fd74e459e0cc3704d8041e07df1b608",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1641
+      },
+      "status": "planned",
+      "title": "Implement a versioned provider-adapter SDK, lifecycle, capability-level model, support-matrix schema, event contract, removal contract, and conformance harness.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-ART-001",
+        "AT-SUP-001"
+      ],
+      "dependencies": [
+        "AM-CIC-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-110"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-ART-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 110 - Artifact Registries and Immutable Promotion",
+              "line": 6201
+            },
+            "sprint": 110,
+            "story_id": "110.1",
+            "story_title": "Artifact Registries and Immutable Promotion"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "fe7c0d8727eb3518623dda6d16e6d9564a1da531608259a1fdff1511b7e16d9a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1647
+      },
+      "status": "planned",
+      "title": "Implement immutable-digest artifact discovery, verification, download, promotion, retention, and provenance links for OCI Distribution, GitHub Container Registry, Azure Container Registry, JFrog Artifactory, and Sonatype Nexus.",
+      "verifies_requirement_ids": []
+    },
     {
       "acceptance_tests": [
         "AT-AUTH-001"
@@ -60,7 +182,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 5 - Capability Grants and Policy Engine",
-              "line": 559
+              "line": 577
             },
             "sprint": 5,
             "story_id": "5.1",
@@ -73,7 +195,7 @@
         {
           "document": "PRD.md",
           "heading": "10. Capability Grants",
-          "line": 274,
+          "line": 280,
           "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
         }
       ],
@@ -86,6 +208,57 @@
       },
       "status": "planned",
       "title": "Define and enforce the single-use `CapabilityGrant` contract for every authority-bearing action.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-CAT-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001",
+        "AM-OBS-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-119"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-CAT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 119 - Service Catalog and Ownership Graph",
+              "line": 6633
+            },
+            "sprint": 119,
+            "story_id": "119.1",
+            "story_title": "Service Catalog and Ownership Graph"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "c5d11b0d7e90a0c8e83ae00754cee80852671f0f3cfca9d9f5b6fbe6f13037a8",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1655
+      },
+      "status": "planned",
+      "title": "Implement a Backstage reference catalog adapter linking services, owners, repositories, pipelines, artifacts, environments, telemetry, incidents, and releases; retain Port, Cortex, and Compass as conformance-gated extensions.",
       "verifies_requirement_ids": []
     },
     {
@@ -116,7 +289,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
-              "line": 415
+              "line": 433
             },
             "sprint": 3,
             "story_id": "3.1",
@@ -135,6 +308,57 @@
       },
       "status": "planned",
       "title": "Load and validate versioned configuration without silently broadening authority.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-CIC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GHE-001",
+        "AM-SRC-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-109"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-CIC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 109 - Multi-Provider CI Execution and Evidence",
+              "line": 6153
+            },
+            "sprint": 109,
+            "story_id": "109.1",
+            "story_title": "Multi-Provider CI Execution and Evidence"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "1864cca010d8b6bb0279e4051a193fdc8f2ea24e479ff3823a9390c15f968e53",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1646
+      },
+      "status": "planned",
+      "title": "Implement inspect, correlate, dispatch, rerun, cancel, approve, log, and artifact behavior for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins as separate read and execute capabilities.",
       "verifies_requirement_ids": []
     },
     {
@@ -166,7 +390,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 910
+              "line": 928
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -179,25 +403,25 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 290,
+          "line": 296,
           "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 303,
+          "line": 309,
           "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 305,
+          "line": 311,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 353,
+          "line": 359,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -210,6 +434,116 @@
       },
       "status": "planned",
       "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEL-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-103"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-DEL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
+              "line": 5863
+            },
+            "sprint": 103,
+            "story_id": "103.1",
+            "story_title": "Delivery Graph, Adapter SDK, and Support Matrix"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0dda55264bc5f590d1afea9776d08709ec032e3648a333c16b32f06a57a76abd",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1640
+      },
+      "status": "planned",
+      "title": "Implement a provider-neutral delivery graph linking services, work, source, reviews, builds, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback with immutable source identities and freshness.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEP-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-SUP-014"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-112",
+          "artifacts/sprints/sprint-113"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-DEP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 112 - Kubernetes, Helm, and Kustomize Deployment Safety",
+              "line": 6297
+            },
+            "sprint": 112,
+            "story_id": "112.1",
+            "story_title": "Kubernetes, Helm, and Kustomize Deployment Safety"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 113 - Argo CD and Flux GitOps Control",
+              "line": 6345
+            },
+            "sprint": 113,
+            "story_id": "113.1",
+            "story_title": "Argo CD and Flux GitOps Control"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "9515cb17a71770b331b40d0d2d5a8a5efc08ce49d59e68087cdd7b9303275fde",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1649
+      },
+      "status": "planned",
+      "title": "Implement plan, diff, promote, health, drift, synchronize, and rollback support for Kubernetes, Helm, Kustomize, Argo CD, and Flux with immutable artifacts and environment-specific deployment grants.",
       "verifies_requirement_ids": []
     },
     {
@@ -243,7 +577,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1149
+              "line": 1167
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -296,7 +630,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -306,7 +640,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -316,7 +650,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -329,7 +663,7 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 381,
+          "line": 387,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -375,7 +709,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -385,7 +719,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -398,13 +732,13 @@
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 351,
+          "line": 357,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 353,
+          "line": 359,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -450,7 +784,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -460,7 +794,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -479,6 +813,164 @@
       },
       "status": "planned",
       "title": "Label material claims as Observed, Derived, Inferred, or Unknown/Blocked and bind citations to source hashes and ranges so changed evidence becomes visibly stale.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-001",
+        "AT-WIN-001"
+      ],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-103",
+          "artifacts/sprints/sprint-126"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-GA-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
+              "line": 5863
+            },
+            "sprint": 103,
+            "story_id": "103.1",
+            "story_title": "Delivery Graph, Adapter SDK, and Support Matrix"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 126 - First Supported GA Evidence and Release Decision",
+              "line": 6975
+            },
+            "sprint": 126,
+            "story_id": "126.1",
+            "story_title": "First Supported GA Evidence and Release Decision"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "249b0f684acd84e84f1aff54e12275a1375276fe1180c26e9ac9ed70c4694844",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1639
+      },
+      "status": "planned",
+      "title": "Define v1.0 GA as the first supported public release, freeze its Fedora, Ubuntu, and Windows 11 x64 platform matrix, retain Apple Silicon macOS as post-GA work, and publish exact promoted and unsupported capabilities.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-001"
+      ],
+      "dependencies": [
+        "AM-XTE-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-126"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-GAD-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 126 - First Supported GA Evidence and Release Decision",
+              "line": 6975
+            },
+            "sprint": 126,
+            "story_id": "126.1",
+            "story_title": "First Supported GA Evidence and Release Decision"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "fe0f101e9a845b82ea23183fcfd69d162a8dc5ddcc0c5ec4018e3564e792dabf",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1659
+      },
+      "status": "planned",
+      "title": "Produce the v1.0 GA release decision from current Fedora, Ubuntu, Windows, strict-local, connected, provider-conformance, support-matrix, supply-chain, recovery, accessibility, and independent-review evidence.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-GHE-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-106"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-GHE-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance",
+              "line": 6011
+            },
+            "sprint": 106,
+            "story_id": "106.1",
+            "story_title": "GitHub.com and GitHub Enterprise Full Conformance"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "62fa495b5d9f8cb015076ea3d0fc34b11c650800f64c8bae48fb583bd6662e18",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1643
+      },
+      "status": "planned",
+      "title": "Support GitHub.com and user-approved GitHub Enterprise Server repositories, commits, issues, pull requests, reviews, checks, workflows, releases, local signed commits, approval-gated pushes, and hosted mutations within a published matrix.",
       "verifies_requirement_ids": []
     },
     {
@@ -510,7 +1002,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -562,7 +1054,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -572,7 +1064,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -582,7 +1074,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -595,25 +1087,25 @@
         {
           "document": "PRD.md",
           "heading": "6. v0.1 User Experience",
-          "line": 180,
+          "line": 186,
           "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
         },
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 334,
+          "line": 340,
           "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
         },
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 336,
+          "line": 342,
           "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 351,
+          "line": 357,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         }
       ],
@@ -626,6 +1118,168 @@
       },
       "status": "planned",
       "title": "Render a local, reviewable Codex handoff packet without invoking Codex, controlling its tab, writing the clipboard, or transmitting content.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-IAC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-114"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-IAC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 114 - Terraform and OpenTofu Infrastructure Safety",
+              "line": 6392
+            },
+            "sprint": 114,
+            "story_id": "114.1",
+            "story_title": "Terraform and OpenTofu Infrastructure Safety"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "b90e9843ea20ba5df81ead678ac3a13f04f13a38d7e501c93039302b823f2ab5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1650
+      },
+      "status": "planned",
+      "title": "Implement inspect, plan, policy-check, apply, reconcile, and recover support for Terraform and OpenTofu while keeping destructive and production actions separately approved.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-IDN-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-ADP-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-104",
+          "artifacts/sprints/sprint-105"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-IDN-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 104 - Connected Identity, Credentials, and Capability Classes",
+              "line": 5913
+            },
+            "sprint": 104,
+            "story_id": "104.1",
+            "story_title": "Connected Identity, Credentials, and Capability Classes"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
+              "line": 5962
+            },
+            "sprint": 105,
+            "story_id": "105.1",
+            "story_title": "External Effects, Events, and Uncertain Results"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "7ef73afff37a4042ac303075614ddc089faa4de6e9d8095c12dddc8f3219104d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1642
+      },
+      "status": "planned",
+      "title": "Bind every connected credential and operation to exact provider, host, tenant, account, project, environment, capability class, purpose, scope, expiry, and secret-store reference without exposing secret values.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-INC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-OBS-001",
+        "AM-WRK-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-118"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-INC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 118 - Incidents, Bounded Notifications, and ChatOps",
+              "line": 6584
+            },
+            "sprint": 118,
+            "story_id": "118.1",
+            "story_title": "Incidents, Bounded Notifications, and ChatOps"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "13754e9ac238292a1f076e05cde33112cfcbd8c85a0f93f916ad2bdf76ddfb8a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1653
+      },
+      "status": "planned",
+      "title": "Implement incident correlation, evidence, draft communication, bounded issue creation, escalation, rollback recommendation, and notification adapters with PagerDuty and compatible incident systems as independently gated capabilities.",
       "verifies_requirement_ids": []
     },
     {
@@ -658,7 +1312,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -671,7 +1325,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 255,
+          "line": 261,
           "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
         }
       ],
@@ -715,7 +1369,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 1 - Repository and Package Architecture",
-              "line": 277
+              "line": 295
             },
             "sprint": 1,
             "story_id": "1.1",
@@ -725,7 +1379,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
-              "line": 501
+              "line": 519
             },
             "sprint": 4,
             "story_id": "4.1",
@@ -735,7 +1389,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 964
+              "line": 982
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -748,13 +1402,13 @@
         {
           "document": "PRD.md",
           "heading": "5. Product Architecture",
-          "line": 128,
+          "line": 134,
           "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
         },
         {
           "document": "PRD.md",
           "heading": "5.1 Kernel",
-          "line": 134,
+          "line": 140,
           "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
         }
       ],
@@ -798,7 +1452,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1018
+              "line": 1036
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -811,31 +1465,31 @@
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 243,
+          "line": 249,
           "statement_sha256": "49b3d53eee47a4e94f4caaf39bbc9e12fa81af8082cc58519ad7a31ed324b482"
         },
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 245,
+          "line": 251,
           "statement_sha256": "016c900f173f9cad1993965357e8ca83010ed0621f09fa7af22d21ef49c92d72"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 257,
+          "line": 263,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 326,
+          "line": 332,
           "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 373,
+          "line": 379,
           "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
         }
       ],
@@ -878,7 +1532,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1149
+              "line": 1167
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -891,7 +1545,7 @@
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 247,
+          "line": 253,
           "statement_sha256": "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7"
         }
       ],
@@ -936,7 +1590,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 14 - Separate Model Installer and Importer",
-              "line": 1095
+              "line": 1113
             },
             "sprint": 14,
             "story_id": "14.1",
@@ -949,19 +1603,19 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 239,
+          "line": 245,
           "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
         },
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 243,
+          "line": 249,
           "statement_sha256": "49b3d53eee47a4e94f4caaf39bbc9e12fa81af8082cc58519ad7a31ed324b482"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 257,
+          "line": 263,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -974,6 +1628,56 @@
       },
       "status": "planned",
       "title": "Implement the separate approved-model installer/importer with hardware-fit checks, license and lineage display, resumable staging, hash verification, quarantine, atomic activation, self-test, unload, and cleanup.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-MTH-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-120"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-MTH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 120 - Markdown and LaTeX Mathematics",
+              "line": 6681
+            },
+            "sprint": 120,
+            "story_id": "120.1",
+            "story_title": "Markdown and LaTeX Mathematics"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "8fd16b95e0d8db65acf8353d0050916fa8049d12f392a9c09d034e470f1b8e80",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1657
+      },
+      "status": "planned",
+      "title": "Author, preserve, review, and render inline and display LaTeX-style mathematics in Markdown through a pinned offline safe subset with round-trip and accessibility support.",
       "verifies_requirement_ids": []
     },
     {
@@ -1005,7 +1709,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 856
+              "line": 874
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -1018,7 +1722,7 @@
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 326,
+          "line": 332,
           "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
         }
       ],
@@ -1031,6 +1735,67 @@
       },
       "status": "planned",
       "title": "Enforce offline operation and restrict the selected local inference runtime to the guarded inference path.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-OBS-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-116",
+          "artifacts/sprints/sprint-117"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-OBS-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 116 - OpenTelemetry Correlation Foundation",
+              "line": 6488
+            },
+            "sprint": 116,
+            "story_id": "116.1",
+            "story_title": "OpenTelemetry Correlation Foundation"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 117 - Datadog and Multi-Vendor Observability",
+              "line": 6536
+            },
+            "sprint": 117,
+            "story_id": "117.1",
+            "story_title": "Datadog and Multi-Vendor Observability"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "f26708af63b3c9f6b8464986a8cede12fc4039dc0549c464f149cb03a7466120",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1652
+      },
+      "status": "planned",
+      "title": "Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation.",
       "verifies_requirement_ids": []
     },
     {
@@ -1062,7 +1827,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
-              "line": 670
+              "line": 688
             },
             "sprint": 7,
             "story_id": "7.1",
@@ -1075,25 +1840,25 @@
         {
           "document": "PRD.md",
           "heading": "5.1 Kernel",
-          "line": 134,
+          "line": 140,
           "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
         },
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 186,
-          "statement_sha256": "d0b2a4077b7f4acb01eca5410fc33837919f08be0d214ded5a86b303869d18b7"
+          "line": 192,
+          "statement_sha256": "d67b774f233f094277ea45c7f4e4f02c89fcb9c447ad074728b04eebfd430abc"
         },
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 188,
-          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+          "line": 194,
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 237,
+          "line": 243,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         }
       ],
@@ -1138,7 +1903,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 910
+              "line": 928
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -1151,13 +1916,13 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 237,
+          "line": 243,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 318,
+          "line": 324,
           "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
         }
       ],
@@ -1200,7 +1965,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 6 - Canonical Workspace Paths",
-              "line": 617
+              "line": 635
             },
             "sprint": 6,
             "story_id": "6.1",
@@ -1213,7 +1978,7 @@
         {
           "document": "PRD.md",
           "heading": "11. Path Contract",
-          "line": 282,
+          "line": 288,
           "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
         }
       ],
@@ -1226,6 +1991,57 @@
       },
       "status": "planned",
       "title": "Enforce canonical workspace-relative capability paths through the platform path adapter while generating absolute paths only for display links.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-REL-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-DEP-001",
+        "AM-IAC-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-115"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-REL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations",
+              "line": 6440
+            },
+            "sprint": 115,
+            "story_id": "115.1",
+            "story_title": "Releases, Feature Flags, Progressive Delivery, and Migrations"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "4ba5692304f7483220a7f7c593604cdafdb8b8cc8f546e8bce6569a347e5aea1",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1651
+      },
+      "status": "planned",
+      "title": "Implement semantic-version, changelog, release-manifest, promotion, progressive-delivery, feature-flag, database-migration, health, rollback, and compensating-action contracts.",
       "verifies_requirement_ids": []
     },
     {
@@ -1260,7 +2076,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1335
+              "line": 1353
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -1270,7 +2086,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1385
+              "line": 1403
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -1283,7 +2099,7 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 305,
+          "line": 311,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         }
       ],
@@ -1327,7 +2143,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 724
+              "line": 742
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -1337,7 +2153,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 778
+              "line": 796
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -1350,19 +2166,19 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 237,
+          "line": 243,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 257,
+          "line": 263,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 259,
+          "line": 265,
           "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
         }
       ],
@@ -1408,7 +2224,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 724
+              "line": 742
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -1418,7 +2234,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 778
+              "line": 796
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -1428,7 +2244,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1227
+              "line": 1245
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -1441,7 +2257,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 257,
+          "line": 263,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -1454,6 +2270,56 @@
       },
       "status": "planned",
       "title": "Run every file and Git tool inside the restricted platform tool worker.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SEC-003",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-SUP-014"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-111"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-SEC-003",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
+              "line": 6248
+            },
+            "sprint": 111,
+            "story_id": "111.1",
+            "story_title": "Supply-Chain Evidence and Security Findings"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "29e4d0b0ed99837cfe2f9611be81177387b0bada4e25683cf9d82a9439c2fad5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1654
+      },
+      "status": "planned",
+      "title": "Normalize CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings without erasing provider provenance, conflicting severity, suppression, reachability, or source identity.",
       "verifies_requirement_ids": []
     },
     {
@@ -1487,7 +2353,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 964
+              "line": 982
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -1497,7 +2363,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1537
+              "line": 1555
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -1510,7 +2376,7 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 305,
+          "line": 311,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         }
       ],
@@ -1523,6 +2389,106 @@
       },
       "status": "planned",
       "title": "Persist and resume one active local session without duplicating completed actions.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SRC-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-108"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-SRC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 108 - Azure Repos and GitLab Source Adapters",
+              "line": 6106
+            },
+            "sprint": 108,
+            "story_id": "108.1",
+            "story_title": "Azure Repos and GitLab Source Adapters"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "74a91a994579ef9be448912dea5cfc7a52f6ebb8db949c292d8bac2a12e7cead",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1645
+      },
+      "status": "planned",
+      "title": "Implement conformance-gated source adapters for Azure Repos and GitLab, while keeping Bitbucket and Gerrit as disabled extension candidates until promoted.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-SUP-001",
+        "AT-SEC-003"
+      ],
+      "dependencies": [
+        "AM-ART-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-111"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-SUP-014",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
+              "line": 6248
+            },
+            "sprint": 111,
+            "story_id": "111.1",
+            "story_title": "Supply-Chain Evidence and Security Findings"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "c1cb8f3576258ea00f50335a932ea6cc085ef8db81ab8eaf99fa9adfee60737e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1648
+      },
+      "status": "planned",
+      "title": "Normalize and verify SPDX, CycloneDX, SARIF, Sigstore/Cosign signatures, SLSA provenance, vulnerability results, and policy decisions against exact source, build, and artifact identities.",
       "verifies_requirement_ids": []
     },
     {
@@ -1555,7 +2521,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1227
+              "line": 1245
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -1628,7 +2594,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -1638,7 +2604,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -1648,7 +2614,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -1661,13 +2627,13 @@
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 188,
-          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+          "line": 194,
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 381,
+          "line": 387,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -1736,7 +2702,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -1746,7 +2712,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -1756,7 +2722,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -1769,19 +2735,19 @@
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 188,
-          "statement_sha256": "975b1d955553809a8195024e2505a2acc95506f8ece8409da5a313aacc67b79b"
+          "line": 194,
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 373,
+          "line": 379,
           "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 381,
+          "line": 387,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -1827,7 +2793,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -1837,7 +2803,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -1847,7 +2813,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -1860,7 +2826,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 257,
+          "line": 263,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -1907,7 +2873,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -1917,7 +2883,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -1927,7 +2893,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -1947,6 +2913,281 @@
       "status": "planned",
       "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat.",
       "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-WIN-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GA-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-121",
+          "artifacts/sprints/sprint-122",
+          "artifacts/sprints/sprint-125"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-WIN-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC",
+              "line": 6729
+            },
+            "sprint": 121,
+            "story_id": "121.1",
+            "story_title": "Windows Package, Visual Studio Code Bridge, and IPC"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers",
+              "line": 6778
+            },
+            "sprint": 122,
+            "story_id": "122.1",
+            "story_title": "Windows Path, Sandbox, Keys, Model, and Connected Workers"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
+              "line": 6924
+            },
+            "sprint": 125,
+            "story_id": "125.1",
+            "story_title": "Cross-Provider Delivery and Windows Release Gates"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "daf7bceac9ed1ec062e5d4e9a085517a32414ef65f07f793287a8c4b49c60426",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1656
+      },
+      "status": "planned",
+      "title": "Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-WRK-001",
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-IDN-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-107"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-WRK-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards",
+              "line": 6059
+            },
+            "sprint": 107,
+            "story_id": "107.1",
+            "story_title": "Work Management Across GitHub, Jira, and Azure Boards"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "8f983e5e68c5c3f297dad88b9a5cc292c975cf0509af63068c59210fdd9e52aa",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1644
+      },
+      "status": "planned",
+      "title": "Implement conformance-gated work-management adapters for GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards with stable identity, links, drafts, bounded writes, and complete audit receipts.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [
+        "AT-XTE-001"
+      ],
+      "dependencies": [
+        "AM-GHE-001",
+        "AM-WRK-001",
+        "AM-SRC-001",
+        "AM-CIC-001",
+        "AM-ART-001",
+        "AM-DEP-001",
+        "AM-IAC-001",
+        "AM-REL-001",
+        "AM-OBS-001",
+        "AM-INC-001",
+        "AM-SEC-003",
+        "AM-CAT-001",
+        "AM-WIN-001",
+        "AM-MTH-001"
+      ],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-123",
+          "artifacts/sprints/sprint-124",
+          "artifacts/sprints/sprint-125"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AM-XTE-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 123 - Provider Version Skew, Failure, and Resource Campaign",
+              "line": 6827
+            },
+            "sprint": 123,
+            "story_id": "123.1",
+            "story_title": "Provider Version Skew, Failure, and Resource Campaign"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
+              "line": 6876
+            },
+            "sprint": 124,
+            "story_id": "124.1",
+            "story_title": "Adapter Removal and Strict-Local Restoration"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
+              "line": 6924
+            },
+            "sprint": 125,
+            "story_id": "125.1",
+            "story_title": "Cross-Provider Delivery and Windows Release Gates"
+          }
+        ]
+      },
+      "kind": "product_requirement",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "52f2014dd1e2117699d96799e934ebe6baf3d24c612c81cb7fec24d99dc759f0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36. First-GA Delivery and Windows Backlog",
+        "line": 1658
+      },
+      "status": "planned",
+      "title": "Run cross-provider, cross-platform, adversarial, mutation, fuzz, replay, confusion, partition, rate-limit, version-skew, crash, partial-effect, rollback, resource, removal, and end-to-end delivery tests with no hidden blocking result.",
+      "verifies_requirement_ids": []
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-103",
+          "artifacts/sprints/sprint-105",
+          "artifacts/sprints/sprint-124"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-ADP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
+              "line": 5863
+            },
+            "sprint": 103,
+            "story_id": "103.1",
+            "story_title": "Delivery Graph, Adapter SDK, and Support Matrix"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
+              "line": 5962
+            },
+            "sprint": 105,
+            "story_id": "105.1",
+            "story_title": "External Effects, Events, and Uncertain Results"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
+              "line": 6876
+            },
+            "sprint": 124,
+            "story_id": "124.1",
+            "story_title": "Adapter Removal and Strict-Local Restoration"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "3ae699c39568f06ce03ca9061e2e9277abe1a4cee1b8c3867bcefb3dcb2a7d88",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1666
+      },
+      "status": "planned",
+      "title": "Run the adapter lifecycle and capability-level suite against fake, fault, reference, future-version, and malicious providers.",
+      "verifies_requirement_ids": [
+        "AM-ADP-001"
+      ]
     },
     {
       "acceptance_tests": [],
@@ -1974,7 +3215,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 1 - Repository and Package Architecture",
-              "line": 277
+              "line": 295
             },
             "sprint": 1,
             "story_id": "1.1",
@@ -1984,7 +3225,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
-              "line": 501
+              "line": 519
             },
             "sprint": 4,
             "story_id": "4.1",
@@ -1994,7 +3235,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 964
+              "line": 982
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -2009,12 +3250,59 @@
         "definition_sha256": "881b0b86b404a90db60449b02dd35b50e474f42893815efab7b948e0feceb8f7",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1441
+        "line": 1446
       },
       "status": "planned",
       "title": "Static and runtime dependency checks across kernel, Core Read-Only pack, and Visual Studio Code shell.",
       "verifies_requirement_ids": [
         "AM-KRN-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-110"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-ART-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 110 - Artifact Registries and Immutable Promotion",
+              "line": 6201
+            },
+            "sprint": 110,
+            "story_id": "110.1",
+            "story_title": "Artifact Registries and Immutable Promotion"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "7952c58a65a148ec1f8c0544a786f2bb233c85d3f6a2e830d35019d23115e38e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1672
+      },
+      "status": "planned",
+      "title": "Discover, verify, download, compare, promote, retain, and remove artifacts across OCI, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus fixtures.",
+      "verifies_requirement_ids": [
+        "AM-ART-001"
       ]
     },
     {
@@ -2041,7 +3329,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 5 - Capability Grants and Policy Engine",
-              "line": 559
+              "line": 577
             },
             "sprint": 5,
             "story_id": "5.1",
@@ -2056,13 +3344,60 @@
         "definition_sha256": "6f4196ec9f28c1817367c9e881e47db710a34a3aeffc9350c986b4465b3133b6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1451
+        "line": 1456
       },
       "status": "planned",
       "title": "Grant mutation, replay, expiry, nonce reuse, preimage change, task change, target change, uncertain-result retry, and child-scope tests.",
       "verifies_requirement_ids": [
         "AM-AUT-001",
         "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-119"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-CAT-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 119 - Service Catalog and Ownership Graph",
+              "line": 6633
+            },
+            "sprint": 119,
+            "story_id": "119.1",
+            "story_title": "Service Catalog and Ownership Graph"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "06b50bf91f28fda3f1a6603bf61c2a6fa2e9c6434cdfbb8b4786a16cd3c47ee5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1680
+      },
+      "status": "planned",
+      "title": "Build Backstage service-catalog relationships and run extension-contract fixtures for Port, Cortex, and Compass.",
+      "verifies_requirement_ids": [
+        "AM-CAT-001"
       ]
     },
     {
@@ -2089,7 +3424,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
-              "line": 415
+              "line": 433
             },
             "sprint": 3,
             "story_id": "3.1",
@@ -2104,12 +3439,59 @@
         "definition_sha256": "6de1efc92a254ea03d1b079e0e688cae6b1570c9e71f0a2dae1e3fafa9354b22",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1442
+        "line": 1447
       },
       "status": "planned",
       "title": "Invalid, unknown, and permission-broadening configuration mutations.",
       "verifies_requirement_ids": [
         "AM-CFG-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-109"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-CIC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 109 - Multi-Provider CI Execution and Evidence",
+              "line": 6153
+            },
+            "sprint": 109,
+            "story_id": "109.1",
+            "story_title": "Multi-Provider CI Execution and Evidence"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "c22f612195dad8e7b8b1cfd082d563ae41ac79375d1348809d183d2b98c43dd7",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1671
+      },
+      "status": "planned",
+      "title": "Inspect and execute GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins fixtures across refs, inputs, environments, permissions, logs, artifacts, cancellation, rerun, and uncertain results.",
+      "verifies_requirement_ids": [
+        "AM-CIC-001"
       ]
     },
     {
@@ -2136,7 +3518,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1537
+              "line": 1555
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -2151,7 +3533,7 @@
         "definition_sha256": "bce082393a038eb39d6c76e56edd79390344b8bcb0eb193cd4142a3afaf0aa88",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1453
+        "line": 1458
       },
       "status": "planned",
       "title": "Forced termination during model, file, Git, receipt, and checkpoint phases.",
@@ -2185,7 +3567,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 910
+              "line": 928
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -2200,13 +3582,118 @@
         "definition_sha256": "09eeafdf4254f63b73f29e74cf35d79c12b2e48f1b3a1d3515d38e6b42ae4269",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1452
+        "line": 1457
       },
       "status": "planned",
       "title": "Transaction and migration invariants with crashes injected at every durable-write boundary.",
       "verifies_requirement_ids": [
         "AM-DAT-001",
         "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-103"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-DEL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
+              "line": 5863
+            },
+            "sprint": 103,
+            "story_id": "103.1",
+            "story_title": "Delivery Graph, Adapter SDK, and Support Matrix"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "66620486bc0b6b8cc4316e4b4cd3243c0e047e76759655903170f6ef521d9fa2",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1665
+      },
+      "status": "planned",
+      "title": "Build and mutate delivery graphs spanning work item, source, review, CI, artifact, provenance, deployment, telemetry, incident, release, and rollback fixtures.",
+      "verifies_requirement_ids": [
+        "AM-DEL-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-112",
+          "artifacts/sprints/sprint-113"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-DEP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 112 - Kubernetes, Helm, and Kustomize Deployment Safety",
+              "line": 6297
+            },
+            "sprint": 112,
+            "story_id": "112.1",
+            "story_title": "Kubernetes, Helm, and Kustomize Deployment Safety"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 113 - Argo CD and Flux GitOps Control",
+              "line": 6345
+            },
+            "sprint": 113,
+            "story_id": "113.1",
+            "story_title": "Argo CD and Flux GitOps Control"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "43a8c0a937f6e2b6c9678ea2a45f660a62fcfe5c955235734c8e2370ebca3c48",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1674
+      },
+      "status": "planned",
+      "title": "Plan, preview, promote, health-check, detect drift, synchronize, fail, cancel, and roll back Kubernetes, Helm, Kustomize, Argo CD, and Flux fixtures.",
+      "verifies_requirement_ids": [
+        "AM-DEP-001"
       ]
     },
     {
@@ -2233,7 +3720,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1149
+              "line": 1167
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -2248,7 +3735,7 @@
         "definition_sha256": "90a6319a59e0eb13ee8d0dcefcad16ec5408929935efb1790249ea4ad3a5f9c3",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1459
+        "line": 1464
       },
       "status": "planned",
       "title": "Redacted local doctor results rendered inside native Visual Studio Code Chat across model, runtime, offline, sandbox/helper, workspace, capability, repository-map, encrypted-store, receipt, and recovery states.",
@@ -2283,7 +3770,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -2293,7 +3780,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -2303,7 +3790,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -2318,7 +3805,7 @@
         "definition_sha256": "91088a866b596c62243a119d2866ca31a9bd6dd9e25af7a7db48a2a3bc334098",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1473
+        "line": 1478
       },
       "status": "planned",
       "title": "Three clean installations, one each on MacBook Pro M5, Fedora, and Ubuntu, by a reader using only published instructions.",
@@ -2352,7 +3839,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -2362,7 +3849,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -2377,7 +3864,7 @@
         "definition_sha256": "fe9dc987ba61f81ffab3eb71ef9ec5d6ac01092435c1c5e16447282a59abac18",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1464
+        "line": 1469
       },
       "status": "planned",
       "title": "Tool-action receipt coverage.",
@@ -2412,7 +3899,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -2422,7 +3909,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -2437,7 +3924,7 @@
         "definition_sha256": "f1af2c30a44845bfc9bed0e6bcdafd8ea622d781c45132c498d2d8a8161aa569",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1465
+        "line": 1470
       },
       "status": "planned",
       "title": "File-grounded claim and citation scoring against a labeled corpus.",
@@ -2472,7 +3959,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -2482,7 +3969,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -2497,13 +3984,108 @@
         "definition_sha256": "03c161ccf9635ac2eb02522c6fe8de4013bfebca75d8fbc1f9f3af20d8fd5f74",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1466
+        "line": 1471
       },
       "status": "planned",
       "title": "Evidence-state, deterministic-derivation, citation-hash, source-range, conflict, and stale-citation scoring against a labeled corpus.",
       "verifies_requirement_ids": [
         "AM-EVD-002",
         "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-126"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-GA-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 126 - First Supported GA Evidence and Release Decision",
+              "line": 6975
+            },
+            "sprint": 126,
+            "story_id": "126.1",
+            "story_title": "First Supported GA Evidence and Release Decision"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "ad96939721b037a81fca0542c117ba276be07ccc87ab49ac3f69e26c27c1f81b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1684
+      },
+      "status": "planned",
+      "title": "Rebuild all requirements and run the exact v1.0 GA platform, strict-local, connected, delivery, support-matrix, supply-chain, recovery, accessibility, documentation, and independent-review gates.",
+      "verifies_requirement_ids": [
+        "AM-GA-001",
+        "AM-GAD-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-106"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-GHE-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance",
+              "line": 6011
+            },
+            "sprint": 106,
+            "story_id": "106.1",
+            "story_title": "GitHub.com and GitHub Enterprise Full Conformance"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "2145271daef7aef6a21c5eae4e03fe91121bb065bb34df828a419964af5de9a5",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1668
+      },
+      "status": "planned",
+      "title": "Exercise the complete published GitHub.com and GitHub Enterprise Server matrix across version, permission, object, branch, issue, pull request, review, workflow, release, local commit, signed push, and failure fixtures.",
+      "verifies_requirement_ids": [
+        "AM-GHE-001"
       ]
     },
     {
@@ -2530,7 +4112,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -2545,7 +4127,7 @@
         "definition_sha256": "5832ea93ba32a5bde3dbfe4ae8553c1a1cfda33f188413ba117af5798384448b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1462
+        "line": 1467
       },
       "status": "planned",
       "title": "Read-only Git operations across clean, dirty, detached, untracked, and malformed fixture repositories.",
@@ -2580,7 +4162,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -2590,7 +4172,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -2600,7 +4182,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -2615,13 +4197,154 @@
         "definition_sha256": "cce2ccd7a7e7e85e19220e02a10f5a9ce5bf6c47bdb47de39c959ed63baa4848",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1456
+        "line": 1461
       },
       "status": "planned",
       "title": "Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts.",
       "verifies_requirement_ids": [
         "AM-HOF-001",
         "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-114"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-IAC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 114 - Terraform and OpenTofu Infrastructure Safety",
+              "line": 6392
+            },
+            "sprint": 114,
+            "story_id": "114.1",
+            "story_title": "Terraform and OpenTofu Infrastructure Safety"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "cd925b1e3f571b04d7443a1147b94c09c297d91361c102763a65611705da569c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1675
+      },
+      "status": "planned",
+      "title": "Inspect, plan, policy-check, apply, crash, reconcile, and recover Terraform and OpenTofu fixtures including destructive, stale-state, lock, provider, and secret cases.",
+      "verifies_requirement_ids": [
+        "AM-IAC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-104"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-IDN-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 104 - Connected Identity, Credentials, and Capability Classes",
+              "line": 5913
+            },
+            "sprint": 104,
+            "story_id": "104.1",
+            "story_title": "Connected Identity, Credentials, and Capability Classes"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "59163763a6bb0f13e9a20b865a89bb835baac48b4226064670e9a9a159257e04",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1667
+      },
+      "status": "planned",
+      "title": "Cross product provider, host, tenant, account, project, environment, credential, redirect, proxy, callback, and operation fixtures.",
+      "verifies_requirement_ids": [
+        "AM-IDN-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-118"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-INC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 118 - Incidents, Bounded Notifications, and ChatOps",
+              "line": 6584
+            },
+            "sprint": 118,
+            "story_id": "118.1",
+            "story_title": "Incidents, Bounded Notifications, and ChatOps"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "1a5556d8206c1cfd6bd6562cf622cefab0db1d66989471071a86b0387c872f4d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1678
+      },
+      "status": "planned",
+      "title": "Detect, correlate, draft, notify, create bounded work, recommend rollback, recover, and close incident fixtures across duplicate, delayed, partial, conflicting, and injected data.",
+      "verifies_requirement_ids": [
+        "AM-INC-001"
       ]
     },
     {
@@ -2648,7 +4371,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -2663,7 +4386,7 @@
         "definition_sha256": "39e7b4c1b075d11462418e0f4ef18bfdd0dc5afe8ab8a7bbb05e10a339e8a50d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1446
+        "line": 1451
       },
       "status": "planned",
       "title": "Prompt-injection and malicious-content suite.",
@@ -2697,7 +4420,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -2712,7 +4435,7 @@
         "definition_sha256": "276de9e71bf648700e2ac7e189d0e63c4b3439ae587b4a57d401ae2f837d9255",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1447
+        "line": 1452
       },
       "status": "planned",
       "title": "Repository-instruction trust and precedence suite covering nested instructions, conflicts, generated text, comments, policy-change requests, hidden-tool requests, broader-root requests, external transfer, and false-completion instructions.",
@@ -2745,7 +4468,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1018
+              "line": 1036
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -2760,7 +4483,7 @@
         "definition_sha256": "92b791e3c97fc1315332d6d932bcc304e5352da3e6d71e3525e27bf05a698cbe",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1457
+        "line": 1462
       },
       "status": "planned",
       "title": "Admission record, license, publisher/control, lineage, artifact, tokenizer, native GGUF hash, immutable OCI digest where applicable, runtime, acceleration, and offline response verification for Gemma 4 E4B.",
@@ -2793,7 +4516,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 14 - Separate Model Installer and Importer",
-              "line": 1095
+              "line": 1113
             },
             "sprint": 14,
             "story_id": "14.1",
@@ -2808,13 +4531,60 @@
         "definition_sha256": "7696cb983b7b8108bc27527699b017f2598d927821813cbe1e2211ee26032685",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1458
+        "line": 1463
       },
       "status": "planned",
       "title": "Installer/importer preflight, acquisition, cancellation, recovery, quarantine, atomic activation, self-test, load/unload, and cleanup across the supported platform matrix.",
       "verifies_requirement_ids": [
         "AM-MDL-003",
         "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-120"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-MTH-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 120 - Markdown and LaTeX Mathematics",
+              "line": 6681
+            },
+            "sprint": 120,
+            "story_id": "120.1",
+            "story_title": "Markdown and LaTeX Mathematics"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "7e9e74a4296ec3e545a5841dca53dbcb16009f0419605c3bae630708987589bf",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1682
+      },
+      "status": "planned",
+      "title": "Round-trip and render Markdown containing inline/display mathematics, labels, references, escaping, code fences, malformed input, hostile commands, deep macros, accessibility labels, and cross-platform fixtures.",
+      "verifies_requirement_ids": [
+        "AM-MTH-001"
       ]
     },
     {
@@ -2841,7 +4611,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 856
+              "line": 874
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -2856,7 +4626,7 @@
         "definition_sha256": "ff8a5bb1056dd4b8842c0ff948a231b8433599fe97788c7b9bbcbded5e43b02e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1448
+        "line": 1453
       },
       "status": "planned",
       "title": "Packet, socket, process, container, namespace, and Domain Name System monitoring for a 60-minute offline end-to-end run after the separate model installer has exited on each supported platform and adapter.",
@@ -2889,7 +4659,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 856
+              "line": 874
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -2904,13 +4674,71 @@
         "definition_sha256": "ad8292b4543d131beeb4eb2d25c29c156aec8643aa36d2fb457fb4e8ce0f8a7a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1449
+        "line": 1454
       },
       "status": "planned",
       "title": "Reachability probes from a local-area-network peer, unrelated same-user process, ordinary container where applicable, separate network namespace, tool worker, XPC helper, extension host, and kernel.",
       "verifies_requirement_ids": [
         "AM-NET-001",
         "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-116",
+          "artifacts/sprints/sprint-117"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-OBS-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 116 - OpenTelemetry Correlation Foundation",
+              "line": 6488
+            },
+            "sprint": 116,
+            "story_id": "116.1",
+            "story_title": "OpenTelemetry Correlation Foundation"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 117 - Datadog and Multi-Vendor Observability",
+              "line": 6536
+            },
+            "sprint": 117,
+            "story_id": "117.1",
+            "story_title": "Datadog and Multi-Vendor Observability"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "24759d20ee95999946f848b852294cab53f6d5075ee00d463428f99cd5d1039e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1677
+      },
+      "status": "planned",
+      "title": "Correlate OpenTelemetry, Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry metrics, logs, traces, errors, monitors, releases, and time windows.",
+      "verifies_requirement_ids": [
+        "AM-OBS-001"
       ]
     },
     {
@@ -2937,7 +4765,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 6 - Canonical Workspace Paths",
-              "line": 617
+              "line": 635
             },
             "sprint": 6,
             "story_id": "6.1",
@@ -2952,7 +4780,7 @@
         "definition_sha256": "9179559a6e33173f74cbb334d8e53bfd3423752e00c1ad936bdabceba972f466",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1450
+        "line": 1455
       },
       "status": "planned",
       "title": "Absolute path, traversal, encoding, separator, symlink, alias, stale-bookmark, case-folding, Unicode-normalization, rename-race, mount, and file-replacement attacks.",
@@ -2988,7 +4816,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -2998,7 +4826,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3008,7 +4836,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3023,7 +4851,7 @@
         "definition_sha256": "4e1d612ba719c969c1c21916ce889bbdf79a1eb33f9ea70b744e237f05f9d33c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1471
+        "line": 1476
       },
       "status": "planned",
       "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu.",
@@ -3057,7 +4885,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
-              "line": 670
+              "line": 688
             },
             "sprint": 7,
             "story_id": "7.1",
@@ -3067,7 +4895,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 724
+              "line": 742
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -3077,7 +4905,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 778
+              "line": 796
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -3092,7 +4920,7 @@
         "definition_sha256": "12a56f916bead89fabe3a523bdfc615129d8bb615b2da627738aaf36e7be2e57",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1443
+        "line": 1448
       },
       "status": "planned",
       "title": "Clean first-run packaging and platform-adapter verification on MacBook Pro M5, Fedora, and Ubuntu.",
@@ -3125,7 +4953,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 910
+              "line": 928
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -3140,7 +4968,7 @@
         "definition_sha256": "6c0353a92b95bd62e85ce7e30fb74fcda1f44e77bf19ba323fbea787a9254bb8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1454
+        "line": 1459
       },
       "status": "planned",
       "title": "Secret canaries in prompts, files, attachments, tool output, errors, and model responses.",
@@ -3173,7 +5001,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 910
+              "line": 928
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -3188,7 +5016,7 @@
         "definition_sha256": "2571ae44791997b6c94bfdc8c0c81bc2f42af3f83b44da18055daa4c678551bb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1455
+        "line": 1460
       },
       "status": "planned",
       "title": "Encryption, ephemeral fallback, expiry, export, and cryptographic-erasure tests.",
@@ -3223,7 +5051,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -3233,7 +5061,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3243,7 +5071,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3258,12 +5086,59 @@
         "definition_sha256": "4a27634f923a1f5182805e8beae4d97eb1ea41fa091b2a011f740046ef730233",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1470
+        "line": 1475
       },
       "status": "planned",
       "title": "Labeled read-only repository questions, extraction tasks, schema calls, malformed-tool recovery, and adversarial completion prompts.",
       "verifies_requirement_ids": [
         "AM-TST-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-115"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-REL-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations",
+              "line": 6440
+            },
+            "sprint": 115,
+            "story_id": "115.1",
+            "story_title": "Releases, Feature Flags, Progressive Delivery, and Migrations"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "ac502870325110f692280cf5ddf898f78e79fd73c49a3062b9320cc5b05c7650",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1676
+      },
+      "status": "planned",
+      "title": "Run version, changelog, manifest, promotion, flag, progressive-delivery, migration, health, rollback, and compensation fixtures.",
+      "verifies_requirement_ids": [
+        "AM-REL-001"
       ]
     },
     {
@@ -3291,7 +5166,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1335
+              "line": 1353
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -3301,7 +5176,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1385
+              "line": 1403
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -3316,7 +5191,7 @@
         "definition_sha256": "dc0467900199dc8e1876cd7454784288ec18af03d1a52bf62048bedf9aaca5dc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1463
+        "line": 1468
       },
       "status": "planned",
       "title": "Deterministic repository-map construction, invalidation, coverage, rendering, source resolution, and read-only invariants across supported and unsupported fixture repositories.",
@@ -3349,7 +5224,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1537
+              "line": 1555
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -3364,7 +5239,7 @@
         "definition_sha256": "33d35b4f9fad91ae917ccfd26b456b0ef0b9b491f2c06481ed1798fe3934b945",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1467
+        "line": 1472
       },
       "status": "planned",
       "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes.",
@@ -3398,7 +5273,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1149
+              "line": 1167
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -3413,7 +5288,7 @@
         "definition_sha256": "8883e2854d6da09cb935fd6866a6475cfc8528e3b463efec4739326adbc382c5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1460
+        "line": 1465
       },
       "status": "planned",
       "title": "Mixed deterministic and model-assisted task suite.",
@@ -3448,7 +5323,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 724
+              "line": 742
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -3458,7 +5333,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 778
+              "line": 796
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -3468,7 +5343,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1227
+              "line": 1245
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -3483,7 +5358,7 @@
         "definition_sha256": "ca6ccee0e1d95ac61f13874f7a5ce4b62f5c6d8fcadec462be37f030f7d5344b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1445
+        "line": 1450
       },
       "status": "planned",
       "title": "Per-platform sandbox escape suite covering filesystem, process, device, environment, namespace, XPC, bookmark, and entitlement attacks.",
@@ -3517,7 +5392,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 724
+              "line": 742
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -3527,7 +5402,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 778
+              "line": 796
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -3542,13 +5417,61 @@
         "definition_sha256": "9eb29d8f9fb20fa47dbaf06fe2b62f1aa473c64eea324276f182cc1c32daf8cc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1444
+        "line": 1449
       },
       "status": "planned",
       "title": "Process, socket, file-permission, entitlement, environment, identity, and privilege inspection on macOS, Fedora, and Ubuntu.",
       "verifies_requirement_ids": [
         "AM-SEC-001",
         "AM-TST-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-111"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-SEC-003",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
+              "line": 6248
+            },
+            "sprint": 111,
+            "story_id": "111.1",
+            "story_title": "Supply-Chain Evidence and Security Findings"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "ac55530fd370aa505e7616c082058dea7e3a81d2ba735dd6501762558fc8e9f9",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1679
+      },
+      "status": "planned",
+      "title": "Ingest and reconcile CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings with conflicting severity, locations, suppressions, reachability, and tool versions.",
+      "verifies_requirement_ids": [
+        "AM-SEC-003",
+        "AM-SUP-014"
       ]
     },
     {
@@ -3577,7 +5500,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -3587,7 +5510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3597,7 +5520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3612,12 +5535,107 @@
         "definition_sha256": "2137970f3ec64877145d0cf1ed26b8c7a92181321e82df767a0daff11750b471",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1472
+        "line": 1477
       },
       "status": "planned",
       "title": "Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements.",
       "verifies_requirement_ids": [
         "AM-DOC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-108"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-SRC-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 108 - Azure Repos and GitLab Source Adapters",
+              "line": 6106
+            },
+            "sprint": 108,
+            "story_id": "108.1",
+            "story_title": "Azure Repos and GitLab Source Adapters"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "a861e298fc7d7d33d16ca33fb82831f537ef428e5ecdd482eaad7f84cb5d22b4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1670
+      },
+      "status": "planned",
+      "title": "Exercise Azure Repos and GitLab repository, branch, commit, review, policy, local-worktree, signed-commit, and push fixtures.",
+      "verifies_requirement_ids": [
+        "AM-SRC-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-111"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-SUP-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
+              "line": 6248
+            },
+            "sprint": 111,
+            "story_id": "111.1",
+            "story_title": "Supply-Chain Evidence and Security Findings"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "57c3dc2d737ad09a2ad3de9144ff708c1bcdb876776751ef5499ba6ac423ba87",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1673
+      },
+      "status": "planned",
+      "title": "Validate SPDX, CycloneDX, Sigstore/Cosign, SLSA, policy, vulnerability, source, build, and artifact fixture chains.",
+      "verifies_requirement_ids": [
+        "AM-ART-001",
+        "AM-SUP-014"
       ]
     },
     {
@@ -3644,7 +5662,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1227
+              "line": 1245
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -3659,7 +5677,7 @@
         "definition_sha256": "38794252650831d8707836dc68ea28c8bafcab4df1a7d9a25da0eb4f68bfb321",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1461
+        "line": 1466
       },
       "status": "planned",
       "title": "Golden list, read, search, metadata, and hash fixtures with size and result limits.",
@@ -3694,7 +5712,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -3704,7 +5722,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3714,7 +5732,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3729,7 +5747,7 @@
         "definition_sha256": "bb32b8479b7989290b47654b18c51772bac51d0652fd7c140b3ed1cab7ba4ca6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1468
+        "line": 1473
       },
       "status": "planned",
       "title": "Clean extension and kernel-host installation plus model discovery on MacBook Pro M5, Fedora, and Ubuntu.",
@@ -3764,7 +5782,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -3774,7 +5792,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3784,7 +5802,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3799,13 +5817,225 @@
         "definition_sha256": "0ad6083e55497930e94b666db4f8b5065fa06e77c6dc04fd29920cb3e624d794",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1469
+        "line": 1474
       },
       "status": "planned",
       "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests.",
       "verifies_requirement_ids": [
         "AM-TST-002",
         "AM-VSC-002"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-121",
+          "artifacts/sprints/sprint-122",
+          "artifacts/sprints/sprint-125"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-WIN-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC",
+              "line": 6729
+            },
+            "sprint": 121,
+            "story_id": "121.1",
+            "story_title": "Windows Package, Visual Studio Code Bridge, and IPC"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers",
+              "line": 6778
+            },
+            "sprint": 122,
+            "story_id": "122.1",
+            "story_title": "Windows Path, Sandbox, Keys, Model, and Connected Workers"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
+              "line": 6924
+            },
+            "sprint": 125,
+            "story_id": "125.1",
+            "story_title": "Cross-Provider Delivery and Windows Release Gates"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "ef45f9a161662e6b968702956f48e4aea5c903e6f1781a400804d8e866341a6b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1681
+      },
+      "status": "planned",
+      "title": "Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64.",
+      "verifies_requirement_ids": [
+        "AM-GA-001",
+        "AM-WIN-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-107"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-WRK-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards",
+              "line": 6059
+            },
+            "sprint": 107,
+            "story_id": "107.1",
+            "story_title": "Work Management Across GitHub, Jira, and Azure Boards"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "35e2e56d241e2f83917009a6912f442ccc21b46770231becbd6513b2e2f96848",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1669
+      },
+      "status": "planned",
+      "title": "Exercise GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards reads, links, drafts, field updates, comments, transitions, attachments, permissions, pagination, and recovery.",
+      "verifies_requirement_ids": [
+        "AM-WRK-001"
+      ]
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "evidence": {
+        "expected_roots": [
+          "artifacts/sprints/sprint-105",
+          "artifacts/sprints/sprint-123",
+          "artifacts/sprints/sprint-124",
+          "artifacts/sprints/sprint-125"
+        ],
+        "paths": [],
+        "status": "not_yet_produced"
+      },
+      "exclusion": {
+        "policy_expectation_ids": [],
+        "state": "outside_v0.1_release"
+      },
+      "id": "AT-XTE-001",
+      "implementation": {
+        "derivation": "explicit_source_coverage",
+        "external_issue_ids": [],
+        "external_issue_status": "not_created",
+        "planning_items": [
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
+              "line": 5962
+            },
+            "sprint": 105,
+            "story_id": "105.1",
+            "story_title": "External Effects, Events, and Uncertain Results"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 123 - Provider Version Skew, Failure, and Resource Campaign",
+              "line": 6827
+            },
+            "sprint": 123,
+            "story_id": "123.1",
+            "story_title": "Provider Version Skew, Failure, and Resource Campaign"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
+              "line": 6876
+            },
+            "sprint": 124,
+            "story_id": "124.1",
+            "story_title": "Adapter Removal and Strict-Local Restoration"
+          },
+          {
+            "source": {
+              "document": "TASKS.md",
+              "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
+              "line": 6924
+            },
+            "sprint": 125,
+            "story_id": "125.1",
+            "story_title": "Cross-Provider Delivery and Windows Release Gates"
+          }
+        ]
+      },
+      "kind": "acceptance_test",
+      "normative_statements": [],
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "28e8d6fdf3fc365ae8b0cb93355541bd23de2b0ce5fe423ab58c132b67a80f1e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "36A. First-GA Quantitative Acceptance Matrix",
+        "line": 1683
+      },
+      "status": "planned",
+      "title": "Run cross-provider and cross-platform contract mutation, fuzzing, hostile content, credential confusion, event replay, version skew, rate limit, partition, crash, cancellation, partial effect, rollback, resource, removal, and end-to-end lifecycle campaigns.",
+      "verifies_requirement_ids": [
+        "AM-ADP-001",
+        "AM-CAT-001",
+        "AM-CIC-001",
+        "AM-DEP-001",
+        "AM-GHE-001",
+        "AM-IAC-001",
+        "AM-IDN-001",
+        "AM-INC-001",
+        "AM-MTH-001",
+        "AM-OBS-001",
+        "AM-REL-001",
+        "AM-SEC-003",
+        "AM-SRC-001",
+        "AM-WIN-001",
+        "AM-WRK-001",
+        "AM-XTE-001"
       ]
     },
     {
@@ -3832,7 +6062,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1149
+              "line": 1167
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -3847,7 +6077,7 @@
         "definition_sha256": "877567aebd241067488d13afa50e8c65d634a1bee8c69cae8b2b1f15068fbdfd",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1580
+        "line": 1585
       },
       "status": "planned",
       "title": "Redacted runtime and capability diagnostics",
@@ -3879,7 +6109,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1592
+              "line": 1610
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -3889,7 +6119,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1666
+              "line": 1684
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -3899,7 +6129,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1737
+              "line": 1755
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -3914,7 +6144,7 @@
         "definition_sha256": "a4752d14e298850fc8b80970a9617a694337e0845fe78c3b2bfac2a5cbed5f58",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1581
+        "line": 1586
       },
       "status": "planned",
       "title": "Gemma 4 quality, tool-recovery, context, latency, citation, and injection evaluation on reference hardware",
@@ -3945,7 +6175,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1436
+              "line": 1454
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -3955,7 +6185,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1486
+              "line": 1504
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -3970,7 +6200,7 @@
         "definition_sha256": "0a24d974a5bf7e92b9a7d065e8aa83fea965cba0073493c0a101864552a2c95b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1579
+        "line": 1584
       },
       "status": "planned",
       "title": "Observed, Derived, Inferred, and Unknown/Blocked answer states with resolvable and stale-aware citations",
@@ -4000,7 +6230,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1018
+              "line": 1036
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -4015,7 +6245,7 @@
         "definition_sha256": "2ba81cd03eb62a50e2a86677bb57b5f596e9824d7b6ce7848daaa4c0aeefc9aa",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1578
+        "line": 1583
       },
       "status": "planned",
       "title": "Complete approved local-model acquisition, verification, fit, lifecycle, diagnostics, cancellation, and offline proof",
@@ -4046,7 +6276,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1335
+              "line": 1353
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -4056,7 +6286,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1385
+              "line": 1403
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -4071,7 +6301,7 @@
         "definition_sha256": "8aee25d105937eb34f8056ba5a602dc4cddba094e8d882bab7de9a56b9e7855d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1577
+        "line": 1582
       },
       "status": "planned",
       "title": "Deterministic, policy-aware, citation-preserving read-only repository map without required embeddings",
@@ -4101,7 +6331,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1281
+              "line": 1299
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -4116,7 +6346,7 @@
         "definition_sha256": "582027f0f14e0b7423338c3420b4a018ae1e53215f463b62980fca0ff0c0c9dc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1582
+        "line": 1587
       },
       "status": "planned",
       "title": "Repository, notes, issues, tool output, and imported instructions remain untrusted data unless explicitly trust-gated as non-authority guidance",
@@ -4146,7 +6376,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 30 - Optional Local Semantic Retrieval",
-              "line": 2025
+              "line": 2043
             },
             "sprint": 30,
             "story_id": "30.1",
@@ -4161,7 +6391,7 @@
         "definition_sha256": "6f375865398b1dcede9bf475eb089dd721344d09bf78adcd7bc3c3219e85fd29",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1583
+        "line": 1588
       },
       "status": "planned",
       "title": "Optional approved local hybrid structural, lexical, embedding, and reranking retrieval with deletion and deterministic fallback",
@@ -4191,7 +6421,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 49 - Later Model Profiles and Measured Local Routing",
-              "line": 3054
+              "line": 3072
             },
             "sprint": 49,
             "story_id": "49.1",
@@ -4206,7 +6436,7 @@
         "definition_sha256": "4a5fe87b735489782c3420515e574d1fae492d02da2c56ae061edc4f18ccd5c3",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1587
+        "line": 1592
       },
       "status": "planned",
       "title": "Provider-independent allowlisted internal roles for dialogue, tools, summaries, repository maps, embeddings, reranking, patches, and claim verification",
@@ -4238,7 +6468,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 26 - Canonical Human Knowledge Domain",
-              "line": 1815
+              "line": 1833
             },
             "sprint": 26,
             "story_id": "26.1",
@@ -4248,7 +6478,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 32 - Conversation Search and Branching",
-              "line": 2135
+              "line": 2153
             },
             "sprint": 32,
             "story_id": "32.1",
@@ -4258,7 +6488,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 33 - Private Archives and Evidence Bundles",
-              "line": 2185
+              "line": 2203
             },
             "sprint": 33,
             "story_id": "33.1",
@@ -4273,7 +6503,7 @@
         "definition_sha256": "583e7b86716eae0ed548e57b490ad1828882977217b045ae842d4bc6da504997",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1588
+        "line": 1593
       },
       "status": "planned",
       "title": "Session fork, citation-preserving compaction, encrypted archive, controlled deletion, and redacted evidence bundle",
@@ -4305,7 +6535,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release",
-              "line": 2235
+              "line": 2253
             },
             "sprint": 34,
             "story_id": "34.1",
@@ -4315,7 +6545,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 78 - Capability Package Trust and Lifecycle",
-              "line": 4583
+              "line": 4601
             },
             "sprint": 78,
             "story_id": "78.1",
@@ -4325,7 +6555,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 79 - Hooks, Safe Mode, and Package Recovery",
-              "line": 4632
+              "line": 4650
             },
             "sprint": 79,
             "story_id": "79.1",
@@ -4340,7 +6570,7 @@
         "definition_sha256": "430906671d718e2169f0e835ed21793788feea7cedff40e176632967377a5a53",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1589
+        "line": 1594
       },
       "status": "planned",
       "title": "Declarative, provenance-recorded, trust-gated skills before executable plugins",
@@ -4370,7 +6600,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 46 - Trusted Test and Validation Runner",
-              "line": 2889
+              "line": 2907
             },
             "sprint": 46,
             "story_id": "46.1",
@@ -4385,7 +6615,7 @@
         "definition_sha256": "ca38cc59d009f00b99728710af19ad5c50327dcdcd934dbecdc820d692f6bdc1",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1586
+        "line": 1591
       },
       "status": "planned",
       "title": "Separately approved trusted test, lint, formatter, build, and scan templates with evidence-based receipts",
@@ -4415,7 +6645,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 42 - Git Worktrees and Remote Repository Safety",
-              "line": 2669
+              "line": 2687
             },
             "sprint": 42,
             "story_id": "42.1",
@@ -4430,7 +6660,7 @@
         "definition_sha256": "47bda9c287e6d4888d64bf7d30807da367de0e2be7291520a88ce09760590785",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1585
+        "line": 1590
       },
       "status": "planned",
       "title": "Git worktree isolation that supplements, but is never described as, the security sandbox",
@@ -4461,7 +6691,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 35 - Exact-Preimage Write Approval",
-              "line": 2293
+              "line": 2311
             },
             "sprint": 35,
             "story_id": "35.1",
@@ -4471,7 +6701,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 36 - Atomic Write Application and Rollback",
-              "line": 2344
+              "line": 2362
             },
             "sprint": 36,
             "story_id": "36.1",
@@ -4486,7 +6716,7 @@
         "definition_sha256": "4615bfd58d2bb8ebda6c82a4e35b0463083faf0f434cf328949237bdd57b687c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1584
+        "line": 1589
       },
       "status": "planned",
       "title": "Exact-preimage controlled-write transaction with shadow changes, one-use grant, atomic application, receipts, verification, and rollback",
@@ -4516,7 +6746,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 48 - Complete Local CLI and Headless Contracts",
-              "line": 2999
+              "line": 3017
             },
             "sprint": 48,
             "story_id": "48.1",
@@ -4531,7 +6761,7 @@
         "definition_sha256": "0b9ba91213e4b34958a99c46db004682c5c720bd7d9d68730a64064d1a2efdb0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1591
+        "line": 1596
       },
       "status": "planned",
       "title": "CLI, JSON, software development kit, and Agent Client Protocol only after stable VS Code, with predeclared grants and fail-closed headless behavior",
@@ -4561,7 +6791,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 70 - Visible Network Capability and Connector Cache",
-              "line": 4152
+              "line": 4170
             },
             "sprint": 70,
             "story_id": "70.1",
@@ -4576,7 +6806,7 @@
         "definition_sha256": "67ca76bc68d7ee8dbea816347d6dfc359316c3347a011cf454be9294c3d943cb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1592
+        "line": 1597
       },
       "status": "planned",
       "title": "User-initiated read-only GitHub and connector synchronization into a sensitivity-labeled local cache",
@@ -4607,7 +6837,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 89 - Queue, Lease, and Retry Semantics",
-              "line": 5132
+              "line": 5150
             },
             "sprint": 89,
             "story_id": "89.1",
@@ -4617,7 +6847,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 90 - Read-Only Schedules, Notifications, and Receipts",
-              "line": 5182
+              "line": 5200
             },
             "sprint": 90,
             "story_id": "90.1",
@@ -4632,7 +6862,7 @@
         "definition_sha256": "459ac274a77ee12ea0f6bc7aa8ecc3ac38dbf0b5321914d415c7e55fafcc1a57",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1593
+        "line": 1598
       },
       "status": "planned",
       "title": "Leased, idempotent, budgeted, cancellable, expiring scheduled work with read-only first release and post-run receipts",
@@ -4665,7 +6895,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 92 - Agent Definitions and Registry",
-              "line": 5288
+              "line": 5306
             },
             "sprint": 92,
             "story_id": "92.1",
@@ -4675,7 +6905,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 93 - Agent Validation, Dry Runs, and Enablement",
-              "line": 5337
+              "line": 5355
             },
             "sprint": 93,
             "story_id": "93.1",
@@ -4685,7 +6915,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 94 - Child Authority and Isolation",
-              "line": 5388
+              "line": 5406
             },
             "sprint": 94,
             "story_id": "94.1",
@@ -4695,7 +6925,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 95 - Agent Coordination, Review, and Direction",
-              "line": 5438
+              "line": 5456
             },
             "sprint": 95,
             "story_id": "95.1",
@@ -4710,7 +6940,7 @@
         "definition_sha256": "8d015b42cbd0a8f159b2d2882bd751e72408059ddceaeac9baab63347ab45a11",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1594
+        "line": 1599
       },
       "status": "planned",
       "title": "Child grants, separate writable worktrees, ownership, conflicts, budgets, cancellation propagation, and attributable receipts",
@@ -4741,7 +6971,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 80 - Read-Only MCP Identity and Manifests",
-              "line": 4683
+              "line": 4701
             },
             "sprint": 80,
             "story_id": "80.1",
@@ -4751,7 +6981,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 81 - MCP Request Mediation and Failure Isolation",
-              "line": 4732
+              "line": 4750
             },
             "sprint": 81,
             "story_id": "81.1",
@@ -4766,7 +6996,7 @@
         "definition_sha256": "3866411c1fff8f1b38d97623321d13f776f0244014b6fa587625b9bc70762a2f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1590
+        "line": 1595
       },
       "status": "planned",
       "title": "Manifested MCP and plugins fully mediated by the kernel, with identity, scopes, limits, cancellation, receipts, and a read-only first phase",

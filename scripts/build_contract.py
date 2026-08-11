@@ -51,7 +51,13 @@ EXPECTED_CARGO_PACKAGES = {
     ),
     "platforms/linux": (
         "agentmage-platform-linux",
-        {"agentmage-kernel-contracts", "rustix", "sha2"},
+        {
+            "agentmage-kernel-contracts",
+            "rustix",
+            "seccompiler",
+            "sha2",
+            "zeroize",
+        },
     ),
     "release/xtask": ("agentmage-xtask", set()),
     "shells/host": (
@@ -97,7 +103,8 @@ EXPECTED_SCRIPTS = {
     ),
     "product:lint": (
         "cargo clippy --workspace --all-targets --locked -- -D warnings && "
-        "npm run lint --workspace @agentmage/vscode-shell"
+        "npm run lint --workspace @agentmage/vscode-shell && "
+        "npm run strict-local-source:check"
     ),
     "product:test": (
         "cargo test --workspace --locked && "

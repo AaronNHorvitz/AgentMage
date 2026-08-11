@@ -3,22 +3,22 @@
 | | |
 |---|---|
 | **Product** | AgentMage - a portable, local-first AI agent |
-| **Version** | Draft v0.5 |
+| **Version** | Draft v0.6 |
 | **Author** | Aaron N. Horvitz |
-| **Date** | 2026-08-10 |
-| **Status** | Design phase; implementation not started |
+| **Date** | 2026-08-11 |
+| **Status** | Implementation in progress; first-GA scope expanded by Decision 0008 |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
-| **Execution plan** | [TASKS.md](./TASKS.md) - 10 epics and 103 sequential two-week sprints |
-| **Reference platforms** | Apple Silicon MacBook Pro M5 as the primary launch reference, plus Fedora and Ubuntu in the same release |
+| **Execution plan** | [TASKS.md](./TASKS.md) - 12 epics and 127 sequential dependency gates |
+| **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
 | **First interface** | Native Visual Studio Code Chat |
 | **First model** | Manifest-pinned local Gemma 4 E4B through native `llama.cpp`, plus a gated Docker Model Runner compatibility adapter on Linux |
 | **License** | Apache License 2.0 |
 
 AgentMage is a brand-new, from-scratch project. It is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer, and it is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
 
-This PRD governs product intent, release scope, architecture, and product-level requirements. The inventory governs stable requirement identifiers, detailed capability gates, and acceptance tests. The security review governs the public product-security baseline and reviewer evidence contract. The implementation plan provides the derived high-level build sequence, workstreams, milestones, dependencies, and risks. The task plan governs granular execution order, stories, tasks, sub-tasks, acceptance criteria, and sprint gates. The README summarizes these authorities and must not redefine them. Supporting model, disclosure, runtime, and decision documents implement these authorities and cannot weaken them.
+This PRD governs product intent, release scope, architecture, and product-level requirements. The inventory governs stable requirement identifiers, detailed capability gates, and acceptance tests. The security review governs the public product-security baseline and reviewer evidence contract. The implementation plan provides the derived high-level build sequence, workstreams, milestones, dependencies, and risks. The task plan governs granular execution order, stories, tasks, sub-tasks, acceptance criteria, and sprint gates. The README summarizes these authorities and must not redefine them. Supporting model, disclosure, runtime, delivery, Windows, and decision documents implement these authorities and cannot weaken them.
 
 If the documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted requirement, test, security-control, reviewer-protocol, epic, sprint, story, task, and sub-task identifiers are never silently removed, weakened, merged away, or renumbered.
 
@@ -35,15 +35,17 @@ If the documents conflict, the narrower safety boundary or release scope wins un
 | `MODEL-PROVENANCE-POLICY.md` | Model-origin, lineage, license, artifact, runtime, quality, and fallback admission procedure under the inventory and security baseline |
 | `SECURITY.md` | Public vulnerability reporting, supported-version, patch-delivery, emergency-disablement, and end-of-support policy |
 | `RUNTIME-BOUNDARIES.md` | Derived trust-boundary, privilege, process, socket, lifecycle, and data-flow specification |
+| `DELIVERY-SYSTEM.md` | Normative provider-neutral delivery graph, adapter, authority-class, operation, conformance, and support-matrix contract |
+| `WINDOWS-BOUNDARIES.md` | Normative first-GA Windows package, process, path, IPC, key, sandbox, runtime, and verification contract |
 | `docs/decisions/*.md` | Accepted clarifications and supersessions with rationale and verification; never authority to weaken a higher-ranked requirement silently |
 
 Each document has an independent revision. A derived document's version number does not claim that the governing PRD has the same maturity; compatibility is established by recorded source versions and automated cross-document checks.
 
 ## 1. Product Summary
 
-AgentMage is a small local assistant that combines deterministic tools with approved local models. It reads bounded local workspaces, preserves minimal resumable state, runs tools inside enforceable macOS and Linux boundaries, and shows evidence for its claims.
+AgentMage is a local-first software-development and delivery assistant that combines deterministic tools with approved local models. It reads bounded local workspaces, preserves minimal resumable state, runs tools inside enforceable Linux and Windows boundaries, and shows evidence for its claims. Apple Silicon macOS remains a retained post-GA platform lane.
 
-The long-term product can support knowledge management, coding, documents, administrative work, GitHub, manual frontier consultation, desktop interfaces, plugins, browser research, scheduled work, and bounded specialist agents. Those capabilities are not one release. They are divided across the release epics and remain disabled until their own authority, privacy, security, recovery, and acceptance gates pass. v0.1 is deliberately limited to a read-only local evidence assistant in native Visual Studio Code Chat.
+The complete product adds knowledge management, coding, documents, administrative work, GitHub and GitHub Enterprise, work planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security findings, service catalogs, releases, manual frontier consultation, plugins, browser research, scheduled work, and bounded specialist agents. These capabilities are divided across internal milestones and remain disabled until their own authority, privacy, security, recovery, and acceptance gates pass. v0.1 is deliberately limited to a read-only local evidence assistant in native Visual Studio Code Chat; under Decision 0008 it is an internal milestone, not the first supported public release.
 
 ## 2. Problem
 
@@ -60,12 +62,16 @@ AgentMage separates deterministic work, model inference, authorization, evidence
 5. Make authority explicit, narrow, expiring, non-replayable, and enforceable outside the model.
 6. Resume safely after interruption without repeating completed actions.
 7. Keep user-owned knowledge readable and portable without creating competing operational databases.
-8. Ship the same bounded v0.1 workflow on an Apple Silicon MacBook Pro M5, Fedora, and Ubuntu through explicit platform adapters rather than platform-conditionals in product logic.
+8. Ship the same bounded v1.0 GA workflow on Fedora, Ubuntu, and Windows 11 through explicit platform adapters rather than platform-conditionals in product logic, while retaining Apple Silicon macOS as separately evidenced post-GA work.
 9. Build a deterministic, Git-aware structural repository map that reduces model context pressure and grounds repository explanations in exact source ranges.
 10. Make the active model, runtime, sandbox, workspace authority, encrypted state, and offline condition inspectable without exposing secrets.
 11. Make every promoted requirement traceable from source document to stable requirement, sprint, story, implementation task, test, evidence, owner, and release decision.
 12. Produce a reproducible security-review evidence bundle without claiming external certification or customer deployment approval that has not been independently granted.
 13. Admit models, runtimes, tokenizers, conversions, dependencies, plugins, and connectors only through explicit license, publisher, lineage, origin, provenance, integrity, resource, and security gates.
+14. Represent software delivery through a provider-neutral graph and versioned adapter contract spanning source, work, CI, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases.
+15. Keep read, draft, local write, remote write, execute, deploy, secrets, and administration as independent authority classes with exact previews, current preconditions, idempotency or reconciliation, verified postconditions, and receipts.
+16. Publish an exact provider, host, version, object, operation, scope, limit, and degradation matrix so every completeness claim is bounded and reproducible.
+17. Support inline and display LaTeX mathematics in Markdown authoring and rendering without allowing document content to execute code or broaden authority.
 
 ## 4. Non-Goals
 
@@ -183,11 +189,11 @@ There is no Model-to-Tool, Shell-to-Tool, Shell-to-Model, or Capability-Pack-to-
 
 ## 7. Platform and Runtime
 
-Apple Silicon macOS on a MacBook Pro M5 is the primary launch and performance reference. Fedora is the Linux performance reference, and the identical supported workflow must pass on clean Fedora and Ubuntu environments before release. The release manifest freezes the minimum and tested macOS builds, arm64 architecture, Apple SDK and Swift toolchain, Team ID, bundle and App Group identifiers, designated requirements, entitlements, helper hashes, package digest, M5 processor and memory, filesystem behavior, minimum stable Visual Studio Code build, model manifest, and runtime versions. Intel Mac and Windows are deferred.
+For the retained internal-v0.1 Mac-inclusive lane, Apple Silicon macOS on a MacBook Pro M5 is the Mac performance reference and Fedora is the Linux performance reference. The lane's manifest freezes the minimum and tested macOS builds, arm64 architecture, Apple SDK and Swift toolchain, Team ID, bundle and App Group identifiers, designated requirements, entitlements, helper hashes, package digest, M5 processor and memory, filesystem behavior, minimum stable Visual Studio Code build, model manifest, and runtime versions. Intel Mac must remain deferred. Decision 0008 separately promotes Windows 11 x64 into first-GA scope.
 
-The product release supports all three declared platforms. Initial product validation is narrower: one personally controlled Apple Silicon Mac, one standard non-administrator user, one stable Visual Studio Code build, one workspace, and public, synthetic, or user-owned non-sensitive data. Evidence from Fedora or Ubuntu never substitutes for a macOS release claim, and macOS evidence never removes the requirement to pass the supported Linux workflow.
+The retained internal-v0.1 validation lane is narrower: one personally controlled Apple Silicon Mac, one standard non-administrator user, one stable Visual Studio Code build, one workspace, and public, synthetic, or user-owned non-sensitive data, plus an independently evidenced Fedora workflow. Evidence from Fedora or Ubuntu never substitutes for a macOS claim, and macOS evidence never removes the requirement to pass the supported Linux workflow. Sections 23 through 26 define the separate v1.0 GA delivery-system, Fedora, Ubuntu, and Windows release boundary.
 
-All platforms use authenticated local inter-process communication, encrypted SQLite for operational state, the same capability contracts, and the same acceptance fixtures. On macOS, a minimal signed arm64 bridge bundled with the Visual Studio Code extension reaches the sandboxed host through a mode `0600` Unix socket in the registered App Group container. The peers validate audit-token and designated code-signing identities and authenticate each launch with a fresh in-memory challenge. Linux uses a mode `0600` Unix socket, peer-credential validation, and an equally short-lived authenticated session.
+Across supported and retained platform lanes, AgentMage uses authenticated local inter-process communication, encrypted SQLite for operational state, the same capability contracts, and the same acceptance fixtures. On macOS, a minimal signed arm64 bridge bundled with the Visual Studio Code extension reaches the sandboxed host through a mode `0600` Unix socket in the registered App Group container. The peers validate audit-token and designated code-signing identities and authenticate each launch with a fresh in-memory challenge. Linux uses a mode `0600` Unix socket, peer-credential validation, and an equally short-lived authenticated session. Windows uses a per-user named pipe, explicit access control, process-token and package-identity validation, and a fresh authenticated session under `WINDOWS-BOUNDARIES.md`.
 
 ```mermaid
 flowchart TB
@@ -210,7 +216,7 @@ flowchart TB
     X -. "no workspace or session authority" .-> W
 ```
 
-On macOS, the kernel, tool worker, secret store, and inference boxes map to the signed App-Sandboxed host, XPC helper, Keychain, and native Metal service. On Fedora and Ubuntu, they map to the unprivileged AgentMage kernel, fresh Bubblewrap worker, Linux Secret Service, and either the native security-reference runtime or separately gated Docker compatibility runtime. Platform-specific enforcement may differ; the shared authority, path, privacy, receipt, and offline contracts may not. `RUNTIME-BOUNDARIES.md` gives the complete process, privilege, socket, lifecycle, and classified data-flow inventory.
+On macOS, the kernel, tool worker, secret store, and inference boxes map to the signed App-Sandboxed host, XPC helper, Keychain, and native Metal service. On Fedora and Ubuntu, they map to the unprivileged AgentMage kernel, fresh Bubblewrap worker, Linux Secret Service, and either the native security-reference runtime or separately gated Docker compatibility runtime. On Windows, they map to the per-user kernel host, restricted worker process, DPAPI-protected key material, named-pipe bridge, and native security-reference runtime. Platform-specific enforcement may differ; the shared authority, path, privacy, receipt, and offline contracts may not. `RUNTIME-BOUNDARIES.md` gives the complete process, privilege, socket, lifecycle, and classified data-flow inventory.
 
 ### 7.1 macOS Reference Runtime
 
@@ -399,9 +405,9 @@ The inventory owns the executable requirement definitions. The task plan owns ex
 | Native Visual Studio Code Chat | `AM-VSC-001`, `AM-VSC-002` | 23 |
 | Security, quality, performance, documentation, and cross-platform release | `AM-TST-001`, `AM-TST-002`, `AM-DOC-001` | 25 |
 
-## 19. Release Sequence
+## 19. Implementation Sequence
 
-The release labels are product epics rather than individual stories. The current execution baseline assigns one or more bounded stories to each sequential two-week sprint only when their combined gate remains achievable. The cadence is a reversible planning assumption, not a product delivery guarantee; oversized work is split through an appended decision without renumbering accepted identifiers.
+The v0.x labels are internal capability milestones rather than supported public releases. The execution baseline assigns one or more bounded stories to each sequential dependency gate only when their combined evidence remains reviewable. No calendar duration is implied; oversized work is split through an appended decision without renumbering accepted identifiers.
 
 ```mermaid
 flowchart LR
@@ -412,58 +418,63 @@ flowchart LR
     R4 --> R5["Epic 5<br/>v0.5 Frontier"]
     R5 --> R6["Epic 6<br/>v0.6 Admin and Documents"]
     R6 --> R7["Epic 7<br/>v0.7 GitHub and Connectors"]
-    R7 --> R8["Epic 8<br/>v1+ Extended Capabilities"]
-    R8 --> C["Epic 9<br/>Product Completion"]
+    R7 --> R8["Epic 8<br/>Extended Capabilities"]
+    R8 --> C["Epic 9<br/>Inherited Scope Closure"]
+    C --> D["Epic 10<br/>Delivery System and Windows"]
+    D --> G["Epic 11<br/>v1.0 GA"]
 ```
 
 | Epic | Product increment | Sprint range | Required boundary |
 |---|---|---|---|
 | Epic 0 | Foundation: scope, traceability, package architecture, synthetic fixtures, configuration, and build integrity | 0-3 | No feature implementation begins before the governing contracts and evidence framework are executable. |
-| Epic 1 / v0.1 | Apple Silicon MacBook Pro M5, Fedora, and Ubuntu read-only local evidence assistant in native Visual Studio Code Chat | 4-25 | One verified Gemma profile; deterministic repository map; local evidence; no writes, generic shell, semantic index, web, connectors, plugins, scheduling, child agents, or Codex transfer. |
+| Epic 1 / v0.1 internal | Read-only local evidence-assistant foundation in native Visual Studio Code Chat | 4-25 | One verified Gemma profile; deterministic repository map; local evidence; no writes, generic shell, semantic index, web, connectors, plugins, scheduling, child agents, or Codex transfer. |
 | Epic 2 / v0.2 | Knowledge, direct read-only Obsidian and Markdown, rolling memory, conversation continuity, and optional approved local semantic retrieval | 26-34 | Markdown is canonical for human knowledge; semantic retrieval is opt-in, local, deletable, and never a replacement for deterministic search. The release remains read-only. |
 | Epic 3 / v0.3 | Controlled local file and knowledge writes | 35-40 | Exact-preimage shadow changes, exact preview, single-use grants, stale rejection, atomic application, receipts, verification, and rollback; no generic shell. |
 | Epic 4 / v0.4 | Coding, isolated worktrees, trusted validation commands, and complete local CLI | 41-50 | Worktrees supplement but never replace operating-system sandboxing; remote Git reads are visible and bounded; commands and every write remain separately granted and receipted. |
 | Epic 5 / v0.5 | Manual Frontier Consultation | 51-53 | Redacted local packet, user-controlled export, untrusted result import, and local revalidation; no autonomous Codex or external-model delivery. |
 | Epic 6 / v0.6 | Administrative, secretary, document, rich artifact, and structured-data work | 54-69 | No unattended correspondence, live-calendar mutation, hidden external delivery, or unverified artifact completion. |
-| Epic 7 / v0.7 | User-initiated read-only GitHub and connector foundations | 70-75 | Visible temporary destination-scoped network use, sensitivity-labeled local cache, credentials outside model context, and no hosted writes. |
-| Epic 8 / v1+ | Desktop shells, capability packages, hooks, read-only MCP, web research, computer use, hosted writes, writable connectors, schedules, updates, and bounded agents | 76-100 | Each authority path requires its own threat model and release gate; none may bypass grants, receipts, retention, cancellation, isolation, or user confirmation. |
-| Epic 9 | Requirement closure and final product verification | 101-102 | Every promoted requirement has current reproducible evidence; every deferred item remains an explicit tested exclusion unless formally promoted. |
+| Epic 7 / v0.7 internal | User-initiated read-only GitHub and connector foundations | 70-75 | Visible temporary destination-scoped network use, sensitivity-labeled local cache, credentials outside model context, and no hosted writes. |
+| Epic 8 / inherited v1+ | Desktop shells, capability packages, hooks, read-only MCP, web research, computer use, hosted writes, writable connectors, schedules, updates, and bounded agents | 76-100 | Each authority path requires its own threat model and release gate; none may bypass grants, receipts, retention, cancellation, isolation, or user confirmation. |
+| Epic 9 | Inherited-roadmap closure checkpoint | 101-102 | Preserves and reconciles all prior promoted requirements; Decision 0008 supersedes this as the final product gate. |
+| Epic 10 | Provider-neutral delivery system and Windows 11 | 103-125 | Delivery graph, adapter conformance, full published GitHub/GHES matrix, planning/CI/artifact/deploy/observability/incident/security/catalog/release adapters, and complete Windows evidence. |
+| Epic 11 | v1.0 GA verification | 126 | Every promoted first-GA requirement has current reproducible evidence on Fedora, Ubuntu, and Windows 11; every unsupported path has a passing denial or absence test. |
 
-## 20. Release Decision
+## 20. Internal Milestone Decision
 
-AgentMage v0.1 may ship only when:
+The internal v0.1 milestone may close only when:
 
 - Foundation Sprints 0-3 and v0.1 Sprints 4-25 are `PASS` with current evidence.
 - Every stable-ID v0.1 backlog item is complete and linked to its implementation, tests, evidence, owner, and release manifest.
-- Every required acceptance threshold passes on the recorded MacBook Pro M5, Fedora, and Ubuntu environments.
+- Every required milestone threshold passes in its recorded platform lane. A missing MacBook Pro M5 result leaves the retained Mac lane `BLOCKED-MACOS` but does not block v1.0 GA under Decision 0008.
 - Applicable `SR-*` controls and `RV-*` reviewer protocols have current dispositions and reproducible evidence.
 - Documentation passes all three clean-install tests using published instructions only.
 - Signed packages, hashes, software/model/cryptographic bills of materials, provenance, platform manifests, test summaries, and raw evidence reconcile exactly.
 - Release notes state every excluded, deferred, unsupported, degraded, and untested capability.
 
-Feature completeness never overrides a failed platform, security, privacy, authority, evidence, recovery, supply-chain, accessibility, or clean-install gate. A failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking check keeps the release `BLOCKED`.
+Feature completeness never overrides a failed platform, security, privacy, authority, evidence, recovery, supply-chain, accessibility, or clean-install gate. A failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking check keeps the applicable milestone or release `BLOCKED`.
 
-## 21. Security Review and Optional Managed-Device Evaluation
+## 21. Product Security Review and Optional Managed-Device Evaluation
 
 `SECURITY-REVIEW.md` is the public, reviewer-facing product-security baseline. It maps the product threat model and broadly applicable industry practices into controls, reviewer procedures, and reproducible evidence for a local, single-user desktop application.
 
-The recommended initial product-validation profile is narrower than the supported platform matrix:
+The recommended first-GA product-validation profile is narrower than the complete capability roadmap:
 
-- One personally controlled Apple Silicon Mac.
+- One clean Fedora or Ubuntu standard-user environment and one clean Windows 11 x64 standard-user environment.
 - One standard, non-administrator user.
-- One signed AgentMage package and stable Visual Studio Code build.
+- One signed platform package and stable Visual Studio Code build per tested environment.
 - One manifest-pinned local model and runtime.
 - One user-selected read-only workspace.
 - Public, synthetic, or user-owned non-sensitive information only.
-- No cloud inference, hosted account, telemetry, browser, connector, shell, write operation, autonomous agent, or automatic model switch.
+- Strict-local validation before any connected pack, followed by synthetic provider accounts and repositories for each promoted adapter.
+- No cloud inference, product telemetry, hidden browser, ambient connector, autonomous external effect, or automatic model switch.
 
 AgentMage supplies architecture, data-flow, threat-model, supply-chain, platform, test, privacy, retention, accessibility, incident, recovery, and evidence inputs. A device owner or deploying organization separately decides whether installation is permitted, which information types are allowed, what endpoint controls apply, which cryptographic provider is acceptable, and whether additional privacy, retention, accessibility, AI-risk, or operational review is required.
 
-Managed-device evaluation is optional and outside the personal development boundary. It does not make AgentMage employer-sponsored, commissioned work or transfer ownership of the source, design, documentation, or product.
+Managed-device evaluation is optional and outside the personal development boundary. It does not make AgentMage employer-sponsored, commissioned work or transfer ownership of the source, design, documentation, or product. Apple Silicon MacBook Pro M5 assessment remains a separate retained post-GA platform lane.
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 10 epics and 103 sequential sprints. Each sprint currently represents a two-week planning timebox and contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains achievable. Decision 0001 records this additions-only clarification.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 12 epics and 127 sequential dependency gates. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001 and 0008 record the additions-only evolution.
 
 ```mermaid
 flowchart LR
@@ -487,6 +498,55 @@ The execution rules are:
 5. No failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking check can count as passing.
 6. Critical trust boundaries require independent review tied to the exact source and release-manifest identities.
 7. Deferred items remain tested exclusions until a user-approved decision promotes them into the stable inventory and newly appended sprint/story identifiers.
-8. If a story cannot fit its timebox, it is blocked and split into newly appended identifiers; accepted identifiers are not renumbered.
+8. If a story cannot remain independently reviewable, it is blocked and split into newly appended identifiers; accepted identifiers are not renumbered.
 
 Evidence is organized under `artifacts/sprints/sprint-N/<story-or-test-id>/` as raw machine-readable output plus a concise generated summary. Product documentation, manifests, software/model/cryptographic bills of materials, threat cases, recovery guidance, and evidence indexes must be current at every applicable gate.
+
+## 23. v1.0 GA Delivery-System Scope
+
+Decision 0008 establishes v1.0 GA as the first supported public release. The earlier v0.x scope and exclusions remain valid for their internal milestones but do not limit the GA product.
+
+The first-GA delivery contract is defined in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md). It includes:
+
+- A provider-neutral delivery graph linking services, work items, changes, commits, reviews, builds, checks, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback.
+- A versioned adapter SDK and conformance suite with manifested provider, host, version, capability, scope, event, limit, degradation, and removal behavior.
+- Full GitHub.com and user-approved GitHub Enterprise Server behavior within the shipped matrix, including local signed commits and separately approved pushes, issues, pull requests, reviews, workflows, checks, releases, and hosted mutations.
+- Reference adapters for Jira, Azure DevOps, GitLab, Jenkins, artifact registries, Kubernetes and GitOps, infrastructure as code, OpenTelemetry and vendor observability, incidents, security findings, service catalogs, feature flags, migrations, and releases.
+- Separate `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` authority classes, with no capability class inheriting another.
+- Exact previews, fresh remote preconditions, single-use grants, idempotency or deterministic reconciliation, verified postconditions, receipts, rollback or compensation, cancellation, and crash recovery.
+- A strict-local core that remains complete and testable after all connected packs, credentials, caches, event registrations, schedules, and network scopes are removed.
+
+Provider-specific capabilities that cannot be normalized without losing meaning remain namespaced extensions. “Full” always means complete support for the published provider/version/capability matrix, not every present or future provider API.
+
+## 24. Windows 11 First-GA Scope
+
+Windows 11 x64 is a required v1.0 GA platform under [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md). It uses a signed per-user package, authenticated named-pipe IPC, restricted tool workers, Job Objects, handle-relative NTFS path enforcement, DPAPI-protected keys, native `llama.cpp`, native Visual Studio Code Chat, and separately isolated network provider workers.
+
+Windows evidence is independent from Fedora, Ubuntu, and Apple Silicon evidence. Windows on Arm, Windows Subsystem for Linux as a security boundary, Docker-based Windows inference, network-share workspaces, and cloud-synchronized strict-local data roots remain disabled until separately promoted.
+
+## 25. Markdown Mathematics
+
+AgentMage v1.0 GA supports authoring, reviewing, preserving, and rendering inline and display LaTeX-style mathematics in Markdown. The implementation preserves source text, equation delimiters, labels, references, code fences, escaping, Unicode, and surrounding Markdown. Preview and export use pinned offline renderers and local assets only.
+
+Mathematics content is untrusted document data. Commands outside the approved mathematical subset, shell escapes, file reads, network resources, package loading, macro recursion, and executable extensions are rejected. Round-trip, malformed-input, denial-of-service, accessibility, and cross-platform rendering fixtures are release-blocking.
+
+## 26. First-GA Acceptance
+
+v1.0 GA may ship only when:
+
+- Every first-GA `AM-*` requirement and `AT-*` acceptance test has current requirement-to-code-to-test-to-evidence traceability.
+- Fedora, Ubuntu, and Windows 11 pass three independent clean standard-user package lifecycles using published instructions only.
+- Each promoted provider/version/capability tuple passes its declared adapter conformance level, including negative tests for every unsupported operation.
+- Complete work-item-to-release and incident-to-rollback workflows pass across the reference adapter matrix without hidden authority or duplicate side effects.
+- Cross-host, cross-tenant, cross-account, cross-repository, cross-project, cross-environment, credential-confusion, prompt-injection, webhook-replay, network-partition, rate-limit, version-skew, partial-effect, crash, cancellation, rollback, and resource-exhaustion suites pass with current raw evidence.
+- Connected capabilities can be fully removed and the strict-local acceptance suite still passes.
+- Every external effect has one actor, exact current preconditions, exact preview, consumed grant, provider request identity, reconciliation state, verified postcondition, receipt, retention rule, and recovery outcome.
+- The provider support matrix, platform manifests, source and binary bills of materials, model bill of materials, provenance, signatures, limitations, support state, upgrade, rollback, and removal instructions reconcile with the exact release artifacts.
+
+Any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking check keeps `G-GA` blocked.
+
+## 27. Decision Supersession
+
+Sprints 101 and 102 retain their identifiers and historical scope, but their earlier final-product meaning is superseded. They are inherited-scope closure checkpoints. Final product closure occurs only at Sprint 126 after the delivery-system and Windows work in Sprints 103-125 passes.
+
+The Apple Silicon MacBook Pro M5 lane remains intact and testable after v1.0 GA. Its unavailable evidence cannot be fabricated or borrowed from Linux or Windows, but it is no longer a first-GA dependency.

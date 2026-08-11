@@ -6,6 +6,7 @@
 | Date | 2026-08-10 |
 | Scope | Development sequencing while required MacBook Pro M5 hardware is unavailable |
 | Supersedes | The rule that every blocked platform check prevents all independent downstream development |
+| Superseded in part by | [Decision 0008](./0008-first-ga-delivery-system-and-windows.md), which removes Apple Silicon from the v1.0 GA dependency chain while preserving this blocked lane |
 
 ## Context
 
@@ -24,19 +25,19 @@ The original execution rule stopped all later development whenever any dependenc
 7. No Mac requirement, task, acceptance criterion, platform statement, or release obligation is deleted, renumbered, weakened, waived, or silently reclassified.
 8. When the hardware or untouched raw result becomes available, execution returns to the earliest blocked Mac identifier before any affected gate can close.
 9. Work that is technically inseparable from an unavailable Mac dependency is skipped without implementation and remains unchecked. The next independent numbered item becomes the active development item.
-10. Final completion still requires every retained Mac item and every affected cross-platform or release gate to pass with current evidence.
+10. Final completion of the retained Apple Silicon lane still requires every retained Mac item and every affected Mac or Mac-inclusive gate to pass with current evidence. Under Decision 0008, this does not block v1.0 GA on Fedora, Ubuntu, and Windows 11.
 
 ## Consequences
 
 - Sprint 0 remains `BLOCKED-MACOS`, but independent Sprint 1 work may begin.
 - Subsequent shared and Linux development can advance without producing a false Sprint 0 pass.
 - Progress percentages distinguish implemented items from closed stories, sprints, and releases.
-- A Linux-only development build may become highly complete while v0.1 and final product release remain blocked.
+- A Linux/Windows first-GA build may complete while the retained Apple Silicon lane remains blocked; it cannot claim Mac support.
 - The blocked Mac lane may accumulate multiple identifiers; each must be revisited individually rather than cleared by one broad assertion.
 
 ## Verification
 
-- Documentation validation confirms that macOS remains a required v0.1 platform and Linux evidence cannot satisfy a Mac gate.
+- Documentation validation confirms that macOS remains a retained internal-v0.1 and post-GA platform lane and Linux/Windows evidence cannot satisfy a Mac gate.
 - `TASKS.md` keeps every blocked Mac checkbox unchecked and identifies downstream continuation as development-only.
 - Evidence and release manifests reject `PASS`, supported-platform, or release claims while any applicable Mac item is unavailable.
 - The first independent item after the current blocker remains the next numeric non-Mac implementation item.

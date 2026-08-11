@@ -69,8 +69,8 @@ Mutable tags such as `latest` or `e4b` may be shown to users but never serve as 
 
 AgentMage implements one `LocalModelRuntime` contract with separately attributable adapters:
 
-- Native `llama.cpp` with Metal is the macOS security reference.
-- Native `llama.cpp` is the Fedora and Ubuntu security reference.
+- Native `llama.cpp` is the Fedora, Ubuntu, and Windows 11 x64 first-GA security reference.
+- Native `llama.cpp` with Metal remains the Apple Silicon macOS post-GA security reference.
 - Docker Model Runner with its `llama.cpp` backend is a supported Fedora and Ubuntu compatibility adapter when its additional admission gates pass.
 - Docker Model Runner on macOS is separately gated and is not required for the reference installation.
 
@@ -82,7 +82,7 @@ Docker Model Runner is treated as an unauthenticated local inference service. Lo
 
 ### Gemma 4 E4B
 
-Gemma 4 E4B is the initial candidate, not a pre-approved dependency. Its first admission record must verify the exact first-party artifact, Apache-2.0 license disposition, upstream and packaged hashes, tokenizer and template, official or reproducible GGUF, runtime compatibility, hardware fit, tool calling, evidence behavior, and every quantitative v0.1 model threshold.
+Gemma 4 E4B is the initial candidate, not a pre-approved dependency. Its first admission record must verify the exact first-party artifact, Apache-2.0 license disposition, upstream and packaged hashes, tokenizer and template, official or reproducible GGUF, runtime compatibility, hardware fit, tool calling, evidence behavior, every quantitative internal-v0.1 model threshold, and first-GA platform behavior on Fedora, Ubuntu, and Windows 11.
 
 The Docker compatibility path uses `ai/gemma4:e4b` only after resolving that mutable name to an approved immutable OCI digest. The native path uses an approved GGUF and supporting artifacts whose hashes resolve to the same admitted profile.
 

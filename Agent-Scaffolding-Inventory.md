@@ -14,7 +14,7 @@ The context that makes this project worth building is simple: frontier models ar
 
 The deeper design bet is that most dependability lives in scaffolding rather than in any model. Evidence receipts, capability grants, bounded budgets, schema validation, contradiction checks, and audit records turn model output into a proposal that the kernel can verify. Encrypted SQLite is the sole authority for operational state. Beginning in v0.2, Markdown is authoritative only for human-owned knowledge and approved portable memory, while JSON Lines remains export-only. Because models remember nothing between sessions, v0.1 persists the minimum encrypted checkpoint needed to resume one read-only session without repeating completed work.
 
-The trajectory and the posture are both deliberate. v0.1 supports macOS on an Apple Silicon MacBook Pro M5 as its primary launch reference and supports Fedora and Ubuntu in the same release, with no cloud model, external interface, telemetry, or cloud storage. It begins as a read-only assistant using Gemma 4 in the native Visual Studio Code Chat window, then grows a command-line interface and eventually native desktop applications; Windows and Intel Mac support remain later work. Writes are deny-by-default and approval-gated, workspaces are boundaries rather than suggestions, secrets never enter memory or logs, and every claim of completed work must trace to a tool receipt or source citation. The checkboxes that follow are labeled by status, sequenced by the recommended build order, and gated by synthetic evaluation fixtures before anything touches real files — so this document should be read as a map of what could be built and the order in which to find out, not a promise that all of it will be.
+The trajectory and posture are deliberate. v0.1 remains an internal read-only milestone using Gemma 4 in native Visual Studio Code Chat. Under Decision 0008, v1.0 is the first supported public release: Fedora, Ubuntu, and Windows 11 x64 support the complete promoted delivery workflow, while Apple Silicon MacBook Pro M5 work remains preserved as a post-GA lane and Intel Mac remains deferred. Writes are deny-by-default and approval-gated, workspaces are boundaries rather than suggestions, secrets never enter memory or logs, and every claim of completed work must trace to a tool receipt or source citation. The checkboxes that follow are labeled by status, sequenced by the recommended build order, and gated by synthetic evaluation fixtures before anything touches real files, so this document should be read as a map of what could be built and the order in which to find out, not a promise that all of it will be.
 
 ## Local Model Compatibility
 
@@ -119,6 +119,8 @@ Every `Build` row is new AgentMage work. A `Verify` row establishes an environme
 | v0.6 | Administrative and Document packs. | Sending correspondence or changing live calendars. |
 | v0.7 | Read-only GitHub and approved connector foundations. | Automatic hosted changes. |
 | v1.0+ | Desktop shell, approval-gated hosted changes, and bounded multi-agent direction after separate security gates. | Agent swarms and self-expanding authority. |
+
+Decision 0008 reclassifies every v0.x row above as an internal milestone and supersedes the prior v1.0 boundary. The first supported v1.0 GA additionally requires Section 36, Fedora, Ubuntu, Windows 11 x64, and the complete published delivery capability matrix. Historical exclusions remain accurate for their individual milestone rows.
 
 ## 1. Local Model and Runtime
 
@@ -1307,6 +1309,9 @@ This interface provides a visual conversation library and chat window while usin
 - [ ] `BUILD` crash-safe autosave to the local conversation database, single-writer locks, recovery after forced termination, and a read-only safe mode.
 - [ ] `BUILD` packaged local fonts, icons, themes, help, and updates; no remote fonts, content-delivery network, analytics, telemetry, advertisements, or automatic cloud update service.
 - [ ] `DEFER` Windows and Intel Mac support until the Apple Silicon macOS, Fedora, and Ubuntu implementation passes the complete offline, security, storage, and recovery suites.
+
+Decision 0008 preserves that historical checklist entry but supersedes its Windows disposition: Windows 11 x64 is now first-GA work under Sections 36, 36A, and 36B. Intel Mac remains deferred, and Apple Silicon remains a retained post-GA lane.
+
 - [ ] `VERIFY` that the application remains fully usable with the network disabled, the Obsidian desktop application absent, and all user data located in a non-synchronized local folder.
 
 ## 28. Specialized Workflow Skills
@@ -1624,3 +1629,148 @@ This register makes the competitive capability review additive and traceable. It
 - [ ] `DOCUMENT` Keep every competitive requirement mapped to a stable inventory section, release, acceptance test, and decision record when it becomes executable.
 - [ ] `CAPABILITY GATE` Do not delete, weaken, silently merge away, or move a competitive requirement outside the canonical inventory; any future supersession requires an explicit user-approved decision record that preserves the original text and explains the replacement.
 - [ ] `VERIFY` For every competitive integration pass, compare against the prior canonical inventory and prove that all prior checklist entries remain present before accepting the updated file.
+
+## 36. First-GA Delivery and Windows Backlog
+
+Decision 0008 preserves the entire earlier inventory as internal milestone work and adds the following first-GA requirements. Nothing in this section weakens or removes a prior checklist entry. v1.0 is the first supported public release; “full” provider support is bounded to the exact provider/version/object/operation matrix shipped with that release. [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) governs the provider-neutral adapter boundary and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) governs Windows 11.
+
+| ID | Requirement | Dependencies | Disposition | Target | Acceptance tests |
+|---|---|---|---|---|---|
+| `AM-GA-001` | Define v1.0 GA as the first supported public release, freeze its Fedora, Ubuntu, and Windows 11 x64 platform matrix, retain Apple Silicon macOS as post-GA work, and publish exact promoted and unsupported capabilities. | None | Build | v1.0 | `AT-GA-001`, `AT-WIN-001` |
+| `AM-DEL-001` | Implement a provider-neutral delivery graph linking services, work, source, reviews, builds, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback with immutable source identities and freshness. | `AM-GA-001` | Build | v1.0 | `AT-DEL-001` |
+| `AM-ADP-001` | Implement a versioned provider-adapter SDK, lifecycle, capability-level model, support-matrix schema, event contract, removal contract, and conformance harness. | `AM-DEL-001` | Build | v1.0 | `AT-ADP-001`, `AT-XTE-001` |
+| `AM-IDN-001` | Bind every connected credential and operation to exact provider, host, tenant, account, project, environment, capability class, purpose, scope, expiry, and secret-store reference without exposing secret values. | `AM-ADP-001` | Build | v1.0 | `AT-IDN-001`, `AT-XTE-001` |
+| `AM-GHE-001` | Support GitHub.com and user-approved GitHub Enterprise Server repositories, commits, issues, pull requests, reviews, checks, workflows, releases, local signed commits, approval-gated pushes, and hosted mutations within a published matrix. | `AM-IDN-001` | Build | v1.0 | `AT-GHE-001`, `AT-XTE-001` |
+| `AM-WRK-001` | Implement conformance-gated work-management adapters for GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards with stable identity, links, drafts, bounded writes, and complete audit receipts. | `AM-IDN-001` | Build | v1.0 | `AT-WRK-001`, `AT-XTE-001` |
+| `AM-SRC-001` | Implement conformance-gated source adapters for Azure Repos and GitLab, while keeping Bitbucket and Gerrit as disabled extension candidates until promoted. | `AM-IDN-001` | Build | v1.0 | `AT-SRC-001`, `AT-XTE-001` |
+| `AM-CIC-001` | Implement inspect, correlate, dispatch, rerun, cancel, approve, log, and artifact behavior for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins as separate read and execute capabilities. | `AM-GHE-001`, `AM-SRC-001` | Build | v1.0 | `AT-CIC-001`, `AT-XTE-001` |
+| `AM-ART-001` | Implement immutable-digest artifact discovery, verification, download, promotion, retention, and provenance links for OCI Distribution, GitHub Container Registry, Azure Container Registry, JFrog Artifactory, and Sonatype Nexus. | `AM-CIC-001` | Build | v1.0 | `AT-ART-001`, `AT-SUP-001` |
+| `AM-SUP-014` | Normalize and verify SPDX, CycloneDX, SARIF, Sigstore/Cosign signatures, SLSA provenance, vulnerability results, and policy decisions against exact source, build, and artifact identities. | `AM-ART-001` | Build | v1.0 | `AT-SUP-001`, `AT-SEC-003` |
+| `AM-DEP-001` | Implement plan, diff, promote, health, drift, synchronize, and rollback support for Kubernetes, Helm, Kustomize, Argo CD, and Flux with immutable artifacts and environment-specific deployment grants. | `AM-SUP-014` | Build | v1.0 | `AT-DEP-001`, `AT-XTE-001` |
+| `AM-IAC-001` | Implement inspect, plan, policy-check, apply, reconcile, and recover support for Terraform and OpenTofu while keeping destructive and production actions separately approved. | `AM-IDN-001` | Build | v1.0 | `AT-IAC-001`, `AT-XTE-001` |
+| `AM-REL-001` | Implement semantic-version, changelog, release-manifest, promotion, progressive-delivery, feature-flag, database-migration, health, rollback, and compensating-action contracts. | `AM-DEP-001`, `AM-IAC-001` | Build | v1.0 | `AT-REL-001`, `AT-XTE-001` |
+| `AM-OBS-001` | Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation. | `AM-DEL-001` | Build | v1.0 | `AT-OBS-001`, `AT-XTE-001` |
+| `AM-INC-001` | Implement incident correlation, evidence, draft communication, bounded issue creation, escalation, rollback recommendation, and notification adapters with PagerDuty and compatible incident systems as independently gated capabilities. | `AM-OBS-001`, `AM-WRK-001` | Build | v1.0 | `AT-INC-001`, `AT-XTE-001` |
+| `AM-SEC-003` | Normalize CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings without erasing provider provenance, conflicting severity, suppression, reachability, or source identity. | `AM-SUP-014` | Build | v1.0 | `AT-SEC-003`, `AT-XTE-001` |
+| `AM-CAT-001` | Implement a Backstage reference catalog adapter linking services, owners, repositories, pipelines, artifacts, environments, telemetry, incidents, and releases; retain Port, Cortex, and Compass as conformance-gated extensions. | `AM-DEL-001`, `AM-OBS-001` | Build | v1.0 | `AT-CAT-001`, `AT-XTE-001` |
+| `AM-WIN-001` | Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal. | `AM-GA-001` | Build | v1.0 | `AT-WIN-001`, `AT-XTE-001` |
+| `AM-MTH-001` | Author, preserve, review, and render inline and display LaTeX-style mathematics in Markdown through a pinned offline safe subset with round-trip and accessibility support. | `AM-GA-001` | Build | v1.0 | `AT-MTH-001`, `AT-XTE-001` |
+| `AM-XTE-001` | Run cross-provider, cross-platform, adversarial, mutation, fuzz, replay, confusion, partition, rate-limit, version-skew, crash, partial-effect, rollback, resource, removal, and end-to-end delivery tests with no hidden blocking result. | `AM-GHE-001`, `AM-WRK-001`, `AM-SRC-001`, `AM-CIC-001`, `AM-ART-001`, `AM-DEP-001`, `AM-IAC-001`, `AM-REL-001`, `AM-OBS-001`, `AM-INC-001`, `AM-SEC-003`, `AM-CAT-001`, `AM-WIN-001`, `AM-MTH-001` | Verify | v1.0 | `AT-XTE-001` |
+| `AM-GAD-001` | Produce the v1.0 GA release decision from current Fedora, Ubuntu, Windows, strict-local, connected, provider-conformance, support-matrix, supply-chain, recovery, accessibility, and independent-review evidence. | `AM-XTE-001` | Build | v1.0 | `AT-GA-001` |
+
+## 36A. First-GA Quantitative Acceptance Matrix
+
+| ID | Test | Passing threshold |
+|---|---|---|
+| `AT-DEL-001` | Build and mutate delivery graphs spanning work item, source, review, CI, artifact, provenance, deployment, telemetry, incident, release, and rollback fixtures. | 100% of observed nodes and evidence-backed edges retain exact provider/host/tenant/object/version/freshness/receipt identity; inferred edges remain non-authoritative; deletion, rename, transfer, and stale observations never resolve to the wrong object. |
+| `AT-ADP-001` | Run the adapter lifecycle and capability-level suite against fake, fault, reference, future-version, and malicious providers. | 100% of manifested operations match the support matrix; unsupported operations are absent; malformed or future fields fail safely; removal leaves zero credentials, workers, webhooks, schedules, caches, or network authority. |
+| `AT-IDN-001` | Cross product provider, host, tenant, account, project, environment, credential, redirect, proxy, callback, and operation fixtures. | Zero credential disclosure, cross-domain request, authority reuse, or wrong-target effect across at least 2,000 confusion attempts; every denial and attempt is receipted without secret values. |
+| `AT-GHE-001` | Exercise the complete published GitHub.com and GitHub Enterprise Server matrix across version, permission, object, branch, issue, pull request, review, workflow, release, local commit, signed push, and failure fixtures. | 100% supported-operation conformance, zero undeclared or duplicate mutation, zero cross-host credential use, exact pre/post state and receipts, and passing negative tests for every unsupported or administrative operation. |
+| `AT-WRK-001` | Exercise GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards reads, links, drafts, field updates, comments, transitions, attachments, permissions, pagination, and recovery. | 100% published field/operation conformance; exact identity and transition semantics; zero duplicate, cross-project, hidden-recipient, or stale-state mutation. |
+| `AT-SRC-001` | Exercise Azure Repos and GitLab repository, branch, commit, review, policy, local-worktree, signed-commit, and push fixtures. | 100% published operation conformance; exact immutable revisions; zero active-worktree loss, credential crossover, force operation, or stale push. |
+| `AT-CIC-001` | Inspect and execute GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins fixtures across refs, inputs, environments, permissions, logs, artifacts, cancellation, rerun, and uncertain results. | Every execution binds exact source, workflow, inputs, environment, budget, and actor; zero duplicate dispatch across 1,000 timeout/retry cases; logs and artifacts remain bounded, untrusted, secret-scanned, and attributable. |
+| `AT-ART-001` | Discover, verify, download, compare, promote, retain, and remove artifacts across OCI, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus fixtures. | 100% artifact actions resolve immutable digests and provenance; mutable tags carry no authority; zero unsigned, mismatched, cross-repository, traversal, archive, or retention-policy bypass. |
+| `AT-SUP-001` | Validate SPDX, CycloneDX, Sigstore/Cosign, SLSA, policy, vulnerability, source, build, and artifact fixture chains. | Every promoted artifact has complete source-to-build-to-artifact identity, valid required signatures and provenance, reconcilable bills of materials, and no hidden critical finding or unsupported assurance claim. |
+| `AT-DEP-001` | Plan, preview, promote, health-check, detect drift, synchronize, fail, cancel, and roll back Kubernetes, Helm, Kustomize, Argo CD, and Flux fixtures. | Zero unpreviewed resource or environment change; immutable artifact binding; production approval isolation; deterministic health/timeout behavior; rollback never overwrites later independent changes. |
+| `AT-IAC-001` | Inspect, plan, policy-check, apply, crash, reconcile, and recover Terraform and OpenTofu fixtures including destructive, stale-state, lock, provider, and secret cases. | Plan identity and state preconditions match every apply; destructive and production actions remain separate; zero duplicate apply, secret disclosure, stale-state write, or unsafe retry after unknown effect. |
+| `AT-REL-001` | Run version, changelog, manifest, promotion, flag, progressive-delivery, migration, health, rollback, and compensation fixtures. | Every release maps exact source, artifact, environment, policy, migration, flag, health, and rollback state; no hidden production, destructive, or database effect; every compensation requires a new approval. |
+| `AT-OBS-001` | Correlate OpenTelemetry, Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry metrics, logs, traces, errors, monitors, releases, and time windows. | 100% identity and time-window preservation; bounded cardinality and result size; zero secret leakage; correlations are labeled and never promoted to causation without deterministic evidence. |
+| `AT-INC-001` | Detect, correlate, draft, notify, create bounded work, recommend rollback, recover, and close incident fixtures across duplicate, delayed, partial, conflicting, and injected data. | Zero autonomous mitigation or notification; exact incident/service/release identity; duplicate events do not duplicate external effects; all communications and remediation actions remain separately previewed and approved. |
+| `AT-SEC-003` | Ingest and reconcile CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings with conflicting severity, locations, suppressions, reachability, and tool versions. | 100% original provenance preserved; no conflicting finding silently erased; stale locations are visible; zero finding text changes policy or authority; release gates cannot omit blocking findings. |
+| `AT-CAT-001` | Build Backstage service-catalog relationships and run extension-contract fixtures for Port, Cortex, and Compass. | Every catalog relationship cites exact provider evidence; owner and service identity collisions remain unresolved rather than guessed; catalog data cannot mint authority or override provider truth. |
+| `AT-WIN-001` | Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64. | Three clean standard-user lifecycles pass; zero boundary escape across at least 1,000 path and 500 sandbox attacks; zero outbound bytes in a 60-minute strict-local run; no secret, credential, process, task, pipe, package, or data residue beyond approved retention. |
+| `AT-MTH-001` | Round-trip and render Markdown containing inline/display mathematics, labels, references, escaping, code fences, malformed input, hostile commands, deep macros, accessibility labels, and cross-platform fixtures. | 100% source-preserving round trip for the supported subset; deterministic offline rendering on Fedora, Ubuntu, and Windows; zero code execution, file read, network load, package escape, or unbounded expansion; accessible output passes the declared checks. |
+| `AT-XTE-001` | Run cross-provider and cross-platform contract mutation, fuzzing, hostile content, credential confusion, event replay, version skew, rate limit, partition, crash, cancellation, partial effect, rollback, resource, removal, and end-to-end lifecycle campaigns. | Zero unauthorized access, disclosure, execution, deployment, administration, duplicate effect, false completion, or hidden blocker; all seeds, corpus, coverage, environment, versions, raw results, shrinks, failures, and reviewer dispositions remain reproducible. |
+| `AT-GA-001` | Rebuild all requirements and run the exact v1.0 GA platform, strict-local, connected, delivery, support-matrix, supply-chain, recovery, accessibility, documentation, and independent-review gates. | Every promoted requirement has current code/test/document/evidence/owner/release linkage; every unsupported path has a passing denial/absence test; all blocking checks pass on Fedora, Ubuntu, and Windows; the signed release decision matches raw evidence. |
+
+## 36B. Delivery-System Construction Checklist
+
+### Delivery Kernel and Adapter SDK
+
+- [ ] `CAPABILITY GATE` Keep `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as independent non-inheriting capability classes.
+- [ ] `BUILD` typed delivery objects for service, work item, repository, change, commit, review, build, check, artifact, provenance, environment, deployment, telemetry, incident, finding, release, and rollback.
+- [ ] `BUILD` stable provider identities containing exact host, tenant or organization, project, immutable object identifier, mutable display identifier, version, freshness, and source receipt.
+- [ ] `BUILD` provider-neutral evidence-backed edges and keep inferred relationships visibly non-authoritative.
+- [ ] `BUILD` the adapter lifecycle for describe, diagnose, discover, plan, preview, execute, reconcile, rollback or compensate, and remove.
+- [ ] `BUILD` adapter manifests containing tested provider products/versions, host types, objects, operations, scopes, event modes, limits, degradation, support state, and evidence digests.
+- [ ] `BUILD` L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative conformance levels.
+- [ ] `CAPABILITY GATE` Register only operations that passed their exact provider/version/capability conformance level; keep every unsupported operation absent.
+- [ ] `BUILD` namespaced provider extensions for behavior that cannot be normalized truthfully.
+- [ ] `BUILD` fake, fault, replay, eventual-consistency, future-version, and malicious provider adapters before live-provider execution.
+- [ ] `BUILD` webhook signature, timestamp, nonce, replay, duplicate, ordering, gap, backfill, and tombstone handling plus bounded polling fallback.
+- [ ] `VERIFY` complete adapter removal including credentials, caches, events, webhooks, schedules, workers, registrations, and network scopes.
+
+### Identity, Secrets, and External Effects
+
+- [ ] `CAPABILITY GATE` Bind every credential to one exact provider, host, tenant, account, project scope, and permitted capability class.
+- [ ] `BUILD` secret-store references and operation-scoped credential delivery without exposing secret values to the model, command line, environment, logs, receipts, diagnostics, or repositories.
+- [ ] `BUILD` host identity, Transport Layer Security, redirect, proxy, Domain Name System, callback, and provider-supplied download-target validation.
+- [ ] `BUILD` exact effect previews containing actor, target, object, payload, attachment, visibility, source revision, environment, expected state change, cost or budget, and recovery path where applicable.
+- [ ] `BUILD` fresh remote precondition reads immediately before approval and immediately before submission.
+- [ ] `BUILD` provider-native idempotency where available and deterministic operation fingerprints plus reconciliation where it is not.
+- [ ] `CAPABILITY GATE` Treat timeout and transport failure as unknown effect until reconciliation proves effect, non-effect, duplicate effect, or partial effect.
+- [ ] `BUILD` verified postconditions and immutable operation receipts for every external attempt, including denial, cancellation, failure, timeout, partial effect, unknown effect, and success.
+- [ ] `CAPABILITY GATE` Make rollback and compensation new previewed, approval-gated operations that preserve later independent changes.
+- [ ] `VERIFY` at least 2,000 cross-host, cross-tenant, cross-account, cross-project, cross-environment, redirect, and credential-confusion attempts with zero wrong-domain request or disclosure.
+
+### Source, Work, and CI
+
+- [ ] `BUILD` complete GitHub.com and GitHub Enterprise Server conformance within the published repository, branch, commit, issue, pull-request, review, check, workflow, release, and security matrix.
+- [ ] `BUILD` exact staged-diff and commit-message approval, required signing, signature verification, and a separate approval for every remote push.
+- [ ] `CAPABILITY GATE` Keep force push, secret changes, repository administration, organization administration, and ruleset administration absent unless separately promoted to L5.
+- [ ] `BUILD` Jira Cloud, Jira Data Center, GitHub Issues, and Azure Boards field, transition, comment, attachment, link, hierarchy, iteration, and project semantics without flattening provider-only behavior incorrectly.
+- [ ] `BUILD` Azure Repos and GitLab repository, branch, commit, merge-request or pull-request, policy, and signed-push adapters.
+- [ ] `BUILD` GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins definition, run, job, step, annotation, log, artifact, rerun, cancel, approval, and dispatch adapters.
+- [ ] `CAPABILITY GATE` Bind every CI execution to exact workflow or pipeline identity, immutable source revision, inputs, environment, permissions, runner constraints, budget, cancellation, and expected artifacts.
+- [ ] `BUILD` log and artifact size limits, streaming cancellation, archive defenses, secret scanning, untrusted-content labeling, and retention.
+- [ ] `VERIFY` at least 1,000 CI timeout and retry combinations with zero duplicate dispatch or false completion.
+
+### Artifacts, Deployment, and Infrastructure
+
+- [ ] `BUILD` OCI Distribution, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus adapters with digest-first identity.
+- [ ] `CAPABILITY GATE` Treat tags, names, channels, versions, and build numbers as non-authoritative display identities until resolved to immutable digests.
+- [ ] `BUILD` SPDX and CycloneDX bill-of-material ingestion, reconciliation, validation, and exact artifact linking.
+- [ ] `BUILD` Sigstore/Cosign verification, SLSA provenance validation, signer policy, policy identity, and source/build/artifact chain evidence.
+- [ ] `BUILD` Kubernetes, Helm, and Kustomize read, diff, plan, promote, health, drift, rollback, and resource-ownership operations.
+- [ ] `BUILD` Argo CD and Flux application, source, synchronization, health, drift, prune, suspend, resume, and rollback operations with separate destructive grants.
+- [ ] `BUILD` Terraform and OpenTofu configuration, provider, module, state, lock, plan, policy, apply, output, drift, import, and recovery operations.
+- [ ] `CAPABILITY GATE` Keep plan separate from apply, non-production separate from production, synchronization separate from prune, and deploy separate from secret or administrative changes.
+- [ ] `BUILD` immutable release manifests, environment promotion, health windows, rollback targets, progressive delivery, and compensating actions.
+- [ ] `BUILD` feature-flag and database-migration adapter contracts with explicit compatibility, direction, backup, lock, timeout, and rollback conditions.
+
+### Observability, Incidents, Security, and Catalogs
+
+- [ ] `BUILD` OpenTelemetry as the canonical telemetry interchange and correlation vocabulary.
+- [ ] `BUILD` Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry reference adapters for bounded metrics, logs, traces, errors, monitors, dashboards, and releases.
+- [ ] `CAPABILITY GATE` Distinguish temporal and structural correlation from causation; require deterministic evidence before making a causal claim.
+- [ ] `BUILD` PagerDuty-compatible incident discovery, correlation, evidence package, draft communication, bounded work creation, escalation, and closure workflows.
+- [ ] `CAPABILITY GATE` Keep rollback, mitigation, notification, status change, and work creation as separate exact approvals; incident content cannot trigger them automatically.
+- [ ] `BUILD` CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF normalization preserving tool version, rule, location, severity, confidence, reachability, suppression, and original identity.
+- [ ] `BUILD` OPA/Conftest-style policy evaluation with exact policy bundle identity, input digest, result, explanation, and release-gate mapping.
+- [ ] `BUILD` Backstage service, component, owner, system, repository, pipeline, artifact, environment, telemetry, incident, and release links with exact provider citations.
+- [ ] `ROADMAP` Add Port, Cortex, Compass, New Relic, Dynatrace, ServiceNow, Bitbucket, Gerrit, Buildkite, CircleCI, Pulumi, LaunchDarkly, Unleash, Flyway, and Liquibase only through the same staged conformance process.
+
+### Windows 11 and Markdown Mathematics
+
+- [ ] `BUILD` a signed per-user MSIX package and release manifest for current serviced Windows 11 x64.
+- [ ] `BUILD` authenticated named-pipe IPC with user, logon-session, integrity-level, executable, package, protocol, sequence, and launch-challenge validation.
+- [ ] `BUILD` fresh AppContainer or equivalently reviewed restricted-token tool workers controlled by Job Objects and denied ambient profile, registry, credential, clipboard, device, process, and network access.
+- [ ] `BUILD` handle-relative NTFS path resolution defending against reparse points, junctions, links, alternate streams, device and UNC paths, short names, case, Unicode, hard links, rename, replace, and time-of-check/time-of-use races.
+- [ ] `BUILD` DPAPI-protected operational keys, reviewed Credential Manager references, local-only data-root checks, native signed `llama.cpp`, and separately confined connected workers.
+- [ ] `VERIFY` three clean standard-user Windows package lifecycles and the complete path, sandbox, IPC, strict-local network, recovery, accessibility, update, rollback, uninstall, and residue suites.
+- [ ] `BUILD` Markdown inline and display mathematics parsing, syntax preservation, labels, references, escaping, preview, and accessible rendering through pinned offline components.
+- [ ] `CAPABILITY GATE` Reject shell escape, file read, network resource, package loading, executable extension, unbounded macro expansion, and unsupported LaTeX commands.
+- [ ] `VERIFY` deterministic cross-platform mathematical round trips and rendering on Fedora, Ubuntu, and Windows 11.
+
+### Extreme Verification and First-GA Closure
+
+- [ ] `VERIFY` contract mutation and fuzzing for every schema, parser, IPC message, webhook, provider response, log, archive, manifest, mathematics input, and model-generated operation.
+- [ ] `VERIFY` prompt injection in every provider-controlled text field, code file, comment, issue, review, log, artifact, telemetry record, incident, finding, and catalog field.
+- [ ] `VERIFY` pagination loops, cursor reuse, duplicate and reordered events, replay, forgery, clock skew, eventual consistency, rate limits, quota exhaustion, permission reduction, credential expiry, provider outage, and version skew.
+- [ ] `VERIFY` crash and cancellation before submission, during transport, after remote effect, during reconciliation, during local persistence, and during rollback or compensation.
+- [ ] `VERIFY` concurrent user and provider changes, branch movement, object rename or deletion, moved line positions, policy change, environment drift, and artifact replacement.
+- [ ] `VERIFY` resource exhaustion from repositories, logs, artifacts, archives, event floods, telemetry cardinality, model context, concurrent adapters, disk, memory, processor, and graphics load.
+- [ ] `VERIFY` complete work-item-to-release and incident-to-rollback workflows across the first-GA reference adapter matrix with exact cross-system identity and no hidden authority.
+- [ ] `VERIFY` remove every connected capability pack and rerun the complete strict-local suite with zero residual credential, cache, event, process, schedule, listener, or network authority.
+- [ ] `DOCUMENT` publish exact provider/version/capability, platform, model, runtime, support, limitation, degradation, upgrade, rollback, and removal matrices with evidence digests.
+- [ ] `CAPABILITY GATE` Keep `G-GA` blocked for every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result.
