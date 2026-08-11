@@ -1,0 +1,193 @@
+{
+  "acceptance_criteria": [
+    {
+      "acceptance_test_id": "AT-AUTH-001",
+      "admitted_escalation_count": 0,
+      "admitted_mutation_count": 0,
+      "authority_escalation_case_count": 28,
+      "criterion_id": "5.AC1",
+      "mutation_seed_count": 560,
+      "production_executor_claim": "none",
+      "status": "pass-shared-linux-in-memory"
+    },
+    {
+      "accepted_scenario_count": 4,
+      "criterion_id": "5.AC2",
+      "durable_transaction_claim": "none",
+      "maximum_effect_count": 1,
+      "maximum_worker_start_count": 1,
+      "replay_success_count": 0,
+      "status": "pass-shared-linux-in-memory"
+    },
+    {
+      "admitted_mutation_count": 0,
+      "criterion_id": "5.AC3",
+      "mutation_class_count": 14,
+      "mutation_seed_count": 560,
+      "post_approval_mutation_count": 4,
+      "post_approval_worker_start_count": 0,
+      "status": "pass-shared-linux-in-memory"
+    },
+    {
+      "admitted_authority_count": 0,
+      "attempt_count": 28,
+      "criterion_id": "5.AC4",
+      "escalation_kind_count": 4,
+      "source_count": 7,
+      "status": "pass-shared-linux-contract-boundary"
+    },
+    {
+      "approval_forbidden_authority_field_count": 0,
+      "criterion_id": "5.AC5",
+      "grant_operation_count": 15,
+      "status": "pass-shared-linux-contract-and-policy",
+      "strict_denied_by_absence_count": 2,
+      "strict_explicit_denial_count": 12
+    }
+  ],
+  "independent_review": {
+    "disposition": "pass-shared-linux-sprint-blocked-macos",
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_artifacts": [
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
+        "sha256": "d0e54d5754a639f39238a0ef2ba65c37a0d7731407dec1a85490b6ed58869c5a"
+      },
+      {
+        "path": "scripts/story_5_1_gate.py",
+        "sha256": "408a6a81136e38be73c71bc3ffff82208332d6aa499284baa9dd079b1c228bb4"
+      },
+      {
+        "path": "tests/test_story_5_1_gate.py",
+        "sha256": "86ed0e1d60e5e136f4bca48b3aa83dac87f2bb2a2f367e9ed702dff26b80a4b0"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
+        "sha256": "dd6a86eff1230d6fbf47d5256b8573a8fe801f2cc7cab2e4103e2cf91f4b88d8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
+        "sha256": "e627927c557c2b550803b7470175df8903cce2f45e570635c1b0eca535fc0f54"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
+        "sha256": "7b742627e44a296b91c99ea468373e516ce2f1e7b772d999befd9f38b15bd1f3"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
+        "sha256": "7ec1694608dd0d28a523e302ff8c6368ae6567ae652ff931fe7cec22631bfef8"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
+        "sha256": "79d1723b95100c567ed2a2a2b619f9d0ae3aadd1bb6c19e3c1eb17b058286f9b"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
+        "sha256": "25735990094f0bb1f16752097c71994c27354e6fb07456a07315acf5239c415f"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
+        "sha256": "ab104c5dbb33ee909e745a0bd40fd52436b92dc3dc8dcbc63d858029fdc0ff26"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "sha256": "04447366fbf2967f8f75c7521824e554e7a86e3c0a1b18a256912c7f3665cca5"
+      },
+      {
+        "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
+        "sha256": "dc353fd72d81b3452ddda671a668415881d6242a87104a371f9ea051a8c7c2d0"
+      },
+      {
+        "path": "fixtures/grants/adversarial/v1/manifest.json",
+        "sha256": "11251ece511c248e8ee6ad34e87b8a6ee6ddd771075c4f0e5321856c4644802a"
+      }
+    ],
+    "reviewed_commit": "89e68a38001b0991f964c47a04fc5a33156d9f89",
+    "reviewed_tree": "a99b5cda5f9b195f0afdbbb6ceefe978ec1b3d70",
+    "reviewer_id": "agentmage-sprint-5-independent-gate-v1"
+  },
+  "macos": {
+    "evidence_substitution": "prohibited",
+    "execution_performed": false,
+    "status": "blocked-macos",
+    "support_claim": "none"
+  },
+  "product_acceptance_claim": "none",
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "89e68a38001b0991f964c47a04fc5a33156d9f89",
+  "reviewed_tree": "a99b5cda5f9b195f0afdbbb6ceefe978ec1b3d70",
+  "schema_version": 1,
+  "sprint_id": 5,
+  "status": "blocked-macos",
+  "story_gates": [
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 2,
+      "dod_blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_control_ids": [
+        "G-DOD-01",
+        "G-DOD-02",
+        "G-DOD-03",
+        "G-DOD-04",
+        "G-DOD-05",
+        "G-DOD-06",
+        "G-DOD-07",
+        "G-DOD-08",
+        "G-DOD-09",
+        "G-DOD-10",
+        "G-DOD-11",
+        "G-DOD-12",
+        "G-DOD-13"
+      ],
+      "only_blocker": "macos-execution-evidence-unavailable",
+      "shared_linux_story_work_complete": true,
+      "status": "blocked-macos",
+      "story_checkbox_complete": false,
+      "story_id": "5.1"
+    }
+  ],
+  "summary": {
+    "acceptance_criteria_failed": 0,
+    "acceptance_criteria_passed": 5,
+    "blocking_control_count": 1,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "blocking_story_count": 1,
+    "blocking_story_ids": [
+      "5.1"
+    ],
+    "shared_linux_sprint_work_complete": true,
+    "sprint_checkbox_complete": false,
+    "story_gate_count": 1
+  },
+  "universal_definition_of_done": {
+    "all_non_platform_controls_pass_or_not_applicable": true,
+    "blocking_controls": [
+      "G-DOD-10"
+    ],
+    "control_ids": [
+      "G-DOD-01",
+      "G-DOD-02",
+      "G-DOD-03",
+      "G-DOD-04",
+      "G-DOD-05",
+      "G-DOD-06",
+      "G-DOD-07",
+      "G-DOD-08",
+      "G-DOD-09",
+      "G-DOD-10",
+      "G-DOD-11",
+      "G-DOD-12",
+      "G-DOD-13"
+    ],
+    "macos_evidence_substitution": "prohibited",
+    "story_count": 1
+  }
+}
