@@ -228,7 +228,19 @@ def tool_record(name: str, path: Path) -> dict[str, Any]:
         or metadata.st_mode & 0o022
     ):
         raise LinuxControlEvidenceError(f"trusted tool identity is invalid: {name}")
-    version_output = run_command([str(path), "--version"], timeout=30)
+    if name == "secret-tool":
+        version_output = run_command(
+            [
+                "/usr/bin/rpm",
+                "-qf",
+                "--queryformat",
+                "%{NAME} %{VERSION}-%{RELEASE}.%{ARCH}\\n",
+                str(path),
+            ],
+            timeout=30,
+        )
+    else:
+        version_output = run_command([str(path), "--version"], timeout=30)
     version = version_output.splitlines()[0].strip()
     if not version or len(version) > 160:
         raise LinuxControlEvidenceError(f"trusted tool version is invalid: {name}")
