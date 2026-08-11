@@ -22,13 +22,13 @@
     "shared_contract": "verified",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "6b91f2b895cb0b45ac2c9b93b920b6bba49c683e",
+  "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "fixtures/paths/README.md",
-      "sha256": "7542074fef58e4e0b35e11ee4db9f4d9d7a4d6c1a079455df0adaa3601d0cef8"
+      "sha256": "d36fe899439eff1ed6546efaf53cbcd8bff7b5a8c11ebeb63b0a4c2a30f81213"
     },
     {
       "path": "fixtures/paths/v1/corpus.json",
