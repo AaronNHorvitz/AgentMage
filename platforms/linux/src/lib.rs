@@ -3,12 +3,16 @@
 //! Fedora and Ubuntu platform path adapter.
 
 use std::fmt;
+use std::fs;
+use std::os::fd::AsRawFd;
+use std::os::unix::ffi::OsStrExt;
+use std::path::Path;
 
 use agentmage_kernel_contracts::{
-    AdapterInstanceId, AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject,
-    PathAdapterError, PathAdapterErrorKind, PathPlatform, PathResolutionIntent,
-    PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity,
-    WorkspaceObjectKind, WorkspacePath,
+    AdapterInstanceId, AuthorizedWorkspaceHandle, DisplayFileLink, DisplayLinkErrorKind,
+    FilePreimage, HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind, PathPlatform,
+    PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
+    WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{
@@ -153,6 +157,29 @@ impl LinuxHeldObject {
     #[must_use]
     pub const fn resolution_strategy(&self) -> LinuxResolutionStrategy {
         self.resolution_strategy
+    }
+
+    /// Generates a non-authoritative absolute file link after held-object revalidation.
+    pub fn display_link(&self, line: Option<u32>) -> Result<DisplayFileLink, PathAdapterError> {
+        if line == Some(0) {
+            return Err(adapter_error(PathAdapterErrorKind::UnsafeComponent, None));
+        }
+        self.revalidate()?;
+        let descriptor_link = format!("/proc/self/fd/{}", self.object_descriptor.as_raw_fd());
+        let absolute = fs::read_link(descriptor_link)
+            .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+        if !absolute.is_absolute() {
+            return Err(adapter_error(PathAdapterErrorKind::PlatformFailure, None));
+        }
+        let file_uri = encode_file_uri(&absolute);
+        DisplayFileLink::new(file_uri, line, self.object_identity.clone()).map_err(|error| {
+            let kind = if error.kind() == DisplayLinkErrorKind::OversizedUri {
+                PathAdapterErrorKind::ResourceLimitExceeded
+            } else {
+                PathAdapterErrorKind::PlatformFailure
+            };
+            adapter_error(kind, None)
+        })
     }
 
     /// Revalidates the continuously held root and object identities.
@@ -656,6 +683,23 @@ fn identity_digest(domain: &[u8], snapshot: &LinuxStatSnapshot) -> [u8; 32] {
     digest.finalize().into()
 }
 
+fn encode_file_uri(path: &Path) -> String {
+    const HEX: &[u8; 16] = b"0123456789ABCDEF";
+    let bytes = path.as_os_str().as_bytes();
+    let mut encoded = String::with_capacity(7 + bytes.len());
+    encoded.push_str("file://");
+    for byte in bytes {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'-' | b'.' | b'_' | b'~') {
+            encoded.push(char::from(*byte));
+        } else {
+            encoded.push('%');
+            encoded.push(char::from(HEX[(byte >> 4) as usize]));
+            encoded.push(char::from(HEX[(byte & 0x0f) as usize]));
+        }
+    }
+    encoded
+}
+
 fn open_error(error: Errno, component_index: usize) -> PathAdapterError {
     let kind = if error == Errno::LOOP {
         PathAdapterErrorKind::SymbolicLink
@@ -690,7 +734,7 @@ mod tests {
     use agentmage_kernel_contracts::{
         AdapterInstanceId, HeldWorkspaceObject, PathAdapterErrorKind, PathResolutionIntent,
         PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectKind,
-        WorkspacePath,
+        WorkspacePath, WorkspacePathErrorKind,
     };
     use rustix::fs::{Mode, OFlags, open, openat2};
     use rustix::io::Errno;
@@ -978,6 +1022,46 @@ mod tests {
             &changed_mount,
             LinuxResolutionStrategy::OpenAt2,
         ));
+    }
+
+    #[test]
+    fn display_links_are_encoded_redacted_and_rejected_as_workspace_authority() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        fs::write(root.join("My Note#1%.txt"), b"display\n").expect("fixture writes");
+        let workspace = authorize_for_test(&root);
+        let held = adapter()
+            .resolve(
+                &workspace,
+                &path(&["My Note#1%.txt"]),
+                PathResolutionIntent::ReadFile,
+            )
+            .expect("display fixture resolves");
+        let link = held.display_link(Some(7)).expect("display link generates");
+        assert!(link.file_uri().starts_with("file:///"));
+        assert!(link.file_uri().ends_with("/My%20Note%231%25.txt"));
+        assert_eq!(link.line(), Some(7));
+        assert!(link.render_target().ends_with("/My%20Note%231%25.txt#L7"));
+        assert_eq!(link.object_identity(), held.object_identity());
+        assert!(!format!("{link:?}").contains("My%20Note"));
+
+        let replay = WorkspacePath::new(WorkspaceId::from_raw("workspace-0001"), [link.file_uri()])
+            .expect_err("display URI cannot become a workspace component");
+        assert_eq!(replay.kind(), WorkspacePathErrorKind::ColonInComponent);
+        let rendered_replay = WorkspacePath::new(
+            WorkspaceId::from_raw("workspace-0001"),
+            [link.render_target()],
+        )
+        .expect_err("rendered display target cannot become workspace authority");
+        assert_eq!(
+            rendered_replay.kind(),
+            WorkspacePathErrorKind::ColonInComponent
+        );
+        let zero_line = held
+            .display_link(Some(0))
+            .expect_err("zero display line rejects");
+        assert_eq!(zero_line.kind(), PathAdapterErrorKind::UnsafeComponent);
     }
 
     #[test]

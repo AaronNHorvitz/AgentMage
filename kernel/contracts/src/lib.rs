@@ -5,6 +5,7 @@
 mod approval;
 mod boundary;
 mod common;
+mod display_link;
 mod evidence;
 mod grant;
 mod ids;
@@ -22,6 +23,9 @@ pub use boundary::{
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,
     SchemaReference, ValidationIssue, ValidationSeverity,
+};
+pub use display_link::{
+    DisplayFileLink, DisplayLinkError, DisplayLinkErrorKind, MAX_DISPLAY_FILE_URI_BYTES,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use grant::{
