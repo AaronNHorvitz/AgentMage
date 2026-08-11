@@ -16,6 +16,8 @@ from typing import Any, Callable
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json"
 SUBJECT_REPORTS = (
     "grant-policy-reference-report.json",
