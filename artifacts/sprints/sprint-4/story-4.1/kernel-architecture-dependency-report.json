@@ -46,6 +46,18 @@
         "condition": "all",
         "dependency_kind": "product",
         "lock": {
+          "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.1.25"
+        },
+        "manifest": "kernel/contracts/Cargo.toml",
+        "source": "kernel-contracts",
+        "target": "unicode-normalization"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
           "checksum": "6ebaa1a2bf1290ab3bfe5a7b771d050ebffab2711c19a81691c683a5144a25de",
           "source": "registry+https://github.com/rust-lang/crates.io-index",
           "version": "3.0.0"
@@ -89,10 +101,46 @@
         "manifest": "kernel/engine/Cargo.toml",
         "source": "kernel-engine",
         "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.1.4"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "rustix"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "a4ae55de56877481d112a559bbc12667635fdaf5e005712fd4e2b2fa50ffc884",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.5.0"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "seccompiler"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "sha2"
       }
     ],
-    "direct_cargo_count": 6,
-    "locked_external_cargo_package_count": 31,
+    "direct_cargo_count": 10,
+    "locked_external_cargo_package_count": 41,
     "swift_external": [],
     "vscode_development": [
       "@eslint/js",
@@ -240,11 +288,11 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "2c8d2a0a5ce54932b78a758c637fe25752be241cb72361ba461cc302695155e9"
+      "sha256": "1576f838ef19085d21b12bb20aa5a8b24e90a47645e5d87025d20a50d405b913"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "6c3e6e12499540011fb775c3e48efdbfc682fdeecf2c82a8cd0c62d32097ab98"
+      "sha256": "c3ca4816fa53bf5fb0dda1c29d35149baf41003c31e094b664773333f47ad590"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -264,7 +312,7 @@
     },
     {
       "path": "kernel/contracts/Cargo.toml",
-      "sha256": "a271593cde3691c01f46d4c096e327ecc1a8e2db7e19497fe322e1d18f3b9324"
+      "sha256": "225d6d1d029c925c5456d9693f0fafd2da9620d20cf9f1eabbd66608e3327760"
     },
     {
       "path": "kernel/engine/Cargo.toml",
@@ -276,7 +324,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "2f527e1f328c99dfa146b94698108999d759a87438cab499d1693bd4c7101649"
+      "sha256": "1f71f0fba3a624cfcc480b9083f6b2da9c90ac1039dcb2fdf06502c6d55d1fc3"
     },
     {
       "path": "platforms/macos/Package.resolved",
@@ -307,7 +355,7 @@
       "sha256": "21cbcb1e09210d62ae9d10b814e6fe28efd6ef72cfda067d19b52446ccc3a6f6"
     }
   ],
-  "source_revision": "703eb13c680127324a1b910b8bd202e66de1c45b",
+  "source_revision": "490aba33e1500a09217ea1479ee4c73c58a9be7d",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }

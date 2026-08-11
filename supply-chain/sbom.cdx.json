@@ -130,7 +130,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "930ac7cd24121b42499454b4fc524a65186008c10ba48f9ecc6a6d1667381e79"
+          "content": "90979168346ea74005ddc7a23a35b93f3b17f5e919c573bd68f8857cf48f3ef8"
         }
       ],
       "licenses": [
@@ -828,6 +828,35 @@
       "scope": "required",
       "type": "library",
       "version": "1.1.4"
+    },
+    {
+      "bom-ref": "cargo:seccompiler@0.5.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a4ae55de56877481d112a559bbc12667635fdaf5e005712fd4e2b2fa50ffc884"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR BSD-3-Clause"
+        }
+      ],
+      "name": "seccompiler",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/seccompiler@0.5.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.5.0"
     },
     {
       "bom-ref": "cargo:semver@1.0.28",
@@ -12982,6 +13011,7 @@
       "dependsOn": [
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:rustix@1.1.4",
+        "cargo:seccompiler@0.5.0",
         "cargo:sha2@0.11.0"
       ],
       "ref": "cargo:agentmage-platform-linux@0.0.0"
@@ -13126,6 +13156,14 @@
         "cargo:windows-sys@0.61.2"
       ],
       "ref": "cargo:rustix@1.1.4"
+    },
+    {
+      "dependsOn": [
+        "cargo:libc@0.2.189",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151"
+      ],
+      "ref": "cargo:seccompiler@0.5.0"
     },
     {
       "dependsOn": [],
@@ -15563,7 +15601,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:f631f33d-7ba3-55be-a470-04f4580d8c01",
+  "serialNumber": "urn:uuid:a405fdbb-f437-5d81-b9f2-b84bb0984bb4",
   "specVersion": "1.6",
   "version": 1
 }
