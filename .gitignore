@@ -73,6 +73,10 @@ artifacts/sprints/sprint-5/*
 !artifacts/sprints/sprint-5/sprint-gate-report.json
 !artifacts/sprints/sprint-5/story-5.1/
 !artifacts/sprints/sprint-5/story-5.1/**
+!artifacts/sprints/sprint-6/
+artifacts/sprints/sprint-6/*
+!artifacts/sprints/sprint-6/story-6.1/
+!artifacts/sprints/sprint-6/story-6.1/**
 
 # Build, dependency, cache, and generated output
 node_modules/
