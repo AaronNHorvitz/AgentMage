@@ -6,24 +6,23 @@
     "hard_link": "pass-fedora-local",
     "macos_alias": "blocked-macos",
     "mount_identity_drift": "pass-synthetic-unit",
-    "privileged_mount_swap": "not-executed-requires-isolated-privilege",
+    "privileged_mount_swap": "pass-fedora-isolated-user-mount-namespace",
     "rename": "pass-fedora-local",
     "replacement": "pass-fedora-local",
     "symlink": "pass-fedora-local"
   },
   "coverage": {
-    "attack_class_count": 8,
+    "attack_class_count": 9,
     "concurrent_minimum_resolution_attempts": 512,
-    "executed_scenario_count": 5,
+    "executed_scenario_count": 6,
     "out_of_root_access_count": 0
   },
   "limitations": [
-    "privileged bind-mount replacement is not executed on this host",
     "macOS alias attacks are blocked with the macOS implementation",
     "Ubuntu execution is not performed"
   ],
   "macos_evidence_substituted": false,
-  "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
+  "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
   "related_verification_task": "6.1.3.2",
   "release_claim": "none",
   "schema_version": 1,
@@ -34,15 +33,15 @@
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "c6322c6183c98d6c5124d9f3dffb09a81b2b008af977439ef9322b0f8710aa94"
+      "sha256": "38105b49a8a6c9d8607931f3a92a504d465cbd17b975c9dc8e834dda4d56920d"
     },
     {
       "path": "scripts/path_race_artifact.py",
-      "sha256": "52f2229692e8b306051a35a3360db291e46d888597d1b64976fb000764fa3361"
+      "sha256": "9e7cab287df2ba29a923ac26bb0bfa68f2bfb2758ded7aeb22e70e722a02faa7"
     },
     {
       "path": "tests/test_path_race_artifact.py",
-      "sha256": "b8fbd31fccd20c429d49a3b334cab67c37dc8b052bc9c5e1b22abafb5d035ecb"
+      "sha256": "9a98be401db176f4e2eff7e4e199695b78fd129c7cf20fcdb905db2bad879a60"
     }
   ],
   "status": "pass-fedora-unprivileged-scope",
@@ -77,6 +76,12 @@
       "out_of_root_access_count": 0,
       "scenario_id": "concurrent_toctou",
       "test_name": "concurrent_symlink_replacement_never_changes_held_file_authority"
+    },
+    {
+      "execution_status": "pass-fedora-isolated-user-mount-namespace",
+      "out_of_root_access_count": 0,
+      "scenario_id": "privileged_mount_swap",
+      "test_name": "isolated_bind_mount_swap_is_rejected_as_mount_changed"
     }
   ]
 }

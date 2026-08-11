@@ -21,7 +21,7 @@
     "macos": "blocked-macos",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "073a7a6b559a3c3cea7a744b2af4bf837c8b0669",
+  "reference_revision": "4dc87008db859135035c3e7a119d95164bb0f0c0",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -47,7 +47,7 @@
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "c6322c6183c98d6c5124d9f3dffb09a81b2b008af977439ef9322b0f8710aa94"
+      "sha256": "38105b49a8a6c9d8607931f3a92a504d465cbd17b975c9dc8e834dda4d56920d"
     },
     {
       "path": "scripts/path_contract_artifact.py",
