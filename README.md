@@ -1,20 +1,20 @@
 # AgentMage
 
-**AgentMage is a brand-new, from-scratch project.** It is a portable, local-first software-development and delivery assistant that combines deterministic tools with approved local models under enforceable Linux and Windows security boundaries.
+**AgentMage is a brand-new, from-scratch project.** It is a portable, local-first development, delivery, productivity, research, continuity, whole-codebase audit, and financial-management assistant that combines deterministic tools with approved local models under enforceable Linux and Windows security boundaries.
 
 AgentMage is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer. It is intended for public distribution. Any future installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
 
 | Field | Current baseline |
 |---|---|
 | Status | Implementation in progress; Linux development active, Windows first-GA work planned, and blocked Mac lane retained |
-| First supported public release | v1.0 GA Local-First Delivery System |
+| First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
 | First interface | Native Visual Studio Code Chat beside the separate Codex tab |
 | First enabled model | Manifest-pinned Gemma 4 E4B |
 | Model runtimes | Native `llama.cpp`; gated Docker Model Runner compatibility adapter |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
-| Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases |
-| Execution plan | 12 epics and 127 numbered dependency gates; completed work is preserved and new delivery/Windows work is appended under Decision 0008 |
+| Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
+| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions are appended under Decisions 0008, 0009, 0010, and 0011 |
 | License | [Apache License 2.0](./LICENSE) |
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
@@ -30,11 +30,11 @@ The project documents have distinct responsibilities:
 5. [`TASKS.md`](./TASKS.md) governs granular execution order through epics, sprints, stories, tasks, sub-tasks, acceptance criteria, and PASS/BLOCKED gates.
 6. This README is the orientation document and must summarize, rather than redefine, those authorities.
 
-Supporting policies remain subordinate to those authorities: [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md) controls model admission procedure, [`SECURITY.md`](./SECURITY.md) controls public vulnerability and support communication, [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) records the shared process, privilege, socket, lifecycle, and data-flow specification, [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) defines the connected delivery architecture, and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) defines the first-GA Windows boundary. Accepted clarifications and supersessions are recorded under [`docs/decisions/`](./docs/decisions/).
+Supporting policies remain subordinate to those authorities: [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md) controls model admission procedure, [`SECURITY.md`](./SECURITY.md) controls public vulnerability and support communication, [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) records the shared process, privilege, socket, lifecycle, and data-flow specification, [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) defines the connected delivery architecture, [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md) defines communications, autonomy, personal-information, finance, and cloud-observer architecture, [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md) defines command authority, public research, credential brokering, continuity, and model management, [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) defines comprehensive read-only repository audit, and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) defines the first-GA Windows boundary. Accepted clarifications and supersessions are recorded under [`docs/decisions/`](./docs/decisions/).
 
 If documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted identifiers are never silently removed, weakened, merged away, or renumbered.
 
-Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-platform-lane-continuation.md) as superseded for release scope by [`Decision 0008`](./docs/decisions/0008-first-ga-delivery-system-and-windows.md). MacBook Pro M5 tasks remain required for the retained Apple Silicon lane and remain unchecked while the hardware is unavailable. They no longer block v1.0 GA, which requires Fedora, Ubuntu, and Windows 11. No platform's evidence substitutes for another's.
+Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-platform-lane-continuation.md) as superseded for release scope by [`Decision 0008`](./docs/decisions/0008-first-ga-delivery-system-and-windows.md), expanded by [`Decision 0009`](./docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md), [`Decision 0010`](./docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md), and [`Decision 0011`](./docs/decisions/0011-whole-codebase-audit.md). MacBook Pro M5 tasks remain required for the retained Apple Silicon lane and remain unchecked while the hardware is unavailable. They no longer block v1.0 GA, which requires Fedora, Ubuntu, and Windows 11. No platform's evidence substitutes for another's.
 
 ## Internal v0.1 Milestone
 
@@ -62,6 +62,17 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
 - Fedora, Ubuntu, and Windows 11 x64 packages with separate clean-install, sandbox, path, secret-store, IPC, accessibility, performance, and release evidence.
 - Full GitHub.com and user-approved GitHub Enterprise Server behavior within a versioned matrix covering repositories, branches, commits, issues, pull requests, reviews, checks, workflows, releases, local commits, signed pushes, and separately approved hosted mutations.
 - Provider-neutral adapters for Jira, Azure DevOps, GitLab, Jenkins, artifacts, Kubernetes/GitOps, infrastructure, OpenTelemetry and observability, incidents, security findings, catalogs, feature flags, migrations, and release operations.
+- Removable communications and productivity packs for Outlook and Exchange Online, Teams, Gmail, Slack, Proton Mail Bridge, generic mail protocols, Linux mail-client interoperability, calendars, contacts, tasks, document repositories, a unified activity inbox, and a confirmed cross-provider work graph.
+- A kernel-enforced Autonomy Center with Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, and Autonomous within policy levels, narrowed independently by pack, connector, account, operation, destination, recipient, channel, and schedule.
+- A local-first Finance and Budgeting pack with fixed-point arithmetic, statement import and reconciliation, Actual Budget integration, read-only bank data, budgets, cash-flow forecasts, bills, subscriptions, receipts, accounting workflows, and explainable anomaly indicators. Money movement and trading are absent.
+- A read-only Cloud Observer pack for bounded AWS, Azure, and Google Cloud inventory, configuration, health, logs, security observations, and cost summaries. It has no cloud write, remote-command, deploy, secret-read, identity, policy, or administration authority.
+- Current public Internet research through an isolated search and retrieval worker with recency controls, claim-level citations, source provenance, bounded downloads, and prompt-injection and private-disclosure defenses.
+- A fully capable local command surface with Disabled, Inspect, Workspace Autonomous, Connected Operations, and explicitly activated Owner / Unrestricted Session levels. Owner mode is time bounded, visibly active, panic-stoppable, and never enabled or renewed by a model, schedule, workflow, or external content.
+- Operating-system-backed credential brokering using non-secret references and operation-scoped resolution; raw credentials never enter model context, prompts, chat logs, command arguments, diagnostics, exports, or continuity snapshots.
+- Local encrypted snapshots and optional client-side-encrypted cloud continuity through an exact backup namespace. The live operational store remains local, and backup write authority does not broaden read-only Cloud Observer.
+- A signed approved-model catalog and chat-guided model manager for compatible-model discovery, user-confirmed acquisition or import, quarantine, verification, admission testing, activation, comparison, rollback, removal, and storage cleanup.
+- Meta Muse Glimmer as a candidate only until its exact first-party license, open-source or open-weight classification, provenance, artifacts, runtime, resource, quality, security, and platform evidence produce a normal admission disposition.
+- Comprehensive read-only whole-codebase audit with exact repository identity, complete path disposition, deterministic structural graphs, semantic review in bounded coherent units, persistent evidence cards, cross-module reconciliation, checkpoint resume, transitive invalidation, calibrated findings, and explicit coverage and uncertainty.
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
 - A removable connected layer: uninstalling every provider adapter restores the independently tested strict-local product.
@@ -85,12 +96,25 @@ flowchart LR
     A --> M
     K --> D["Provider-neutral delivery graph"]
     D --> C["Operation-scoped provider adapters"]
+    K --> W["Unified inbox and work graph"]
+    K --> X["Productivity capability packs"]
+    X --> C
+    K --> O["Trusted operations brokers"]
+    O --> R["Public research worker"]
+    O --> B["Encrypted continuity worker"]
+    O --> H["Tiered command workers"]
+    K --> Z["Whole-codebase audit coordinator"]
+    Z --> Y["Census, structural graph, and evidence ledger"]
+    Z --> J["Disposable verification workspace"]
+    G["OS credential broker"] --> C
+    G --> B
+    I --> Q["Candidate quarantine and admission"]
 ```
 
 AgentMage has three one-way product layers:
 
 1. **Kernel** - policy, `CapabilityGrant`, receipts, encrypted operational storage, model adapters, sandboxed tools, classification, retention, and recovery.
-2. **Capability packs** - Core Read-Only first, followed by Knowledge and Obsidian, Controlled Writes, Coding, Manual Frontier Consultation, Administrative and Document Work, then provider-neutral delivery capabilities spanning source, planning, CI, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases.
+2. **Capability packs** - Core Read-Only first, followed by Knowledge and Obsidian, Controlled Writes, Coding, Manual Frontier Consultation, Administrative and Document Work, provider-neutral delivery capabilities, Communications and Personal Information, Finance and Budgeting, read-only Cloud Observation, Public Research, Continuity, Approved Model Management, and Whole-Codebase Audit.
 3. **Shells** - native Visual Studio Code Chat first, followed later by a complete CLI and standalone macOS and Linux desktop applications.
 
 Shells and models carry no authority. Only the kernel can validate and consume a capability grant. Codex is an adjacent user-controlled surface, not an AgentMage shell, model, tool, fallback, router destination, or subagent.
@@ -119,6 +143,7 @@ The kernel validates and atomically consumes a grant immediately before executio
 - Every v0.1 file and Git operation runs in a fresh, read-only, no-network platform sandbox.
 - Tool inputs use canonical workspace-relative `WorkspacePath` values. Absolute paths exist only as non-authoritative display links.
 - Repository instructions, source comments, documents, connector content, and model output are untrusted. They cannot alter policy, mint grants, expand scope, enable tools, or override the current user request.
+- Messages, attachments, calendar records, contacts, tasks, financial descriptions, cloud metadata, logs, and provider links are equally untrusted. They cannot select recipients, authorize sends, move money, mutate cloud state, or broaden autonomy.
 - Every denied, cancelled, failed, timed-out, uncertain, or successful tool attempt produces one schema-valid receipt.
 - Security-sensitive behavior fails closed when identity, policy, path, sandbox, encryption, network, evidence, or recovery checks are unavailable.
 
@@ -137,13 +162,25 @@ flowchart TD
 
 Classification, secret detection, minimization, retention assignment, and encryption selection happen before persistence. Private or restricted records never fall back silently to plaintext. The local data root must be user-selected and outside cloud-synchronized or remote storage under the strict-local profile.
 
+Continuity snapshots are immutable, versioned, and encrypted on the client before an optional cloud
+backup worker receives them. The live operational database, model store, locks, indexes, queues,
+sockets, and temporary files never operate from a cloud-synchronized or network path. Restored
+installations reauthenticate connected accounts instead of restoring raw credentials.
+
 ## Model Policy
 
 v0.1 uses explicit user model selection. It attempts deterministic operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract.
 
 The initial candidate is Gemma 4 E4B. Its manifest pins identity, license, publisher, upstream lineage, conversion and quantization recipe, native artifact or immutable OCI digest, tokenizer and template hashes, runtime compatibility, platform support, and resource limits. Every enabled model, embedding model, reranker, tokenizer, conversion, runtime, and derived artifact must satisfy [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), including the project's non-Chinese and non-Chinese-derived model rule, as a supply-chain requirement.
 
-Gemma 4 12B Unified is the named disabled fallback candidate if E4B fails a mandatory quality or tool-calling threshold. Gemma 4 26B A4B and other later candidates remain disabled until their separate registry, lineage, license, origin, resource, quality, security, and platform gates pass. A broad model marketplace is not a v0.1 objective, and AgentMage never switches models or adapters automatically.
+Gemma 4 12B Unified is the named disabled fallback candidate if E4B fails a mandatory quality or tool-calling threshold. Gemma 4 26B A4B and other later candidates remain disabled until their separate registry, lineage, license, origin, resource, quality, security, and platform gates pass. Meta Muse Glimmer is recorded as a candidate only; no open-source, support, compatibility, download, or activation claim is made until first-party evidence and the complete admission pipeline pass. A broad model marketplace is not a v0.1 objective, and AgentMage never switches models or adapters automatically.
+
+For first GA, the user can ask Chat to list hardware-compatible approved profiles and to download,
+import, verify, activate, compare, roll back, remove, or clean up one. A deterministic model manager
+shows the exact artifact, license, source, size, hardware fit, network use, checks, and rollback before
+confirmation; the separate installer performs the operation. A post-GA Experimental Model Lab may
+evaluate user-selected unapproved artifacts with no network, credentials, command, connector, or
+canonical-workspace-write authority, but promotion still requires ordinary model admission.
 
 ## Codex Handoff Boundary
 
@@ -166,6 +203,11 @@ flowchart LR
     E8 --> E9["Epic 9<br/>Inherited Scope Closure"]
     E9 --> E10["Epic 10<br/>Delivery System and Windows"]
     E10 --> E11["Epic 11<br/>v1.0 GA Verification"]
+    E11 --> E12["Epic 12<br/>Productivity and Communications"]
+    E12 --> E13["Epic 13<br/>Finance and Cloud Observer"]
+    E13 --> E14["Epic 14<br/>Expanded GA Verification"]
+    E14 --> E15["Epic 15<br/>Trusted Operations and Codebase Audit"]
+    E15 --> E16["Epic 16<br/>Experimental Model Lab"]
 ```
 
 | Epic | Increment | Sprint range |
@@ -181,13 +223,18 @@ flowchart LR
 | 8 | Extended interfaces, packages, actions, scheduling, and agents | 76-100 |
 | 9 | Inherited-roadmap closure checkpoint; superseded as final release gate | 101-102 |
 | 10 | Provider-neutral delivery system and Windows 11 | 103-125 |
-| 11 | v1.0 GA verification and release decision | 126 |
+| 11 | Delivery-and-Windows GA checkpoint; superseded as final gate | 126 |
+| 12 | Productivity, communications, personal information, documents, and autonomy | 127-141 |
+| 13 | Finance, budgeting, accounting, and read-only cloud observation | 142-155 |
+| 14 | Expanded v1.0 GA verification and release decision | 156 |
+| 15 | Trusted operations, research, credentials, continuity, model management, whole-codebase audit, and superseding v1.0 GA decision | 157-166 |
+| 16 | Post-GA Experimental Model Lab | 167-168 |
 
 Sprints are ordered dependency and evidence gates, not calendar promises. A sprint contains one or more bounded stories only when their combined gate remains reviewable; each story has numbered tasks and sub-tasks, 2-4 Given/When/Then criteria, evidence requirements, and a binary PASS/BLOCKED gate. Oversized work is split through a recorded decision without renumbering accepted identifiers.
 
 ## Release Gates
 
-Each internal milestone is governed by its own stable requirements, sprints, security controls, and reviewer protocols. v1.0 GA additionally requires every promoted delivery adapter and Windows gate, complete cross-provider lifecycle evidence, published support matrices, and the extreme verification matrix in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md). Required results include zero sandbox, path, grant, privacy, credential-isolation, injection, cross-tenant, IPC-authentication, unauthorized-network, or unauthorized-mutation violations; exact deterministic repository-map and delivery-graph results; complete receipts and citations; reliable local-model calls and recovery; deterministic crash and uncertain-result recovery; and explicit latency, memory, rate, and data-volume ceilings on each recorded reference machine and provider fixture.
+Each internal milestone is governed by its own stable requirements, sprints, security controls, and reviewer protocols. v1.0 GA additionally requires every promoted delivery, productivity, communications, finance, cloud-observer, public-research, continuity, command-authority, credential-broker, model-management, and whole-codebase audit capability; the Windows gate; complete cross-provider lifecycle evidence; published support matrices; and the extreme verification matrices in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), and [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md). Required results include zero sandbox, path, grant, privacy, credential-isolation, injection, cross-tenant, cross-account, cross-pack, IPC-authentication, unauthorized-network, canonical-repository mutation, silent audit omission, stale audit evidence, money-movement, cloud-mutation, private-research-disclosure, backup-namespace, model-substitution, or command-authority violations; exact deterministic repository-map, structural-graph, work-graph, financial-reconciliation, delivery-graph, citation, snapshot, and restore results; complete receipts, citations, audit coverage, and finding evidence; reliable local-model calls and recovery; deterministic crash, checkpoint, invalidation, and uncertain-result recovery; and explicit latency, memory, rate, and data-volume ceilings on each recorded reference machine and provider fixture.
 
 A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking checks cannot be represented as passing. Feature completeness never overrides a failed platform, security, privacy, authority, evidence, recovery, or clean-install gate.
 
@@ -197,11 +244,14 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Agent Scaffolding Inventory](./Agent-Scaffolding-Inventory.md) - stable requirements, detailed capability roadmap, build order, and acceptance matrix.
 - [Security Review and Verification Guide](./SECURITY-REVIEW.md) - public product-security baseline, security requirements, reviewer protocols, and evidence contract.
 - [High-Level Implementation Plan](./IMPLEMENTATION-PLAN.md) - architectural sequence, cross-cutting workstreams, milestones, risks, and release strategy.
-- [Story-Based Sprint Plan](./TASKS.md) - 12 epics, 127 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
+- [Story-Based Sprint Plan](./TASKS.md) - 17 epics, 169 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
 - [Model Provenance and Admission Policy](./MODEL-PROVENANCE-POLICY.md) - origin, lineage, license, artifact, runtime, quality, and fallback admission rules.
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
 - [Delivery System Architecture](./DELIVERY-SYSTEM.md) - provider-neutral delivery graph, adapter contract, capability classes, operation lifecycle, conformance levels, and extreme tests.
+- [Productivity System Architecture](./PRODUCTIVITY-SYSTEM.md) - autonomy, communications, personal-information, document, finance, workflow, and read-only cloud-observer contracts.
+- [Trusted Operations Architecture](./TRUSTED-OPERATIONS.md) - command authority, public research, credential brokering, encrypted continuity, approved-model management, and experimental-model isolation.
+- [Whole-Codebase Audit Architecture](./CODEBASE-AUDIT.md) - exhaustive repository census, deterministic structure, bounded semantic review, reconciliation, read-only verification, checkpoints, findings, and coverage truth.
 - [Windows 11 Boundaries](./WINDOWS-BOUNDARIES.md) - package, process, IPC, path, sandbox, key, runtime, network, and verification requirements for first GA.
 - [Machine-Readable Requirement Registry](./requirements/README.md) - deterministic inventory and field contract for every canonical `AM-*`, `AT-*`, and `CR-*` identifier.
 - [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.

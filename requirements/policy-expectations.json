@@ -3,10 +3,10 @@
     "by_kind": {
       "deferred": 30,
       "rejected_default": 11,
-      "release_deferred": 19,
+      "release_deferred": 20,
       "v0.1_exclusion": 14
     },
-    "total": 74
+    "total": 75
   },
   "expectations": [
     {
@@ -529,7 +529,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 91,
+        "line": 101,
         "statement_sha256": "22fbe483892bf9d4f0655fd0872e802b105456764a3ceba6d4cb3bd2902cf34f"
       },
       "statement": "A claim of external certification, customer approval, or managed-environment approval that has not been independently granted.",
@@ -546,7 +546,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 90,
+        "line": 100,
         "statement_sha256": "32ee6e69fccade2566f3ae46b5d4038a97452c6e30a5b5d9f2b18d12a927a39d"
       },
       "statement": "A public model marketplace, arbitrary provider endpoint, automatically installed plugin ecosystem, or unrestricted Model Context Protocol client.",
@@ -563,7 +563,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 93,
+        "line": 103,
         "statement_sha256": "35d761d60cbeac8f19dbcb3249344139700d8e2b4a7ee08cc52e65b397a96ad6"
       },
       "statement": "A defense against hostile root or administrator access, a compromised operating-system account or kernel, or physical access to an unlocked workstation.",
@@ -580,7 +580,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 86,
+        "line": 96,
         "statement_sha256": "43189b76cfe082b71e13af88d7b88cd40cdbcd2ac55b1533072a50a01e4c24e1"
       },
       "statement": "A bridge that invokes Codex, controls or populates its tab, writes a handoff to the clipboard, or submits content on the user's behalf.",
@@ -597,7 +597,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 87,
+        "line": 97,
         "statement_sha256": "671f4236763b39dcc8e764fc9e3d5115b35b9011b64bf6a1a38417d6e14ecd1f"
       },
       "statement": "A scheduler or unattended background worker.",
@@ -614,7 +614,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 85,
+        "line": 95,
         "statement_sha256": "7a0156253401f3d720bbf4eec671a4d1c01c4dfdd876a649341498b35b06e168"
       },
       "statement": "A frontier-model transfer mechanism.",
@@ -631,7 +631,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 84,
+        "line": 94,
         "statement_sha256": "7c8d6457dc0ff1e059687385bf4afc6e13d8d3aa18db2ef1c7280234637a105f"
       },
       "statement": "A browser, email, calendar, messaging, database, or GitHub connector.",
@@ -648,7 +648,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 80,
+        "line": 90,
         "statement_sha256": "8389b2e223f7a3ae8c311b6e058f789f1c9b5cf371197a6ca6a285724d3a0686"
       },
       "statement": "A cloud assistant or hosted service.",
@@ -665,7 +665,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 92,
+        "line": 102,
         "statement_sha256": "8fc52fecc0347a66ab5770df903656b610899809de72bbbda9572b66d4735a80"
       },
       "statement": "Approval to process sensitive, regulated, confidential, personal, financial, credential, or customer-controlled data under a profile that has not been explicitly supported and tested.",
@@ -682,7 +682,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 88,
+        "line": 98,
         "statement_sha256": "a14448dff969d65f2261fb8e9a6b38f98f1b463562a057215374c8d29d1cf9bd"
       },
       "statement": "A multi-agent system.",
@@ -699,7 +699,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 81,
+        "line": 91,
         "statement_sha256": "b8dc5e3a93c4636d5104a2d9785c83bbf0cb3aaaca5e26a4cc4a905b5e255c8e"
       },
       "statement": "A coding agent that changes files.",
@@ -716,7 +716,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 82,
+        "line": 92,
         "statement_sha256": "c09dbfe6ac8e80cb04a5586a50751bb1cf98c866cae469215f2eb2f99e738b86"
       },
       "statement": "An Obsidian assistant.",
@@ -733,7 +733,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 83,
+        "line": 93,
         "statement_sha256": "cf2749acf143494ecfc5d0048d4c507f7d23b453c28f4c2d03eb5aabfcaa280d"
       },
       "statement": "A desktop application or complete command-line product.",
@@ -750,7 +750,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 89,
+        "line": 99,
         "statement_sha256": "e64902474dbd23529208c47e192370c15c4f087eac07d49582133e1acc83246c"
       },
       "statement": "A semantic/vector code index, remote embedding service, or language-server write surface.",
@@ -788,6 +788,23 @@
         "statement_sha256": "43a61be11832ce2e019e7bdad527642a79510dc65bb0b2a242d63fea30d6b33d"
       },
       "statement": "File metadata, source hashes, bounded extraction, citations, and safe sidecar output for every supported format.",
+      "status": "enforced_policy",
+      "test_contract_id": "PX-TEST-001"
+    },
+    {
+      "acceptance_tests": [],
+      "expected_result": "disabled_before_target_release",
+      "id": "PX-RDM-43D41A1A239F7235",
+      "kind": "release_deferred",
+      "promotion_rule": "target_release_gate",
+      "scope": "before_target_release",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1903,
+        "statement_sha256": "43d41a1a239f7235663ec380f24e8cda0b4ffa4df74d4f023f354d21414ed33a"
+      },
+      "statement": "Promote Notion, Box, Dropbox, and additional repositories only after their independent manifests and conformance suites pass.",
       "status": "enforced_policy",
       "test_contract_id": "PX-TEST-001"
     },
@@ -1272,11 +1289,11 @@
   "sources": [
     {
       "document": "PRD.md",
-      "sha256": "ff9bb34dbd0d197d48556af9dcb75d3258c969afe853012eda90164af52af061"
+      "sha256": "b9eb1a51f6785142ed4321f2fcf23115c02b8548d0084a0b1ab763bdff88e3a6"
     },
     {
       "document": "Agent-Scaffolding-Inventory.md",
-      "sha256": "6a45cb4890cdf6069d61e93f10044e6cb41cdb1123836f65c387727032b900b3"
+      "sha256": "41d7840586ba4a9cb101bf02b9ed13ec16ba660af0ec693e7a0a7afaaeb0fa53"
     }
   ],
   "test_contract": {

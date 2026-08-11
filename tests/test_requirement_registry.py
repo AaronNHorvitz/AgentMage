@@ -112,6 +112,121 @@ class DefinitionParsingTests(unittest.TestCase):
                 source_line="fixture",
             )
 
+    def test_normalizes_productivity_first_ga_definitions(self) -> None:
+        product = definition_from_cells(
+            [
+                "`AM-ATC-001`",
+                "Autonomy Center",
+                "`AM-ADP-001`",
+                "Build",
+                "v1.0",
+                "`AT-AUT-001`",
+            ],
+            heading="37. First-GA Productivity, Finance, and Cloud Observer Backlog",
+            line_number=20,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+        acceptance = definition_from_cells(
+            ["`AT-AUT-001`", "Autonomy matrix", "Zero authority broadening"],
+            heading="37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
+            line_number=21,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+
+        self.assertEqual(product["release"], "v1.0")
+        self.assertEqual(product["dependencies"], ["AM-ADP-001"])
+        self.assertEqual(product["acceptance_tests"], ["AT-AUT-001"])
+        self.assertEqual(acceptance["release"], "v1.0")
+        self.assertEqual(acceptance["disposition"], "required")
+
+    def test_normalizes_trusted_operations_and_post_ga_definitions(self) -> None:
+        trusted = definition_from_cells(
+            [
+                "`AM-TRU-001`",
+                "Trusted operations",
+                "`AM-KRN-001`",
+                "Build",
+                "v1.0",
+                "`AT-TRU-001`",
+            ],
+            heading=(
+                "38. First-GA Trusted Operations, Research, Continuity, "
+                "and Model Management Backlog"
+            ),
+            line_number=30,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+        trusted_acceptance = definition_from_cells(
+            ["`AT-TRU-001`", "Trusted operations matrix", "Zero authority union"],
+            heading="38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
+            line_number=31,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+        lab = definition_from_cells(
+            [
+                "`AM-EML-001`",
+                "Experimental Model Lab",
+                "None",
+                "Build",
+                "post-GA",
+                "`AT-EML-001`",
+            ],
+            heading="39. Post-GA Experimental Model Lab Backlog",
+            line_number=32,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+        lab_acceptance = definition_from_cells(
+            ["`AT-EML-001`", "Lab isolation", "Zero connected authority"],
+            heading="39A. Post-GA Experimental Model Acceptance Matrix",
+            line_number=33,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+
+        self.assertEqual(trusted["release"], "v1.0")
+        self.assertEqual(trusted_acceptance["release"], "v1.0")
+        self.assertEqual(lab["release"], "post-GA")
+        self.assertEqual(lab["dependencies"], [])
+        self.assertEqual(lab_acceptance["release"], "post-GA")
+
+    def test_normalizes_whole_codebase_audit_first_ga_definitions(self) -> None:
+        audit = definition_from_cells(
+            [
+                "`AM-CBA-001`",
+                "Whole-codebase audit",
+                "`AM-TRU-001`",
+                "Build",
+                "v1.0",
+                "`AT-CBA-001`",
+            ],
+            heading="40. First-GA Whole-Codebase Audit Backlog",
+            line_number=40,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+        audit_acceptance = definition_from_cells(
+            [
+                "`AT-CBA-001`",
+                "Complete audit lifecycle",
+                "Zero silent omissions or undeclared authority",
+            ],
+            heading="40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
+            line_number=41,
+            source_document="inventory.md",
+            source_line="fixture",
+        )
+
+        self.assertEqual(audit["release"], "v1.0")
+        self.assertEqual(audit["dependencies"], ["AM-TRU-001"])
+        self.assertEqual(audit["acceptance_tests"], ["AT-CBA-001"])
+        self.assertEqual(audit_acceptance["release"], "v1.0")
+        self.assertEqual(audit_acceptance["disposition"], "required")
+
 
 class RegistryArtifactTests(unittest.TestCase):
     def test_committed_registry_covers_every_canonical_definition(self) -> None:

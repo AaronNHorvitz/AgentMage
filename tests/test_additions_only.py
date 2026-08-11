@@ -32,6 +32,16 @@ class AdditionsOnlyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.registry = load_json(DEFAULT_REGISTRY)
         self.baseline = load_json(DEFAULT_BASELINE)
+        self.protected_ids = {
+            record["id"] for record in self.baseline["requirements"]
+        }
+
+    def protected_record(self, registry: dict[str, object]) -> dict[str, object]:
+        return next(
+            record
+            for record in registry["requirements"]
+            if record["id"] in self.protected_ids
+        )
 
     def categories(self, diagnostics: list[object]) -> list[str]:
         return [diagnostic.category for diagnostic in diagnostics]
@@ -44,8 +54,14 @@ class AdditionsOnlyTests(unittest.TestCase):
         )
 
         self.assertEqual(diagnostics, [])
-        self.assertEqual(self.baseline["counts"]["requirements"], 119)
-        self.assertEqual(self.baseline["counts"]["checklist"], 1103)
+        self.assertEqual(
+            self.baseline["counts"]["requirements"],
+            len(self.baseline["requirements"]),
+        )
+        self.assertEqual(
+            self.baseline["counts"]["checklist"],
+            len(self.baseline["checklist"]),
+        )
 
     def test_initial_baseline_is_deterministic(self) -> None:
         first = build_initial_baseline(self.registry, DEFAULT_INVENTORY)
@@ -61,7 +77,8 @@ class AdditionsOnlyTests(unittest.TestCase):
 
     def test_removed_requirement_is_blocked(self) -> None:
         mutated = copy.deepcopy(self.registry)
-        removed = mutated["requirements"].pop()
+        removed = self.protected_record(mutated)
+        mutated["requirements"].remove(removed)
 
         diagnostics = audit_additions_only(
             self.baseline,
@@ -81,7 +98,7 @@ class AdditionsOnlyTests(unittest.TestCase):
         ):
             with self.subTest(field=field):
                 mutated = copy.deepcopy(self.registry)
-                mutated["requirements"][0][field] = replacement
+                self.protected_record(mutated)[field] = replacement
                 diagnostics = audit_additions_only(
                     self.baseline,
                     mutated,
@@ -93,21 +110,26 @@ class AdditionsOnlyTests(unittest.TestCase):
                 )
 
     def test_s_000_st01_requirement_remove_rename_weaken_and_reclassify_are_exact(self) -> None:
-        baseline_id = self.registry["requirements"][0]["id"]
+        baseline_id = self.protected_record(self.registry)["id"]
         cases = {
-            "remove": lambda records: records.pop(0),
-            "rename": lambda records: records[0].update({"id": "AM-RENAMED-001"}),
-            "weaken": lambda records: records[0].update(
+            "remove": lambda records, index: records.pop(index),
+            "rename": lambda records, index: records[index].update({"id": "AM-RENAMED-001"}),
+            "weaken": lambda records, index: records[index].update(
                 {"title": "Optionally perform the protected behavior."}
             ),
-            "reclassify": lambda records: records[0].update(
+            "reclassify": lambda records, index: records[index].update(
                 {"kind": "competitive_requirement", "disposition": "optional"}
             ),
         }
         for name, mutate in cases.items():
             with self.subTest(mutation=name):
                 changed = copy.deepcopy(self.registry)
-                mutate(changed["requirements"])
+                protected_index = next(
+                    index
+                    for index, record in enumerate(changed["requirements"])
+                    if record["id"] == baseline_id
+                )
+                mutate(changed["requirements"], protected_index)
                 diagnostics = audit_additions_only(
                     self.baseline,
                     changed,
@@ -129,7 +151,11 @@ class AdditionsOnlyTests(unittest.TestCase):
         for field in ("dependencies", "acceptance_tests"):
             with self.subTest(field=field):
                 mutated = copy.deepcopy(self.registry)
-                record = next(item for item in mutated["requirements"] if item[field])
+                record = next(
+                    item
+                    for item in mutated["requirements"]
+                    if item["id"] in self.protected_ids and item[field]
+                )
                 removed = record[field].pop()
                 diagnostics = audit_additions_only(
                     self.baseline,
@@ -144,8 +170,10 @@ class AdditionsOnlyTests(unittest.TestCase):
     def test_added_dependencies_tests_and_requirements_are_allowed(self) -> None:
         mutated = copy.deepcopy(self.registry)
         product = next(
-            item for item in mutated["requirements"]
-            if item["kind"] == "product_requirement"
+            item
+            for item in mutated["requirements"]
+            if item["id"] in self.protected_ids
+            and item["kind"] == "product_requirement"
         )
         product["dependencies"].append("AM-NEW-001")
         product["acceptance_tests"].append("AT-NEW-001")
@@ -263,7 +291,7 @@ class AdditionsOnlyTests(unittest.TestCase):
 
     def test_update_refuses_to_hide_a_removal(self) -> None:
         mutated = copy.deepcopy(self.registry)
-        mutated["requirements"].pop()
+        mutated["requirements"].remove(self.protected_record(mutated))
 
         with self.assertRaisesRegex(AdditionsOnlyError, "cannot update"):
             update_baseline(self.baseline, mutated, DEFAULT_INVENTORY)

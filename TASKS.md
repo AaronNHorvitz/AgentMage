@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Implementation in progress; delivery-system and Windows first-GA scope accepted |
+| Status | Implementation in progress; expanded first-GA scope accepted through Decision 0009 |
 | Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
-| Scope | Complete AgentMage roadmap from foundation through v1.0 GA delivery-system closure |
+| Scope | Complete AgentMage roadmap from foundation through expanded v1.0 GA closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
 | Product authority | `PRD.md` |
 | Detailed requirement authority | `Agent-Scaffolding-Inventory.md` |
@@ -13,9 +13,10 @@
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime/process/socket boundary | `RUNTIME-BOUNDARIES.md` |
 | Connected-delivery boundary | `DELIVERY-SYSTEM.md` |
+| Productivity, communication, finance, and cloud-observer boundary | `PRODUCTIVITY-SYSTEM.md` |
 | Windows 11 boundary | `WINDOWS-BOUNDARIES.md` |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
-| Execution rule | Work proceeds in numbered order under Decisions 0003 and 0008; Mac items remain `BLOCKED-MACOS`, but first-GA shared/Linux/Windows work may continue when technically independent and no platform evidence is substituted |
+| Execution rule | Work proceeds in numbered order under Decisions 0003, 0008, and 0009; Mac items remain `BLOCKED-MACOS`, but first-GA shared/Linux/Windows work may continue when technically independent and no platform evidence is substituted |
 
 ## Planning Hierarchy and Numbering
 
@@ -42,6 +43,7 @@
 | The delivery/security audit identified missing v0.1 policy, runtime, fuzzing, incident, accessibility, support, diagnostics, and handoff work. | Accepted planning decision | Record the independently assessed decisions in `docs/decisions/0001-product-security-and-runtime-baseline.md`; add bounded stories without deleting or renumbering prior work. |
 | Required MacBook Pro M5 hardware is unavailable while independent shared and Linux work remains executable. | Accepted sequencing decision | Apply `docs/decisions/0003-blocked-platform-lane-continuation.md`: retain every Mac item and gate as `BLOCKED-MACOS`, prohibit substitution or release claims, and continue only dependency-independent work in numeric order. |
 | The product expanded to a delivery control plane and Windows 11 became a first-release requirement. | Accepted scope decision | Apply `docs/decisions/0008-first-ga-delivery-system-and-windows.md`: preserve Sprints 0-102, classify them as internal/inherited milestones, append the delivery and Windows work, and close the first supported release only at `G-GA`. |
+| Productivity, communications, finance, and read-only cloud observation became first-GA capability packs. | Accepted scope decision | Apply `docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md`: preserve every prior sprint and requirement, retain Sprint 126 as a delivery-and-Windows checkpoint, append Sprints 127-156, and close expanded `G-GA` only at Sprint 156. |
 
 ### Blocked Platform Lane
 
@@ -85,7 +87,7 @@ No vague or epic-sized item remains silently assigned as a single active story. 
 
 ## Universal Story Definition of Done
 
-Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds `G-DOD-14` through `G-DOD-16` prospectively to Sprints 103-126 and to any future story that introduces a connected operation or adapter. Those controls do not retroactively rewrite or reopen immutable evidence for completed local-only stories; a later change to one of those stories that introduces connected authority must satisfy the added controls.
+Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds `G-DOD-14` through `G-DOD-16` prospectively to Sprints 103-126 and to any future story that introduces a connected operation or adapter. Decision 0009 adds `G-DOD-17` through `G-DOD-19` to Sprints 127-156 and to any later change that touches autonomy, cross-pack data, finance, or cloud observation. Those controls do not retroactively rewrite or reopen immutable evidence for completed local-only stories; a later change to one of those stories that introduces connected authority must satisfy the added controls.
 
 - [ ] **G-DOD-01:** Scope, dependencies, risks, exclusions, source requirements, and applicable `SR-*` controls are recorded before implementation.
 - [ ] **G-DOD-02:** Every implementation sub-task has positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect unit cases where applicable.
@@ -103,6 +105,9 @@ Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds 
 - [ ] **G-DOD-14:** Every connected operation binds exact provider, host, tenant, account, project or environment, capability class, credential reference, preconditions, effect, limits, and support-matrix tuple.
 - [ ] **G-DOD-15:** Every external effect has an exact preview, consumed single-use grant, idempotency or reconciliation strategy, verified postcondition, receipt, cancellation path, and rollback or compensation plan.
 - [ ] **G-DOD-16:** Every promoted adapter passes its versioned conformance level and can be removed without damaging strict-local behavior or another adapter.
+- [ ] **G-DOD-17:** Every productivity operation is intersected with the current narrowest autonomy policy, binds every effect-bearing field, and invalidates stale approval before effect.
+- [ ] **G-DOD-18:** Every cross-pack transfer has an explicit classification, source, destination, purpose, minimization, retention, policy decision, and receipt; external content cannot create the transfer or its authority.
+- [ ] **G-DOD-19:** Finance and Cloud Observer changes prove money-movement and cloud-mutation families absent from schemas, manifests, registrations, policies, shells, workflows, provider requests, and compiled artifacts.
 
 ## Test and Evidence Contract
 
@@ -148,6 +153,24 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-28` Deployment, infrastructure, and rollback safety | Sprint 112 | Every deployment, infrastructure, flag, migration, or rollback change and Sprint 126 |
 | `RV-29` Provider failure, version skew, and resource exhaustion | Sprint 123 | Every provider matrix expansion and Sprint 126 |
 | `RV-30` Adapter removal and strict-local restoration | Sprint 124 | Every connected-pack lifecycle change and Sprint 126 |
+| `RV-31` Autonomy, recipient, and communication effects | Sprint 128 | Every communication operation or autonomy-policy change and Sprints 156 and 166 |
+| `RV-32` Identity, synchronization, unified inbox, and workflow integrity | Sprints 129-131 | Every productivity graph, synchronization, inbox, or workflow change and Sprints 156 and 166 |
+| `RV-33` Financial precision, reconciliation, privacy, and prohibited authority | Sprints 142-151 | Every finance-domain or financial-adapter change and Sprints 156 and 166 |
+| `RV-34` Cloud Observer read-only and scope enforcement | Sprints 152-155 | Every cloud-observer provider or correlation change and Sprints 156 and 166 |
+| `RV-35` Productivity-pack removal and cross-pack restoration | Sprint 155 | Every productivity-pack lifecycle change and Sprints 156 and 166 |
+| `RV-36` Command authority and Owner-session lifecycle | Sprint 159 | Every command-policy, worker, platform, or lifecycle change and Sprint 166 |
+| `RV-37` Public research, citation, and disclosure isolation | Sprint 160 | Every research worker, source, citation, download, or disclosure change and Sprint 166 |
+| `RV-38` Credential broker isolation and lifecycle | Sprint 158 | Every credential-store, identity, provider, worker, rotation, restore, or removal change and Sprint 166 |
+| `RV-39` Encrypted continuity and disaster recovery | Sprints 161-162 | Every snapshot, encryption, provider, restore, retention, deletion, or recovery change and Sprint 166 |
+| `RV-40` Approved catalog and chat-guided model management | Sprints 163-164 | Every catalog, installer, model, runtime, platform, activation, rollback, or removal change and Sprint 166 |
+| `RV-41` Muse Glimmer candidate admission | Sprint 165 | Every Muse identity, license, provenance, artifact, runtime, quality, security, support, or disposition change and Sprint 166 |
+| `RV-42` Experimental Model Lab isolation and promotion | Sprint 167 | Every post-GA lab artifact, authority, resource, promotion, or removal change and Sprint 168 |
+| `RV-43` Trusted-operations removal and superseding first-GA closure | Sprint 165 | Every trusted-operations capability lifecycle change and Sprint 166 |
+| `RV-44` Repository census and coverage truth | Sprints 157 and 159 | Every scope, path, source-control, census, exclusion, or coverage change and Sprint 166 |
+| `RV-45` Read-only audit, parser isolation, and secret protection | Sprint 159 | Every audit worker, parser, command, path, redaction, or disposable-workspace change and Sprint 166 |
+| `RV-46` Structural index, semantic partition, and cross-module reconciliation | Sprints 163 and 165 | Every parser, graph, packet, evidence-card, reconciliation, or model-profile change and Sprint 166 |
+| `RV-47` Audit checkpoint, invalidation, findings, and reporting | Sprints 161 and 165 | Every checkpoint, resume, invalidation, finding, report, or coverage-state change and Sprint 166 |
+| `RV-48` Whole-codebase audit removal and first-GA qualification | Sprints 165-166 | Every audit-capability lifecycle change and final Sprint 166 closure |
 
 ## Epic Roadmap
 
@@ -164,7 +187,12 @@ The owning sprint performs the first complete execution possible for its boundar
 | Epic 8 | v1+ - Desktop, Extensions, Actions, Scheduling, and Agents | Sprints 76-100 |
 | Epic 9 | Inherited-Roadmap Closure Checkpoint | Sprints 101-102 |
 | Epic 10 | Provider-Neutral Delivery System and Windows 11 | Sprints 103-125 |
-| Epic 11 | v1.0 GA Verification and Release Decision | Sprint 126 |
+| Epic 11 | Delivery and Windows GA Closure Checkpoint | Sprint 126 |
+| Epic 12 | Productivity, Communications, and Unified Work | Sprints 127-141 |
+| Epic 13 | Finance, Budgeting, and Cloud Observer | Sprints 142-155 |
+| Epic 14 | Expanded v1.0 GA Verification Checkpoint | Sprint 156 |
+| Epic 15 | Trusted Operations, Whole-Codebase Audit, and Superseding v1.0 GA | Sprints 157-166 |
+| Epic 16 | Post-GA Experimental Model Lab | Sprints 167-168 |
 
 ## [ ] Epic 0 - Foundation
 
@@ -6983,19 +7011,19 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Gate decision:** Sprint 125 is PASS only when Story 125.1, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
-## [ ] Epic 11 - v1.0 GA Verification and Release Decision
+## [ ] Epic 11 - Delivery and Windows GA Closure Checkpoint
 
-### [ ] Sprint 126 - First Supported GA Evidence and Release Decision
+### [ ] Sprint 126 - Delivery and Windows Release-Candidate Checkpoint
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
-**Sprint goal:** Rebuild, independently reproduce, and sign the exact v1.0 GA release decision without hiding any unsupported capability, stale result, residual risk, or platform/provider limitation.
+**Sprint goal:** Rebuild, independently reproduce, and sign the delivery-and-Windows release-candidate checkpoint without hiding any unsupported capability, stale result, residual risk, or platform/provider limitation; keep expanded `G-GA` blocked for Decision 0009 work.
 
 **Source coverage:** `AM-GA-001`, `AM-GAD-001`, `AT-GA-001`; entire README, PRD, inventory through Section 36B, implementation plan, security review, runtime/delivery/Windows boundaries, model policy, security policy, Decisions 0001-0008, and all Sprints 0-125.
 
 **Dependencies:** Sprint 125; `G-FOUNDATION`, all internal milestone gates used by promoted scope, `G-LEGACY-CLOSURE`, `G-DELIVERY`, and `G-WINDOWS`. Apple Silicon `BLOCKED-MACOS` items are retained post-GA and are not `G-GA` dependencies under Decision 0008.
 
-#### [ ] Story 126.1 - Truthful v1.0 GA Closure
+#### [ ] Story 126.1 - Truthful Delivery and Windows Closure Checkpoint
 
 **User-facing value:** As a user and reviewer, I need a release whose supported platforms, providers, operations, security, limitations, and evidence match the exact package I receive.
 
@@ -7011,7 +7039,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 126.1.2.2:** Rerun every promoted provider conformance matrix and every `AT-*` first-GA threshold against exact release candidates and synthetic provider environments.
   - [ ] **Sub-task 126.1.2.3:** Rerun `RV-01` through `RV-30`, cross-provider lifecycles, strict-local removal, accessibility, performance, recovery, incident tabletop, and documentation checks.
   - [ ] **Sub-task 126.1.2.4:** Recompute every summary from raw evidence, validate staleness against all source/dependency/config/model/platform/provider manifests, and reconcile every failure, skip, suppression, quarantine, and reviewer finding.
-- [ ] **Task 126.1.3 - Decide and sign v1.0 GA**
+- [ ] **Task 126.1.3 - Decide and sign the delivery and Windows checkpoint**
   - [ ] **Sub-task 126.1.3.1:** Produce the final provider/version/capability matrix with exact supported, degraded, unsupported, disabled, and post-GA states.
   - [ ] **Sub-task 126.1.3.2:** Produce the final risk, limitation, remediation, rollback, support, vulnerability, and release decision from raw evidence.
   - [ ] **Sub-task 126.1.3.3:** Force every release gate and support claim to fail in synthetic checks and prove packaging/publication cannot proceed.
@@ -7030,9 +7058,2076 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 126.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, recovery, and removal gates.
 - [ ] **Sprint AC 126.AC3:** Every promoted provider/version/capability tuple passes its exact conformance and extreme tests; every unsupported operation passes negative tests.
 - [ ] **Sprint AC 126.AC4:** Bills of materials, provenance, signatures, hashes, manifests, support matrices, documentation, and raw evidence reconcile exactly.
-- [ ] **Sprint AC 126.AC5:** `G-GA` closes only after independent reproduction and explicit user approval with no hidden blocker.
+- [ ] **Sprint AC 126.AC5:** The Sprint 126 delivery-and-Windows checkpoint closes only after independent reproduction and explicit user approval; expanded `G-GA` remains blocked pending Sprints 127-156.
 
-**Gate decision:** Sprint 126 and `G-GA` are PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable `AT-*`, every `RV-01` through `RV-30`, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
+**Gate decision:** Sprint 126 is PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable delivery-and-Windows `AT-*`, every `RV-01` through `RV-30`, and the Universal Story Definition of Done pass with current signed evidence. This checkpoint does not close expanded `G-GA`, which remains BLOCKED until Sprint 156. Otherwise Sprint 126 is BLOCKED.
+
+## [ ] Epic 12 - Productivity, Communications, and Unified Work
+
+### [ ] Sprint 127 - Productivity-Pack Scope and Support Contract
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Convert Decision 0009 and `PRODUCTIVITY-SYSTEM.md` into versioned pack, provider, operation, data-flow, support, and exclusion contracts before registering any new tool.
+
+**Source coverage:** Decision 0009; `PRODUCTIVITY-SYSTEM.md`; `AM-ATC-001`, `AM-SYNC-001`, `AM-PGR-001`, `AM-UIN-001`, `AM-COM-001`, `AM-FIN-001`, `AM-CLO-001`.
+
+**Dependencies:** Sprint 126 checkpoint; existing adapter, identity, classification, receipt, support-matrix, and strict-local contracts.
+
+#### [ ] Story 127.1 - Truthful Optional-Pack Foundation
+
+**User-facing value:** As a user, I can see exactly which productivity packs, providers, accounts, objects, operations, and limitations are installed without an optional pack silently changing strict-local behavior.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 127.1.1 - Define pack and capability manifests**
+  - [ ] **Sub-task 127.1.1.1:** Define versioned pack, provider, account, object, operation, event, scope, classification, network, retention, recovery, removal, and support-state schemas.
+  - [ ] **Sub-task 127.1.1.2:** Define `supported`, `degraded`, `unsupported`, `disabled`, `revoked`, and `removed` states with fail-closed unknown-version behavior.
+  - [ ] **Sub-task 127.1.1.3:** Encode first-GA provider and operation matrices, including communications writes, financial-institution reads, Cloud Observer reads, money-movement absence, and cloud-mutation absence.
+- [ ] **Task 127.1.2 - Bind lifecycle and data-flow boundaries**
+  - [ ] **Sub-task 127.1.2.1:** Specify install, enable, authenticate, synchronize, suspend, revoke, disable, remove, and strict-local-restoration transitions.
+  - [ ] **Sub-task 127.1.2.2:** Enumerate every allowed cross-pack data-flow edge and deny all undeclared edges.
+  - [ ] **Sub-task 127.1.2.3:** Add component, process, socket, credential-reference, cache, cursor, schedule, webhook, index, and retained-data inventory fields.
+- [ ] **Task 127.1.3 - Verify contract completeness**
+  - [ ] **Sub-task 127.1.3.1:** Generate fixtures for every state, provider family, operation class, omission, future version, malformed manifest, and contradictory support claim.
+  - [ ] **Sub-task 127.1.3.2:** Prove optional packs add zero process, socket, credential, tool, schedule, or network authority while disabled or absent.
+  - [ ] **Sub-task 127.1.3.3:** Publish deterministic support and exclusion reports with source and schema digests.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 127.1.AC1:** Given a supported, degraded, unsupported, disabled, or removed pack state, when capability discovery runs, then only exact manifested operations appear with their current limitations and evidence.
+- [ ] **Story AC 127.1.AC2:** Given an absent, malformed, contradictory, or future-version manifest, when registration is attempted, then no new authority is created and the reason is visible.
+- [ ] **Story AC 127.1.AC3:** Given every first-GA pack, when its lifecycle and data flows are inspected, then communications writes, read-only finance and cloud boundaries, and prohibited operation families are explicit.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 127.AC1:** Every new pack, provider family, object, operation, lifecycle state, and data-flow edge has a versioned schema.
+- [ ] **Sprint AC 127.AC2:** Unsupported, disabled, absent, and future-version paths pass negative registration tests.
+- [ ] **Sprint AC 127.AC3:** Strict-local startup is byte- and authority-equivalent with all optional packs absent versus disabled.
+- [ ] **Sprint AC 127.AC4:** The generated support and exclusion matrices reconcile with README, PRD, inventory, security review, and Decision 0009.
+
+**Gate decision:** Sprint 127 is PASS only when Story 127.1, all criteria, pack-schema tests, absence tests, documentation checks, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 128 - Kernel-Enforced Autonomy Center
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Make every connected operation obey one visible effective autonomy policy whose narrower ceilings, expiry, budgets, and emergency disablement cannot be broadened by a shell, model, connector, workflow, or stale approval.
+
+**Source coverage:** `AM-ATC-001`, `AT-AUT-001`, `SR-PRD-001`, `RV-31`; `PRODUCTIVITY-SYSTEM.md` Autonomy Center.
+
+**Dependencies:** Sprint 127; v0.1 `CapabilityGrant`, policy intersection, authenticated configuration, receipt, and emergency-disable foundations.
+
+#### [ ] Story 128.1 - One Effective Autonomy Policy
+
+**User-facing value:** As a user, I can select Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, or Autonomous within policy and trust the displayed level to match enforced behavior.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 128.1.1 - Implement autonomy policy contracts**
+  - [ ] **Sub-task 128.1.1.1:** Define closed level, ceiling, operation, destination, recipient, channel, classification, schedule, budget, expiry, version, and policy-origin types.
+  - [ ] **Sub-task 128.1.1.2:** Implement deterministic intersection across global, pack, connector, account, workspace, workflow, and operation policy.
+  - [ ] **Sub-task 128.1.1.3:** Make money movement and cloud mutation unrepresentable regardless of selected level.
+- [ ] **Task 128.1.2 - Build the user control and transition flow**
+  - [ ] **Sub-task 128.1.2.1:** Add the native Visual Studio Code Autonomy Center control with effective-state, reason, expiry, budget, and narrower-ceiling visibility.
+  - [ ] **Sub-task 128.1.2.2:** Require authentication, exact delta preview, fresh policy revision, and a receipt for every authority increase.
+  - [ ] **Sub-task 128.1.2.3:** Implement narrowing, expiry, logout, revocation, cancellation, and global external-write disablement with in-flight reconciliation.
+- [ ] **Task 128.1.3 - Attack and verify enforcement**
+  - [ ] **Sub-task 128.1.3.1:** Cross product all levels and ceilings against every operation class and policy origin.
+  - [ ] **Sub-task 128.1.3.2:** Mutate stale display state, replayed approvals, session identity, recipients, destinations, payloads, schedules, budgets, and expiry around authorization.
+  - [ ] **Sub-task 128.1.3.3:** Run at least 2,000 authority mutations and prove emergency disablement blocks new writes while classifying every in-flight effect.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 128.1.AC1:** Given multiple autonomy ceilings, when an operation is evaluated, then the narrowest effective policy is enforced and explained.
+- [ ] **Story AC 128.1.AC2:** Given any changed operation field, stale policy revision, expired grant, or replayed approval, when execution is attempted, then the operation is denied before effect.
+- [ ] **Story AC 128.1.AC3:** Given emergency disablement during queued or in-flight work, when it completes, then no new write begins and every uncertain effect is reconciled visibly.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 128.AC1:** `AT-AUT-001` passes with zero authority broadening.
+- [ ] **Sprint AC 128.AC2:** The Visual Studio Code display and kernel effective policy agree for every fixture.
+- [ ] **Sprint AC 128.AC3:** Money movement and cloud mutation are absent from every autonomy schema and registration path.
+- [ ] **Sprint AC 128.AC4:** `RV-31` has current raw mutation, race, cancellation, disablement, and reconciliation evidence.
+
+**Gate decision:** Sprint 128 is PASS only when Story 128.1, all criteria, `AM-ATC-001`, `AT-AUT-001`, `SR-PRD-001`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 129 - Connected Identity and Work Graph
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Extend provider-scoped identity and graph contracts without allowing aliases, names, inferred similarity, or cross-provider joins to authorize a person, account, destination, record, or action.
+
+**Source coverage:** `AM-PGR-001`, `AT-PGR-001`, `SR-PRD-002`, `RV-32`.
+
+**Dependencies:** Sprints 127-128; existing provider-neutral identity and delivery-graph contracts.
+
+#### [ ] Story 129.1 - Evidence-Backed Cross-System Identity
+
+**User-facing value:** As a user, I can relate messages, meetings, tasks, documents, financial records, cloud observations, and delivery work while always seeing the native source identity and confidence of each link.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 129.1.1 - Extend native identity types**
+  - [ ] **Sub-task 129.1.1.1:** Add provider, tenant, account, mailbox, workspace, team, channel, person, meeting, task, document, financial-record, and cloud-resource identities.
+  - [ ] **Sub-task 129.1.1.2:** Preserve native immutable identifiers, mutable display attributes, source observation, freshness, classification, and tombstone state separately.
+  - [ ] **Sub-task 129.1.1.3:** Define confirmed, deterministic, proposed, conflicting, stale, and removed cross-provider links.
+- [ ] **Task 129.1.2 - Build graph mutation and review flows**
+  - [ ] **Sub-task 129.1.2.1:** Add evidence-cited graph edges and user confirmation for non-deterministic identity joins.
+  - [ ] **Sub-task 129.1.2.2:** Implement rename, transfer, merge, split, account change, provider deletion, and link-revocation behavior.
+  - [ ] **Sub-task 129.1.2.3:** Deny authorization, recipient resolution, and destination selection from proposed or display-only links.
+- [ ] **Task 129.1.3 - Verify identity confusion resistance**
+  - [ ] **Sub-task 129.1.3.1:** Test aliases, duplicate names, homoglyphs, renamed channels, transferred resources, recycled addresses, and conflicting provider evidence.
+  - [ ] **Sub-task 129.1.3.2:** Mutate every graph edge around recipient, account, financial record, and cloud resource selection.
+  - [ ] **Sub-task 129.1.3.3:** Prove removal deletes or tombstones every derived edge without corrupting unrelated provider history.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 129.1.AC1:** Given two objects with similar display attributes, when graph linkage is proposed, then they remain distinct until deterministic evidence or user confirmation exists.
+- [ ] **Story AC 129.1.AC2:** Given a confirmed link that becomes stale, conflicting, transferred, or removed, when an action is evaluated, then the link cannot authorize that action.
+- [ ] **Story AC 129.1.AC3:** Given a graph view, when the user inspects any node or edge, then native identity, source, freshness, classification, and link status are visible.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 129.AC1:** `AT-PGR-001` passes across every promoted identity class.
+- [ ] **Sprint AC 129.AC2:** No alias, display name, inferred similarity, or stale link authorizes an action.
+- [ ] **Sprint AC 129.AC3:** Rename, transfer, merge, split, deletion, and removal preserve exact lineage.
+- [ ] **Sprint AC 129.AC4:** `RV-32` records graph-confusion and cross-provider isolation evidence.
+
+**Gate decision:** Sprint 129 is PASS only when Story 129.1, all criteria, `AM-PGR-001`, `AT-PGR-001`, `SR-PRD-002`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 130 - Synchronization and Event Integrity
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Provide deterministic change ingestion, bounded polling, gap detection, reconciliation, and removal so stale or incomplete provider state is never presented as current and complete.
+
+**Source coverage:** `AM-SYNC-001`, `AT-SYNC-001`, `SR-PRD-003`, `RV-32`.
+
+**Dependencies:** Sprints 127 and 129; provider event and polling contracts from Sprints 103-105.
+
+#### [ ] Story 130.1 - Honest Incremental Synchronization
+
+**User-facing value:** As a user, I can tell whether connected information is current, delayed, incomplete, permission-limited, reconciling, revoked, or offline.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 130.1.1 - Implement synchronization state machines**
+  - [ ] **Sub-task 130.1.1.1:** Define event, notification, delta, cursor, page, checkpoint, backfill, tombstone, coverage, freshness, permission, gap, and reconciliation records.
+  - [ ] **Sub-task 130.1.1.2:** Implement duplicate, reorder, edit, delete, delayed event, cursor expiry, bounded polling, and full-reconciliation transitions.
+  - [ ] **Sub-task 130.1.1.3:** Bind every stream to one exact provider, tenant, account, object family, scope, credential reference, and schema version.
+- [ ] **Task 130.1.2 - Surface and recover incomplete state**
+  - [ ] **Sub-task 130.1.2.1:** Add visible freshness, last-success, last-attempt, coverage, permission gap, history gap, throttling, and recovery state.
+  - [ ] **Sub-task 130.1.2.2:** Implement restart, revocation, reconnect, backfill, resubscribe, webhook rotation, and cursor-reset flows.
+  - [ ] **Sub-task 130.1.2.3:** Prevent events and synchronized content from creating grants, schedules, workflows, or external effects.
+- [ ] **Task 130.1.3 - Verify event and polling integrity**
+  - [ ] **Sub-task 130.1.3.1:** Inject forgery, replay, duplicates, omissions, reordering, clock skew, cursor loss, permission reduction, throttling, outage, partition, and crash.
+  - [ ] **Sub-task 130.1.3.2:** Compare incremental state with authoritative fixture snapshots after every schedule.
+  - [ ] **Sub-task 130.1.3.3:** Remove streams and prove zero remaining webhook, cursor, poller, schedule, cache, worker, socket, or credential authority.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 130.1.AC1:** Given duplicate, reordered, delayed, or replayed events, when synchronization completes, then canonical state is deterministic and no action is duplicated.
+- [ ] **Story AC 130.1.AC2:** Given a cursor, permission, history, or provider gap, when data is displayed, then the gap is visible and the result cannot appear complete.
+- [ ] **Story AC 130.1.AC3:** Given revocation or removal, when synchronization stops, then every event and polling path loses authority and retained state follows policy.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 130.AC1:** `AT-SYNC-001` passes against fake, fault, malicious, and future-version providers.
+- [ ] **Sprint AC 130.AC2:** Incremental and full-reconciliation snapshots agree for every complete fixture.
+- [ ] **Sprint AC 130.AC3:** Every incomplete fixture has explicit freshness, permission, history, or coverage state.
+- [ ] **Sprint AC 130.AC4:** Removal leaves zero event, polling, credential, schedule, process, socket, or cache authority.
+
+**Gate decision:** Sprint 130 is PASS only when Story 130.1, all criteria, `AM-SYNC-001`, `AT-SYNC-001`, `SR-PRD-003`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 131 - Unified Activity Inbox
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Build a local unified activity view that preserves source truth, deterministic state, citations, freshness, uncertainty, and permission gaps without inventing provider authority.
+
+**Source coverage:** `AM-UIN-001`, `AT-UIN-001`, `SR-PRD-004`, `RV-32`.
+
+**Dependencies:** Sprints 129-130; local retrieval, citation, classification, and Visual Studio Code shell foundations.
+
+#### [ ] Story 131.1 - One Cited Work Queue
+
+**User-facing value:** As a user, I can review communication, meetings, tasks, delivery work, bills, and cloud observations in one queue while retaining each item's native system and evidence.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 131.1.1 - Define inbox records and deterministic state**
+  - [ ] **Sub-task 131.1.1.1:** Define action, response, decision, waiting, blocked, due, reference, duplicate, stale, incomplete, uncertain, dismissed, and completed states.
+  - [ ] **Sub-task 131.1.1.2:** Store source identity, citations, observed time, effective time, freshness, classification, provider state, local disposition, and model suggestion separately.
+  - [ ] **Sub-task 131.1.1.3:** Define deterministic deduplication and grouping keys without merging native records.
+- [ ] **Task 131.1.2 - Build inbox query and interaction surfaces**
+  - [ ] **Sub-task 131.1.2.1:** Add filters for source, account, item class, state, due window, freshness, classification, confidence, and permission gap.
+  - [ ] **Sub-task 131.1.2.2:** Add cited detail views, source-open actions, local disposition changes, and draft handoffs that invoke no provider write by themselves.
+  - [ ] **Sub-task 131.1.2.3:** Distinguish deterministic priority, explicit user rules, and labeled model suggestions.
+- [ ] **Task 131.1.3 - Verify truthful aggregation**
+  - [ ] **Sub-task 131.1.3.1:** Build mixed-source fixtures with duplicates, stale records, missing history, revoked permissions, conflicting due dates, and uncertain actions.
+  - [ ] **Sub-task 131.1.3.2:** Test pagination, sort stability, restart, deletion, tombstone, source rename, and source removal.
+  - [ ] **Sub-task 131.1.3.3:** Run keyboard, screen-reader, focus, dynamic-update, and status-announcement checks.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 131.1.AC1:** Given mixed connected records, when the inbox is built, then every item retains native identity, source citation, freshness, classification, and uncertainty.
+- [ ] **Story AC 131.1.AC2:** Given incomplete permissions or history, when a view is filtered or summarized, then missing coverage remains visible and cannot appear empty or complete.
+- [ ] **Story AC 131.1.AC3:** Given a model-suggested priority or grouping, when displayed, then it remains labeled and cannot alter source state or authorize an effect.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 131.AC1:** `AT-UIN-001` passes across communication, delivery, meeting, task, finance, and cloud fixture classes.
+- [ ] **Sprint AC 131.AC2:** Deterministic views reproduce byte-identically from the same normalized state.
+- [ ] **Sprint AC 131.AC3:** Source, freshness, permission, coverage, duplicate, stale, and uncertain states remain visible.
+- [ ] **Sprint AC 131.AC4:** Accessibility and removal tests pass with no source mutation or residual authority.
+
+**Gate decision:** Sprint 131 is PASS only when Story 131.1, all criteria, `AM-UIN-001`, `AT-UIN-001`, `SR-PRD-004`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 132 - Communications Contract and Outlook
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Implement the common communications contract and a Microsoft Graph Outlook and Exchange Online reference adapter with exact mailbox, recipient, content, attachment, event, failure, and removal behavior.
+
+**Source coverage:** `AM-COM-001`, `AM-M365-001`, `AT-COM-001`, `AT-M365-001`, `SR-PRD-005`, `SR-PRD-006`, `RV-23` through `RV-26`, `RV-31`.
+
+**Dependencies:** Sprints 127-131; provider worker and external-effect foundations.
+
+#### [ ] Story 132.1 - Exact Outlook and Exchange Communication
+
+**User-facing value:** As a user, I can search, read, draft, and perform supported Outlook operations against the intended mailbox while every external effect remains separately controlled.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 132.1.1 - Implement common communication objects**
+  - [ ] **Sub-task 132.1.1.1:** Define mailbox, folder, conversation, thread, message, sender, recipient, mention, reaction, attachment, formatting, visibility, event, and provider-transformation contracts.
+  - [ ] **Sub-task 132.1.1.2:** Define distinct read, draft, send, reply, forward, edit, delete, archive, flag, label, upload, download, recovery, and removal operations.
+  - [ ] **Sub-task 132.1.1.3:** Make unsupported operations absent and provider differences explicit.
+- [ ] **Task 132.1.2 - Implement Microsoft Graph conformance**
+  - [ ] **Sub-task 132.1.2.1:** Add exact tenant, account, mailbox, shared-mailbox, folder, message, thread, category, flag, attachment, pagination, and delta identities.
+  - [ ] **Sub-task 132.1.2.2:** Implement least-scope authentication references, permission discovery, throttling, retry, uncertain-result, reconciliation, and revocation.
+  - [ ] **Sub-task 132.1.2.3:** Implement account removal, cache deletion, subscription deletion, cursor invalidation, worker shutdown, and retained-data policy.
+- [ ] **Task 132.1.3 - Verify common and Microsoft behavior**
+  - [ ] **Sub-task 132.1.3.1:** Exercise fake, fault, malicious, future-version, personal, organizational, delegated, application-denied, and shared-mailbox fixtures.
+  - [ ] **Sub-task 132.1.3.2:** Test wrong mailbox, hidden recipient, attachment substitution, stale message, duplicate send, timeout, partial effect, permission loss, and cross-account credential attacks.
+  - [ ] **Sub-task 132.1.3.3:** Reconcile every uncertain operation and prove removal restores the pre-pack authority inventory.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 132.1.AC1:** Given a supported Outlook object or operation, when invoked, then exact tenant, account, mailbox, object, scope, transformation, and postcondition evidence is retained.
+- [ ] **Story AC 132.1.AC2:** Given an unsupported operation, insufficient permission, stale precondition, or changed recipient or attachment, when execution is attempted, then no effect occurs.
+- [ ] **Story AC 132.1.AC3:** Given timeout, throttling, partial effect, revocation, or removal, when recovery runs, then no duplicate send or hidden residual authority remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 132.AC1:** `AT-COM-001` and `AT-M365-001` pass for the published Microsoft matrix.
+- [ ] **Sprint AC 132.AC2:** At least 2,000 wrong-domain, mailbox, recipient, payload, and attachment mutations produce zero unauthorized effect.
+- [ ] **Sprint AC 132.AC3:** At least 1,000 timeout, retry, and partial-effect cases produce zero duplicate delivery or false completion.
+- [ ] **Sprint AC 132.AC4:** Revocation and removal leave zero credential, cache, cursor, subscription, worker, socket, schedule, or network authority.
+
+**Gate decision:** Sprint 132 is PASS only when Story 132.1, all criteria, `AM-COM-001`, `AM-M365-001`, both acceptance tests, applicable security requirements, `RV-23` through `RV-26`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 133 - Microsoft Teams Adapter
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add tenant- and destination-exact Teams reads and supported writes without confusing teams, channels, chats, threads, membership, mentions, files, or personal-account limitations.
+
+**Source coverage:** `AM-TMS-001`, `AT-TMS-001`, `SR-PRD-005` through `SR-PRD-007`, `RV-23` through `RV-26`, `RV-31`.
+
+**Dependencies:** Sprint 132 common communications contract.
+
+#### [ ] Story 133.1 - Controlled Teams Conversations
+
+**User-facing value:** As a user, I can read, draft, reply, react, edit, and delete only where the exact Teams tenant, membership, visibility, provider support, and autonomy policy allow it.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 133.1.1 - Implement Teams identity and capability discovery**
+  - [ ] **Sub-task 133.1.1.1:** Model tenant, account, team, channel, chat, thread, message, reply, mention, reaction, file, membership, and visibility identities.
+  - [ ] **Sub-task 133.1.1.2:** Detect delegated permissions, tenant policy, personal-account exclusions, edit/delete windows, event support, and provider degradation.
+  - [ ] **Sub-task 133.1.1.3:** Register only operations supported by the exact tenant and account profile.
+- [ ] **Task 133.1.2 - Implement reads, drafts, writes, and events**
+  - [ ] **Sub-task 133.1.2.1:** Implement bounded history, pagination, replies, mentions, reactions, files, edits, deletions, and change notifications.
+  - [ ] **Sub-task 133.1.2.2:** Bind previews and effects to exact tenant, destination, thread, membership, visibility, content, mention expansion, file digest, and idempotency state.
+  - [ ] **Sub-task 133.1.2.3:** Reconcile throttling, timeout, partial effect, stale edit, deleted target, permission loss, and duplicate events.
+- [ ] **Task 133.1.3 - Verify Teams isolation and removal**
+  - [ ] **Sub-task 133.1.3.1:** Mutate tenant, team, channel, chat, thread, member, mention, external user, visibility, file, and edit target.
+  - [ ] **Sub-task 133.1.3.2:** Inject hidden mentions, broad mentions, malicious cards, hostile files, replayed events, and content-created instructions.
+  - [ ] **Sub-task 133.1.3.3:** Revoke and remove the adapter during idle, queued, in-flight, uncertain, and synchronizing states.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 133.1.AC1:** Given a Teams operation, when previewed and executed, then tenant, account, destination, thread, membership, visibility, content, mentions, and files match exactly.
+- [ ] **Story AC 133.1.AC2:** Given an unsupported tenant feature or personal-account path, when capability discovery runs, then the operation is absent and the limitation is visible.
+- [ ] **Story AC 133.1.AC3:** Given failure or removal, when reconciliation completes, then no duplicate effect, cross-chat disclosure, stale write, or residual event authority remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 133.AC1:** `AT-TMS-001` passes for every published Teams capability tuple.
+- [ ] **Sprint AC 133.AC2:** Wrong-tenant, destination, membership, mention, visibility, and file mutations produce zero unauthorized effect.
+- [ ] **Sprint AC 133.AC3:** Timeout, retry, edit, delete, and event-replay tests produce zero duplicate or false completion.
+- [ ] **Sprint AC 133.AC4:** Removal restores strict-local and pre-adapter authority inventories.
+
+**Gate decision:** Sprint 133 is PASS only when Story 133.1, all criteria, `AM-TMS-001`, `AT-TMS-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 134 - Gmail Adapter
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add account-exact Gmail message, thread, label, draft, send, attachment, history, push, polling, recovery, and removal support.
+
+**Source coverage:** `AM-GML-001`, `AT-GML-001`, `SR-PRD-005` through `SR-PRD-007`, `RV-23` through `RV-26`, `RV-31`.
+
+**Dependencies:** Sprint 132 common communications contract; Sprint 130 synchronization contract.
+
+#### [ ] Story 134.1 - Controlled Gmail Communication
+
+**User-facing value:** As a user, I can work with the intended Gmail account and thread without broad scopes, history gaps, label drift, retries, or token confusion causing an unintended effect.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 134.1.1 - Implement Gmail identity and least-scope discovery**
+  - [ ] **Sub-task 134.1.1.1:** Model account, mailbox, message, thread, label, draft, attachment, history, watch, and cursor identities.
+  - [ ] **Sub-task 134.1.1.2:** Publish exact OAuth scope, account, operation, quota, pagination, history, push, and polling support.
+  - [ ] **Sub-task 134.1.1.3:** Deny broad-scope substitution and cross-account token use.
+- [ ] **Task 134.1.2 - Implement Gmail operations and synchronization**
+  - [ ] **Sub-task 134.1.2.1:** Implement bounded reads, search, threads, labels, drafts, sends, replies, forwards, attachments, history, push, and fallback polling.
+  - [ ] **Sub-task 134.1.2.2:** Preserve raw provider identity and transformations for MIME, aliases, threading, labels, and attachments.
+  - [ ] **Sub-task 134.1.2.3:** Reconcile history expiry, stale drafts, timeout, quota, duplicate delivery, watch expiry, permission loss, and account removal.
+- [ ] **Task 134.1.3 - Verify account, thread, and delivery integrity**
+  - [ ] **Sub-task 134.1.3.1:** Mutate account, alias, sender, recipients, thread, labels, body, quote, MIME parts, links, and attachments.
+  - [ ] **Sub-task 134.1.3.2:** Inject duplicate, reordered, omitted, and forged push events plus cursor and history gaps.
+  - [ ] **Sub-task 134.1.3.3:** Remove watches, tokens, caches, cursors, schedules, workers, and retained data according to policy.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 134.1.AC1:** Given a supported Gmail operation, when executed, then exact account, message or thread, labels, recipients, content, attachment digests, scopes, and postconditions are retained.
+- [ ] **Story AC 134.1.AC2:** Given history loss, watch expiry, permission reduction, stale content, or changed fields, when synchronization or execution runs, then incompleteness is visible and no stale approval is reused.
+- [ ] **Story AC 134.1.AC3:** Given a timeout or retry, when reconciliation completes, then no duplicate delivery or false completion occurs.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 134.AC1:** `AT-GML-001` passes for every published Gmail capability tuple.
+- [ ] **Sprint AC 134.AC2:** Cross-account, broad-scope, recipient, thread, MIME, label, and attachment mutations produce zero unauthorized effect.
+- [ ] **Sprint AC 134.AC3:** Push, polling, cursor, quota, and recovery fixtures preserve visible completeness state.
+- [ ] **Sprint AC 134.AC4:** Revocation and removal restore the pre-adapter authority inventory.
+
+**Gate decision:** Sprint 134 is PASS only when Story 134.1, all criteria, `AM-GML-001`, `AT-GML-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 135 - Standard Mail Protocols and Proton Bridge
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add capability-detected IMAP, SMTP, and JMAP plus a loopback-only Proton Mail Bridge profile without protocol downgrade, wrong-server credential use, duplicate delivery, or private-profile coupling.
+
+**Source coverage:** `AM-MAIL-001`, `AT-MAIL-001`, `SR-PRD-005` through `SR-PRD-007`, `RV-23` through `RV-26`, `RV-31`.
+
+**Dependencies:** Sprints 130 and 132.
+
+#### [ ] Story 135.1 - Interoperable and Bounded Mail
+
+**User-facing value:** As a user, I can connect standards-based mail or Proton Mail Bridge and see exactly which protocol capabilities are available for the authenticated server and mailbox.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 135.1.1 - Implement protocol negotiation and identity**
+  - [ ] **Sub-task 135.1.1.1:** Model server, certificate, account, mailbox, folder, UID, validity, message, thread hint, submission, extension, and capability identities.
+  - [ ] **Sub-task 135.1.1.2:** Enforce TLS, host, port, authentication reference, redirect, proxy, certificate, protocol-version, and downgrade policy.
+  - [ ] **Sub-task 135.1.1.3:** Register operations only from negotiated IMAP, SMTP, or JMAP capabilities.
+- [ ] **Task 135.1.2 - Implement mail and Proton Bridge profiles**
+  - [ ] **Sub-task 135.1.2.1:** Implement bounded reads, folder state, flags, moves, copies, drafts where supported, SMTP submission, JMAP methods, and deterministic protocol differences.
+  - [ ] **Sub-task 135.1.2.2:** Restrict Proton Bridge to authenticated loopback endpoints, exact process and certificate expectations, and one account-scoped operation at a time.
+  - [ ] **Sub-task 135.1.2.3:** Reconcile disconnect, UID validity change, duplicate submission, ambiguous server result, capability drift, and removal.
+- [ ] **Task 135.1.3 - Verify protocol and server isolation**
+  - [ ] **Sub-task 135.1.3.1:** Test malicious banners, capability lies, STARTTLS downgrade, certificate swap, DNS and proxy redirection, loopback escape, and wrong-server credentials.
+  - [ ] **Sub-task 135.1.3.2:** Exercise formatting, encoding, multipart, attachment, rate, duplicate, disconnect, and uncertain submission cases.
+  - [ ] **Sub-task 135.1.3.3:** Prove removal closes connections and deletes credential references, caches, cursors, schedules, and account-scoped state as required.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 135.1.AC1:** Given a server capability set, when connection succeeds, then only negotiated and policy-allowed operations are registered.
+- [ ] **Story AC 135.1.AC2:** Given a host, certificate, protocol, credential, or loopback mismatch, when connection is attempted, then no credential is disclosed and no operation is registered.
+- [ ] **Story AC 135.1.AC3:** Given ambiguous submission or disconnect, when recovery runs, then the result remains uncertain until reconciliation proves effect or non-effect.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 135.AC1:** `AT-MAIL-001` passes across IMAP, SMTP, JMAP, and Proton Bridge matrices.
+- [ ] **Sprint AC 135.AC2:** Downgrade, redirection, certificate, loopback, and wrong-server credential attacks produce zero disclosure or effect.
+- [ ] **Sprint AC 135.AC3:** Duplicate and uncertain-submission campaigns produce zero duplicate delivery and zero false completion.
+- [ ] **Sprint AC 135.AC4:** Capability drift and removal update registrations and authority inventories immediately.
+
+**Gate decision:** Sprint 135 is PASS only when Story 135.1, all criteria, `AM-MAIL-001`, `AT-MAIL-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 136 - Slack Adapter
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add workspace-, destination-, membership-, visibility-, thread-, mention-, file-, event-, and rate-exact Slack support with controlled writes and complete removal.
+
+**Source coverage:** `AM-SLK-001`, `AT-SLK-001`, `SR-PRD-005` through `SR-PRD-007`, `RV-23` through `RV-26`, `RV-31`.
+
+**Dependencies:** Sprints 130 and 132.
+
+#### [ ] Story 136.1 - Controlled Slack Workspaces
+
+**User-facing value:** As a user, I can read and act in the intended Slack workspace, channel, direct message, and thread without token, membership, mention, file, event, or retry confusion.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 136.1.1 - Implement Slack identity and capability discovery**
+  - [ ] **Sub-task 136.1.1.1:** Model workspace, account, enterprise, channel, direct and group message, thread, message, member, mention, reaction, file, event, and cursor identities.
+  - [ ] **Sub-task 136.1.1.2:** Detect scopes, membership, channel type, external or shared visibility, edit/delete support, event subscriptions, pagination, and rate tiers.
+  - [ ] **Sub-task 136.1.1.3:** Register only exact workspace- and membership-supported operations.
+- [ ] **Task 136.1.2 - Implement Slack operations and events**
+  - [ ] **Sub-task 136.1.2.1:** Implement bounded history, threads, replies, mentions, reactions, files, edits, deletions, events, retries, and rate handling.
+  - [ ] **Sub-task 136.1.2.2:** Bind every write to workspace, destination, thread, membership, visibility, expanded mentions, content, file digest, and idempotency receipt.
+  - [ ] **Sub-task 136.1.2.3:** Reconcile retries, timeouts, stale edits, deleted targets, membership loss, event replay, and provider outage.
+- [ ] **Task 136.1.3 - Verify Slack isolation and removal**
+  - [ ] **Sub-task 136.1.3.1:** Mutate workspace, enterprise, channel, direct message, thread, member, mention, visibility, file, scope, and token identity.
+  - [ ] **Sub-task 136.1.3.2:** Inject broad mentions, hostile blocks, links, files, event payloads, cursor loops, and rate exhaustion.
+  - [ ] **Sub-task 136.1.3.3:** Revoke and remove subscriptions, tokens, caches, cursors, workers, sockets, schedules, and retained state.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 136.1.AC1:** Given a supported Slack operation, when previewed and executed, then workspace, destination, membership, thread, visibility, mentions, content, files, and postconditions match exactly.
+- [ ] **Story AC 136.1.AC2:** Given missing membership, scope, or provider support, when capability discovery or execution runs, then the operation is absent or denied before effect.
+- [ ] **Story AC 136.1.AC3:** Given timeout, rate limit, event replay, permission loss, or removal, when recovery completes, then no duplicate post, cross-workspace disclosure, or residual authority remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 136.AC1:** `AT-SLK-001` passes for every published Slack capability tuple.
+- [ ] **Sprint AC 136.AC2:** Workspace, destination, member, mention, visibility, file, scope, and token attacks produce zero unauthorized effect.
+- [ ] **Sprint AC 136.AC3:** Event, pagination, rate, retry, and recovery fixtures produce deterministic visible state.
+- [ ] **Sprint AC 136.AC4:** Removal restores strict-local and pre-adapter authority inventories.
+
+**Gate decision:** Sprint 136 is PASS only when Story 136.1, all criteria, `AM-SLK-001`, `AT-SLK-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 137 - Linux Mail-Client Interoperability
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Support Thunderbird, Evolution, and KMail through provider or standard protocols and explicit read-only mbox or Maildir imports without mutating private client profiles or extracting client credentials.
+
+**Source coverage:** `AM-LMAIL-001`, `AT-LMAIL-001`, `SR-PRD-008`, `RV-23`, `RV-24`, `RV-30`, `RV-31`.
+
+**Dependencies:** Sprint 135; path-resolution, import, classification, and connector-removal foundations.
+
+#### [ ] Story 137.1 - Safe Linux Mail Interoperability
+
+**User-facing value:** As a Linux user, I can connect the same underlying mail provider or import an explicit mail archive without AgentMage editing or depending on a mail client's private profile database.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 137.1.1 - Define supported interoperability paths**
+  - [ ] **Sub-task 137.1.1.1:** Publish provider-reuse, IMAP, SMTP, JMAP, mbox, and Maildir paths for Thunderbird, Evolution, and KMail.
+  - [ ] **Sub-task 137.1.1.2:** Classify private profile databases, credential stores, lock files, caches, and application state as denied inputs and denied write targets.
+  - [ ] **Sub-task 137.1.1.3:** Define explicit user-selected archive import, source snapshot, read-only handle, content hash, provenance, and removal contracts.
+- [ ] **Task 137.1.2 - Implement archive import and source protection**
+  - [ ] **Sub-task 137.1.2.1:** Parse bounded mbox and Maildir fixtures with path, link, size, encoding, duplicate, corruption, and cancellation defenses.
+  - [ ] **Sub-task 137.1.2.2:** Preserve message identity, headers, MIME structure, attachment hashes, folder context, import source, and parse failures.
+  - [ ] **Sub-task 137.1.2.3:** Refuse locked, mutable, replaced, linked, raced, unsupported, or credential-bearing profile inputs.
+- [ ] **Task 137.1.3 - Verify client independence and removal**
+  - [ ] **Sub-task 137.1.3.1:** Test supported client versions plus future, corrupted, symlinked, hard-linked, replaced, and concurrently modified profiles.
+  - [ ] **Sub-task 137.1.3.2:** Snapshot client profiles before and after every test and prove byte-for-byte non-mutation.
+  - [ ] **Sub-task 137.1.3.3:** Remove imported archives and derived indexes without changing the original archive or provider account.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 137.1.AC1:** Given a supported client configuration, when interoperability is requested, then AgentMage uses the provider or standard protocol rather than private-profile mutation.
+- [ ] **Story AC 137.1.AC2:** Given an explicit mbox or Maildir import, when parsing completes, then the source remains unchanged and every normalized record retains provenance.
+- [ ] **Story AC 137.1.AC3:** Given a private, locked, credential-bearing, linked, replaced, or unsupported profile, when access is attempted, then the request is denied without mutation or credential extraction.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 137.AC1:** `AT-LMAIL-001` passes across Thunderbird, Evolution, KMail, mbox, and Maildir fixtures.
+- [ ] **Sprint AC 137.AC2:** Every private client profile remains byte-identical through success, failure, crash, and cancellation tests.
+- [ ] **Sprint AC 137.AC3:** Path, archive, encoding, corruption, size, link, and race attacks cause zero escape or source mutation.
+- [ ] **Sprint AC 137.AC4:** Removal deletes only authorized imported state and leaves zero residual worker or credential authority.
+
+**Gate decision:** Sprint 137 is PASS only when Story 137.1, all criteria, `AM-LMAIL-001`, `AT-LMAIL-001`, `SR-PRD-008`, applicable reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 138 - Communication Write Safety and Reconciliation
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Unify every promoted communication effect behind exact previews, fresh preconditions, field-bound approvals, idempotency, uncertain-result reconciliation, verified postconditions, and immutable receipts.
+
+**Source coverage:** `AM-COMW-001`, `AT-COMW-001`, `SR-PRD-001`, `SR-PRD-005` through `SR-PRD-007`, `RV-25`, `RV-26`, `RV-31`.
+
+**Dependencies:** Sprints 128 and 132-137.
+
+#### [ ] Story 138.1 - Exact Communication Effects
+
+**User-facing value:** As a user, I can preview and approve the exact sender, recipients, destination, content, formatting, mentions, links, and attachments before any message or chat change occurs.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 138.1.1 - Define operation-specific effect contracts**
+  - [ ] **Sub-task 138.1.1.1:** Keep read, draft, send, reply, forward, edit, delete, reaction, upload, download, move, label, flag, and archive as distinct operations.
+  - [ ] **Sub-task 138.1.1.2:** Bind previews to provider, tenant, account, actor, sender, recipients, external domains, destination, thread, visibility, payload, formatting, quote, mentions, links, attachments, classification, transformation, and expected postcondition.
+  - [ ] **Sub-task 138.1.1.3:** Invalidate approval on any bound-field, policy, permission, source, destination, attachment, or provider-state change.
+- [ ] **Task 138.1.2 - Implement submission and reconciliation**
+  - [ ] **Sub-task 138.1.2.1:** Perform fresh provider precondition reads before approval and submission where provider semantics permit.
+  - [ ] **Sub-task 138.1.2.2:** Use provider idempotency or deterministic operation fingerprints and persist intent before effect.
+  - [ ] **Sub-task 138.1.2.3:** Classify denial, cancellation, failure, timeout, partial, unknown, duplicate, and success with verified postconditions and immutable receipts.
+- [ ] **Task 138.1.3 - Run communication mutation campaigns**
+  - [ ] **Sub-task 138.1.3.1:** Mutate every identity, recipient, domain, destination, visibility, payload, formatting, quote, mention, link, attachment, classification, operation, and policy field.
+  - [ ] **Sub-task 138.1.3.2:** Inject at least 1,000 timeout, retry, partial-effect, duplicate, stale-state, and uncertain-result schedules across provider workers.
+  - [ ] **Sub-task 138.1.3.3:** Verify cancellation and emergency disablement before submission, during transport, after effect, during reconciliation, and during receipt persistence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 138.1.AC1:** Given an exact approved communication preview, when no bound field changes, then the resulting provider effect and receipt match that preview.
+- [ ] **Story AC 138.1.AC2:** Given any changed bound field or stale precondition, when submission is attempted, then approval is invalidated and no effect occurs.
+- [ ] **Story AC 138.1.AC3:** Given timeout, partial effect, crash, retry, or cancellation, when recovery runs, then no completed effect repeats and uncertainty is never reported as success.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 138.AC1:** `AT-COMW-001` passes with zero unauthorized or duplicate effect across at least 2,000 field mutations.
+- [ ] **Sprint AC 138.AC2:** At least 1,000 uncertainty and retry schedules produce exact reconciliation and zero false completion.
+- [ ] **Sprint AC 138.AC3:** Every promoted operation has operation-specific preview, approval, postcondition, receipt, cancellation, and recovery tests.
+- [ ] **Sprint AC 138.AC4:** `RV-31` independently reproduces recipient, attachment, idempotency, and emergency-disable results.
+
+**Gate decision:** Sprint 138 is PASS only when Story 138.1, all criteria, `AM-COMW-001`, `AT-COMW-001`, applicable security requirements, `RV-25`, `RV-26`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 139 - Calendars, Contacts, and Tasks
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Implement Microsoft, Google, CalDAV, and CardDAV personal-information operations with exact identity, time, recurrence, invitation, recipient, assignment, conflict, write, recovery, and removal semantics.
+
+**Source coverage:** `AM-PIM-001`, `AT-PIM-001`, `SR-PRD-001` through `SR-PRD-003`, `SR-PRD-006`, `RV-23` through `RV-26`, `RV-31`, `RV-32`.
+
+**Dependencies:** Sprints 128-130 and 138.
+
+#### [ ] Story 139.1 - Exact Personal Information Management
+
+**User-facing value:** As a user, I can review and manage events, availability, contacts, and tasks without accidental invitations, recurrence corruption, contact merges, task assignments, or cross-account writes.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 139.1.1 - Implement shared calendar, contact, and task contracts**
+  - [ ] **Sub-task 139.1.1.1:** Define event, calendar, availability, time zone, recurrence, invitation, response, reminder, resource, attendee, contact, address, organization, task, assignment, dependency, due date, and status types.
+  - [ ] **Sub-task 139.1.1.2:** Preserve provider identity, recurrence master and instance identity, attendee state, conflict, visibility, permissions, and transformation.
+  - [ ] **Sub-task 139.1.1.3:** Separate create, update, move, invite, respond, cancel, merge, assign, complete, reopen, and delete operations.
+- [ ] **Task 139.1.2 - Implement provider and standards adapters**
+  - [ ] **Sub-task 139.1.2.1:** Add Outlook and Google Calendar plus CalDAV capability-detected reads and writes.
+  - [ ] **Sub-task 139.1.2.2:** Add Microsoft and Google contacts plus CardDAV capability-detected reads and writes.
+  - [ ] **Sub-task 139.1.2.3:** Add Microsoft To Do and Planner, Google Tasks, and local-task reads and writes with exact assignment and status behavior.
+- [ ] **Task 139.1.3 - Verify time, identity, conflict, and effect safety**
+  - [ ] **Sub-task 139.1.3.1:** Test daylight-saving transitions, ambiguous times, recurrence exceptions, moved instances, invitation races, resource conflicts, and provider transformation.
+  - [ ] **Sub-task 139.1.3.2:** Test duplicate contacts, similar names, merge and split, cross-account tasks, stale assignments, concurrent edits, and permission reduction.
+  - [ ] **Sub-task 139.1.3.3:** Reconcile retries, partial effects, notification side effects, removal, and strict-local restoration.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 139.1.AC1:** Given a calendar operation, when previewed and executed, then event identity, time zone, recurrence, attendees, notifications, visibility, and resulting instances match exactly.
+- [ ] **Story AC 139.1.AC2:** Given a contact or task operation, when identity, account, assignment, or conflict state changes, then stale approval is invalidated before effect.
+- [ ] **Story AC 139.1.AC3:** Given provider differences or unsupported behavior, when discovery runs, then exact supported semantics and limitations remain visible.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 139.AC1:** `AT-PIM-001` passes across Microsoft, Google, CalDAV, CardDAV, and local task matrices.
+- [ ] **Sprint AC 139.AC2:** Time-zone, recurrence, invitation, contact-merge, assignment, conflict, and retry campaigns produce zero unintended effect.
+- [ ] **Sprint AC 139.AC3:** Unsupported operations are absent and every provider transformation is visible.
+- [ ] **Sprint AC 139.AC4:** Removal leaves zero credential, cursor, event, schedule, worker, socket, cache, or write authority.
+
+**Gate decision:** Sprint 139 is PASS only when Story 139.1, all criteria, `AM-PIM-001`, `AT-PIM-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 140 - Documents, Repositories, and Attachments
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Implement conformance-gated OneDrive, SharePoint, Google Drive, and Confluence access with exact versions, permissions, links, visibility, bounded writes, hostile-content defenses, recovery, and removal.
+
+**Source coverage:** `AM-DREP-001`, `AT-DREP-001`, `SR-PRD-006`, `SR-PRD-007`, `RV-23` through `RV-26`, `RV-31`, `RV-32`.
+
+**Dependencies:** Sprints 128-130 and 138; local document and archive defenses.
+
+#### [ ] Story 140.1 - Versioned and Permission-Exact Documents
+
+**User-facing value:** As a user, I can search, read, cite, draft, and perform supported document operations against the intended repository, version, and visibility without a link or attachment broadening access.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 140.1.1 - Define document-repository contracts**
+  - [ ] **Sub-task 140.1.1.1:** Define repository, site, drive, space, document, page, version, content, attachment, permission, principal, link, visibility, draft, comment, conflict, and postcondition identities.
+  - [ ] **Sub-task 140.1.1.2:** Separate read, search, download, upload, create, update, move, rename, comment, permission change, link creation, archive, and delete capability classes.
+  - [ ] **Sub-task 140.1.1.3:** Keep Notion, Box, and Dropbox unregistered until independent manifests and conformance suites pass.
+- [ ] **Task 140.1.2 - Implement reference adapters and content defenses**
+  - [ ] **Sub-task 140.1.2.1:** Add bounded OneDrive, SharePoint, Google Drive, and Confluence object, version, content, permission, and event operations.
+  - [ ] **Sub-task 140.1.2.2:** Verify attachment hash, size, media type, classification, malware result, archive structure, macros, links, permissions, and post-preview replacement.
+  - [ ] **Sub-task 140.1.2.3:** Treat document text, comments, metadata, links, scripts, macros, and embedded instructions as untrusted content without authority.
+- [ ] **Task 140.1.3 - Verify repository isolation and write safety**
+  - [ ] **Sub-task 140.1.3.1:** Mutate repository, tenant, version, permission, principal, visibility, link type, attachment, content, destination, and postcondition.
+  - [ ] **Sub-task 140.1.3.2:** Test concurrent edits, renamed or deleted objects, attachment swaps, public-link broadening, hostile archives, timeouts, retries, and partial effects.
+  - [ ] **Sub-task 140.1.3.3:** Remove adapters, subscriptions, credentials, caches, indexes, downloaded content, schedules, and workers according to policy.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 140.1.AC1:** Given a document operation, when executed, then repository, object, version, permission, visibility, payload, attachment, and postcondition match the approved preview.
+- [ ] **Story AC 140.1.AC2:** Given a changed version, principal, permission, link, visibility, or attachment, when submission is attempted, then prior approval is invalid and no effect occurs.
+- [ ] **Story AC 140.1.AC3:** Given hostile document content, when parsed or summarized, then it cannot create authority, alter policy, select a recipient, or trigger a write.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 140.AC1:** `AT-DREP-001` passes for every promoted repository and operation tuple.
+- [ ] **Sprint AC 140.AC2:** Wrong-repository, version, permission, link, visibility, attachment, and credential attacks produce zero disclosure or effect.
+- [ ] **Sprint AC 140.AC3:** Concurrency, timeout, retry, partial-effect, and replacement tests produce exact reconciliation.
+- [ ] **Sprint AC 140.AC4:** Unpromoted repositories remain absent and removal restores strict-local authority inventories.
+
+**Gate decision:** Sprint 140 is PASS only when Story 140.1, all criteria, `AM-DREP-001`, `AT-DREP-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 141 - Deterministic Productivity Workflows and Epic Gate
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Compile user-authored productivity workflows into immutable, dry-runnable, budgeted, expiring graphs and close the complete communications and unified-work epic through hostile end-to-end testing.
+
+**Source coverage:** `AM-WFA-001`, `AT-WFA-001`, `SR-PRD-009`, `RV-31`, `RV-32`, `RV-35`; all Sprints 127-140.
+
+**Dependencies:** Sprints 127-140.
+
+#### [ ] Story 141.1 - Bounded Productivity Automation
+
+**User-facing value:** As a user, I can automate recurring information and communication work from a visible graph whose triggers, accounts, branches, recipients, effects, budgets, approvals, and stop conditions cannot change silently.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 141.1.1 - Implement the workflow graph and compiler**
+  - [ ] **Sub-task 141.1.1.1:** Define exact trigger, account, object, filter, join, branch, operation, recipient, destination, classification, budget, stop, expiry, approval, dry-run, failure, compensation, and receipt nodes.
+  - [ ] **Sub-task 141.1.1.2:** Compile versioned user-authored definitions into immutable deterministic graphs with content and dependency digests.
+  - [ ] **Sub-task 141.1.1.3:** Intersect every node with current autonomy, provider, account, classification, operation, destination, and budget policy at execution time.
+- [ ] **Task 141.1.2 - Implement execution, pause, recovery, and removal**
+  - [ ] **Sub-task 141.1.2.1:** Add dry run, activate, pause, resume, cancel, expire, retry, reconcile, disable, and remove state transitions.
+  - [ ] **Sub-task 141.1.2.2:** Prevent self-edit, recursive expansion, hidden branches, undeclared destinations, approval aggregation, content-created instructions, and cross-pack grant reuse.
+  - [ ] **Sub-task 141.1.2.3:** Persist node-level intent, result, evidence, uncertainty, and receipts without repeating completed effects after crash or restart.
+- [ ] **Task 141.1.3 - Run productivity epic campaigns**
+  - [ ] **Sub-task 141.1.3.1:** Exercise meeting-to-agenda, meeting-to-commitment, inbox-to-draft, task-to-reminder, document-to-review, and approved communication workflows.
+  - [ ] **Sub-task 141.1.3.2:** Inject hostile messages, documents, attachments, identities, events, branches, retries, provider outages, permission changes, crashes, cancellations, and resource exhaustion.
+  - [ ] **Sub-task 141.1.3.3:** Disable and remove each pack independently and together, then rerun strict-local, accessibility, network, residue, and documentation gates.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 141.1.AC1:** Given an approved workflow graph, when it executes, then every node matches the signed graph and current narrower policy.
+- [ ] **Story AC 141.1.AC2:** Given hostile external content or a changed graph, provider, account, recipient, policy, budget, or branch, when execution reaches it, then no undeclared authority or effect occurs.
+- [ ] **Story AC 141.1.AC3:** Given crash, cancellation, timeout, disablement, or removal, when recovery completes, then completed effects do not repeat and residual authority is zero.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 141.AC1:** `AT-WFA-001` passes for deterministic compilation, dry run, execution, recovery, and removal.
+- [ ] **Sprint AC 141.AC2:** All promoted communication and personal-information adapters pass integrated identity, synchronization, autonomy, injection, uncertainty, and accessibility campaigns.
+- [ ] **Sprint AC 141.AC3:** Productivity workflows produce zero self-edit, recursion escape, hidden branch, destination substitution, approval aggregation, or content-created authority.
+- [ ] **Sprint AC 141.AC4:** Every new pack can be removed independently and together with strict-local restoration and zero residue.
+- [ ] **Sprint AC 141.AC5:** The Epic 12 support matrix, evidence index, limitations, and documentation reconcile exactly.
+
+**Gate decision:** Sprint 141 and the Epic 12 productivity gate are PASS only when Story 141.1, all criteria, `AM-WFA-001`, `AT-WFA-001`, every applicable Sprint 127-140 acceptance test, `RV-31`, `RV-32`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+## [ ] Epic 13 - Finance, Budgeting, and Cloud Observer
+
+### [ ] Sprint 142 - Exact Financial Domain and Arithmetic
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Establish fixed-point money, immutable financial lineage, explicit currency and rounding, and closed financial object contracts before importing or calculating user data.
+
+**Source coverage:** `AM-FIN-001`, `AT-FIN-001`, `SR-FIN-001`, `SR-FIN-002`, `RV-33`.
+
+**Dependencies:** Sprints 127-129 and 141; existing local data, classification, encryption, and audit foundations.
+
+#### [ ] Story 142.1 - Deterministic Financial Records
+
+**User-facing value:** As a user, I can trust that balances, transactions, splits, transfers, budgets, debts, and assets retain exact values, currencies, rounding rules, and source lineage.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 142.1.1 - Implement fixed-point money values**
+  - [ ] **Sub-task 142.1.1.1:** Define amount, currency, scale, sign, rounding mode, effective date, conversion source, overflow, comparison, aggregation, and serialization contracts.
+  - [ ] **Sub-task 142.1.1.2:** Prohibit binary floating-point values from canonical financial storage, comparison, reconciliation, budgeting, and decision paths.
+  - [ ] **Sub-task 142.1.1.3:** Add checked arithmetic, explicit rounding boundaries, stable ordering, deterministic allocation, and currency-mismatch failures.
+- [ ] **Task 142.1.2 - Implement the financial object model**
+  - [ ] **Sub-task 142.1.2.1:** Define institution, account, statement, transaction, pending, posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, receipt, invoice, reimbursement, and tax-label records.
+  - [ ] **Sub-task 142.1.2.2:** Preserve source records immutably and represent corrections through adjustment or supersession records with complete lineage.
+  - [ ] **Sub-task 142.1.2.3:** Define reconciliation, duplicate candidate, match, confidence, user disposition, and unresolved-conflict records.
+- [ ] **Task 142.1.3 - Verify arithmetic and lineage**
+  - [ ] **Sub-task 142.1.3.1:** Property-test currencies, scales, signs, boundary magnitudes, rounding modes, aggregate order, allocation remainders, splits, transfers, and conversions.
+  - [ ] **Sub-task 142.1.3.2:** Mutate source, correction, supersession, account, currency, effective date, and lineage fields.
+  - [ ] **Sub-task 142.1.3.3:** Fuzz parsing and serialization with malformed, extreme, future-version, and mixed-currency records.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 142.1.AC1:** Given any valid financial fixture, when calculations repeat across supported platforms and execution orders, then canonical results are exact and deterministic.
+- [ ] **Story AC 142.1.AC2:** Given currency ambiguity, overflow, unsupported scale, malformed input, or silent-rounding risk, when evaluation runs, then it fails visibly before a financial result is stored.
+- [ ] **Story AC 142.1.AC3:** Given a corrected source record, when history is inspected, then the original, correction, reason, author, time, and resulting lineage remain available.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 142.AC1:** `AT-FIN-001` passes for 100% of arithmetic and domain fixtures.
+- [ ] **Sprint AC 142.AC2:** No canonical financial path accepts binary floating point, silent overflow, ambiguous currency, or order-dependent totals.
+- [ ] **Sprint AC 142.AC3:** Every mutation preserves immutable source lineage or fails closed.
+- [ ] **Sprint AC 142.AC4:** `RV-33` independently reproduces precision, rounding, currency, lineage, and malformed-input evidence.
+
+**Gate decision:** Sprint 142 is PASS only when Story 142.1, all criteria, `AM-FIN-001`, `AT-FIN-001`, `SR-FIN-001`, `SR-FIN-002`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 143 - Financial Import and Reconciliation
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Import CSV, OFX, and QFX records immutably and reconcile statements, pending-to-posted transitions, duplicates, transfers, splits, corrections, and conflicts deterministically.
+
+**Source coverage:** `AM-FIMPORT-001`, `AT-FIMPORT-001`, `SR-FIN-001`, `SR-FIN-002`, `RV-33`.
+
+**Dependencies:** Sprint 142; file parsing, path, archive, evidence, and local data controls.
+
+#### [ ] Story 143.1 - Reproducible Statement Import
+
+**User-facing value:** As a user, I can import a financial export repeatedly without duplicate transactions, hidden corrections, lost source evidence, or unexplained reconciliation differences.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 143.1.1 - Implement immutable import profiles**
+  - [ ] **Sub-task 143.1.1.1:** Define source hash, format, profile, encoding, account, statement period, column or field mapping, locale, sign, currency, time zone, and parser-version records.
+  - [ ] **Sub-task 143.1.1.2:** Implement bounded CSV profile detection and explicit confirmation for ambiguous date, decimal, sign, currency, header, and account mappings.
+  - [ ] **Sub-task 143.1.1.3:** Implement OFX and QFX parsing with unsupported-version, extension, malformed-record, entity, encoding, size, and cancellation defenses.
+- [ ] **Task 143.1.2 - Implement matching and reconciliation**
+  - [ ] **Sub-task 143.1.2.1:** Add deterministic duplicate, pending-to-posted, transfer, split, correction, and supersession candidate rules with explainable evidence.
+  - [ ] **Sub-task 143.1.2.2:** Implement statement reconciliation using opening balance, closing balance, included records, pending exclusions, adjustments, tolerance, conflict, and reviewer disposition.
+  - [ ] **Sub-task 143.1.2.3:** Preserve unresolved conflicts without guessing or silently changing imported records.
+- [ ] **Task 143.1.3 - Verify repeatability and failure safety**
+  - [ ] **Sub-task 143.1.3.1:** Reimport identical, reordered, overlapping, partially changed, encoding-varied, and renamed source files.
+  - [ ] **Sub-task 143.1.3.2:** Inject duplicates, near-duplicates, transfer ambiguity, pending changes, reversed transactions, missing balances, malformed files, crash, and disk failure.
+  - [ ] **Sub-task 143.1.3.3:** Recompute all reconciliations from immutable source records and compare byte-identical outputs.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 143.1.AC1:** Given an identical source file and profile, when imported repeatedly, then canonical records and reconciliation output do not duplicate or drift.
+- [ ] **Story AC 143.1.AC2:** Given ambiguous format, account, date, sign, currency, match, transfer, or reconciliation evidence, when import runs, then the ambiguity remains visible and no unsupported guess is committed.
+- [ ] **Story AC 143.1.AC3:** Given crash or failure at any import stage, when recovery runs, then source records remain immutable and partial derived state is absent or fully attributable.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 143.AC1:** `AT-FIMPORT-001` passes across CSV, OFX, QFX, overlap, duplicate, pending, transfer, split, correction, and statement fixtures.
+- [ ] **Sprint AC 143.AC2:** Repeated and reordered imports produce zero duplicate record and byte-stable reconciliations.
+- [ ] **Sprint AC 143.AC3:** Ambiguous and malformed inputs fail visibly without source or canonical-state corruption.
+- [ ] **Sprint AC 143.AC4:** `RV-33` includes current import, reconciliation, crash, and recovery evidence.
+
+**Gate decision:** Sprint 143 is PASS only when Story 143.1, all criteria, `AM-FIMPORT-001`, `AT-FIMPORT-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 144 - Actual Budget Reference Adapter
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Integrate Actual Budget through its approved local API with exact budget-file identity, records, rules, schedules, synchronization, backup, recovery, and removal behavior.
+
+**Source coverage:** `AM-ACT-001`, `AT-ACT-001`, `SR-FIN-001`, `SR-FIN-002`, `SR-FIN-006`, `RV-23` through `RV-26`, `RV-33`, `RV-35`.
+
+**Dependencies:** Sprints 128, 142, and 143.
+
+#### [ ] Story 144.1 - Local-First Actual Budget Integration
+
+**User-facing value:** As a user, I can connect an exact local Actual Budget file, review and propose changes, synchronize safely, and disconnect without corrupting the budget or leaving hidden authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 144.1.1 - Define and admit the Actual Budget profile**
+  - [ ] **Sub-task 144.1.1.1:** Pin supported API, server, client, schema, budget-file, sync, encryption, authentication-reference, and compatibility versions.
+  - [ ] **Sub-task 144.1.1.2:** Map accounts, payees, categories, transactions, splits, transfers, rules, schedules, budgets, notes, imports, and reconciliation without losing native identity.
+  - [ ] **Sub-task 144.1.1.3:** Detect unsupported versions and capabilities before registration.
+- [ ] **Task 144.1.2 - Implement reads, drafts, bounded writes, and recovery**
+  - [ ] **Sub-task 144.1.2.1:** Implement local reads, search, import, export, draft changes, exact previews, approved non-money-movement writes, and verified postconditions.
+  - [ ] **Sub-task 144.1.2.2:** Implement synchronization conflict detection, stale-state rejection, backup, restore rehearsal, cancellation, crash recovery, and duplicate prevention.
+  - [ ] **Sub-task 144.1.2.3:** Implement disconnect and removal for credentials, process, socket, cache, index, schedule, sync state, and retained data.
+- [ ] **Task 144.1.3 - Verify local integrity and no money movement**
+  - [ ] **Sub-task 144.1.3.1:** Exercise supported, degraded, future, corrupt, locked, concurrently edited, restored, and removed budget fixtures.
+  - [ ] **Sub-task 144.1.3.2:** Mutate budget identity, account, transaction, category, amount, currency, split, rule, schedule, sync state, and postcondition.
+  - [ ] **Sub-task 144.1.3.3:** Probe every payment, transfer initiation, external-account administration, credential recovery, and financial-provider action family for absence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 144.1.AC1:** Given a supported Actual Budget profile, when records are read or changed, then budget identity, native record identity, precision, lineage, preview, and postcondition remain exact.
+- [ ] **Story AC 144.1.AC2:** Given concurrent edits, stale sync, corruption, crash, or restore, when recovery runs, then no accepted change is duplicated and no independent change is overwritten silently.
+- [ ] **Story AC 144.1.AC3:** Given any money-movement request, when capability discovery or execution runs, then no corresponding tool or provider operation exists.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 144.AC1:** `AT-ACT-001` passes for supported Actual Budget versions and published capabilities.
+- [ ] **Sprint AC 144.AC2:** Precision, identity, conflict, sync, backup, recovery, and removal fixtures produce deterministic results.
+- [ ] **Sprint AC 144.AC3:** Money-movement and external financial-administration operations are absent across every autonomy level.
+- [ ] **Sprint AC 144.AC4:** Removal leaves zero credential, process, socket, cache, schedule, sync, or write authority.
+
+**Gate decision:** Sprint 144 is PASS only when Story 144.1, all criteria, `AM-ACT-001`, `AT-ACT-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 145 - Read-Only Financial Data Adapters
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Admit financial-data providers only through independently tested, consent-bound, account-exact, read-only profiles with visible scope, freshness, cursor, revocation, deletion, and coverage state.
+
+**Source coverage:** `AM-BNK-001`, `AT-BNK-001`, `SR-FIN-005`, `SR-FIN-006`, `RV-23`, `RV-24`, `RV-26`, `RV-33`, `RV-35`.
+
+**Dependencies:** Sprints 128, 130, 142, and 143.
+
+#### [ ] Story 145.1 - Read-Only Account Aggregation
+
+**User-facing value:** As a user, I can authorize selected financial accounts for transaction, balance, liability, investment, recurring-stream, and statement reads without granting payment, transfer, trade, account-admin, or credential-recovery authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 145.1.1 - Define the read-only financial adapter contract**
+  - [ ] **Sub-task 145.1.1.1:** Define provider, institution, item, account, owner scope, consent, data class, cursor, freshness, coverage, revocation, deletion, credential reference, and support identities.
+  - [ ] **Sub-task 145.1.1.2:** Enumerate permitted transaction, balance, liability, investment, recurring-stream, and statement reads and omit every effectful financial family.
+  - [ ] **Sub-task 145.1.1.3:** Require independent provider-version, scope, data-use, retention, removal, failure, and security admission evidence.
+- [ ] **Task 145.1.2 - Implement consent, synchronization, and normalization**
+  - [ ] **Sub-task 145.1.2.1:** Implement explicit account selection, least scope, consent receipt, token reference isolation, refresh, expiry, revocation, and reauthentication.
+  - [ ] **Sub-task 145.1.2.2:** Normalize provider records into immutable financial records while retaining provider-native identity, pending state, source time, freshness, and coverage.
+  - [ ] **Sub-task 145.1.2.3:** Reconcile cursor loss, duplicates, pending transitions, account relinking, institution outage, throttling, and permission reduction.
+- [ ] **Task 145.1.3 - Prove read-only and privacy boundaries**
+  - [ ] **Sub-task 145.1.3.1:** Probe payment, transfer, bill pay, trade, order, withdrawal, deposit, credit, loan, beneficiary, tax, account-admin, and credential-recovery APIs and schemas for absence.
+  - [ ] **Sub-task 145.1.3.2:** Mutate provider, item, account, scope, owner, cursor, redirect, institution, token reference, and requested field.
+  - [ ] **Sub-task 145.1.3.3:** Revoke and delete an item during idle, sync, outage, stale, queued, and removed states; verify retained data against policy.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 145.1.AC1:** Given an authorized financial item, when synchronization runs, then only selected accounts and permitted read classes are requested and freshness and coverage remain visible.
+- [ ] **Story AC 145.1.AC2:** Given any money-movement, account-administration, or credential-recovery request, when evaluated, then the operation is absent before a provider request can exist.
+- [ ] **Story AC 145.1.AC3:** Given revocation or deletion, when lifecycle cleanup completes, then credentials and synchronization authority are gone and retained records match explicit policy.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 145.AC1:** `AT-BNK-001` passes for every independently admitted provider-version and data-class tuple.
+- [ ] **Sprint AC 145.AC2:** All prohibited financial operation families pass schema, registration, policy, shell, workflow, and provider-request absence tests.
+- [ ] **Sprint AC 145.AC3:** Cross-provider, institution, item, account, scope, owner, redirect, and token attacks produce zero disclosure.
+- [ ] **Sprint AC 145.AC4:** Revocation and deletion leave zero credential, cursor, poller, webhook, schedule, worker, socket, or undeclared retained data.
+
+**Gate decision:** Sprint 145 is PASS only when Story 145.1, all criteria, `AM-BNK-001`, `AT-BNK-001`, applicable security requirements, `RV-33`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 146 - Budgets, Cash Flow, Goals, and Scenarios
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Build deterministic local budgets, cash-flow forecasts, savings goals, debt scenarios, net-worth views, and scenario comparisons with complete assumptions, confidence, lineage, and no execution authority.
+
+**Source coverage:** `AM-BUD-001`, `AT-BUD-001`, `SR-FIN-001`, `SR-FIN-004`, `SR-FIN-006`, `RV-33`.
+
+**Dependencies:** Sprints 142-145.
+
+#### [ ] Story 146.1 - Explainable Personal Financial Planning
+
+**User-facing value:** As a user, I can compare budgets and financial scenarios while seeing the exact source data, assumptions, rules, uncertainty, and limitations behind every result.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 146.1.1 - Implement deterministic budget rules**
+  - [ ] **Sub-task 146.1.1.1:** Add category and envelope budgets, rollover, scheduled income and expense, allocation, overspending, goal contribution, and user-approved local rules.
+  - [ ] **Sub-task 146.1.1.2:** Preserve rule identity, priority, effective period, source, version, conflict, override, and user disposition.
+  - [ ] **Sub-task 146.1.1.3:** Make every amount use Sprint 142 fixed-point and currency contracts.
+- [ ] **Task 146.1.2 - Implement forecasts and scenarios**
+  - [ ] **Sub-task 146.1.2.1:** Build cash-flow horizons, savings goals, debt amortization scenarios, asset and liability views, and net-worth histories.
+  - [ ] **Sub-task 146.1.2.2:** Record inputs, assumptions, missing data, confidence class, scenario identity, calculation version, sensitivity, and limitations.
+  - [ ] **Sub-task 146.1.2.3:** Keep forecasts and scenarios local, non-authoritative, non-executing, and explicitly distinct from actual transactions.
+- [ ] **Task 146.1.3 - Verify determinism and truthful uncertainty**
+  - [ ] **Sub-task 146.1.3.1:** Test negative balances, irregular income, currency mismatch, missing periods, duplicate streams, changing rates, boundary values, and conflicting rules.
+  - [ ] **Sub-task 146.1.3.2:** Recompute every budget and scenario from immutable source records in varied input order and across supported platforms.
+  - [ ] **Sub-task 146.1.3.3:** Probe prompts and workflows attempting to convert a plan, forecast, or recommendation into payment, transfer, trade, credit, tax, or account action.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 146.1.AC1:** Given the same records, rules, assumptions, and calculation version, when a budget or scenario is recomputed, then the result is exact and deterministic.
+- [ ] **Story AC 146.1.AC2:** Given missing, stale, conflicting, or uncertain inputs, when a forecast is displayed, then limitations and sensitivity remain visible and no guaranteed claim is made.
+- [ ] **Story AC 146.1.AC3:** Given any request to execute a financial scenario, when evaluated, then no money-movement or financial-administration operation is available.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 146.AC1:** `AT-BUD-001` passes across budgeting, forecast, goal, debt, net-worth, and scenario fixtures.
+- [ ] **Sprint AC 146.AC2:** Repeated and reordered computation produces exact fixed-point results.
+- [ ] **Sprint AC 146.AC3:** Every displayed result retains source, assumption, version, confidence, limitation, and actual-versus-scenario status.
+- [ ] **Sprint AC 146.AC4:** Prohibited-action probes produce zero registered or attempted money-movement operation.
+
+**Gate decision:** Sprint 146 is PASS only when Story 146.1, all criteria, `AM-BUD-001`, `AT-BUD-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 147 - Bills, Subscriptions, and Recurring Streams
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Detect recurring bills, income, fees, subscriptions, price changes, due dates, missing payments, and cancellation candidates from cited evidence without paying or canceling anything.
+
+**Source coverage:** `AM-BIL-001`, `AT-BIL-001`, `SR-FIN-003`, `SR-FIN-004`, `SR-FIN-006`, `RV-31`, `RV-33`.
+
+**Dependencies:** Sprints 131, 138, 143, and 146.
+
+#### [ ] Story 147.1 - Cited Recurring-Obligation Tracking
+
+**User-facing value:** As a user, I can see upcoming obligations, changed prices, missing expected transactions, and possible subscriptions with the exact records and communications that support each detection.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 147.1.1 - Implement recurring-stream detection**
+  - [ ] **Sub-task 147.1.1.1:** Define recurrence, merchant or payee identity, expected amount range, cadence, due window, confidence, source evidence, status, and user-disposition records.
+  - [ ] **Sub-task 147.1.1.2:** Detect recurring expense, recurring income, fee, subscription, price change, missing expected record, duplicate charge candidate, and cancellation candidate deterministically where possible.
+  - [ ] **Sub-task 147.1.1.3:** Keep model-assisted matches labeled, non-authoritative, reversible, and separate from deterministic rules.
+- [ ] **Task 147.1.2 - Correlate cited communications and reminders**
+  - [ ] **Sub-task 147.1.2.1:** Link invoices, renewal notices, receipts, price-change messages, cancellation terms, and transaction records through evidence-backed graph edges.
+  - [ ] **Sub-task 147.1.2.2:** Add local due, renewal, price-change, and missing-record reminders with exact source, expiry, acknowledgment, and dismissal behavior.
+  - [ ] **Sub-task 147.1.2.3:** Permit separately approved communication drafts while prohibiting autonomous cancellation, payment, transfer, or account administration.
+- [ ] **Task 147.1.3 - Verify detection, uncertainty, and absence**
+  - [ ] **Sub-task 147.1.3.1:** Test irregular cadence, variable amounts, merchant renames, split transactions, refunds, annual renewals, free trials, skipped periods, duplicates, and stale data.
+  - [ ] **Sub-task 147.1.3.2:** Inject misleading emails, fake cancellation instructions, hidden fees, altered links, missing history, and identity collisions.
+  - [ ] **Sub-task 147.1.3.3:** Probe cancellation and payment operation families at every autonomy level and through every workflow route.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 147.1.AC1:** Given recurring transaction and communication evidence, when an obligation is detected, then cadence, amount range, due window, confidence, sources, and limitations are visible.
+- [ ] **Story AC 147.1.AC2:** Given ambiguous, stale, conflicting, or missing evidence, when detection runs, then the item remains uncertain and no definitive or completed-action claim is made.
+- [ ] **Story AC 147.1.AC3:** Given a cancellation or payment request, when evaluated, then AgentMage can at most prepare an explicitly approved communication draft and cannot perform the financial or account action.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 147.AC1:** `AT-BIL-001` passes across recurring, variable, missing, duplicate, renewal, fee, refund, and cancellation-candidate fixtures.
+- [ ] **Sprint AC 147.AC2:** Every detection retains exact financial and communication citations plus deterministic or model-assisted status.
+- [ ] **Sprint AC 147.AC3:** Hostile-content and identity-confusion fixtures create zero authority or false completion.
+- [ ] **Sprint AC 147.AC4:** Cancellation, payment, transfer, and account-admin operations remain absent at every autonomy level.
+
+**Gate decision:** Sprint 147 is PASS only when Story 147.1, all criteria, `AM-BIL-001`, `AT-BIL-001`, applicable security requirements, `RV-31`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 148 - Financial Documents and Matching
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Organize receipts, invoices, reimbursements, statements, and tax documents with source-preserving extraction, matching, duplicate detection, classification, retention, redaction, and export.
+
+**Source coverage:** `AM-FDOC-001`, `AT-FDOC-001`, `SR-FIN-001`, `SR-FIN-005`, `SR-FIN-006`, `RV-33`.
+
+**Dependencies:** Sprints 140, 142, and 143; local document, OCR, archive, malware, and evidence contracts.
+
+#### [ ] Story 148.1 - Source-Preserving Financial Records
+
+**User-facing value:** As a user, I can find and match a receipt, invoice, reimbursement, statement, or tax document without losing the original file, extraction uncertainty, transaction evidence, or privacy classification.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 148.1.1 - Implement financial-document identities and extraction**
+  - [ ] **Sub-task 148.1.1.1:** Define source file, content hash, media type, page, region, extraction, field, value, confidence, currency, date, merchant, account hint, classification, retention, and provenance records.
+  - [ ] **Sub-task 148.1.1.2:** Extract bounded receipt, invoice, reimbursement, statement, and tax-document fields while preserving raw source and per-field evidence.
+  - [ ] **Sub-task 148.1.1.3:** Keep ambiguous dates, amounts, taxes, currencies, account identifiers, and document types unresolved until reviewed.
+- [ ] **Task 148.1.2 - Implement matching, storage, redaction, and export**
+  - [ ] **Sub-task 148.1.2.1:** Match documents to transactions using exact and explainable candidate evidence without silently merging records.
+  - [ ] **Sub-task 148.1.2.2:** Detect source and semantic duplicates, preserve versions, and retain user dispositions.
+  - [ ] **Sub-task 148.1.2.3:** Apply classification, encryption, minimization, retention, deletion, redaction, and report-export policies field by field.
+- [ ] **Task 148.1.3 - Verify hostile documents and privacy**
+  - [ ] **Sub-task 148.1.3.1:** Test malformed PDFs and images, archive bombs, macros, scripts, hidden text, links, prompt injection, OCR confusion, replaced files, and post-preview changes.
+  - [ ] **Sub-task 148.1.3.2:** Mutate document, page, field, amount, currency, date, merchant, transaction, account, classification, redaction, and export destination.
+  - [ ] **Sub-task 148.1.3.3:** Verify deletion, backup, restore, export, crash, and removal across original, derived, indexed, cached, and linked records.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 148.1.AC1:** Given a supported financial document, when extracted, then every field retains exact source coordinates, confidence, parser identity, and original-file hash.
+- [ ] **Story AC 148.1.AC2:** Given an ambiguous or conflicting match, when review occurs, then candidates remain distinct and no transaction or document is silently merged.
+- [ ] **Story AC 148.1.AC3:** Given export, deletion, backup, or removal, when completed, then classification, redaction, retention, and residue match the explicit policy.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 148.AC1:** `AT-FDOC-001` passes for every supported document type and extraction field.
+- [ ] **Sprint AC 148.AC2:** Hostile file, archive, macro, script, link, hidden-text, injection, replacement, and OCR-confusion tests create zero authority or escape.
+- [ ] **Sprint AC 148.AC3:** Matching and duplicate detection remain explainable, reversible, and source preserving.
+- [ ] **Sprint AC 148.AC4:** Privacy, redaction, export, backup, deletion, and removal evidence reconciles across every data copy.
+
+**Gate decision:** Sprint 148 is PASS only when Story 148.1, all criteria, `AM-FDOC-001`, `AT-FDOC-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 149 - Statistical Outlier and Potential-Fraud Indicators
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Produce reproducible, explainable statistical indicators for unusual financial activity while preserving baseline, features, method, uncertainty, drift, source evidence, and the distinction between an indicator and a fraud conclusion.
+
+**Source coverage:** `AM-FANL-001`, `AT-FANL-001`, `SR-FIN-004`, `SR-FIN-005`, `RV-14`, `RV-33`.
+
+**Dependencies:** Sprints 142-148; model provenance, evaluation, and evidence-reconciliation foundations.
+
+#### [ ] Story 149.1 - Explainable Financial Anomaly Analysis
+
+**User-facing value:** As a user, I can review why a transaction or pattern looks unusual, compare it with its baseline, and accept or reject the indicator without AgentMage declaring fraud or taking external action.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 149.1.1 - Define indicator and evaluation contracts**
+  - [ ] **Sub-task 149.1.1.1:** Define feature, baseline population, horizon, seasonality, method or model, version, threshold, score, confidence, limitation, source, drift, and user-disposition records.
+  - [ ] **Sub-task 149.1.1.2:** Separate deterministic rules, robust statistical methods, and model-assisted explanations in storage and presentation.
+  - [ ] **Sub-task 149.1.1.3:** Prohibit definitive fraud, innocence, creditworthiness, legal, tax, financial-advice, or completed-action claims.
+- [ ] **Task 149.1.2 - Implement reproducible indicator families**
+  - [ ] **Sub-task 149.1.2.1:** Add amount, frequency, merchant, category, time, location where available, duplicate, sequence, recurrence-break, and account-pattern indicators.
+  - [ ] **Sub-task 149.1.2.2:** Add robust baselines, seasonal comparisons, minimum-sample rules, drift detection, missing-data handling, and configurable user thresholds.
+  - [ ] **Sub-task 149.1.2.3:** Preserve complete calculation inputs and deterministic replay; route user disposition into future local evaluation without rewriting past evidence.
+- [ ] **Task 149.1.3 - Evaluate accuracy, bias, drift, and adversarial behavior**
+  - [ ] **Sub-task 149.1.3.1:** Build synthetic normal, unusual, fraudulent-pattern-like, benign-shift, sparse, seasonal, duplicate, noisy, and mislabeled corpora.
+  - [ ] **Sub-task 149.1.3.2:** Measure precision, recall, false-positive rate, false-negative rate, calibration, stability, subgroup limitations, drift, and explanation fidelity where labels permit.
+  - [ ] **Sub-task 149.1.3.3:** Inject adversarial amounts, merchant names, categories, transaction splitting, timing, missingness, prompt injection, and requests for autonomous action.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 149.1.AC1:** Given an indicator, when inspected or replayed, then exact features, baseline, method, version, threshold, score, confidence, limitations, and source records are available.
+- [ ] **Story AC 149.1.AC2:** Given sparse, shifted, drifting, or uncertain data, when analysis runs, then confidence and limitations adjust visibly and no definitive fraud claim is made.
+- [ ] **Story AC 149.1.AC3:** Given any request to act on an indicator, when evaluated, then the indicator creates no payment, transfer, account, report, communication, or cloud authority by itself.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 149.AC1:** `AT-FANL-001` passes all published deterministic replay and explanation-fidelity thresholds.
+- [ ] **Sprint AC 149.AC2:** Accuracy, error, calibration, stability, subgroup, and drift results are published from versioned synthetic corpora.
+- [ ] **Sprint AC 149.AC3:** Every indicator is labeled as a potential signal with evidence and limitations, never a definitive fraud determination.
+- [ ] **Sprint AC 149.AC4:** Adversarial data and action prompts produce zero external authority or unsupported claim.
+
+**Gate decision:** Sprint 149 is PASS only when Story 149.1, all criteria, `AM-FANL-001`, `AT-FANL-001`, applicable security requirements, `RV-14`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 150 - QuickBooks Online and Xero Accounting
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Add independently gated QuickBooks Online and Xero reads, drafts, and approved non-money-movement accounting writes with exact organization, period, currency, tax, precision, idempotency, reconciliation, recovery, and removal behavior.
+
+**Source coverage:** `AM-ACC-001`, `AT-ACC-001`, `SR-FIN-001` through `SR-FIN-006`, `RV-23` through `RV-26`, `RV-31`, `RV-33`, `RV-35`.
+
+**Dependencies:** Sprints 128, 138, 142, 143, and 148.
+
+#### [ ] Story 150.1 - Controlled Non-Payment Accounting
+
+**User-facing value:** As a user, I can review accounting records, prepare drafts, and approve supported ledger changes without granting payment, transfer, banking, tax-filing, or account-administration authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 150.1.1 - Define accounting identities and capability classes**
+  - [ ] **Sub-task 150.1.1.1:** Model organization, ledger, account, contact, item, invoice, bill, journal, tax code, currency, period, attachment, draft, posted record, correction, and reconciliation identities.
+  - [ ] **Sub-task 150.1.1.2:** Separate reads, local drafts, provider drafts, approved non-money-movement writes, corrections, voids where admitted, and prohibited financial effects.
+  - [ ] **Sub-task 150.1.1.3:** Discover organization, role, period state, accounting basis, tax support, currency, precision, version, rate, and provider limitations.
+- [ ] **Task 150.1.2 - Implement QuickBooks and Xero conformance**
+  - [ ] **Sub-task 150.1.2.1:** Implement bounded reads and source-preserving normalization for exact supported objects.
+  - [ ] **Sub-task 150.1.2.2:** Implement drafts and separately approved writes with fresh period, object, tax, currency, duplicate, and reconciliation preconditions.
+  - [ ] **Sub-task 150.1.2.3:** Implement provider idempotency, unknown-effect reconciliation, verified postconditions, correction flows, crash recovery, revocation, and removal.
+- [ ] **Task 150.1.3 - Verify organization, precision, and prohibited authority**
+  - [ ] **Sub-task 150.1.3.1:** Mutate provider, organization, role, period, object, account, contact, currency, amount, tax, attachment, duplicate key, and postcondition.
+  - [ ] **Sub-task 150.1.3.2:** Test closed periods, concurrent changes, stale balances, tax differences, precision boundaries, timeout, retry, partial effects, and provider version drift.
+  - [ ] **Sub-task 150.1.3.3:** Probe payment, transfer, bill pay, bank feed administration, payroll, filing, credit, loan, credential recovery, and organization administration for absence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 150.1.AC1:** Given a supported accounting operation, when previewed and executed, then organization, period, object, accounts, contacts, currency, precision, tax, payload, and postcondition match exactly.
+- [ ] **Story AC 150.1.AC2:** Given a stale period, changed record, duplicate, tax mismatch, precision risk, or ambiguous effect, when submission or recovery runs, then no unsupported or duplicate write occurs.
+- [ ] **Story AC 150.1.AC3:** Given any payment, banking, filing, payroll, credit, credential, or administration request, when capability discovery runs, then the operation is absent.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 150.AC1:** `AT-ACC-001` passes for every promoted QuickBooks Online and Xero object and operation tuple.
+- [ ] **Sprint AC 150.AC2:** Organization, period, currency, precision, tax, identity, duplicate, timeout, and recovery campaigns produce zero wrong or duplicate write.
+- [ ] **Sprint AC 150.AC3:** All money-movement and financial-administration families pass schema, registration, shell, policy, workflow, and provider-request absence tests.
+- [ ] **Sprint AC 150.AC4:** Revocation and removal leave zero credential, cursor, webhook, schedule, worker, socket, cache, or write authority.
+
+**Gate decision:** Sprint 150 is PASS only when Story 150.1, all criteria, `AM-ACC-001`, `AT-ACC-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 151 - Financial Privacy and No-Money-Movement Gate
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Prove financial minimization, encryption, retention, model-context isolation, cross-pack disclosure control, export, backup, deletion, removal, and complete absence of money-movement authority across the finance pack.
+
+**Source coverage:** `AM-FPRV-001`, `AT-FPRV-001`, `SR-FIN-001` through `SR-FIN-006`, `RV-18`, `RV-24`, `RV-33`, `RV-35`; all Sprints 142-150.
+
+**Dependencies:** Sprints 142-150.
+
+#### [ ] Story 151.1 - Private and Non-Executing Finance Pack
+
+**User-facing value:** As a user, I can use financial analysis and budgeting while knowing sensitive records stay within declared boundaries and AgentMage cannot move money or administer financial accounts.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 151.1.1 - Enforce financial data policy**
+  - [ ] **Sub-task 151.1.1.1:** Define field-level financial classifications, allowed stores, encryption, memory lifetime, model-context eligibility, log redaction, diagnostic disclosure, export, backup, retention, deletion, and cross-pack rules.
+  - [ ] **Sub-task 151.1.1.2:** Require explicit classified and receipted data-flow policy before any financial value or record enters communications, documents, tasks, delivery, cloud, diagnostics, exports, or model context.
+  - [ ] **Sub-task 151.1.1.3:** Add local privacy controls, retained-data inventory, deletion preview, backup disclosure, and post-removal verification.
+- [ ] **Task 151.1.2 - Prove money-movement absence**
+  - [ ] **Sub-task 151.1.2.1:** Enumerate transfers, payments, bill pay, trades, orders, withdrawals, deposits, credit, loans, tax filing, beneficiaries, account administration, and credential recovery as closed prohibited families.
+  - [ ] **Sub-task 151.1.2.2:** Scan schemas, manifests, policy, tool registry, adapters, shell commands, workflow nodes, schedules, tests, documentation, and compiled artifacts for prohibited capability shapes.
+  - [ ] **Sub-task 151.1.2.3:** Run malicious model, message, document, workflow, provider, plugin, configuration, migration, and autonomy-level probes for each prohibited family.
+- [ ] **Task 151.1.3 - Run finance epic privacy and removal campaigns**
+  - [ ] **Sub-task 151.1.3.1:** Seed financial canaries and probe model prompts, memory, logs, diagnostics, receipts, exports, backups, crashes, core dumps, cross-pack flows, and error paths.
+  - [ ] **Sub-task 151.1.3.2:** Remove each finance adapter and the entire pack during idle, sync, queued, in-flight, uncertain, crashed, and stale states.
+  - [ ] **Sub-task 151.1.3.3:** Rebuild strict-local and communication suites after removal and compare process, socket, credential, cache, cursor, schedule, index, data, and network inventories.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 151.1.AC1:** Given classified financial data, when any processing, storage, model, diagnostic, export, backup, cross-pack, deletion, or removal path runs, then observed disclosure and retention match explicit policy.
+- [ ] **Story AC 151.1.AC2:** Given any money-movement or financial-administration request from any source or autonomy level, when evaluated, then no schema, tool, workflow, adapter, provider request, or external effect exists.
+- [ ] **Story AC 151.1.AC3:** Given pack removal, when strict-local and non-finance suites rerun, then no financial credential, data, cache, cursor, worker, schedule, socket, or authority remains beyond declared retention.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 151.AC1:** `AT-FPRV-001` passes with zero undeclared financial disclosure.
+- [ ] **Sprint AC 151.AC2:** Every prohibited financial family passes static, dynamic, adversarial, compiled-artifact, and provider-request absence tests.
+- [ ] **Sprint AC 151.AC3:** Finance canaries remain absent from unauthorized model, memory, log, diagnostic, receipt, export, backup, and cross-pack outputs.
+- [ ] **Sprint AC 151.AC4:** Independent `RV-33` and `RV-35` review reproduces precision, privacy, absence, removal, and restoration results.
+- [ ] **Sprint AC 151.AC5:** The finance support matrix, limitations, retention, and evidence index reconcile exactly.
+
+**Gate decision:** Sprint 151 and the finance gate are PASS only when Story 151.1, all criteria, `AM-FPRV-001`, `AT-FPRV-001`, every applicable finance acceptance test, all `SR-FIN-*`, `RV-18`, `RV-24`, `RV-33`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+### [ ] Sprint 152 - Cloud Observer Common Read Contract
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Define and enforce one strictly read-only cloud observation contract with exact provider, organization or tenant, account, subscription or project, region, service, resource, query, scope, rate, cache, freshness, recovery, and removal boundaries.
+
+**Source coverage:** `AM-CLO-001`, `AT-CLO-001`, `SR-CLD-001` through `SR-CLD-003`, `RV-23`, `RV-24`, `RV-26`, `RV-34`, `RV-35`.
+
+**Dependencies:** Sprints 127-130 and 141; delivery-system identity, credential, provider, observability, and support contracts.
+
+#### [ ] Story 152.1 - Strictly Read-Only Cloud Observation
+
+**User-facing value:** As a user, I can inspect bounded cloud inventory, health, configuration, telemetry, security observations, deployments, and costs without granting resource mutation, remote execution, deployment, secret, identity, policy, logging, or administration authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 152.1.1 - Define closed cloud read schemas**
+  - [ ] **Sub-task 152.1.1.1:** Define provider, organization, tenant, account, subscription, project, region, service, resource, query, time range, field, row, byte, rate, token, cache, freshness, result, and support identities.
+  - [ ] **Sub-task 152.1.1.2:** Enumerate allowed control-plane inventory, configuration, tags or labels, health, bounded metrics and logs, audit references, security observations, deployment identity, and cost-summary reads.
+  - [ ] **Sub-task 152.1.1.3:** Omit resource writes, data-plane broadening, commands, shells, deploys, secret values, credential rotation, identity, policy, logging, budget, upload, delete, and administration operations.
+- [ ] **Task 152.1.2 - Implement common worker and result controls**
+  - [ ] **Sub-task 152.1.2.1:** Bind each worker to one exact provider, credential reference, scope, account hierarchy, region set, service set, query, time, field, row, byte, rate, and cancellation budget.
+  - [ ] **Sub-task 152.1.2.2:** Implement pagination, throttling, quota, timeout, partial, stale, truncated, permission-limited, cached, revoked, recovered, and removed states.
+  - [ ] **Sub-task 152.1.2.3:** Treat cloud content and observations as untrusted evidence that cannot create cloud, delivery, communication, finance, or workflow authority.
+- [ ] **Task 152.1.3 - Prove common read-only enforcement**
+  - [ ] **Sub-task 152.1.3.1:** Run fake, fault, malicious, future-version, pagination-loop, quota, token-expiry, proxy, redirect, cross-account, and content-injection fixtures.
+  - [ ] **Sub-task 152.1.3.2:** Probe every prohibited cloud family through schemas, manifests, policy, registry, shell, workflows, workers, provider requests, and compiled artifacts.
+  - [ ] **Sub-task 152.1.3.3:** Revoke and remove the observer during idle, query, pagination, throttling, timeout, crash, and stale-cache states.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 152.1.AC1:** Given an admitted cloud query, when it runs, then exact provider, hierarchy, scope, region, service, resource, fields, time, limits, freshness, and result identity are retained.
+- [ ] **Story AC 152.1.AC2:** Given a prohibited cloud operation or out-of-scope request, when evaluated, then no provider request or authority-bearing representation exists.
+- [ ] **Story AC 152.1.AC3:** Given partial, stale, cached, permission-limited, throttled, or truncated results, when displayed, then limitations are visible and cannot appear complete or current.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 152.AC1:** `AT-CLO-001` passes against fake, fault, malicious, future-version, and reference-provider fixtures.
+- [ ] **Sprint AC 152.AC2:** All prohibited cloud families pass static, dynamic, compiled-artifact, and provider-request absence tests.
+- [ ] **Sprint AC 152.AC3:** Scope, token, account hierarchy, region, service, resource, query, time, field, row, byte, rate, proxy, and redirect attacks produce zero escape.
+- [ ] **Sprint AC 152.AC4:** Revocation and removal leave zero credential, cache, cursor, worker, socket, schedule, network, or cloud authority.
+
+**Gate decision:** Sprint 152 is PASS only when Story 152.1, all criteria, `AM-CLO-001`, `AT-CLO-001`, all `SR-CLD-*`, `RV-34`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 153 - AWS, Azure, and Google Cloud Observers
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Implement and independently verify provider-native read-only observation profiles for AWS, Azure, and Google Cloud without flattening account hierarchies, identities, permissions, telemetry, costs, or failure semantics.
+
+**Source coverage:** `AM-AWS-001`, `AM-AZR-001`, `AM-GCP-001`, `AT-AWS-001`, `AT-AZR-001`, `AT-GCP-001`, `SR-CLD-001` through `SR-CLD-003`, `RV-23`, `RV-24`, `RV-26`, `RV-29`, `RV-34`, `RV-35`.
+
+**Dependencies:** Sprint 152; delivery and observability adapters from Sprints 103-125.
+
+#### [ ] Story 153.1 - AWS Observer
+
+**User-facing value:** As an AWS user, I can inspect approved organizations, accounts, regions, resources, configuration, health, bounded telemetry, security observations, deployment identity, and costs without assume-role escape or cloud mutation.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 153.1.1 - Implement AWS identities and reads**
+  - [ ] **Sub-task 153.1.1.1:** Model partition, organization, organizational unit, account, region, service, ARN, resource, role session, token, query, metric, log group, trail reference, security observation, deployment, and cost identities.
+  - [ ] **Sub-task 153.1.1.2:** Implement admitted inventory, configuration, tag, health, bounded CloudWatch metric and log, CloudTrail reference, security observation, deployment identity, and Cost Explorer reads.
+  - [ ] **Sub-task 153.1.1.3:** Enforce exact account and role allowlists, external IDs where configured, region and service limits, query and byte limits, token expiry, and no secret values.
+- [ ] **Task 153.1.2 - Verify AWS isolation**
+  - [ ] **Sub-task 153.1.2.1:** Test assume-role chains, cross-account confusion, partition mismatch, ARN mutation, region and service escape, data-plane broadening, throttling, token expiry, and provider drift.
+  - [ ] **Sub-task 153.1.2.2:** Probe remote command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 153.1.AC1:** Given an admitted AWS scope, when observation runs, then partition, organization, account, region, service, ARN, query, fields, limits, freshness, and costs match exactly.
+- [ ] **Story AC 153.1.AC2:** Given assume-role, cross-account, region, service, resource, data-plane, token, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [ ] **Story AC 153.1.AC3:** Given throttling, token expiry, partial data, or removal, when recovery completes, then limitations remain visible and residual AWS authority is zero.
+
+#### [ ] Story 153.2 - Azure Observer
+
+**User-facing value:** As an Azure user, I can inspect approved tenants, subscriptions, regions, resources, configuration, health, bounded telemetry, security observations, deployment identity, and costs without cross-subscription or management-plane mutation.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 153.2.1 - Implement Azure identities and reads**
+  - [ ] **Sub-task 153.2.1.1:** Model cloud, tenant, management group, subscription, resource group, region, provider, resource ID, principal, token, query, metric, log workspace, activity reference, security observation, deployment, and cost identities.
+  - [ ] **Sub-task 153.2.1.2:** Implement admitted Resource Graph, configuration, tag, health, bounded Monitor metric and log, activity reference, security observation, deployment identity, and Cost Management reads.
+  - [ ] **Sub-task 153.2.1.3:** Enforce exact tenant, subscription, resource group, region, provider, field, time, row, byte, rate, token, and no-secret-value boundaries.
+- [ ] **Task 153.2.2 - Verify Azure isolation**
+  - [ ] **Sub-task 153.2.2.1:** Test tenant and subscription confusion, management-group escape, resource-ID mutation, provider registration drift, data-plane broadening, token audience, throttling, and API-version skew.
+  - [ ] **Sub-task 153.2.2.2:** Probe run-command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 153.2.AC1:** Given an admitted Azure scope, when observation runs, then tenant, subscription, resource group, region, provider, resource ID, query, limits, freshness, and costs match exactly.
+- [ ] **Story AC 153.2.AC2:** Given tenant, subscription, resource, data-plane, token, API-version, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [ ] **Story AC 153.2.AC3:** Given quota, version skew, partial data, or removal, when recovery completes, then limitations remain visible and residual Azure authority is zero.
+
+#### [ ] Story 153.3 - Google Cloud Observer
+
+**User-facing value:** As a Google Cloud user, I can inspect approved organizations, folders, projects, regions, assets, configuration, health, bounded telemetry, security observations, deployment identity, and billing without cross-project or cloud mutation.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 153.3.1 - Implement Google Cloud identities and reads**
+  - [ ] **Sub-task 153.3.1.1:** Model universe or endpoint, organization, folder, project, region, zone, service, full resource name, principal, token, query, metric, log, audit reference, security observation, deployment, billing account, and cost identities.
+  - [ ] **Sub-task 153.3.1.2:** Implement admitted Asset Inventory, configuration, label, health, bounded Monitoring metric and log, audit reference, security observation, deployment identity, and billing-summary reads.
+  - [ ] **Sub-task 153.3.1.3:** Enforce exact organization, folder, project, region, zone, service, resource, field, time, row, byte, quota-project, token, and no-secret-value boundaries.
+- [ ] **Task 153.3.2 - Verify Google Cloud isolation**
+  - [ ] **Sub-task 153.3.2.1:** Test organization, folder, project, quota-project, service-account, resource-name, region, service, data-plane, endpoint, token, quota, and API-version confusion.
+  - [ ] **Sub-task 153.3.2.2:** Probe SSH or command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 153.3.AC1:** Given an admitted Google Cloud scope, when observation runs, then organization, folder, project, region, service, resource, query, limits, freshness, and billing match exactly.
+- [ ] **Story AC 153.3.AC2:** Given hierarchy, project, resource, data-plane, endpoint, token, quota, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [ ] **Story AC 153.3.AC3:** Given quota, API drift, partial data, or removal, when recovery completes, then limitations remain visible and residual Google Cloud authority is zero.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 153.AC1:** `AT-AWS-001`, `AT-AZR-001`, and `AT-GCP-001` pass independently for every published provider capability tuple.
+- [ ] **Sprint AC 153.AC2:** Cross-hierarchy, account, subscription, project, region, service, resource, data-plane, credential, token, endpoint, and quota attacks produce zero escape.
+- [ ] **Sprint AC 153.AC3:** Every cloud write, execute, deploy, secret, identity, policy, logging, budget, upload, delete, and administration family is absent before provider request.
+- [ ] **Sprint AC 153.AC4:** Throttling, quota, version skew, partial results, crash, revocation, and removal preserve honest state and zero residual authority.
+- [ ] **Sprint AC 153.AC5:** Provider-specific identities and semantics remain native and are not flattened into ambiguous shared identifiers.
+
+**Gate decision:** Sprint 153 is PASS only when Stories 153.1 through 153.3, all criteria, all three provider requirements and acceptance tests, all `SR-CLD-*`, applicable reviewer protocols including `RV-34`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 154 - Cloud Cost and Delivery Correlation
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Correlate bounded cloud configuration, health, telemetry, security, deployment, and cost observations with delivery and productivity identities while preserving time, source, uncertainty, and the distinction between correlation and causation.
+
+**Source coverage:** `AM-CCST-001`, `AT-CCST-001`, `SR-CLD-001` through `SR-CLD-003`, `RV-14`, `RV-27`, `RV-34`.
+
+**Dependencies:** Sprints 129, 131, and 152-153; delivery graph and observability foundations.
+
+#### [ ] Story 154.1 - Cited Cross-System Cloud Context
+
+**User-facing value:** As a user, I can relate a deployment, incident, work item, configuration change, health signal, log window, security observation, and cost change without AgentMage inventing causation or cloud authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 154.1.1 - Define correlation records**
+  - [ ] **Sub-task 154.1.1.1:** Define native identities, observed and effective times, time windows, source evidence, structural links, temporal links, explicit provider links, statistical associations, confidence, freshness, and limitations.
+  - [ ] **Sub-task 154.1.1.2:** Separate provider-native relationship, deterministic cross-system mapping, user-confirmed link, model suggestion, statistical association, and causal claim states.
+  - [ ] **Sub-task 154.1.1.3:** Prohibit a correlation from creating deployment, infrastructure, incident, communication, financial, or cloud authority.
+- [ ] **Task 154.1.2 - Implement bounded cost and operational views**
+  - [ ] **Sub-task 154.1.2.1:** Link cost summaries to exact billing scope, service, resource where supported, time window, currency, granularity, source, freshness, and allocation assumptions.
+  - [ ] **Sub-task 154.1.2.2:** Build cited deployment-to-health, incident-to-observation, work-to-deployment, configuration-to-metric, and cost-to-service views.
+  - [ ] **Sub-task 154.1.2.3:** Keep remediation, rollback, notification, issue creation, and cloud action as separate delivery or communication operations with independent policy.
+- [ ] **Task 154.1.3 - Verify identity, time, cost, and causal restraint**
+  - [ ] **Sub-task 154.1.3.1:** Test identity collisions, renames, transfers, deleted resources, delayed telemetry, clock skew, stale costs, missing tags, shared services, currency differences, and conflicting evidence.
+  - [ ] **Sub-task 154.1.3.2:** Inject content claiming causation, urgency, approval, remediation, or completed action.
+  - [ ] **Sub-task 154.1.3.3:** Recompute correlations from raw evidence and verify labeled deterministic, statistical, model-assisted, uncertain, and rejected states.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 154.1.AC1:** Given correlated delivery, productivity, cloud, and cost records, when inspected, then every native identity, source, time window, freshness, assumption, and link type is visible.
+- [ ] **Story AC 154.1.AC2:** Given temporal or statistical association without deterministic evidence, when summarized, then it remains correlation and is not presented as causation.
+- [ ] **Story AC 154.1.AC3:** Given a correlation or hostile observation, when action is requested, then no cloud or delivery authority is inherited from the correlation.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 154.AC1:** `AT-CCST-001` passes across identity, time, rename, transfer, stale, cost, conflicting-evidence, and injected-causation fixtures.
+- [ ] **Sprint AC 154.AC2:** Every view retains native source identity and exact time, currency, granularity, freshness, and allocation assumptions.
+- [ ] **Sprint AC 154.AC3:** Unsupported causal claims are absent and every association class is labeled.
+- [ ] **Sprint AC 154.AC4:** Correlations create zero cloud, delivery, communication, finance, or workflow authority.
+
+**Gate decision:** Sprint 154 is PASS only when Story 154.1, all criteria, `AM-CCST-001`, `AT-CCST-001`, applicable security requirements, `RV-14`, `RV-27`, `RV-34`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 155 - Cross-Pack Extreme Verification and Removal
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Attack and remove productivity, communications, finance, and cloud packs independently and together, prove prohibited-authority absence, and restore strict-local behavior without hidden blockers or residue.
+
+**Source coverage:** `AM-XPR-001`, `AT-XPR-001`, all `SR-PRD-*`, all `SR-FIN-*`, all `SR-CLD-*`, `RV-01` through `RV-35`; all Sprints 127-154.
+
+**Dependencies:** Sprints 127-154; Epic 12 and finance gate completion.
+
+#### [ ] Story 155.1 - Adversarial Cross-Pack Closure
+
+**User-facing value:** As a user and reviewer, I can trust that combined workflows do not leak identity, data, credentials, grants, recipients, financial records, cloud scope, or effects across pack boundaries.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 155.1.1 - Build the cross-pack campaign matrix**
+  - [ ] **Sub-task 155.1.1.1:** Cross product autonomy, identity, provider, account, recipient, destination, synchronization, classification, attachment, financial record, cloud resource, workflow, schedule, crash point, and removal state.
+  - [ ] **Sub-task 155.1.1.2:** Include communication-to-work, meeting-to-commitment, bill-to-budget, receipt-to-transaction, cloud-observation-to-delivery-plan, and incident-to-approved-communication lifecycles.
+  - [ ] **Sub-task 155.1.1.3:** Define exact authorized effects, prohibited effects, expected uncertainty, postconditions, residue inventories, evidence, and stop conditions for every case.
+- [ ] **Task 155.1.2 - Run hostile, failure, and resource campaigns**
+  - [ ] **Sub-task 155.1.2.1:** Mutate schemas, IPC, events, webhooks, cursors, provider results, recipients, attachments, documents, financial values, cloud scope, logs, archives, manifests, model outputs, and workflow graphs.
+  - [ ] **Sub-task 155.1.2.2:** Inject replay, forgery, duplicate, omission, reorder, stale state, permission reduction, token expiry, rate and quota exhaustion, outage, partition, version skew, crash, cancellation, restart, and disk or memory pressure.
+  - [ ] **Sub-task 155.1.2.3:** Probe money movement, financial administration, cloud mutation, cloud execution, secret access, identity and policy administration, and content-created authority through every pack and autonomy level.
+- [ ] **Task 155.1.3 - Remove packs and restore strict local**
+  - [ ] **Sub-task 155.1.3.1:** Disable and remove every connector and pack independently and together during idle, queued, in-flight, uncertain, synchronizing, stale, crashed, and partially removed states.
+  - [ ] **Sub-task 155.1.3.2:** Verify credential references, caches, cursors, events, webhooks, schedules, indexes, processes, sockets, listeners, network scopes, retained data, backups, and grants against policy.
+  - [ ] **Sub-task 155.1.3.3:** Rerun complete strict-local, delivery, Windows, accessibility, recovery, update, rollback, uninstall, residue, and documentation gates after removal.
+- [ ] **Task 155.1.4 - Reconcile and independently review evidence**
+  - [ ] **Sub-task 155.1.4.1:** Preserve versioned corpora, seeds, environments, raw results, traces, failures, skips, suppressions, quarantines, resource measures, and reviewer dispositions.
+  - [ ] **Sub-task 155.1.4.2:** Recompute every summary from raw evidence and fail on stale, missing, contradictory, unreconciled, unavailable, or unreviewed results.
+  - [ ] **Sub-task 155.1.4.3:** Independently execute `RV-31` through `RV-35` and all inherited protocols affected by the new packs.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 155.1.AC1:** Given any cross-pack workflow, when normal, hostile, failure, and recovery schedules run, then only declared effects occur and every result is attributable and receipted.
+- [ ] **Story AC 155.1.AC2:** Given any money-movement, financial-administration, cloud-mutation, cloud-execution, secret, identity, policy, or content-created-authority attempt, when evaluated, then no prohibited representation, request, or effect exists.
+- [ ] **Story AC 155.1.AC3:** Given disablement or removal at any lifecycle point, when strict-local restoration completes, then residual authority is zero and retained data matches explicit policy.
+- [ ] **Story AC 155.1.AC4:** Given raw evidence and an independent environment, when summaries and gates are rebuilt, then all results reproduce without hidden blocker.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 155.AC1:** `AT-XPR-001` passes with zero unauthorized disclosure, effect, money movement, cloud mutation, duplicate, false completion, or hidden blocker.
+- [ ] **Sprint AC 155.AC2:** Every new schema, parser, IPC, event, provider, attachment, financial, cloud, workflow, and model-output boundary has current mutation and fuzz evidence.
+- [ ] **Sprint AC 155.AC3:** Failure, recovery, cancellation, and resource campaigns preserve exact state and never repeat a completed effect.
+- [ ] **Sprint AC 155.AC4:** Pack removal and strict-local restoration leave zero undeclared credential, cache, cursor, event, schedule, index, process, socket, listener, network, grant, or retained-data residue.
+- [ ] **Sprint AC 155.AC5:** `RV-01` through `RV-35` and all support, limitation, removal, and evidence matrices reconcile exactly.
+
+**Gate decision:** Sprint 155 and the cross-pack gate are PASS only when Story 155.1, all criteria, `AM-XPR-001`, `AT-XPR-001`, every applicable acceptance test and security requirement, `RV-01` through `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+## [ ] Epic 14 - Expanded v1.0 GA Verification Checkpoint
+
+### [ ] Sprint 156 - Expanded First-GA Evidence Checkpoint
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Rebuild, independently reproduce, and sign the exact Decision 0009 evidence checkpoint across delivery, Windows, productivity, communications, finance, cloud observation, strict-local operation, support, accessibility, recovery, removal, and documentation before Decision 0010 work proceeds.
+
+**Source coverage:** `AM-GAD-002`, `AT-GA-002`; Decision 0009; entire README, PRD, inventory through Section 37B, implementation plan, security review, runtime, delivery, productivity, and Windows boundaries; Sprints 0-155.
+
+**Dependencies:** Sprint 155; Sprint 126 checkpoint; every promoted milestone and support gate. Apple Silicon remains outside first-GA blocking scope under accepted decisions.
+
+#### [ ] Story 156.1 - Truthful Expanded v1.0 GA Checkpoint
+
+**User-facing value:** As a user and reviewer, I receive a release whose platforms, providers, accounts, objects, operations, autonomy, finance and cloud restrictions, limitations, support, removal, and evidence match the exact installed package.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 156.1.1 - Rebuild requirements, artifacts, and support truth**
+  - [ ] **Sub-task 156.1.1.1:** Rebuild the complete requirement graph and prove every promoted `AM-*`, `AT-*`, `SR-*`, `RV-*`, story, task, test, artifact, owner, support state, and release claim has current linkage.
+  - [ ] **Sub-task 156.1.1.2:** Generate signed platform, model, runtime, component, process, socket, path, adapter, provider, version, account, object, operation, scope, data-flow, autonomy, retention, exclusion, recovery, and removal manifests.
+  - [ ] **Sub-task 156.1.1.3:** Regenerate source and binary SBOMs, cryptographic BOM, Model BOM, licenses, provenance, signatures, hashes, vulnerability dispositions, support, degradation, and end-of-support metadata.
+  - [ ] **Sub-task 156.1.1.4:** Publish exact install, diagnostics, strict-local, connected-pack, autonomy, communication, finance, cloud-observer, credential, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
+- [ ] **Task 156.1.2 - Independently rerun the expanded release**
+  - [ ] **Sub-task 156.1.2.1:** Perform three clean standard-user install, upgrade, rollback, uninstall, and residue lifecycles per first-GA platform using published instructions only.
+  - [ ] **Sub-task 156.1.2.2:** Rerun every promoted provider, protocol, version, account, object, operation, scope, autonomy, finance, and cloud conformance matrix against exact release candidates and synthetic environments.
+  - [ ] **Sub-task 156.1.2.3:** Rerun `RV-01` through `RV-35`, cross-pack lifecycles, strict-local restoration, prohibited-authority absence, accessibility, performance, recovery, incident tabletop, and documentation checks.
+  - [ ] **Sub-task 156.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, suppression, quarantine, flake, stale result, unavailable dependency, and reviewer finding.
+- [ ] **Task 156.1.3 - Prove truthful failure and release blocking**
+  - [ ] **Sub-task 156.1.3.1:** Force each platform, provider, autonomy, effect, finance, cloud, privacy, security, accessibility, recovery, removal, support, and evidence gate to fail independently.
+  - [ ] **Sub-task 156.1.3.2:** Prove unsupported operations remain absent and every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result prevents publication.
+  - [ ] **Sub-task 156.1.3.3:** Compare package contents and runtime registrations with public support and limitation matrices and block every mismatch.
+- [ ] **Task 156.1.4 - Decide and sign the expanded checkpoint**
+  - [ ] **Sub-task 156.1.4.1:** Produce final supported, degraded, unsupported, disabled, removed, and post-GA matrices for platforms, providers, operations, and capability packs.
+  - [ ] **Sub-task 156.1.4.2:** Produce final risk, privacy, prohibited-authority, limitation, remediation, rollback, support, vulnerability, and release decisions from raw evidence.
+  - [ ] **Sub-task 156.1.4.3:** Obtain independent reviewer signatures over the exact evidence index and explicit user approval over the release decision.
+  - [ ] **Sub-task 156.1.4.4:** Sign and hash checkpoint manifests, candidate packages, evidence indexes, and checksums only after every Decision 0009 blocking gate is green; do not publish v1.0 before Sprint 166.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 156.1.AC1:** Given exact expanded v1.0 release candidates, when independent reviewers follow published procedures, then every supported platform, provider, operation, pack, restriction, recovery, accessibility, support, and removal result reproduces from raw evidence.
+- [ ] **Story AC 156.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, unavailable, or unreviewed blocking result, when checkpoint status is computed, then `G-GA-PRODUCTIVITY-CHECKPOINT` and final `G-GA` remain blocked and no supported-release package is produced.
+- [ ] **Story AC 156.1.AC3:** Given final packages, registrations, manifests, support matrices, limitations, and release notes, when compared, then every claim agrees exactly and prohibited authority remains absent.
+- [ ] **Story AC 156.1.AC4:** Given pack disablement or removal, when strict-local restoration is rerun against the release candidate, then no undeclared authority or residue remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 156.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
+- [ ] **Sprint AC 156.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, recovery, update, rollback, uninstall, and residue gates.
+- [ ] **Sprint AC 156.AC3:** Every promoted provider, protocol, version, account, object, operation, scope, and autonomy tuple passes conformance and extreme tests; every unsupported family passes absence tests.
+- [ ] **Sprint AC 156.AC4:** Bills of materials, provenance, signatures, hashes, manifests, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
+- [ ] **Sprint AC 156.AC5:** `G-GA-PRODUCTIVITY-CHECKPOINT` closes only after independent reproduction, explicit user approval, and zero hidden Decision 0009 blocker; final `G-GA` remains blocked until Sprint 166.
+
+**Gate decision:** Sprint 156 and `G-GA-PRODUCTIVITY-CHECKPOINT` are PASS only when Story 156.1, all criteria, `AM-GAD-002`, `AT-GA-002`, every applicable `AT-*`, `SR-*`, and `RV-01` through `RV-35`, every promoted milestone gate through Decision 0009, and the Universal Story Definition of Done pass with current signed evidence. Final `G-GA` remains BLOCKED until Sprint 166 under Decision 0010.
+
+## [ ] Epic 15 - Trusted Operations, Whole-Codebase Audit, and Superseding v1.0 GA
+
+### [ ] Sprint 157 - Trusted-Operations Contracts and Platform Topology
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Freeze the capability, process, IPC, network, storage, authority, lifecycle, evidence, removal, and whole-codebase audit contracts shared by trusted operations.
+
+**Source coverage:** `AM-TRU-001`, `AT-TRU-001`, `AM-CBA-001`, `AT-CBA-001`, `SR-CMD-001` through `SR-CMD-004`, `SR-TOP-001`, `SR-AUD-001`; Decisions 0010-0011; `TRUSTED-OPERATIONS.md`; `CODEBASE-AUDIT.md`; `RV-36` through `RV-48` ownership map.
+
+**Dependencies:** Sprints 4-16, 103-105, 121-125, and 156; Decision 0010.
+
+#### [ ] Story 157.1 - Reviewable Trusted-Operations Boundary
+
+**User-facing value:** As a user, I can understand which AgentMage component can execute commands, access the Internet, resolve a credential, write a backup, or install a model, and I can disable each authority independently.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 157.1.1 - Define typed capability and operation contracts**
+  - [ ] **Sub-task 157.1.1.1:** Add closed schemas for command levels, research plans, credential references, continuity plans, model-manager plans, lifecycle states, limits, cancellation, and terminal receipts.
+  - [ ] **Sub-task 157.1.1.2:** Register each capability independently and prohibit worker, grant, credential, network, storage, or policy union across capability classes.
+  - [ ] **Sub-task 157.1.1.3:** Add compatibility, migration, unsupported-version, unknown-field, and fail-closed parsing fixtures.
+- [ ] **Task 157.1.2 - Freeze process and platform topology**
+  - [ ] **Sub-task 157.1.2.1:** Declare every Linux, Windows, and retained macOS process, package, identity, IPC edge, socket, writable path, network destination class, secret edge, durable object, and cleanup owner.
+  - [ ] **Sub-task 157.1.2.2:** Extend release manifests, diagnostics, component inventory, threat cases, and data-flow maps with trusted-operations identities and states.
+  - [ ] **Sub-task 157.1.2.3:** Build fake and fault platform adapters for unavailable sandbox, key store, network enforcement, storage, clock, authentication, and cancellation dependencies.
+- [ ] **Task 157.1.3 - Define lifecycle, disablement, and evidence**
+  - [ ] **Sub-task 157.1.3.1:** Specify enable, start, active, cancel, uncertain, reconcile, stop, disable, remove, recover, and residue states for each capability.
+  - [ ] **Sub-task 157.1.3.2:** Assign `RV-36` through `RV-43` first-execution ownership and evidence schemas to Sprints 158-166.
+  - [ ] **Sub-task 157.1.3.3:** Generate cross-document support, limitation, authority, process, network, storage, and removal matrices.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 157.1.AC1:** Given any trusted-operations request, when its contract is validated, then exactly one capability class, worker identity, authority level, inputs, limits, lifecycle, and receipt schema are selected or the request is denied.
+- [ ] **Story AC 157.1.AC2:** Given an unknown, conflicting, missing, or future contract field, when loading or dispatch occurs, then startup or the operation fails closed without guessing.
+- [ ] **Story AC 157.1.AC3:** Given any capability disablement or removal state, when inspected, then every process, socket, network rule, credential reference, store, cache, schedule, and retention owner has one declared disposition.
+
+#### [ ] Story 157.2 - Whole-Codebase Audit Contracts and Memory Model
+
+**User-facing value:** As a user, I can begin a repository audit knowing exactly what will be inspected, what complete means, where long-running evidence is retained, and which conditions prevent a whole-codebase claim.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 157.2.1 - Define audit identity and coverage contracts**
+  - [ ] **Sub-task 157.2.1.1:** Add closed schemas for repository root, revision, index, dirty state, inclusion and exclusion rules, depth, languages, parsers, history, submodules, worktrees, commands, network, resources, retention, cancellation, and outputs.
+  - [ ] **Sub-task 157.2.1.2:** Define path dispositions for analyzed, generated, vendored, binary, excluded, unavailable, unsupported, changed, and failed content without allowing silent omission.
+  - [ ] **Sub-task 157.2.1.3:** Bind audit identity to platform, release, policy, model/runtime profile, parser catalog, start state, and successor or incremental relationships.
+- [ ] **Task 157.2.2 - Define structured project-memory records**
+  - [ ] **Sub-task 157.2.2.1:** Add versioned schemas for file, symbol, module, graph edge, semantic packet, evidence card, contradiction, finding, checkpoint, invalidation, coverage, resource, and report records.
+  - [ ] **Sub-task 157.2.2.2:** Define exact source spans, hashes, provenance, observation-versus-inference state, confidence, uncertainty, counterevidence, reverse dependencies, and current/stale lifecycle.
+  - [ ] **Sub-task 157.2.2.3:** Prohibit model context, embeddings, summaries, mutable names, and retrieval rank from serving as canonical identity, coverage, dependency, authority, or evidence.
+- [ ] **Task 157.2.3 - Freeze audit process and evidence topology**
+  - [ ] **Sub-task 157.2.3.1:** Declare audit coordinator, census, parser/graph, disposable verification, model-packet, reconciliation, and report-compiler processes and IPC edges on every first-GA platform.
+  - [ ] **Sub-task 157.2.3.2:** Add audit components, stores, scratch roots, queues, retention, diagnostics, disablement, removal, and residue ownership to signed manifests.
+  - [ ] **Sub-task 157.2.3.3:** Assign `RV-44` through `RV-48` to owning stories and define machine-readable evidence schemas before implementation.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 157.2.AC1:** Given any audit request, when its contract is validated, then exact repository, scope, identity, depth, parsers, model, commands, resources, retention, outputs, and completion rules are selected or the audit is denied.
+- [ ] **Story AC 157.2.AC2:** Given any file or repository state, when coverage is represented, then one explicit disposition exists and no exclusion or failure can be confused with completed analysis.
+- [ ] **Story AC 157.2.AC3:** Given any model packet, evidence card, finding, checkpoint, or report, when inspected, then it resolves to current deterministic source records and cannot create authority or completeness by itself.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 157.AC1:** `AT-TRU-001` passes against the complete declared topology on Fedora, Ubuntu, and Windows fixtures.
+- [ ] **Sprint AC 157.AC2:** Schema, compatibility, migration, malformed-input, and fault-adapter tests fail closed with no capability registration or side effect.
+- [ ] **Sprint AC 157.AC3:** Release manifests and diagnostics enumerate every added component and no undeclared process, socket, write path, secret edge, or destination remains.
+- [ ] **Sprint AC 157.AC4:** Requirement, security, reviewer-protocol, task, artifact, and release traceability is complete for Sprints 158-166.
+- [ ] **Sprint AC 157.AC5:** `AT-CBA-001` contract, coverage, record, lifecycle, compatibility, malformed-input, and topology fixtures pass before any audit worker implementation begins.
+
+**Gate decision:** Sprint 157 is PASS only when Stories 157.1-157.2, all criteria, `AM-TRU-001`, `AT-TRU-001`, `AM-CBA-001`, `AT-CBA-001`, applicable security requirements, the assigned `RV-*` ownership map, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 158 - Operating-System Credential Broker
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Resolve approved credentials seamlessly for one exact worker operation while ensuring raw secrets never enter models, general processes, logs, diagnostics, exports, or backups.
+
+**Source coverage:** `AM-CRD-001`, `AT-CRD-001`, `SR-CRD-001` through `SR-CRD-003`, `RV-38`.
+
+**Dependencies:** Sprint 157; platform secret-store and provider-identity foundations from Sprints 9, 11, 104, and 128-130.
+
+#### [ ] Story 158.1 - Typed Secret References and Exact Resolution
+
+**User-facing value:** As a user, I can connect approved services once and let AgentMage reuse the connection safely without placing passwords or tokens in chat or configuration files.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 158.1.1 - Implement platform credential stores**
+  - [ ] **Sub-task 158.1.1.1:** Implement Linux Secret Service, Windows Credential Manager or DPAPI, and retained macOS Keychain adapters behind one typed reference contract.
+  - [ ] **Sub-task 158.1.1.2:** Store provider, host, tenant, account, scopes, creation, expiry, rotation, revocation, and support metadata separately from secret values.
+  - [ ] **Sub-task 158.1.1.3:** Fail closed when store identity, lock state, access control, cryptographic provider, or platform support cannot be verified.
+- [ ] **Task 158.1.2 - Implement acquisition and worker resolution**
+  - [ ] **Sub-task 158.1.2.1:** Add system-browser and device OAuth, short-lived token, Secure Shell agent, certificate-reference, and scoped manual-token flows where admitted.
+  - [ ] **Sub-task 158.1.2.2:** Validate requesting worker identity and exact provider, host, tenant, account, operation, scope, grant, expiry, redirect, and proxy before resolving one reference.
+  - [ ] **Sub-task 158.1.2.3:** Keep the value in bounded worker memory, clear it on every terminal path, and return only status and non-secret metadata.
+- [ ] **Task 158.1.3 - Implement lifecycle, redaction, and recovery**
+  - [ ] **Sub-task 158.1.3.1:** Add expiry, refresh, rotation, revocation, deletion, account disconnect, emergency disablement, and concurrent-operation behavior.
+  - [ ] **Sub-task 158.1.3.2:** Add canary scanning across prompts, model context, chat, files, arguments, environment, logs, receipts, diagnostics, exports, crashes, snapshots, and residue.
+  - [ ] **Sub-task 158.1.3.3:** Restore non-secret account references only and require deterministic reauthentication after continuity restore.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 158.1.AC1:** Given an exact authorized worker operation, when it resolves a valid credential reference, then only that worker receives the value and only for its bounded lifetime.
+- [ ] **Story AC 158.1.AC2:** Given any provider, host, tenant, account, operation, scope, expiry, worker, redirect, or proxy mismatch, when resolution is attempted, then no secret is returned or used.
+- [ ] **Story AC 158.1.AC3:** Given backup and clean-device restore, when account metadata is recovered, then no raw credential is present and the user is guided through reauthentication.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 158.AC1:** `AT-CRD-001` and `RV-38` pass on every available first-GA platform with separate evidence.
+- [ ] **Sprint AC 158.AC2:** At least 5,000 cross-worker, account, host, tenant, scope, redirect, proxy, expiry, race, crash, and replay mutations produce zero disclosure or wrong-account request.
+- [ ] **Sprint AC 158.AC3:** Canary scans find zero raw secret across every prohibited process and persistence surface.
+- [ ] **Sprint AC 158.AC4:** Revocation, deletion, disablement, restore reauthentication, and removal leave no usable stale reference or secret residue.
+
+**Gate decision:** Sprint 158 is PASS only when Story 158.1, all criteria, `AM-CRD-001`, `AT-CRD-001`, `SR-CRD-001` through `SR-CRD-003`, `RV-38`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 159 - Tiered Full Command Execution
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Provide complete local command capability through explicit authority levels and enforce whole-codebase census and verification without allowing an audit to write to its canonical repository.
+
+**Source coverage:** `AM-AUT-002`, `AM-CLI-002`, `AM-CEN-001`, `AM-ROA-001`, `AT-AUT-002`, `AT-CLI-002`, `AT-CEN-001`, `AT-ROA-001`, `SR-CMD-001` through `SR-CMD-004`, `SR-AUD-001` through `SR-AUD-004`, `RV-36`, `RV-44`, `RV-45`.
+
+**Dependencies:** Sprints 41-43, 74, 128, 157, and 158.
+
+#### [ ] Story 159.1 - Capable Shell with Explicit Authority
+
+**User-facing value:** As a user, I can let AgentMage build, test, administer a workspace, or deliberately operate with my full user authority while always knowing which level is active and being able to stop it immediately.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 159.1.1 - Implement command levels and plan compiler**
+  - [ ] **Sub-task 159.1.1.1:** Implement Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted Session policy states and intersections.
+  - [ ] **Sub-task 159.1.1.2:** Compile exact executable or shell, arguments, pipelines, redirections, interpreters, PTY, working directory, paths, environment, credentials, network, descendants, persistence, resources, timeout, output, changes, rollback, and cancellation.
+  - [ ] **Sub-task 159.1.1.3:** Render deterministic previews, effective authority, expected side effects, risk, limitations, and terminal receipts in native Chat and CLI.
+- [ ] **Task 159.1.2 - Implement constrained and owner workers**
+  - [ ] **Sub-task 159.1.2.1:** Run Inspect, Workspace Autonomous, and Connected Operations commands in platform-constrained workers with exact grants and process-tree cleanup.
+  - [ ] **Sub-task 159.1.2.2:** Require a direct user gesture, fresh platform authentication, exact duration, login-session binding, persistent warning, remaining-time display, panic stop, and explicit risk acknowledgement for Owner mode.
+  - [ ] **Sub-task 159.1.2.3:** Revoke Owner mode and terminate descendants on expiry, stop, lock, logout, restart, policy change, emergency disablement, or integrity failure.
+- [ ] **Task 159.1.3 - Verify semantics, boundaries, and truthful risk**
+  - [ ] **Sub-task 159.1.3.1:** Exercise direct commands, shells, pipelines, redirections, scripts, interpreters, PTYs, packages, builds, tests, Git, Docker, and interactive cancellation.
+  - [ ] **Sub-task 159.1.3.2:** Probe path, environment, credential, network, device, process, persistence, privilege, resource, timeout, output, descendant, and rollback boundaries.
+  - [ ] **Sub-task 159.1.3.3:** Attempt activation, inheritance, scheduling, renewal, replay, race, stale display, and concealment from every model and untrusted content channel.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 159.1.AC1:** Given a constrained command level, when a command runs, then every process and side effect remains within the exact plan and current grant.
+- [ ] **Story AC 159.1.AC2:** Given Owner / Unrestricted Session, when the user activates it, then host-user risk is explicit, the state is continuously visible and expiring, and panic or revocation terminates all descendants.
+- [ ] **Story AC 159.1.AC3:** Given any model, webpage, repository, message, workflow, schedule, child agent, stale session, or replay request to enable or renew Owner mode, when evaluated, then no activation occurs.
+
+#### [ ] Story 159.2 - Complete Census and Enforced Read-Only Verification
+
+**User-facing value:** As a user, I can ask AgentMage to inspect and test an entire repository while the original source tree, Git state, hosted services, credentials, and neighboring files remain unchanged.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 159.2.1 - Implement deterministic repository census**
+  - [ ] **Sub-task 159.2.1.1:** Enumerate tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, symbolic-link, hard-link, inaccessible, malformed, special, external, and changing path states.
+  - [ ] **Sub-task 159.2.1.2:** Record stable path identity, type, size, hash where readable, language, encoding, classification, repository state, parser, disposition, exclusion rule, errors, and dependencies.
+  - [ ] **Sub-task 159.2.1.3:** Reconcile filesystem, source-control, submodule, worktree, and audit totals and block completion on every unexplained mismatch or required unavailable path.
+- [ ] **Task 159.2.2 - Enforce canonical immutability**
+  - [ ] **Sub-task 159.2.2.1:** Give census and parser workers read-only source handles with no path, Git, hook, configuration, hosted, credential, or neighboring-data write authority.
+  - [ ] **Sub-task 159.2.2.2:** Create disposable copy-on-write audit workspaces for builds, tests, dependency resolution, generators, formatters, coverage, and language-service initialization.
+  - [ ] **Sub-task 159.2.2.3:** Compare canonical root, filesystem metadata, Git index, refs, configuration, hooks, worktrees, submodules, tracked, untracked, ignored, processes, sockets, and hosted state before and after every audit.
+- [ ] **Task 159.2.3 - Isolate hostile content and secrets**
+  - [ ] **Sub-task 159.2.3.1:** Parse archives, links, special files, build metadata, plugins, and language services in fresh workers with path, recursion, file, byte, process, output, resource, timeout, and cancellation limits.
+  - [ ] **Sub-task 159.2.3.2:** Detect and classify secrets before model-packet creation, replace protected values with typed redactions, and scan every retained audit surface with canaries.
+  - [ ] **Sub-task 159.2.3.3:** Exercise malicious repository instructions, hooks, build scripts, parser exploits, archive bombs, path traversal, link races, process descendants, crashes, cancellation, and cleanup.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 159.2.AC1:** Given any in-scope repository path, when census completes, then exactly one current disposition and evidence record exists or the audit remains incomplete.
+- [ ] **Story AC 159.2.AC2:** Given a build, test, generator, formatter, package operation, or language service that writes, when audit verification runs, then every write remains disposable and the canonical repository and hosted state are unchanged.
+- [ ] **Story AC 159.2.AC3:** Given secrets or hostile repository content, when census, parsing, verification, and packet preparation run, then no raw value or content-created authority reaches the model or a retained surface.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 159.AC1:** `AT-AUT-002`, `AT-CLI-002`, and `RV-36` pass on Fedora, Ubuntu, and Windows with separate platform evidence.
+- [ ] **Sprint AC 159.AC2:** At least 5,000 authority mutations and all command-semantic fixtures produce zero constrained-mode escape or hidden launch.
+- [ ] **Sprint AC 159.AC3:** Every Owner-mode terminal trigger revokes authority and leaves zero surviving descendant, listener, scheduled launch, or reusable activation record.
+- [ ] **Sprint AC 159.AC4:** Keyboard, screen-reader, focus, contrast, warning, remaining-time, confirmation, cancellation, and panic-stop behavior pass.
+- [ ] **Sprint AC 159.AC5:** `AT-CEN-001`, `AT-ROA-001`, `RV-44`, and `RV-45` pass across every repository-state class with zero canonical or hosted mutation, raw-secret exposure, silent omission, parser escape, or surviving audit process.
+
+**Gate decision:** Sprint 159 is PASS only when Stories 159.1-159.2, all criteria, `AM-AUT-002`, `AM-CLI-002`, `AM-CEN-001`, `AM-ROA-001`, named acceptance tests, `SR-CMD-001` through `SR-CMD-004`, `SR-AUD-001` through `SR-AUD-004`, `RV-36`, `RV-44`, `RV-45`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 160 - Current Public Research and Citation Safety
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Search and retrieve current public information with claim-level evidence while preventing hostile web content, downloads, and private-context requests from creating authority or disclosure.
+
+**Source coverage:** `AM-WEB-001`, `AT-WEB-001`, `SR-WEB-001` through `SR-WEB-004`, `RV-37`.
+
+**Dependencies:** Sprints 21, 66, 74, 157, and 158.
+
+#### [ ] Story 160.1 - Evidence-Oriented Public Internet Research
+
+**User-facing value:** As a user, I can ask a current question and receive an answer that shows where each fact came from, when it was retrieved, how fresh it is, and what remains uncertain.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 160.1.1 - Implement bounded search and retrieval**
+  - [ ] **Sub-task 160.1.1.1:** Define query, provider, recency, domain, scheme, DNS, proxy, certificate, redirect, item, byte, media, script, archive, download, cache, timeout, and cancellation contracts.
+  - [ ] **Sub-task 160.1.1.2:** Run public search and retrieval in a separate worker with no authenticated-browser state, broad workspace handle, connector credential, or external-effect tool.
+  - [ ] **Sub-task 160.1.1.3:** Quarantine downloads and require separate artifact-type admission before parsing, opening, installing, or executing them.
+- [ ] **Task 160.1.2 - Implement citations and freshness**
+  - [ ] **Sub-task 160.1.2.1:** Preserve query, source provider, direct URL, redirects, title, retrieval time, publication date, event date where known, excerpt hash, source class, and cache state.
+  - [ ] **Sub-task 160.1.2.2:** Bind web-grounded claims to citations and label observed source statements, deterministic derivations, model inference, conflict, staleness, and unknown state.
+  - [ ] **Sub-task 160.1.2.3:** Revalidate changing facts and prefer first-party or primary sources while preserving clearly labeled secondary corroboration.
+- [ ] **Task 160.1.3 - Prevent injection and private disclosure**
+  - [ ] **Sub-task 160.1.3.1:** Keep page text, hidden text, metadata, scripts, links, authentication prompts, and tool requests in untrusted evidence channels.
+  - [ ] **Sub-task 160.1.3.2:** Require an exact classified disclosure preview for any selected workspace, memory, communication, finance, connector, or other private field sent to a destination.
+  - [ ] **Sub-task 160.1.3.3:** Build malicious-site, redirect, tracking, injection, credential, form, upload, download, archive, script, and private-canary fixtures.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 160.1.AC1:** Given a changing public question, when research completes, then every material web-grounded claim has a direct citation, retrieval time, freshness state, and visible inference or uncertainty.
+- [ ] **Story AC 160.1.AC2:** Given hostile page content or a downloaded instruction, when processed, then it cannot activate a command, credential, model, connector, form, upload, publication, or other effect.
+- [ ] **Story AC 160.1.AC3:** Given private context is relevant, when research is prepared, then no field leaves the device until the exact destination and disclosure are previewed and approved.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 160.AC1:** `AT-WEB-001` and `RV-37` pass across current, stale, conflicting, malicious, redirected, archived, and unavailable source fixtures.
+- [ ] **Sprint AC 160.AC2:** Citation resolution, excerpt hashes, dates, cache state, and evidence labels reproduce deterministically.
+- [ ] **Sprint AC 160.AC3:** At least 2,000 hostile-content and private-disclosure mutations produce zero created authority or undeclared egress.
+- [ ] **Sprint AC 160.AC4:** Download quarantine, cancellation, resource limits, accessibility, disablement, and worker removal pass on every first-GA platform.
+
+**Gate decision:** Sprint 160 is PASS only when Story 160.1, all criteria, `AM-WEB-001`, `AT-WEB-001`, `SR-WEB-001` through `SR-WEB-004`, `RV-37`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 161 - Encrypted Local Continuity
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Preserve canonical work and long-running audit state through encrypted local records, deterministic checkpoints, exact invalidation, and safe restore without running live state from synchronized, remote, or network storage.
+
+**Source coverage:** `AM-BKC-001`, `AM-CKP-001`, `AT-BKC-001`, `AT-CKP-001`, `SR-BCK-001`, `SR-BCK-002`, `SR-BCK-005`, `SR-AUD-006`, `RV-39` local cases, `RV-47` checkpoint cases.
+
+**Dependencies:** Sprints 11, 22, 32, 73, 102, 157, and 158.
+
+#### [ ] Story 161.1 - Verifiable Local Backup and Restore
+
+**User-facing value:** As a user, I can recover AgentMage work after corruption, deletion, upgrade, or device loss from an encrypted local snapshot whose completeness can be independently verified.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 161.1.1 - Define immutable snapshot format**
+  - [ ] **Sub-task 161.1.1.1:** Version manifests, source release/schema identities, selected domains, classifications, exclusions, retention, chunks, integrity tree, encryption metadata, required references, and completion state.
+  - [ ] **Sub-task 161.1.1.2:** Encrypt and authenticate before final output, use opaque internal identifiers, and complete the manifest atomically only after every object verifies.
+  - [ ] **Sub-task 161.1.1.3:** Reject cloud-sync, network, remote, placeholder, linked, raced, unsupported, or uncertain roots for live stores and snapshot staging.
+- [ ] **Task 161.1.2 - Implement creation, retention, and deletion**
+  - [ ] **Sub-task 161.1.2.1:** Add full and deduplicated incremental snapshot planning with bounded memory, disk, processor, cancellation, cleanup, and progress.
+  - [ ] **Sub-task 161.1.2.2:** Apply classification-specific inclusion, exclusion, retention, expiry, cryptographic deletion, and user-selected durable-backup rules.
+  - [ ] **Sub-task 161.1.2.3:** Preserve no raw credentials and record required post-restore reauthentication.
+- [ ] **Task 161.1.3 - Implement staged restore and disaster recovery**
+  - [ ] **Sub-task 161.1.3.1:** Verify identity, keys, complete object set, hashes, compatibility, available space, ownership, included/excluded domains, and rollback before restore.
+  - [ ] **Sub-task 161.1.3.2:** Restore and migrate in staging, run consistency checks, confirm the exact swap, and retain a tested rollback point.
+  - [ ] **Sub-task 161.1.3.3:** Exercise interruption, low disk, missing, duplicate, corrupt, replayed, stale, cross-version, ransomware-like, retention, deletion, and clean-device cases.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 161.1.AC1:** Given selected canonical domains, when a snapshot completes, then every included byte, exclusion, classification, manifest, integrity value, encryption state, and retention rule is verifiable.
+- [ ] **Story AC 161.1.AC2:** Given an interrupted, incomplete, corrupt, replayed, or incompatible snapshot, when restore is attempted, then no canonical state changes and the exact block is visible.
+- [ ] **Story AC 161.1.AC3:** Given a valid clean-device restore, when staging and confirmation complete, then canonical state reconciles exactly, connected accounts require reauthentication, and rollback remains available.
+
+#### [ ] Story 161.2 - Resumable Audit Evidence and Transitive Invalidation
+
+**User-facing value:** As a user, I can pause or recover a multi-hour repository audit without starting over, while changed code automatically invalidates every conclusion that can no longer be trusted.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 161.2.1 - Implement encrypted audit checkpoints**
+  - [ ] **Sub-task 161.2.1.1:** Persist exact audit, repository, scope, parser, model, runtime, policy, queue, census, graph, packet, card, contradiction, finding, resource, and completion identities.
+  - [ ] **Sub-task 161.2.1.2:** Store no raw secrets, source payloads beyond declared retention, ambient paths, or mutable model summaries as canonical checkpoint facts.
+  - [ ] **Sub-task 161.2.1.3:** Complete checkpoints atomically and retain the prior valid generation until the new generation and reverse-dependency indexes verify.
+- [ ] **Task 161.2.2 - Implement deterministic resume and invalidation**
+  - [ ] **Sub-task 161.2.2.1:** Revalidate repository, worktree, scope, parser, model, runtime, policy, record schema, resource, and checkpoint identities before reuse.
+  - [ ] **Sub-task 161.2.2.2:** Invalidate changed files and transitively dependent symbols, modules, edges, packets, cards, contradictions, findings, coverage, and reports before scheduling replacement work.
+  - [ ] **Sub-task 161.2.2.3:** Trigger an explicit broader rescan when reverse dependencies, parser compatibility, repository identity, or source relationships cannot be reconstructed safely.
+- [ ] **Task 161.2.3 - Verify interruption and recovery**
+  - [ ] **Sub-task 161.2.3.1:** Pause, cancel, crash, restart, restore, and replace the approved model at every census, parse, graph, packet, reconcile, and report transition.
+  - [ ] **Sub-task 161.2.3.2:** Change, rename, delete, move, reclassify, regenerate, or reparse inputs and mutate checkpoint, queue, graph, clock, and completion records.
+  - [ ] **Sub-task 161.2.3.3:** Compare uninterrupted and resumed deterministic coverage, graph, queue, evidence-reference, gap, and completion results.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 161.2.AC1:** Given an unchanged valid checkpoint, when an audit resumes, then deterministic coverage, structure, queue, evidence references, and pending work agree with uninterrupted execution.
+- [ ] **Story AC 161.2.AC2:** Given any changed input, when resume or report generation occurs, then every dependent record is stale before reuse and replacement analysis is scheduled or the audit blocks.
+- [ ] **Story AC 161.2.AC3:** Given uncertain dependency or compatibility state, when invalidation cannot be proven complete, then a broader rescan occurs and no stale finding or completion claim survives.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 161.AC1:** `AT-BKC-001` and applicable `RV-39` cases pass on Fedora, Ubuntu, and Windows.
+- [ ] **Sprint AC 161.AC2:** No incomplete snapshot is represented as complete and no plaintext snapshot or raw credential artifact exists.
+- [ ] **Sprint AC 161.AC3:** Live operational state is denied on every tested cloud-sync, remote, network, linked, placeholder, or raced path.
+- [ ] **Sprint AC 161.AC4:** Clean-device restore, migration, rollback, retention, deletion, cancellation, accessibility, and residue evidence reconcile exactly.
+- [ ] **Sprint AC 161.AC5:** `AT-CKP-001` and checkpoint portions of `RV-47` pass across every interruption and source-change stage with deterministic resume and zero stale current record.
+
+**Gate decision:** Sprint 161 is PASS only when Stories 161.1-161.2, all criteria, `AM-BKC-001`, `AM-CKP-001`, `AT-BKC-001`, `AT-CKP-001`, applicable security requirements, local `RV-39`, checkpoint `RV-47`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 162 - Client-Side-Encrypted Cloud Continuity
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Back up and restore completed encrypted snapshots through one exact cloud namespace without exposing plaintext or turning Cloud Observer into a writable cloud-control surface.
+
+**Source coverage:** `AM-CBK-001`, `AT-CBK-001`, `SR-BCK-003` through `SR-BCK-005`, `SR-CRD-002`, `RV-39`.
+
+**Dependencies:** Sprints 105, 152-154, 158, and 161.
+
+#### [ ] Story 162.1 - Least-Privilege Cloud Backup and Recovery
+
+**User-facing value:** As a user, I can optionally keep encrypted copies with a chosen cloud provider and restore them after losing the original computer without giving AgentMage broad cloud-write access.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 162.1.1 - Define backup-provider contract**
+  - [ ] **Sub-task 162.1.1.1:** Bind provider, account, container or folder, prefix, supported object methods, encryption state, metadata, bytes, rate, versioning, retention, deletion, restore, and removal.
+  - [ ] **Sub-task 162.1.1.2:** Implement one reference cloud adapter and fake/fault conformance adapters for S3-compatible, OneDrive, Google Drive, Box, Dropbox, and later providers.
+  - [ ] **Sub-task 162.1.1.3:** Keep backup schemas, credentials, grants, tools, workers, caches, and writes structurally separate from Cloud Observer.
+- [ ] **Task 162.1.2 - Implement encrypted transfer and reconciliation**
+  - [ ] **Sub-task 162.1.2.1:** Transfer only completed client-side-encrypted objects using opaque keys, bounded multipart state, resumability, integrity, idempotency, and cancellation.
+  - [ ] **Sub-task 162.1.2.2:** Revalidate host, TLS, DNS, proxy, redirect, account, namespace, object identity, remote version, and credential before each effect.
+  - [ ] **Sub-task 162.1.2.3:** Reconcile timeouts, partial uploads, duplicates, missing objects, retention, deletion, and unknown effects before retry.
+- [ ] **Task 162.1.3 - Verify namespace and disaster recovery**
+  - [ ] **Sub-task 162.1.3.1:** Probe cross-account, cross-prefix, list, read, write, delete, redirect, proxy, credential-reuse, and Cloud Observer crossover attacks.
+  - [ ] **Sub-task 162.1.3.2:** Exercise throttling, partitions, provider outages, revocation, changed versions, interrupted multipart transfers, partial deletion, stale manifests, and complete local loss.
+  - [ ] **Sub-task 162.1.3.3:** Perform documented clean-device restore from independently verified cloud objects on every first-GA platform.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 162.1.AC1:** Given a confirmed cloud backup plan, when transfer runs, then only encrypted objects are sent to the exact account and namespace with complete integrity and effect evidence.
+- [ ] **Story AC 162.1.AC2:** Given an ambiguous, partial, duplicate, corrupt, wrong-account, or wrong-prefix state, when recovery runs, then no blind retry or false-complete snapshot occurs.
+- [ ] **Story AC 162.1.AC3:** Given Cloud Observer or another cloud capability, when it attempts a continuity write or credential reuse, then the operation is absent or denied before any request.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 162.AC1:** `AT-CBK-001` and complete `RV-39` pass against the reference adapter and all fake/fault conformance profiles.
+- [ ] **Sprint AC 162.AC2:** Packet, object, metadata, cache, log, and provider inspections find zero plaintext or raw credential disclosure.
+- [ ] **Sprint AC 162.AC3:** At least 2,000 namespace, identity, credential, redirect, effect, retry, and deletion mutations produce zero out-of-scope access or duplicate effect.
+- [ ] **Sprint AC 162.AC4:** Independent clean-device cloud restore, rollback, revocation, removal, accessibility, and strict-local restoration pass on Fedora, Ubuntu, and Windows.
+
+**Gate decision:** Sprint 162 is PASS only when Story 162.1, all criteria, `AM-CBK-001`, `AT-CBK-001`, applicable security requirements, `RV-39`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 163 - Signed Approved-Model Catalog
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Represent every exact model profile truthfully and build deterministic repository structure plus bounded semantic analysis whose coverage cannot be broadened by mutable names, retrieval, missing evidence, or model output.
+
+**Source coverage:** `AM-MCAT-001`, `AM-STR-001`, `AM-SEM-001`, `AT-MCAT-001`, `AT-STR-001`, `AT-SEM-001`, `SR-MGM-001`, `SR-AUD-004`, `SR-AUD-005`, `MODEL-PROVENANCE-POLICY.md`, `CODEBASE-AUDIT.md`, `RV-40` catalog cases, `RV-46` structural and partition cases.
+
+**Dependencies:** Sprints 13-15, 103, 157, and 158.
+
+#### [ ] Story 163.1 - Truthful Model Catalog and Compatibility View
+
+**User-facing value:** As a user, I can see which local models are candidates, approved, degraded, quarantined, rejected, or retired and why each one does or does not fit my computer.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 163.1.1 - Define signed catalog records**
+  - [ ] **Sub-task 163.1.1.1:** Record exact developer, publisher, model and artifact revision, origin, lineage, license, format, transformation, hashes, size, tokenizer, template, runtime, platform, hardware, quality, security, support, and re-review evidence.
+  - [ ] **Sub-task 163.1.1.2:** Implement candidate, evaluating, approved, degraded, quarantined, rejected, and retired states with closed transition rules and immutable decision history.
+  - [ ] **Sub-task 163.1.1.3:** Sign catalog releases and bind every entry to model, runtime, component, release, and support manifests.
+- [ ] **Task 163.1.2 - Implement compatibility and lifecycle evaluation**
+  - [ ] **Sub-task 163.1.2.1:** Compare exact profile disk, memory, acceleration, context, concurrency, latency, and runtime requirements with measured platform facts.
+  - [ ] **Sub-task 163.1.2.2:** Distinguish compatible, compatible with limitations, incompatible, unknown, stale, revoked, and blocked states without guessing.
+  - [ ] **Sub-task 163.1.2.3:** Trigger quarantine, degradation, retirement, or re-review on every policy-defined identity, support, vulnerability, artifact, runtime, or behavior change.
+- [ ] **Task 163.1.3 - Verify state and identity integrity**
+  - [ ] **Sub-task 163.1.3.1:** Mutate every catalog identity, evidence, state, transition, signature, expiry, support, and compatibility field.
+  - [ ] **Sub-task 163.1.3.2:** Exercise mutable tags, mirrors, aliases, substituted manifests, stale measurements, unsupported runtimes, and conflicting lineage or license evidence.
+  - [ ] **Sub-task 163.1.3.3:** Verify inaccessible states are absent from ordinary model selection and cannot be loaded through CLI, Chat, configuration, import, or fallback.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 163.1.AC1:** Given an exact model profile, when displayed, then its catalog state, evidence identity, compatibility, limitations, support, and re-review status are current and reproducible.
+- [ ] **Story AC 163.1.AC2:** Given missing, stale, conflicting, invalid, revoked, or changed evidence, when catalog state is computed, then the profile cannot become ordinarily usable.
+- [ ] **Story AC 163.1.AC3:** Given a mutable name or model request, when resolution occurs, then only an exact signed artifact identity can be selected.
+
+#### [ ] Story 163.2 - Deterministic Structure and Bounded Semantic Analysis
+
+**User-facing value:** As a user, I can have a repository larger than the model context analyzed in coherent pieces while exact structural facts and coverage remain stable across packet order, model restarts, and context limits.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 163.2.1 - Build deterministic repository structure**
+  - [ ] **Sub-task 163.2.1.1:** Integrate admitted compilers, abstract syntax trees, language services, package and build metadata, schema parsers, test discovery, workflow parsers, source-control records, and exact text search behind versioned contracts.
+  - [ ] **Sub-task 163.2.1.2:** Materialize packages, modules, services, symbols, interfaces, dependencies, calls, state, data, events, errors, configuration, schemas, migrations, tests, builds, releases, requirements, decisions, and provenance edges.
+  - [ ] **Sub-task 163.2.1.3:** Record parser failures, ambiguity, unsupported syntax, version skew, generated boundaries, unknown edges, and evidence spans without model inference filling a structural gap.
+- [ ] **Task 163.2.2 - Implement coherent semantic partitioning**
+  - [ ] **Sub-task 163.2.2.1:** Partition by package, service, responsibility, state boundary, feature, workflow, schema family, and cross-cutting concern under explicit context and resource budgets.
+  - [ ] **Sub-task 163.2.2.2:** Construct redacted work packets containing minimum exact spans, structural facts, neighbor interfaces, tests, decisions, prior conflicts, and one bounded audit question.
+  - [ ] **Sub-task 163.2.2.3:** Store model observations as provisional evidence cards with source and model identity, assumptions, uncertainty, confidence, conflict, requested follow-up, and reverse dependencies.
+- [ ] **Task 163.2.3 - Verify model-memory independence**
+  - [ ] **Sub-task 163.2.3.1:** Vary packet order, partition size, context limit, retrieval ranking, interruption, approved model profile, runtime restart, and summary depth.
+  - [ ] **Sub-task 163.2.3.2:** Inject false file, symbol, graph, coverage, authority, completion, and dependency claims into repository content and model output.
+  - [ ] **Sub-task 163.2.3.3:** Reproduce deterministic census, structural graph, packet identity, coverage, and evidence references independently of model prose.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 163.2.AC1:** Given a supported repository, when structural indexing completes, then every canonical record and graph edge resolves to exact parser or source evidence and every unknown remains explicit.
+- [ ] **Story AC 163.2.AC2:** Given a repository exceeding model context, when semantic review runs, then every required coherent unit receives bounded source-pinned analysis without pretending the model retained the repository globally.
+- [ ] **Story AC 163.2.AC3:** Given packet, context, retrieval, model, or summary variation, when outputs are compared, then deterministic identity, coverage, structure, authority, and completion state remain unchanged.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 163.AC1:** `AT-MCAT-001` and catalog portions of `RV-40` pass across all states and transition fixtures.
+- [ ] **Sprint AC 163.AC2:** At least 3,000 identity, evidence, compatibility, state, support, signature, expiry, and substitution mutations produce zero unauthorized usability.
+- [ ] **Sprint AC 163.AC3:** Catalog, Model BOM, runtime, package, platform, and support manifests reconcile exactly.
+- [ ] **Sprint AC 163.AC4:** Quarantine, degradation, retirement, re-review, accessibility, removal, and offline selection behavior pass.
+- [ ] **Sprint AC 163.AC5:** `AT-STR-001`, `AT-SEM-001`, and structural and partition portions of `RV-46` pass across the published language/build matrix, context budgets, packet orderings, and approved model profiles with no silent structural or coverage gap.
+
+**Gate decision:** Sprint 163 is PASS only when Stories 163.1-163.2, all criteria, `AM-MCAT-001`, `AM-STR-001`, `AM-SEM-001`, named acceptance tests, `SR-MGM-001`, `SR-AUD-004`, `SR-AUD-005`, applicable model and audit policy, catalog `RV-40`, structural and partition `RV-46`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 164 - Chat-Guided Model Installation and Lifecycle
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Let users safely discover, acquire, import, verify, activate, compare, roll back, remove, and clean up approved local models through one deterministic Chat workflow.
+
+**Source coverage:** `AM-MGR-001`, `AT-MGR-001`, `SR-MGM-002`, `SR-MGM-003`, `RV-40`.
+
+**Dependencies:** Sprints 14-15, 23, 157-158, and 163.
+
+#### [ ] Story 164.1 - Nontechnical Approved-Model Management
+
+**User-facing value:** As a user, I can ask AgentMage to install or try an approved compatible model without knowing package commands, artifact formats, hashes, or runtime configuration.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 164.1.1 - Implement deterministic Chat intents and preflight**
+  - [ ] **Sub-task 164.1.1.1:** Support list, explain, recommend, download, import, resume, verify, activate, compare, cancel, roll back, remove, and clean-storage intents through closed schemas.
+  - [ ] **Sub-task 164.1.1.2:** Show exact profile, publisher, license, source host, artifact/runtime identities, expected size, free-space need, measured hardware fit, network use, destination, checks, limitations, and rollback.
+  - [ ] **Sub-task 164.1.1.3:** Bind confirmation to the exact plan digest and invalidate it on catalog, artifact, source, hardware, storage, policy, runtime, or support change.
+- [ ] **Task 164.1.2 - Implement isolated acquisition and activation**
+  - [ ] **Sub-task 164.1.2.1:** Launch the separate installer/importer with only one confirmed acquisition or import plan and no workspace, session, provider, credential, shell, or inference authority.
+  - [ ] **Sub-task 164.1.2.2:** Download or import into quarantine with bounded resume, hash/signature verification, scanning, format validation, hardware and runtime self-test, cancellation, and cleanup.
+  - [ ] **Sub-task 164.1.2.3:** Activate atomically, preserve the prior valid profile, verify postconditions, and implement crash-safe rollback, removal, and disk reclamation.
+- [ ] **Task 164.1.3 - Verify substitution, interruption, and usability**
+  - [ ] **Sub-task 164.1.3.1:** Mutate source, redirect, artifact, hash, license, size, tokenizer, template, runtime, platform, hardware, disk, catalog, preview, scan, and activation state.
+  - [ ] **Sub-task 164.1.3.2:** Interrupt every download, resume, import, verify, scan, self-test, activation, rollback, removal, and cleanup transition.
+  - [ ] **Sub-task 164.1.3.3:** Test novice Chat flows, clear errors, progress, cancellation, keyboard, screen reader, focus, storage explanation, and recovery guidance.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 164.1.AC1:** Given a compatible approved profile, when the user confirms the exact Chat plan, then the installer obtains and activates only that artifact and verifies all declared postconditions.
+- [ ] **Story AC 164.1.AC2:** Given any changed, malformed, unsupported, low-resource, failed-scan, stale-preview, or interrupted state, when the operation proceeds, then no partial or substituted profile becomes active.
+- [ ] **Story AC 164.1.AC3:** Given any model output or request for silent acquisition, self-approval, activation, replacement, or fallback, when evaluated, then no model-management effect occurs without deterministic policy and user confirmation.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 164.AC1:** `AT-MGR-001` and `RV-40` pass on every first-GA platform and approved reference runtime tuple.
+- [ ] **Sprint AC 164.AC2:** At least 3,000 plan, source, artifact, identity, resource, interruption, activation, rollback, and deletion mutations produce zero silent or partial activation.
+- [ ] **Sprint AC 164.AC3:** Installer process, path, network, credential, workspace, quarantine, store, and cleanup evidence matches runtime manifests exactly.
+- [ ] **Sprint AC 164.AC4:** Novice usability, accessibility, cancellation, recovery, removal, storage cleanup, and strict-local restoration pass.
+
+**Gate decision:** Sprint 164 is PASS only when Story 164.1, all criteria, `AM-MGR-001`, `AT-MGR-001`, `SR-MGM-002`, `SR-MGM-003`, `RV-40`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Produce a truthful Muse Glimmer candidate disposition, prove trusted operations cannot aggregate authority, and complete cross-module reconciliation plus evidence-based whole-codebase reporting.
+
+**Source coverage:** `AM-MUSE-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, `AT-MUSE-001`, `AT-XOP-001`, `AT-RCN-001`, `AT-AUR-001`, `SR-MGM-004`, `SR-TOP-001`, `SR-AUD-007` through `SR-AUD-010`, `RV-41`, `RV-43` pre-release cases, `RV-46` reconciliation, `RV-47` reporting, `RV-48` pre-release cases.
+
+**Dependencies:** Sprints 157-164 and every prior first-GA security/removal gate.
+
+#### [ ] Story 165.1 - Truthful Muse Glimmer Admission
+
+**User-facing value:** As a user, I can see whether an exact Muse Glimmer profile is genuinely supported, blocked for missing evidence, or rejected, without marketing language being mistaken for technical approval.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 165.1.1 - Acquire and verify first-party evidence**
+  - [ ] **Sub-task 165.1.1.1:** Record exact developer, publisher, release, model card, source locations, open-source or open-weight classification, license text, origin, lineage, formats, and support state.
+  - [ ] **Sub-task 165.1.1.2:** Pin exact original and packaged artifacts, transformations, hashes, tokenizer, template, runtime identities, and platform profiles.
+  - [ ] **Sub-task 165.1.1.3:** Mark every unavailable, contradictory, stale, secondary-only, or unverifiable evidence class explicitly.
+- [ ] **Task 165.1.2 - Run normal admission and measurements**
+  - [ ] **Sub-task 165.1.2.1:** Measure disk, memory, acceleration, context, latency, concurrency, cancellation, thermal, and stability behavior on available reference platforms.
+  - [ ] **Sub-task 165.1.2.2:** Run coding, repository, tool-call, grounding, citation, uncertainty, malformed-output, prompt-injection, egress, credential, path, and authority corpora.
+  - [ ] **Sub-task 165.1.2.3:** Produce `PASS`, `BLOCKED`, or `REJECTED` with exact rationale, limitations, evidence index, and re-review triggers.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 165.1.AC1:** Given complete verified first-party and measured evidence, when admission is decided, then the exact Muse profile receives only the disposition supported by that evidence.
+- [ ] **Story AC 165.1.AC2:** Given missing, contradictory, stale, secondary-only, or failed evidence, when product documentation and Chat display the candidate, then no unsupported open-source, compatibility, download, support, hardware-fit, or activation claim appears.
+- [ ] **Story AC 165.1.AC3:** Given Muse is blocked or rejected, when first-GA status is computed, then the Gemma reference lane remains independently eligible and no failure is concealed.
+
+#### [ ] Story 165.2 - Cross-Capability Authority and Removal Campaign
+
+**User-facing value:** As a user, I can combine research, commands, connected services, backups, and approved models without one capability silently borrowing another's credentials or authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 165.2.1 - Build composed hostile workflows**
+  - [ ] **Sub-task 165.2.1.1:** Join hostile repository and web content, command plans, provider operations, credentials, backup destinations, model acquisition, schedules, crashes, revocation, and resource pressure.
+  - [ ] **Sub-task 165.2.1.2:** Mutate cross-capability identity, account, destination, disclosure, grant, preview, artifact, snapshot, process, schedule, and recovery state.
+  - [ ] **Sub-task 165.2.1.3:** Run at least 10,000 deterministic composed mutations with seeded replay and raw-evidence reconciliation.
+- [ ] **Task 165.2.2 - Disable, remove, and restore strict local**
+  - [ ] **Sub-task 165.2.2.1:** Disable and remove every trusted-operations capability independently and together during idle, active, queued, interrupted, uncertain, restored, and incident states.
+  - [ ] **Sub-task 165.2.2.2:** Inspect workers, descendants, sockets, network rules, credentials, snapshots, transfers, caches, quarantines, catalogs, schedules, logs, and retained evidence.
+  - [ ] **Sub-task 165.2.2.3:** Rerun strict-local, delivery, productivity, finance, Cloud Observer, model, accessibility, update, rollback, uninstall, and residue suites.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 165.2.AC1:** Given a composed workflow, when each step executes, then it uses one exact current capability and grant without borrowing authority, credentials, network, files, or completion state from another step.
+- [ ] **Story AC 165.2.AC2:** Given hostile external content, when it requests command, credential, disclosure, backup, model, provider, or schedule authority, then zero unauthorized effect occurs.
+- [ ] **Story AC 165.2.AC3:** Given trusted-operations removal, when strict-local restoration runs, then no undeclared authority or residue remains and neighboring canonical user data is unharmed.
+
+#### [ ] Story 165.3 - Cross-Module Reconciliation and Professional Audit Report
+
+**User-facing value:** As a user, I receive a rigorous codebase assessment whose architectural conclusions reconcile evidence across modules and whose findings show exactly what supports them, what contradicts them, and what remains unknown.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 165.3.1 - Implement mandatory reconciliation passes**
+  - [ ] **Sub-task 165.3.1.1:** Reconcile module responsibility and interfaces against dependency, call, ownership, and build graphs.
+  - [ ] **Sub-task 165.3.1.2:** Trace state, data, event, error, configuration, authorization, lifecycle, schema, migration, and deployment flows end to end.
+  - [ ] **Sub-task 165.3.1.3:** Compare code with in-scope requirements, decisions, documentation, tests, delivery records, support claims, issues, and history while distinguishing observed drift from historically supported conclusions.
+- [ ] **Task 165.3.2 - Detect and revisit cross-boundary conditions**
+  - [ ] **Sub-task 165.3.2.1:** Detect duplicate responsibility, dead or unreachable code, orphaned modules, circular dependencies, incompatible paradigms, stale adapters, abandoned migrations, weak tests, and documentation drift.
+  - [ ] **Sub-task 165.3.2.2:** Retain contradictory cards, identify every affected partition through reverse dependencies, and schedule focused re-review before assigning a global disposition.
+  - [ ] **Sub-task 165.3.2.3:** Add risk-directed passes for high-centrality, privileged, stateful, concurrent, externally reachable, weakly tested, frequently changed, and historically unstable areas without reducing baseline coverage.
+- [ ] **Task 165.3.3 - Compile calibrated findings and reports**
+  - [ ] **Sub-task 165.3.3.1:** Implement stable finding identity, category, severity, confidence, impact, exact evidence, graph path, counterevidence, uncertainty, recommendation, deduplication, conflict, supersession, and status.
+  - [ ] **Sub-task 165.3.3.2:** Produce quick, targeted, and comprehensive profiles with distinct completion language and a professional report covering architecture, technical debt, progress, viability, security, operations, strengths, limitations, recommendations, questions, and coverage.
+  - [ ] **Sub-task 165.3.3.3:** Recompute every material report claim and coverage total from current raw records and prevent comprehensive completion on any missing, stale, failed, unsupported, unavailable, excluded-required, or unreconciled state.
+- [ ] **Task 165.3.4 - Run known-answer and removal campaigns**
+  - [ ] **Sub-task 165.3.4.1:** Audit seeded monorepo, polyglot, pivoted-architecture, duplicate-system, dead-code, state-conflict, missing-test, stale-documentation, false-positive, contradictory-evidence, and model-disagreement fixtures.
+  - [ ] **Sub-task 165.3.4.2:** Exercise low memory, low disk, context pressure, parser failure, unsupported language, resource exhaustion, cancellation, crash, resume, accessibility, report export, and evidence retention.
+  - [ ] **Sub-task 165.3.4.3:** Disable and remove audit workers, scratch, indexes, cards, checkpoints, findings, caches, registrations, and retained state according to policy and prove canonical and neighboring data remain unchanged.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 165.3.AC1:** Given a cross-module concern, when reconciliation completes, then every global conclusion cites all material relationships and contradictions or is explicitly limited to local scope.
+- [ ] **Story AC 165.3.AC2:** Given any finding or report claim, when independently inspected, then its severity, confidence, impact, evidence, counterevidence, uncertainty, and recommendation resolve to current immutable records.
+- [ ] **Story AC 165.3.AC3:** Given incomplete coverage, unsupported structure, unresolved contradiction, stale evidence, or failed read-only attestation, when report status is computed, then no whole-codebase completion claim is produced.
+- [ ] **Story AC 165.3.AC4:** Given audit removal, when cleanup and strict-local restoration finish, then no audit process, authority, scratch, index, checkpoint, cache, or undeclared retained record remains and source data is unchanged.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 165.AC1:** `AT-MUSE-001` and `RV-41` produce a truthful exact candidate disposition without making first GA depend on `PASS`.
+- [ ] **Sprint AC 165.AC2:** `AT-XOP-001` and pre-release `RV-43` pass at least 10,000 composed attacks with zero unauthorized command, secret disclosure, private upload, backup escape, model substitution, persistent child, or authority reuse.
+- [ ] **Sprint AC 165.AC3:** Disablement and removal restore complete strict-local behavior on Fedora, Ubuntu, and Windows with zero residue or neighboring-pack damage.
+- [ ] **Sprint AC 165.AC4:** Accessibility, incident tabletop, resource, crash, recovery, support, limitation, and raw-to-summary evidence reconciliation pass.
+- [ ] **Sprint AC 165.AC5:** `AT-RCN-001`, `AT-AUR-001`, reconciliation `RV-46`, reporting `RV-47`, and pre-release `RV-48` detect the complete seeded cross-module corpus, preserve every contradiction and gap, and produce only current evidence-backed findings with zero audit residue.
+
+**Gate decision:** Sprint 165, `G-TRUSTED-OPERATIONS`, and `G-CODEBASE-AUDIT` are PASS only when Stories 165.1-165.3, all criteria, `AM-MUSE-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, named acceptance tests, applicable security requirements, `RV-41`, pre-release `RV-43`, `RV-46` through `RV-48`, every prior trusted-operations and audit story, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+### [ ] Sprint 166 - Superseding First-GA Evidence and Release Decision
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Independently reproduce the complete AgentMage v1.0 release, including trusted operations and whole-codebase auditing, and issue a truthful final release decision from current signed raw evidence.
+
+**Source coverage:** `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`; Decisions 0010-0011; entire canonical document set through Inventory Section 40B; `RV-01` through `RV-48`.
+
+**Dependencies:** Sprints 0-165 and every promoted first-GA gate; post-GA Sprints 167-168 excluded.
+
+#### [ ] Story 166.1 - Truthful Superseding v1.0 GA Closure
+
+**User-facing value:** As a user, I receive a supported release only when every claimed local, connected, productivity, financial, cloud-observer, command, research, credential, continuity, approved-model, and whole-codebase audit behavior has current reproducible evidence.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 166.1.1 - Rebuild release truth and artifacts**
+  - [ ] **Sub-task 166.1.1.1:** Rebuild the requirement graph and prove every promoted `AM-*`, `AT-*`, `SR-*`, `RV-*`, story, task, test, artifact, owner, support state, limitation, and release claim has current linkage.
+  - [ ] **Sub-task 166.1.1.2:** Generate signed platform, model, runtime, process, socket, path, command-level, research, credential, backup, provider, audit-scope, parser, structural-graph, evidence, data-flow, retention, recovery, exclusion, and removal manifests.
+  - [ ] **Sub-task 166.1.1.3:** Regenerate source and binary bills of materials, Model BOM, licenses, provenance, signatures, hashes, vulnerabilities, support, degradation, and end-of-support metadata.
+- [ ] **Task 166.1.2 - Independently rerun the complete release**
+  - [ ] **Sub-task 166.1.2.1:** Perform three clean standard-user install, upgrade, rollback, uninstall, residue, backup, and restore lifecycles per first-GA platform using published instructions only.
+  - [ ] **Sub-task 166.1.2.2:** Rerun every promoted provider, command level, research, credential, continuity, model, finance, cloud, autonomy, object, operation, and scope matrix against exact release candidates.
+  - [ ] **Sub-task 166.1.2.3:** Rerun `RV-01` through `RV-48`, accessibility, performance, recovery, incident tabletop, removal, strict-local restoration, and documentation gates.
+  - [ ] **Sub-task 166.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, stale result, suppression, quarantine, flake, unavailable dependency, and reviewer finding.
+  - [ ] **Sub-task 166.1.2.5:** Independently run comprehensive audits against each release-reference repository and known-answer corpus, then reconcile census, graphs, packets, cards, contradictions, checkpoints, findings, reports, read-only attestations, platform results, and removal evidence.
+- [ ] **Task 166.1.3 - Prove release blocking and sign decision**
+  - [ ] **Sub-task 166.1.3.1:** Force each platform, provider, authority, credential, disclosure, backup, restore, model, audit-coverage, read-only, reconciliation, security, accessibility, recovery, support, removal, and evidence gate to fail independently.
+  - [ ] **Sub-task 166.1.3.2:** Prove each failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocker prevents package publication and `G-GA` closure.
+  - [ ] **Sub-task 166.1.3.3:** Obtain independent reviewer signatures and explicit user approval before signing manifests, packages, evidence indexes, checksums, and release notes.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 166.1.AC1:** Given exact v1.0 release candidates, when independent reviewers follow published procedures, then every supported platform, provider, capability, restriction, recovery, accessibility, support, whole-codebase audit, and removal result reproduces from raw evidence.
+- [ ] **Story AC 166.1.AC2:** Given any blocking non-pass state, when release status is computed, then `G-GA` remains blocked and no supported package is published.
+- [ ] **Story AC 166.1.AC3:** Given final packages, registrations, manifests, audit reports, coverage records, support matrices, limitations, and release notes, when compared, then every claim agrees exactly and every prohibited or incomplete path remains absent, denied, or visibly blocking.
+- [ ] **Story AC 166.1.AC4:** Given optional capabilities are disabled or removed, when strict-local restoration runs, then no undeclared authority or residue remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 166.AC1:** `AT-GA-003` and `AT-GA-004` pass and every promoted requirement has current reproducible requirement-to-release traceability.
+- [ ] **Sprint AC 166.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, backup, restore, recovery, update, rollback, uninstall, and residue gates.
+- [ ] **Sprint AC 166.AC3:** Every promoted provider, command, research, credential, continuity, model, audit, object, operation, scope, and autonomy tuple passes conformance and extreme tests; every unsupported family passes absence tests.
+- [ ] **Sprint AC 166.AC4:** Bills of materials, provenance, signatures, hashes, manifests, audit census, graphs, findings, coverage, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
+- [ ] **Sprint AC 166.AC5:** `G-GA` closes only after independent reproduction, explicit user approval, and zero hidden blocker.
+
+**Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-48`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
+
+## [ ] Epic 16 - Post-GA Experimental Model Lab
+
+### [ ] Sprint 167 - Isolated Experimental Model Import and Evaluation
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Build a visibly experimental model-evaluation environment that can inspect user-selected unapproved artifacts without receiving network, credential, command, connector, or canonical-workspace-write authority.
+
+**Source coverage:** `AM-EML-001`, `AT-EML-001`, `SR-LAB-001`, `SR-LAB-002`, `RV-42` implementation cases.
+
+**Dependencies:** Sprints 157, 163-164, and 166; first GA already closed independently.
+
+#### [ ] Story 167.1 - Disposable Unapproved-Model Laboratory
+
+**User-facing value:** As a user, I can inspect and benchmark a model artifact that is not approved while seeing every provenance, license, compatibility, and safety gap and without exposing my accounts or real work.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 167.1.1 - Implement separate lab package and authority**
+  - [ ] **Sub-task 167.1.1.1:** Create separate package, process identity, data root, quarantine, synthetic corpus, scratch, resource controller, cancellation, diagnostics, and removal contracts.
+  - [ ] **Sub-task 167.1.1.2:** Structurally omit network, credentials, commands, connectors, messaging, finance, delivery, cloud, backup, operational-memory, approved-store, and canonical-workspace-write interfaces.
+  - [ ] **Sub-task 167.1.1.3:** Retain the non-Chinese and non-Chinese-derived model rule and reject or block policy-excluded or unverifiable lineage.
+- [ ] **Task 167.1.2 - Implement import, quarantine, and evaluation**
+  - [ ] **Sub-task 167.1.2.1:** Record user-selected source, observed license, developer/publisher, provenance gaps, hashes, formats, transformations, warnings, and resource preflight.
+  - [ ] **Sub-task 167.1.2.2:** Parse and load under strict processor, memory, graphics, disk, context, output, duration, process, and cancellation limits.
+  - [ ] **Sub-task 167.1.2.3:** Run deterministic format, malformed-output, prompt-injection, tool-request, exfiltration, resource, coding, and quality evaluations over synthetic data.
+- [ ] **Task 167.1.3 - Verify hostile artifacts and truthful state**
+  - [ ] **Sub-task 167.1.3.1:** Exercise malformed, oversized, hostile, unknown, mirrored, mutable, provenance-incomplete, license-unclear, and unsupported artifacts.
+  - [ ] **Sub-task 167.1.3.2:** Probe every prohibited IPC, path, socket, interface, credential, network, store, and authority route.
+  - [ ] **Sub-task 167.1.3.3:** Interrupt import, parsing, loading, inference, evaluation, cleanup, and removal and inspect residue.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 167.1.AC1:** Given an unapproved artifact, when imported, then its exact source, hashes, observed license, provenance gaps, quarantine, compatibility, warnings, and experimental status remain visible.
+- [ ] **Story AC 167.1.AC2:** Given hostile model output or artifact content, when evaluated, then it cannot access network, credentials, commands, connectors, canonical work, approved models, or user data.
+- [ ] **Story AC 167.1.AC3:** Given resource exhaustion, crash, cancellation, or removal, when the lab stops, then limits hold and no undeclared process, socket, cache, artifact, or permission residue remains.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 167.AC1:** Implementation portions of `AT-EML-001` and `RV-42` pass on each promoted lab platform.
+- [ ] **Sprint AC 167.AC2:** Prohibited capability schemas, registrations, IPC routes, credentials, and writable canonical paths are structurally absent.
+- [ ] **Sprint AC 167.AC3:** Malformed-artifact, parser, resource, injection, exfiltration, crash, cancellation, accessibility, and residue suites pass.
+- [ ] **Sprint AC 167.AC4:** Experimental state and all license/provenance/support limitations remain visible in Chat, diagnostics, exports, and evidence.
+
+**Gate decision:** Sprint 167 is PASS only when Story 167.1, all criteria, implementation portions of `AM-EML-001`, `AT-EML-001`, `SR-LAB-001`, `SR-LAB-002`, `RV-42`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+### [ ] Sprint 168 - Experimental Promotion and Removal Gate
+
+**Planning unit:** Dependency-bounded sprint; no calendar estimate.
+
+**Sprint goal:** Prove that experimental artifacts cannot enter ordinary AgentMage use without complete independent admission and that the lab can be removed without residue or damage.
+
+**Source coverage:** `AM-EML-001`, `AT-EML-001`, `SR-LAB-001` through `SR-LAB-003`, complete `RV-42`.
+
+**Dependencies:** Sprint 167 and the normal approved-catalog and model-admission pipeline.
+
+#### [ ] Story 168.1 - Normal-Admission-Only Promotion and Complete Removal
+
+**User-facing value:** As a user, I can trust that an experimental model remains isolated until it independently earns approval and that deleting the lab removes its artifacts and authority cleanly.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 168.1.1 - Enforce promotion through normal admission**
+  - [ ] **Sub-task 168.1.1.1:** Provide no direct promote operation; create a fresh candidate record and complete normal identity, license, lineage, artifact, runtime, resource, quality, security, platform, and review gates.
+  - [ ] **Sub-task 168.1.1.2:** Require independent evidence and an approved signed catalog transition before copying or activating any exact artifact in the approved store.
+  - [ ] **Sub-task 168.1.1.3:** Attempt promotion through chat, model output, files, copied manifests, catalog edits, stale approvals, aliases, hashes, preferences, and lab results.
+- [ ] **Task 168.1.2 - Implement and verify lab removal**
+  - [ ] **Sub-task 168.1.2.1:** Cancel evaluations, terminate descendants, close IPC, clear scratch, indexes, caches, quarantines, rules, registrations, and selected retained artifacts.
+  - [ ] **Sub-task 168.1.2.2:** Preserve approved models, canonical work, user-selected exported evidence, and unrelated platform dependencies.
+  - [ ] **Sub-task 168.1.2.3:** Reinstall, repeat, crash during removal, and verify strict-local and approved-model behavior afterward.
+- [ ] **Task 168.1.3 - Close the post-GA lab gate**
+  - [ ] **Sub-task 168.1.3.1:** Rerun complete `AT-EML-001` and `RV-42` with all supported artifact and platform fixtures.
+  - [ ] **Sub-task 168.1.3.2:** Reconcile process, package, model, path, network-denial, resource, retention, support, limitation, removal, and evidence manifests.
+  - [ ] **Sub-task 168.1.3.3:** Publish a signed post-GA lab support and limitation matrix without changing the v1.0 GA decision.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 168.1.AC1:** Given any experimental artifact or result, when ordinary activation is requested, then no activation occurs until a separate complete admission and signed approved-catalog transition pass.
+- [ ] **Story AC 168.1.AC2:** Given lab removal in any lifecycle state, when cleanup completes, then no undeclared artifact, process, socket, permission, cache, network rule, or authority remains and approved user state is unharmed.
+- [ ] **Story AC 168.1.AC3:** Given the final lab package and documentation, when independently reviewed, then every support, limitation, provenance, license, resource, authority, retention, and removal claim matches raw evidence.
+
+#### Sprint Acceptance Criteria
+
+- [ ] **Sprint AC 168.AC1:** Complete `AT-EML-001` and `RV-42` pass with zero direct-promotion path or prohibited authority.
+- [ ] **Sprint AC 168.AC2:** At least 2,000 promotion, identity, manifest, catalog, alias, stale-approval, and policy-bypass mutations produce zero ordinary activation.
+- [ ] **Sprint AC 168.AC3:** Removal, crash recovery, reinstall, residue, accessibility, resource, and neighboring-approved-state tests pass on every supported lab platform.
+- [ ] **Sprint AC 168.AC4:** The signed support matrix and evidence bundle are reproducible and remain explicitly post-GA.
+
+**Gate decision:** Sprint 168 and `G-EXPERIMENTAL-MODELS` are PASS only when Story 168.1, all criteria, `AM-EML-001`, `AT-EML-001`, `SR-LAB-001` through `SR-LAB-003`, complete `RV-42`, and the Universal Story Definition of Done pass. This gate does not alter or block the independently decided v1.0 `G-GA`; otherwise the lab gate is BLOCKED.
 
 ## Legacy Traceability Appendices
 
@@ -7146,6 +9241,18 @@ The tables below retain the original `S-NNN` planning identifiers. Each is mappe
 | 36. First-GA Delivery and Windows Backlog | Sprints 103-126 |
 | 36A. First-GA Quantitative Matrix | Owning Sprint 103-124 and integrated Sprints 125-126 |
 | 36B. Delivery-System Checklist | Sprints 103-126 |
+| 37. First-GA Productivity, Finance, and Cloud Observer Backlog | Sprints 127-156 |
+| 37A. Productivity, Finance, and Cloud Quantitative Matrix | Owning Sprints 128-154 and integrated Sprints 155-156 |
+| 37B. Productivity-System Checklist | Sprints 127-156 |
+| 38. First-GA Trusted Operations Backlog | Sprints 157-166 |
+| 38A. First-GA Trusted Operations Quantitative Matrix | Owning Sprints 157-165 and integrated Sprint 166 |
+| 38B. Trusted Operations Checklist | Sprints 157-166 |
+| 39. Post-GA Experimental Model Lab Backlog | Sprints 167-168 |
+| 39A. Post-GA Experimental Model Acceptance Matrix | Sprints 167-168 |
+| 39B. Experimental Model Lab Checklist | Sprints 167-168 |
+| 40. First-GA Whole-Codebase Audit Backlog | Owning stories in Sprints 157, 159, 161, 163, and 165 plus Sprint 166 |
+| 40A. First-GA Whole-Codebase Audit Quantitative Matrix | Owning stories and integrated Sprint 166 |
+| 40B. Whole-Codebase Audit Checklist | Sprints 157-166 |
 
 ### First-GA Stable Backlog Coverage
 
@@ -7172,6 +9279,75 @@ The tables below retain the original `S-NNN` planning identifiers. Each is mappe
 | `AM-WIN-001` | Sprints 121-122 | Sprints 125-126 |
 | `AM-XTE-001` | Sprints 123-125 | Sprint 126 |
 | `AM-GAD-001` | Sprint 126 | Sprint 126 |
+
+### Expanded First-GA Stable Backlog Coverage
+
+| Backlog ID | Primary sprint | Integrated gate |
+|---|---|---|
+| `AM-ATC-001` | Sprint 128 | Sprints 141, 155-156 |
+| `AM-SYNC-001` | Sprint 130 | Sprints 141, 155-156 |
+| `AM-PGR-001` | Sprint 129 | Sprints 141, 154-156 |
+| `AM-UIN-001` | Sprint 131 | Sprints 141, 155-156 |
+| `AM-COM-001` | Sprint 132 | Sprints 138, 141, 155-156 |
+| `AM-M365-001` | Sprint 132 | Sprints 138, 141, 155-156 |
+| `AM-TMS-001` | Sprint 133 | Sprints 138, 141, 155-156 |
+| `AM-GML-001` | Sprint 134 | Sprints 138, 141, 155-156 |
+| `AM-MAIL-001` | Sprint 135 | Sprints 137-138, 141, 155-156 |
+| `AM-SLK-001` | Sprint 136 | Sprints 138, 141, 155-156 |
+| `AM-LMAIL-001` | Sprint 137 | Sprints 141, 155-156 |
+| `AM-COMW-001` | Sprint 138 | Sprints 141, 155-156 |
+| `AM-PIM-001` | Sprint 139 | Sprints 141, 155-156 |
+| `AM-DREP-001` | Sprint 140 | Sprints 141, 148, 155-156 |
+| `AM-WFA-001` | Sprint 141 | Sprints 155-156 |
+| `AM-FIN-001` | Sprint 142 | Sprints 151, 155-156 |
+| `AM-FIMPORT-001` | Sprint 143 | Sprints 151, 155-156 |
+| `AM-ACT-001` | Sprint 144 | Sprints 151, 155-156 |
+| `AM-BNK-001` | Sprint 145 | Sprints 151, 155-156 |
+| `AM-BUD-001` | Sprint 146 | Sprints 151, 155-156 |
+| `AM-BIL-001` | Sprint 147 | Sprints 151, 155-156 |
+| `AM-FDOC-001` | Sprint 148 | Sprints 151, 155-156 |
+| `AM-FANL-001` | Sprint 149 | Sprints 151, 155-156 |
+| `AM-ACC-001` | Sprint 150 | Sprints 151, 155-156 |
+| `AM-FPRV-001` | Sprint 151 | Sprints 155-156 |
+| `AM-CLO-001` | Sprint 152 | Sprints 155-156 |
+| `AM-AWS-001` | Sprint 153 | Sprints 154-156 |
+| `AM-AZR-001` | Sprint 153 | Sprints 154-156 |
+| `AM-GCP-001` | Sprint 153 | Sprints 154-156 |
+| `AM-CCST-001` | Sprint 154 | Sprints 155-156 |
+| `AM-XPR-001` | Sprint 155 | Sprint 156 |
+| `AM-GAD-002` | Sprint 156 | Sprint 156 |
+
+### Trusted Operations and Experimental Model Backlog Coverage
+
+| Backlog ID | Primary sprint | Integrated gate |
+|---|---|---|
+| `AM-TRU-001` | Sprint 157 | Sprints 165-166 |
+| `AM-CRD-001` | Sprint 158 | Sprints 165-166 |
+| `AM-AUT-002` | Sprint 159 | Sprints 165-166 |
+| `AM-CLI-002` | Sprint 159 | Sprints 165-166 |
+| `AM-WEB-001` | Sprint 160 | Sprints 165-166 |
+| `AM-BKC-001` | Sprint 161 | Sprints 162, 165-166 |
+| `AM-CBK-001` | Sprint 162 | Sprints 165-166 |
+| `AM-MCAT-001` | Sprint 163 | Sprints 164-166 |
+| `AM-MGR-001` | Sprint 164 | Sprints 165-166 |
+| `AM-MUSE-001` | Sprint 165 | Sprint 166 |
+| `AM-XOP-001` | Sprint 165 | Sprint 166 |
+| `AM-GAD-003` | Sprint 166 | Sprint 166 |
+| `AM-EML-001` | Sprint 167 | Sprint 168 |
+
+### Whole-Codebase Audit Backlog Coverage
+
+| Backlog ID | Primary sprint | Integrated gate |
+|---|---|---|
+| `AM-CBA-001` | Sprint 157 | Sprints 165-166 |
+| `AM-CEN-001` | Sprint 159 | Sprints 165-166 |
+| `AM-ROA-001` | Sprint 159 | Sprints 165-166 |
+| `AM-CKP-001` | Sprint 161 | Sprints 165-166 |
+| `AM-STR-001` | Sprint 163 | Sprints 165-166 |
+| `AM-SEM-001` | Sprint 163 | Sprints 165-166 |
+| `AM-RCN-001` | Sprint 165 | Sprint 166 |
+| `AM-AUR-001` | Sprint 165 | Sprint 166 |
+| `AM-GAD-004` | Sprint 166 | Sprint 166 |
 
 ## Sprint Completion Record Template
 

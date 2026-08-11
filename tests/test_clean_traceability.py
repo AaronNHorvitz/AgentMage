@@ -29,7 +29,7 @@ class CleanTraceabilityTests(unittest.TestCase):
 
         self.assertEqual(summary["normative_statements"], 26)
         self.assertGreater(summary["resolved_requirement_links"], 26)
-        self.assertEqual(summary["traceability_records"], 119)
+        self.assertEqual(summary["traceability_records"], 227)
 
     def test_orphan_requirement_and_test_are_rejected(self) -> None:
         orphan_requirement = copy.deepcopy(self.normative_map)

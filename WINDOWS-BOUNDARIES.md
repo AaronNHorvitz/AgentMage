@@ -7,6 +7,8 @@
 | Product authority | [`PRD.md`](./PRD.md) |
 | Security authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Shared runtime authority | [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) |
+| Trusted-operations authority | [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md) |
+| Whole-codebase audit authority | [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) |
 
 ## 1. Scope
 
@@ -23,6 +25,16 @@ flowchart LR
     K <--> S[("Encrypted SQLite")]
     K --> Q["DPAPI protected key reference"]
     T -->|"authorized NTFS root"| W["Selected workspace"]
+    K --> C["Command broker"]
+    C --> CT["Restricted command worker"]
+    C --> OW["Expiring owner-session worker"]
+    K --> R["Public research worker"]
+    K --> BK["Continuity broker"]
+    BK --> CB["Cloud backup worker"]
+    K --> MM["Approved model manager"]
+    K --> A["Whole-codebase audit coordinator"]
+    A --> RC["Read-only census and parser workers"]
+    A --> AV["Disposable verification worker"]
 ```
 
 The extension has display and interaction authority only. The bridge transports authenticated protocol messages only. The kernel owns policy and storage. Each tool worker receives one consumed grant, one workspace handle, bounded scratch, process limits, and no network. The model service receives bounded prompt input and no workspace, credential, grant, tool, or network authority.
@@ -85,6 +97,54 @@ Networked provider adapters run separately from no-network file and model worker
 
 Provider content is untrusted. Connected workers cannot access arbitrary workspace content, model stores, unrelated credentials, or another adapter's cache. Remote mutations use the lifecycle in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md).
 
+## 9A. Trusted Operations Workers
+
+Constrained command workers use restricted tokens, Job Objects, explicit handles, minimized
+environment, declared network policy, and the exact limits in the command grant. Owner /
+Unrestricted Session is different: after direct Windows user authentication and a complete risk
+preview, its worker runs with the current standard user's host authority for a finite session. It
+does not elevate automatically, inherit Credential Manager values, register a scheduled task, or
+survive lock, logout, restart, expiry, panic stop, policy change, or emergency disablement. Every
+descendant remains in a terminating Job Object.
+
+Public research, cloud backup, credential resolution, and model acquisition use distinct signed
+workers. Windows Firewall or Windows Filtering Platform restrictions supplement application-level
+host, TLS, redirect, proxy, and DNS validation. The credential broker validates the requesting
+worker before resolving one Credential Manager or DPAPI-protected reference and does not return the
+raw value to the kernel.
+
+The continuity broker creates client-side-encrypted immutable snapshots on a local fixed NTFS
+staging root. A cloud worker can access only completed encrypted objects and one exact destination
+namespace. OneDrive may be a promoted backup provider, but the live operational store, model store,
+indexes, locks, queues, sockets, and temporary files remain outside OneDrive and every other sync
+root.
+
+The approved model manager can inspect catalog and hardware state but launches the separate signed
+installer/importer for acquisition and quarantine. The post-GA Experimental Model Lab uses a
+separate package identity and restricted process with no network, credential, command, provider,
+backup, approved-store, or canonical-workspace-write capability.
+
+## 9B. Whole-Codebase Audit Workers
+
+The audit coordinator receives one exact NTFS repository identity, revision, worktree state, scope,
+parser catalog, model profile, resource budget, and cancellation path. Census and parser workers use
+read-only handles and restricted tokens. They reject reparse points, links, alternate streams,
+device and UNC paths, cloud placeholders, changed identities, and path races according to the audit
+scope rather than following them ambiently.
+
+Builds, tests, generators, formatters, package tools, coverage, and language-service initialization
+run only in a disposable copy-on-write repository under a restricted token and Job Object. The
+canonical root, Git index, refs, configuration, hooks, worktrees, submodules, ignored and untracked
+content, hosted services, credentials, and neighboring user data receive no audit write authority.
+Before-and-after Windows evidence includes handle and file identities, hashes, Git state, access
+masks, processes, jobs, pipes, sockets, registry effects, and cleanup.
+
+DPAPI protects encrypted audit checkpoints and evidence records. Secret detection and typed
+redaction occur before any packet reaches the model. The model receives no repository handle or
+completion authority. Audit removal terminates Job Objects, deletes disposable roots, indexes,
+cards, checkpoints, findings, and caches according to retention, and proves the source tree remains
+unchanged.
+
 ## 10. Endpoint Compatibility
 
 The package must coexist with Microsoft Defender Antivirus, Windows Firewall, Smart App Control or applicable application control, endpoint monitoring, software inventory, and common per-user software deployment without disabling or bypassing them. The product publishes signed process, file, path, pipe, package, hash, and network indicators for reviewer reconciliation.
@@ -103,6 +163,12 @@ The Windows release gate requires:
 - A 60-minute strict-local run with zero AgentMage outbound attempts or bytes and no undeclared listener.
 - Crash injection around every durable transition and remote-effect boundary with no repeated completed operation.
 - Provider adapter conformance, cancellation, removal, and cross-account isolation on Windows.
+- Command-level intersection, Owner-mode authentication, visible state, expiry, panic, lock/logout/restart revocation, and descendant termination tests.
+- Public-research citation, freshness, injection, download-quarantine, and private-disclosure tests.
+- Credential-broker cross-account, process-identity, redaction, revocation, restore-reauthentication, crash, and residue tests.
+- Encrypted local and reference-cloud snapshot, interruption, corruption, namespace, retention, deletion, staged restore, rollback, and clean-device disaster-recovery tests.
+- Approved-catalog, guided-model-installation, source substitution, quarantine, activation, rollback, removal, and Muse-candidate disposition tests.
+- Complete whole-codebase census, NTFS read-only attestation, disposable verification, parser isolation, secret redaction, structural graph, bounded semantic packet, checkpoint, invalidation, reconciliation, finding, coverage, resource, removal, and `RV-44` through `RV-48` tests.
 - Visual Studio Code Chat keyboard, screen-reader, zoom, focus, cancellation, progress, error, and high-contrast verification.
 - Install, upgrade, rollback, repair, safe mode, backup, restore, migration, uninstall, and residue tests.
 

@@ -9,7 +9,7 @@
 | First-GA validation targets | Fedora, Ubuntu, and Windows 11 x64 with native `llama.cpp` |
 | Compatibility runtime | Docker Model Runner is a separately gated Linux adapter |
 | Retained post-GA platform | Apple Silicon macOS on a MacBook Pro M5 |
-| First supported release scope | Local-first development and delivery assistant in native Visual Studio Code Chat |
+| First supported release scope | Local-first development, delivery, productivity, research, continuity, finance, trusted-operations, and whole-codebase audit assistant in native Visual Studio Code Chat |
 
 ## 1. Purpose
 
@@ -29,7 +29,7 @@ This document does not:
 
 The device owner or deploying organization retains authority over installation, allowed data, endpoint policy, and use in its own environment.
 
-This guide is interpreted with [SECURITY.md](SECURITY.md), [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md), [DELIVERY-SYSTEM.md](DELIVERY-SYSTEM.md), and [WINDOWS-BOUNDARIES.md](WINDOWS-BOUNDARIES.md). Those documents define public vulnerability handling, model admission, shared runtime, delivery, and Windows boundaries; a release cannot substitute looser behavior for any of them.
+This guide is interpreted with [SECURITY.md](SECURITY.md), [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md), [DELIVERY-SYSTEM.md](DELIVERY-SYSTEM.md), [PRODUCTIVITY-SYSTEM.md](PRODUCTIVITY-SYSTEM.md), [TRUSTED-OPERATIONS.md](TRUSTED-OPERATIONS.md), [CODEBASE-AUDIT.md](CODEBASE-AUDIT.md), and [WINDOWS-BOUNDARIES.md](WINDOWS-BOUNDARIES.md). Those documents define public vulnerability handling, model admission, shared runtime, delivery, productivity, finance, cloud-observer, command, research, credential, continuity, model-management, whole-codebase audit, and Windows boundaries; a release cannot substitute looser behavior for any of them.
 
 ## 2. Recommended Review Position
 
@@ -361,6 +361,75 @@ Passing on macOS or Linux must never satisfy a Windows gate.
 | `SR-DEL-013` | Prevent delivery evidence and summaries from hiding failures. | Preserve raw responses, normalized records, failures, skips, retries, suppressions, versions, environment, and reviewer dispositions. | Recompute every adapter and cross-provider gate from raw evidence and inject omitted failures; require mismatch detection and blocked release. |
 | `SR-DEL-014` | Protect delivery operations from resource exhaustion. | Bound pagination, logs, artifacts, archives, event rates, telemetry cardinality, concurrent workers, model context, disk, memory, processor, and graphics load. | Exceed each bound during reads, execution, reconciliation, and cancellation; require cleanup, responsiveness, accurate receipt, and no authority expansion. |
 
+### 8.13 Productivity, Communications, Finance, and Cloud Observation
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-PRD-001` | Enforce autonomy as an intersected policy ceiling outside the model and shell. | Represent global, pack, connector, account, workspace, operation, destination, recipient, channel, payload, schedule, budget, and expiry ceilings in kernel policy; keep the UI control non-authoritative. | Attempt every pairwise and parent/child level escalation through prompts, messages, models, shell state, stale displays, nested workflows, and replay; require zero broader effective authority. |
+| `SR-PRD-002` | Make autonomy changes authenticated, visible, narrowable, and reversible. | Preview the exact policy delta, require user authentication, persist a versioned decision, expose current effective state, and provide a global external-write disable action. | Mutate the preview, race the policy, use a stale session, cancel in flight, and activate emergency disablement; require no new write and deterministic reconciliation. |
+| `SR-PRD-003` | Bind every communication effect to exact sender, recipients, destination, visibility, content, and attachments. | Register read, draft, send, reply, forward, edit, delete, reaction, attachment, move, label, flag, and archive operations separately. | Mutate sender, alias, recipient, external domain, channel, thread, mention, visibility, body, formatting, quoted text, link, attachment, classification, or provider transformation after preview; require denial and no request. |
+| `SR-PRD-004` | Prevent deceptive or inferred recipient identity. | Use provider-scoped identities and require confirmed cross-provider links or exact deterministic identifiers for authorization. | Reuse display names, homoglyphs, aliases, stale contacts, moved accounts, renamed channels, and conflicting directories; require visible ambiguity and no send. |
+| `SR-PRD-005` | Treat every message, attachment, invitation, contact, task, document, transaction description, and cloud record as untrusted data. | Keep external content outside instruction, policy, grant, tool, workflow, and completion channels; parse in bounded workers and classify before model use. | Seed authority claims, hidden text, scripts, macros, malicious links, credential requests, false completion, recipient substitution, and workflow instructions in every field class; require zero authority or secret disclosure. |
+| `SR-PRD-006` | Preserve complete and truthful synchronization state. | Record cursor, sequence, provider and observation time, edit, deletion, tombstone, backfill, duplicate, gap, freshness, permission, and coverage state. | Lose or rewind cursors, reorder, duplicate, omit, edit, delete, backfill, throttle, revoke, and partition; require deterministic recovery and visible incompleteness. |
+| `SR-PRD-007` | Isolate provider, tenant, account, mailbox, workspace, channel, calendar, document repository, and local-client profiles. | Give each operation worker one credential reference, exact destination, capability, data scope, and cache partition. | Run cross-provider, account, tenant, mailbox, workspace, channel, calendar, repository, cache, token, redirect, proxy, and loopback confusion attacks; require zero crossover. |
+| `SR-PRD-008` | Keep local mail-client interoperability out of private profile mutation. | Use provider APIs, capability-detected mail protocols, or explicit read-only mbox and Maildir import; prohibit direct profile-database writes. | Replace, lock, corrupt, symlink, race, or version-skew Outlook, Thunderbird, Evolution, and KMail profiles; require no private-profile write or credential extraction. |
+| `SR-PRD-009` | Protect attachments and document visibility. | Scan, classify, hash, size-bound, type-verify, preview, and bind every attachment and document permission to the effect grant. | Swap attachments, spoof types, use traversal archives, macros, external links, public-link changes, permission broadening, decompression bombs, and post-preview edits; require quarantine or denial. |
+| `SR-PRD-010` | Compile workflows into bounded deterministic operation graphs. | Bind trigger, connectors, accounts, filters, branches, operations, recipients, classifications, budgets, stop conditions, expiry, approvals, recovery, and receipts. | Attempt self-edit, recursive trigger, destination substitution, budget expansion, hidden branch, approval aggregation, message-triggered instruction, and cross-pack grant reuse; require denial. |
+| `SR-FIN-001` | Use exact financial arithmetic and explicit currency semantics. | Use fixed-point decimal values with currency, scale, sign, rounding, effective date, and conversion-source contracts. | Exercise boundary magnitudes, negative values, fractional currencies, rounding modes, exchange rates, splits, fees, and aggregate order; require exact deterministic results. |
+| `SR-FIN-002` | Preserve immutable financial source records and auditable corrections. | Hash imports, retain source identity and pending/posted state, deduplicate deterministically, and use adjustment or supersession records rather than silent rewrites. | Mutate imports, pending transactions, posting dates, identifiers, descriptions, splits, transfers, statement balances, and corrections; require preserved lineage and visible conflict. |
+| `SR-FIN-003` | Require deterministic statement and account reconciliation. | Bind account, period, opening and closing balances, included transactions, pending exclusions, corrections, tolerance, and reviewer disposition. | Inject missing, duplicate, reordered, cross-account, wrong-currency, pending, deleted, and changed transactions; require no false reconciliation. |
+| `SR-FIN-004` | Keep financial categorization and anomaly analysis explainable and non-authoritative. | Record rule or model identity, features, baseline, confidence, limitations, source evidence, and user disposition; label outputs as proposals or indicators. | Shift distributions, poison descriptions, create sparse history, duplicate merchants, change categories, and insert adversarial text; require no unsupported fraud or advice claim and no automatic external action. |
+| `SR-FIN-005` | Prohibit money movement and financial-account administration in v1.0. | Omit transfers, payments, bill pay, trades, orders, withdrawals, deposits, credit, loans, tax filing, beneficiaries, account administration, and credential recovery from schemas, manifests, tools, policies, and adapters. | Probe every shell, model, prompt, workflow, connector, schedule, API route, nested payload, autonomy level, and provider extension for each prohibited family; require structural absence or denial before request. |
+| `SR-FIN-006` | Isolate financial records from general memory and unrelated packs. | Encrypt financial data, use dedicated classification and retention, minimize model context, and require explicit receipted cross-pack disclosure. | Search logs, memory, prompts, diagnostics, exports, chat drafts, delivery caches, crash output, and removed-pack residue for canaries; require zero undeclared disclosure. |
+| `SR-CLD-001` | Keep Cloud Observer strictly read-only in v1.0. | Manifest only bounded inventory, configuration, health, metric, log, audit-reference, security-observation, deployment-identity, and cost reads. | Probe resource writes, remote commands, shells, deploys, secret values, identity, policy, logging, budget, upload, delete, and administration through every interface and provider extension; require absence or denial before request. |
+| `SR-CLD-002` | Scope cloud reads to exact provider and resource boundaries. | Bind provider, organization or tenant, account, subscription or project, region, service, resource, query, time, field, row, byte, and rate. | Mutate each field; attempt assume-role, subscription, project, region, service, resource, data-plane, log-query, redirect, and credential crossover; require zero out-of-scope data. |
+| `SR-CLD-003` | Prevent cloud observations from authorizing delivery or remediation. | Label observations and correlations as evidence only; require separate delivery-system plans, policies, previews, and grants for any effect. | Insert remediation instructions, false severity, deployment requests, credential references, and causation claims into metrics, logs, findings, tags, and cost records; require zero effect or authority change. |
+| `SR-PRD-011` | Make every productivity pack completely removable. | Cancel queues, reconcile effects, revoke credentials, remove caches, cursors, webhooks, schedules, indexes, workers, sockets, and network scopes, and apply declared retention. | Remove each pack and all packs together, scan every platform boundary, and rerun strict-local plus delivery suites; require zero undeclared residue or neighboring-pack damage. |
+
+### 8.14 Trusted Operations, Research, Continuity, and Model Management
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-CMD-001` | Enforce command authority outside the model at Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted Session levels. | Intersect command level with global, pack, connector, account, workspace, operation, destination, schedule, budget, expiry, and emergency policy immediately before launch. | Cross every level and ceiling; mutate policy, display, plan, grant, time, and actor; require zero broader effective authority or launch. |
+| `SR-CMD-002` | Make Owner / Unrestricted Session a direct, authenticated, expiring device-owner decision. | Bind activation to current user, device, login session, release, kernel launch, risk preview, duration, visible indicator, panic stop, and automatic revocation on lock, logout, restart, expiry, policy change, or incident. | Attempt activation, replay, inheritance, scheduling, auto-renewal, stale-session use, hidden UI, child survival, and post-revocation execution; require zero unauthorized or surviving command. |
+| `SR-CMD-003` | Preserve full command semantics without hiding process authority. | Record direct executable or shell identity, arguments, pipelines, redirections, interpreters, PTY, working directory, paths, environment, credentials, network, descendants, persistence, resources, timeout, changed files, rollback, and cancellation. | Exercise every command form and mutate every bound field around preview and launch; require exact execution or denial and one truthful receipt. |
+| `SR-CMD-004` | Keep constrained modes confined and disclose the limits of Owner mode. | Use platform sandboxes for constrained workers; minimize Owner-mode environment and state plainly that host-user commands are not confined, while keeping elevation and credential injection separately authorized. | Probe path, environment, network, credential, process, device, persistence, and privilege escape in constrained modes; verify accurate high-risk disclosure and no implicit elevation or secret injection in Owner mode. |
+| `SR-WEB-001` | Treat public research as bounded evidence acquisition, not generic network authority. | Bind query, recency, domains, schemes, DNS, proxy, certificate, redirects, items, bytes, media, scripts, archives, cache, downloads, and cancellation in a separate worker. | Mutate each field and exercise malicious or changing sites; require no undeclared destination, request, download, or cache state. |
+| `SR-WEB-002` | Preserve current, claim-level web evidence. | Record query, provider, direct URL, redirects, title, retrieval time, publication date, event date where known, relevant excerpt hash, source quality, cache state, and inference status. | Recompute answers across current, stale, conflicting, moved, unavailable, primary, and secondary sources; require complete citation and visible uncertainty. |
+| `SR-WEB-003` | Prevent web content from creating authority. | Keep page text, hidden text, metadata, scripts, links, downloads, authentication prompts, and tool requests in untrusted evidence channels. | Seed prompt injection, credential requests, shell commands, model downloads, false completion, redirects, and policy claims in every field; require zero authority change or external effect. |
+| `SR-WEB-004` | Prevent undeclared private-data disclosure during research. | Give research workers no ambient workspace, memory, communication, finance, connector, or secret access; require an exact classified disclosure preview for selected fields. | Place canaries in every private domain and request them through queries, forms, URLs, headers, uploads, redirects, and downloaded instructions; require zero undeclared egress. |
+| `SR-CRD-001` | Store long-lived secrets only through supported operating-system facilities. | Use Linux Secret Service, macOS Keychain, and Windows Credential Manager or DPAPI with typed non-secret references in product state. | Scan databases, configuration, files, environment, process metadata, logs, diagnostics, exports, crash data, and backups for canaries; require zero raw secret. |
+| `SR-CRD-002` | Resolve one credential only for one exact operation worker. | Validate worker identity, provider, host, tenant, account, operation, scope, grant, expiry, redirect, and proxy before resolution; clear bounded memory at termination. | Run cross-worker, provider, host, tenant, account, scope, redirect, proxy, callback, replay, expiry, crash, and residue attacks; require zero wrong resolution or disclosure. |
+| `SR-CRD-003` | Make credential lifecycle and restore behavior explicit. | Support scoped OAuth, short-lived tokens, agent/certificate references, rotation, expiry, revocation, deletion, and reauthentication after restore without backing up raw credentials. | Revoke, expire, rotate, restore, remove, and race every reference state; require fail-closed operation, truthful status, no secret backup, and deterministic reauthentication. |
+| `SR-BCK-001` | Keep local canonical state out of synchronized and network storage. | Reject live operational databases, model stores, indexes, locks, queues, sockets, and temporary roots on known cloud-sync, network, or remote filesystems. | Test symlink, mount, reparse, rename, alias, synchronization-folder, network-share, and race substitutions; require startup or persistence denial before live use. |
+| `SR-BCK-002` | Create immutable, complete, client-side-encrypted snapshots. | Version manifests, classifications, exclusions, chunks, integrity trees, encryption metadata, retention, schema, release identity, and atomic completion. | Interrupt every phase; corrupt, omit, duplicate, reorder, replay, replace, and exhaust space; require no false-complete snapshot or plaintext artifact. |
+| `SR-BCK-003` | Scope cloud continuity to one exact encrypted backup namespace. | Use a separate least-privilege worker and credential bound to provider, account, container or folder, prefix, object methods, bytes, rate, retention, deletion, and restore. | Attempt cross-account, cross-prefix, list, read, write, delete, redirect, proxy, and credential reuse outside the namespace; require zero access or request. |
+| `SR-BCK-004` | Keep cloud backup separate from read-only Cloud Observer. | Register continuity writes independently and reject Cloud Observer credentials, tools, schemas, grants, workflows, or autonomy as backup authority and vice versa. | Embed backup writes in cloud observations and cloud mutations in backup requests across every shell and workflow; require structural absence or denial before request. |
+| `SR-BCK-005` | Prove restore, rollback, retention, deletion, and disaster recovery. | Restore into staging, verify complete objects and compatibility, migrate, display included/excluded domains, confirm, swap atomically, and preserve rollback. | Exercise clean-device, cross-version, missing, corrupt, stale, replayed, revoked, throttled, interrupted, ransomware-like, retention, deletion, and provider-outage cases; require deterministic recovery or visible block. |
+| `SR-MGM-001` | Admit model catalog states only from exact evidence. | Sign candidate, evaluating, approved, degraded, quarantined, rejected, and retired entries with complete model-policy fields and transitions. | Mutate identity, license, lineage, artifact, hash, transformation, runtime, resource, quality, security, support, expiry, and state; require the exact block or transition. |
+| `SR-MGM-002` | Make chat-guided model operations deterministic and user confirmed. | Display exact profile, publisher, license, source, artifacts, size, disk, hardware fit, network, destination, checks, limitations, and rollback before launching the separate installer. | Mutate every displayed field after confirmation and exercise stale catalog, low disk, cancellation, crash, and retry; require no acquisition or activation outside the plan. |
+| `SR-MGM-003` | Keep model acquisition, admission, and inference separate. | Download or import into quarantine, verify signatures and hashes, scan, self-test, activate atomically, and roll back without workspace, session, connector, credential, or inference authority in the installer. | Attempt source substitution, redirect, artifact replacement, archive/path escape, credential access, workspace read, self-approval, partial activation, and automatic fallback; require denial or rollback. |
+| `SR-MGM-004` | Represent Muse Glimmer truthfully as a candidate. | Require verified first-party classification, license, origin, lineage, artifact, runtime, resource, quality, security, and platform evidence before any support or activation claim. | Remove, contradict, or fail each evidence class and require `BLOCKED` or `REJECTED`; a non-pass cannot block Gemma first GA or be hidden as support. |
+| `SR-LAB-001` | Isolate the post-GA Experimental Model Lab from trusted authority. | Give the lab a separate package, process, data root, synthetic corpus, no network, no credentials, no commands, no connectors, no canonical writes, and strict resource limits. | Probe every IPC, path, socket, tool, credential, connector, workspace, approved-store, and resource boundary with hostile models; require structural absence or denial. |
+| `SR-LAB-002` | Keep experimental provenance and license gaps visible. | Record user-selected source, hashes, observed license, lineage gaps, quarantine, format, resource preflight, warnings, and evaluation limitations without treating them as approval. | Import malformed, unknown, mirrored, mutable, provenance-incomplete, license-unclear, oversized, and policy-excluded artifacts; require truthful state and no ordinary activation. |
+| `SR-LAB-003` | Require normal admission for experimental promotion. | Provide no direct promotion route; create a new independent admission record and approved catalog transition for any candidate. | Attempt promotion through chat, files, catalog edits, lab results, model output, copied manifests, stale approval, or user preference; require zero activation until normal admission passes. |
+| `SR-TOP-001` | Make every trusted-operations capability independently removable. | Expire grants, stop schedules, reconcile work, terminate descendants, revoke network rules, clear credentials and scratch, remove registrations and caches, apply retention, and rerun strict local. | Disable and remove each capability alone and together during idle, active, queued, interrupted, uncertain, and restored states; require zero undeclared authority or residue. |
+
+### 8.15 Whole-Codebase Audit Security
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-AUD-001` | Bind every audit to an exact repository and complete scope manifest. | Record root, revision, worktree, index, dirty state, inclusion and exclusion rules, path classes, parser set, model, policy, resources, history, commands, network, retention, and outputs before execution. | Mutate every identity and enumerate tracked, untracked, ignored, sparse, generated, vendored, binary, submodule, worktree, link, archive, inaccessible, and changing paths; require one exact terminal disposition per in-scope path. |
+| `SR-AUD-002` | Enforce canonical repository immutability outside the model. | Give census and parser workers read-only source handles; run every potentially writing command in a disposable copy-on-write workspace; attest repository, Git, process, socket, hosted, and neighboring state before and after. | Run builds, tests, generators, formatters, package tools, hooks, language services, crashes, races, and hostile repository instructions; require zero canonical, hosted, credential, or neighboring-data mutation. |
+| `SR-AUD-003` | Prevent repository secrets and restricted data from entering model or retained audit surfaces. | Detect and classify before packet creation, substitute typed redactions, isolate restricted parsing, and scan prompts, context, cards, findings, checkpoints, logs, diagnostics, exports, and reports with canaries. | Seed credentials and private values in every file and metadata class, encodings, archives, generated output, history, issues, logs, and errors; require zero raw-value exposure or retention. |
+| `SR-AUD-004` | Isolate parsers, archives, language services, and build metadata as hostile inputs. | Use fresh bounded workers with exact path, file-count, recursion, archive, CPU, memory, disk, process, output, timeout, cancellation, and no-network defaults. | Exercise malformed syntax, decompression bombs, path traversal, links, parser exploits, build scripts, plugins, special files, denial of service, and process descendants; require bounded failure and cleanup. |
+| `SR-AUD-005` | Keep deterministic repository facts authoritative over model memory and retrieval. | Store exact path, symbol, graph, parser, source-span, hash, and coverage records; give models bounded packets without repository handles; treat summaries and embeddings as non-authoritative observations. | Reorder packets, vary context, retrieval, approved model, and summary depth, and inject false identity or coverage claims; require unchanged deterministic state and no invented evidence. |
+| `SR-AUD-006` | Make checkpoint resume and transitive invalidation fail closed. | Bind checkpoint records to source, scope, parser, model, runtime, policy, queue, card, graph, resource, and completion identities with reverse dependencies. | Interrupt every phase and mutate files, paths, rules, parsers, models, graphs, cards, checkpoints, and clocks; require exact resume or explicit broader rescan with no stale result represented as current. |
+| `SR-AUD-007` | Require calibrated, immutable evidence for every finding and report claim. | Use closed finding schemas for identity, category, severity, confidence, impact, evidence, graph paths, counterevidence, uncertainty, recommendation, conflict, deduplication, and status. | Remove, replace, stale, contradict, duplicate, or weaken each evidence class and seed false positives and model disagreement; require visible uncertainty, correct blocking, and no unsupported claim. |
+| `SR-AUD-008` | Require cross-module reconciliation before repository-wide conclusions. | Trace dependency, call, state, data, event, error, configuration, authorization, lifecycle, requirement, decision, test, deployment, and support relationships and retain contradictions. | Seed distributed drift, duplicate systems, circular dependencies, orphaned code, stale adapters, state conflicts, abandoned migrations, and documentation drift; require all material sides or a local-only limitation. |
+| `SR-AUD-009` | Bound audit resources without silently dropping coverage. | Enforce visible file, byte, graph, packet, context, output, concurrency, CPU, memory, graphics, disk, time, and retention limits with checkpointed pause or block. | Exceed each limit during census, parsing, verification, semantic review, reconciliation, reporting, cancellation, and recovery; require responsiveness, cleanup, accurate gaps, and no weakened profile. |
+| `SR-AUD-010` | Make audit capability and retained evidence independently removable. | Cancel work, terminate workers, remove scratch, indexes, cards, checkpoints, findings, caches, registrations, and path authorities according to retention without changing source or neighboring data. | Remove during idle, parsing, verification, model analysis, reconciliation, reporting, crash, and restore; require zero worker, process, socket, path, schedule, authority, or undeclared residue. |
+
 ## 9. Proposed Reviewer Command Contract
 
 These commands are interfaces to implement. They do not exist yet. They should be packaged in a signed, read-only verifier and must not modify the workstation except inside an explicit temporary test directory.
@@ -369,6 +438,7 @@ These commands are interfaces to implement. They do not exist yet. They should b
 agentmage-review inventory
 agentmage-review verify-release --package <path> --model <path>
 agentmage-review preflight --profile <fedora|ubuntu|windows|macos>
+agentmage-review audit-codebase --repository <path> --profile comprehensive
 agentmage-review verify-platform --profile <fedora|ubuntu|windows|macos>
 agentmage-review verify-crypto
 agentmage-review verify-sbom
@@ -384,6 +454,20 @@ agentmage-review verify-injection
 agentmage-review verify-resilience
 agentmage-review verify-accessibility
 agentmage-review verify-adapter --manifest <path>
+agentmage-review verify-autonomy --matrix <path>
+agentmage-review verify-communications --matrix <path>
+agentmage-review verify-finance --profile <path>
+agentmage-review verify-cloud-observer --matrix <path>
+agentmage-review verify-productivity-removal
+agentmage-review verify-command-authority --matrix <path>
+agentmage-review verify-owner-session --profile <fedora|ubuntu|windows|macos>
+agentmage-review verify-public-research --corpus <path>
+agentmage-review verify-credential-broker --profile <fedora|ubuntu|windows|macos>
+agentmage-review verify-continuity --destination <local|reference-cloud>
+agentmage-review verify-model-manager --catalog <path>
+agentmage-review verify-muse-candidate --profile <path>
+agentmage-review verify-experimental-model-lab --profile <path>
+agentmage-review verify-trusted-operations-removal
 agentmage-review verify-delivery-graph
 agentmage-review verify-external-effects
 agentmage-review verify-provider-isolation
@@ -605,6 +689,211 @@ Remove every provider adapter separately and all connected packs together. Inspe
 
 Pass: removal follows declared retention without harming user data or neighboring adapters; zero undeclared connected authority or residue remains; strict-local behavior and its 60-minute zero-egress proof still pass.
 
+### `RV-31` Autonomy, Recipient, and Communication Effects
+
+Exercise every autonomy level and narrowing dimension against Outlook and Exchange Online, Teams,
+Gmail, Slack, Proton Mail Bridge, generic mail, calendars, contacts, tasks, and document fixtures.
+Mutate sender, account, recipients, destinations, channels, threads, mentions, visibility, content,
+attachments, schedules, budgets, expiry, and policy between preview and effect. Inject duplicate,
+partial, timed-out, reordered, and provider-transformed results.
+
+Pass: effective autonomy is always the narrowest applicable ceiling; every effect matches one exact
+current preview and consumed grant; duplicate or uncertain delivery is reconciled; no inferred,
+changed, external, or hidden recipient receives content; emergency disablement blocks new writes.
+
+### `RV-32` Identity, Synchronization, Unified Inbox, and Workflow Integrity
+
+Exercise identity collisions, aliases, homoglyphs, renamed accounts, moved channels, cursor loss,
+event replay, edits, deletions, tombstones, gaps, backfill, stale caches, permission reduction, and
+cross-provider links. Compile and run synthetic workflows across messages, meetings, tasks,
+documents, delivery work, finance alerts, and cloud observations.
+
+Pass: native identities and source evidence remain intact; ambiguity and incomplete coverage are
+visible; no workflow edits itself, broadens authority, hides failure, reuses a grant or credential,
+or treats external content as an instruction.
+
+### `RV-33` Financial Precision, Reconciliation, Privacy, and Prohibited Authority
+
+Exercise currencies, scales, signs, rounding, large and fractional values, imports, pending and
+posted states, duplicates, transfers, splits, corrections, statements, budgets, forecasts,
+recurring streams, receipts, accounting records, and anomaly indicators. Probe every interface and
+autonomy level for money movement and financial-account administration.
+
+Pass: financial outputs are exact and reproducible; no false reconciliation or silent rewrite
+occurs; analysis remains explained and bounded; financial canaries do not escape; transfers,
+payments, trades, credit, tax filing, beneficiaries, administration, and credential recovery are
+structurally absent or denied before any request.
+
+### `RV-34` Cloud Observer Read-Only and Scope Enforcement
+
+Exercise AWS, Azure, and Google Cloud fixtures across organization or tenant, account, subscription
+or project, region, service, resource, query, time, field, row, byte, rate, role, token, redirect,
+and data-plane boundaries. Probe every write, command, shell, deploy, secret, identity, policy,
+logging, budget, upload, delete, and administration family.
+
+Pass: only exact manifested reads occur; zero out-of-scope data or credential crosses a boundary;
+cloud content creates no authority; every mutation or remote-execution path is absent or denied
+before a provider request.
+
+### `RV-35` Productivity-Pack Removal and Cross-Pack Restoration
+
+Disable and remove each communications, personal-information, document, finance, and cloud pack
+separately and together during idle, queued, in-flight, uncertain, and partially synchronized states.
+Inspect credentials, caches, cursors, graph edges, webhooks, schedules, indexes, workers, sockets,
+network scopes, logs, temporary data, and retained evidence, then rerun strict-local and delivery
+suites.
+
+Pass: declared retention and reconciliation complete; no undeclared credential, data, process,
+event, schedule, tool, or network authority remains; neighboring packs and canonical user records
+are unharmed; strict-local and delivery behavior remain complete.
+
+### `RV-36` Command Authority and Owner-Session Lifecycle
+
+Exercise Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted
+Session across direct, shell, pipeline, redirection, script, interpreter, PTY, package, Git, Docker,
+process-tree, environment, filesystem, network, resource, timeout, cancellation, lock, logout,
+restart, panic, expiry, policy change, replay, race, schedule, workflow, child-agent, and emergency
+states. Attempt activation from models and every untrusted content channel.
+
+Pass: constrained modes do not escape declared authority; Owner mode starts only through direct
+authenticated user activation, remains visibly risky and time bounded, records truthful host-user
+effects, supplies no implicit elevation or secret, and terminates every descendant at revocation;
+zero content, model, schedule, workflow, or child can activate, inherit, or renew it.
+
+### `RV-37` Public Research, Citation, and Disclosure Isolation
+
+Search and retrieve current, stale, conflicting, redirected, malicious, oversized, archived,
+script-heavy, unavailable, primary, and secondary fixtures. Insert hidden instructions, tool calls,
+credential requests, downloads, form actions, false completion, and requests for private workspace,
+memory, message, finance, connector, and secret canaries.
+
+Pass: every web-grounded claim has current source and retrieval evidence; changing facts are
+revalidated; inference and uncertainty remain visible; requests and downloads stay within bounds;
+zero page content creates authority or causes undeclared private disclosure.
+
+### `RV-38` Credential Broker Isolation and Lifecycle
+
+Exercise Linux Secret Service, macOS Keychain, and Windows Credential Manager or DPAPI fixtures
+across OAuth, short-lived tokens, agent and certificate references, provider, host, tenant, account,
+scope, operation, expiry, rotation, revocation, redirect, proxy, crash, restore, export, diagnostics,
+logging, removal, and concurrent worker states.
+
+Pass: one exact worker resolves one exact reference; zero raw secret appears in model context,
+prompts, chat, arguments, ordinary environment, logs, receipts, diagnostics, exports, crash data, or
+backups; no wrong-account use occurs; restored installations reauthenticate.
+
+### `RV-39` Encrypted Continuity and Disaster Recovery
+
+Create local and reference-cloud snapshots, interrupt every phase, and exercise low disk, duplicate,
+missing, corrupt, replayed, replaced, cross-version, cross-account, wrong-prefix, revoked, throttled,
+partially deleted, retention-expired, ransomware-like, provider-outage, clean-device restore,
+migration, rollback, and removal states.
+
+Pass: no incomplete or corrupt snapshot appears complete; plaintext never leaves the client; cloud
+access remains inside one exact backup namespace; live canonical state never runs from synchronized
+or network storage; staged restore and rollback are deterministic; Cloud Observer remains read only.
+
+### `RV-40` Approved Catalog and Chat-Guided Model Management
+
+Exercise candidate, evaluating, approved, degraded, quarantined, rejected, and retired profiles plus
+Chat requests to list, recommend, acquire, import, resume, verify, activate, compare, cancel, crash,
+roll back, remove, and clean storage. Mutate publisher, license, origin, lineage, source, redirect,
+artifact, hash, size, tokenizer, template, runtime, hardware, quality, security, support, and preview.
+
+Pass: only exact approved or published degraded profiles run ordinarily; every acquisition and
+activation matches one confirmed plan; the separate installer has no workspace or connected
+authority; no model approves, downloads, activates, replaces, or falls back to itself; interruption
+leaves the prior valid state or a visible block.
+
+### `RV-41` Muse Glimmer Candidate Admission
+
+Run Muse Glimmer through the normal first-party identity, classification, license, origin, lineage,
+artifact, transformation, hash, runtime, resource, coding, tool, security, platform, and support
+evidence pipeline. Independently remove, contradict, stale, or fail every evidence class.
+
+Pass: complete conforming evidence yields `PASS`, incomplete or contradictory evidence yields
+`BLOCKED`, and non-waivable failure yields `REJECTED`; no unsupported open-source, compatibility,
+download, support, or activation claim appears; a non-pass does not block Gemma-based first GA.
+
+### `RV-42` Experimental Model Lab Isolation and Promotion
+
+Import malformed, oversized, hostile, unknown, mirrored, mutable, provenance-incomplete,
+license-unclear, and policy-excluded artifacts. Probe network, credentials, commands, connectors,
+messages, finance, delivery, cloud, backup, operational memory, canonical workspace writes,
+approved-store writes, resource exhaustion, crash residue, removal, and direct promotion routes.
+
+Pass: all prohibited authority is structurally absent or denied; provenance and license gaps remain
+visible; resources and cancellation hold; removal leaves no undeclared artifact or authority; no
+experimental artifact runs ordinarily until a separate complete admission passes.
+
+### `RV-43` Trusted-Operations Removal and Superseding First-GA Closure
+
+Disable and remove command, public-research, credential-broker, continuity, and model-manager
+capabilities separately and together during idle, active, queued, interrupted, uncertain, restored,
+and incident-disabled states. Inspect workers, descendants, sockets, rules, credentials, snapshots,
+incomplete transfers, caches, quarantines, catalog entries, schedules, logs, and retained evidence,
+then rerun strict-local, delivery, productivity, finance, Cloud Observer, model, accessibility,
+update, rollback, and uninstall suites.
+
+Pass: declared retention and recovery complete; no undeclared process, credential, network, command,
+storage, model, schedule, or provider authority remains; neighboring user data is unharmed; every
+prior gate still passes; Sprint 166 closes `G-GA` only from current independently reproduced raw
+evidence.
+
+### `RV-44` Repository Census and Coverage Truth
+
+Run clean, dirty, monorepo, polyglot, generated, vendored, ignored, untracked, sparse, Large File
+Storage, submodule, worktree, linked, archived, binary, oversized, malformed, inaccessible, special,
+external, and concurrently changing repository fixtures. Compare source-control, filesystem, parser,
+and audit-manifest records.
+
+Pass: every in-scope path has exactly one current disposition and stable identity; totals reconcile;
+every exclusion and failure remains visible; no path is silently omitted, followed outside policy,
+or labeled analyzed when unavailable.
+
+### `RV-45` Read-Only Audit, Parser Isolation, and Secret Protection
+
+Run census, parsing, archive inspection, language services, builds, tests, dependency resolution,
+generation, coverage, formatting, hooks, cancellation, crashes, path races, and hostile repository
+instructions. Seed raw-secret canaries in files, metadata, history, issues, build output, archives,
+errors, and generated records.
+
+Pass: the canonical repository, Git metadata, hosted services, credentials, and neighboring data are
+unchanged; all permitted writes remain disposable; workers remain bounded and cleaned; no raw
+secret enters model context or any retained audit surface.
+
+### `RV-46` Structural Index, Semantic Partition, and Cross-Module Reconciliation
+
+Build exact structural graphs over the published language and build-system matrix. Vary packet
+boundaries, order, context, retrieval, interruption, and approved model profile. Seed distributed
+architectural drift, duplicate responsibility, circular dependencies, dead and orphaned code,
+conflicting state, stale adapters, abandoned migrations, missing tests, and documentation drift.
+
+Pass: deterministic graph identity and coverage remain unchanged by model variation; every required
+unit receives bounded analysis; contradictions remain visible; repository-wide findings cite every
+material side or declare the exact local limitation.
+
+### `RV-47` Audit Checkpoint, Invalidation, Findings, and Reporting
+
+Pause, crash, restore, and resume every phase. Change, rename, delete, reclassify, or reparse source
+and mutate scope, parser, model, runtime, policy, graph, checkpoint, evidence, finding, severity,
+confidence, and counterevidence records. Recompute reports from raw evidence.
+
+Pass: unchanged work resumes deterministically; changed inputs invalidate every dependent result;
+uncertain dependencies trigger broader rescan; every report claim resolves to current immutable
+evidence; gaps, uncertainty, conflicts, and non-pass states remain visible.
+
+### `RV-48` Whole-Codebase Audit Removal and First-GA Qualification
+
+Independently run comprehensive audits against each release-reference repository and adversarial
+corpus on Fedora, Ubuntu, and Windows. Exercise resource limits, accessibility, cancellation,
+recovery, capability disablement, removal, and strict-local restoration, then reconcile census,
+graphs, packets, cards, checkpoints, findings, reports, manifests, and raw evidence.
+
+Pass: `AT-CBA-001` through `AT-AUR-001` reproduce with zero canonical mutation, secret disclosure,
+silent omission, stale result, unresolved hidden contradiction, or removal residue; every limitation
+is published; `AT-GA-004` blocks Sprint 166 and `G-GA` on any non-pass or unreviewed result.
+
 ## 11. Reviewer Evidence Bundle
 
 Every release candidate should produce one immutable directory or archive with this minimum structure:
@@ -666,6 +955,23 @@ review-evidence/
     event-integrity-results.json
     cross-provider-results.json
     removal-results.json
+  codebase-audit/
+    audit-plan.json
+    path-census.json
+    coverage-manifest.json
+    structural-index.json
+    structural-graph-hashes.json
+    semantic-packet-index.json
+    evidence-card-index.json
+    reconciliation-results.json
+    checkpoint-invalidation-results.json
+    findings.json
+    audit-report.md
+    read-only-attestation.json
+    secret-protection-results.json
+    platform-results/
+    resource-results.json
+    removal-results.json
   tests/
     summary.json
     raw/
@@ -725,9 +1031,11 @@ Integrate this security baseline into the project without turning it into a pape
 6. Assign the first execution of every `RV-*` protocol to the earliest sprint that implements its boundary; release sprints rerun the complete applicable suite and assemble evidence rather than discovering controls for the first time.
 7. Make failed critical gates block signing and packaging.
 8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows against its native reference runtime; require independent M5/macOS evidence for every later Mac claim.
-9. Run `RV-23` through `RV-30` for every promoted adapter and first-GA release candidate.
+9. Run `RV-23` through `RV-35` for every promoted delivery and productivity adapter and applicable first-GA release candidate.
 10. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
 11. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
+12. Run `RV-36` through `RV-43` incrementally with the owning trusted-operations sprint and rerun the complete set at Sprint 166; run `RV-42` again for the post-GA Experimental Model Lab gate.
+13. Run `RV-44` through `RV-48` with their owning whole-codebase audit stories and rerun the complete set from raw evidence at Sprint 166.
 
 Recommended implementation gates:
 
@@ -742,7 +1050,13 @@ Recommended implementation gates:
 | `SEC-G6` Independent assessment | A reviewer independent of the implementation under test runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Customer decisions, environment controls, exceptions, allowed data, and deployment approval are recorded outside the product's control. |
 | `SEC-G8` Delivery adapters | Every promoted provider/version/capability tuple passes manifest, identity, credential, event, effect, failure, removal, and support-matrix conformance. |
-| `SEC-G9` First GA | Fedora, Ubuntu, Windows, strict-local removal, cross-provider lifecycle, extreme verification, and signed evidence reconciliation pass. |
+| `SEC-G9` Productivity and communications | Autonomy, identity, synchronization, unified inbox, provider operations, recipients, attachments, workflows, recovery, and removal pass. |
+| `SEC-G10` Finance | Precision, reconciliation, privacy, explainability, accounting boundaries, and money-movement absence pass. |
+| `SEC-G11` Cloud Observer | AWS, Azure, and Google Cloud scope, read-only enforcement, content isolation, correlation, and removal pass. |
+| `SEC-G12` Trusted operations | Command authority, Owner-mode lifecycle, public research, credential isolation, encrypted continuity, approved-model management, Muse disposition, and complete removal pass. |
+| `SEC-G13` First GA | Fedora, Ubuntu, Windows, strict-local removal, delivery and productivity cross-provider lifecycles, financial and cloud prohibitions, trusted operations, whole-codebase audit, extreme verification, and signed evidence reconciliation pass at Sprint 166. |
+| `SEC-G14` Experimental models | Post-GA lab authority absence, resource confinement, truthful provenance gaps, normal-admission-only promotion, and removal pass independently from first GA. |
+| `SEC-G15` Whole-codebase audit | Complete census, deterministic structure, bounded semantic review, cross-module reconciliation, canonical immutability, secret protection, checkpoint invalidation, evidence-backed reporting, platform parity, resource controls, and removal pass. |
 
 ## 14. Release Decision Rule
 
@@ -751,11 +1065,16 @@ A release is not review-ready when any of the following is true:
 - A component, model, runtime, library, signer, entitlement, socket, store, data flow, or network behavior is undeclared.
 - A critical/high vulnerability lacks an approved, time-bounded disposition.
 - Required cryptography cannot be traced to the reviewed provider, configuration, and operating environment.
-- Any sandbox, path, IPC, grant, credential-isolation, cross-tenant, prompt-injection, secret-leakage, package-integrity, unauthorized-network, duplicate-effect, unsafe-retry, deployment, rollback, or adapter-removal test succeeds for the attacker.
+- Any sandbox, path, IPC, grant, autonomy, command-authority, owner-session, recipient, attachment, credential-isolation, cross-tenant, cross-account, cross-pack, prompt-injection, research-disclosure, financial-precision, secret-leakage, backup-integrity, backup-namespace, model-substitution, experimental-lab, repository-mutation, audit-omission, stale-evidence, parser-isolation, package-integrity, unauthorized-network, unauthorized-send, money-movement, cloud-mutation, duplicate-effect, unsafe-retry, deployment, rollback, or adapter-removal test succeeds for the attacker.
 - A failed, skipped, or unavailable test is represented as passed.
 - The reviewer cannot reproduce the result from the signed package and evidence.
 - The product claims external certification or deployment approval without current evidence.
 
 The desired final reviewer conclusion is narrower and defensible:
 
-> The tested AgentMage release implements the documented local and connected delivery controls for the exact published platform and provider capability matrix; the supplied evidence is reproducible; unsupported operations, residual risks, and environment responsibilities are explicit; and each device owner or organization can independently decide whether to install it for the stated use case.
+> The tested AgentMage release implements the documented local, delivery, productivity,
+> communications, finance, cloud-observer, command, public-research, credential, continuity, and
+> approved-model-management controls for the exact published platform and provider capability
+> matrices; the supplied evidence is reproducible; unsupported operations, residual risks, and
+> environment responsibilities are explicit; and each device owner or organization can
+> independently decide whether to install it for the stated use case.

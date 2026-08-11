@@ -34,10 +34,18 @@ EXPECTED_HEADINGS: Final = {
     "AM": {
         "Executable v0.1 Backlog",
         "36. First-GA Delivery and Windows Backlog",
+        "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
+        "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
+        "39. Post-GA Experimental Model Lab Backlog",
+        "40. First-GA Whole-Codebase Audit Backlog",
     },
     "AT": {
         "31B. v0.1 Quantitative Acceptance Matrix",
         "36A. First-GA Quantitative Acceptance Matrix",
+        "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
+        "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
+        "39A. Post-GA Experimental Model Acceptance Matrix",
+        "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
     },
     "CR": {"35. Competitive Review Integration Register"},
 }
@@ -121,11 +129,17 @@ def definition_from_cells(
         acceptance_tests = referenced_ids(cells[5], "AT")
     elif prefix == "AT":
         title = cells[1]
-        release = (
-            "v1.0"
-            if heading == "36A. First-GA Quantitative Acceptance Matrix"
-            else "v0.1"
-        )
+        if heading == "39A. Post-GA Experimental Model Acceptance Matrix":
+            release = "post-GA"
+        elif heading in {
+            "36A. First-GA Quantitative Acceptance Matrix",
+            "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
+            "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
+            "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
+        }:
+            release = "v1.0"
+        else:
+            release = "v0.1"
         dependencies = []
         disposition = "required"
         acceptance_tests = []

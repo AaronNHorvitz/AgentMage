@@ -1,6 +1,6 @@
 # Requirement Registry
 
-`registry.json` is the deterministic machine-readable inventory of every canonical `AM-*`, `AT-*`, and `CR-*` definition in `Agent-Scaffolding-Inventory.md`. Do not edit it manually.
+`registry.json` is the deterministic machine-readable inventory of every canonical `AM-*`, `AT-*`, and `CR-*` definition in `Agent-Scaffolding-Inventory.md`, including Sections 36-38 and 40 first-GA expansions and the Section 39 post-GA Experimental Model Lab. Do not edit it manually.
 
 Generate and verify it with:
 

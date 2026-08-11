@@ -8,6 +8,8 @@
 | Security authority | `SECURITY-REVIEW.md` |
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
 | Delivery authority | `DELIVERY-SYSTEM.md` |
+| Trusted-operations authority | `TRUSTED-OPERATIONS.md` |
+| Whole-codebase audit authority | `CODEBASE-AUDIT.md` |
 | Windows specialization | `WINDOWS-BOUNDARIES.md` |
 
 ## 1. Purpose
@@ -48,6 +50,27 @@ flowchart LR
     P -->|"bounded TLS request"| H["Approved provider host"]
     H -->|"untrusted provider response"| P
     P -->|"typed result and effect state"| K
+
+    K -->|"exact command grant; ephemeral"| CB["Command execution broker"]
+    CB -->|"constrained levels"| CT["Constrained command worker"]
+    CB -->|"explicit expiring owner session"| OW["Owner-session worker"]
+
+    K -->|"public research grant; ephemeral"| RB["Research broker"]
+    RB -->|"bounded public egress"| RW["Research worker"]
+
+    K -->|"snapshot grant; encrypted objects only"| BC["Continuity broker"]
+    BC --> LB["Local snapshot worker"]
+    BC --> BW["Cloud backup worker"]
+
+    K -->|"typed secret reference"| GB["Credential broker"]
+    GB -->|"operation-scoped resolution"| Q
+
+    K -->|"exact read-only audit grant"| AC["Audit coordinator"]
+    AC -->|"read-only scope"| RC["Repository census worker"]
+    AC -->|"bounded source units"| PG["Parser and graph workers"]
+    AC -->|"disposable command plan"| AV["Audit verification worker"]
+    AV -->|"writes only here"| CO["Copy-on-write audit workspace"]
+    AC -->|"bounded evidence packet"| A
 ```
 
 Data labels on an edge describe the strictest expected class before the receiving boundary applies classification and minimization. `Ephemeral`, `Operational`, `Durable`, and `Restricted` retain their meanings from PRD Section 13. Model output, repository content, and external-product output are untrusted regardless of sensitivity.
@@ -67,6 +90,20 @@ The dotted handoff edge is not an AgentMage network path. It depicts a separate 
 | Model installer/importer | Bounded acquisition or user-selected import into staging | Workspace, session, tool, grant, operational-store, and inference authority |
 | Review verifier | Read signed packages and synthetic evidence in an explicit test directory | Modifying user workspaces or trusting AgentMage summaries over raw evidence |
 | Provider adapter worker | One destination-, account-, capability-, and operation-scoped credential reference and network grant | Raw workspace access, model authority, unrelated credentials, alternate hosts, ambient network, and grant reuse |
+| Command execution broker | Validate command plans, effective command level, activation state, grant, worker profile, limits, cancellation, and receipt | Executing commands directly, minting authority, resolving raw credentials, or silently selecting Owner mode |
+| Constrained command worker | One command grant under Inspect, Workspace Autonomous, or Connected Operations authority | Access outside declared paths, environment, credentials, network, descendants, persistence, resources, or time |
+| Owner-session worker | Host-user command authority during one directly authenticated, expiring Owner / Unrestricted Session | Automatic elevation, hidden activation, scheduling, inheritance, renewal, survival after revocation, or undeclared secret injection |
+| Public research worker | One query/retrieval grant, approved public destinations, bounded cache/download scratch, and citation capture | Authenticated browser reuse, private-context upload, external effects, credentials, workspace writes, or content-created authority |
+| Credential broker | Validate typed references and resolve one secret inside the exact authenticated operation worker | Returning raw secret values to the kernel, model, shell plan, logs, diagnostics, exports, or backups |
+| Local snapshot worker | Read classified canonical state and write one encrypted immutable local snapshot | Live-store relocation, plaintext snapshot output, provider network, model authority, or unrelated filesystem writes |
+| Cloud backup worker | Read one completed encrypted snapshot and access one exact backup namespace | Plaintext access, live-store access, Cloud Observer mutation, unrelated cloud resources, model authority, or general provider writes |
+| Model catalog and manager | Read signed catalog state and compile deterministic user-visible model operations | Artifact acquisition, admission self-approval, workspace authority, secret resolution, or inference |
+| Experimental Model Lab worker | Load one quarantined unapproved artifact with synthetic corpus and bounded scratch | Network, credentials, commands, connectors, canonical workspace writes, approved-store writes, or direct promotion |
+| Audit coordinator | Compile exact repository scope, deterministic work queues, model packets, reconciliation passes, checkpoints, and report state | Direct source reads or writes, parser execution, raw secret access, authority minting, hosted mutations, or treating model output as evidence without validation |
+| Repository census worker | Enumerate one exact repository scope through read-only handles and produce path dispositions | Writes, links outside policy, network, credentials, model access, commands, silent exclusion, or completion claims |
+| Parser and graph worker | Parse one bounded admitted source unit into exact structural records and edges | Canonical writes, network, credentials, model authority, unbounded plugins or descendants, and unsupported inference represented as fact |
+| Audit verification worker | Run one approved command inside a disposable copy-on-write repository with bounded scratch | Canonical-root writes, hosted effects, credentials by default, undeclared network, writes outside disposable storage, or surviving descendants |
+| Audit report compiler | Validate current evidence, coverage, contradictions, finding schemas, and report claims | Repository access, model inference, authority changes, unsupported certainty, or hiding non-pass coverage |
 
 Every shipped process, helper, executable, interpreter, container, image, listener, socket, entitlement, and durable path appears in the release manifest and `agentmage doctor` diagnostics. An undeclared component or endpoint blocks startup or release.
 
@@ -111,6 +148,23 @@ AgentMage never describes a Docker-backed installation as wholly unprivileged un
 | Windows extension/bridge to kernel | Access-controlled named pipe | Exact user and logon session, integrity level, executable/package identity, fresh challenge, version, sequence, size limits, cancellation, and replay defense |
 | Kernel to provider adapter worker | Private operation-scoped IPC | One consumed connected grant, exact host/tenant/account/capability, credential reference, byte/time budget, cancellation, result schema, and one terminal receipt |
 | Provider adapter worker to approved host | Transport Layer Security to the exact granted destination | Host and certificate validation, redirect/proxy/DNS revalidation, bounded methods and bytes, no alternate credential use, effect reconciliation, and no workspace/model-store access |
+| Kernel to command execution broker | Private authenticated IPC | Exact command plan, effective authority level, grant identity, activation state, limits, cancellation, and one terminal receipt |
+| Command broker to constrained worker | Private per-command IPC | One consumed grant, exact process profile, path/environment/network/credential limits, descendant cleanup, and changed-file report |
+| Command broker to owner-session worker | Private session-bound IPC | Direct-user activation record, current login-session identity, expiry, visible state, panic stop, sequence, command ledger, and forced descendant termination |
+| Kernel to public research worker | Private per-research IPC | Exact query, destinations, recency, item/byte/media/download limits, disclosure state, cancellation, citations, and terminal receipt |
+| Research worker to public destination | Transport Layer Security to exact approved hosts | Certificate, DNS, redirect, proxy, scheme, media, byte, archive, script, tracking, cache, and download-quarantine enforcement |
+| Kernel to credential broker | Private authenticated IPC | Caller process identity, typed reference, exact provider/host/tenant/account/operation/scope, grant, expiry, and no raw secret response |
+| Kernel to local snapshot worker | Private per-snapshot IPC | Exact source domains, classifications, exclusions, destination, encryption metadata, retention, limits, integrity, and atomic completion |
+| Kernel to cloud backup worker | Private per-transfer IPC | Completed encrypted snapshot identity, exact account and backup namespace, credential reference, object/byte/rate limits, resume state, and terminal receipt |
+| Cloud backup worker to backup host | Transport Layer Security to exact backup destination | Least privilege, opaque keys, no plaintext, redirect/proxy/DNS revalidation, integrity, version, retention, deletion, and no Cloud Observer credential reuse |
+| Kernel to model manager | Private authenticated IPC | Exact catalog state, hardware facts, user-confirmed plan digest, installer launch identity, cancellation, activation result, and rollback |
+| Experimental lab controller to lab worker | Private disposable IPC | One quarantined artifact, synthetic corpus, no-network policy, no secret/path authority, strict resources, cancellation, and residue report |
+| Kernel to audit coordinator | Private audit-scoped IPC | Repository and audit identity, read-only capability grant, policy, resources, cancellation, checkpoint, and one terminal receipt |
+| Audit coordinator to census worker | Private per-census IPC | Read-only root handle, exact path policy, source-control identity, file/byte/time limits, dispositions, errors, and no-follow rules |
+| Audit coordinator to parser and graph worker | Private per-unit IPC | Exact admitted files or handles, parser/version, output schema, resource budget, cancellation, typed redactions, and no ambient plugin discovery |
+| Audit coordinator to verification worker | Private per-command IPC | Disposable workspace identity, exact command, no canonical write handle, network and credential state, resource limits, descendant cleanup, and mutation attestation |
+| Audit coordinator to model adapter | Existing private model IPC | Bounded redacted evidence packet, exact source references, audit/model identity, context and output limits, no repository handle, and untrusted observation result |
+| Audit coordinator to report compiler | Private per-report IPC | Current census, structural graph, reconciled evidence, findings, gaps, profile, coverage rules, cancellation, and deterministic output schema |
 
 Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access but does not prevent other local processes from sending inference requests. The Docker-backed strict-local profile therefore remains `BLOCKED` unless its implemented namespace, proxy, firewall, socket, or equivalent platform boundary satisfies the approved threat model. The extension and tool workers never receive the raw endpoint.
 
@@ -122,6 +176,10 @@ Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access
 4. Each tool worker is fresh and operation-scoped. It terminates with descendants and scratch cleanup after success, denial, cancellation, timeout, or failure.
 5. Shutdown closes sockets, unloads the model, completes or invalidates checkpoints, expires temporary authority, and records residue.
 6. Uninstall removes product-owned packages and optional user-selected data according to the published procedure while preserving user workspaces and unrelated platform dependencies.
+7. Owner / Unrestricted Session starts only from a direct authenticated user action and ends on expiry, panic stop, lock, logout, restart, policy change, emergency disablement, or integrity failure; termination includes every descendant.
+8. A continuity run snapshots local canonical state into staging, encrypts and seals it, completes the immutable manifest atomically, and only then permits an optional cloud transfer. Restore occurs into separate staging and swaps only after integrity, compatibility, and user confirmation pass.
+9. A model-manager operation launches the separate installer/importer for one confirmed catalog profile, keeps all acquisition in quarantine, and changes the active profile only through verified atomic activation or rollback.
+10. A whole-codebase audit freezes its exact source and scope identity, inventories the repository, builds deterministic structure, processes bounded semantic packets, reconciles cross-module evidence, and compiles a report. Cancellation checkpoints current work; removal terminates every audit worker and deletes only retention-selected audit state.
 
 No AgentMage process silently persists as a system-wide daemon. Any user-session launch mechanism is declared, visible in diagnostics, removable, and tested for stop, restart, update, rollback, and uninstall behavior.
 
@@ -189,4 +247,93 @@ Read, draft, local-write, remote-write, execute, deploy, secrets, and admin capa
 
 Fedora, Ubuntu, and Windows 11 run the same delivery-object, adapter-lifecycle, grant, preview, receipt, reconciliation, and removal fixtures. Platform-specific process and network enforcement differs, but no platform may weaken host, tenant, account, credential, operation, effect, or evidence semantics.
 
+## 12. Productivity, Finance, and Cloud Workers
+
+The packs in [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md) use the existing operation-scoped
+provider worker boundary with narrower domain rules:
+
+- A communication worker receives one exact provider, tenant, account, sender, operation,
+  destination, recipient or channel set, payload digest, attachment set, visibility, budget,
+  credential reference, and consumed grant. It has no workspace, unrelated-account, or model-store
+  access.
+- A Proton Mail Bridge worker can reach only the authenticated loopback Bridge endpoint and the
+  exact mailbox operation. Bridge credentials never enter the kernel model context or another mail
+  adapter.
+- Linux mail-client support uses provider or standard protocol workers. It does not write private
+  Outlook, Thunderbird, Evolution, or KMail profile databases.
+- A finance-import worker receives only the approved input and scratch output. A financial-data
+  worker has one read-only account scope and no payment, transfer, trade, credit, tax, beneficiary,
+  administration, or credential-recovery operation.
+- A Cloud Observer worker has one provider, organization or tenant, account, subscription or
+  project, region, service, resource, query, time, field, byte, and rate scope. It has no remote
+  command, shell, deploy, write, secret-value, identity, policy, or administration operation.
+- A cross-pack workflow coordinator holds descriptive plan state only. Each effect requires its own
+  independently validated and consumed operation grant.
+
+Provider content is classified and minimized before entering model context. Raw message bodies,
+attachments, contacts, financial records, and cloud logs are not copied into general memory by
+default. Pack disablement cancels queued work, reconciles in-flight effects, terminates workers,
+removes network scopes, and preserves only retention-authorized receipts and evidence.
+
+Fedora, Ubuntu, and Windows 11 run the same autonomy, communication, synchronization, financial,
+cloud-observer, cross-pack, and removal fixtures. Platform-specific secret-store, sandbox, IPC, and
+network enforcement can differ, but no platform may broaden a provider or domain capability.
+
 Apple Silicon macOS retains the same shared contracts for its post-GA lane. Its unavailable evidence remains `BLOCKED-MACOS` and cannot be borrowed from Linux or Windows.
+
+## 13. Trusted Operations Workers
+
+The workers defined in [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md) never run as one shared
+ambiently connected process:
+
+- The command broker computes the effective command level outside the model. Constrained workers
+  receive declared paths, environment, network, credentials, resources, and descendants. The Owner
+  worker instead receives the explicit host-user session authority and a hard expiry; diagnostics
+  state that this mode is not confined against commands the user authorizes.
+- The public research worker receives no authenticated-browser profile or broad workspace handle.
+  Any private disclosure is a separate classified input bound to the exact destination and grant.
+- The credential broker resolves a typed reference only after validating the destination worker and
+  exact operation. The kernel receives status and metadata, never the raw value.
+- The local snapshot worker can read only selected canonical domains and can write only the staged
+  encrypted snapshot. The cloud worker can read completed encrypted objects but cannot read their
+  plaintext or local canonical stores.
+- The model manager can read the catalog and hardware facts but cannot download. The separate
+  installer/importer receives one confirmed artifact plan and no workspace or ordinary session
+  authority.
+- The Experimental Model Lab is a post-GA process and data root. Its network is denied, its corpus is
+  synthetic, and it has no IPC route to command, credential, provider, backup, workspace-write, or
+  approved-model activation services.
+
+Pack disablement rejects new operations, expires grants, stops schedules, cancels or reconciles
+in-flight work, revokes temporary network rules, terminates workers and descendants, closes sockets,
+clears scratch and credential material, and preserves only retention-authorized receipts. Removal
+then deletes product-owned caches, quarantines, incomplete snapshots, catalog extensions, and
+provider registrations according to explicit retention while preserving user work and completed
+user-selected backups.
+
+## 14. Whole-Codebase Audit Workers
+
+The workers defined in [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) separate source authority,
+deterministic analysis, model inference, disposable execution, and report completion:
+
+- The audit coordinator receives one exact repository and audit identity. It owns the deterministic
+  queue and checkpoint but has no direct source-write, command, credential, or hosted-effect path.
+- The census worker receives read-only handles and records every path class and terminal
+  disposition. It cannot follow a link, mount, worktree, submodule, archive, or external reference
+  outside the exact policy.
+- Parser and graph workers are fresh and bounded by source unit, parser identity, recursion,
+  process, file, byte, output, time, and resource limits. Build scripts and repository plugins do
+  not become parser authority.
+- The verification worker receives a disposable copy-on-write repository. Commands that may write
+  cannot reach the canonical root, and network and credentials remain absent unless the exact audit
+  plan grants a separately reviewed acquisition operation.
+- The existing model adapter receives only redacted bounded evidence packets and returns untrusted
+  observations. It receives no repository handle, audit authority, completion state, or path grant.
+- The report compiler accepts only current deterministic coverage, graphs, reconciled evidence,
+  finding records, and gap states. It cannot infer missing coverage or suppress a blocker.
+
+Audit checkpoints remain in the encrypted local operational store and bind source, scope, parser,
+model, runtime, policy, graph, queue, evidence, contradiction, resource, and completion identities.
+Changed input invalidates reverse-dependent records before reuse. Audit removal terminates workers,
+deletes disposable roots, indexes, cards, checkpoints, findings, caches, and registrations according
+to retention, and then proves the canonical repository and neighboring user data are unchanged.

@@ -2,16 +2,16 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Implementation in progress; first-GA delivery and Windows scope accepted |
-| Version | 1.2 |
+| Status | Implementation in progress; expanded first-GA scope accepted |
+| Version | 1.5 |
 | Date | 2026-08-11 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
-| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) |
-| Planning sequence | 127 sequential dependency gates across 12 epics; no calendar estimate implied |
+| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) |
+| Planning sequence | 169 sequential dependency gates across 17 epics; no calendar estimate implied |
 
 ## 1. Purpose
 
@@ -55,7 +55,7 @@ If documents conflict, the narrower safety boundary or release scope wins until 
 
 The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Its initial candidate is manifest-pinned Gemma 4 E4B, which is enabled only after admission passes. Gemma 4 12B Unified is the named disabled fallback candidate. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
 
-The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, bounded agents, a provider-neutral delivery system, and Windows 11. The first supported public release is v1.0 GA after Sprints 103-126. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
+The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, bounded agents, a provider-neutral delivery system, Windows 11, communications, a unified work graph, personal information and documents, finance and budgeting, read-only cloud observation, tiered command authority, credential brokering, encrypted continuity, approved-model management, and comprehensive whole-codebase audit. The first supported public release is v1.0 GA after Sprint 166. The Experimental Model Lab remains post-GA in Sprints 167-168. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
 
 The implementation must preserve these outcomes throughout the roadmap:
 
@@ -75,6 +75,16 @@ The implementation must preserve these outcomes throughout the roadmap:
 - `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` remain independent authority classes.
 - Windows 11 x64 is required for v1.0 GA; passing Linux or Apple Silicon evidence cannot satisfy a Windows gate. Intel Mac and Windows on Arm remain deferred.
 - Markdown authoring preserves and safely renders inline and display LaTeX mathematics through pinned offline components.
+- Communications reads and writes are governed by a visible Autonomy Center whose effective level is the intersection of global and narrower policy ceilings.
+- Financial calculations use fixed-point decimal arithmetic and source-preserving reconciliation; first-GA bank access cannot move money.
+- AWS, Azure, and Google Cloud observation is read-only and cannot become a hidden infrastructure, command, secret, identity, or administration path.
+- Public research uses a separate hostile-content boundary, preserves claim-level citations and freshness, and cannot disclose private context without an exact user-reviewed grant.
+- Command execution supports complete shell semantics while authority remains tiered; only a direct authenticated user can activate an expiring, visibly risky Owner / Unrestricted Session.
+- Connected secrets remain operating-system-backed references resolved inside one exact worker operation and never enter model context, ordinary logs, diagnostics, exports, or continuity snapshots.
+- Local continuity is canonical and cloud backup is client-side encrypted, versioned, namespace bounded, restorable, and separate from read-only Cloud Observer.
+- The approved-model manager is deterministic and user confirmed; Meta Muse Glimmer remains a candidate until complete admission evidence exists.
+- Whole-codebase audit treats the encrypted structural index and evidence ledger as project memory, model contexts as bounded working memory, canonical source as read-only, and complete path disposition plus cross-module reconciliation as prerequisites for a comprehensive claim.
+- Unapproved models remain in a post-GA isolated lab without network, credentials, commands, connectors, or canonical workspace writes and cannot promote themselves.
 
 ## 4. Architecture Implementation Strategy
 
@@ -95,6 +105,17 @@ flowchart TB
     MODEL --> EVIDENCE
     POLICY --> GRAPH["Provider-neutral delivery graph"]
     GRAPH --> PROVIDERS["Operation-scoped provider adapters"]
+    POLICY --> WORK["Unified activity inbox and work graph"]
+    WORK --> PACKS2["Communications, finance, and cloud-observer packs"]
+    PACKS2 --> PROVIDERS
+    POLICY --> TRUST["Trusted operations brokers"]
+    TRUST --> COMMAND["Tiered command workers"]
+    TRUST --> RESEARCH["Public research worker"]
+    TRUST --> BACKUP["Encrypted continuity worker"]
+    TRUST --> MANAGER["Approved model manager"]
+    POLICY --> AUDIT["Whole-codebase audit coordinator"]
+    AUDIT --> INDEX["Census, structural graph, and evidence ledger"]
+    AUDIT --> COW["Disposable verification workspace"]
 ```
 
 ### 4.1 Kernel First
@@ -123,6 +144,36 @@ Read-only local work is implemented first. File writes, command execution, remot
 
 The delivery graph and adapter SDK arrive only after local authority, writes, execution, and connected-read foundations are proven. Adapters advance from manifested to observable, writable, executable, deployable, and administrative conformance one level at a time. The kernel understands typed delivery objects and capability classes, not provider-specific API calls. [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) owns this contract.
 
+### 4.7 Productivity Packs Through the Same Kernel
+
+Communications, personal-information, document, finance, and cloud-observer adapters reuse the
+provider lifecycle but do not flatten their domain semantics into delivery objects. The Autonomy
+Center narrows kernel policy and never becomes an authority-bearing shell feature. The unified inbox
+and work graph retain native object identity, source, freshness, classification, and uncertainty.
+Financial arithmetic and reconciliation remain deterministic, bank and cloud adapters remain
+read-only, and every pack is independently removable. [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md)
+owns this contract.
+
+### 4.8 Trusted Operations as Separate Authorities
+
+Command execution, public research, credential resolution, continuity, and model acquisition use
+separate workers and capability registrations. The command language can be complete without making
+host-user authority ambient. Owner / Unrestricted Session is a direct, authenticated, expiring user
+decision with a visible warning and panic stop. Public research cannot reuse authenticated browser
+state. Cloud continuity writes only encrypted snapshots to one exact destination namespace.
+Approved-model installation is deterministic and separate from inference. The post-GA Experimental
+Model Lab has no connected or workspace-write authority. [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md)
+owns this contract.
+
+### 4.9 Whole-Codebase Audit as Persistent Evidence
+
+Comprehensive repository analysis does not depend on fitting a repository into one model context.
+An exact census and deterministic structural graph define coverage; coherent bounded model packets
+produce provisional evidence cards; mandatory reconciliation connects conclusions across modules;
+encrypted checkpoints preserve progress and invalidate stale dependencies. The canonical repository
+has no audit write grant, and potentially writing commands run only in disposable copy-on-write
+workspaces. [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) owns this contract.
+
 ## 5. Cross-Cutting Workstreams
 
 These workstreams continue across multiple epics even though their first deliverables occur in a specific sprint range.
@@ -139,6 +190,14 @@ These workstreams continue across multiple epics even though their first deliver
 | Capability expansion | Epics 2-8 | Knowledge, writes, coding, frontier consultation, documents, connectors, web, schedules, and agents |
 | Delivery graph and adapters | Epics 7-10 | Provider SDK, identity correlation, GitHub/GHES, Jira, Azure DevOps, GitLab, Jenkins, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases |
 | Delivery operations | Epic 10 | Idempotency, uncertain-result reconciliation, CI execution, promotion, health, drift, rollback, feature flags, migrations, and ChatOps notifications |
+| Productivity and communications | Epic 12 | Autonomy, confirmed identities, synchronization, unified inbox, mail, chat, calendar, contacts, tasks, documents, attachments, workflows, and communication recovery |
+| Finance and budgeting | Epic 13 | Fixed-point arithmetic, imports, reconciliation, Actual Budget, read-only bank data, budgets, bills, receipts, accounting, anomaly indicators, and financial privacy |
+| Cloud observation | Epic 13 | Read-only AWS, Azure, and Google Cloud inventory, configuration, health, logs, security, cost, correlation, and removal |
+| Trusted command authority | Epic 15 | Tiered shell policy, full command semantics, owner-session authentication, expiry, panic stop, descendants, receipts, and removal |
+| Public research | Epic 15 | Current search, primary-source preference, citations, freshness, hostile-content handling, download quarantine, and disclosure control |
+| Credentials and continuity | Epic 15 | OS secret references, operation-scoped resolution, encrypted local snapshots, bounded cloud backup, clean-device restore, and disaster recovery |
+| Model management | Epic 15 and post-GA Epic 16 | Approved catalog, guided installation, Muse candidate admission, and isolated experimental evaluation |
+| Whole-codebase audit | Epic 15 | Exact scope and census, deterministic structure, semantic partitioning, evidence cards, checkpoint resume, invalidation, cross-module reconciliation, read-only verification, findings, coverage, and removal |
 | Security assurance | Epic 0 | Threat cases, `SR-*` mappings, assigned `RV-*` owners, continuous fuzzing, adversarial testing, independent review criteria, and incremental evidence bundles |
 | Release engineering | Epic 0 | Apache-2.0 licensing, reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, vulnerability response, signed manual patches, rollback, and support |
 
@@ -156,7 +215,12 @@ flowchart LR
     E7 --> E8["Epic 8<br/>Extended Capabilities<br/>Sprints 76-100"]
     E8 --> E9["Epic 9<br/>Inherited Closure<br/>Sprints 101-102"]
     E9 --> E10["Epic 10<br/>Delivery and Windows<br/>Sprints 103-125"]
-    E10 --> E11["Epic 11<br/>v1.0 GA<br/>Sprint 126"]
+    E10 --> E11["Epic 11<br/>Delivery Checkpoint<br/>Sprint 126"]
+    E11 --> E12["Epic 12<br/>Productivity and Communications<br/>Sprints 127-141"]
+    E12 --> E13["Epic 13<br/>Finance and Cloud Observer<br/>Sprints 142-155"]
+    E13 --> E14["Epic 14<br/>Expanded Checkpoint<br/>Sprint 156"]
+    E14 --> E15["Epic 15<br/>Trusted Operations and Codebase Audit<br/>Sprints 157-166"]
+    E15 --> E16["Epic 16<br/>Experimental Model Lab<br/>Sprints 167-168"]
 ```
 
 Sprints are numbered dependency and evidence gates, not calendar estimates. Work proceeds in numbered dependency order. Under Decision 0008, unavailable Mac-specific work remains `BLOCKED-MACOS` for the retained post-GA lane while shared, Linux, and Windows work may proceed when it does not consume or assume a missing Mac result. No Mac claim closes until its retained work passes, but Mac is not a `G-GA` dependency. If a story becomes too broad for independent review, it is blocked and split into newly appended identifiers before implementation continues.
@@ -174,7 +238,12 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 | 8 | Extended interfaces, packages, actions, scheduling, and agents | 76-100 | `G-V1+` |
 | 9 | Inherited-roadmap closure checkpoint | 101-102 | `G-LEGACY-CLOSURE` |
 | 10 | Provider-neutral delivery system and Windows 11 | 103-125 | `G-DELIVERY` and `G-WINDOWS` |
-| 11 | v1.0 GA verification and release decision | 126 | `G-GA` |
+| 11 | Delivery-and-Windows GA checkpoint | 126 | `G-GA-DELIVERY-CHECKPOINT` |
+| 12 | Productivity, communications, personal information, documents, and autonomy | 127-141 | `G-PRODUCTIVITY` |
+| 13 | Finance, budgeting, accounting, and read-only cloud observation | 142-155 | `G-FINANCE` and `G-CLOUD-OBSERVER` |
+| 14 | Expanded v1.0 GA verification and release decision | 156 | `G-GA` |
+| 15 | Trusted operations, whole-codebase audit, and superseding v1.0 GA | 157-166 | `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` |
+| 16 | Post-GA Experimental Model Lab | 167-168 | `G-EXPERIMENTAL-MODELS` |
 
 ## 7. Epic Implementation Milestones
 
@@ -310,13 +379,153 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 
 **Exit condition:** `G-DELIVERY` and `G-WINDOWS` pass only when every promoted provider tuple and Windows platform requirement has current conformance, security, recovery, documentation, and independent-review evidence.
 
-### 7.12 Epic 11 - v1.0 GA Verification
+### 7.12 Epic 11 - Delivery-and-Windows GA Checkpoint
 
-**Objective:** Produce the first supported public release from the exact promoted scope and prove that it survives clean-platform, cross-provider, adversarial, failure, recovery, and removal testing.
+**Objective:** Close the exact Decision 0008 delivery-and-Windows scope before productivity packs build on its provider lifecycle and cross-system identity contracts.
 
 **Primary outcomes:** complete requirement graph; Fedora, Ubuntu, and Windows clean-package evidence; provider/version/capability matrix; cross-provider work-to-release and incident-to-rollback evidence; strict-local removal proof; source and binary bills of materials; model bill of materials; signatures and provenance; support and end-of-support state; limitations; rollback plan; signed release decision.
 
-**Exit condition:** `G-GA` passes only when every blocking result is current and reproducible, every unsupported path has a passing negative test, the user reviews the release decision, and no failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed result is hidden or waived by feature completeness.
+**Exit condition:** `G-GA-DELIVERY-CHECKPOINT` passes only when every Decision 0008 blocking result is current and reproducible and no unsupported or failed path is hidden. Decision 0009 supersedes this checkpoint's former final-release meaning.
+
+### 7.13 Epic 12 - Productivity and Communications
+
+**Objective:** Add human communications and surrounding work through the same exact identity,
+authority, synchronization, receipt, and removal boundaries used by delivery adapters.
+
+**Implementation sequence:**
+
+1. Freeze the productivity adapter matrix, Autonomy policy, user-interface control, identity graph,
+   event and cursor contract, unified inbox, and cross-pack data-flow schema.
+2. Implement and independently gate Outlook and Exchange Online, Teams, Gmail, Proton Mail Bridge,
+   generic IMAP, SMTP, JMAP, Slack, and Linux mail-client interoperability.
+3. Add separately registered read, draft, send, reply, forward, edit, delete, reaction, attachment,
+   move, label, flag, archive, and synchronization operations.
+4. Add Microsoft, Google, CalDAV, and CardDAV calendar, contact, and task behavior.
+5. Add OneDrive, SharePoint, Google Drive, Confluence, and separately promoted document repositories
+   with visibility, attachment, classification, and version controls.
+6. Compile user workflows into deterministic graphs with dry runs, approvals, budgets, stop
+   conditions, cancellation, reconciliation, and receipts.
+7. Run cross-recipient, cross-account, injection, attachment, cursor, duplicate-send, partial-effect,
+   accessibility, disablement, removal, and strict-local restoration suites.
+
+**Boundary:** The Autonomy Center narrows policy but carries no grant. External content is untrusted
+and cannot select a recipient, authorize a send, widen autonomy, or trigger an operation.
+
+**Exit condition:** `G-PRODUCTIVITY` passes only when every promoted provider tuple and autonomy
+level has current positive, negative, recovery, removal, privacy, and accessibility evidence.
+
+### 7.14 Epic 13 - Finance and Cloud Observer
+
+**Objective:** Add useful local financial management and cloud visibility without creating money
+movement, financial-account administration, or a second cloud execution path.
+
+**Implementation sequence:**
+
+1. Freeze the fixed-point financial domain, currency and rounding rules, immutable import model,
+   statement and transaction states, corrections, and reconciliation contracts.
+2. Implement CSV, OFX, and QFX import plus Actual Budget as the first local reference adapter.
+3. Add independently gated read-only bank, liability, investment, recurring-stream, and statement
+   synchronization.
+4. Add budgeting, cash-flow, savings, debt, net-worth, bill, subscription, receipt, invoice,
+   reimbursement, tax-document, and explainable anomaly workflows.
+5. Add approval-gated non-money-movement QuickBooks and Xero accounting records only after their
+   read, draft, precision, reconciliation, and recovery gates pass.
+6. Implement read-only AWS, Azure, and Google Cloud inventory, configuration, health, metrics,
+   bounded logs, audit references, security observations, deployment identity, and cost summaries.
+7. Run precision, reconciliation, duplicate, pending/posting, correction, money-movement absence,
+   cloud-mutation absence, cross-pack, resource, recovery, removal, and strict-local suites.
+
+**Boundary:** Financial institution and cloud adapters are read-only. No autonomy level can create a
+payment, transfer, trade, credit, tax-filing, remote-command, deploy, secret-read, identity, policy,
+or administrative operation.
+
+**Exit condition:** `G-FINANCE` and `G-CLOUD-OBSERVER` pass only when deterministic financial
+correctness and zero prohibited financial or cloud authority are demonstrated across every shell,
+schema, policy, adapter, workflow, and platform.
+
+### 7.15 Epic 14 - Expanded v1.0 GA Verification Checkpoint
+
+**Objective:** Close the complete promoted scope under Decisions 0008 and 0009 before trusted
+operations are integrated under Decision 0010.
+
+**Primary outcomes:** complete traceability; Linux and Windows clean-package evidence; delivery,
+productivity, communications, finance, accounting, and cloud support matrices; cross-pack workflow
+evidence; autonomy and emergency-stop evidence; zero money movement and cloud mutation; strict-local
+restoration; bills of materials; signatures; limitations; support state; rollback; and signed release
+decision.
+
+**Exit condition:** `G-GA-PRODUCTIVITY-CHECKPOINT` passes only at Sprint 156 when every Decision 0009
+blocking result is current and reproducible, unsupported paths have passing negative tests, and no
+failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed
+result is hidden. Decision 0010 supersedes this checkpoint's former final-release meaning.
+
+### 7.16 Epic 15 - Trusted Operations, Whole-Codebase Audit, and Superseding v1.0 GA
+
+**Objective:** Promote command execution, public research, credential handling, continuity, and
+approved-model management into a coherent, reviewable first-GA capability set and make
+comprehensive repository audit deterministic, read-only, resumable, reconciled, and evidence based.
+
+**Implementation sequence:**
+
+1. Freeze trusted-operations process, capability, data-flow, network, storage, receipt, removal, and
+   platform contracts.
+2. Implement operating-system-backed credential references, OAuth and token lifecycles,
+   operation-scoped resolution, redaction, revocation, and restore reauthentication.
+3. Implement Disabled, Inspect, Workspace Autonomous, Connected Operations, and authenticated
+   Owner / Unrestricted Session command levels with full command semantics and exact lifecycle.
+4. Implement current public search and retrieval with claim-level citations, freshness, primary
+   source preference, hostile-content isolation, bounded downloads, and disclosure previews.
+5. Implement immutable encrypted local snapshots, staging restore, migrations, rollback, retention,
+   deletion, clean-device recovery, and one reference client-side-encrypted cloud backup adapter.
+6. Implement the signed approved-model catalog and chat-guided acquisition, import, quarantine,
+   verification, activation, comparison, rollback, removal, and storage-cleanup workflow.
+7. Produce a truthful Meta Muse Glimmer candidate disposition through normal admission without
+   making first GA depend on a pass.
+8. Run integrated command, injection, disclosure, secret, backup, restore, model-substitution,
+   resource, accessibility, removal, and strict-local-restoration campaigns.
+9. Freeze whole-codebase audit scope, coverage, process, record, checkpoint, finding, report,
+   lifecycle, and platform contracts.
+10. Implement complete repository census, canonical-root immutability, disposable command
+    verification, secret-safe parsing, deterministic structural graphs, coherent semantic packets,
+    and persistent evidence cards.
+11. Implement checkpoint resume, transitive invalidation, contradiction retention, cross-module
+    reconciliation, risk-directed review, calibrated findings, professional reports, and complete
+    audit removal.
+12. Rebuild and independently reproduce the complete release evidence at Sprint 166, including
+    comprehensive audits of release-reference repositories and known-answer corpora.
+
+**Boundary:** Owner mode is intentionally broad host-user authority but never ambient, scheduled,
+inherited, model activated, automatically renewed, or equivalent to administrator elevation. Public
+research, credential resolution, cloud backup, model acquisition, and command execution cannot
+share one worker or union their grants. Cloud backup cannot mutate Cloud Observer resources. A
+candidate model cannot activate itself.
+
+The audit coordinator cannot write to canonical source or treat model context as repository state.
+Potentially writing commands run in disposable copy-on-write workspaces. Every whole-codebase claim
+requires complete path disposition, deterministic structure, current evidence, cross-module
+reconciliation, read-only attestation, and visible gap accounting.
+
+**Exit condition:** `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and final `G-GA` pass only when
+Sprints 157-166 and every prior promoted gate have current reproducible evidence, all `RV-01`
+through `RV-48` protocols pass, and no blocker is hidden.
+
+### 7.17 Epic 16 - Post-GA Experimental Model Lab
+
+**Objective:** Let users evaluate unapproved model artifacts without weakening approved-model or
+connected-operation boundaries.
+
+**Primary outcomes:** separate package and process identity; user-selected quarantine import;
+visible license and provenance gaps; synthetic evaluation; strict processor, memory, graphics, disk,
+context, output, duration, and cancellation limits; complete removal; and normal-admission-only
+promotion.
+
+**Boundary:** The lab retains the model-origin policy and has no network, credential, command,
+connector, messaging, finance, delivery, cloud, backup, operational-memory, or canonical-workspace-
+write authority. Results remain visibly experimental.
+
+**Exit condition:** `G-EXPERIMENTAL-MODELS` passes only when Sprints 167-168 prove structural
+authority absence, robust artifact handling, truthful gaps, resource control, complete removal, and
+no direct promotion route. This gate does not block v1.0 GA.
 
 ## 8. Product Security and Independent Verification
 
@@ -333,7 +542,13 @@ Security assurance is built with each component rather than added after feature 
 | `SEC-G6` Independent assessment | Critical boundary completion and every release candidate | A reviewer who did not author the exact boundary records identity, commit, findings, disposition, and re-review; a separate release reviewer re-runs applicable `RV-*` protocols and reproduces the signed evidence bundle. |
 | `SEC-G7` Optional environment review | Separate customer decision | A device owner or deploying organization records environment controls, exceptions, allowed data, residual risk, and deployment approval outside AgentMage's authority. |
 | `SEC-G8` Delivery adapters | Epics 7-10 and every adapter promotion | Provider identity, credential isolation, capability level, exact effects, idempotency/reconciliation, event integrity, version support, removal, and cross-tenant tests pass. |
-| `SEC-G9` GA system | Epic 11 | Cross-provider lifecycle, strict-local removal, Windows/Linux parity, extreme verification, evidence reconciliation, and final support matrix pass. |
+| `SEC-G9` Productivity and communications | Epic 12 | Autonomy, identity, synchronization, unified inbox, provider operations, recipients, attachments, workflows, recovery, and removal pass. |
+| `SEC-G10` Finance | Epic 13 | Precision, reconciliation, privacy, explainability, accounting boundaries, and money-movement absence pass. |
+| `SEC-G11` Cloud Observer | Epic 13 | AWS, Azure, and Google Cloud scope, read-only enforcement, content isolation, correlation, and removal pass. |
+| `SEC-G12` Trusted operations | Epic 15 | Command-level intersections, Owner-mode lifecycle, public-research disclosure, credential isolation, encrypted continuity, model management, removal, and `RV-36` through `RV-43` pass. |
+| `SEC-G13` First GA | Epics 14-15 | Fedora, Ubuntu, Windows, strict-local removal, connected-capability lifecycles, financial and cloud prohibitions, trusted operations, whole-codebase audit, extreme verification, and signed evidence reconciliation pass at Sprint 166. |
+| `SEC-G14` Experimental models | Post-GA Epic 16 | The lab has no connected or canonical-write authority, all artifacts remain quarantined until normal admission, and removal leaves no residue. |
+| `SEC-G15` Whole-codebase audit | Epic 15 | Complete census, deterministic structure, bounded semantic review, cross-module reconciliation, canonical immutability, secret protection, checkpoint invalidation, evidence-backed reporting, platform parity, resource controls, removal, and `RV-44` through `RV-48` pass. |
 
 AgentMage targets a bounded, single-user desktop application and produces reproducible product-security evidence. It does not claim external certification or managed-environment approval that has not been independently granted, and no evaluation or deployment transfers ownership, sponsorship, or authorship.
 
@@ -401,6 +616,12 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Granular-plan drift | Future developers or LLMs implement stale or orphaned work | Stable IDs, additions-only checks, document hashes, requirement registry, cross-document validation, and Sprint 0 traceability. |
 | Long roadmap and resource pressure | Excessive concurrent scope, thermal load, disk growth, or abandoned partial capabilities | Sequential gates, bounded stories, split decisions, resource budgets, cancellation, cleanup, and capability removal tests. |
 | Optional environment-review uncertainty | Product evidence is mistaken for customer approval or a transfer of ownership | Shared-responsibility model, explicit ownership boundary, reserved customer decisions, and reproducible review package. |
+| Owner-mode misuse or content-triggered command execution | Host-user files, processes, network, or local secrets are affected outside the user's intent | Direct authenticated activation, explicit risk preview, persistent warning, finite duration, panic stop, no scheduling/inheritance/auto-renewal, minimized environment, command ledger, and descendant revocation. |
+| Web prompt injection or private-context disclosure | Untrusted pages create authority or cause local data to leave the device | Separate research worker, untrusted-content channel, claim citations, exact egress and download limits, authenticated-session separation, and disclosure preview. |
+| Backup corruption or cloud namespace confusion | Work cannot be restored or encrypted objects are written or read under the wrong account or location | Local canonical store, client-side authenticated encryption, immutable manifests, exact destination binding, integrity trees, staged restore, cross-account tests, and disaster-recovery drills. |
+| Model-catalog or download substitution | A different, unlicensed, unsupported, or hostile artifact becomes active | Exact first-party identity, immutable hashes, quarantine, admission states, deterministic preview, separate installer, atomic activation, rollback, and no model self-approval. |
+| Large-repository context and summary drift | Files are omitted, contradictions disappear, or partial model summaries are presented as whole-codebase understanding | Complete census, deterministic structural graph, coherent packets, source-pinned evidence cards, persistent encrypted project memory, mandatory cross-module reconciliation, transitive invalidation, and explicit coverage gaps. |
+| Read-only audit mutates source or exposes secrets | Builds, parsers, hooks, tools, or hostile repository content alter canonical state or place protected values in model context | Read-only source handles, disposable copy-on-write verification, no hosted or credential authority, before-and-after attestation, parser isolation, pre-model classification and redaction, canaries, and `RV-45`. |
 
 ## 12. Planning and Change Management
 
@@ -415,6 +636,8 @@ Changes to the implementation sequence follow these rules:
 7. A changed source, dependency, configuration, schema, model, runtime, platform, threat model, authority path, storage path, network path, installer, or package makes affected evidence stale and triggers impact-based reruns.
 8. A sprint may contain multiple bounded stories only when their combined gate remains achievable; otherwise the work is split without renumbering accepted identifiers.
 9. Decision 0008 supersedes the first-GA effect of Decision 0003: a missing Mac result does not prevent shared, Linux, Windows, delivery, or v1.0 GA work, but every affected Mac status remains blocked and no evidence is substituted.
+10. Decisions 0009 and 0010 preserve earlier sprint identities as checkpoints, append new requirements and work, and assign final v1.0 closure to Sprint 166 without rewriting completed history.
+11. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, 165, and 166 without renumbering them or changing the Sprint 166 final gate.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
@@ -432,16 +655,16 @@ The first high-level sequence is:
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
-For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decisions 0003 and 0008. Record affected Mac gates as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
+For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decisions 0003, 0008, 0009, 0010, and 0011. Record affected Mac gates as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
 
 ## 14. Completion Definition
 
 The implementation plan is complete only when:
 
 - Every promoted requirement maps to current code, tests, documentation, evidence, owner, and release identity.
-- Every internal milestone gate, `G-LEGACY-CLOSURE`, `G-DELIVERY`, `G-WINDOWS`, and `G-GA` is closed with reproducible evidence.
+- Every internal milestone gate, `G-LEGACY-CLOSURE`, `G-DELIVERY`, `G-WINDOWS`, `G-PRODUCTIVITY`, `G-FINANCE`, `G-CLOUD-OBSERVER`, `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` is closed with reproducible evidence; the post-GA `G-EXPERIMENTAL-MODELS` gate remains independently tracked.
 - Every deferred item is either a tested exclusion or has been formally promoted into the stable inventory and appended execution plan.
-- Every supported platform, provider/version/capability tuple, model, interface, capability pack, delivery object, data domain, authority path, recovery path, and package agrees across the governing documents and release artifacts.
+- Every supported platform, provider/version/capability tuple, model, interface, capability pack, delivery object, productivity object, financial object, cloud observation, command level, research source, credential reference, continuity destination, audit profile, repository class, parser, structural graph, evidence-card state, finding, data domain, authority path, recovery path, and package agrees across the governing documents and release artifacts.
 - Every prohibited path has a test proving that it is absent or denied.
 - Every release-blocking security, privacy, authority, evidence, recovery, supply-chain, accessibility, and clean-install threshold passes without being overridden by feature completeness.
 - The final `G-GA` decision is reviewed by the user; any later customer-specific managed-device decision remains separate and optional.

@@ -210,6 +210,17 @@
       "statement": "an `AgentDefinition` schema and local registry with stable identifiers, versions, owners, compatibility, status, and source hashes."
     },
     {
+      "id": "CL-03FE0C23E48056BE14AB",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1947,
+        "semantic_sha256": "03fe0c23e48056be14abc0010e9bdb128eb14f0721cd63e5f68f433806d010ee"
+      },
+      "statement": "Preserve Sprint 126 as a stable delivery-and-Windows checkpoint and keep expanded `G-GA` blocked until Sprint 156 passes every Decision 0009 requirement and acceptance test."
+    },
+    {
       "id": "CL-0484DBD49F7468037748",
       "label": "DEFER",
       "source": {
@@ -274,6 +285,17 @@
         "semantic_sha256": "05234c51986e5396380f456fa3c311d09121988fb7e34feae497bbbac62404cb"
       },
       "statement": "backup, restore, integrity, migration, and complete-index-rebuild tests for plain folders and Obsidian vaults."
+    },
+    {
+      "id": "CL-059C0A6BA59FB6F1BDFE",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1934,
+        "semantic_sha256": "059c0a6ba59fb6f1bdfe11043e74301e66d6792ef7f4d6e4ee633c8ebf2754f9"
+      },
+      "statement": "Keep cloud observations and correlations non-authoritative; require separate delivery-system plans, policies, previews, and grants for every delivery or infrastructure effect."
     },
     {
       "id": "CL-06862B638ED8CF597D05",
@@ -373,6 +395,28 @@
         "semantic_sha256": "078c65c71a4873a179994d06b72b60953be02b2fe0a7fe2489b5f716c22ea43a"
       },
       "statement": "an evidence ledger that records which files were actually read and which were merely discovered."
+    },
+    {
+      "id": "CL-07BA0AE296445521F2AD",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1996,
+        "semantic_sha256": "07ba0ae296445521f2adef3aa1dafd4e55690f8ed22a61f71c331f8de6a7ce12"
+      },
+      "statement": "working-directory, readable/writable root, environment, credential-reference, network, descendant, persistence, resource, timeout, output, cancellation, changed-file, rollback, and cleanup controls."
+    },
+    {
+      "id": "CL-080AC8D2A55DCABCC92A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2056,
+        "semantic_sha256": "080ac8d2a55dcabcc92a7b9af01bc3a7a739ec92ce90e3ce7232761bdc9ef7da"
+      },
+      "statement": "deterministic malformed-output, prompt-injection, tool-request, exfiltration, quality, context, latency, memory, graphics, disk, cancellation, and crash evaluations over synthetic data."
     },
     {
       "id": "CL-0818A099CEFE97D44425",
@@ -606,6 +650,28 @@
       "statement": "a configuration diff shown before a change is activated."
     },
     {
+      "id": "CL-0C460961A14C1713E91C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2100,
+        "semantic_sha256": "0c460961a14c1713e91ca09be3fbecb31789c652d4018fa7ffd5c25fdc2532a8"
+      },
+      "statement": "module, symbol, interface, dependency, call, state, data, event, error, configuration, test, build, release, requirement, decision, and provenance records and graphs."
+    },
+    {
+      "id": "CL-0C7107FE3D7AF7622211",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2007,
+        "semantic_sha256": "0c7107fe3d7af7622211d8718e74dce17ffd1dfb92e7cebafc533948f9c1f92e"
+      },
+      "statement": "hidden instructions, malicious metadata, redirects, Domain Name System rebinding, certificate failures, tracking links, prompt injection, download substitution, archive bombs, scripts, and private-context requests."
+    },
+    {
       "id": "CL-0C82E53C41D38E38B6EC",
       "label": "ROADMAP",
       "source": {
@@ -650,6 +716,17 @@
       "statement": "authentication and permission diagnostics that show the active host, account or app, installation, granted repositories, scopes, expiration, single-sign-on state, and missing permission without showing secret values."
     },
     {
+      "id": "CL-0D1BCAE1F4DFC03A0D68",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1920,
+        "semantic_sha256": "0d1bcae1f4dfc03a0d68ced0273bb4d213e081ab6111ba7844e539896f509ade"
+      },
+      "statement": "receipt, invoice, reimbursement, statement, and tax-document extraction, matching, duplicate detection, retention, redaction, and report export."
+    },
+    {
       "id": "CL-0D22453A38A085C879E6",
       "label": "BUILD",
       "source": {
@@ -670,6 +747,17 @@
         "semantic_sha256": "0d598dd20637450003481bcd219c01c50647e9a6d655a75df091a1c57ea794d9"
       },
       "statement": "On repeated validation failures, failed tests, contradictions, rejected verification, or exhausted budgets, stop local work and present either a clarification request or a frontier-handoff recommendation; never send it automatically."
+    },
+    {
+      "id": "CL-0D5BFE84E8D14A17074E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1891,
+        "semantic_sha256": "0d5bfe84e8d14a17074ee249095c80a8ada159de7579b231caccd7c18257f002"
+      },
+      "statement": "Prohibit direct private-profile database writes, credential extraction, UI scraping with standing authority, and protocol downgrade."
     },
     {
       "id": "CL-0D6498A2145738298AC9",
@@ -738,6 +826,17 @@
       "statement": "host identity, Transport Layer Security, redirect, proxy, Domain Name System, callback, and provider-supplied download-target validation."
     },
     {
+      "id": "CL-0E8C887B66A93E2A30A6",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2022,
+        "semantic_sha256": "0e8c887b66a93e2a30a622b3f32dbe6c79e8047b61ba1988d2c91274ffc2cd7a"
+      },
+      "statement": "signed candidate, evaluating, approved, degraded, quarantined, rejected, and retired catalog records containing every model-provenance and support field."
+    },
+    {
       "id": "CL-0F113F9DEC62620E6223",
       "label": "BUILD",
       "source": {
@@ -782,6 +881,17 @@
       "statement": "PostgreSQL command-line tools are not installed in the current shell."
     },
     {
+      "id": "CL-0F4CDB44BCC4A3D013A6",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2105,
+        "semantic_sha256": "0f4cdb44bcc4a3d013a68f7570b52d792bb1715d73bf64bfd64495ceac2e1b21"
+      },
+      "statement": "canonical-root read handles with no write grant and explicit denial of Git index, ref, hook, configuration, worktree, submodule, ignored, untracked, hosted mutation, and neighboring-path changes."
+    },
+    {
       "id": "CL-0F7A5CF1C84EFC9ED583",
       "label": "BUILD",
       "source": {
@@ -802,6 +912,17 @@
         "semantic_sha256": "0f84c0f1302602480a1f69a913adb6fc51b742529e0775d51e08fadc781d1121"
       },
       "statement": "a secretary guide covering agendas, meeting requests, raw notes, transcripts, minutes, action logs, correspondence, document control, and filing."
+    },
+    {
+      "id": "CL-0F861170E048DF690416",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1892,
+        "semantic_sha256": "0f861170e048df6904168abc48a6b83b87830d8611bc98cf3372b9fdd3202747"
+      },
+      "statement": "distinct read, draft, send, reply, forward, edit, delete, reaction, upload, download, move, label, flag, and archive tools where provider evidence supports them."
     },
     {
       "id": "CL-1006383E2AD1342E7B52",
@@ -848,6 +969,17 @@
       "statement": "Add Port, Cortex, Compass, New Relic, Dynatrace, ServiceNow, Bitbucket, Gerrit, Buildkite, CircleCI, Pulumi, LaunchDarkly, Unleash, Flyway, and Liquibase only through the same staged conformance process."
     },
     {
+      "id": "CL-10F27F1FF63FCFA62439",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2018,
+        "semantic_sha256": "10f27f1ff63fcfa62439a9049c1a2f93b8e6601234e0b5da94212afe1b30b40f"
+      },
+      "statement": "clean-device, cross-version, low-disk, corrupt, missing, replayed, duplicated, revoked, throttled, interrupted, ransomware-like, retention, deletion, rollback, and provider-outage recovery."
+    },
+    {
       "id": "CL-110EE20E7A928DF1969F",
       "label": "BUILD",
       "source": {
@@ -879,6 +1011,17 @@
         "semantic_sha256": "112a953fd60cc14edfaf5ab519df22859bfab9d35ebd89b6d8f562d8a649620f"
       },
       "statement": "a fictional Markdown workspace for repeatable acceptance tests."
+    },
+    {
+      "id": "CL-116F6F5E90BAE130C351",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1876,
+        "semantic_sha256": "116f6f5e90bae130c3519886c6b1f9cb8027c034f36d7cc5b0549b2b96bd8ae0"
+      },
+      "statement": "one operation-scoped provider worker per exact account, capability, credential reference, destination, byte and time budget, cancellation path, and receipt."
     },
     {
       "id": "CL-11AA81697933C57B329C",
@@ -1000,6 +1143,17 @@
         "semantic_sha256": "13e71586f93789a009ecbabb47964bd8533af7d93f1b81a226523527aba93b9f"
       },
       "statement": "an `ObsidianNote` class with path, title, frontmatter, headings, tasks, links, backlinks, timestamps, and content hash."
+    },
+    {
+      "id": "CL-1426E1C403CA5B5A0482",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1919,
+        "semantic_sha256": "1426e1c403ca5b5a0482fc5ca06390238b823ccf3cfb34bf88d46973ea78b332"
+      },
+      "statement": "recurring bill, income, fee, subscription, price-change, due-date, missing-payment, and cancellation-candidate detection with source evidence and user disposition."
     },
     {
       "id": "CL-14329E1F624FC7D06D6D",
@@ -1200,6 +1354,17 @@
       "statement": "a human-readable audit summary for every state-changing session."
     },
     {
+      "id": "CL-1824BAC6B0C85E2969EE",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1924,
+        "semantic_sha256": "1824bac6b0c85e2969ee0d2a68ded65c6a5e5c598aaa05c69f01c2828ac3bdf8"
+      },
+      "statement": "Keep financial analysis labeled as analysis, scenario, proposal, or indicator and never as guaranteed prediction, definitive fraud, financial advice, tax advice, legal advice, or completed action."
+    },
+    {
       "id": "CL-1856C82349B2BEAA086A",
       "label": "BUILD",
       "source": {
@@ -1385,6 +1550,17 @@
         "semantic_sha256": "1b7b9fe61bba8dfc75529e00dea0c376a679f30499c6fb941e4bfbf5f911af10"
       },
       "statement": "downgrade tests that prove the agent reports missing vision, tool, context, or file support instead of pretending the selected model has it."
+    },
+    {
+      "id": "CL-1BDC587AABA49C99AF2A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1918,
+        "semantic_sha256": "1bdc587aaba49c99af2aeb0b94dd3575fdf804c2141dceced5a2ea9a339b1b23"
+      },
+      "statement": "deterministic category and envelope budgets, cash-flow forecasts, savings goals, debt scenarios, net-worth views, scenario comparisons, assumptions, and confidence disclosures."
     },
     {
       "id": "CL-1C3E76546E5852ED2C4B",
@@ -1618,6 +1794,17 @@
       "statement": "Reject shell escape, file read, network resource, package loading, executable extension, unbounded macro expansion, and unsupported LaTeX commands."
     },
     {
+      "id": "CL-2174610C9D809199FFCD",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1941,
+        "semantic_sha256": "2174610c9d809199ffcd558f186582d0f4bf40fdd3e5fc6efbf89c374a81c1ae"
+      },
+      "statement": "cross-pack credential, cache, cursor, identity, context, classification, retention, schedule, grant, recipient, attachment, financial-record, and cloud-resource confusion attacks."
+    },
+    {
       "id": "CL-21BADFCABB44D8489B08",
       "label": "BUILD",
       "source": {
@@ -1627,6 +1814,17 @@
         "semantic_sha256": "21badfcabb44d8489b08d4652bd120337c063ba10ad632d18d1b2e0e8e3812d8"
       },
       "statement": "signed and versioned update packages with rollback and integrity verification."
+    },
+    {
+      "id": "CL-21C2F2998F6D0F3217EC",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1871,
+        "semantic_sha256": "21c2f2998f6d0f3217ecf309ab566d2f7646fb76a4d59c8d79bcbc8e85107f96"
+      },
+      "statement": "explicit permission-gap, history-gap, freshness, cursor, synchronization-health, and coverage displays so an incomplete source never appears empty or complete."
     },
     {
       "id": "CL-21F620475B74E826C03C",
@@ -1750,6 +1948,17 @@
       "statement": "special readers for `Current Handoff.md`, `Current Work.md`, today's daily note, and the master task list."
     },
     {
+      "id": "CL-24EF8059C36529C0102F",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1894,
+        "semantic_sha256": "24ef8059c36529c0102ff77e0d931e720f4bf63ae05fd75364b7c69566207b72"
+      },
+      "statement": "at least 2,000 communication-field mutations and 1,000 timeout, retry, partial-effect, duplicate, and uncertain-result cases with zero wrong or duplicate delivery."
+    },
+    {
       "id": "CL-25074871F2A314DA7568",
       "label": "BUILD",
       "source": {
@@ -1772,6 +1981,17 @@
       "statement": "exact diff, command, write, and delete approval screens backed by the shared policy engine; the desktop interface must not grant itself broader rights than the command-line interface."
     },
     {
+      "id": "CL-258DEDC09B37E180D13F",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1868,
+        "semantic_sha256": "258dedc09b37e180d13f587dd16fc828e4ee0464843aa1e6c66d3e032b8a8425"
+      },
+      "statement": "Require user-confirmed or deterministic cross-provider identity links; never authorize from display-name, alias, title, timestamp, or model similarity alone."
+    },
+    {
       "id": "CL-25F53DA212D42991EC9B",
       "label": "BUILD",
       "source": {
@@ -1792,6 +2012,17 @@
         "semantic_sha256": "2601b320c4d228de28674dcd3c89846788b57098167d4b5d5d22d94e15318054"
       },
       "statement": "Require a declarative capability manifest naming identity, version, package and process hashes, transport, tools, schemas, side effects, workspace roots, network destinations, secrets, limits, cancellation behavior, and requested authority before connection."
+    },
+    {
+      "id": "CL-261A306015D19703F9B8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1992,
+        "semantic_sha256": "261a306015d19703f9b8ee23d54ccf751123b7310a3a5225117ec9c0a198368a"
+      },
+      "statement": "separate Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted Session command policies under the global Autonomy Center."
     },
     {
       "id": "CL-261B91A3E3E1E4CE9757",
@@ -1948,6 +2179,17 @@
       "statement": "autonomous self-improvement, self-modifying prompts, unlimited loops, and unsupervised background work."
     },
     {
+      "id": "CL-2CC127E6A620D45208EE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2016,
+        "semantic_sha256": "2cc127e6a620d45208eec73dfa364148baf24e1813b4617e30cab8e6251645cf"
+      },
+      "statement": "one reference cloud backup adapter and a conformance contract for S3-compatible, OneDrive, Google Drive, Box, Dropbox, and later destinations."
+    },
+    {
       "id": "CL-2D1D9CF1108E777E6E64",
       "label": "CAPABILITY GATE",
       "source": {
@@ -1957,6 +2199,17 @@
         "semantic_sha256": "2d1d9cf1108e777e6e64f412df7a5e07db9734c0a85c215c194c0bde0bc9acc2"
       },
       "statement": "Route every Model Context Protocol and plugin connection, discovery action, request, response, and side effect through the same kernel capability gateway, policy engine, grant checks, limits, and receipt ledger as core tools."
+    },
+    {
+      "id": "CL-2D23D4DB0DD78F4EC2D8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1884,
+        "semantic_sha256": "2d23d4db0dd78f4ec2d858cdd8ea96cf293cf2fa92498416044cc105fea471b7"
+      },
+      "statement": "Microsoft Graph Outlook and Exchange Online support for manifested mailbox, folder, thread, message, draft, send, reply, forward, attachment, flag, category, event, and shared-mailbox operations."
     },
     {
       "id": "CL-2D2DDAEC132FDF6BFAFD",
@@ -2300,6 +2553,17 @@
       "statement": "tool-result redaction before results enter model context or logs."
     },
     {
+      "id": "CL-33F65E0764FFA84D69C1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1899,
+        "semantic_sha256": "33f65e0764ffa84d69c17522d6ab5ffa778584023b01f972ca440485ee6015bb"
+      },
+      "statement": "Outlook and Google calendar plus CalDAV event, availability, time-zone, recurrence, invitation, response, reminder, resource, conflict, and write semantics."
+    },
+    {
       "id": "CL-3422EE4E24DF406620DE",
       "label": "BUILD",
       "source": {
@@ -2476,6 +2740,17 @@
       "statement": "local shell completion, command help, machine-readable JSON output, and a human-readable default format."
     },
     {
+      "id": "CL-37C886AC5E8BF4390F55",
+      "label": "ROADMAP",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1903,
+        "semantic_sha256": "37c886ac5e8bf4390f5514f53892bb745822ef486fde1d1c8874d954269faa95"
+      },
+      "statement": "Promote Notion, Box, Dropbox, and additional repositories only after their independent manifests and conformance suites pass."
+    },
+    {
       "id": "CL-37F7555CB30F91527BE1",
       "label": "BUILD",
       "source": {
@@ -2575,6 +2850,17 @@
       "statement": "OCI Distribution, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus adapters with digest-first identity."
     },
     {
+      "id": "CL-397CE19D7EDA20C26E32",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2058,
+        "semantic_sha256": "397ce19d7eda20c26e32864ab63b88b9bbf17063ea4cb33b6524d321faef192e"
+      },
+      "statement": "artifact substitution, symlink and path attacks, malformed formats, decompression bombs, denial of service, policy bypass, authority requests, crash residue, removal, and attempted direct promotion."
+    },
+    {
       "id": "CL-3983D11524E93811A3D1",
       "label": "CAPABILITY GATE",
       "source": {
@@ -2661,6 +2947,17 @@
         "semantic_sha256": "3a2414af109d1ae6e635b1f9647ddf1456d5cd5234b0090b8ac673e4bcc339c7"
       },
       "statement": "Keep rollback, mitigation, notification, status change, and work creation as separate exact approvals; incident content cannot trigger them automatically."
+    },
+    {
+      "id": "CL-3B7B7C5D20BE4C7E0A1C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1916,
+        "semantic_sha256": "3b7b7c5d20be4c7e0a1c1642341612857434f5a8fadbf35b0bba7d7de9917b23"
+      },
+      "statement": "Actual Budget support through its approved local API for budget identity, accounts, payees, categories, transactions, rules, schedules, budgets, sync, backup, recovery, and removal."
     },
     {
       "id": "CL-3B88CF601AC12631553B",
@@ -2773,6 +3070,17 @@
       "statement": "an incremental SQLite cache keyed by workspace, path, content hash, Git identity, grammar identity, parser version, and policy version; changed inputs invalidate affected records before they can be cited."
     },
     {
+      "id": "CL-3DB5DC93C9DC1ADC4E56",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2125,
+        "semantic_sha256": "3db5dc93c9dc1adc4e5673da31676b30e17222a3756105861dd9f50bf4321b9e"
+      },
+      "statement": "quick, targeted, and comprehensive report profiles with explicit coverage semantics; only the comprehensive profile may claim whole-codebase completion."
+    },
+    {
       "id": "CL-3DD3D45828D2ABED2130",
       "label": "BUILD",
       "source": {
@@ -2815,6 +3123,17 @@
         "semantic_sha256": "3e25251cbba4dec0b8530ffdf9ea7a13dec0ed8b5b15e98ebc36775a391a6d19"
       },
       "statement": "automatic commit, push, pull-request creation, issue editing, review submission, merge, reset, checkout-discard, and force operations."
+    },
+    {
+      "id": "CL-3E435A88EC11F6246C7D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2119,
+        "semantic_sha256": "3e435a88ec11f6246c7d4d45586fa55e745089db94e0c0fc05b793863e64d793"
+      },
+      "statement": "risk-directed prioritization for high-centrality, privileged, stateful, concurrent, exposed, weakly tested, frequently changed, and historically unstable areas without reducing baseline coverage."
     },
     {
       "id": "CL-3E55938957806DF517CB",
@@ -3070,6 +3389,17 @@
       "statement": "Support cancellation at safe tool and file boundaries."
     },
     {
+      "id": "CL-41A7AED33027F553636A",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2129,
+        "semantic_sha256": "41a7aed33027f553636a76f53dbff63ef95a151a27117d6468729fea0a0f5484"
+      },
+      "statement": "publish language, parser, build-system, repository-size, file-count, graph, context, model, resource, platform, support, limitation, retention, and audit-depth matrices with evidence digests."
+    },
+    {
       "id": "CL-41AFBB5E450E83232947",
       "label": "BUILD",
       "source": {
@@ -3147,6 +3477,28 @@
       "statement": "Local Agent Builder skill \u2014 bounded agent definitions, permission manifests, synthetic trials, evaluations, versions, and packages."
     },
     {
+      "id": "CL-42916A5C3C2DE5E53A8E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2116,
+        "semantic_sha256": "42916a5c3c2de5e53a8e60a45e8b060cacbcb7695095cca3af31ba77c879f85a"
+      },
+      "statement": "encrypted local audit checkpoints and deterministic queues that resume after cancellation, restart, crash, model replacement, and device recovery."
+    },
+    {
+      "id": "CL-429DA00DE4B39DB5754D",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1994,
+        "semantic_sha256": "429da00de4b39db5754d141ecc5ba399b4de6dab61b07f94838fc100f494763a"
+      },
+      "statement": "Prohibit Owner mode activation or renewal from a model, prompt, repository, webpage, message, plugin, workflow, schedule, child agent, stale display, or standing consent."
+    },
+    {
       "id": "CL-42BB209B6A14725C4F80",
       "label": "CAPABILITY GATE",
       "source": {
@@ -3189,6 +3541,17 @@
         "semantic_sha256": "435a76f61076f08d17ea743a4723225dd08f6ba43ad36489775fd48b60264c00"
       },
       "statement": "log-level, log-entry, log-metadata, and logger types."
+    },
+    {
+      "id": "CL-43CBB5D0EA201E3FF69B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2097,
+        "semantic_sha256": "43cbb5d0ea201e3ff69bb34b711fbff83a981ab1c4d048e5787b3b6e6bb074a1"
+      },
+      "statement": "a complete path census with deterministic identities, classifications, hashes where readable, parser state, terminal disposition, errors, exclusions, and dependent records."
     },
     {
       "id": "CL-44A0481A3EE3C65F9166",
@@ -3255,6 +3618,17 @@
         "semantic_sha256": "45fc04d71dd49d3e4d1d168937dc5bebe99f4f57dcbd195f5c0818bc0fc57a08"
       },
       "statement": "Scope each server independently to approved workspace roots, network destinations, credentials, operation classes, response classifications, and expiry."
+    },
+    {
+      "id": "CL-463669958556BD563B7E",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1943,
+        "semantic_sha256": "463669958556bd563b7e331a759a3398493166673faf238cdcdc01718de1a667"
+      },
+      "statement": "disable and remove every new pack independently and together during idle, queued, in-flight, uncertain, stale, and partially synchronized states."
     },
     {
       "id": "CL-463DCF0C44E12A3D7A51",
@@ -3376,6 +3750,17 @@
         "semantic_sha256": "488dea670480f84b5c57cd2c92ade0c09a676a10c39d947c14543f107a6fbcf0"
       },
       "statement": "Derive validation status only from process and artifact evidence; never treat model narration, expected output, or a planned command as proof that a check ran or passed."
+    },
+    {
+      "id": "CL-48DEE313CD6EDC741C35",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2004,
+        "semantic_sha256": "48dee313cd6edc741c3564844f73280b136bf7bcb2fdbd66f93471068cf6c74c"
+      },
+      "statement": "current-fact revalidation and visible stale, conflicting, unavailable, partial, secondary, and inferred source states."
     },
     {
       "id": "CL-490DE50BAE9235C977CA",
@@ -3642,6 +4027,39 @@
       "statement": "exact-preimage patches so edits fail if the file changed after review."
     },
     {
+      "id": "CL-4CE1D0729AAD55275B32",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1900,
+        "semantic_sha256": "4ce1d0729aad55275b32ae1eb4d3fae5f6d630d58b2d35171f38452feac134a5"
+      },
+      "statement": "Microsoft and Google contacts plus CardDAV identity, address, organization, merge, update, duplicate, conflict, and removal semantics."
+    },
+    {
+      "id": "CL-4D3C0A71B9BBDDA1052B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2108,
+        "semantic_sha256": "4d3c0a71b9bbdda1052bcaf7a926fa002b445a98005b751e220379b1a7f9d582"
+      },
+      "statement": "before-and-after repository, filesystem, process, socket, Git metadata, user-data, and hosted-service attestation with exact changed-state failure records."
+    },
+    {
+      "id": "CL-4D3E210A5D299EC1FD97",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1889,
+        "semantic_sha256": "4d3e210a5d299ec1fd974c6733c78641fe1dcac2be2e536c1dc18397f39f6c0e"
+      },
+      "statement": "a Proton Mail Bridge profile limited to its authenticated loopback endpoints and one exact mailbox operation."
+    },
+    {
       "id": "CL-4D5315FECD5EEE7FA2BE",
       "label": "BUILD",
       "source": {
@@ -3818,6 +4236,17 @@
       "statement": "a pinned embedded Git-reading library for v0.1; an installed `git` may be used only by diagnostics and later approved operations after version and path checks."
     },
     {
+      "id": "CL-512F9FB4405E94E156B0",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2115,
+        "semantic_sha256": "512f9fb4405e94e156b0b3034cd29e35121cd09efed587e928761266f1584c88"
+      },
+      "statement": "source-pinned evidence cards with parser facts, neighboring interfaces, tests, model/runtime identity, assumptions, uncertainty, conflicts, confidence, and reverse dependencies."
+    },
+    {
       "id": "CL-5155BD7245188B7E07AB",
       "label": "CAPABILITY GATE",
       "source": {
@@ -3827,6 +4256,17 @@
         "semantic_sha256": "5155bd7245188b7e07ab9282169e1bcd70d8362aae0fe0582f0a0a9049f3e21a"
       },
       "statement": "Provide an interactive `agent chat` command that uses the same guarded runtime, tools, approvals, memory, and conversation store as every other interface."
+    },
+    {
+      "id": "CL-5171BEC5662D5876653A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1901,
+        "semantic_sha256": "5171bec5662d5876653afa0a35b98b5752f866bbf294ccbb705db67843c4c791"
+      },
+      "statement": "Microsoft To Do and Planner, Google Tasks, and local task identity, assignment, due date, status, dependency, reminder, write, and recovery semantics."
     },
     {
       "id": "CL-51A09636A60FBA2D7CFF",
@@ -3950,6 +4390,17 @@
       "statement": "that building, reading, invalidating, and rendering the map leaves the workspace tree, Git index, refs, object set, instructions, and file metadata unchanged."
     },
     {
+      "id": "CL-5322293F3AF77422FC95",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2013,
+        "semantic_sha256": "5322293f3af77422fc95cbf04313cb9e41543d5e55df68602f75d195f053205c"
+      },
+      "statement": "Keep raw credentials out of model context, prompts, chat, arguments, shell history, ordinary environment, logs, receipts, diagnostics, exports, crash data, and continuity snapshots."
+    },
+    {
       "id": "CL-53EE1F38E17520883C1D",
       "label": "BUILD",
       "source": {
@@ -4016,6 +4467,17 @@
       "statement": "Bind every credential to one exact provider, host, tenant, account, project scope, and permitted capability class."
     },
     {
+      "id": "CL-55531D26AB9A18B44375",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1923,
+        "semantic_sha256": "55531d26ab9a18b44375fa731f7279cdd240c4673f7abb0e348f94e0b915f79b"
+      },
+      "statement": "Omit transfers, payments, bill pay, trades, orders, withdrawals, deposits, credit, loans, tax filing, beneficiaries, financial-account administration, and credential recovery from every first-GA schema, manifest, policy, tool, adapter, shell, workflow, and autonomy level."
+    },
+    {
       "id": "CL-558677F55838BB03327B",
       "label": "BUILD",
       "source": {
@@ -4071,6 +4533,17 @@
       "statement": "environment-specific overrides that cannot broaden permissions silently."
     },
     {
+      "id": "CL-56B7181FBA13C406BDF8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1877,
+        "semantic_sha256": "56b7181fba13c406bdf8e34c06e1eb3d27b071236237487178eeee9e55a7bb98"
+      },
+      "statement": "provider manifests for API or protocol version, scopes, objects, operations, events, rate limits, consistency, attachments, formatting, degradation, recovery, and removal."
+    },
+    {
       "id": "CL-56C30BFE5FEF2476EF6E",
       "label": "BUILD",
       "source": {
@@ -4091,6 +4564,17 @@
         "semantic_sha256": "56c6dab7dda39e570dd7e1648d79e8e16432e2d5dc5c0bb8493b072ba8d53d84"
       },
       "statement": "a local task-assignment protocol containing objective, inputs, allowed files, expected output, evidence requirements, due or time limit, dependency state, and return channel."
+    },
+    {
+      "id": "CL-56D7A7C27DD872FB7F11",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Integrated First-GA Closure",
+        "line": 2033,
+        "semantic_sha256": "56d7a7c27dd872fb7f1182685c00ce1603b2c54851b1813e6a23a48ed5dc4a60"
+      },
+      "statement": "disable and remove each command, research, credential, continuity, and model-manager capability separately and together during idle, active, queued, interrupted, and uncertain states."
     },
     {
       "id": "CL-56E423A44E9B62A4B0C1",
@@ -4170,6 +4654,17 @@
       "statement": "a later deep repository-comprehension guide covering feature traces, data flow, permissions, tests, history, semantic retrieval when approved, and citation rules."
     },
     {
+      "id": "CL-579AE968A0CE32930B0F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2114,
+        "semantic_sha256": "579ae968a0ce32930b0f367aa5aa0376a348a4a4d8b6fdde04ff886b8dab424b"
+      },
+      "statement": "coherent package, service, state-boundary, feature, workflow, schema-family, and cross-cutting-concern partitioning with bounded deterministic work packets."
+    },
+    {
       "id": "CL-57A26109DDD0F8B98294",
       "label": "CAPABILITY GATE",
       "source": {
@@ -4223,6 +4718,17 @@
         "semantic_sha256": "58467815482d5dbb6d08f4c380f1b114ddff15311e8acc2dccfad50bbb7e8d6c"
       },
       "statement": "consolidation that runs at a meaningful checkpoint or after an idle period, never while a task is still changing, and records which model and sources produced the consolidated entry."
+    },
+    {
+      "id": "CL-5868BD72A7174FB4FFA1",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1945,
+        "semantic_sha256": "5868bd72a7174fb4ffa11e588df9df649f86cb3e97ac37f1b20a21242efad1d4"
+      },
+      "statement": "keyboard-only, screen-reader, focus, status, error, contrast, dynamic-content, and confirmation behavior for autonomy, unified inbox, synchronization health, communication previews, financial reports, cloud observations, and emergency disablement."
     },
     {
       "id": "CL-58B1BB8DD2A004D473D6",
@@ -4311,6 +4817,17 @@
         "semantic_sha256": "59534f2341de73835c90711a9b778f4afb46565488f07165394bec72a5ea454e"
       },
       "statement": "Reject remote semantic indexing, remote embedding, remote reranking, or source upload while the product or session is represented as local mode."
+    },
+    {
+      "id": "CL-59926C945E38A164E247",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2015,
+        "semantic_sha256": "59926c945e38a164e24709e51ef2d5d36ab90cd31636f8e6aa53e05b581c42e6"
+      },
+      "statement": "Prohibit live operational databases, model stores, indexes, locks, queues, sockets, and temporary files on cloud-synchronized, remote, or network storage."
     },
     {
       "id": "CL-5A1A5A520093A9D1A1AC",
@@ -4412,6 +4929,17 @@
       "statement": "`sha256()`, `clean()`, `normalized()`, `normalized_id()`, `normalized_filename()`, `normalized_url()`, `safe_csv_value()`, and `read_csv()` helpers."
     },
     {
+      "id": "CL-5BDF15A7BD3441EDAB19",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1880,
+        "semantic_sha256": "5bdf15a7bd3441edab191b16e90ce74244bcf3a1fe45c1f5fafb8b84cc91f321"
+      },
+      "statement": "complete connector removal including credentials, caches, cursors, webhooks, schedules, indexes, workers, sockets, network scopes, and retained data."
+    },
+    {
       "id": "CL-5C66BB580AABF4CFCCB5",
       "label": "BUILD",
       "source": {
@@ -4443,6 +4971,17 @@
         "semantic_sha256": "5cfd7089829b1bbb2a4e9fa7397a073fc6c8fc035bcef15de544321fb471c6a8"
       },
       "statement": "alternative generation that compares at least two viable approaches when architecture, access, cost, or irreversible choices are involved."
+    },
+    {
+      "id": "CL-5D9F0B1EA0B0D3679BBD",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1936,
+        "semantic_sha256": "5d9f0b1ea0b0d3679bbd12f761b98ed3429b8e8e4b682173e88c063bc09da0ad"
+      },
+      "statement": "every cloud write, execute, deploy, secret, identity, policy, logging, budget, upload, delete, and administration family is absent or denied before a provider request."
     },
     {
       "id": "CL-5DE20A9DDF32469ACD97",
@@ -4489,6 +5028,17 @@
       "statement": "a public `WorkPacket` data class for the defined contract fields."
     },
     {
+      "id": "CL-5E7EEB8AA80BA87D506C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2126,
+        "semantic_sha256": "5e7eeb8aa80ba87d506c63225965b4fd80f13823a1e8ae3e40471c9c9a01a81c"
+      },
+      "statement": "professional reports covering architecture, structure, technical debt, progress, viability, security, operations, strengths, limitations, strategic recommendations, unresolved questions, and coverage totals."
+    },
+    {
       "id": "CL-5E8B4272D9E44F3A32DA",
       "label": "BUILD",
       "source": {
@@ -4509,6 +5059,28 @@
         "semantic_sha256": "5e94c11598273021d9f667f792d8071acdd0c3bf3ad93f0504e01c54ccec2345"
       },
       "statement": "a maximum-context test that proves the agent can continue after condensation without repeating completed work or losing the active request."
+    },
+    {
+      "id": "CL-5E9B03DDAF70172E62D7",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1902,
+        "semantic_sha256": "5e9b03ddaf70172e62d707adfd72e19bb587b9cad3f546cd29171dfa7137a944"
+      },
+      "statement": "OneDrive, SharePoint, Google Drive, and Confluence document identity, version, content, attachment, permission, link, visibility, draft, write, conflict, and removal semantics."
+    },
+    {
+      "id": "CL-5EE120A2678AA081F1DD",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1878,
+        "semantic_sha256": "5ee120a2678aa081f1ddaaf9290c27c25a8e3b4bf6bb02578f14bd5e48705187"
+      },
+      "statement": "Keep unsupported provider operations absent from tool registration and expose permission or tenant-policy limitations truthfully."
     },
     {
       "id": "CL-5FA05BA7D06DB33533B9",
@@ -4819,6 +5391,17 @@
       "statement": "a local capability catalog that shows which package supplies each tool or skill and why it was selected for the current task."
     },
     {
+      "id": "CL-635BEBE8E25842D56613",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1914,
+        "semantic_sha256": "635bebe8e25842d566133eabe09dd781cb8148ae1eefceb773d9cb34a6b4c646"
+      },
+      "statement": "CSV, OFX, and QFX profile detection, parsing, source hashing, account identity, encoding, duplicate protection, pending-to-posted matching, transfer matching, and error reporting."
+    },
+    {
       "id": "CL-63D828EE773633D0120A",
       "label": "BUILD",
       "source": {
@@ -4951,6 +5534,17 @@
       "statement": "a deterministic packet serializer and parser."
     },
     {
+      "id": "CL-66C7C5D6B17052B9F712",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2027,
+        "semantic_sha256": "66c7c5d6b17052b9f7123ef869598a706fd8feca7d9bc559794ac9c4ec34bd05"
+      },
+      "statement": "source, redirect, artifact, manifest, license, hash, size, tokenizer, template, runtime, platform, low-resource, scan, stale-preview, interruption, activation, rollback, and deletion mutations."
+    },
+    {
       "id": "CL-66EBAF7BA707CA39D0E8",
       "label": "BUILD",
       "source": {
@@ -4982,6 +5576,17 @@
         "semantic_sha256": "67b9eea5152954b5f87d50907867575cabe4fa2c7375004b4af709f30869f5b7"
       },
       "statement": "sequential agent pipelines in which each stage receives only the approved output of the previous stage, such as planner, implementer, tester, and verifier."
+    },
+    {
+      "id": "CL-6802E48C4F7929D2A1D8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1931,
+        "semantic_sha256": "6802e48c4f7929d2a1d8877c9ae2a7433bd7cd538e67255a51c73d66d08a03cb"
+      },
+      "statement": "Azure tenant and subscription inventory, resource graph, configuration, tags, health, bounded Monitor metrics and logs, activity references, security observations, deployment identity, and Cost Management summaries."
     },
     {
       "id": "CL-687CB6073CC4B7A18AA1",
@@ -5281,6 +5886,17 @@
       "statement": "Reject unrestricted, \"yolo,\" blanket, wildcard, or approve-everything tool execution in every interface and operating mode."
     },
     {
+      "id": "CL-6E248C7A24680C556E38",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1888,
+        "semantic_sha256": "6e248c7a24680c556e381edab45b3f8451a04e557922024530056d26f01389ae"
+      },
+      "statement": "capability-detected IMAP, SMTP, and JMAP with exact server identity, TLS, authentication reference, mailbox, folder, extension, rate, and disconnect behavior."
+    },
+    {
       "id": "CL-6E348D08F69146FDA4FE",
       "label": "BUILD",
       "source": {
@@ -5301,6 +5917,17 @@
         "semantic_sha256": "6e8881254c791f4ec45a9afef184ac5f2b2e3b244b53b2955a2d1321a4cd3ca4"
       },
       "statement": "a `PolicyEngine` that evaluates the grant, user authority, workspace scope, file scope, command scope, network scope, current preimages, expiration, nonce, use count, and expected side effects."
+    },
+    {
+      "id": "CL-6EA24445741BA63A8659",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1922,
+        "semantic_sha256": "6ea24445741ba63a86591cceaed02d164d9701f06aff4759083c7355e8620f43"
+      },
+      "statement": "QuickBooks Online and Xero reads, drafts, and approval-gated non-money-movement accounting writes only after precision, period, tax, reconciliation, idempotency, recovery, and removal gates pass."
     },
     {
       "id": "CL-6EEE6FF3CC36077D26E5",
@@ -5501,6 +6128,17 @@
       "statement": "a `ModelConfig` class with model name, endpoint, context limit, output limit, timeout, temperature, tool-use support, and enabled state."
     },
     {
+      "id": "CL-71542C60F989FD3509B1",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1944,
+        "semantic_sha256": "71542c60f989fd3509b143e92e3d5683fde1030c1da5f4767a1aa45ab8f2c81e"
+      },
+      "statement": "rerun complete strict-local and delivery suites after removal with zero residual credential, cache, cursor, webhook, schedule, index, process, socket, listener, or network authority."
+    },
+    {
       "id": "CL-71678A2D105287B14817",
       "label": "BUILD",
       "source": {
@@ -5699,6 +6337,17 @@
       "statement": "a portfolio view that summarizes each active project by purpose, owner, status, next milestone, dependencies, decisions, risks, and next action."
     },
     {
+      "id": "CL-7435E03D61212A12A9AD",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2023,
+        "semantic_sha256": "7435e03d61212a12a9ad56da27d1369365307e38cedc7a6acaceebbd48b77f83"
+      },
+      "statement": "native Chat intents for compatible-model listing, tradeoff explanation, user-confirmed download, import, verify, activate, compare, rollback, remove, and storage cleanup."
+    },
+    {
       "id": "CL-750D3A864EC688EE86EE",
       "label": "CAPABILITY GATE",
       "source": {
@@ -5743,6 +6392,28 @@
       "statement": "Start scheduled and unattended execution with read-only jobs and local notifications only; prohibit scheduled filesystem writes, generic shell commands, connector writes, publication, and remote state changes until unattended authority has a separate threat model and passing adversarial tests."
     },
     {
+      "id": "CL-75BEFF1448A7325254E2",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1893,
+        "semantic_sha256": "75beff1448a7325254e2e5cc077ce4610222165951ade0a7ff79113254c548a7"
+      },
+      "statement": "outward-effect previews containing provider, tenant, account, sender, recipients, channel, thread, visibility, subject, body, formatting, mentions, quotes, links, attachments, classification, provider transformation, idempotency, and postcondition."
+    },
+    {
+      "id": "CL-75EEA8262291851AC5A8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2055,
+        "semantic_sha256": "75eea8262291851ac5a8bf16dfa1350810f2920ad821f56b6e5960d555ba9b1c"
+      },
+      "statement": "user-selected import with source identity, observed license, provenance gaps, hashes, quarantine, format checks, parser hardening, resource preflight, and explicit warnings."
+    },
+    {
       "id": "CL-75FB001921EFAF878D91",
       "label": "CAPABILITY GATE",
       "source": {
@@ -5752,6 +6423,17 @@
         "semantic_sha256": "75fb001921efaf878d91e7af5f327086b38cb00193e22155745546826173c003"
       },
       "statement": "Keep force push, secret changes, repository administration, organization administration, and ruleset administration absent unless separately promoted to L5."
+    },
+    {
+      "id": "CL-763886E45024342E43EA",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2118,
+        "semantic_sha256": "763886e45024342e43ea4b7ff018ae68b9cd29214f4d18e0f8d05c8eccc131a8"
+      },
+      "statement": "cross-module dependency, call, state, data, event, error, configuration, authorization, lifecycle, requirement, decision, test, deployment, and support reconciliation passes."
     },
     {
       "id": "CL-76452EDFA9B1A039EDA2",
@@ -5974,6 +6656,17 @@
       "statement": "a conversation relationship view showing original conversation, resumed branch, superseded summary, handoff, and related project without requiring a graph database."
     },
     {
+      "id": "CL-7B441C8118454399859C",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1942,
+        "semantic_sha256": "7b441c8118454399859cbfddab49748c43dd0945983005216e63d4a904b5ac3b"
+      },
+      "statement": "end-to-end communication-to-work, meeting-to-commitment, bill-to-budget, receipt-to-transaction, cloud-observation-to-delivery-plan, and incident-to-approved-communication workflows."
+    },
+    {
       "id": "CL-7B46420E60861A87283C",
       "label": "BUILD",
       "source": {
@@ -6172,6 +6865,17 @@
       "statement": "safe comma-separated-value parsing and writing."
     },
     {
+      "id": "CL-7FF4CA7F65A474C71008",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1905,
+        "semantic_sha256": "7ff4ca7f65a474c71008ef5f9abac7b397daba0dc0c91deeeddf1390c01db597"
+      },
+      "statement": "deterministic meeting agenda, transcript-import, decision, commitment, follow-up, deadline, attachment, and cited source workflows."
+    },
+    {
       "id": "CL-801CF597489CFD03258E",
       "label": "BUILD",
       "source": {
@@ -6192,6 +6896,17 @@
         "semantic_sha256": "801eb97626d12e517ced9925bb2aafa26c68d164327e6449e4b8f5072479f893"
       },
       "statement": "an ignore policy for `.obsidian/`, plugin folders, caches, trash, attachments, and other hidden or binary content; read any excluded area only when the user names it and the policy permits it."
+    },
+    {
+      "id": "CL-802628758A568B05CB9B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1862,
+        "semantic_sha256": "802628758a568b05cb9b67e94c769d061145cd3387ef96f586a9edba0c046134"
+      },
+      "statement": "a closed autonomy-level schema and kernel policy intersection across global, pack, connector, account, workspace, operation, destination, recipient, channel, payload, schedule, budget, and expiry ceilings."
     },
     {
       "id": "CL-80451A0217A7D60497DD",
@@ -6225,6 +6940,17 @@
         "semantic_sha256": "807d4dc8f2fac7b328cb0267097c5c502195e1a12436e5aa4bbddd8c930ae881"
       },
       "statement": "Reject automatic download, installation, enabling, updating, or execution of public plugins, skills, hooks, agent packages, models, or capability bundles."
+    },
+    {
+      "id": "CL-80AB679606C745C09987",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2101,
+        "semantic_sha256": "80ab679606c745c09987aded9a8a36654e79201dfcfa50e7b747f5c2521701a2"
+      },
+      "statement": "Prohibit embeddings, mutable names, model summaries, or retrieval rankings from serving as canonical identity, coverage, dependency, authority, or evidence."
     },
     {
       "id": "CL-80BEA5374F6D786CE3B5",
@@ -6414,6 +7140,17 @@
       "statement": "`read_multiple_text_files(paths)` with a strict file-count and byte budget."
     },
     {
+      "id": "CL-851C8EB6EE4A8F0D5835",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2057,
+        "semantic_sha256": "851c8eb6ee4a8f0d5835af210787f9b1b8c4ce4927d05920c0c04b2beebd1baa"
+      },
+      "statement": "Require complete normal model admission and independent review before any experimental artifact can enter the approved catalog or ordinary AgentMage runtime."
+    },
+    {
       "id": "CL-85202703519FDA7BCE12",
       "label": "BUILD",
       "source": {
@@ -6502,6 +7239,17 @@
       "statement": "retention enforcement and cryptographic deletion according to the data-classification policy."
     },
     {
+      "id": "CL-85C3FE584546033A9C6E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2003,
+        "semantic_sha256": "85c3fe584546033a9c6e893a496c72fdde05644c4b5a2359c4627f1553dc5e31"
+      },
+      "statement": "claim-level title, URL, retrieval time, publication date, event date where known, excerpt hash, source-quality, and inference-state citations."
+    },
+    {
       "id": "CL-85EFD162A86F9EDCD40D",
       "label": "BUILD",
       "source": {
@@ -6568,6 +7316,17 @@
       "statement": "backup and rollback for agent configuration."
     },
     {
+      "id": "CL-86A119BB51A0F04F33D7",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1921,
+        "semantic_sha256": "86a119bb51a0f04f33d74f9403244e8f0caf45ec6fca785c3faf3e8dded53bf0"
+      },
+      "statement": "explainable statistical outlier and potential-fraud indicators with feature, baseline, method, confidence, limitation, drift, source, and user-disposition records."
+    },
+    {
       "id": "CL-8707B525B0B15CAE44FB",
       "label": "VERIFY",
       "source": {
@@ -6612,6 +7371,17 @@
       "statement": "patch proposals that name files, symbols, behavior, tests, risk, and rollback before editing."
     },
     {
+      "id": "CL-87A0922F65E2DC5C81C9",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2006,
+        "semantic_sha256": "87a0922f65e2dc5c81c95d6bd8414ada9c341c53e86b50781979a7afc4622617"
+      },
+      "statement": "Require an exact private-data disclosure preview before any workspace, memory, message, financial, connector, or credential-derived field can leave the device for research."
+    },
+    {
       "id": "CL-87ED90D212CAE71EE182",
       "label": "BUILD",
       "source": {
@@ -6654,6 +7424,17 @@
         "semantic_sha256": "89248b2621d801e28cf68014d80cd607793dd2a857ef26cd8fb0ffc7380af8db"
       },
       "statement": "path-traversal and symlink-escape fixtures."
+    },
+    {
+      "id": "CL-899F6571F02867D33983",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2120,
+        "semantic_sha256": "899f6571f02867d33983dd80fb510f3f01b15836e7c45dd54671d7a699f0acd6"
+      },
+      "statement": "Retain contradictory evidence and revisit affected partitions before any global conclusion; never collapse unresolved conflict into certainty."
     },
     {
       "id": "CL-89E4DF888017FE100516",
@@ -6709,6 +7490,17 @@
         "semantic_sha256": "8a93f44aeed7a22faf7ee9cb16ccd9986e928f207ed75bc55acabcb854edfb4f"
       },
       "statement": "Treat repository configuration as untrusted data and reject arbitrary executable repository configuration, setup scripts, hooks, tasks, or commands unless separately inspected and granted."
+    },
+    {
+      "id": "CL-8AA47445347A1DA096B1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1932,
+        "semantic_sha256": "8aa47445347a1da096b1128ce81e4a3d9725548f6d73f0f0d7dda823784e09a0"
+      },
+      "statement": "Google Cloud organization, folder, project, and asset inventory, configuration, labels, health, bounded Monitoring metrics and logs, audit references, security observations, deployment identity, and billing summaries."
     },
     {
       "id": "CL-8AF91F396FAD42577883",
@@ -6854,6 +7646,17 @@
       "statement": "backlink and relationship traversal with maximum depth."
     },
     {
+      "id": "CL-8D25EA285BAFBA9DF82E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1866,
+        "semantic_sha256": "8d25ea285bafba9df82e9270b0ae1e5dc890c953576791d0e8e2fa397361d0bf"
+      },
+      "statement": "Keep financial money movement and cloud mutation prohibited regardless of autonomy level, standing consent, schedule, workflow, or model request."
+    },
+    {
       "id": "CL-8D3B5C92D88B89C7A23B",
       "label": "BUILD",
       "source": {
@@ -6909,6 +7712,17 @@
       "statement": "reason-code dictionaries and explanation helpers."
     },
     {
+      "id": "CL-8E37EAF96D685C6C198A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2014,
+        "semantic_sha256": "8e37eaf96d685c6c198a4df42cbcc2eebc025bfbff09a04e89e893da52eeac9c"
+      },
+      "statement": "immutable encrypted local snapshots with manifests, integrity trees, classifications, exclusions, retention, atomic completion, staging restore, migration, rollback, and deletion."
+    },
+    {
       "id": "CL-8E563D63145C37CD324A",
       "label": "CAPABILITY GATE",
       "source": {
@@ -6951,6 +7765,17 @@
         "semantic_sha256": "8f93ad96ae8cd55c07419da6fd7499121463bf2b25038629156b96f2159271fc"
       },
       "statement": "a second manual approval pause before every push that updates an open pull request."
+    },
+    {
+      "id": "CL-8F999CD43BFB8C8ABE6D",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2005,
+        "semantic_sha256": "8f999cd43bfb8c8abe6d2619d559923e8fccb5ffe9cc7c0fd55b3846f87f8286"
+      },
+      "statement": "Separate public research from authenticated browser state, form submission, upload, publication, purchase, account changes, and every other external effect."
     },
     {
       "id": "CL-8FBB9E6EF9598D5A8289",
@@ -7006,6 +7831,28 @@
         "semantic_sha256": "9047b8c403085e4fdd98d5cd644b4fc8563497b8058d1eeabbcfb22c1715e751"
       },
       "statement": "GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins definition, run, job, step, annotation, log, artifact, rerun, cancel, approval, and dispatch adapters."
+    },
+    {
+      "id": "CL-90543F5FDDB9260C532F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2106,
+        "semantic_sha256": "90543f5fddb9260c532fa5c776fad09afec6f0b33af504ee92a8dc2ceee6b9d5"
+      },
+      "statement": "disposable copy-on-write verification workspaces for builds, tests, resolution, generation, coverage, formatting, and language-service initialization."
+    },
+    {
+      "id": "CL-9055180CB3C2F266961E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2130,
+        "semantic_sha256": "9055180cb3c2f266961e5f2538547c8d5e45f372c1d03b199dbcde60a443f253"
+      },
+      "statement": "Keep `G-GA` blocked until Sprint 166 passes `AM-GAD-004`, `AT-GA-004`, every Decision 0011 requirement, and all assigned security and reviewer protocols."
     },
     {
       "id": "CL-90C6B9CFCCE0604FB9EC",
@@ -7228,6 +8075,39 @@
       "statement": "signed-commit verification equivalent to `git verify-commit`."
     },
     {
+      "id": "CL-93A59E5925102F70934D",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2028,
+        "semantic_sha256": "93a59e5925102f70934d5ae6f0df875b85b6129a99efde39980e665dd26020da"
+      },
+      "statement": "list Muse Glimmer as candidate only until verified first-party evidence produces a complete admission disposition; do not assume open-source status, support, compatibility, or hardware fit."
+    },
+    {
+      "id": "CL-93ED83AEE859B0218E0E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1997,
+        "semantic_sha256": "93ed83aee859b0218e0efde196e7d1087b0bbff5359c70000894658603b66d12"
+      },
+      "statement": "Keep administrator or root elevation, credential injection, and secret environment imports separate from Owner-mode activation and separately authorized per operation."
+    },
+    {
+      "id": "CL-93F6DF34C0D1D686EBE8",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2053,
+        "semantic_sha256": "93f6df34c0d1d686ebe846d75d35fbdfd258a25a4c010a9fe905c6a1476c1c87"
+      },
+      "statement": "Retain the non-Chinese and non-Chinese-derived model rule unless a later accepted decision explicitly supersedes it."
+    },
+    {
       "id": "CL-94049CB0E187BE456596",
       "label": "BUILD",
       "source": {
@@ -7281,6 +8161,39 @@
         "semantic_sha256": "951f10293f6be95da8318186f6eb024fcc5fa4fbb8ee49681bb65ec2dfcd2314"
       },
       "statement": "source resolution from every structural record to workspace-relative path, content hash, line range, parser identity, and Git identity when available."
+    },
+    {
+      "id": "CL-953B3D3DB1C93E0941EE",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2110,
+        "semantic_sha256": "953b3d3db1c93e0941ee2270abeb2fee7d7361e6ebe44b0bc3985e8482cde77c"
+      },
+      "statement": "symlink, hard-link, mount, archive, race, special-file, hook, configuration, build-script, generated-output, parser, language-server, submodule, and repository-instruction attacks."
+    },
+    {
+      "id": "CL-95635975F44849EB0808",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1865,
+        "semantic_sha256": "95635975f44849eb08080bfeeb30508d1ee1ce146d8f4260356ca9214e847a4b"
+      },
+      "statement": "a global external-write disable action that blocks new grants, cancels queues, reconciles in-flight effects, and leaves read-only diagnostics available."
+    },
+    {
+      "id": "CL-960C881056A68F40D123",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2025,
+        "semantic_sha256": "960c881056a68f40d123e142b2a13f149c3fdbb74808dc233f641d5c89d5d5e9"
+      },
+      "statement": "separate download/import quarantine, bounded resume, hash/signature verification, malware and format scan, admission self-test, atomic activation, cancellation, crash recovery, and rollback."
     },
     {
       "id": "CL-961D725E5C37F5377463",
@@ -7624,6 +8537,17 @@
       "statement": "a meeting-preparation brief containing purpose, desired outcome, attendees and roles, relevant history, prior decisions, open questions, risks, proposed agenda, and files to review."
     },
     {
+      "id": "CL-9B52E875C3368536F71B",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2098,
+        "semantic_sha256": "9b52e875c3368536f71bc99a72065f58c75c38205245c7c280dbe7fdff74053a"
+      },
+      "statement": "Keep generated, vendored, ignored, untracked, binary, linked, archived, Large File Storage, submodule, worktree, inaccessible, oversized, malformed, and changing content visible even when semantic analysis excludes it."
+    },
+    {
       "id": "CL-9B88CD6448DE3131BE82",
       "label": "BUILD",
       "source": {
@@ -7633,6 +8557,17 @@
         "semantic_sha256": "9b88cd6448de3131be829356e92ecec1239568992cb6f5aaab00f610cb0ca607"
       },
       "statement": "a repository map containing packages, applications, services, libraries, entry points, configuration, scripts, tests, documentation, generated code, and external dependencies."
+    },
+    {
+      "id": "CL-9BFB1A668B1226F1DF7D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1863,
+        "semantic_sha256": "9bfb1a668b1226f1df7d7a966bc1d974f2d512e130eaa489c5327c9be3cb3df2"
+      },
+      "statement": "the native Visual Studio Code Autonomy control as a non-authoritative display and authenticated policy-change surface."
     },
     {
       "id": "CL-9C429212137B98D05D84",
@@ -7866,6 +8801,17 @@
       "statement": "Do not persist raw attachments, full tool output, environment variables, prompts, or model responses by default; retain hashes, bounded evidence excerpts, and receipt metadata only when sufficient."
     },
     {
+      "id": "CL-A1D652DAFB7FA8A9CC65",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Integrated First-GA Closure",
+        "line": 2034,
+        "semantic_sha256": "a1d652dafb7fa8a9cc6569dc026d66167583a1da648c0b7d98a1a7bfa2934400"
+      },
+      "statement": "rerun strict-local, delivery, productivity, finance, cloud-observer, model, accessibility, recovery, update, rollback, and uninstall suites after removal."
+    },
+    {
       "id": "CL-A1FA88E853A8490BF4CC",
       "label": "BUILD",
       "source": {
@@ -7910,6 +8856,17 @@
       "statement": "deny-by-default policies for delete, overwrite, commit, push, publish, upload, send, deploy, database write, and credential changes."
     },
     {
+      "id": "CL-A2A52C304C24A4CA1F62",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2109,
+        "semantic_sha256": "a2a52c304c24a4ca1f6283d4b838efaaa89ece0fd1eb74d6b90e4ff34cb1f09c"
+      },
+      "statement": "pre-model secret detection, classification, typed redaction, restricted-file handling, canary scanning, and retention controls."
+    },
+    {
       "id": "CL-A2A6DB991DD424E2E7E4",
       "label": "BUILD",
       "source": {
@@ -7919,6 +8876,17 @@
         "semantic_sha256": "a2a6db991dd424e2e7e4d4f4d38cf6e4777e5855fb81861245bc78adfb767c4d"
       },
       "statement": "contact-card, project-card, meeting-note, communication-note, and task-list extractors."
+    },
+    {
+      "id": "CL-A2AAFEFC572C4F875030",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1907,
+        "semantic_sha256": "a2aafefc572c4f875030e8ad13c9c0874da05d6438b039b5f111245ca73f132a"
+      },
+      "statement": "Prohibit workflow self-edit, recursive expansion, hidden branches, undeclared destinations, approval aggregation, message-created instructions, and cross-pack grant reuse."
     },
     {
       "id": "CL-A2CBAF225E1DC6426BDE",
@@ -7965,6 +8933,17 @@
       "statement": "a fictional Git repository with tests and one deliberate defect."
     },
     {
+      "id": "CL-A3EC6BB837BBA3BC6FE3",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1993,
+        "semantic_sha256": "a3ec6bb837bba3bc6fe3eedbbd09fb180bf92cf89b3cd5b7aa88df21f10f9128"
+      },
+      "statement": "Require direct authenticated user activation, exact duration, visible high-risk state, non-replayable launch identity, panic stop, and automatic revocation for Owner mode."
+    },
+    {
       "id": "CL-A3ED9E9735AF67CC3658",
       "label": "BUILD",
       "source": {
@@ -8007,6 +8986,17 @@
         "semantic_sha256": "a4f62f6b63e8bd69230f1014b55e3d02337e76c895d7753971566c1a29712d09"
       },
       "statement": "Begin substantial work with a compact problem frame containing the objective, known facts, constraints, unknowns, acceptance checks, risks, and authority boundary."
+    },
+    {
+      "id": "CL-A4F6F58BA26FFBB9DAE7",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1917,
+        "semantic_sha256": "a4f6f58ba26ffbb9dae72744424dcf957dd5a58b34032562d1e4e9a574b72873"
+      },
+      "statement": "independently admitted read-only transaction, balance, liability, investment, recurring-stream, and statement adapters with consent, scope, freshness, cursor, revocation, and deletion state."
     },
     {
       "id": "CL-A5860E0F5C86E1EA35AB",
@@ -8062,6 +9052,17 @@
         "semantic_sha256": "a64371cd092936d7d348f6ed2fde0db1cb6a1880397b5bcb53dfd7e09f0022ed"
       },
       "statement": "coding workflows on fictional repositories for Python, TypeScript, JavaScript, Go, shell, Structured Query Language, and mixed-language projects before enabling edits in a real repository."
+    },
+    {
+      "id": "CL-A689070036994387D7E7",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Read-Only and Sensitive-Data Protection",
+        "line": 2107,
+        "semantic_sha256": "a689070036994387d7e70e28459f414a1d4e5e0ba14e0108a732e7125c7867c2"
+      },
+      "statement": "Start audit workers without network, credentials, provider effects, hosted writes, or command authority beyond the exact read-only or disposable verification plan."
     },
     {
       "id": "CL-A6D115E22016242D7951",
@@ -8174,6 +9175,17 @@
       "statement": "a `MemoryRecord` with evidence reference, content hash, created time, last verified time, status, sensitivity, retention class, and expiration."
     },
     {
+      "id": "CL-A8188F87DDD25D3A06DB",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Integrated First-GA Closure",
+        "line": 2036,
+        "semantic_sha256": "a8188f87ddd25d3a06db8d35eb6554653734f8d7ae74b6406770675276fee4c7"
+      },
+      "statement": "Preserve Sprint 156 as a stable expanded-productivity checkpoint and keep `G-GA` blocked until Sprint 166 passes every Decision 0010 first-GA requirement and acceptance test."
+    },
+    {
       "id": "CL-A831AA45F34074041CB8",
       "label": "BUILD",
       "source": {
@@ -8196,6 +9208,17 @@
       "statement": "synthetic Word, Portable Document Format, spreadsheet, comma-separated-value, JSON, image, and archive fixtures."
     },
     {
+      "id": "CL-A86BD9AFC1CF09B3D6F1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1912,
+        "semantic_sha256": "a86bd9afc1cf09b3d6f133a488900fe611bf82836043a85199f9220319dc465c"
+      },
+      "statement": "canonical financial account, institution, statement, transaction, pending, posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, correction, receipt, invoice, reimbursement, tax label, and reconciliation records."
+    },
+    {
       "id": "CL-A8846B5CF3E42370510F",
       "label": "CAPABILITY GATE",
       "source": {
@@ -8205,6 +9228,17 @@
         "semantic_sha256": "a8846b5cf3e42370510ff5b7eba89818c2718b3fc748d1898e657f2ad3923bb3"
       },
       "statement": "Make each semantic index opt-in per workspace, record the exact included roots and files, and require explicit user approval before first construction or scope expansion."
+    },
+    {
+      "id": "CL-A8DC08BEC04C277C003E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2012,
+        "semantic_sha256": "a8dc08bec04c277c003eb21c3f7b43a89a4c1f1fc114833410c26cfc1e850d44"
+      },
+      "statement": "system-browser and device OAuth, short-lived token, Secure Shell agent, certificate-reference, rotation, revocation, expiry, and reauthentication workflows where providers support them."
     },
     {
       "id": "CL-A939E2952B84C933C849",
@@ -8526,6 +9560,17 @@
       "statement": "per-plugin filesystem, command, network, credential, connector, and publication permissions enforced by the same policy engine as core tools."
     },
     {
+      "id": "CL-AFA26EF9D1C77DA858DB",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2017,
+        "semantic_sha256": "afa26ef9d1c77da858dbcabe74d8d0a766ff83578801711831c67576fc74a2d5"
+      },
+      "statement": "Bind cloud backup to one exact encrypted destination namespace and keep its write authority completely separate from read-only Cloud Observer."
+    },
+    {
       "id": "CL-AFB9E2FFFCDD9F131662",
       "label": "BUILD",
       "source": {
@@ -8603,6 +9648,17 @@
       "statement": "a secret-store adapter that uses the operating-system keychain or another approved local secret manager; tools receive only the credential they need for the shortest practical time."
     },
     {
+      "id": "CL-B076D3F89D189531DE00",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2124,
+        "semantic_sha256": "b076d3f89d189531de00fe8503509c9088540b4f5290047bd4282a143acfe403"
+      },
+      "statement": "finding schemas for identity, category, severity, confidence, impact, status, evidence, graph paths, counterevidence, uncertainty, recommendation, deduplication, conflict, supersession, and verification."
+    },
+    {
       "id": "CL-B088E71789828417B236",
       "label": "VERIFY",
       "source": {
@@ -8625,6 +9681,17 @@
       "statement": "`validate_transition()` for validating work-state changes."
     },
     {
+      "id": "CL-B0A072E1C979C15528A8",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1879,
+        "semantic_sha256": "b0a072e1c979c15528a826f7f5862edd30d280e257fa4595246e93feb1020e82"
+      },
+      "statement": "event forgery, replay, duplication, omission, reordering, cursor loss, backfill, clock skew, rate limit, revocation, outage, partition, and restart."
+    },
+    {
       "id": "CL-B174F78398785419B204",
       "label": "BUILD",
       "source": {
@@ -8645,6 +9712,17 @@
         "semantic_sha256": "b1938a54884721d10fbd6f0a2dc7fd757cd9a418941ed8423bf740898221c766"
       },
       "statement": "native `LlamaCppMetalClient` and `LlamaCppLinuxClient` adapters plus a `DockerModelRunnerClient` for approved isolated Linux use, all hidden behind `LocalModelRuntime` and all consuming the same versioned profile and conformance fixtures."
+    },
+    {
+      "id": "CL-B1968279B0927EC9A3BB",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1925,
+        "semantic_sha256": "b1968279b0927ec9a3bbeb1fef06adc3aa662020b2a50b1eaafa57784655d6e8"
+      },
+      "statement": "financial precision, rounding, currency, overflow, import, duplicate, pending and posted, transfer, split, correction, statement, reconciliation, budget, forecast, anomaly, privacy, crash, recovery, and removal campaigns."
     },
     {
       "id": "CL-B19981174454C9B4CD91",
@@ -8779,6 +9857,17 @@
       "statement": "an answer-claim ledger connecting rendered statements to evidence state, citations, deterministic method where applicable, model/runtime manifest for inferences, and final completion receipt."
     },
     {
+      "id": "CL-B5794555A05651B1F99F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2099,
+        "semantic_sha256": "b5794555a05651b1f99f0375b97d1676613b3bab88e4ce6633b7bb7cd0fb28bd"
+      },
+      "statement": "compiler, abstract-syntax-tree, language-service, package, build, schema, test, workflow, source-control, and exact-search adapters behind versioned parser contracts."
+    },
+    {
       "id": "CL-B598A5226270AC57B87B",
       "label": "VERIFY",
       "source": {
@@ -8788,6 +9877,17 @@
         "semantic_sha256": "b598a5226270ac57b87b237dccf03daaa15a6849394478a29a54ed16c0227df5"
       },
       "statement": "which Python environment contains or may install `python-docx`; it is not available in the current global Python environment."
+    },
+    {
+      "id": "CL-B59D3EFD89C4E2E01E8E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1864,
+        "semantic_sha256": "b59d3efd89c4e2e01e8e79bca9e6bf5d50a1f01f954efd381d370dcd1e50e65b"
+      },
+      "statement": "exact autonomy-delta previews, versioned decisions, stale-state rejection, session reauthentication, expiry, cancellation, and rollback to a narrower policy."
     },
     {
       "id": "CL-B5AF844F268E6D9DE3F3",
@@ -8823,6 +9923,17 @@
       "statement": "a document register containing title, purpose, owner, version, status, source path, reviewers, approval state, related meeting, retention class, and content hash."
     },
     {
+      "id": "CL-B5EA89FCB911800819AC",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2127,
+        "semantic_sha256": "b5ea89fcb911800819aca8af3c100b6a2e094b8ec45876bab9ef7625cd96cc9a"
+      },
+      "statement": "seeded known-answer monorepos, polyglot repositories, architectural pivots, dead code, duplicate systems, state conflicts, missing tests, stale documentation, false positives, contradictory evidence, and model disagreement."
+    },
+    {
       "id": "CL-B626F3F032210D9BCC8B",
       "label": "BUILD",
       "source": {
@@ -8832,6 +9943,17 @@
         "semantic_sha256": "b626f3f032210d9bcc8bae56253bd74a836df152ae281012d41b4f09951d4fde"
       },
       "statement": "process timeouts and child-process cleanup."
+    },
+    {
+      "id": "CL-B639FC8B86BA712619E9",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1929,
+        "semantic_sha256": "b639fc8b86ba712619e9c237c82953f9d94a00ed72fb4f803fa25c8664297bf7"
+      },
+      "statement": "a closed Cloud Observer read schema for provider, organization or tenant, account, subscription or project, region, service, resource, query, time, field, row, byte, rate, credential, cache, freshness, and result identity."
     },
     {
       "id": "CL-B63EA7E7F02EBD31329F",
@@ -8999,6 +10121,17 @@
       "statement": "a document-conversion guide with known loss of formatting or metadata."
     },
     {
+      "id": "CL-BAEBEF0C71CF6294A897",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2052,
+        "semantic_sha256": "baebef0c71cf6294a897a9ee0a4e4ca9995a2ea97cdf3e2e7a5400eea5e297e1"
+      },
+      "statement": "a visibly experimental package, store, process identity, synthetic corpus, scratch root, resource budget, cancellation path, and removal lifecycle separate from approved-model operation."
+    },
+    {
       "id": "CL-BB11340835827BF61CBB",
       "label": "BUILD",
       "source": {
@@ -9052,6 +10185,17 @@
         "semantic_sha256": "bb56b9cf4adf242f3ca90d532946573dbfd5f2fcfdaade98b4487532bd5725ff"
       },
       "statement": "explanation-provider interfaces and deterministic fake providers for isolation and tests."
+    },
+    {
+      "id": "CL-BB6CFDDB1A1DE9CC1AF3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1911,
+        "semantic_sha256": "bb6cfddb1a1de9cc1af36e856c1dac5ca3e331cc79d70a6c394670370f3ca868"
+      },
+      "statement": "fixed-point decimal money values with explicit currency, scale, sign, rounding rule, effective date, conversion source, overflow behavior, and serialization."
     },
     {
       "id": "CL-BB963366176539A7CF89",
@@ -9505,6 +10649,17 @@
       "statement": "Render approval requests, command previews, file diffs, progress, cancellation, errors, citations, and final receipts without hiding information in a graphical window."
     },
     {
+      "id": "CL-C292B73117A28B313025",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Public Research and Citations",
+        "line": 2002,
+        "semantic_sha256": "c292b73117a28b313025304b942516edc4544005b8c902394f0309dbd2c1ecff"
+      },
+      "statement": "a separate public search and retrieval worker with exact query, recency, domain, redirect, transport, item, byte, media, script, archive, download, cache, and cancellation limits."
+    },
+    {
       "id": "CL-C2BE2D9E375C47E1839F",
       "label": "BUILD",
       "source": {
@@ -9558,6 +10713,17 @@
         "semantic_sha256": "c3955f3cc64cf1189a635105e7dd2f7a233d1308b564b9cd45f81088cd79a516"
       },
       "statement": "GitHub Actions workflow inspection covering triggers, permissions, environments, secrets referenced by name, variables, concurrency, reusable workflows, and artifact retention without exposing secret values."
+    },
+    {
+      "id": "CL-C397938560FE4053BB94",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1904,
+        "semantic_sha256": "c397938560fe4053bb949d6d844dc178befd6444c74604e3c4f55f959a2264e6"
+      },
+      "statement": "attachment hash, size, media-type, classification, malware, archive, macro, link, permission, visibility, and post-preview-change checks."
     },
     {
       "id": "CL-C3B2571893523F1040E4",
@@ -9945,6 +11111,17 @@
       "statement": "adversarial tests for prompt injection, memory poisoning, stale evidence, conflicting instructions, secret extraction, path escape, and approval bypass."
     },
     {
+      "id": "CL-CC0F2DBA6442FAEB02E4",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39B. Experimental Model Lab Construction Checklist",
+        "line": 2054,
+        "semantic_sha256": "cc0f2dba6442faeb02e4cbfdca8d58d78e4b4059c4db46582e7d1b916ac39ce8"
+      },
+      "statement": "Deny network, credential, command, connector, messaging, finance, delivery, cloud, backup, operational-memory, and canonical-workspace-write authority structurally."
+    },
+    {
       "id": "CL-CC11D845057BAAED6979",
       "label": "BUILD",
       "source": {
@@ -10176,6 +11353,17 @@
       "statement": "frontier edit rules that treat all returned content as untrusted input and prohibit direct changes to canonical operational or knowledge state."
     },
     {
+      "id": "CL-D14CFE050BA932A48957",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Semantic Review, Memory, and Reconciliation",
+        "line": 2117,
+        "semantic_sha256": "d14cfe050ba932a48957c14b202ea75bb9f8249ba18c9ea87e34887a3872ad0b"
+      },
+      "statement": "source-change detection and transitive invalidation for census, structure, packets, cards, findings, contradictions, coverage, and reports."
+    },
+    {
       "id": "CL-D1655CD5B5350A039ACC",
       "label": "DEFER",
       "source": {
@@ -10196,6 +11384,17 @@
         "semantic_sha256": "d18f9e473955dcabc5dfd9b4a3355b373de310f99a00e005d3d77b6734177883"
       },
       "statement": "Reject every Model Context Protocol server, plugin, hook, client, or alternate endpoint that bypasses kernel policy, grants, limits, cancellation, classification, or receipts."
+    },
+    {
+      "id": "CL-D1AC560EB70D62D6C898",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1890,
+        "semantic_sha256": "d1ac560eb70d62d6c898c2d6532e4a69d6f643d556bd5484f56c4316cf55f2c9"
+      },
+      "statement": "Thunderbird, Evolution, and KMail interoperability through provider or standard protocols plus explicit read-only mbox and Maildir import."
     },
     {
       "id": "CL-D1B3057305E2EED1ACC2",
@@ -10253,6 +11452,28 @@
       "statement": "Build, sign, notarize, staple, and test the macOS package on an isolated Apple Silicon release runner using an Apple Developer Program identity. Keep signing and notarization credentials in the release secret store and out of the repository, build output, logs, model context, and distributed package."
     },
     {
+      "id": "CL-D31F8E8FD3C42504E426",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1886,
+        "semantic_sha256": "d31f8e8fd3c42504e426d892741d99f934728762aea6eda894e618de936eb19e"
+      },
+      "statement": "Gmail support for manifested mailbox, message, thread, label, draft, send, reply, forward, attachment, history, push, and polling operations."
+    },
+    {
+      "id": "CL-D340A9299A3B6F980600",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1867,
+        "semantic_sha256": "d340a9299a3b6f980600c41c6886cb27796eaddda872828f4ebe90886b4961ff"
+      },
+      "statement": "provider-scoped identities for people, organizations, accounts, mailboxes, workspaces, teams, channels, calendars, task stores, document repositories, financial accounts, and cloud accounts."
+    },
+    {
       "id": "CL-D407BC24A34E416EA184",
       "label": "BUILD",
       "source": {
@@ -10262,6 +11483,17 @@
         "semantic_sha256": "d407bc24a34e416ea184ebb15d90fb675eca32ea4ded3702182e337df3a5d029"
       },
       "statement": "`_is_non_empty_string()`, `_is_non_empty_string_list()`, and `_is_iso_date()` validation helpers."
+    },
+    {
+      "id": "CL-D46859C56E0E7417CD43",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Scope, Census, and Structural Index",
+        "line": 2096,
+        "semantic_sha256": "d46859c56e0e7417cd43511717c87d126c9849b677f57752c6e4c27e5fd18f20"
+      },
+      "statement": "exact audit-plan schemas for repository, revision, worktree, scope, depth, language, parser, generated and vendored policy, history, submodules, worktrees, commands, network, resources, retention, cancellation, and outputs."
     },
     {
       "id": "CL-D47B1583720E54E465D8",
@@ -10284,6 +11516,17 @@
         "semantic_sha256": "d49975d920b3134878d795e23cf92ba07f797e634942d1a1a70c3c85154c1e78"
       },
       "statement": "Append long-term memories only through the memory-candidate pipeline; supersede outdated entries instead of rewriting or deleting them silently."
+    },
+    {
+      "id": "CL-D4B2223C02504616C125",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Integrated First-GA Closure",
+        "line": 2035,
+        "semantic_sha256": "d4b2223c02504616c125493d391d5c0c17ab45a2b240506e1c6b86c515dfa371"
+      },
+      "statement": "publish exact command-authority, research, citation, credential, backup, provider, model-catalog, model-installation, support, limitation, incident, recovery, and removal matrices."
     },
     {
       "id": "CL-D4B4BAA2DBE306161EE9",
@@ -10407,6 +11650,17 @@
       "statement": "a packet completion validator that requires the specified evidence before closing work."
     },
     {
+      "id": "CL-D83ABB115A235AFBFA42",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1930,
+        "semantic_sha256": "d83abb115a235afbfa42a0d0fbb147540b694ac845aba3ccec8ee4c67a77af7d"
+      },
+      "statement": "AWS organization and account inventory, resource configuration, tags, health, bounded CloudWatch metrics and logs, CloudTrail references, security observations, deployment identity, and Cost Explorer summaries."
+    },
+    {
       "id": "CL-D83E060A91FECB19505A",
       "label": "BUILD",
       "source": {
@@ -10460,6 +11714,17 @@
         "semantic_sha256": "d8a494721fba93de8e3248be0d56baf39345c80292440c89b7d7f43bf497b459"
       },
       "statement": "skill version and prompt version fields."
+    },
+    {
+      "id": "CL-D8DECC9D6ADF31F9B681",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1906,
+        "semantic_sha256": "d8decc9d6adf31f9b681b614d90be6297da2db7fe21a4e9bdf91884343644303"
+      },
+      "statement": "a workflow compiler with exact trigger, account, filter, join, branch, operation, recipient, classification, budget, stop, expiry, approval, dry-run, failure, and receipt nodes."
     },
     {
       "id": "CL-D8F0BCE41BB01E8B4711",
@@ -10592,6 +11857,17 @@
         "semantic_sha256": "db7ccf50f67b51bc962f0a9412132228fc41a7dcb195df931b4a418d7bbcbac2"
       },
       "statement": "a measured fallback chain that activates only after benchmark gates pass and the user enables automatic routing."
+    },
+    {
+      "id": "CL-DB7E70B70FBEA5E5DC5D",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1946,
+        "semantic_sha256": "db7e70b70fbea5e5dc5d94efef4d6d21aed5ce535a533ad6761ec26f325bca42"
+      },
+      "statement": "publish exact provider, protocol, version, object, operation, scope, autonomy, rate, freshness, degradation, limitation, retention, recovery, removal, and support matrices with evidence digests."
     },
     {
       "id": "CL-DBB8CFEEA7A222926DE2",
@@ -10781,6 +12057,17 @@
       "statement": "a validation receipt that includes exact command, working directory, exit code, and timestamp."
     },
     {
+      "id": "CL-E03AF82A4128621F1B97",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1915,
+        "semantic_sha256": "e03af82a4128621f1b97002a438940c82f5a1001ab7bbe2df31c60e05caedf46"
+      },
+      "statement": "statement reconciliation with exact period, opening and closing balances, included records, pending exclusions, corrections, tolerance, conflict, and reviewer disposition."
+    },
+    {
       "id": "CL-E05E3B9EA6A6B02A16D1",
       "label": "BUILD",
       "source": {
@@ -10911,6 +12198,17 @@
         "semantic_sha256": "e263874677fc09720416962c1c58851624bd62bf37f5700f6758c732b758b4d4"
       },
       "statement": "`apply_patch(path, patch)` with exact preimage checks."
+    },
+    {
+      "id": "CL-E26A8610D57ED4909CA3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2024,
+        "semantic_sha256": "e26a8610d57ed4909ca32c8d11228787f69d00ba4a285bbbbbe93b18832b3ab8"
+      },
+      "statement": "deterministic preflight showing exact publisher, license, source host, artifact, runtime, size, disk, hardware fit, network use, destination, checks, limitations, and rollback before confirmation."
     },
     {
       "id": "CL-E29DC200A21270D556B0",
@@ -11076,6 +12374,17 @@
         "semantic_sha256": "e56a04705e6e12b525ba16cdf73452f6f8509629c76c80f9dd959bef83a979aa"
       },
       "statement": "a bounded observe-plan-act-review loop with a maximum number of model turns and tool calls."
+    },
+    {
+      "id": "CL-E56C16DD8493538F1087",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cross-Pack and Expanded GA Closure",
+        "line": 1940,
+        "semantic_sha256": "e56c16dd8493538f1087b468de040739d5262e81d92db9093add5da19ccfd385"
+      },
+      "statement": "Require an explicit classified and receipted data-flow rule before communication, delivery, finance, cloud, document, calendar, task, or memory content crosses pack boundaries."
     },
     {
       "id": "CL-E5A6F117624CB4BCAD6A",
@@ -11254,6 +12563,28 @@
       "statement": "plugin and skill compatibility tests against supported agent, tool-protocol, configuration, and memory-schema versions."
     },
     {
+      "id": "CL-EA1FFAA0A1A8B65E82B2",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Approved Model Management",
+        "line": 2026,
+        "semantic_sha256": "ea1ffaa0a1a8b65e82b279ad0e93b3ca9ff619991f5d79a66a978422bb3c3366"
+      },
+      "statement": "Prohibit a model from downloading, approving, activating, replacing, or falling back to itself or another model."
+    },
+    {
+      "id": "CL-EA3C4D674D1396A6DA85",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1995,
+        "semantic_sha256": "ea3c4d674d1396a6da8594949dfdbf0706fed1da35745b40d492f044cd44bd64"
+      },
+      "statement": "direct-executable, shell-language, pipeline, redirection, interpreter, script, and explicit PTY command contracts with exact previews and terminal receipts."
+    },
+    {
       "id": "CL-EA5B39259F38EBB36038",
       "label": "BUILD",
       "source": {
@@ -11287,6 +12618,17 @@
       "statement": "that uninstalling or never installing the Obsidian desktop application does not remove any vault-reading, search, task, link, handoff, or note-writing capability."
     },
     {
+      "id": "CL-EB2D312F979AB9849720",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1885,
+        "semantic_sha256": "eb2d312f979ab9849720c706479d9b2878595bc9214f27d611f70d5ca407c099"
+      },
+      "statement": "Microsoft Teams support for manifested team, channel, chat, thread, message, reply, mention, reaction, file, edit, deletion, membership, and event operations."
+    },
+    {
       "id": "CL-EB57BB3199D60516F4B9",
       "label": "BUILD",
       "source": {
@@ -11307,6 +12649,28 @@
         "semantic_sha256": "eb7b2670664f07faefcef45ad101b903bf9262a94cd92b354f395c315adec9e0"
       },
       "statement": "exact staged-diff and commit-message approval, required signing, signature verification, and a separate approval for every remote push."
+    },
+    {
+      "id": "CL-EBB09E3A7A33DB727B7A",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Authority and Command Execution",
+        "line": 1998,
+        "semantic_sha256": "ebb09e3a7a33db727b7a3ee2dda65efd03d7d84a976847c691d5194beafc7986"
+      },
+      "statement": "lock, logout, restart, expiry, panic, policy mutation, crash, race, replay, descendant survival, scheduled activation, and content-created-authority attacks."
+    },
+    {
+      "id": "CL-EBC6BBCF283B3ECB1154",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Credentials and Continuity",
+        "line": 2011,
+        "semantic_sha256": "ebc6bbcf283b3ecb115476a2c92de759b62bddf6763b171344cad417fa1c50dc"
+      },
+      "statement": "Linux Secret Service, macOS Keychain, and Windows Credential Manager or DPAPI credential-reference adapters with exact identity, scope, lifecycle, and conformance fixtures."
     },
     {
       "id": "CL-EC1037281C1A3989F1C1",
@@ -11331,6 +12695,17 @@
       "statement": "approved macOS-, Fedora-, and Ubuntu-compatible local preview and image utilities."
     },
     {
+      "id": "CL-EC43881F2F74128FA8F8",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1933,
+        "semantic_sha256": "ec43881f2f74128fa8f8f7b1a3cb67c5df904853cd8dc6eacdcadb315c11a451"
+      },
+      "statement": "Omit resource writes, remote commands, shells, deploys, secret values, credential rotation, identity, policy, logging, budget, upload, delete, and administration from every Cloud Observer schema, manifest, policy, tool, adapter, shell, workflow, and autonomy level."
+    },
+    {
       "id": "CL-EC5404E085FFE1465401",
       "label": "BUILD",
       "source": {
@@ -11351,6 +12726,17 @@
         "semantic_sha256": "ec8bffa934c4c61ef22a9f7980fa97eee44c435d35aa646c0b14adc1108f876b"
       },
       "statement": "later macOS and Linux desktop application guides covering local data paths, vault selection, conversation browsing, approvals, offline checks, backup, and recovery."
+    },
+    {
+      "id": "CL-ECB1494196655ECB4FF1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Synchronization and Provider Lifecycle",
+        "line": 1875,
+        "semantic_sha256": "ecb1494196655ecb4ff119853e3235c02740c54f09cfe8e32ab73c8a70054c6f"
+      },
+      "statement": "common webhook, change-notification, delta, cursor, bounded-polling, backfill, edit, deletion, tombstone, ordering, duplicate, gap, and reconciliation contracts."
     },
     {
       "id": "CL-ED441C6A557B282E5B6E",
@@ -11430,6 +12816,28 @@
       "statement": "environment-variable filtering so secrets are not inherited automatically."
     },
     {
+      "id": "CL-EF500501EA184B5F7808",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1895,
+        "semantic_sha256": "ef500501ea184b5f7808881dd983bbb3c640c3a56a3b3b4e4045c0ae3eea9b6e"
+      },
+      "statement": "message, signature, quote, attachment, invitation, linked-page, hidden-text, script, macro, false-completion, and recipient-substitution prompt injection."
+    },
+    {
+      "id": "CL-EF5FD40C42D188671C18",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1869,
+        "semantic_sha256": "ef5fd40c42d188671c181a6c819fa4f2db3a861c43ed2275de6b800290b182ac"
+      },
+      "statement": "evidence-backed work-graph edges with source, observation time, classification, confidence class, freshness, and removal tombstones."
+    },
+    {
       "id": "CL-EFD40B4D5062D9CDEF25",
       "label": "BUILD",
       "source": {
@@ -11450,6 +12858,17 @@
         "semantic_sha256": "efe207280ec2750482f1b590b667dc8914a9adb09feb65a38d5deb48c12667c8"
       },
       "statement": "Debugging skill \u2014 reproduction, hypotheses, checks, logs, root cause, regression test, and fix evidence."
+    },
+    {
+      "id": "CL-EFEDE09E21C07FBE08C4",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Findings, Reporting, and First-GA Closure",
+        "line": 2128,
+        "semantic_sha256": "efede09e21c07fbe08c40fee8a7e42b33e9250d41a4047018569b7aa5d0e7500"
+      },
+      "statement": "cancellation, crash, checkpoint, resume, invalidation, low-memory, low-disk, context pressure, parser failure, unsupported language, resource exhaustion, accessibility, removal, and clean strict-local restoration."
     },
     {
       "id": "CL-F007CF5F8152E985915E",
@@ -11606,6 +13025,17 @@
       "statement": "a post-run receipt covering lease, idempotency key, effective grant, start and end state, resources, operations, network use, outputs, failures, retries, and cleanup."
     },
     {
+      "id": "CL-F40940A3E1B778C5A9FC",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Finance and Budgeting",
+        "line": 1913,
+        "semantic_sha256": "f40940a3e1b778c5a9fc80d817a292e81280a06d592695571e9e2196a454aee2"
+      },
+      "statement": "Preserve imported source records immutably and express corrections through adjustment or supersession records."
+    },
+    {
       "id": "CL-F44A256D434D8E99D1DD",
       "label": "VERIFY",
       "source": {
@@ -11637,6 +13067,17 @@
         "semantic_sha256": "f4967d11c33e763c0d78025b65cb214dc7b2de5f78525f2e2713e2e184da7482"
       },
       "statement": "a resumable session state that records the exact objective and next safe action."
+    },
+    {
+      "id": "CL-F4C70A3FB82252712FBA",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Autonomy, Identity, and Unified Work",
+        "line": 1870,
+        "semantic_sha256": "f4c70a3fb82252712fba7b1696de81f0ddd66ef0de940716927d73ec447ebb96"
+      },
+      "statement": "a unified activity inbox with action, response, decision, waiting, blocked, due, reference, duplicate, stale, incomplete, and uncertain states."
     },
     {
       "id": "CL-F4E67F8B13FCFD7D6053",
@@ -11793,6 +13234,17 @@
       "statement": "Prevent a coordinator from combining several narrow child grants into broader aggregate authority or using one child's result to authorize another child's action."
     },
     {
+      "id": "CL-F7E654B1CFC5527B893B",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Cloud Observer",
+        "line": 1935,
+        "semantic_sha256": "f7e654b1cfc5527b893bbd70c6ee020e2c74694ca91189a31a5e536cb210e872"
+      },
+      "statement": "assume-role, tenant, subscription, project, region, service, resource, data-plane, query, time, field, token, redirect, proxy, credential, quota, log-volume, cost, and content-injection attacks."
+    },
+    {
       "id": "CL-F7F76F5B77CC08A27BAF",
       "label": "BUILD",
       "source": {
@@ -11903,6 +13355,17 @@
       "statement": "a `discover_project_docs()` function for readmes, architecture files, plans, tests, and handoffs."
     },
     {
+      "id": "CL-FA82280458DC6B9E1487",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Email, Chat, and Linux Mail Clients",
+        "line": 1887,
+        "semantic_sha256": "fa82280458dc6b9e14870654a853e8f193a04f05a2ce5695d51d139ac2146487"
+      },
+      "statement": "Slack support for manifested workspace, channel, direct and group message, thread, reply, mention, reaction, file, edit, deletion, and event operations."
+    },
+    {
       "id": "CL-FAA68F9819F7D0E88C9D",
       "label": "BUILD",
       "source": {
@@ -11923,6 +13386,17 @@
         "semantic_sha256": "fae23da581040bc4ab0d407ccf0c1babe7a7417e882e806cfa1d1016c000226d"
       },
       "statement": "model hallucination checks that compare claims against tool receipts."
+    },
+    {
+      "id": "CL-FB2F8348D5E56F540CDC",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Integrated First-GA Closure",
+        "line": 2032,
+        "semantic_sha256": "fb2f8348d5e56f540cdc74384e5d8ca9c76c5edd951f8b4528da7334377f8551"
+      },
+      "statement": "all `RV-36` through `RV-43` protocols on Fedora, Ubuntu, and Windows 11 with platform-specific evidence and no borrowed result."
     },
     {
       "id": "CL-FB4DC60CA2CA29D4365C",
@@ -12135,8 +13609,8 @@
     }
   ],
   "counts": {
-    "checklist": 1103,
-    "requirements": 119
+    "checklist": 1237,
+    "requirements": 227
   },
   "policy": {
     "mode": "additions_only",
@@ -12147,6 +13621,41 @@
     "weakened_requirement": "blocked"
   },
   "requirements": [
+    {
+      "acceptance_tests": [
+        "AT-ACC-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-FIN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ACC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement separately gated QuickBooks Online and Xero adapters for reads, drafts, and approval-gated non-money-movement accounting records after exact precision, identity, period, tax-code, reconciliation, idempotency, recovery, and removal gates pass."
+    },
+    {
+      "acceptance_tests": [
+        "AT-ACT-001"
+      ],
+      "dependencies": [
+        "AM-FIMPORT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ACT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement Actual Budget as the first local budgeting reference adapter through its supported local API with exact budget-file identity, import, export, account, payee, category, transaction, rule, schedule, budget, synchronization, backup, recovery, and removal behavior."
+    },
     {
       "acceptance_tests": [
         "AT-ADP-001",
@@ -12185,6 +13694,43 @@
     },
     {
       "acceptance_tests": [
+        "AT-AUT-001"
+      ],
+      "dependencies": [
+        "AM-ADP-001",
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ATC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a kernel-enforced Autonomy Center with Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, and Autonomous within policy levels plus global and narrower policy ceilings, authenticated changes, visible effective state, expiry, budgets, and emergency external-write disablement."
+    },
+    {
+      "acceptance_tests": [
+        "AT-AUR-001"
+      ],
+      "dependencies": [
+        "AM-RCN-001",
+        "AM-ROA-001",
+        "AM-CKP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-AUR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Produce deduplicated audit findings and professional reports with stable identity, category, severity, confidence, status, impact, immutable file/line or symbol evidence, graph paths, counterevidence, uncertainty, recommendation, coverage totals, gaps, strengths, limitations, and observed-versus-inferred labels."
+    },
+    {
+      "acceptance_tests": [
         "AT-AUTH-001"
       ],
       "dependencies": [
@@ -12200,6 +13746,128 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Define and enforce the single-use `CapabilityGrant` contract for every authority-bearing action."
+    },
+    {
+      "acceptance_tests": [
+        "AT-AUT-002"
+      ],
+      "dependencies": [
+        "AM-TRU-001",
+        "AM-ATC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-AUT-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Extend command authority with Disabled, Inspect, Workspace Autonomous, Connected Operations, and explicit Owner / Unrestricted Session levels intersected with every global and narrower autonomy ceiling. Owner mode requires direct authenticated activation, visible risk state, bounded duration, panic stop, automatic revocation, and prohibition from schedules, inheritance, model activation, or automatic renewal."
+    },
+    {
+      "acceptance_tests": [
+        "AT-AWS-001"
+      ],
+      "dependencies": [
+        "AM-CLO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-AWS-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated AWS observer for approved organization and account inventory, resource configuration, tags, health, bounded CloudWatch metrics and logs, CloudTrail references, security observations, deployment identity, and Cost Explorer summaries."
+    },
+    {
+      "acceptance_tests": [
+        "AT-AZR-001"
+      ],
+      "dependencies": [
+        "AM-CLO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-AZR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Azure observer for approved tenant, subscription, resource graph, configuration, tags, health, Azure Monitor metrics and logs, activity references, security observations, deployment identity, and Cost Management summaries."
+    },
+    {
+      "acceptance_tests": [
+        "AT-BIL-001"
+      ],
+      "dependencies": [
+        "AM-BUD-001",
+        "AM-UIN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-BIL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement recurring bill, income, fee, subscription, price-change, due-date, missing-payment, and cancellation-candidate detection with exact transaction evidence, communication links, user disposition, reminders, and no autonomous cancellation or payment."
+    },
+    {
+      "acceptance_tests": [
+        "AT-BKC-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001"
+      ],
+      "disposition": "build",
+      "id": "AM-BKC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement immutable client-side-encrypted local continuity snapshots with versioned manifests, integrity trees, data classification, explicit exclusions, retention, atomic completion, staging restore, migration, clean-device recovery, rollback, deletion, and no live operational state on cloud-synchronized or network storage."
+    },
+    {
+      "acceptance_tests": [
+        "AT-BNK-001"
+      ],
+      "dependencies": [
+        "AM-FIN-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-BNK-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement independently admitted read-only financial-data adapters for user-authorized transaction, balance, liability, investment, recurring-stream, and statement data with exact institution, item, account, consent, scope, freshness, cursor, revocation, and deletion behavior."
+    },
+    {
+      "acceptance_tests": [
+        "AT-BUD-001"
+      ],
+      "dependencies": [
+        "AM-FIMPORT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-BUD-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement deterministic category and envelope budgets, cash-flow forecasts, savings goals, debt scenarios, net-worth views, scenario comparisons, confidence and assumption disclosure, and local user-approved budget rules."
     },
     {
       "acceptance_tests": [
@@ -12219,6 +13887,80 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Implement a Backstage reference catalog adapter linking services, owners, repositories, pipelines, artifacts, environments, telemetry, incidents, and releases; retain Port, Cortex, and Compass as conformance-gated extensions."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CBA-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CBA-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Implement `CODEBASE-AUDIT.md` as a separately registered read-only capability with exact repository and scope identity, complete path disposition, deterministic structural indexing, bounded semantic analysis, cross-module reconciliation, persistent evidence, truthful coverage, cancellation, recovery, removal, and separate platform evidence."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CBK-001"
+      ],
+      "dependencies": [
+        "AM-BKC-001",
+        "AM-CRD-001",
+        "AM-ADP-001",
+        "AM-CLO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CBK-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement optional cloud continuity through a separately writable, provider-scoped backup worker with one exact encrypted destination namespace, least-privilege credential, opaque object naming, bounded transfer, resumability, versioning, retention, integrity, deletion, restore, disaster-recovery, removal, and zero broadening of Cloud Observer."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CCST-001"
+      ],
+      "dependencies": [
+        "AM-AWS-001",
+        "AM-AZR-001",
+        "AM-GCP-001",
+        "AM-PGR-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CCST-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Correlate bounded cloud health, configuration, metric, log, security, deployment, and cost observations with exact delivery and productivity identities without asserting unsupported causation or creating cloud or delivery authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CEN-001"
+      ],
+      "dependencies": [
+        "AM-CBA-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CEN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Implement a deterministic repository census covering tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, symbolic-link, hard-link, inaccessible, malformed, special, external, and changing path states with one terminal disposition per in-scope path."
     },
     {
       "acceptance_tests": [
@@ -12255,6 +13997,116 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Implement inspect, correlate, dispatch, rerun, cancel, approve, log, and artifact behavior for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins as separate read and execute capabilities."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CKP-001"
+      ],
+      "dependencies": [
+        "AM-CEN-001",
+        "AM-BKC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CKP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Persist encrypted audit checkpoints containing exact source, scope, parser, model, policy, coverage, queue, evidence, contradiction, resource, and completion identities; revalidate on resume and transitively invalidate every dependent fact, card, finding, reconciliation, and report when an input changes."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CLI-002"
+      ],
+      "dependencies": [
+        "AM-AUT-002",
+        "AM-CRD-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CLI-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement a fully capable local command execution broker supporting direct executables, shell syntax, pipelines, redirection, scripting, and explicit PTY sessions with exact command, working directory, path, environment, network, credential, descendant, resource, timeout, cancellation, changed-file, risk, rollback, and receipt contracts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CLO-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-ADP-001",
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CLO-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a strictly read-only Cloud Observer contract with provider, organization or tenant, account, subscription or project, region, service, resource, query, time, field, row, byte, rate, credential, cache, freshness, correlation, recovery, and removal boundaries."
+    },
+    {
+      "acceptance_tests": [
+        "AT-COM-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-PGR-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-COM-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a communications adapter contract covering mailbox, conversation, channel, thread, message, recipient, mention, reaction, attachment, formatting, visibility, event, draft, send, edit, delete, archive, recovery, and removal semantics."
+    },
+    {
+      "acceptance_tests": [
+        "AT-COMW-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-COMW-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Register communication reads, drafts, sends, replies, forwards, edits, deletions, reactions, uploads, downloads, moves, labels, flags, and archives as distinct operations with exact recipient, visibility, payload, attachment, idempotency, uncertain-result, and postcondition controls."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CRD-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001",
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CRD-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement an operating-system-backed credential broker using typed non-secret references, exact provider/host/tenant/account/operation/scope binding, system-browser or device OAuth where available, operation-scoped resolution, rotation, revocation, redaction, removal, and reauthentication after restore."
     },
     {
       "acceptance_tests": [
@@ -12350,6 +14202,40 @@
     },
     {
       "acceptance_tests": [
+        "AT-DREP-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-PGR-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-DREP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement conformance-gated OneDrive, SharePoint, Google Drive, and Confluence adapters with separately promoted Notion, Box, and Dropbox extensions covering identity, versions, content, attachments, permissions, links, visibility, drafts, bounded writes, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [
+        "AT-EML-001"
+      ],
+      "dependencies": [],
+      "disposition": "build",
+      "id": "AM-EML-001",
+      "kind": "product_requirement",
+      "release": "post-GA",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39. Post-GA Experimental Model Lab Backlog"
+      },
+      "title": "Implement a separately packaged Experimental Model Lab for user-selected unapproved artifacts with quarantine, explicit provenance and license gaps, no network, no credentials, no command or connector authority, no canonical workspace write, disposable synthetic evaluation, strict resource limits, truthful results, complete removal, and promotion only through normal independent model admission."
+    },
+    {
+      "acceptance_tests": [
         "AT-EVD-001",
         "AT-EVD-002"
       ],
@@ -12388,6 +14274,99 @@
     },
     {
       "acceptance_tests": [
+        "AT-FANL-001"
+      ],
+      "dependencies": [
+        "AM-FIN-001",
+        "AM-FIMPORT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-FANL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement explainable statistical outlier and potential-fraud indicators that retain features, baseline, model or rule identity, confidence, limitations, source evidence, drift, user disposition, and no definitive fraud or automated external-action claim."
+    },
+    {
+      "acceptance_tests": [
+        "AT-FDOC-001"
+      ],
+      "dependencies": [
+        "AM-FIN-001",
+        "AM-DREP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-FDOC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement receipt, invoice, reimbursement, statement, and tax-document organization with source-preserving extraction, transaction matching, duplicate detection, classification, retention, redaction, report export, and no unsupported tax or legal claim."
+    },
+    {
+      "acceptance_tests": [
+        "AT-FIMPORT-001"
+      ],
+      "dependencies": [
+        "AM-FIN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-FIMPORT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement immutable CSV, OFX, and QFX financial imports with profile detection, source hashes, account and statement identity, pending and posted transitions, duplicate protection, transfer matching, corrections, and deterministic reconciliation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-FIN-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-FIN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a fixed-point financial domain with explicit currency, scale, sign, rounding, account, institution, statement, transaction, pending and posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, correction, receipt, invoice, reimbursement, and reconciliation contracts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-FPRV-001"
+      ],
+      "dependencies": [
+        "AM-BNK-001",
+        "AM-BUD-001",
+        "AM-BIL-001",
+        "AM-FDOC-001",
+        "AM-FANL-001",
+        "AM-ACC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-FPRV-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Enforce dedicated financial classification, encryption, minimization, retention, model-context, cross-pack disclosure, export, backup, deletion, and money-movement absence controls across every shell, policy, workflow, adapter, schedule, and autonomy level."
+    },
+    {
+      "acceptance_tests": [
         "AT-GA-001",
         "AT-WIN-001"
       ],
@@ -12418,6 +14397,77 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Produce the v1.0 GA release decision from current Fedora, Ubuntu, Windows, strict-local, connected, provider-conformance, support-matrix, supply-chain, recovery, accessibility, and independent-review evidence."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-002"
+      ],
+      "dependencies": [
+        "AM-GAD-001",
+        "AM-XPR-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GAD-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Produce the expanded v1.0 GA release decision from current delivery, Windows, productivity, communications, finance, cloud-observer, cross-pack, strict-local, support-matrix, recovery, accessibility, and independent-review evidence at Sprint 156."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-003"
+      ],
+      "dependencies": [
+        "AM-GAD-002",
+        "AM-XOP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GAD-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Produce the superseding v1.0 GA decision at Sprint 166 from current delivery, Windows, productivity, finance, cloud-observer, trusted-operations, command-authority, research, credential, continuity, model-management, strict-local, recovery, accessibility, support, and independent-review evidence."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GA-004"
+      ],
+      "dependencies": [
+        "AM-GAD-003",
+        "AM-AUR-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GAD-004",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Extend the Sprint 166 v1.0 GA decision with current whole-codebase audit architecture, census, structural, semantic, reconciliation, read-only, secret-protection, checkpoint, invalidation, reporting, platform, resource, accessibility, removal, and independent-review evidence."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GCP-001"
+      ],
+      "dependencies": [
+        "AM-CLO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GCP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Google Cloud observer for approved organization, folder, project, asset, configuration, labels, health, Cloud Monitoring metrics and logs, audit references, security observations, deployment identity, and billing summaries."
     },
     {
       "acceptance_tests": [
@@ -12454,6 +14504,23 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Implement read-only Git status, diff, log, branch, and object inspection."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GML-001"
+      ],
+      "dependencies": [
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GML-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Gmail adapter for mailboxes, messages, threads, labels, drafts, sends, replies, forwards, attachments, history, push notifications, bounded polling, recovery, and removal."
     },
     {
       "acceptance_tests": [
@@ -12565,6 +14632,74 @@
     },
     {
       "acceptance_tests": [
+        "AT-LMAIL-001"
+      ],
+      "dependencies": [
+        "AM-MAIL-001"
+      ],
+      "disposition": "build",
+      "id": "AM-LMAIL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Support Thunderbird, Evolution, and KMail through provider or standard protocol adapters plus explicit read-only mbox and Maildir import without direct writes to private client-profile databases or extraction of client credentials."
+    },
+    {
+      "acceptance_tests": [
+        "AT-M365-001"
+      ],
+      "dependencies": [
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-M365-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Outlook and Exchange Online adapter for supported mailboxes, folders, messages, threads, labels, flags, categories, drafts, sends, replies, forwards, attachments, events, and shared-mailbox behavior through Microsoft Graph."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MAIL-001"
+      ],
+      "dependencies": [
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MAIL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement capability-detected IMAP, SMTP, and JMAP adapters plus an authenticated loopback Proton Mail Bridge profile with exact TLS, server, mailbox, folder, feature, credential, rate, and removal boundaries."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MCAT-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MCAT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement a signed approved-model catalog with exact candidate, evaluating, approved, degraded, quarantined, rejected, and retired states plus publisher, developer, license, origin, lineage, artifact, transformation, hash, size, runtime, platform, hardware, quality, security, support, and re-review evidence."
+    },
+    {
+      "acceptance_tests": [
         "AT-MODEL-001"
       ],
       "dependencies": [
@@ -12619,6 +14754,24 @@
     },
     {
       "acceptance_tests": [
+        "AT-MGR-001"
+      ],
+      "dependencies": [
+        "AM-MCAT-001",
+        "AM-CRD-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MGR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement a deterministic chat-guided model manager that can list compatible approved profiles and perform user-confirmed download, bounded resume, import, quarantine, hash and signature verification, scan, admission self-test, atomic activation, comparison, rollback, removal, and storage cleanup through the separate installer/importer."
+    },
+    {
+      "acceptance_tests": [
         "AT-MTH-001",
         "AT-XTE-001"
       ],
@@ -12634,6 +14787,24 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Author, preserve, review, and render inline and display LaTeX-style mathematics in Markdown through a pinned offline safe subset with round-trip and accessibility support."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MUSE-001"
+      ],
+      "dependencies": [
+        "AM-MCAT-001",
+        "AM-MGR-001"
+      ],
+      "disposition": "verify",
+      "id": "AM-MUSE-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Add Meta Muse Glimmer to the candidate catalog and produce a truthful `PASS`, `BLOCKED`, or `REJECTED` admission disposition from verified first-party identity, open-source or open-weight classification, license, origin, lineage, artifact, transformation, runtime, resource, coding-quality, tool, security, and platform evidence without making first GA depend on a pass."
     },
     {
       "acceptance_tests": [
@@ -12670,6 +14841,44 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-PGR-001"
+      ],
+      "dependencies": [
+        "AM-DEL-001",
+        "AM-IDN-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-PGR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Extend the evidence-backed graph with provider-scoped people, accounts, organizations, mailboxes, workspaces, channels, meetings, tasks, documents, financial records, and cloud observations while requiring confirmed or deterministic cross-provider identity links."
+    },
+    {
+      "acceptance_tests": [
+        "AT-PIM-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-PGR-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-PIM-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement Microsoft and Google calendar, contact, and task adapters plus CalDAV and CardDAV interoperability for availability, events, recurrence, invitations, responses, reminders, contacts, tasks, assignments, time zones, conflicts, writes, recovery, and removal."
     },
     {
       "acceptance_tests": [
@@ -12727,6 +14936,23 @@
     },
     {
       "acceptance_tests": [
+        "AT-RCN-001"
+      ],
+      "dependencies": [
+        "AM-SEM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-RCN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Reconcile semantic conclusions across dependency, call, state, data, event, error, configuration, authorization, lifecycle, requirement, decision, test, deployment, and support relationships; retain contradictions and revisit every affected partition before making a repository-wide claim."
+    },
+    {
+      "acceptance_tests": [
         "AT-REL-001",
         "AT-XTE-001"
       ],
@@ -12763,6 +14989,24 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Build a deterministic, Git-aware, policy-aware repository map with pinned Tree-sitter parsers, supported-language symbols, reliable definitions/imports/relationships, bounded cache, coverage report, and exact source citations."
+    },
+    {
+      "acceptance_tests": [
+        "AT-ROA-001"
+      ],
+      "dependencies": [
+        "AM-CBA-001",
+        "AM-CLI-002"
+      ],
+      "disposition": "build",
+      "id": "AM-ROA-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Enforce read-only audit behavior outside the model with no canonical-root write grant, no hosted mutation or credential authority, disposable copy-on-write execution for commands that may write, secret-safe packet construction, before-and-after repository attestation, process cleanup, and zero neighboring-data mutation."
     },
     {
       "acceptance_tests": [
@@ -12819,6 +15063,23 @@
     },
     {
       "acceptance_tests": [
+        "AT-SEM-001"
+      ],
+      "dependencies": [
+        "AM-STR-001"
+      ],
+      "disposition": "build",
+      "id": "AM-SEM-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Partition analysis by coherent architectural unit and create source-pinned semantic evidence cards containing exact spans, hashes, structural facts, neighboring interfaces, tests, model/runtime identity, assumptions, uncertainty, conflicts, confidence, and reverse-dependency invalidation links."
+    },
+    {
+      "acceptance_tests": [
         "AT-CRASH-001",
         "AT-RESUME-001"
       ],
@@ -12835,6 +15096,23 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Persist and resume one active local session without duplicating completed actions."
+    },
+    {
+      "acceptance_tests": [
+        "AT-SLK-001"
+      ],
+      "dependencies": [
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-SLK-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Slack adapter for workspaces, channels, direct and group messages, threads, replies, mentions, reactions, files, edits, deletions, events, rate limits, recovery, and removal."
     },
     {
       "acceptance_tests": [
@@ -12856,6 +15134,23 @@
     },
     {
       "acceptance_tests": [
+        "AT-STR-001"
+      ],
+      "dependencies": [
+        "AM-CEN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-STR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40. First-GA Whole-Codebase Audit Backlog"
+      },
+      "title": "Build an exact structural index from admitted compilers, abstract syntax trees, language services, package and build metadata, schema parsers, test discovery, workflow parsers, source-control records, and exact search, including modules, symbols, interfaces, dependencies, calls, state, data, events, errors, configuration, tests, releases, and provenance."
+    },
+    {
+      "acceptance_tests": [
         "AT-SUP-001",
         "AT-SEC-003"
       ],
@@ -12871,6 +15166,41 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Normalize and verify SPDX, CycloneDX, SARIF, Sigstore/Cosign signatures, SLSA provenance, vulnerability results, and policy decisions against exact source, build, and artifact identities."
+    },
+    {
+      "acceptance_tests": [
+        "AT-SYNC-001"
+      ],
+      "dependencies": [
+        "AM-ADP-001",
+        "AM-IDN-001"
+      ],
+      "disposition": "build",
+      "id": "AM-SYNC-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement provider-neutral delta, cursor, webhook, change-notification, bounded-polling, backfill, edit, deletion, tombstone, ordering, duplicate, gap, freshness, coverage, and reconciliation contracts for productivity adapters."
+    },
+    {
+      "acceptance_tests": [
+        "AT-TMS-001"
+      ],
+      "dependencies": [
+        "AM-COM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-TMS-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Microsoft Teams adapter for teams, channels, chats, threads, messages, replies, mentions, reactions, files, edits, deletions, membership visibility, and supported change notifications."
     },
     {
       "acceptance_tests": [
@@ -12890,6 +15220,24 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Implement bounded list, read, search, metadata, and hash tools."
+    },
+    {
+      "acceptance_tests": [
+        "AT-TRU-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-XTE-001"
+      ],
+      "disposition": "build",
+      "id": "AM-TRU-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement the `TRUSTED-OPERATIONS.md` architecture with separately registered and removable command, public-research, credential-broker, continuity, and model-manager capability classes, workers, data flows, network paths, limits, receipts, recovery, and platform evidence."
     },
     {
       "acceptance_tests": [
@@ -12973,6 +15321,24 @@
     },
     {
       "acceptance_tests": [
+        "AT-UIN-001"
+      ],
+      "dependencies": [
+        "AM-PGR-001",
+        "AM-SYNC-001"
+      ],
+      "disposition": "build",
+      "id": "AM-UIN-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a unified activity inbox that preserves native source identity and classifies communication, delivery, meeting, task, finance, and cloud items with citations, freshness, permission gaps, coverage gaps, uncertainty, and local action state."
+    },
+    {
+      "acceptance_tests": [
         "AT-VSC-001"
       ],
       "dependencies": [
@@ -13007,6 +15373,44 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WEB-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001",
+        "AM-CRD-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WEB-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Implement current public Internet search and retrieval with query, recency, domain, redirect, transport, item, byte, media, download-quarantine, cache, source-quality, publication/event-date, claim-level citation, excerpt-hash, inference-label, private-disclosure, cancellation, and hostile-content controls."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WFA-001"
+      ],
+      "dependencies": [
+        "AM-ATC-001",
+        "AM-UIN-001",
+        "AM-PIM-001",
+        "AM-DREP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WFA-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Compile user-authored event and scheduled productivity workflows into deterministic graphs containing exact triggers, accounts, filters, joins, branches, operations, recipients, classifications, budgets, stop conditions, expiry, approvals, dry runs, recovery, and receipts."
     },
     {
       "acceptance_tests": [
@@ -13046,6 +15450,47 @@
     },
     {
       "acceptance_tests": [
+        "AT-XOP-001"
+      ],
+      "dependencies": [
+        "AM-CLI-002",
+        "AM-WEB-001",
+        "AM-CBK-001",
+        "AM-MGR-001",
+        "AM-MUSE-001"
+      ],
+      "disposition": "verify",
+      "id": "AM-XOP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog"
+      },
+      "title": "Run integrated command-authority, owner-session, web-injection, private-disclosure, credential-leakage, backup-integrity, cross-account, restore, model-substitution, interruption, resource, accessibility, removal, and strict-local-restoration campaigns across every first-GA platform with no hidden blocker."
+    },
+    {
+      "acceptance_tests": [
+        "AT-XPR-001"
+      ],
+      "dependencies": [
+        "AM-WFA-001",
+        "AM-COMW-001",
+        "AM-FPRV-001",
+        "AM-CCST-001"
+      ],
+      "disposition": "verify",
+      "id": "AM-XPR-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Run cross-pack autonomy, identity, recipient, synchronization, injection, attachment, financial-precision, reconciliation, money-movement-absence, cloud-mutation-absence, resource, crash, recovery, removal, accessibility, and strict-local-restoration campaigns with no hidden blocker."
+    },
+    {
+      "acceptance_tests": [
         "AT-XTE-001"
       ],
       "dependencies": [
@@ -13073,6 +15518,32 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Run cross-provider, cross-platform, adversarial, mutation, fuzz, replay, confusion, partition, rate-limit, version-skew, crash, partial-effect, rollback, resource, removal, and end-to-end delivery tests with no hidden blocking result."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ACC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise QuickBooks Online and Xero reads, drafts, and promoted non-money-movement writes across organization, ledger, account, contact, item, invoice, bill, journal, period, tax code, precision, duplicate, conflict, timeout, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ACT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Actual Budget files through supported local API fixtures across import, export, account, payee, category, transaction, rule, schedule, budget, sync, backup, crash, recovery, and removal."
     },
     {
       "acceptance_tests": [],
@@ -13117,6 +15588,45 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-AUR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Generate and independently verify findings and reports across supported strengths, defects, counterevidence, duplicates, conflicts, partial coverage, unavailable evidence, false-positive fixtures, severity boundaries, and model disagreement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-AUT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Cross product every autonomy level, parent and child ceiling, pack, connector, account, workspace, operation, destination, recipient, channel, schedule, budget, expiry, stale display, replay, race, cancellation, and emergency-disable fixture."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-AUT-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Cross every command level with global and narrower autonomy ceilings, activation source, authentication, session identity, expiry, lock, logout, restart, policy mutation, schedule, child agent, panic stop, race, replay, and emergency disablement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-AUTH-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13130,6 +15640,84 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-AWS-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise AWS organization, account, region, service, resource, configuration, tag, health, CloudWatch, CloudTrail reference, security observation, deployment identity, cost, role, token, throttling, failure, and removal fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-AZR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Azure tenant, subscription, region, resource graph, configuration, tag, health, Monitor, activity reference, security observation, deployment identity, cost, role, token, throttling, failure, and removal fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-BIL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Detect bills, income, fees, subscriptions, price changes, due dates, missing payments, and cancellation candidates across recurring, irregular, duplicate, refunded, renamed, and sparse-history fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-BKC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Create, interrupt, corrupt, replay, migrate, restore, roll back, retain, expire, and delete local snapshots across empty, large, classified, partially written, cross-version, low-disk, locked, and ransomware-like loss fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-BNK-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise read-only financial-data fixtures across provider, institution, item, consent, account, product, transaction, balance, liability, investment, recurring stream, statement, cursor, freshness, revocation, deletion, outage, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-BUD-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run budget, cash-flow, savings, debt, net-worth, scenario, assumption, confidence, category-rule, missing-data, and changed-history fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CAT-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -13138,6 +15726,58 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Build Backstage service-catalog relationships and run extension-contract fixtures for Port, Cortex, and Compass."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CBA-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the complete audit lifecycle across empty, small, monorepo, polyglot, dirty, generated, vendored, partially unsupported, interrupted, and changing repository fixtures on every first-GA platform."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CBK-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the reference cloud backup adapter and conformance fixtures across destination identity, account, prefix, object, version, encryption, metadata, multipart transfer, retry, throttle, duplicate, missing object, corruption, replay, retention, deletion, revocation, provider outage, and full disaster recovery."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CCST-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Correlate cloud configuration, health, metrics, logs, security observations, deployments, and costs with delivery and productivity fixtures across identity collision, time skew, rename, transfer, stale data, conflicting evidence, and injected causation."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CEN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Enumerate and mutate tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, link, inaccessible, malformed, special, external, and concurrently changing paths."
     },
     {
       "acceptance_tests": [],
@@ -13169,6 +15809,71 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CKP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Pause, crash, restart, restore, change, delete, rename, reclassify, or reparse inputs at every audit stage and mutate scope, parser, model, runtime, policy, graph, checkpoint, and reverse-dependency records."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CLI-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Run direct, shell, pipeline, redirection, script, interpreter, PTY, package, build, test, Git, Docker, process-tree, environment, filesystem, network, timeout, output, cancellation, rollback, and hostile-command fixtures at every authority level."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CLO-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run the common Cloud Observer contract against fake, fault, future-version, malicious, AWS, Azure, and Google Cloud fixtures across scope, query, result, rate, cache, correlation, failure, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-COM-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run the common communications contract against fake, fault, future-version, malicious, Microsoft, Google, Slack, Proton Bridge, IMAP, SMTP, and JMAP fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-COMW-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Mutate sender, account, recipient, external domain, channel, thread, mention, visibility, body, formatting, quote, link, attachment, classification, operation, idempotency key, provider result, and postcondition around every communication effect."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CRASH-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13177,6 +15882,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Forced termination during model, file, Git, receipt, and checkpoint phases."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CRD-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise operating-system secret stores, OAuth and token references, provider/host/tenant/account/scope binding, expiry, rotation, revocation, crash, redirect, proxy, cross-worker, restore, export, diagnostics, logs, process metadata, and removal canaries."
     },
     {
       "acceptance_tests": [],
@@ -13247,6 +15965,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-DREP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise OneDrive, SharePoint, Google Drive, Confluence, and promoted extension fixtures across identity, version, content, attachment, link, permission, visibility, draft, write, conflict, malicious file, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-EML-001",
+      "kind": "acceptance_test",
+      "release": "post-GA",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "39A. Post-GA Experimental Model Acceptance Matrix"
+      },
+      "title": "Import, parse, load, evaluate, interrupt, crash, replace, remove, and attempt promotion of unknown, malformed, oversized, hostile, unsupported, provenance-incomplete, license-unclear, and policy-excluded artifacts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-EVD-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13286,6 +16030,71 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-FANL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run statistical outlier and potential-fraud indicators across stable, drifting, sparse, poisoned, seasonal, duplicate-merchant, changed-category, adversarial-description, and known-anomaly fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-FDOC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Match receipts, invoices, reimbursements, statements, and tax documents to transactions across duplicate, partial, multi-page, multi-currency, altered, malicious, unmatched, and redacted fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-FIMPORT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Import and reconcile CSV, OFX, and QFX fixtures across encodings, profiles, accounts, periods, opening and closing balances, pending and posted transitions, duplicates, transfers, splits, corrections, malformed data, and restarts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-FIN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise financial values and records across currencies, scales, signs, rounding modes, boundary magnitudes, splits, transfers, categories, recurring streams, debts, assets, liabilities, corrections, and aggregate order."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-FPRV-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Seed financial canaries and probe classification, encryption, memory, model context, logs, diagnostics, exports, backups, cross-pack flows, deletion, crash, removal, and every money-movement family at every autonomy level."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-GA-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -13294,6 +16103,58 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Rebuild all requirements and run the exact v1.0 GA platform, strict-local, connected, delivery, support-matrix, supply-chain, recovery, accessibility, documentation, and independent-review gates."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GA-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Rebuild all requirements and run the exact expanded v1.0 platform, delivery, productivity, communications, finance, cloud-observer, support-matrix, recovery, accessibility, removal, documentation, and independent-review gates."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GA-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Rebuild and independently reproduce the complete v1.0 release from raw requirements, packages, manifests, bills of materials, platform results, provider matrices, trusted-operations evidence, reviewer protocols, limitations, and removal results."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GA-004",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Independently reproduce a comprehensive audit of each release-reference repository and adversarial corpus from raw source, manifests, parser records, structural graphs, semantic packets, evidence cards, checkpoints, findings, reports, platform results, and removal evidence."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GCP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Google Cloud organization, folder, project, region, asset, configuration, label, health, Monitoring, audit reference, security observation, deployment identity, billing, role, token, quota, failure, and removal fixtures."
     },
     {
       "acceptance_tests": [],
@@ -13320,6 +16181,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Read-only Git operations across clean, dirty, detached, untracked, and malformed fixture repositories."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GML-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the published Gmail matrix across mailbox, message, thread, label, draft, send, reply, forward, attachment, history, push, polling, permission, failure, and recovery fixtures."
     },
     {
       "acceptance_tests": [],
@@ -13403,6 +16277,71 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-LMAIL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run Thunderbird, Evolution, KMail, mbox, and Maildir interoperability against versioned, locked, corrupted, replaced, linked, raced, credential-seeded, and unsupported profile fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-M365-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the published Outlook and Exchange Online matrix across mailbox, folder, thread, message, flag, category, draft, send, reply, forward, attachment, shared-mailbox, permission, pagination, event, failure, and recovery fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MAIL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise capability-negotiated IMAP, SMTP, JMAP, and Proton Bridge fixtures across server identity, TLS, authentication reference, mailbox, folder, feature, formatting, attachment, rate, disconnect, and removal states."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MCAT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Mutate publisher, developer, license, origin, lineage, artifact, format, conversion, tokenizer, template, hash, size, runtime, platform, hardware, quality, security, support, state, expiry, and revocation for catalog fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MGR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise chat requests for list, recommend, download, import, resume, verify, activate, compare, cancel, crash, roll back, remove, and clean storage with source substitution, size drift, low disk, malformed artifacts, failed scans, stale approval, and interrupted activation."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-MODEL-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13437,6 +16376,19 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Round-trip and render Markdown containing inline/display mathematics, labels, references, escaping, code fences, malformed input, hostile commands, deep macros, accessibility labels, and cross-platform fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MUSE-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Verify first-party Muse Glimmer identity, classification, license, origin, lineage, artifacts, transformations, hashes, runtime/platform compatibility, measured resource fit, coding/tool quality, security, and support evidence through the normal admission pipeline."
     },
     {
       "acceptance_tests": [],
@@ -13507,6 +16459,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-PGR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Build and mutate identity and work graphs across people, accounts, organizations, mailboxes, channels, meetings, tasks, documents, delivery objects, financial records, and cloud observations."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PIM-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Microsoft, Google, CalDAV, and CardDAV calendar, contact, and task matrices across identity, availability, time zone, recurrence, invitations, responses, reminders, contacts, assignments, permissions, conflicts, writes, failures, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PLAT-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13559,6 +16537,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-RCN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Seed cross-module architectural drift, duplicated responsibility, dead and orphaned code, circular dependencies, conflicting state models, incompatible paradigms, stale adapters, abandoned migrations, test gaps, and documentation-to-code conflicts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-REL-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -13593,6 +16584,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ROA-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Run audits, parsers, language services, builds, tests, package operations, generators, formatters, coverage tools, cancellation, crashes, malicious repository instructions, and path races against canonical and disposable workspaces."
     },
     {
       "acceptance_tests": [],
@@ -13650,6 +16654,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-SEM-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Partition repositories at architectural boundaries under varied context budgets, packet order, interruption points, model restarts, and approved model profiles while preserving exact evidence-card provenance."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-SLK-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the published Slack matrix across workspace, channel, direct and group message, thread, reply, mention, reaction, file, edit, deletion, event, scope, pagination, rate, failure, and recovery fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SPEC-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13676,6 +16706,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-STR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
+      },
+      "title": "Build and independently reproduce module, symbol, interface, dependency, call, state, data, event, error, configuration, schema, test, build, workflow, release, and provenance graphs across the published language and build-system matrix."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-SUP-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -13689,6 +16732,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-SYNC-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise signed events, change notifications, delta cursors, polling, edits, deletions, tombstones, gaps, backfill, duplicates, reordering, clock skew, revocation, throttling, partition, restart, and removal."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-TMS-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise the published Teams matrix across tenant, team, channel, chat, thread, message, reply, mention, reaction, file, edit, deletion, membership, event, permission, failure, and recovery fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-TOOL-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -13697,6 +16766,32 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Golden list, read, search, metadata, and hash fixtures with size and result limits."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-TRU-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Enumerate and mutate every trusted-operations process, worker, IPC edge, network path, credential edge, store, capability registration, lifecycle transition, disablement, and removal state on every first-GA platform."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-UIN-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Build unified-inbox views from mixed communication, delivery, personal-information, finance, and cloud fixtures with unread, due, blocked, duplicate, stale, incomplete, and uncertain states."
     },
     {
       "acceptance_tests": [],
@@ -13728,6 +16823,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-WEB-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Search and retrieve changing public facts across primary, secondary, stale, conflicting, redirected, malicious, oversized, script-heavy, archived, unavailable, authenticated, and private-data-requesting fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WFA-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Compile, dry run, execute, cancel, crash, resume, expire, and remove productivity workflows with nested triggers, branches, joins, classifications, accounts, recipients, budgets, approvals, failures, and hostile external content."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-WIN-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -13749,6 +16870,32 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Exercise GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards reads, links, drafts, field updates, comments, transitions, attachments, permissions, pagination, and recovery."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-XOP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix"
+      },
+      "title": "Run cross-capability attacks joining hostile web or repository content, shell authority, credentials, backup destinations, model installation, provider workers, schedules, crashes, revocation, removal, and resource pressure."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-XPR-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Run cross-pack mutation, fuzz, injection, identity, recipient, attachment, synchronization, financial-precision, reconciliation, money-movement-absence, cloud-mutation-absence, resource, crash, cancellation, recovery, removal, accessibility, and end-to-end campaigns."
     },
     {
       "acceptance_tests": [],

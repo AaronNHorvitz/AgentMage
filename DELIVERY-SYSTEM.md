@@ -201,3 +201,69 @@ A provider version outside the matrix starts in an unsupported or diagnostic-onl
 The first-GA reference adapters establish the contract. Later adapters should be selected by user value and semantic fit, not by making the core aware of more brands. High-value extensions include Bitbucket and Gerrit for source, Buildkite and CircleCI for CI, Pulumi for infrastructure, New Relic and Dynatrace for observability, ServiceNow for incidents and change records, and Port/Cortex/Compass for service catalogs.
 
 Each extension enters as L0, proves L1 read behavior, and advances one capability level at a time. A provider with strong read support and no safe mutation semantics remains honestly supported at L1.
+
+## 15. Productivity-System Relationship
+
+Decision 0009 adds the communications, personal-information, document, finance, and Cloud Observer
+packs defined in [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md). They reuse this document's
+adapter lifecycle, exact connected identity, operation-scoped workers, support-matrix truthfulness,
+event integrity, effect reconciliation, and complete-removal contract.
+
+The productivity work graph may link a message, meeting, task, document, financial alert, or cloud
+observation to delivery objects, but it does not convert those records into delivery authority.
+Likewise, a delivery event cannot authorize a communication, financial-record change, or cloud
+operation. Cross-graph edges retain both native identities, source evidence, observation time,
+classification, confidence class, and freshness.
+
+Additional capability boundaries apply:
+
+- Communication reads, drafts, sends, edits, deletions, reactions, attachments, calendar changes,
+  contact changes, task changes, and document changes are independently manifested operations.
+- The Autonomy Center narrows policy but does not mint, hold, transfer, aggregate, or consume grants.
+- Financial institution reads and cloud observations cannot advance beyond read conformance in
+  v1.0. Their adapters have no writable, executable, deployable, secret, or administrative level.
+- Non-money-movement accounting records can advance to bounded write conformance only through the
+  Finance pack's fixed-point, reconciliation, and recovery gates.
+- Cross-pack workflows compile to explicit operation graphs. A generic workflow cannot collapse
+  communication, delivery, finance, and cloud actions into one approval or credential scope.
+
+The delivery system remains independently complete when all Decision 0009 packs are absent, and the
+productivity packs remain removable without damaging delivery graph identity or evidence.
+
+## 16. Trusted-Operations Relationship
+
+Decision 0010 adds the command, public-research, credential-broker, continuity, and model-manager
+capabilities defined in [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md). They reuse the kernel's
+grant, identity, receipt, cancellation, reconciliation, and removal contracts but do not become
+delivery adapters.
+
+- A command may run Git, build, test, package, or delivery tooling only at the effective command
+  level. Owner / Unrestricted Session does not silently confer provider credentials, hosted-write,
+  deployment, secret, or administration capability.
+- Public research can inform a delivery plan only as cited untrusted evidence. A webpage cannot
+  approve a dependency, command, issue change, deployment, or release.
+- The credential broker resolves one typed reference for one exact provider operation. Delivery and
+  backup credentials are not interchangeable even when the same provider hosts both services.
+- Continuity snapshots may preserve local delivery state and evidence under classification and
+  retention policy, but cloud backup can write only encrypted objects to one exact backup namespace.
+- Model installation and experimental evaluation cannot alter a delivery graph, publish an
+  artifact, start CI, or promote a release.
+
+Disabling trusted operations leaves the provider-neutral delivery system usable at the remaining
+authorized levels. Removing delivery adapters leaves no connected credential or operation path for
+trusted operations to inherit.
+
+## 17. Whole-Codebase Audit Relationship
+
+Decision 0011 adds the read-only repository capability in
+[`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md). A local audit can include delivery manifests,
+workflows, build definitions, deployment configuration, and locally retained evidence within its
+exact repository scope. Remote repositories, pull requests, issues, checks, logs, artifacts, and
+delivery history are separate provider evidence sources and require their own read grants,
+identities, freshness, pagination, rate, retention, and coverage records.
+
+An audit finding cannot authorize a commit, push, issue change, pipeline, deployment, rollback,
+secret operation, or administrative effect. Audit workers have no hosted-write or provider
+credential authority. If the user later chooses remediation, AgentMage creates a new delivery plan
+from current evidence under the ordinary preview, grant, execution, reconciliation, and receipt
+contract.

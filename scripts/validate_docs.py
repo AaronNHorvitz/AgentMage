@@ -21,6 +21,9 @@ REQUIRED_FILES = (
     "MODEL-PROVENANCE-POLICY.md",
     "RUNTIME-BOUNDARIES.md",
     "DELIVERY-SYSTEM.md",
+    "PRODUCTIVITY-SYSTEM.md",
+    "TRUSTED-OPERATIONS.md",
+    "CODEBASE-AUDIT.md",
     "WINDOWS-BOUNDARIES.md",
     "architecture/language-build-matrix.json",
     "architecture/module-inventory.json",
@@ -229,6 +232,9 @@ REQUIRED_FILES = (
     "docs/decisions/0006-update-rollback-design.md",
     "docs/decisions/0007-local-emergency-disablement.md",
     "docs/decisions/0008-first-ga-delivery-system-and-windows.md",
+    "docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md",
+    "docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md",
+    "docs/decisions/0011-whole-codebase-audit.md",
     "docs/architecture/dependency-direction.md",
 )
 CANONICAL_DOCS = (
@@ -240,6 +246,13 @@ CANONICAL_DOCS = (
 )
 DECISION_FILE = "docs/decisions/0001-product-security-and-runtime-baseline.md"
 FIRST_GA_DECISION_FILE = "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+PRODUCTIVITY_DECISION_FILE = (
+    "docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md"
+)
+TRUSTED_OPERATIONS_DECISION_FILE = (
+    "docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md"
+)
+CODEBASE_AUDIT_DECISION_FILE = "docs/decisions/0011-whole-codebase-audit.md"
 DECISION_BOUNDARIES = {
     "license": (
         re.compile(r"Apache(?: License)?[- ]2\.0", re.IGNORECASE),
@@ -287,7 +300,7 @@ DECISION_BOUNDARIES = {
 LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 IDENTIFIER = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
 SR_IDENTIFIER = re.compile(r"\bSR-[A-Z]+-\d{3}\b")
-RV_IDENTIFIER = re.compile(r"\bRV-(?:0[1-9]|[12]\d|30)\b")
+RV_IDENTIFIER = re.compile(r"\bRV-(?:0[1-9]|[1-3]\d|4[0-8])\b")
 PROHIBITED_CLAIM = re.compile(
     r"\b(?:federal|government|treasury|fedramp|fisma|fips|nist|sp\s*800)\b",
     re.IGNORECASE,
@@ -382,7 +395,7 @@ def check_identifiers(files: list[Path], failures: list[str]) -> None:
         re.findall(r"^\| `(SR-[A-Z]+-\d{3})` \|", security, re.MULTILINE)
     )
     definition_list.extend(
-        re.findall(r"^### `(RV-(?:0[1-9]|[12]\d|30))`", security, re.MULTILINE)
+        re.findall(r"^### `(RV-(?:0[1-9]|[1-3]\d|4[0-8]))`", security, re.MULTILINE)
     )
     definitions = set(definition_list)
 
@@ -402,7 +415,7 @@ def check_identifiers(files: list[Path], failures: list[str]) -> None:
     for identifier in sorted(references - definitions):
         failures.append(f"unresolved stable identifier: {identifier}")
 
-    expected_rv = {f"RV-{number:02d}" for number in range(1, 31)}
+    expected_rv = {f"RV-{number:02d}" for number in range(1, 49)}
     missing_rv = expected_rv - set(RV_IDENTIFIER.findall(security))
     if missing_rv:
         failures.append(f"missing reviewer protocols: {', '.join(sorted(missing_rv))}")
@@ -420,12 +433,18 @@ def check_cross_document_contract(failures: list[str]) -> None:
         "Visual Studio Code Chat",
         "provider-neutral",
         "GitHub Enterprise",
+        "Muse Glimmer",
+        "Owner / Unrestricted Session",
+        "whole-codebase audit",
     )
     required_links = (
         "MODEL-PROVENANCE-POLICY.md",
         "SECURITY.md",
         "RUNTIME-BOUNDARIES.md",
         "DELIVERY-SYSTEM.md",
+        "PRODUCTIVITY-SYSTEM.md",
+        "TRUSTED-OPERATIONS.md",
+        "CODEBASE-AUDIT.md",
         "WINDOWS-BOUNDARIES.md",
     )
     for relative in CANONICAL_DOCS:
@@ -439,8 +458,8 @@ def check_cross_document_contract(failures: list[str]) -> None:
 
     tasks = read("TASKS.md")
     sprint_count = len(re.findall(r"^### \[ \] Sprint \d+", tasks, re.MULTILINE))
-    if sprint_count != 127:
-        failures.append(f"TASKS.md: expected 127 sprint headings, found {sprint_count}")
+    if sprint_count != 169:
+        failures.append(f"TASKS.md: expected 169 sprint headings, found {sprint_count}")
 
     license_text = read("LICENSE")
     if "Apache License" not in license_text or "Version 2.0" not in license_text:
@@ -456,6 +475,9 @@ def check_accepted_decision_contract(
     canonical = documents or {relative: read(relative) for relative in CANONICAL_DOCS}
     decision_text = decision if decision is not None else read(DECISION_FILE)
     first_ga_decision_text = read(FIRST_GA_DECISION_FILE)
+    productivity_decision_text = read(PRODUCTIVITY_DECISION_FILE)
+    trusted_operations_decision_text = read(TRUSTED_OPERATIONS_DECISION_FILE)
+    codebase_audit_decision_text = read(CODEBASE_AUDIT_DECISION_FILE)
     decision_markers = {
         "license": ("Apache License 2.0",),
         "model": ("Gemma 4 E4B", "Gemma 4 12B Unified"),
@@ -471,6 +493,12 @@ def check_accepted_decision_contract(
         failures.append(f"{DECISION_FILE}: decision is not accepted")
     if "| Status | Accepted |" not in first_ga_decision_text:
         failures.append(f"{FIRST_GA_DECISION_FILE}: decision is not accepted")
+    if "| Status | Accepted |" not in productivity_decision_text:
+        failures.append(f"{PRODUCTIVITY_DECISION_FILE}: decision is not accepted")
+    if "| Status | Accepted |" not in trusted_operations_decision_text:
+        failures.append(f"{TRUSTED_OPERATIONS_DECISION_FILE}: decision is not accepted")
+    if "| Status | Accepted |" not in codebase_audit_decision_text:
+        failures.append(f"{CODEBASE_AUDIT_DECISION_FILE}: decision is not accepted")
     for marker in (
         "v1.0 GA",
         "Windows 11",
@@ -486,6 +514,59 @@ def check_accepted_decision_contract(
         if marker not in first_ga_decision_text:
             failures.append(
                 f"{FIRST_GA_DECISION_FILE}: missing first-GA decision marker: {marker}"
+            )
+    for marker in (
+        "Sprint 156",
+        "Autonomy Center",
+        "Outlook",
+        "Teams",
+        "Gmail",
+        "Slack",
+        "Actual Budget",
+        "money movement",
+        "AWS",
+        "Azure",
+        "Google Cloud",
+        "read-only",
+    ):
+        if marker not in productivity_decision_text:
+            failures.append(
+                f"{PRODUCTIVITY_DECISION_FILE}: missing productivity decision marker: "
+                f"{marker}"
+            )
+    for marker in (
+        "Sprint 166",
+        "Owner / Unrestricted Session",
+        "public Internet",
+        "credential broker",
+        "cloud continuity",
+        "Cloud Observer",
+        "Muse Glimmer",
+        "Experimental Model Lab",
+        "post-GA",
+    ):
+        if marker not in trusted_operations_decision_text:
+            failures.append(
+                f"{TRUSTED_OPERATIONS_DECISION_FILE}: missing trusted-operations "
+                f"decision marker: {marker}"
+            )
+    for marker in (
+        "Sprint 166",
+        "Model context",
+        "project memory",
+        "Every in-scope path",
+        "Deterministic parsers",
+        "Cross-module reconciliation",
+        "copy-on-write",
+        "Secret detection",
+        "Checkpoints",
+        "AM-GAD-004",
+        "AT-GA-004",
+    ):
+        if marker not in codebase_audit_decision_text:
+            failures.append(
+                f"{CODEBASE_AUDIT_DECISION_FILE}: missing whole-codebase audit "
+                f"decision marker: {marker}"
             )
     for boundary, markers in decision_markers.items():
         for marker in markers:

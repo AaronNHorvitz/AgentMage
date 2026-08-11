@@ -2,10 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Status | Active product policy; initial candidate evaluation is in progress |
+| Status | Active product policy; initial and additional candidate evaluation is in progress |
 | Effective date | 2026-08-10 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
+| Model-management architecture | `TRUSTED-OPERATIONS.md` |
 | Applies to | Models, adapters, tokenizers, templates, conversions, quantizations, and derived artifacts |
 
 ## 1. Purpose
@@ -92,6 +93,20 @@ Gemma 4 12B Unified is the named fallback candidate if E4B fails a required qual
 
 Gemma 4 26B A4B and other later candidates remain disabled until separately promoted and admitted.
 
+### Meta Muse Glimmer
+
+Meta Muse Glimmer is a named candidate only. Before any supported, downloadable, compatible,
+open-source, open-weight, or hardware-fit claim is made, its admission record must verify from
+first-party evidence the exact developer and publisher, release and artifact revisions, model card,
+license text and classification, origin and upstream lineage, formats, conversions and
+quantizations, hashes, tokenizer and template, runtime compatibility, measured platform resources,
+coding and tool quality, security behavior, and support state.
+
+The disposition may be `PASS`, `BLOCKED`, or `REJECTED` under the same rules as every candidate. A
+non-pass does not block the Gemma reference profile or first GA. Mutable names, community mirrors,
+secondary reports, or descriptive use of the term open source cannot substitute for the required
+first-party and artifact evidence.
+
 ## 8. Re-Review Triggers
 
 Admission expires and the profile is disabled or quarantined when any of the following changes:
@@ -103,3 +118,59 @@ Admission expires and the profile is disabled or quarantined when any of the fol
 - A vulnerability, compromise, revocation, or unexplained reproducibility difference affects the admitted profile.
 
 No cached approval, user preference, compatibility alias, or successful prior run overrides a re-review trigger.
+
+## 9. Approved Catalog and Guided Installation
+
+The signed model catalog uses exact `candidate`, `evaluating`, `approved`, `degraded`, `quarantined`,
+`rejected`, and `retired` states. Only `approved` profiles and explicitly supported `degraded`
+profiles can be activated for ordinary AgentMage use. Every catalog transition records its source
+evidence, decision, reviewer, date, limitations, expiry, and triggering release identity.
+
+A user may ask Chat to list compatible approved profiles and to download, import, verify, activate,
+compare, roll back, remove, or clean up one. Before acquisition, the deterministic model manager
+shows the exact artifact and runtime identities, publisher, license, source, size, disk and memory
+requirements, measured hardware fit, expected network use, destination, verification sequence,
+limitations, and rollback. The user confirms that exact plan.
+
+The separate installer/importer performs bounded acquisition or import into quarantine, resume,
+hash and signature verification, malware and format scanning, admission self-tests, atomic
+activation, cancellation, crash recovery, rollback, and cleanup. The model runtime, selected model,
+model output, prompt, webpage, repository, or provider response cannot approve, download, replace,
+activate, or fall back to a model.
+
+## 10. Experimental Model Lab
+
+The post-GA Experimental Model Lab may inspect user-selected unapproved artifacts only inside the
+boundary in `TRUSTED-OPERATIONS.md`. It retains Section 4's origin and lineage rule. An imported
+artifact records its source, observed license, provenance gaps, hashes, quarantine state, format,
+resource preflight, and explicit warnings.
+
+An experimental model has no network, credential, command, connector, messaging, finance, delivery,
+cloud, backup, operational-memory, approved-model-store, or canonical-workspace-write authority. It
+uses synthetic evaluation data and disposable bounded scratch space. Experimental quality or
+security results do not create approval. Promotion requires a new complete Section 5 admission
+record, independent review, and an approved catalog transition.
+
+## 11. Whole-Codebase Audit Model Use
+
+[`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) governs model use during a comprehensive repository
+audit. A large context window, retrieval score, or model-generated summary is never evidence that a
+model understands an entire repository. The deterministic census, structural index, source hashes,
+evidence ledger, reconciliation state, and coverage records remain authoritative.
+
+Every model profile promoted for audit work must pass an audit-specific corpus covering bounded
+source packets, exact source grounding, structural-fact adherence, uncertainty, contradictory
+evidence, malformed or adversarial repository content, context pressure, cancellation, resume, and
+stable structured output. The admission record stores the measured packet, context, latency,
+memory, and quality limits. A profile is not approved merely because it accepts a large prompt.
+
+Every semantic evidence card records the exact model, runtime, template, tokenizer, adapter, and
+policy identities that produced it. Changing any of those identities invalidates affected semantic
+cards and their dependent findings, reconciliation records, and reports. It does not invalidate an
+unchanged deterministic structural index unless that index's own parser or source identity changed.
+
+An audit model receives only the bounded, secret-safe packet selected by the audit coordinator. It
+never receives a repository handle, canonical workspace write grant, credential, network authority,
+hosted-service authority, command authority, coverage authority, approval authority, or checkpoint
+decryption key. Model output remains untrusted data until schema validation, source resolution, and
+cross-module reconciliation succeed.
