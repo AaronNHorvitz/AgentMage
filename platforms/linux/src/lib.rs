@@ -4,6 +4,7 @@
 
 mod ipc;
 mod sandbox;
+mod secret_service;
 
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
@@ -13,6 +14,11 @@ pub use ipc::{
 pub use sandbox::{
     LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
     LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
+};
+pub use secret_service::{
+    LinuxSecretKey, LinuxSecretOperation, LinuxSecretReceipt, LinuxSecretService,
+    LinuxSecretServiceError, LinuxSecretServiceErrorKind, LinuxSecretServiceManifest,
+    LinuxSecretValue,
 };
 
 use std::fmt;

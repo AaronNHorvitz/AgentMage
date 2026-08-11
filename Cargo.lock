@@ -47,6 +47,7 @@ dependencies = [
  "rustix",
  "seccompiler",
  "sha2",
+ "zeroize",
 ]
 
 [[package]]

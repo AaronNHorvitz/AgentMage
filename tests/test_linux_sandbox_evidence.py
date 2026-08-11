@@ -13,7 +13,13 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
         return {
             "schema_version": 1,
             "artifact_id": "linux-ipc-sandbox-control-verification",
-            "task_ids": ["9.1.2.2", "9.1.2.3", "9.1.3.1", "9.1.3.2"],
+            "task_ids": [
+                "9.1.1.5",
+                "9.1.2.2",
+                "9.1.2.3",
+                "9.1.3.1",
+                "9.1.3.2",
+            ],
             "test_ids": ["S-009-UT01", "S-009-ST01"],
             "status": "pass-fedora-only",
             "source_revision": "a" * 40,
@@ -44,6 +50,14 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
             ],
             "ipc_tests": [
                 {"test": name, "status": "pass"} for name in evidence.IPC_TESTS
+            ],
+            "secret_service_tests": [
+                {"test": name, "status": "pass"}
+                for name in evidence.SECRET_SERVICE_TESTS
+            ],
+            "secret_service_live_tests": [
+                {"test": name, "status": "pass"}
+                for name in evidence.SECRET_SERVICE_LIVE_TESTS
             ],
             "platform_status": copy.deepcopy(evidence.PLATFORM_STATUS),
             "private_values_present": False,

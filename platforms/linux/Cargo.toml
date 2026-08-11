@@ -13,6 +13,7 @@ agentmage-kernel-contracts.workspace = true
 rustix.workspace = true
 seccompiler.workspace = true
 sha2.workspace = true
+zeroize.workspace = true
 
 [lints]
 workspace = true

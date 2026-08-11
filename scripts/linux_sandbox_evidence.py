@@ -34,6 +34,7 @@ SOURCE_PATHS = (
     "platforms/linux/src/ipc.rs",
     "platforms/linux/src/lib.rs",
     "platforms/linux/src/sandbox.rs",
+    "platforms/linux/src/secret_service.rs",
     "scripts/linux_sandbox_evidence.py",
     "tests/test_linux_sandbox_evidence.py",
 )
@@ -56,8 +57,18 @@ IPC_TESTS = (
     "private_socket_uses_kernel_peer_credentials_and_exact_frame",
     "unsafe_parent_existing_socket_and_short_frame_fail_closed",
 )
+SECRET_SERVICE_TESTS = (
+    "key_debug_and_errors_never_disclose_candidate_content",
+    "keys_values_and_manifests_are_bounded_and_redacted",
+    "sensitive_output_is_bounded_without_a_content_digest",
+)
+SECRET_SERVICE_LIVE_TESTS = (
+    "live_service_probe_returns_only_a_content_free_receipt",
+    "live_service_round_trip_is_exact_and_cleanup_is_verified",
+)
 TOOLS = {
     "bubblewrap": Path("/usr/bin/bwrap"),
+    "secret-tool": Path("/usr/bin/secret-tool"),
     "systemd-run": Path("/usr/bin/systemd-run"),
 }
 CONTROLS = {
@@ -78,6 +89,7 @@ CONTROLS = {
         "TasksMax",
     ],
     "output": "concurrent-drain-bounded-retention-sha256-diagnostics",
+    "secret_service": "fixed-attributes-pipe-only-zeroized-bounded-watchdog-client",
 }
 ATTACKS = (
     "ambient_home",
@@ -98,7 +110,7 @@ PLATFORM_STATUS = {
 }
 LIMITATIONS = [
     "Ubuntu clean-environment sandbox and package execution remain pending.",
-    "Secret Service, inference runtime, package lifecycle, and adapter startup probes remain pending.",
+    "Inference runtime, package lifecycle, and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted.",
 ]
 REVISION = re.compile(r"^[0-9a-f]{40}$")
@@ -230,7 +242,15 @@ def tool_record(name: str, path: Path) -> dict[str, Any]:
     }
 
 
-def observed_tests(filter_name: str, expected: tuple[str, ...]) -> list[dict[str, str]]:
+def observed_tests(
+    filter_name: str,
+    expected: tuple[str, ...],
+    *,
+    ignored: bool = False,
+) -> list[dict[str, str]]:
+    test_arguments = ["--test-threads=1"]
+    if ignored:
+        test_arguments.insert(0, "--ignored")
     output = run_command(
         [
             "cargo",
@@ -241,7 +261,7 @@ def observed_tests(filter_name: str, expected: tuple[str, ...]) -> list[dict[str
             "agentmage-platform-linux",
             filter_name,
             "--",
-            "--test-threads=1",
+            *test_arguments,
         ]
     )
     observed = {
@@ -270,10 +290,16 @@ def build_report(revision: str) -> dict[str, Any]:
     tools = [tool_record(name, path) for name, path in TOOLS.items()]
     sandbox_tests = observed_tests("sandbox::tests", SANDBOX_TESTS)
     ipc_tests = observed_tests("ipc::tests", IPC_TESTS)
+    secret_service_tests = observed_tests("secret_service::tests", SECRET_SERVICE_TESTS)
+    secret_service_live_tests = observed_tests(
+        "secret_service::tests::live_service",
+        SECRET_SERVICE_LIVE_TESTS,
+        ignored=True,
+    )
     return {
         "schema_version": 1,
         "artifact_id": "linux-ipc-sandbox-control-verification",
-        "task_ids": ["9.1.2.2", "9.1.2.3", "9.1.3.1", "9.1.3.2"],
+        "task_ids": ["9.1.1.5", "9.1.2.2", "9.1.2.3", "9.1.3.1", "9.1.3.2"],
         "test_ids": ["S-009-UT01", "S-009-ST01"],
         "status": "pass-fedora-only",
         "source_revision": revision,
@@ -284,6 +310,8 @@ def build_report(revision: str) -> dict[str, Any]:
         "attack_coverage": {attack: "pass" for attack in ATTACKS},
         "sandbox_tests": sandbox_tests,
         "ipc_tests": ipc_tests,
+        "secret_service_tests": secret_service_tests,
+        "secret_service_live_tests": secret_service_live_tests,
         "platform_status": PLATFORM_STATUS,
         "private_values_present": False,
         "macos_evidence_substituted": False,
@@ -303,7 +331,13 @@ def validate_report(value: Any) -> list[str]:
         or REVISION.fullmatch(str(value.get("source_revision"))) is None
     ):
         failures.append("Linux control report identity changed")
-    if value.get("task_ids") != ["9.1.2.2", "9.1.2.3", "9.1.3.1", "9.1.3.2"]:
+    if value.get("task_ids") != [
+        "9.1.1.5",
+        "9.1.2.2",
+        "9.1.2.3",
+        "9.1.3.1",
+        "9.1.3.2",
+    ]:
         failures.append("Linux control task mapping changed")
     if value.get("test_ids") != ["S-009-UT01", "S-009-ST01"]:
         failures.append("Linux control test mapping changed")
@@ -340,6 +374,21 @@ def validate_report(value: Any) -> list[str]:
         or any(item.get("status") != "pass" for item in ipc)
     ):
         failures.append("IPC test closure is incomplete")
+    secret_service = value.get("secret_service_tests")
+    secret_service_live = value.get("secret_service_live_tests")
+    if (
+        not isinstance(secret_service, list)
+        or [item.get("test") for item in secret_service] != list(SECRET_SERVICE_TESTS)
+        or any(item.get("status") != "pass" for item in secret_service)
+    ):
+        failures.append("Secret Service unit test closure is incomplete")
+    if (
+        not isinstance(secret_service_live, list)
+        or [item.get("test") for item in secret_service_live]
+        != list(SECRET_SERVICE_LIVE_TESTS)
+        or any(item.get("status") != "pass" for item in secret_service_live)
+    ):
+        failures.append("Secret Service live test closure is incomplete")
     attacks = value.get("attack_coverage")
     if attacks != {attack: "pass" for attack in ATTACKS}:
         failures.append("Linux attack coverage is incomplete")

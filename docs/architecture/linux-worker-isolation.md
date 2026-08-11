@@ -90,6 +90,28 @@ launch and no fallback without Bubblewrap, seccomp, the systemd user service, or
 the declared resource controls. Platform startup probes and clean Fedora/Ubuntu
 package evidence remain separate Sprint 9 gate requirements.
 
+## Secret Service Boundary
+
+Linux credentials use the root-owned `secret-tool` client and the desktop
+session's `org.freedesktop.secrets` implementation. AgentMage supplies only
+fixed schema/profile/purpose attributes on the process command line. Credential
+bytes travel through standard input for storage and standard output for lookup;
+they never enter process arguments, inherited environment, configuration,
+receipts, diagnostics, model context, or tool results.
+
+The client starts with a cleared environment containing only the constructed
+user runtime directory and session-bus address. Client identity is verified and
+digest-revalidated before each operation. Reads, diagnostics, and elapsed time
+are bounded; client processes are terminated on timeout. Secret buffers use the
+`zeroize` crate, have no serialization or display implementation, and expose
+bytes only for the duration of a caller-provided closure. Receipts contain the
+operation, hidden-diagnostic byte count, and hidden-diagnostic digest, but no
+key attributes, value, or value digest.
+
+The Fedora evidence performs a fresh no-match probe plus a synthetic
+store/lookup/clear round trip and verifies the item is absent afterward. It does
+not inspect, enumerate, export, or modify any pre-existing credential.
+
 ## Current Verification
 
 The Linux adapter test suite verifies:
