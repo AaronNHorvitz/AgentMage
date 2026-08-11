@@ -1,0 +1,616 @@
+{
+  "artifact_id": "authority-escalation-denial-verification",
+  "coverage": {
+    "actor_identity_count": 1,
+    "admitted_authority_count": 0,
+    "escalation_kind_count": 4,
+    "receipt_count": 28,
+    "redacted_error_code_count": 1,
+    "source_count": 7
+  },
+  "limitations": [
+    "Source and actor attribution are typed evidence but are not authenticated IPC claims.",
+    "Receipts are in-memory non-authoritative values without durable keyed integrity.",
+    "Plugin and child behavior is simulated with sealed descriptive artifacts.",
+    "No production worker, plugin host, child runtime, or macOS implementation is claimed."
+  ],
+  "platform_status": {
+    "linux_reference": "verified-local",
+    "macos": "blocked-macos",
+    "macos_implementation_claim": "none",
+    "shared_contracts": "verified-local"
+  },
+  "receipts": [
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "model",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "model",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "model",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "model",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "prompt",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "prompt",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "prompt",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "prompt",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "shell",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "shell",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "shell",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "shell",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "tool_definition",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "tool",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "tool_definition",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "tool",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "tool_definition",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "tool",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "tool_definition",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "tool",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "plugin",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "plugin",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "plugin",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "description",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "plugin",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "approval_request",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "approval_display",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "approval_request",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "approval_display",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "approval_request",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "approval_display",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "approval_request",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "approval_display",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "mint",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "simulated_child",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "widen",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "simulated_child",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "transfer",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "simulated_child",
+      "task_id": "task-0001"
+    },
+    {
+      "actor_id": "actor-local-0001",
+      "artifact_kind": "prompt",
+      "authority_admitted": false,
+      "error": {
+        "category": "policy",
+        "caused_by": null,
+        "code": "authority.descriptive_artifact.denied",
+        "error_id": "error-descriptive-authority-denied",
+        "field_path": [],
+        "message": "Descriptive artifacts cannot authorize an operation",
+        "retry": "after_user_decision",
+        "schema_version": 1
+      },
+      "escalation_kind": "combine",
+      "schema_version": 1,
+      "session_id": "session-0001",
+      "source": "simulated_child",
+      "task_id": "task-0001"
+    }
+  ],
+  "reference_revision": "c21d8befd3134a1427ce6f7998ac06387c6d7b16",
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+    },
+    {
+      "path": "kernel/engine/tests/authority_escalation_matrix.rs",
+      "sha256": "3ae491dd10c8cc1ef5246d895efdaac28383546c7e2135da8c1be05ddb871880"
+    },
+    {
+      "path": "scripts/authority_escalation_matrix.py",
+      "sha256": "7fc48096ab875845e0712e95321ada3d401f51893923872bba05df086d66a512"
+    },
+    {
+      "path": "tests/test_authority_escalation_matrix.py",
+      "sha256": "027b1fa3ff83d3bb58f4eb20c1076033957bd3f82cad15e3080638c7438ef10b"
+    }
+  ],
+  "status": "pass-shared-linux-reference",
+  "task_id": "5.1.3.3",
+  "verification": {
+    "actor_session_task_attribution": "pass",
+    "authority_material_absence": "pass",
+    "candidate_content_redaction": "pass",
+    "constant_denial_without_success_path": "pass",
+    "escalation_kind_closure": "pass",
+    "sealed_descriptive_rejection": "pass",
+    "source_class_closure": "pass"
+  }
+}
