@@ -25,8 +25,8 @@ from scripts.story_4_1_gate import G_DOD_IDS, check_report as check_story_gate
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/sprint-gate-report.json"
-REVIEWED_COMMIT = "af282594b2c48710f3e7126814cc5963b5b074c1"
-REVIEWED_TREE = "4b316221b9df718b5826f7a469ff3f64724368d8"
+REVIEWED_COMMIT = "d25d50671a0879cb2b73c8488b4cdc6cee4f31a9"
+REVIEWED_TREE = "847bcea3e5c65079cc1a1f37b122bfe0c47fcb7f"
 REVIEWED_PATHS = (
     "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json",
     "scripts/story_4_1_gate.py",

@@ -29,8 +29,8 @@ from scripts.story_2_2_gate import check_report as check_story_2_2_gate  # noqa:
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-2/sprint-gate-report.json"
-REVIEWED_COMMIT = "99599b8e6ed8d23fd6ef9aca89d9c37d446be7f5"
-REVIEWED_TREE = "57068cad97567e12e6ad8064926db40857642eb0"
+REVIEWED_COMMIT = "d25d50671a0879cb2b73c8488b4cdc6cee4f31a9"
+REVIEWED_TREE = "847bcea3e5c65079cc1a1f37b122bfe0c47fcb7f"
 REVIEWED_PATHS = (
     "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
     "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
