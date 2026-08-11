@@ -1,6 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "decision_id": "ADR-0004",
+  "amending_decision_id": "ADR-0012",
   "status": "accepted",
   "product_components": [
     {
@@ -10,10 +11,11 @@
       "platforms": [
         "macos-arm64",
         "fedora-x86_64",
-        "ubuntu-x86_64"
+        "ubuntu-x86_64",
+        "windows-x86_64"
       ],
       "authority": "policy, grants, tools, model mediation, state, and receipts",
-      "shipped": true
+      "status_ref": "architecture/status-model.json#component=kernel"
     },
     {
       "id": "linux-platform-adapter",
@@ -24,7 +26,7 @@
         "ubuntu-x86_64"
       ],
       "authority": "Linux sandbox, identity, secret-store, process, and IPC enforcement",
-      "shipped": true
+      "status_ref": "architecture/status-model.json#component=linux-platform-adapter"
     },
     {
       "id": "macos-platform-adapter",
@@ -34,7 +36,17 @@
         "macos-arm64"
       ],
       "authority": "App Sandbox, XPC, Keychain, bookmark, signing, and native IPC integration",
-      "shipped": true
+      "status_ref": "architecture/status-model.json#component=macos-platform-adapter"
+    },
+    {
+      "id": "windows-platform-adapter",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "windows-x86_64"
+      ],
+      "authority": "Windows sandbox, identity, secret-store, process, and IPC enforcement",
+      "status_ref": "architecture/status-model.json#component=windows-platform-adapter"
     },
     {
       "id": "vscode-extension",
@@ -43,10 +55,11 @@
       "platforms": [
         "macos-arm64",
         "fedora-x86_64",
-        "ubuntu-x86_64"
+        "ubuntu-x86_64",
+        "windows-x86_64"
       ],
       "authority": "display, interaction, provider registration, and authenticated IPC client only",
-      "shipped": true
+      "status_ref": "architecture/status-model.json#component=vscode-extension"
     },
     {
       "id": "build-orchestrator",
@@ -55,10 +68,11 @@
       "platforms": [
         "macos-arm64",
         "fedora-x86_64",
-        "ubuntu-x86_64"
+        "ubuntu-x86_64",
+        "windows-x86_64"
       ],
       "authority": "developer and release command orchestration only",
-      "shipped": false
+      "status_ref": "architecture/status-model.json#component=build-orchestrator"
     }
   ],
   "non_product_tooling": [
@@ -80,8 +94,7 @@
       "operating_systems": [
         "Apple Silicon macOS"
       ],
-      "implementation_status": "blocked-macos",
-      "verification_status": "blocked-macos"
+      "status_ref": "architecture/status-model.json#platform=macos-arm64"
     },
     {
       "id": "fedora-x86_64",
@@ -89,8 +102,7 @@
       "operating_systems": [
         "Fedora"
       ],
-      "implementation_status": "selected",
-      "verification_status": "not-run"
+      "status_ref": "architecture/status-model.json#platform=fedora-x86_64"
     },
     {
       "id": "ubuntu-x86_64",
@@ -98,8 +110,15 @@
       "operating_systems": [
         "Ubuntu"
       ],
-      "implementation_status": "selected",
-      "verification_status": "not-run"
+      "status_ref": "architecture/status-model.json#platform=ubuntu-x86_64"
+    },
+    {
+      "id": "windows-x86_64",
+      "rust_target": "x86_64-pc-windows-msvc",
+      "operating_systems": [
+        "Windows 11 x64"
+      ],
+      "status_ref": "architecture/status-model.json#platform=windows-x86_64"
     }
   ],
   "build_contract": {

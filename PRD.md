@@ -6,14 +6,14 @@
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
 | **Date** | 2026-08-11 |
-| **Status** | Implementation in progress; first-GA scope expanded by Decisions 0008, 0009, 0010, and 0011 |
+| **Status** | Pre-alpha scaffold under Decision 0012 stabilization; no integrated end-user workflow or supported binary |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
 | **Execution plan** | [TASKS.md](./TASKS.md) - 17 epics and 169 sequential dependency gates |
 | **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
-| **First interface** | Native Visual Studio Code Chat |
-| **First model** | Manifest-pinned local Gemma 4 E4B through native `llama.cpp`, plus a gated Docker Model Runner compatibility adapter on Linux |
+| **First interface target** | Native Visual Studio Code Chat |
+| **Current enabled model** | None; evaluated Gemma 4 E4B and Gemma 4 12B Unified candidates are rejected and disabled |
 | **License** | Apache License 2.0 |
 
 AgentMage is a brand-new, from-scratch project. It is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer, and it is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
@@ -21,6 +21,26 @@ AgentMage is a brand-new, from-scratch project. It is an independent, privately 
 This PRD governs product intent, release scope, architecture, and product-level requirements. The inventory governs stable requirement identifiers, detailed capability gates, and acceptance tests. The security review governs the public product-security baseline and reviewer evidence contract. The implementation plan provides the derived high-level build sequence, workstreams, milestones, dependencies, and risks. The task plan governs granular execution order, stories, tasks, sub-tasks, acceptance criteria, and sprint gates. The README summarizes these authorities and must not redefine them. Supporting model, disclosure, runtime, delivery, productivity, trusted-operations, whole-codebase audit, Windows, and decision documents implement these authorities and cannot weaken them.
 
 If the documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted requirement, test, security-control, reviewer-protocol, epic, sprint, story, task, and sub-task identifiers are never silently removed, weakened, merged away, or renumbered.
+
+## Current Implementation Truth
+
+Current product lifecycle: `scaffolded`.
+
+Current integrated workflow: none.
+
+Current enabled models: none.
+
+Current supported platforms: none.
+
+Stabilization scope freeze: active.
+
+This PRD specifies the accepted target product; it does not claim that the
+target is currently available. The current state is governed by
+[`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
+and [`architecture/status-model.json`](./architecture/status-model.json). The
+17 epics, 169 sprints, and 227 stable requirements remain accepted and
+unchanged. Their original execution is paused until the stabilization gate
+authorizes resumption.
 
 ## Document Governance
 
@@ -40,13 +60,14 @@ If the documents conflict, the narrower safety boundary or release scope wins un
 | `TRUSTED-OPERATIONS.md` | Normative command-authority, public-research, credential-broker, continuity, model-manager, and experimental-model architecture |
 | `CODEBASE-AUDIT.md` | Normative whole-codebase census, structural, semantic, reconciliation, read-only, checkpoint, finding, and coverage architecture |
 | `WINDOWS-BOUNDARIES.md` | Normative first-GA Windows package, process, path, IPC, key, sandbox, runtime, and verification contract |
+| `architecture/status-model.json` | Machine-readable current lifecycle, verification, disposition, support, platform, model, and stabilization state under Decision 0012 |
 | `docs/decisions/*.md` | Accepted clarifications and supersessions with rationale and verification; never authority to weaken a higher-ranked requirement silently |
 
 Each document has an independent revision. A derived document's version number does not claim that the governing PRD has the same maturity; compatibility is established by recorded source versions and automated cross-document checks.
 
 ## 1. Product Summary
 
-AgentMage is a local-first software-development, delivery, productivity, research, continuity, and whole-codebase audit assistant that combines deterministic tools with approved local models. It reads bounded local workspaces, preserves resumable state, runs tools inside enforceable Linux and Windows boundaries, researches current public information with citations, protects connected credentials, creates encrypted continuity snapshots, audits repositories larger than model context with exact evidence and coverage, and shows evidence for its claims. Apple Silicon macOS remains a retained post-GA platform lane.
+The target AgentMage product is a local-first software-development, delivery, productivity, research, continuity, and whole-codebase audit assistant that combines deterministic tools with approved local models. When implemented and enabled through its gates, it will read bounded local workspaces, preserve resumable state, run tools inside enforceable Linux and Windows boundaries, research current public information with citations, protect connected credentials, create encrypted continuity snapshots, audit repositories larger than model context with exact evidence and coverage, and show evidence for its claims. Apple Silicon macOS remains a retained post-GA platform lane.
 
 The complete product adds knowledge management, coding, documents, administrative work, GitHub and GitHub Enterprise, work planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security findings, service catalogs, releases, manual frontier consultation, plugins, browser research, scheduled work, and bounded specialist agents. These capabilities are divided across internal milestones and remain disabled until their own authority, privacy, security, recovery, and acceptance gates pass. v0.1 is deliberately limited to a read-only local evidence assistant in native Visual Studio Code Chat; under Decision 0008 it is an internal milestone, not the first supported public release.
 
@@ -187,12 +208,12 @@ sequenceDiagram
 
 There is no Model-to-Tool, Shell-to-Tool, Shell-to-Model, or Capability-Pack-to-Platform bypass. A request, plan, prompt, model response, approval display, or tool schema may describe an operation, but only a current `CapabilityGrant` consumed by the kernel authorizes it.
 
-## 6. v0.1 User Experience
+## 6. Target v0.1 User Experience
 
-1. The user installs the signed and notarized AgentMage package on an Apple Silicon MacBook Pro M5, or the verified Linux package on Fedora or Ubuntu.
+1. The user installs a verified Linux package on Fedora or Ubuntu. Windows 11 x64 belongs to the first-GA target set; Apple Silicon macOS remains a separately evidenced post-GA lane.
 2. A separate installer/importer assesses hardware, memory, disk space, model and quantization fit, license, publisher, lineage, `MODEL-PROVENANCE-POLICY.md`, native artifact or immutable OCI hashes, and runtime compatibility before atomically enabling an approved artifact.
 3. A local, redacted `agentmage doctor` response renders inside native Visual Studio Code Chat and reports the active model and runtime manifests, offline state, platform boundary, workspace grant, capability versions, index health, encrypted-store availability, and session-recovery status without requiring the deferred end-user CLI.
-4. **AgentMage - Gemma 4 E4B (Local, Read Only)** appears in the native Chat model picker.
+4. An admitted local read-only model profile appears in the native Chat model picker. No profile is currently enabled, and the rejected Gemma candidates are not offered.
 5. The user selects a workspace and sees its resolved root, exclusions, sensitivity, and read-grant expiration.
 6. AgentMage can list files, read bounded text, search names or text, inspect metadata, calculate hashes, inspect Git, and build a deterministic structural repository map without changing the workspace.
 7. Chat responses stream in the native Chat window and include progress, citations, denials, errors, completion receipts, and visible **Observed**, **Derived**, **Inferred**, or **Unknown/Blocked** claim states.
@@ -260,9 +281,9 @@ Before acquisition, the installer/importer reports available memory, free disk s
 
 ## 8. Model Policy and Routing
 
-The first candidate model is Gemma 4 E4B. It is not enabled until its admission record passes. Its manifest records the first-party identity, publisher, Apache-2.0 license disposition, upstream lineage and hash, conversion and quantization recipe, packaged-artifact and tokenizer hashes, runtime build, supported platform, expected memory and disk use, context ceiling, acceleration requirements, and measured tool-call limitations. Docker's `ai/gemma4:e4b` name must resolve to an approved immutable OCI digest; native adapters use the same approved profile through a hash-pinned GGUF and supporting artifacts. A separate installer/importer must show the license, verify the manifest, prove hardware fit, and complete an installation self-test before an artifact becomes runnable. AgentMage refuses a silent artifact or runtime change.
+The first named candidate model is Gemma 4 E4B. Its current feasibility disposition is rejected and disabled, so it is not an enabled product model. Gemma 4 12B Unified is also rejected and disabled. Either candidate requires a new revision-bound admission and evaluation decision before activation. The target manifest records the first-party identity, publisher, Apache-2.0 license disposition, upstream lineage and hash, conversion and quantization recipe, packaged-artifact and tokenizer hashes, runtime build, supported platform, expected memory and disk use, context ceiling, acceleration requirements, and measured tool-call limitations. Docker's `ai/gemma4:e4b` name must resolve to an approved immutable OCI digest; native adapters use the same approved profile through a hash-pinned GGUF and supporting artifacts. A separate installer/importer must show the license, verify the manifest, prove hardware fit, and complete an installation self-test before an artifact becomes runnable. AgentMage refuses a silent artifact or runtime change.
 
-Every model, embedding model, reranker, tokenizer, conversion, quantization, runtime, and derived artifact must pass `MODEL-PROVENANCE-POLICY.md`, including the documented non-Chinese and non-Chinese-derived model rule, in addition to license, publisher, lineage, provenance, integrity, resource, quality, security, and platform review. Gemma 4 12B Unified is the named disabled fallback if E4B fails a mandatory quality or tool-calling gate. Gemma 4 26B A4B and other later candidates remain disabled until their separate gates pass. v0.1 exposes an approved-artifact catalog, not an arbitrary model or provider marketplace.
+Every model, embedding model, reranker, tokenizer, conversion, quantization, runtime, and derived artifact must pass `MODEL-PROVENANCE-POLICY.md`, including the documented non-Chinese and non-Chinese-derived model rule, in addition to license, publisher, lineage, provenance, integrity, resource, quality, security, and platform review. Gemma 4 12B Unified remains the named disabled fallback candidate, but its current rejected disposition prohibits activation or automatic substitution. Gemma 4 26B A4B and other later candidates remain disabled until their separate gates pass. v0.1 exposes an approved-artifact catalog, not an arbitrary model or provider marketplace.
 
 Meta Muse Glimmer is a candidate only. AgentMage does not claim its open-source or open-weight
 classification, exact license, supported artifact, lineage, runtime compatibility, hardware fit,

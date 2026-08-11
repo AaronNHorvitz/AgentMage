@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Implementation in progress; expanded first-GA scope accepted through Decision 0009 |
+| Status | Pre-alpha scaffold under Decision 0012 stabilization; original numbered roadmap paused |
 | Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
 | Scope | Complete AgentMage roadmap from foundation through expanded v1.0 GA closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
@@ -14,9 +14,31 @@
 | Runtime/process/socket boundary | `RUNTIME-BOUNDARIES.md` |
 | Connected-delivery boundary | `DELIVERY-SYSTEM.md` |
 | Productivity, communication, finance, and cloud-observer boundary | `PRODUCTIVITY-SYSTEM.md` |
+| Trusted operations, research, continuity, and model-management boundary | `TRUSTED-OPERATIONS.md` |
+| Whole-codebase audit boundary | `CODEBASE-AUDIT.md` |
 | Windows 11 boundary | `WINDOWS-BOUNDARIES.md` |
+| Current status authority | `architecture/status-model.json` under Decision 0012 |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
-| Execution rule | Work proceeds in numbered order under Decisions 0003, 0008, and 0009; Mac items remain `BLOCKED-MACOS`, but first-GA shared/Linux/Windows work may continue when technically independent and no platform evidence is substituted |
+| Execution rule | During stabilization, execute only the separately approved stabilization phase. The preserved numbered roadmap resumes only after its final resumption gate under Decisions 0003 and 0008 through 0012; no platform evidence may be substituted |
+
+## Current Implementation Truth
+
+Current product lifecycle: `scaffolded`.
+
+Current integrated workflow: none.
+
+Current enabled models: none.
+
+Current supported platforms: none.
+
+Stabilization scope freeze: active.
+
+The complete 17-epic, 169-sprint, 227-requirement plan below remains the
+granular execution authority for the accepted target product. It is preserved,
+not cancelled or renumbered. While stabilization is active, its next unchecked
+item is not an instruction to bypass the separately approved stabilization
+phase. A proposed capability-family addition requires an explicitly approved
+scope-freeze exception and impact statement.
 
 ## Planning Hierarchy and Numbering
 
@@ -44,6 +66,9 @@
 | Required MacBook Pro M5 hardware is unavailable while independent shared and Linux work remains executable. | Accepted sequencing decision | Apply `docs/decisions/0003-blocked-platform-lane-continuation.md`: retain every Mac item and gate as `BLOCKED-MACOS`, prohibit substitution or release claims, and continue only dependency-independent work in numeric order. |
 | The product expanded to a delivery control plane and Windows 11 became a first-release requirement. | Accepted scope decision | Apply `docs/decisions/0008-first-ga-delivery-system-and-windows.md`: preserve Sprints 0-102, classify them as internal/inherited milestones, append the delivery and Windows work, and close the first supported release only at `G-GA`. |
 | Productivity, communications, finance, and read-only cloud observation became first-GA capability packs. | Accepted scope decision | Apply `docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md`: preserve every prior sprint and requirement, retain Sprint 126 as a delivery-and-Windows checkpoint, append Sprints 127-156, and close expanded `G-GA` only at Sprint 156. |
+| Command authority, public research, credential brokering, continuity, approved-model management, and the isolated model lab expanded the product plan. | Accepted scope decision | Apply `docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md`: preserve all prior identities, append the trusted-operations work, and assign first-GA closure to Sprint 166. |
+| Whole-codebase audit became a first-GA capability without fitting an entire repository into model context. | Accepted scope decision | Apply `docs/decisions/0011-whole-codebase-audit.md`: preserve the Sprint 166 final gate and add census, structural index, evidence-ledger, reconciliation, read-only, checkpoint, and coverage work within the accepted sprint sequence. |
+| Current documentation and machine architecture conflated planned, scaffolded, tested, enabled, and shipped states. | Accepted stabilization decision | Apply `docs/decisions/0012-stabilization-truth-and-status-model.md`: use `architecture/status-model.json` for current truth, freeze new capability families, and pause the numbered roadmap until the final stabilization resumption gate passes. |
 
 ### Blocked Platform Lane
 

@@ -6,6 +6,8 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
+Current authorized phase: **Phase 2 - Truth and Status Reconciliation (pending user gate review)**
+
 ## 1. Purpose and Authority Boundary
 
 This document consolidates independently reviewed engineering findings into a
@@ -1033,7 +1035,9 @@ resource exhaustion, package lifecycle, and cross-platform contract fixtures.
 
 ## 7. Approval-Gated Stabilization Phases
 
-The phases below are proposed. Only Phase 1 is currently authorized.
+The phases below remain approval-gated. Phase 1 was approved and committed
+locally as `f71a1ce`. Phase 2 alone is currently authorized; Phases 3 through 12
+remain unapproved.
 
 ### Phase 1: Consolidated Remediation Ledger
 
@@ -1211,4 +1215,28 @@ Stabilization is complete only when all of the following are true:
 
 Phase 1 creates this ledger as a review artifact. It intentionally performs no
 remediation, changes no accepted authority, refreshes no evidence, and makes no
-release claim. Its next state is user review, not automatic Phase 2 execution.
+release claim. The user approved the ledger and its local commit
+`f71a1ce` before separately authorizing Phase 2. No push occurred.
+
+## 13. Phase 2 Record
+
+Phase 2 is authorized only for RM-001 through RM-003 and the documentation-only
+portion of RM-025. Its edits remain subject to the Phase 2 gate and user review;
+authorization to edit is not authorization to commit, push, or enter Phase 3.
+
+The candidate Phase 2 implementation establishes Decision 0012 and one
+machine-readable status model, reconciles current orientation, model, platform,
+decision, and roadmap-pause truth, replaces machine `shipped` booleans with
+status references, and refreshes only current generated planning registries.
+The 17 epics, 169 sprints, 227 requirements, 1,237 additions-only checklist
+entries, 227 explicit empty-evidence traceability states, retained model records,
+and historical Decisions 0001 through 0011 remain preserved.
+
+Current documentation, status, architecture, registry, policy, traceability,
+coverage, additions-only, schema, and product checks pass. The legacy aggregate
+gate remains fail-closed when it reaches revision-bound retained evidence; for
+example, the Story 4.1 security checker reports that its retained evidence
+closure is stale. Phase 2 does not refresh that historical artifact or represent
+it as current. Separating historical validity from current applicability remains
+assigned to RM-019 in Phase 10. This known aggregate result requires explicit
+user disposition at the Phase 2 gate; it is not silently waived.

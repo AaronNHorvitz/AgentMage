@@ -2,7 +2,7 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Implementation in progress; expanded first-GA scope accepted |
+| Status | Pre-alpha scaffold under Decision 0012 stabilization; original numbered roadmap paused |
 | Version | 1.5 |
 | Date | 2026-08-11 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
@@ -10,7 +10,7 @@
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
-| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), and [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md) |
+| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md), and [`architecture/status-model.json`](./architecture/status-model.json) |
 | Planning sequence | 169 sequential dependency gates across 17 epics; no calendar estimate implied |
 
 ## 1. Purpose
@@ -22,6 +22,25 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 This document is derived from `PRD.md`, `Agent-Scaffolding-Inventory.md`, and `SECURITY-REVIEW.md`. It is intentionally less granular than `TASKS.md` and defines implementation phases, workstreams, dependencies, milestone outcomes, risks, and gates. `MODEL-PROVENANCE-POLICY.md`, `SECURITY.md`, and `RUNTIME-BOUNDARIES.md` provide subordinate admission, disclosure, and boundary procedures. This plan does **not** replace the numbered stories, tasks, sub-tasks, tests, acceptance criteria, artifacts, or evidence requirements in `TASKS.md`.
 
 A developer or coding agent must use this document to understand the overall sequence and use `TASKS.md` to perform the next bite-sized unit of work. No implementation item may be considered complete from this plan alone.
+
+### 1.1 Current Implementation Truth
+
+Current product lifecycle: `scaffolded`.
+
+Current integrated workflow: none.
+
+Current enabled models: none.
+
+Current supported platforms: none.
+
+Stabilization scope freeze: active.
+
+[`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
+and [`architecture/status-model.json`](./architecture/status-model.json) govern
+these current-state claims. This plan still preserves the complete 17-epic,
+169-sprint, 227-requirement target sequence, but that sequence is paused while
+the approval-gated stabilization phases run. A new capability family requires
+an explicitly approved scope-freeze exception and impact statement.
 
 ## 2. Document Authority and Change Control
 
@@ -53,7 +72,7 @@ If documents conflict, the narrower safety boundary or release scope wins until 
 
 ## 3. Implementation Outcomes
 
-The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Its initial candidate is manifest-pinned Gemma 4 E4B, which is enabled only after admission passes. Gemma 4 12B Unified is the named disabled fallback candidate. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
+The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Gemma 4 E4B remains its first named candidate, but its current disposition is rejected and disabled. Gemma 4 12B Unified is the named fallback candidate and is also rejected and disabled. Either candidate requires a new revision-bound admission and evaluation decision before activation; no fallback is automatic. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
 
 The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, bounded agents, a provider-neutral delivery system, Windows 11, communications, a unified work graph, personal information and documents, finance and budgeting, read-only cloud observation, tiered command authority, credential brokering, encrypted continuity, approved-model management, and comprehensive whole-codebase audit. The first supported public release is v1.0 GA after Sprint 166. The Experimental Model Lab remains post-GA in Sprints 167-168. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
 
@@ -638,24 +657,35 @@ Changes to the implementation sequence follow these rules:
 9. Decision 0008 supersedes the first-GA effect of Decision 0003: a missing Mac result does not prevent shared, Linux, Windows, delivery, or v1.0 GA work, but every affected Mac status remains blocked and no evidence is substituted.
 10. Decisions 0009 and 0010 preserve earlier sprint identities as checkpoints, append new requirements and work, and assign final v1.0 closure to Sprint 166 without rewriting completed history.
 11. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, 165, and 166 without renumbering them or changing the Sprint 166 final gate.
+12. Decision 0012 freezes new capability families and pauses the original numbered roadmap during stabilization; an exception requires explicit approval and a complete impact statement.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
 ## 13. Starting the Build
 
-Implementation begins with Epic 0, Sprint 0 in `TASKS.md`.
+After the stabilization resumption gate passes, numbered roadmap execution resumes
+from the first authoritative incomplete dependency in `TASKS.md`. The sequence
+below remains the preserved foundation order; it is not the active stabilization
+work queue.
 
 The first high-level sequence is:
 
 1. Establish the canonical requirement registry, decision and risk records, document traceability, public-authority provenance, conflict handling, and additions-only checks.
 2. Validate the Apache-2.0, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
-3. Run the early Gemma 4 E4B artifact, native/Docker runtime, tool-call, resource, and quality feasibility spike; retain Gemma 4 12B Unified as a disabled fallback.
+3. Preserve the completed Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records; admit a usable model only through a new revision-bound artifact, runtime, quality, and activation decision.
 4. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
 5. Build the synthetic fixture, attack, fuzzing, test-result, and evidence framework before real user data is touched.
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
-For exact work, use the first unchecked sprint, story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source requirements, perform only that bounded work, run its inherited and named tests, and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it unchecked and move only to the next numbered item that is technically independent under Decisions 0003, 0008, 0009, 0010, and 0011. Record affected Mac gates as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
+While stabilization is active, use only the separately approved stabilization
+phase. After explicit resumption, use the first authoritative incomplete sprint,
+story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source
+requirements, perform only that bounded work, run its inherited and named tests,
+and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it
+unchecked and move only to the next numbered item that is technically independent
+under Decisions 0003, 0008, 0009, 0010, 0011, and 0012. Record affected Mac gates
+as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
 
 ## 14. Completion Definition
 

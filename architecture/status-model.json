@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0012",
+  "status": "accepted",
+  "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
+  "dimensions": {
+    "lifecycle": {
+      "values": [
+        "planned",
+        "designed",
+        "scaffolded",
+        "implemented",
+        "integrated",
+        "packaged",
+        "shipped"
+      ],
+      "promotion_order": [
+        "planned",
+        "designed",
+        "scaffolded",
+        "implemented",
+        "integrated",
+        "packaged",
+        "shipped"
+      ]
+    },
+    "verification": {
+      "values": [
+        "not-run",
+        "contract-tested",
+        "native-tested",
+        "release-verified"
+      ],
+      "promotion_order": [
+        "not-run",
+        "contract-tested",
+        "native-tested",
+        "release-verified"
+      ]
+    },
+    "disposition": {
+      "values": [
+        "active",
+        "blocked",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "support": {
+      "values": [
+        "unsupported-pre-release",
+        "supported",
+        "end-of-support"
+      ],
+      "promotion_order": [
+        "unsupported-pre-release",
+        "supported",
+        "end-of-support"
+      ]
+    }
+  },
+  "legal_transitions": {
+    "lifecycle": {
+      "planned": ["designed"],
+      "designed": ["scaffolded"],
+      "scaffolded": ["implemented"],
+      "implemented": ["integrated"],
+      "integrated": ["packaged"],
+      "packaged": ["shipped"],
+      "shipped": []
+    },
+    "verification": {
+      "not-run": ["contract-tested"],
+      "contract-tested": ["native-tested"],
+      "native-tested": ["release-verified"],
+      "release-verified": []
+    },
+    "disposition": {
+      "active": ["blocked", "rejected", "superseded"],
+      "blocked": ["active", "rejected", "superseded"],
+      "rejected": ["superseded"],
+      "superseded": []
+    },
+    "support": {
+      "unsupported-pre-release": ["supported"],
+      "supported": ["end-of-support"],
+      "end-of-support": []
+    }
+  },
+  "evidence_requirements": {
+    "lifecycle": {
+      "planned": "accepted-decision",
+      "designed": "design",
+      "scaffolded": "source",
+      "implemented": "implementation",
+      "integrated": "integration",
+      "packaged": "package",
+      "shipped": "release"
+    },
+    "verification": {
+      "contract-tested": "test",
+      "native-tested": "native-test",
+      "release-verified": "release-verification"
+    },
+    "disposition": {
+      "blocked": "blocker",
+      "rejected": "disposition",
+      "superseded": "superseding-decision"
+    },
+    "support": {
+      "unsupported-pre-release": "status-assessment",
+      "supported": "support-manifest",
+      "end-of-support": "support-decision"
+    }
+  },
+  "current_product": {
+    "id": "agentmage-product",
+    "lifecycle_status": "scaffolded",
+    "verification_status": "not-run",
+    "disposition_status": "active",
+    "support_status": "unsupported-pre-release",
+    "integrated_user_workflow": false,
+    "enabled_models": [],
+    "supported_platforms": [],
+    "released_packages": [],
+    "release_gate_status": "blocked",
+    "evidence_basis": [
+      {
+        "kind": "source",
+        "path": "architecture/module-inventory.json"
+      },
+      {
+        "kind": "status-assessment",
+        "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "kernel",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "kernel/engine/src/lib.rs"
+        },
+        {
+          "kind": "test",
+          "path": "kernel/engine/tests/boundary_workflow.rs"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "linux-platform-adapter",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "platforms/linux/src/lib.rs"
+        },
+        {
+          "kind": "test",
+          "path": "kernel/engine/tests/platform_adapter_conformance.rs"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "macos-platform-adapter",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "not-run",
+      "disposition_status": "blocked",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "platforms/macos/Package.swift"
+        },
+        {
+          "kind": "blocker",
+          "path": "docs/decisions/0003-blocked-platform-lane-continuation.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "windows-platform-adapter",
+      "lifecycle_status": "planned",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "vscode-extension",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "shells/vscode/src/index.ts"
+        },
+        {
+          "kind": "test",
+          "path": "shells/vscode/test/index.test.ts"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "build-orchestrator",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "release/xtask/src/main.rs"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    }
+  ],
+  "platforms": [
+    {
+      "id": "macos-arm64",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "not-run",
+      "disposition_status": "blocked",
+      "support_status": "unsupported-pre-release",
+      "release_lane": "retained-post-ga",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "platforms/macos/Package.swift"
+        },
+        {
+          "kind": "blocker",
+          "path": "docs/decisions/0003-blocked-platform-lane-continuation.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "fedora-x86_64",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "release_lane": "first-ga-required",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "platforms/linux/src/lib.rs"
+        },
+        {
+          "kind": "test",
+          "path": "kernel/engine/tests/platform_adapter_conformance.rs"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "ubuntu-x86_64",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "release_lane": "first-ga-required",
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "platforms/linux/src/lib.rs"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "windows-x86_64",
+      "lifecycle_status": "planned",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "release_lane": "first-ga-required",
+      "evidence_basis": [
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    }
+  ],
+  "models": [
+    {
+      "id": "gemma-4-e4b-it",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "native-tested",
+      "disposition_status": "rejected",
+      "support_status": "unsupported-pre-release",
+      "enabled": false,
+      "automatic_fallback": false,
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json"
+        },
+        {
+          "kind": "native-test",
+          "path": "artifacts/sprints/sprint-0/story-0.3/native-linux-result.json"
+        },
+        {
+          "kind": "disposition",
+          "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    },
+    {
+      "id": "gemma-4-12b-unified-it",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "native-tested",
+      "disposition_status": "rejected",
+      "support_status": "unsupported-pre-release",
+      "enabled": false,
+      "automatic_fallback": false,
+      "evidence_basis": [
+        {
+          "kind": "source",
+          "path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json"
+        },
+        {
+          "kind": "native-test",
+          "path": "artifacts/sprints/sprint-0/story-0.3-fallback/native-linux-result.json"
+        },
+        {
+          "kind": "disposition",
+          "path": "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+        }
+      ]
+    }
+  ],
+  "scope_control": {
+    "stabilization_active": true,
+    "new_capability_families_frozen": true,
+    "original_roadmap_paused": true,
+    "accepted_epics": 17,
+    "accepted_sprints": 169,
+    "stable_requirements": 227,
+    "exception_requires_explicit_approval": true,
+    "exception_impact_fields": [
+      "architecture",
+      "authority",
+      "security",
+      "privacy",
+      "platforms",
+      "tests",
+      "evidence",
+      "packaging",
+      "support",
+      "recovery",
+      "release-gates"
+    ]
+  },
+  "documentation_contract": {
+    "documents": [
+      "README.md",
+      "PRD.md",
+      "IMPLEMENTATION-PLAN.md",
+      "Agent-Scaffolding-Inventory.md",
+      "TASKS.md"
+    ],
+    "required_markers": [
+      "Current product lifecycle: `scaffolded`.",
+      "Current integrated workflow: none.",
+      "Current enabled models: none.",
+      "Current supported platforms: none.",
+      "Stabilization scope freeze: active."
+    ]
+  }
+}

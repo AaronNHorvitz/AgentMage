@@ -6,23 +6,43 @@ AgentMage is a brand-new, from-scratch project. This inventory defines its requi
 
 AgentMage is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer. It is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
 
-This inventory is interpreted with the public vulnerability/support process in [SECURITY.md](SECURITY.md), the model admission rules in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), and the process, privilege, socket, and data-flow specification in [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md).
+This inventory is interpreted with the public vulnerability/support process in [SECURITY.md](SECURITY.md), the model admission rules in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md), the process, privilege, socket, and data-flow specification in [RUNTIME-BOUNDARIES.md](RUNTIME-BOUNDARIES.md), and the current-state contract in [architecture/status-model.json](architecture/status-model.json) under [Decision 0012](docs/decisions/0012-stabilization-truth-and-status-model.md).
 
 This is a design inventory for building a small, local assistant that can use approved models, read files, preserve memory, run bounded tools, and show evidence for its work. It is not an implementation and does not authorize access to private or environment-specific content, external systems, commits, uploads, messages, or other state-changing actions; the checkboxes describe possible building blocks, their status, and the order in which they should be evaluated.
+
+## Current Implementation Truth
+
+Current product lifecycle: `scaffolded`.
+
+Current integrated workflow: none.
+
+Current enabled models: none.
+
+Current supported platforms: none.
+
+Stabilization scope freeze: active.
+
+This inventory preserves accepted target requirements and historical wording; it
+does not promote them to current product claims. The 227 stable requirements and
+their additions-only identities remain unchanged while the original roadmap is
+paused for approval-gated stabilization.
 
 The context that makes this project worth building is simple: frontier models are extraordinary but expensive, token-limited, cloud-bound, and unavailable for content that must never leave the machine — while most of a working day's actual load is not frontier work at all. Reading notes, tracking tasks, cleaning meeting records, converting documents, inspecting repositories, assembling briefings, and preserving continuity are often mechanical jobs with checkable answers. AgentMage's long-term direction is to use the least powerful measured tier that satisfies explicit acceptance checks. v0.1 is intentionally simpler: deterministic operations run first when applicable, the user selects the local model explicitly, no automatic model switch occurs, and no frontier transfer exists.
 
 The deeper design bet is that most dependability lives in scaffolding rather than in any model. Evidence receipts, capability grants, bounded budgets, schema validation, contradiction checks, and audit records turn model output into a proposal that the kernel can verify. Encrypted SQLite is the sole authority for operational state. Beginning in v0.2, Markdown is authoritative only for human-owned knowledge and approved portable memory, while JSON Lines remains export-only. Because models remember nothing between sessions, v0.1 persists the minimum encrypted checkpoint needed to resume one read-only session without repeating completed work.
 
-The trajectory and posture are deliberate. v0.1 remains an internal read-only milestone using Gemma 4 in native Visual Studio Code Chat. Under Decision 0008, v1.0 is the first supported public release: Fedora, Ubuntu, and Windows 11 x64 support the complete promoted delivery workflow, while Apple Silicon MacBook Pro M5 work remains preserved as a post-GA lane and Intel Mac remains deferred. Writes are deny-by-default and approval-gated, workspaces are boundaries rather than suggestions, secrets never enter memory or logs, and every claim of completed work must trace to a tool receipt or source citation. The checkboxes that follow are labeled by status, sequenced by the recommended build order, and gated by synthetic evaluation fixtures before anything touches real files, so this document should be read as a map of what could be built and the order in which to find out, not a promise that all of it will be.
+The trajectory and posture are deliberate. v0.1 remains an internal read-only target in native Visual Studio Code Chat. Under Decision 0008, v1.0 is the first supported public-release target: Fedora, Ubuntu, and Windows 11 x64 must support the complete promoted delivery workflow before that gate can pass, while Apple Silicon MacBook Pro M5 work remains preserved as a post-GA lane and Intel Mac remains deferred. Writes are deny-by-default and approval-gated, workspaces are boundaries rather than suggestions, secrets never enter memory or logs, and every claim of completed work must trace to a tool receipt or source citation. The checkboxes that follow are labeled by status, sequenced by the recommended build order, and gated by synthetic evaluation fixtures before anything touches real files, so this document should be read as a map of what could be built and the order in which to find out, not a promise that all of it will be.
 
 ## Local Model Compatibility
 
 The agent is designed around a provider-neutral model interface rather than one model family. A model can be added when a local runtime exposes a compatible chat endpoint and the model profile records its identifier, context limits, output limits, tool support, vision support, timeout, and known limitations.
 
-v0.1 targets exactly one enabled local profile: **Gemma 4 E4B**, subject to the early feasibility and admission gate in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md). Its model manifest binds the first-party model identity, Apache-2.0 license disposition, upstream hash, conversion and quantization recipe, packaged-artifact hash, tokenizer hash, and runtime compatibility. `ai/gemma4:e4b` is the candidate Docker Model Runner tag where that adapter is used, but only its resolved immutable OCI digest may identify a release artifact. The native adapters use the same approved Gemma profile as a hash-pinned GGUF through `llama.cpp`, with Metal on Apple Silicon. It handles routine chat, extraction, summaries, and bounded read-only tool-assisted tasks only after the fixed quality and resource corpus passes.
+v0.1 originally named **Gemma 4 E4B** as its first candidate local profile, subject to the early feasibility and admission gate in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md). Its current feasibility disposition is rejected and disabled. **Gemma 4 12B Unified**, the named fallback candidate, is also rejected and disabled. Neither is an enabled model, and either requires a new revision-bound admission and evaluation decision before activation. A future admitted model manifest binds the first-party model identity, Apache-2.0 license disposition, upstream hash, conversion and quantization recipe, packaged-artifact hash, tokenizer hash, and runtime compatibility. `ai/gemma4:e4b` remains only a candidate Docker Model Runner tag; only an admitted immutable OCI digest may identify a release artifact. Native adapters may use only the same admitted, hash-pinned profile through `llama.cpp`. A model may handle routine chat, extraction, summaries, and bounded read-only tool-assisted tasks only after the fixed quality and resource corpus passes.
 
-**Gemma 4 12B Unified** is the named fallback profile if E4B cannot satisfy the release gate. It remains disabled unless it independently passes the complete provenance, license, security, runtime, hardware-fit, quality, and resource admission process. AgentMage never switches to it automatically.
+**Gemma 4 12B Unified** remains the named fallback candidate. Its rejected
+disposition keeps it disabled; reopening it requires the complete provenance,
+license, security, runtime, hardware-fit, quality, and resource admission
+process. AgentMage never switches to it automatically.
 
 Two later candidate profiles remain disabled until their release-specific capability and resource gates pass:
 

@@ -6,16 +6,37 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Implementation in progress; Linux development active, Windows first-GA work planned, and blocked Mac lane retained |
+| Status | Pre-alpha scaffold under stabilization; no integrated end-user workflow or supported binary |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
-| First interface | Native Visual Studio Code Chat beside the separate Codex tab |
-| First enabled model | Manifest-pinned Gemma 4 E4B |
-| Model runtimes | Native `llama.cpp`; gated Docker Model Runner compatibility adapter |
+| First interface target | Native Visual Studio Code Chat beside the separate Codex tab |
+| Current enabled model | None; evaluated Gemma 4 E4B and Gemma 4 12B Unified candidates are rejected and disabled |
+| Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
 | Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions are appended under Decisions 0008, 0009, 0010, and 0011 |
 | License | [Apache License 2.0](./LICENSE) |
+
+## Current Implementation Truth
+
+Current product lifecycle: `scaffolded`.
+
+Current integrated workflow: none.
+
+Current enabled models: none.
+
+Current supported platforms: none.
+
+Stabilization scope freeze: active.
+
+These statements describe the integrated product, not the amount of contract,
+test, planning, or isolated Linux security work in the repository. The
+machine-readable source is
+[`architecture/status-model.json`](./architecture/status-model.json), governed
+by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
+The accepted 17-epic, 169-sprint, 227-requirement scope is preserved, but the
+original numbered roadmap is paused until the stabilization gate authorizes its
+resumption.
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
@@ -34,17 +55,17 @@ Supporting policies remain subordinate to those authorities: [`MODEL-PROVENANCE-
 
 If documents conflict, the narrower safety boundary or release scope wins until an approved decision record resolves the conflict. Accepted identifiers are never silently removed, weakened, merged away, or renumbered.
 
-Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-platform-lane-continuation.md) as superseded for release scope by [`Decision 0008`](./docs/decisions/0008-first-ga-delivery-system-and-windows.md), expanded by [`Decision 0009`](./docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md), [`Decision 0010`](./docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md), and [`Decision 0011`](./docs/decisions/0011-whole-codebase-audit.md). MacBook Pro M5 tasks remain required for the retained Apple Silicon lane and remain unchecked while the hardware is unavailable. They no longer block v1.0 GA, which requires Fedora, Ubuntu, and Windows 11. No platform's evidence substitutes for another's.
+Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-platform-lane-continuation.md) as superseded for release scope by [`Decision 0008`](./docs/decisions/0008-first-ga-delivery-system-and-windows.md), expanded by [`Decision 0009`](./docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md), [`Decision 0010`](./docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md), and [`Decision 0011`](./docs/decisions/0011-whole-codebase-audit.md). [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md) governs current status and pauses the numbered roadmap without removing its scope. MacBook Pro M5 tasks remain required for the retained Apple Silicon lane and remain unchecked while the hardware is unavailable. They no longer block v1.0 GA, which requires Fedora, Ubuntu, and Windows 11. No platform's evidence substitutes for another's.
 
 ## Internal v0.1 Milestone
 
-v0.1 remains intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat. It is an internal engineering milestone and foundation, not the first supported public release.
+v0.1 remains intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat. It is an unimplemented internal engineering target and foundation, not the first supported public release. When implemented, its acceptance contract will include:
 
-- Apple Silicon macOS on a MacBook Pro M5 is the primary launch and deployment reference. Fedora is the Linux performance reference, and the identical supported workflow must pass on clean Ubuntu in the same release.
-- A manifest-pinned Gemma 4 E4B profile runs through signed native `llama.cpp` with Metal on macOS. Fedora and Ubuntu support both native `llama.cpp` and a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.
+- Fedora is the active Linux development and performance reference, and the identical target workflow must pass on clean Ubuntu. Windows 11 x64 is required for first-GA. Apple Silicon macOS on a MacBook Pro M5 remains a blocked, retained post-GA lane.
+- A model profile may run only after a new manifest-bound admission passes. Gemma 4 E4B and Gemma 4 12B Unified are currently rejected and disabled; neither is an enabled baseline model. A future admitted profile would use native `llama.cpp` and, on Linux, may use a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.
 - A separate model installer/importer checks hardware fit, disk and memory requirements, license, publisher, lineage, the [model provenance policy](./MODEL-PROVENANCE-POLICY.md), artifact or OCI hashes, runtime compatibility, quarantine, recovery, and clean activation before enabling the profile.
 - A redacted `agentmage doctor` response is rendered inside native Visual Studio Code Chat; v0.1 does not require an end-user command-line interface. It reports the active model, runtime, sandbox, workspace grant, encrypted store, repository-map health, receipt sequence, recovery state, and offline condition.
-- **AgentMage - Gemma 4 E4B (Local, Read Only)** appears in the native Chat model picker.
+- An admitted model appears in the native Chat model picker only after its exact artifact/runtime pair passes activation gates.
 - The user selects one workspace and can list, read, search, inspect metadata, calculate hashes, and inspect Git without changing it.
 - A deterministic, Git-aware repository map inventories permitted files, identifies supported languages and symbols with pinned Tree-sitter parsers, records reliable definitions, imports, and relationships, and cites every structural fact to an exact source range.
 - Every tool attempt has a receipt and every file-grounded claim has a resolvable citation. Answers visibly distinguish **Observed**, **Derived**, **Inferred**, and **Unknown/Blocked** statements. Changed evidence makes prior citations stale rather than silently reinterpreting them.

@@ -13,16 +13,30 @@ ROOT = Path(__file__).resolve().parents[1]
 MATRIX_PATH = ROOT / "architecture" / "language-build-matrix.json"
 
 EXPECTED_COMPONENTS = {
-    "kernel": ("rust", "cargo"),
-    "linux-platform-adapter": ("rust", "cargo"),
-    "macos-platform-adapter": ("swift", "swiftpm-xcode"),
-    "vscode-extension": ("typescript", "npm"),
-    "build-orchestrator": ("rust", "cargo-xtask"),
+    "kernel": (
+        "rust",
+        "cargo",
+        {"macos-arm64", "fedora-x86_64", "ubuntu-x86_64", "windows-x86_64"},
+    ),
+    "linux-platform-adapter": ("rust", "cargo", {"fedora-x86_64", "ubuntu-x86_64"}),
+    "macos-platform-adapter": ("swift", "swiftpm-xcode", {"macos-arm64"}),
+    "windows-platform-adapter": ("rust", "cargo", {"windows-x86_64"}),
+    "vscode-extension": (
+        "typescript",
+        "npm",
+        {"macos-arm64", "fedora-x86_64", "ubuntu-x86_64", "windows-x86_64"},
+    ),
+    "build-orchestrator": (
+        "rust",
+        "cargo-xtask",
+        {"macos-arm64", "fedora-x86_64", "ubuntu-x86_64", "windows-x86_64"},
+    ),
 }
 EXPECTED_TARGETS = {
-    "macos-arm64": ("aarch64-apple-darwin", "blocked-macos", "blocked-macos"),
-    "fedora-x86_64": ("x86_64-unknown-linux-gnu", "selected", "not-run"),
-    "ubuntu-x86_64": ("x86_64-unknown-linux-gnu", "selected", "not-run"),
+    "macos-arm64": "aarch64-apple-darwin",
+    "fedora-x86_64": "x86_64-unknown-linux-gnu",
+    "ubuntu-x86_64": "x86_64-unknown-linux-gnu",
+    "windows-x86_64": "x86_64-pc-windows-msvc",
 }
 PROHIBITED_EXTENSION_AUTHORITY = {
     "workspace-read",
@@ -61,37 +75,44 @@ def validate_matrix(matrix: Any) -> list[str]:
     if not isinstance(matrix, dict):
         return ["language/build matrix must be an object"]
 
-    if matrix.get("schema_version") != 1:
-        failures.append("schema_version must equal 1")
+    if matrix.get("schema_version") != 2:
+        failures.append("schema_version must equal 2")
     if matrix.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
+    if matrix.get("amending_decision_id") != "ADR-0012":
+        failures.append("amending_decision_id must equal ADR-0012")
     if matrix.get("status") != "accepted":
         failures.append("architecture decision must be accepted")
 
     components = _unique_by_id(matrix.get("product_components"), "component", failures)
     if set(components) != set(EXPECTED_COMPONENTS):
-        failures.append("product component set does not match ADR-0004")
-    for component_id, (language, build_system) in EXPECTED_COMPONENTS.items():
+        failures.append("product component set does not match accepted architecture")
+    for component_id, (language, build_system, platforms) in EXPECTED_COMPONENTS.items():
         component = components.get(component_id, {})
         if component.get("language") != language:
             failures.append(f"{component_id} language must be {language}")
         if component.get("build_system") != build_system:
             failures.append(f"{component_id} build system must be {build_system}")
-        if not isinstance(component.get("platforms"), list) or not component.get("platforms"):
-            failures.append(f"{component_id} must declare at least one platform")
+        if set(component.get("platforms", [])) != platforms:
+            failures.append(f"{component_id} platform set does not match accepted scope")
+        if "shipped" in component:
+            failures.append(f"{component_id} must use status_ref instead of shipped")
+        expected_ref = f"architecture/status-model.json#component={component_id}"
+        if component.get("status_ref") != expected_ref:
+            failures.append(f"{component_id} must reference its canonical current status")
 
     targets = _unique_by_id(matrix.get("platform_targets"), "platform target", failures)
     if set(targets) != set(EXPECTED_TARGETS):
-        failures.append("platform target set does not match ADR-0004")
-    for target_id, expected in EXPECTED_TARGETS.items():
+        failures.append("platform target set does not match accepted architecture")
+    for target_id, expected_target in EXPECTED_TARGETS.items():
         target = targets.get(target_id, {})
-        actual = (
-            target.get("rust_target"),
-            target.get("implementation_status"),
-            target.get("verification_status"),
-        )
-        if actual != expected:
-            failures.append(f"{target_id} status or Rust target does not match ADR-0004")
+        if target.get("rust_target") != expected_target:
+            failures.append(f"{target_id} Rust target does not match accepted architecture")
+        if "implementation_status" in target or "verification_status" in target:
+            failures.append(f"{target_id} must obtain current status through status_ref")
+        expected_ref = f"architecture/status-model.json#platform={target_id}"
+        if target.get("status_ref") != expected_ref:
+            failures.append(f"{target_id} must reference its canonical current status")
 
     build = matrix.get("build_contract")
     if not isinstance(build, dict):

@@ -8,6 +8,11 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote
 
+try:
+    from scripts.status_model import load_json, load_status_model, validate_status_model
+except ModuleNotFoundError:  # Direct execution adds scripts/, not the repository root.
+    from status_model import load_json, load_status_model, validate_status_model
+
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = (
@@ -26,6 +31,7 @@ REQUIRED_FILES = (
     "CODEBASE-AUDIT.md",
     "WINDOWS-BOUNDARIES.md",
     "architecture/language-build-matrix.json",
+    "architecture/status-model.json",
     "architecture/module-inventory.json",
     "architecture/dependency-rules.json",
     "architecture/build-contract.json",
@@ -235,6 +241,7 @@ REQUIRED_FILES = (
     "docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md",
     "docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md",
     "docs/decisions/0011-whole-codebase-audit.md",
+    "docs/decisions/0012-stabilization-truth-and-status-model.md",
     "docs/architecture/dependency-direction.md",
 )
 CANONICAL_DOCS = (
@@ -253,6 +260,7 @@ TRUSTED_OPERATIONS_DECISION_FILE = (
     "docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md"
 )
 CODEBASE_AUDIT_DECISION_FILE = "docs/decisions/0011-whole-codebase-audit.md"
+STATUS_DECISION_FILE = "docs/decisions/0012-stabilization-truth-and-status-model.md"
 DECISION_BOUNDARIES = {
     "license": (
         re.compile(r"Apache(?: License)?[- ]2\.0", re.IGNORECASE),
@@ -436,6 +444,7 @@ def check_cross_document_contract(failures: list[str]) -> None:
         "Muse Glimmer",
         "Owner / Unrestricted Session",
         "whole-codebase audit",
+        "Decision 0012",
     )
     required_links = (
         "MODEL-PROVENANCE-POLICY.md",
@@ -446,6 +455,7 @@ def check_cross_document_contract(failures: list[str]) -> None:
         "TRUSTED-OPERATIONS.md",
         "CODEBASE-AUDIT.md",
         "WINDOWS-BOUNDARIES.md",
+        "architecture/status-model.json",
     )
     for relative in CANONICAL_DOCS:
         text = read(relative)
@@ -478,6 +488,7 @@ def check_accepted_decision_contract(
     productivity_decision_text = read(PRODUCTIVITY_DECISION_FILE)
     trusted_operations_decision_text = read(TRUSTED_OPERATIONS_DECISION_FILE)
     codebase_audit_decision_text = read(CODEBASE_AUDIT_DECISION_FILE)
+    status_decision_text = read(STATUS_DECISION_FILE)
     decision_markers = {
         "license": ("Apache License 2.0",),
         "model": ("Gemma 4 E4B", "Gemma 4 12B Unified"),
@@ -499,6 +510,8 @@ def check_accepted_decision_contract(
         failures.append(f"{TRUSTED_OPERATIONS_DECISION_FILE}: decision is not accepted")
     if "| Status | Accepted |" not in codebase_audit_decision_text:
         failures.append(f"{CODEBASE_AUDIT_DECISION_FILE}: decision is not accepted")
+    if "| Status | Accepted |" not in status_decision_text:
+        failures.append(f"{STATUS_DECISION_FILE}: decision is not accepted")
     for marker in (
         "v1.0 GA",
         "Windows 11",
@@ -549,6 +562,25 @@ def check_accepted_decision_contract(
             failures.append(
                 f"{TRUSTED_OPERATIONS_DECISION_FILE}: missing trusted-operations "
                 f"decision marker: {marker}"
+            )
+    for marker in (
+        "architecture/status-model.json",
+        "scaffolded",
+        "contract-tested",
+        "native-tested",
+        "release-verified",
+        "unsupported-pre-release",
+        "Gemma 4 E4B",
+        "Gemma 4 12B Unified",
+        "Windows 11 x64",
+        "17 epics",
+        "169 sprints",
+        "227 stable requirements",
+        "scope freeze",
+    ):
+        if marker not in status_decision_text:
+            failures.append(
+                f"{STATUS_DECISION_FILE}: missing stabilization decision marker: {marker}"
             )
     for marker in (
         "Sprint 166",
@@ -604,6 +636,15 @@ def main() -> int:
     check_identifiers(files, failures)
     check_cross_document_contract(failures)
     check_accepted_decision_contract(failures)
+    try:
+        failures.extend(
+            validate_status_model(
+                load_status_model(),
+                matrix=load_json(ROOT / "architecture" / "language-build-matrix.json"),
+            )
+        )
+    except (OSError, ValueError) as error:
+        failures.append(f"current status validation could not run: {error}")
 
     if failures:
         print("Documentation validation failed:", file=sys.stderr)

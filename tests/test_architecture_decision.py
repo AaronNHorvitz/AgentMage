@@ -50,16 +50,37 @@ class ArchitectureDecisionTests(unittest.TestCase):
         self.assertTrue(validate_matrix(mutated))
 
     def test_macos_cannot_be_recorded_as_implemented_or_verified(self) -> None:
-        for field in ("implementation_status", "verification_status"):
-            with self.subTest(field=field):
+        mutated = copy.deepcopy(self.matrix)
+        macos = next(
+            item
+            for item in mutated["platform_targets"]
+            if item["id"] == "macos-arm64"
+        )
+        macos["implementation_status"] = "implemented"
+        macos["verification_status"] = "pass"
+        self.assertTrue(validate_matrix(mutated))
+
+    def test_shipped_boolean_is_rejected(self) -> None:
+        mutated = copy.deepcopy(self.matrix)
+        mutated["product_components"][0]["shipped"] = True
+        self.assertTrue(validate_matrix(mutated))
+
+    def test_windows_target_and_component_are_required(self) -> None:
+        for collection, record_id in (
+            ("product_components", "windows-platform-adapter"),
+            ("platform_targets", "windows-x86_64"),
+        ):
+            with self.subTest(collection=collection):
                 mutated = copy.deepcopy(self.matrix)
-                macos = next(
-                    item
-                    for item in mutated["platform_targets"]
-                    if item["id"] == "macos-arm64"
-                )
-                macos[field] = "pass"
+                mutated[collection] = [
+                    item for item in mutated[collection] if item["id"] != record_id
+                ]
                 self.assertTrue(validate_matrix(mutated))
+
+    def test_status_reference_is_required(self) -> None:
+        mutated = copy.deepcopy(self.matrix)
+        mutated["product_components"][0]["status_ref"] = "stale"
+        self.assertTrue(validate_matrix(mutated))
 
     def test_end_user_toolchain_assumptions_are_rejected(self) -> None:
         mutated = copy.deepcopy(self.matrix)
