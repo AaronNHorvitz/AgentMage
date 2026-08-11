@@ -4,41 +4,41 @@
   "files": [
     {
       "path": "control-map.json",
-      "sha256": "cccc5a7232ce4a60f527719ad65874921c4e2b165c4b4d55dc2569d8a1ba676d",
+      "sha256": "c26dc51e42d8a205ff68b1ee097063c11cb062549ff727e973dfb34e8b989fee",
       "size": 2228
     },
     {
       "path": "decision-record.json",
-      "sha256": "a584a49129ddb73c6efb115c5a89615c2f1d4d30dae94ef8f4c499437fdb17e4",
+      "sha256": "425accaf1f08df5bbf774e4acf27e4c8739d2dad7cd43c6a59c784da6d233d32",
       "size": 475
     },
     {
       "path": "policy-hashes.json",
-      "sha256": "e1a0be45ea262e5c5948d8acce8ad6662da8617a4e1827b36c3259cfe469f3af",
-      "size": 2277
+      "sha256": "f1c7e99258f8e96867cf7bf1e2a37a2ed0d0f1a1f9ffb52febc07bc0a7ec676f",
+      "size": 2278
     },
     {
       "path": "raw-checker-output.json",
-      "sha256": "48558f7d6914db834558f5ffdb822368339fb7082574c7127407c2ccda3d8921",
-      "size": 4015
+      "sha256": "e6f77602261395bb6e3ff166f7de5cf173d2b75b04e0a123600a4d2f8408aecb",
+      "size": 4017
     },
     {
       "path": "reviewer-disposition.json",
-      "sha256": "9d873dcc6c758ef91a2f37ff8633f72a925e4b7c7f26f50f79a2fdc51c58e60f",
+      "sha256": "76f9dfac801fcf590a55034075b2df7470b1909a096549970a4d332e25d264b2",
       "size": 727
     },
     {
       "path": "summary.md",
-      "sha256": "4ae4d811151044caa81f58e55bdf210980035f420e924ae15b10e937bcb3a3a4",
+      "sha256": "133e6efa39e09d69ad97a9e84923c1e97814745511f2d70cf9d9945d603a58ae",
       "size": 700
     },
     {
       "path": "workflow-identity.json",
-      "sha256": "44360bc54bcfdedd644c39c7738f4eb0a73aa24f23ca7cf6af6fa47e215fd2de",
+      "sha256": "769a32357f32c71f57a72ad61805f11afe6c79f2b66682f04e879309a1186e76",
       "size": 724
     }
   ],
   "schema_version": 1,
   "scope": "Story 0.2 public policy and documentation controls",
-  "source_revision": "00d2cd77b35affaedad5d457828007397e259314"
+  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
 }

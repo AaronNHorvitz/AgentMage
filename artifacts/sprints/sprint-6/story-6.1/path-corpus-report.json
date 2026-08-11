@@ -22,7 +22,7 @@
     "shared_contract": "verified",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "9f3949c3790216230d1719286dbc5ab53924c1ce",
+  "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [

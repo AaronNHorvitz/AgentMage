@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "bytes": 65272,
+      "bytes": 80205,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
     },
     {
       "bytes": 3340,
@@ -11,19 +11,19 @@
       "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
     },
     {
-      "bytes": 13656,
+      "bytes": 18741,
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "964430ea33190cdb3f4d0aca4076e51a69d25c70cdff1ca32cf1793d94f8f369"
+      "sha256": "5bc03c45d8855551679c93838bf232645b409ceb7a7fd7c95ca5ab8912921324"
     },
     {
-      "bytes": 3737,
+      "bytes": 4031,
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "392fa0d4555bb900315d2f1bbcfd921ba7e2102c5a7abd04e9e26aadabce3709"
+      "sha256": "b95d95c2b1947fe5807831f51d7c017aa4bd18daabcdfa68edf538def054a01c"
     },
     {
-      "bytes": 8560,
+      "bytes": 13807,
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "982f28636b9e626bc8ab8b51f4f19eb7816877af9665a8a33800625a6e918696"
+      "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
     },
     {
       "bytes": 20481,
@@ -41,9 +41,9 @@
       "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
     },
     {
-      "bytes": 2588,
+      "bytes": 2738,
       "path": "fixtures/contracts/fixture_verifier.rs",
-      "sha256": "8c9c8ba8e28b5f6ce41272c459fc2c29b371cad93bfd582d2f247b439affeb07"
+      "sha256": "d67587c6a638b2b56f705e8df0a6a90de7233fe03cc64f1f5ae99216d987f125"
     },
     {
       "bytes": 641,
@@ -51,59 +51,59 @@
       "sha256": "10c7787727fdfcdde05d60d5bee026541e9140c39d75dd55639c741761ceb8ee"
     },
     {
-      "bytes": 5200,
+      "bytes": 5654,
       "path": "fixtures/contracts/v1/manifest.json",
-      "sha256": "4bd8db1a10d2a034899dd2733a0b8461d82f2f01ac5d1019257d8906bf595396"
+      "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
     },
     {
-      "bytes": 20729,
+      "bytes": 40975,
       "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-      "sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd"
+      "sha256": "9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458"
     },
     {
-      "bytes": 4810,
+      "bytes": 6169,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-      "sha256": "d9a18a590cbc39768f65ef199c1d74fa58a6571b2a0dc101a30be70becbc190e"
+      "sha256": "f1e0b0a7fffb5bba09ab4278982e5ab83434703ba4bc0e935f62813a4a527dff"
     },
     {
-      "bytes": 4099,
+      "bytes": 5790,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-      "sha256": "4ca4ac911309cb4db566358e600e0613001045f64b6c496e93337200a6904451"
+      "sha256": "6ce5004d2c3d5a90b5d0b4c63e1bce5dd1b1e19b2e3d6f5e3d01aaaa0e9f1f39"
     },
     {
       "bytes": 1728,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-      "sha256": "531463023d941ebb2ee047d2776dff60f83cc3a5e655490675b85fa3d350c01f"
+      "sha256": "d310f04c6da06c3cfd2379b488cbe336366d2ce87dc36c6ff3a5ee2204e0cc49"
     },
     {
-      "bytes": 9701,
+      "bytes": 11831,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "f5a846b9d3592e03d6508ec401bf06fa61fffe3427ec45729a23e4d7ad760180"
+      "sha256": "15f10951d849cce545506862d8f1beb9de35c2bada13d93e521f47c6767cd315"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "0870f7595b6182b2ef2c1e94c01c7e9ade114c0ae3146227467988bde3d6fd79"
+      "sha256": "9289eaf38bc40a1e7690c51d45e32c6de00c9d2ada55c1fd95fdb3002b651b4d"
     },
     {
       "bytes": 4406,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-      "sha256": "8f6af0392e598e32feeeefca2d13da1a0d7f966d581f1277f7fccd36d5a2882d"
+      "sha256": "be074c0cbb0970c74d0717cda798b8d050f2bbcfe17dc08bddbe6dd630b81dde"
     },
     {
-      "bytes": 14572,
+      "bytes": 15250,
       "path": "scripts/kernel_contract_package.py",
-      "sha256": "0f06ee2874ed3b30e9e31d4e549c07bca0e3817685bcdc8ed6fa83cac8170dfb"
+      "sha256": "c153e2c27b9442393da74baccdc6e4427b123348d69cece36f1d3abc42264890"
     },
     {
-      "bytes": 10982,
+      "bytes": 11052,
       "path": "scripts/kernel_contract_reference.py",
-      "sha256": "7c2c3a38192dc9a739c4ac3e34df2f08abae37b8288d690d403ffa95f0bc71b4"
+      "sha256": "b01828e808e7a7348be2145f908b506ab4802506d24b2969ab1c9a2b1cd405ab"
     },
     {
-      "bytes": 15762,
+      "bytes": 15810,
       "path": "scripts/kernel_contract_fixtures.py",
-      "sha256": "57aae8f5194fc40b8f6d2ea6d70a8b87bed8467382d804889f5a0d75dcdc9baf"
+      "sha256": "e73cbd75144134584b9bccb49042f7210f449dbf026cd93168bbc09d8c5479ed"
     },
     {
       "bytes": 15434,
@@ -126,19 +126,19 @@
       "sha256": "159d50c38a03a230b478209971dc2cea38adc832c2347d3f0f550926838054e2"
     },
     {
-      "bytes": 2117,
+      "bytes": 2879,
       "path": "tests/test_kernel_contract_package.py",
-      "sha256": "fd7ebd409a0682cd67ac6664cc9ace95fb57c07dea01ace4015676d52d386798"
+      "sha256": "ded04616b3677395f6f52bf6533ab6f6825001c6350906a2e4603f19a35b5cbf"
     },
     {
-      "bytes": 1579,
+      "bytes": 1806,
       "path": "tests/test_kernel_contract_reference.py",
-      "sha256": "6838f234900aa30937d11f4697f7d20889d161dd484cba2270e2c51cf4d3a4d1"
+      "sha256": "1145040e3774953aee333280aabd6942b82c6feff087a48854479e83b01f6933"
     },
     {
-      "bytes": 2483,
+      "bytes": 2539,
       "path": "tests/test_kernel_contract_fixtures.py",
-      "sha256": "a5f925a3ddf6d82cd76d0fa360f10656d457bc4174f61993fc80d08c098db671"
+      "sha256": "afdb192a09bdcc8069c8438ec7bed66fa6a87e95084222115d3778242de3caa0"
     },
     {
       "bytes": 1780,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "dd596103cfeea0c51c4f2eb8fd257904a7729752",
+  "source_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

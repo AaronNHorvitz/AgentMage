@@ -8,7 +8,7 @@
       ],
       "exit_code": 0,
       "stderr": "",
-      "stdout": "\nadded 274 packages, and audited 275 packages in 2s\n\n75 packages are looking for funding\n  run `npm fund` for details\n\nfound 0 vulnerabilities\n"
+      "stdout": "\nadded 361 packages, and audited 363 packages in 2s\n\n106 packages are looking for funding\n  run `npm fund` for details\n\nfound 0 vulnerabilities\n"
     },
     {
       "command": [
@@ -18,7 +18,7 @@
       ],
       "exit_code": 0,
       "stderr": "",
-      "stdout": "\n> agentmage-planning-docs@0.0.0 docs:lint\n> markdownlint-cli2 \"**/*.md\" \"#node_modules\"\n\nmarkdownlint-cli2 v0.23.2 (markdownlint v0.41.1)\nFinding: **/*.md !node_modules !node_modules/**\nLinting: 13 files\nSummary: 0 issues in 0 files\n"
+      "stdout": "\n> agentmage-planning-docs@0.0.0 docs:lint\n> markdownlint-cli2 \"**/*.md\" \"#node_modules\"\n\nmarkdownlint-cli2 v0.23.2 (markdownlint v0.41.1)\nFinding: **/*.md !node_modules !node_modules/**\nLinting: 65 files\nSummary: 0 issues in 0 files\n"
     },
     {
       "command": [
@@ -28,7 +28,7 @@
       ],
       "exit_code": 0,
       "stderr": "",
-      "stdout": "\n> agentmage-planning-docs@0.0.0 docs:mermaid\n> python3 scripts/check_mermaid.py\n\nValidated 14 Mermaid block(s).\n"
+      "stdout": "\n> agentmage-planning-docs@0.0.0 docs:mermaid\n> python3 scripts/check_mermaid.py\n\nValidated 33 Mermaid block(s).\n"
     },
     {
       "command": [
@@ -37,7 +37,7 @@
       ],
       "exit_code": 0,
       "stderr": "",
-      "stdout": "Validated 13 Markdown file(s) and all policy invariants.\n"
+      "stdout": "Validated 65 Markdown file(s) and all policy invariants.\n"
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "tests.test_public_policy_baseline"
       ],
       "exit_code": 0,
-      "stderr": "test_broken_local_link_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_broken_local_link_blocks_independently) ... ok\ntest_each_synthetic_secret_signature_blocks_without_disclosure (tests.test_documentation_mutations.DocumentationMutationTests.test_each_synthetic_secret_signature_blocks_without_disclosure) ... ok\ntest_malformed_mermaid_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_malformed_mermaid_blocks_independently) ... ok\ntest_prohibited_deployment_claim_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_prohibited_deployment_claim_blocks_independently) ... ok\ntest_unmodified_repository_passes (tests.test_documentation_mutations.DocumentationMutationTests.test_unmodified_repository_passes) ... ok\ntest_unresolved_stable_identifier_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_unresolved_stable_identifier_blocks_independently) ... ok\ntest_accepted_baseline_decision_is_complete_and_independently_recorded (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_accepted_baseline_decision_is_complete_and_independently_recorded) ... ok\ntest_apache_2_license_is_complete_pinned_and_consistent (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_apache_2_license_is_complete_pinned_and_consistent) ... ok\ntest_model_provenance_policy_covers_admission_and_revocation (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_model_provenance_policy_covers_admission_and_revocation) ... ok\ntest_runtime_boundaries_cover_platforms_processes_sockets_and_lifecycle (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_runtime_boundaries_cover_platforms_processes_sockets_and_lifecycle) ... ok\ntest_security_policy_covers_the_complete_public_response_lifecycle (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_security_policy_covers_the_complete_public_response_lifecycle) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 5.141s\n\nOK\n",
+      "stderr": "test_broken_local_link_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_broken_local_link_blocks_independently) ... ok\ntest_each_synthetic_secret_signature_blocks_without_disclosure (tests.test_documentation_mutations.DocumentationMutationTests.test_each_synthetic_secret_signature_blocks_without_disclosure) ... ok\ntest_malformed_mermaid_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_malformed_mermaid_blocks_independently) ... ok\ntest_prohibited_deployment_claim_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_prohibited_deployment_claim_blocks_independently) ... ok\ntest_unmodified_repository_passes (tests.test_documentation_mutations.DocumentationMutationTests.test_unmodified_repository_passes) ... ok\ntest_unresolved_stable_identifier_blocks_independently (tests.test_documentation_mutations.DocumentationMutationTests.test_unresolved_stable_identifier_blocks_independently) ... ok\ntest_accepted_baseline_decision_is_complete_and_independently_recorded (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_accepted_baseline_decision_is_complete_and_independently_recorded) ... ok\ntest_apache_2_license_is_complete_pinned_and_consistent (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_apache_2_license_is_complete_pinned_and_consistent) ... ok\ntest_model_provenance_policy_covers_admission_and_revocation (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_model_provenance_policy_covers_admission_and_revocation) ... ok\ntest_runtime_boundaries_cover_platforms_processes_sockets_and_lifecycle (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_runtime_boundaries_cover_platforms_processes_sockets_and_lifecycle) ... ok\ntest_security_policy_covers_the_complete_public_response_lifecycle (tests.test_public_policy_baseline.PublicPolicyBaselineTests.test_security_policy_covers_the_complete_public_response_lifecycle) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 12.258s\n\nOK\n",
       "stdout": ""
     }
   ],
@@ -60,7 +60,7 @@
     "system": "Linux"
   },
   "schema_version": 1,
-  "source_revision": "00d2cd77b35affaedad5d457828007397e259314",
+  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a",
   "summary": {
     "failed": 0,
     "passed": 5,

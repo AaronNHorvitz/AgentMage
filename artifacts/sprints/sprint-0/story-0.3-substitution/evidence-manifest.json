@@ -4,12 +4,12 @@
   "files": [
     {
       "path": "raw-checker-output.json",
-      "sha256": "3f1264489f485b61c31743326c2e736635faeb0c3f6d648848fcb761525cfdc6",
+      "sha256": "a5eca22cd1187501c006b03a7c852ce80a41c5c4bf8b9dcd117e57794ba3edae",
       "size": 12010
     },
     {
       "path": "source-hashes.json",
-      "sha256": "61e18dcf7cc52b74d0bac00b8a7dc9a3602377557b3c790a0eee6d2a0fc35080",
+      "sha256": "e0223397f9a4b469fced120eb3100cdafa5980efcbd2ef3abf35d6ac4d119dcb",
       "size": 959
     },
     {
@@ -20,5 +20,5 @@
   ],
   "schema_version": 1,
   "scope": "Sub-task 0.3.3.1 one-field admission substitution refusal",
-  "verification_revision": "aa9f795354f5a7c9cc40cb01425bef0caac0dabb"
+  "verification_revision": "0e898c4320de82e162ef25a4f51241880d65a235"
 }

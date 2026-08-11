@@ -4,41 +4,41 @@
   "files": [
     {
       "path": "conflict-report.json",
-      "sha256": "a1c8625b695125cdeaae6551398f35844c9d5baf8009153ff8a7dbcbf7411314",
+      "sha256": "c8953273596b74cf73c28c998679bf1c23d495be7ffa5fb3ddee877a31f200b4",
       "size": 3044
     },
     {
       "path": "control-map.json",
-      "sha256": "29d6fdab1411e421909bd193993fec214f976bad7c2920d6322dd6ce8119df3c",
+      "sha256": "bb6ac0896c605ba7fb8b5e992d0eedfa1cd3e5492b46111ce3f1e2d29676d562",
       "size": 2893
     },
     {
       "path": "exclusion-diff.json",
-      "sha256": "505aa2502b8f5fca44bcb379a51f41f8b3a9fcc88574da8bf8a7c0858050f720",
+      "sha256": "09585d249972d7e4ee31236079b385e8ff2c5c872dc95a5994945579f81342b2",
       "size": 880
     },
     {
       "path": "raw-checker-output.json",
-      "sha256": "d33fa9aa0a60ca838a876c59684e6c9acfaed2df7130de265c32512844fb54c0",
-      "size": 2577
+      "sha256": "7b8155a30b0be4dc20ebf26dfa9cc2ae5fa5fe449d2646c235d9204a1ae99c36",
+      "size": 2578
     },
     {
       "path": "reviewer-disposition.json",
-      "sha256": "f2a0783f02c5df1536b44c0f6796ac107df25964bc8adc04da8e60995371519d",
+      "sha256": "bdf087cdba75aefa7afa54340530c085374b8a96ed110c4a6eb5a377ac60f95d",
       "size": 738
     },
     {
       "path": "source-hashes.json",
-      "sha256": "570f17356856a656cb7314e11ef82163032f0d979b0fb73662fdb4882668279c",
+      "sha256": "46e16725b93ac701978d80c548ac8d3e8d360d8bc1ff29be6b0100268a95f6b6",
       "size": 2212
     },
     {
       "path": "summary.md",
-      "sha256": "eefbd33a4d34a75c2a081a76143da1768a7abcfa152f81a51fc8ed07a98198a2",
+      "sha256": "b4549057ab821f1130e948a9d74ffd85765372fb597f85ee8b1c7c811c8675f7",
       "size": 681
     }
   ],
   "schema_version": 1,
   "scope": "Story 0.1 planning and traceability baseline",
-  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd"
+  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
 }

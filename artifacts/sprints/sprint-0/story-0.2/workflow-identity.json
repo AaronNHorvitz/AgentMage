@@ -7,7 +7,7 @@
   "gate_command": "npm run docs:clean-check",
   "gate_script": "npm ci --ignore-scripts && npm run docs:check",
   "install_command": "npm ci --ignore-scripts",
-  "lockfile_sha256": "071dc50866b41ff3e746b67c191deca726be40d10a4e9a15d1fa541dd8eba16f",
+  "lockfile_sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
   "path": ".github/workflows/documentation.yml",
   "permissions": {
     "contents": "read"
@@ -15,5 +15,5 @@
   "runner": "ubuntu-24.04",
   "schema_version": 1,
   "sha256": "1c7d1cc7504a0a426d15ccc5a21fe77f0e016d75ffeabb7f853ccdb6ca2fd54b",
-  "source_revision": "00d2cd77b35affaedad5d457828007397e259314"
+  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
 }

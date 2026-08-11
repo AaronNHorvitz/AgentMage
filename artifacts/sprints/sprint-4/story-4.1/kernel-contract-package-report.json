@@ -11,6 +11,10 @@
     {
       "name": "serde_json",
       "version": "=1.0.151"
+    },
+    {
+      "name": "unicode-normalization",
+      "version": "=0.1.25"
     }
   ],
   "limitations": [
@@ -23,26 +27,26 @@
     {
       "executable": false,
       "path": ".cargo_vcs_info.json",
-      "sha256": "03e43ccab6ce467f710dc45eb333dec3cc3c044751eb381eb03828b5f9f63264",
+      "sha256": "4a44a58628749332d110093218c3f59bdf7fa3d0fb93cadb5104ae858ea27137",
       "size_bytes": 110
     },
     {
       "executable": false,
       "path": "Cargo.lock",
-      "sha256": "3c2a57f2e19bcecb44233d4e3f87fc6a2e888f2a7a612bdb47d57d989b0052ef",
-      "size_bytes": 2683
+      "sha256": "41f23bfa838071999c662f5be2ecfe2751c29671066fb8ec5dbe85d763b826e1",
+      "size_bytes": 3374
     },
     {
       "executable": false,
       "path": "Cargo.toml",
-      "sha256": "f88df159e8146047c19bf9946cf1688681e2eeb94d781d3ac4144c5c7d27ba83",
-      "size_bytes": 1165
+      "sha256": "27876e47d56cf356921e202ca919fc847ab3b0440070b5642a718dceb00bad93",
+      "size_bytes": 1304
     },
     {
       "executable": false,
       "path": "Cargo.toml.orig",
-      "sha256": "a271593cde3691c01f46d4c096e327ecc1a8e2db7e19497fe322e1d18f3b9324",
-      "size_bytes": 355
+      "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
+      "size_bytes": 471
     },
     {
       "executable": false,
@@ -64,6 +68,12 @@
     },
     {
       "executable": false,
+      "path": "src/approval.rs",
+      "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe",
+      "size_bytes": 6002
+    },
+    {
+      "executable": false,
       "path": "src/boundary.rs",
       "sha256": "84876a0a834684fc25b24382ccbfae746ad9f57ea6b4f1e5be331acbe598d4ba",
       "size_bytes": 4380
@@ -76,21 +86,57 @@
     },
     {
       "executable": false,
+      "path": "src/display_link.rs",
+      "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b",
+      "size_bytes": 7260
+    },
+    {
+      "executable": false,
       "path": "src/evidence.rs",
       "sha256": "09c751b7153e1674ccabdf0f729878843e45966f8dc8142152d356340dfabf92",
       "size_bytes": 4337
     },
     {
       "executable": false,
+      "path": "src/grant.rs",
+      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea",
+      "size_bytes": 13096
+    },
+    {
+      "executable": false,
       "path": "src/ids.rs",
-      "sha256": "a818809cf3efd0dba7259cda4fb341c9fda568bdd23e0a8a451221ecd55d9235",
-      "size_bytes": 2938
+      "sha256": "3c3a9cc2dc537d8a01fcf9fdd8f92f4f36a533785b26e90b2ffcff82587e8ecb",
+      "size_bytes": 3492
     },
     {
       "executable": false,
       "path": "src/lib.rs",
-      "sha256": "48cbdbfa00e6fa1c81e0fd75c0e04bf08cc5c23c6ef63726b5672e6d54318e96",
-      "size_bytes": 1639
+      "sha256": "dc463ed156650593f2b8f51692d82262c3849d271588561fe378df0a56f28033",
+      "size_bytes": 3132
+    },
+    {
+      "executable": false,
+      "path": "src/network.rs",
+      "sha256": "08d981961254f32cbab84fe5144de10e90763919aed9fe0762eff01a4a73b5f0",
+      "size_bytes": 15921
+    },
+    {
+      "executable": false,
+      "path": "src/path.rs",
+      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9",
+      "size_bytes": 14868
+    },
+    {
+      "executable": false,
+      "path": "src/platform.rs",
+      "sha256": "0516054a15ceb238ea4f6b1b233caae4704f2ad628cda0cae4e0ee9073e7b2b8",
+      "size_bytes": 11520
+    },
+    {
+      "executable": false,
+      "path": "src/platform_path.rs",
+      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62",
+      "size_bytes": 16352
     },
     {
       "executable": false,
@@ -101,8 +147,8 @@
     {
       "executable": false,
       "path": "src/serialization.rs",
-      "sha256": "2d1ad1f59ce5418da216e0614bf1379934094872decfc8b6e7e4a19087e8613d",
-      "size_bytes": 9905
+      "sha256": "86507b236ac2dd13cf9e0d6a667870a20ccf7b43adb7b7df0f360f06861ee683",
+      "size_bytes": 9961
     },
     {
       "executable": false,
@@ -119,8 +165,8 @@
     {
       "executable": false,
       "path": "tests/contract_family.rs",
-      "sha256": "ba610580f1f2783d75e7d95e9150ee2c0d389dba259d5864ae939920d0517642",
-      "size_bytes": 14160
+      "sha256": "2cd523f195638576ad8e8011052c361f042f35529f16eecb99e579e001858c6f",
+      "size_bytes": 20461
     }
   ],
   "package": {
@@ -131,10 +177,10 @@
     "name": "agentmage-kernel-contracts",
     "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
     "publish": false,
-    "sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd",
-    "size_bytes": 20729,
+    "sha256": "9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458",
+    "size_bytes": 40975,
     "source_path": "kernel/contracts",
-    "source_revision": "03e675db2c820d1ca156827781ac9a8bfb8e8dec"
+    "source_revision": "d399e4058b1ec9450c9eb76cd98ea9c3b3d9e9df"
   },
   "platform_status": {
     "linux_source_package": "verified-local",

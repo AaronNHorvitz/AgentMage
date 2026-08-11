@@ -9,7 +9,7 @@
     },
     {
       "path": "evidence-index.json",
-      "sha256": "9d4ba6c2d704448a9f46fad0cb905960333dc320a6d686b02e189b2bba2bf35e",
+      "sha256": "17874cd6270aea572d2b8f387fb8f31a8a63498ace0d1e739f4e87037047a241",
       "size": 4532
     },
     {
@@ -19,7 +19,7 @@
     },
     {
       "path": "reviewer-disposition.json",
-      "sha256": "decd3216e6c7364c222624e0e28c3acdccaa4c47e55f37b81f10acce49e1981c",
+      "sha256": "5b77b128e21552d2ba0998b1ba5cc12e871ba89b8cddd7336f3c12a8f0a78ff9",
       "size": 745
     },
     {
@@ -31,5 +31,5 @@
   "schema_version": 1,
   "scope": "Sub-task 0.3.3.3 feasibility portions of RV-06, RV-13, RV-14, and RV-16",
   "signature_status": "NOT_SIGNED_NO_RELEASE_SIGNING_IDENTITY",
-  "verification_revision": "f2cc16f9c6dc788ced9544fbb9e1fedc8c516d5b"
+  "verification_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
 }

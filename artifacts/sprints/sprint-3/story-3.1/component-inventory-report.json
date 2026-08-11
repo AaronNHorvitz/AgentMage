@@ -138,16 +138,16 @@
       "all_versions_present": true,
       "classifications": {
         "development": 371,
-        "production": 40
+        "production": 50
       },
-      "component_count": 411,
+      "component_count": 421,
       "ecosystems": {
-        "cargo": 38,
+        "cargo": 48,
         "npm": 370,
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "175b3fdeb277bd7ed48c336aa347fe2476693e3671d28dff5b7d55304c2ce73d",
+      "identity_set_sha256": "7f3a2c2f755f1e43ea89de7559087f0d84988e30c16ddc105992e8c4a7237e11",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -316,15 +316,15 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "231d5e82ded927d40beef854b67843c3e6a40fc249e30f4cfcfd5218fba42777"
+      "sha256": "b4afbf7259368ca5426ef4925a6f86dab8020084f4059ba7109cedde0197cf3f"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "7c8387e91035f95bcb8e5e3f45ab2b1228d14b9854800669dd8d9be18a3a711c"
+      "sha256": "0b78ab331f98331761b535260add4c9c7a032819b789ef0b7e893f0d413644f6"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "7cfe5f720df4ef1572fd2d96b5ca2da3d8e4282e4823786280cc641f9906fe25"
+      "sha256": "e34a271d6f8582bd6b431c75593fa8ec3344cbaa7f17724716bf0a367b134e99"
     },
     {
       "path": "architecture/optional-component-inventory.json",
@@ -344,11 +344,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "4c271ea5fd111f5c3c495bfd97cd989ea9167ba3e8b51ca0a8d5868b35e0d7ce"
+      "sha256": "cdff2f04404f578b595e6e137a0cdfc17680498c5d29af8f3a496d1879a12260"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "ecf6c26397cbbf0f00f8c102a34476ca9cececc0149f47c750bc0456454693b3"
+      "sha256": "f74c55589adc30ca042577e31bf054f4a0da5cff8e181dca653c163af1d0493d"
     },
     {
       "path": "scripts/component_inventory.py",
@@ -363,9 +363,9 @@
   "summary": {
     "approved_build_environment_count": 2,
     "approved_build_executable_count": 14,
-    "approved_component_count": 427,
+    "approved_component_count": 437,
     "approved_optional_dependency_count": 0,
-    "approved_package_count": 411,
+    "approved_package_count": 421,
     "approved_product_runtime_count": 0,
     "approved_records_missing_hash_count": 0,
     "approved_records_missing_version_count": 0,

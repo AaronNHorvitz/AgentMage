@@ -5,13 +5,13 @@
   },
   "contract_schema_version": 1,
   "fixture_set": "kernel-contracts-v1",
-  "frozen_package_sha256": "84e35c278d7480e0c6e4ee5d9c35fa194a2db75b2b381ae4217c243f8c13d4fd",
+  "frozen_package_sha256": "9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458",
   "generated_oversized_case": {
     "expected_error_code": "contract.size.exceeded",
     "persisted": false,
     "size_bytes": 1048577
   },
-  "generator_revision": "46af6d894fefe8b2c2198a686f6f560f2090871d",
+  "generator_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
   "invalid_fixtures": [
     {
       "expected_error_code": "contract.version.unsupported",
@@ -65,6 +65,12 @@
       "size_bytes": 233
     },
     {
+      "contract": "approval_request",
+      "path": "fixtures/contracts/v1/valid/approval_request.json",
+      "sha256": "b8791eee4ed25442c5706cf966150c3921402c92eb5f0e410478e66cc8b9dc46",
+      "size_bytes": 1596
+    },
+    {
       "contract": "boundary_failure",
       "path": "fixtures/contracts/v1/valid/boundary_failure.json",
       "sha256": "ea21d9bd4356669adb4ca568cab5f0403ee7364c572a3cfa9c47eb12bb8b43a5",
@@ -75,6 +81,12 @@
       "path": "fixtures/contracts/v1/valid/cancellation_signal.json",
       "sha256": "af1ef5a0338b4f0b420c29dad1102c733bb04dbfc536e2c73fcb596fc8946acf",
       "size_bytes": 159
+    },
+    {
+      "contract": "capability_grant",
+      "path": "fixtures/contracts/v1/valid/capability_grant.json",
+      "sha256": "74ba5f57371cf5e7dfcdd7119159523b0f44fbdebaa4fa6a0ca713599b1d9a29",
+      "size_bytes": 1395
     },
     {
       "contract": "contract_error",

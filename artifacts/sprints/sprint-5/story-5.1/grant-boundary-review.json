@@ -27,7 +27,7 @@
     "macOS implementation and execution evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "3af3c6ab791ed035e7a9abcd94dfacbdd08e6317",
+  "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
   "release_claim": "none",
   "review_type": "independent-automated-boundary-review",
   "reviewer_identity": "agentmage-grant-boundary-review-v1",
@@ -35,7 +35,7 @@
   "sources": [
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "7a1052381668a960858b01c8d615970940a61aa0b245429040371af05d40dd7d"
+      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
     },
     {
       "path": "docs/architecture/grant-policy-reference.md",

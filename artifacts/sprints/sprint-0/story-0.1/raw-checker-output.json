@@ -58,7 +58,7 @@
       ],
       "exit_code": 0,
       "stderr": "",
-      "stdout": "{\n  \"counts\": {\n    \"by_category\": {},\n    \"diagnostics\": 0,\n    \"normative_mappings\": 26,\n    \"normative_statements\": 26,\n    \"registry_requirements\": 78\n  },\n  \"diagnostics\": [],\n  \"ok\": true,\n  \"schema_version\": 1\n}\n"
+      "stdout": "{\n  \"counts\": {\n    \"by_category\": {},\n    \"diagnostics\": 0,\n    \"normative_mappings\": 26,\n    \"normative_statements\": 26,\n    \"registry_requirements\": 119\n  },\n  \"diagnostics\": [],\n  \"ok\": true,\n  \"schema_version\": 1\n}\n"
     },
     {
       "command": [
@@ -74,7 +74,7 @@
         "tests.test_traceability_report"
       ],
       "exit_code": 0,
-      "stderr": ".................................................................\n----------------------------------------------------------------------\nRan 65 tests in 0.344s\n\nOK\n",
+      "stderr": ".................................................................\n----------------------------------------------------------------------\nRan 65 tests in 0.409s\n\nOK\n",
       "stdout": ""
     }
   ],
@@ -85,7 +85,7 @@
     "system": "Linux"
   },
   "schema_version": 1,
-  "source_revision": "60f1db8ee769be28877b9cbdcd09df0da86983fd",
+  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a",
   "summary": {
     "failed": 0,
     "passed": 7,

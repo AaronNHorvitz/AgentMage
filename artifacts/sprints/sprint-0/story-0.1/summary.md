@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Source revision | `60f1db8ee769be28877b9cbdcd09df0da86983fd` |
+| Source revision | `8deae0ffc69d596a3724784fd52991c305c2b69a` |
 | Evidence date | 2026-08-10 |
 | Scope | Story 0.1 planning and traceability baseline |
 | Checker results | 7 passed, 0 failed, 0 skipped |

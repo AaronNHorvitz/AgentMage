@@ -7,7 +7,7 @@
     },
     {
       "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-      "sha256": "7c429a76603eddd0cf9e792eb7d795005063066f5d115fd310a3077b99b1b5fb",
+      "sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
       "size": 6204
     },
     {
@@ -17,11 +17,11 @@
     },
     {
       "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
-      "sha256": "1bc1df87d5b8da35378248a16c838ac727b16afd10d9bce85650b151151deefb",
+      "sha256": "f2e8f8b5adc19e97a6abc8b0857f9deea3dd99db088de5d81e77daf906fbe92b",
       "size": 5931
     }
   ],
   "record_type": "model_substitution_source_hashes",
   "schema_version": 1,
-  "verification_revision": "aa9f795354f5a7c9cc40cb01425bef0caac0dabb"
+  "verification_revision": "0e898c4320de82e162ef25a4f51241880d65a235"
 }
