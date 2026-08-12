@@ -1,0 +1,205 @@
+{
+  "artifact_id": "linux-fedora-ubuntu-adapter-parity",
+  "blocking_gates": [
+    {
+      "reason": "Ubuntu live sandbox and attack execution is absent.",
+      "task_id": "9.1.3.2"
+    },
+    {
+      "reason": "Independent control-disablement startup refusal is not yet complete.",
+      "task_id": "9.1.3.3"
+    },
+    {
+      "reason": "Graphical Visual Studio Code execution is absent on both Linux targets.",
+      "task_id": "9.1.3.4"
+    },
+    {
+      "reason": "Aggregate product-security mapping and review remain open.",
+      "task_id": "9.1.3.5"
+    }
+  ],
+  "dimensions": [
+    {
+      "evidence": [
+        "platform-contract"
+      ],
+      "fedora": "verified-local",
+      "id": "shared-adapter-contract",
+      "parity": "verified",
+      "ubuntu": "verified-networkless-container"
+    },
+    {
+      "evidence": [
+        "path-conformance"
+      ],
+      "fedora": "verified-local",
+      "id": "logical-path-policy",
+      "parity": "verified",
+      "ubuntu": "verified-networkless-container"
+    },
+    {
+      "evidence": [
+        "clean-build"
+      ],
+      "fedora": "verified-networkless-after-bootstrap",
+      "id": "clean-source-build",
+      "parity": "verified",
+      "ubuntu": "verified-networkless-after-bootstrap"
+    },
+    {
+      "evidence": [
+        "package-lifecycle"
+      ],
+      "fedora": "verified-rpm",
+      "id": "candidate-package-payload",
+      "parity": "verified-equivalent-component-manifest",
+      "ubuntu": "verified-deb"
+    },
+    {
+      "evidence": [
+        "package-lifecycle"
+      ],
+      "fedora": "verified-standard-user",
+      "id": "package-lifecycle",
+      "parity": "verified",
+      "ubuntu": "verified-standard-user"
+    },
+    {
+      "evidence": [
+        "inactive-inference",
+        "package-lifecycle"
+      ],
+      "fedora": "verified-self-check-only",
+      "id": "inactive-inference-process",
+      "parity": "verified-inactive-only",
+      "ubuntu": "verified-self-check-only"
+    },
+    {
+      "evidence": [
+        "linux-controls"
+      ],
+      "fedora": "verified-live",
+      "id": "bubblewrap-seccomp-cgroup",
+      "parity": "blocked",
+      "ubuntu": "blocked-live-execution"
+    },
+    {
+      "evidence": [
+        "linux-controls"
+      ],
+      "fedora": "verified-live",
+      "id": "authenticated-ipc",
+      "parity": "blocked",
+      "ubuntu": "blocked-live-execution"
+    },
+    {
+      "evidence": [
+        "linux-controls"
+      ],
+      "fedora": "verified-live-synthetic-items",
+      "id": "secret-service",
+      "parity": "blocked",
+      "ubuntu": "blocked-live-execution"
+    },
+    {
+      "evidence": [
+        "package-lifecycle"
+      ],
+      "fedora": "not-executed",
+      "id": "graphical-vscode-workflow",
+      "parity": "blocked",
+      "ubuntu": "not-executed"
+    }
+  ],
+  "input_evidence": [
+    {
+      "artifact_id": "clean-linux-source-build",
+      "evidence_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
+      "id": "clean-build",
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "edf15b283de55469fbbebcb6323c4d47eee16a12d5db31cc0ed0104e90bf1083",
+      "status": "pass-linux"
+    },
+    {
+      "artifact_id": "shared-logical-path-platform-conformance",
+      "evidence_revision": "8a2a0430e39bbfb4657c260210ecdca518c7660c",
+      "id": "path-conformance",
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "sha256": "f922d89ae24715a19096b43b206e323646e90edb93b54c405d1477b4ce0ce583",
+      "status": "pass-all-available-non-macos-platforms"
+    },
+    {
+      "artifact_id": "platform-adapter-contract-and-manifest-evidence",
+      "evidence_revision": "82c190db8b504330c98ccb8e2d315b98e4307a54",
+      "id": "platform-contract",
+      "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+      "sha256": "72076838df07106dcc92ded34229b8d0bc2a4df25d8016c664640eeb5a6adc38",
+      "status": "pass-all-available-non-macos-contract-scope"
+    },
+    {
+      "artifact_id": "linux-clean-package-lifecycle",
+      "evidence_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
+      "id": "package-lifecycle",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+      "sha256": "90244d25691fd988d59e3c193bd2eb2b2235eca6271122a18a4e6b84a3e824fb",
+      "status": "pass-linux-clean-package-lifecycle"
+    },
+    {
+      "artifact_id": "linux-ipc-sandbox-control-verification",
+      "evidence_revision": "e0b06e720008c9954e4c142197ed124b50eed05a",
+      "id": "linux-controls",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+      "sha256": "29c054bbe846efa30a0173ebb5f8576e2f90f6b658254a4da695cd4d194a3822",
+      "status": "pass-fedora-only"
+    },
+    {
+      "artifact_id": "linux-native-inference-package-boundary",
+      "evidence_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
+      "id": "inactive-inference",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
+      "sha256": "fc01f8fa659114e5b291aca1067276c7a655501a542ba153391481d03fabac8f",
+      "status": "pass-fedora-package-boundary"
+    }
+  ],
+  "limitations": [
+    "This report proves six bounded Fedora/Ubuntu parity dimensions and explicitly blocks four; it is not a full platform-parity claim.",
+    "Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "Neither Linux target has completed the graphical Visual Studio Code workflow in a clean package environment.",
+    "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
+    "All packages are unsigned candidates and make no supported-release claim.",
+    "macOS is outside this Linux parity matrix and no macOS evidence is substituted."
+  ],
+  "macos_evidence_substituted": false,
+  "platform_scope": [
+    "fedora-44-x86_64",
+    "ubuntu-26.04-x86_64"
+  ],
+  "private_values_present": false,
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_revision": "9b7eaf292f98992b18c7d54eefbaff9cd157de44",
+  "sources": [
+    {
+      "path": "package.json",
+      "sha256": "fb572db0c542153757a4bdd8af43c3b50ded898e5e9b66928f8710f7484485b2"
+    },
+    {
+      "path": "scripts/linux_platform_parity_evidence.py",
+      "sha256": "9f13501b8432362d185dfdce40973b131f4682460139678baceae04f37303fd1"
+    },
+    {
+      "path": "tests/test_linux_platform_parity_evidence.py",
+      "sha256": "64f400b291f9786759ca541784639f256e4d23292654074a5ece03b406510dce"
+    }
+  ],
+  "status": "partial-parity-with-open-native-controls",
+  "summary": {
+    "blocked_parity_dimensions": 4,
+    "dimension_count": 10,
+    "full_fedora_ubuntu_parity": false,
+    "verified_parity_dimensions": 6
+  },
+  "task_ids": [
+    "9.1.2.4"
+  ]
+}
