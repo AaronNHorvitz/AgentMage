@@ -1,0 +1,1130 @@
+{
+  "acceptance_network_used": false,
+  "artifact_id": "linux-clean-image-graphical-acceptance",
+  "bootstrap_network_separate": true,
+  "enabled_models": 0,
+  "inference_performed": false,
+  "limitations": [
+    "These are clean rootless container-image acceptance runs, not native physical-host certification.",
+    "The graphical harness disables Chromium's nested sandbox only inside an outer rootless, capability-free, no-new-privileges, networkless test container; this is not a supported production launch option.",
+    "Container root performs only RPM or DEB package-manager installation and removal; all AgentMage execution, Visual Studio Code lifecycle actions, provider exercise, and residue inspection use numeric UID/GID 10001:10001.",
+    "The probe exercises provider discovery and token counting without granting workspace reads, tools, models, credentials, or network authority.",
+    "The generated empty workspace is treated as trusted only inside the disposable acceptance container; no repository or user file is mounted into it.",
+    "Candidates are unsigned, no model is enabled, no inference is performed, and no supported-release or macOS claim is made."
+  ],
+  "packages": {
+    "deb": {
+      "bytes": 616354,
+      "filename": "agentmage_0.0.0_amd64.deb",
+      "sha256": "52540a6bf3b5454e50ce7d6e359895a8be4497798a9f2cea77e0025f8c31a92b"
+    },
+    "rpm": {
+      "bytes": 424493,
+      "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
+      "sha256": "86c57997d2623b8bcfa3e4b85b816d3517e2c651204aac2032c2fd829e803633"
+    },
+    "vsix": {
+      "bytes": 15193,
+      "filename": "agentmage-vscode-0.0.0.vsix",
+      "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392"
+    }
+  },
+  "platforms": [
+    {
+      "acceptance_image": {
+        "id": "sha256:c4ac1e821ea3eaeb7544a2c5e3a1995f82bbe4930ebce6ad2ee8e77957e3a529",
+        "labels": {
+          "org.agentmage.acceptance.base-image": "docker.io/library/fedora@sha256:89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
+          "org.agentmage.acceptance.distribution": "fedora",
+          "org.agentmage.acceptance.vscode-sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
+          "org.agentmage.acceptance.vscode-version": "1.132.0"
+        },
+        "tag": "localhost/agentmage-vscode-acceptance:fedora-44"
+      },
+      "actors": {
+        "agentmage_and_vscode_user": "10001:10001",
+        "package_administrator": "0:0"
+      },
+      "architecture": "x86_64",
+      "base_image": "docker.io/library/fedora@sha256:89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
+      "container_controls": {
+        "capabilities_added": [],
+        "capabilities_dropped": [
+          "CAP_CHOWN",
+          "CAP_DAC_OVERRIDE",
+          "CAP_FOWNER",
+          "CAP_FSETID",
+          "CAP_KILL",
+          "CAP_NET_BIND_SERVICE",
+          "CAP_SETFCAP",
+          "CAP_SETGID",
+          "CAP_SETPCAP",
+          "CAP_SETUID",
+          "CAP_SYS_CHROOT"
+        ],
+        "init": true,
+        "memory_limit_bytes": 2147483648,
+        "network": "none",
+        "no_new_privileges": true,
+        "package_mount": "read-only",
+        "pid_limit": 1024,
+        "privileged": false,
+        "probe_mount": "read-only",
+        "runtime": "rootless-podman",
+        "seccomp_mode": 2,
+        "selinux_label_disabled": true,
+        "shared_memory_bytes": 268435456
+      },
+      "container_removed": true,
+      "distribution": "fedora",
+      "inference_descriptor": {
+        "accepted_operation": "self-check-only",
+        "authority_inputs": [],
+        "component_id": "platform-linux-native-inference",
+        "contract": "authenticated-local-endpoint-v1",
+        "enabled_models": 0,
+        "inference_available": false,
+        "network_listener": false,
+        "process_boundary_version": 1
+      },
+      "package_file_count": 8,
+      "package_format": "rpm",
+      "platform_id": "fedora-x86_64",
+      "process_boundary": {
+        "process_counts": {
+          "Xvfb": 1,
+          "agentmage-host": 0,
+          "agentmage-native-inference": 0,
+          "at-spi-bus-launcher": 1,
+          "code": 10,
+          "dbus-daemon": 1
+        },
+        "standard_user_only": true
+      },
+      "residue": {
+        "active_extension_registration": false,
+        "isolated_user_profile": false,
+        "package_paths": false,
+        "package_record": false,
+        "runtime_processes": false,
+        "runtime_socket": false
+      },
+      "steps": [
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "platform-identity",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "standard-user-identity",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "package-administrator",
+          "expected_exit": "zero",
+          "id": "system-package-install",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "0:0"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "package-version",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "package-files",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "native-host-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-inference-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-version",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-install",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-registration",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-launch-and-provider-exercise",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "standard-user-process-boundary",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-shutdown",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-uninstall",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-registration-absent",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "package-administrator",
+          "expected_exit": "zero",
+          "id": "system-package-uninstall",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "0:0"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "nonzero",
+          "id": "package-record-absent",
+          "observed_exit": "nonzero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "isolated-profile-cleanup",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "final-residue-scan",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        }
+      ],
+      "version": "44",
+      "vscode": {
+        "activation_event": "ExtensionService#_doActivateExtension agentmage-project.agentmage-vscode-shell",
+        "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
+        "chromium_sandbox": "disabled-inside-outer-test-container-only",
+        "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+        "extension_host_log_sha256": "00a1494da6d391ab620002cac24ce390660444e132473fb1cfc9f07aec22480e",
+        "extension_id": "agentmage-project.agentmage-vscode-shell",
+        "extension_version": "0.0.0",
+        "provider_probe": {
+          "observed": {
+            "family": "agentmage-secure-read",
+            "id": "secure-local-read",
+            "tokenCount": 4,
+            "vendor": "agentmage",
+            "version": "0.0.0-phase9"
+          },
+          "schemaVersion": 1,
+          "status": "pass"
+        },
+        "version": "1.132.0"
+      }
+    },
+    {
+      "acceptance_image": {
+        "id": "sha256:0aeabb25a0088140e026d310ed5a3e2fe17516a3c0ba76ebb5e43c7c39a8fb2d",
+        "labels": {
+          "org.agentmage.acceptance.base-image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
+          "org.agentmage.acceptance.distribution": "ubuntu",
+          "org.agentmage.acceptance.vscode-sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
+          "org.agentmage.acceptance.vscode-version": "1.132.0"
+        },
+        "tag": "localhost/agentmage-vscode-acceptance:ubuntu-26.04"
+      },
+      "actors": {
+        "agentmage_and_vscode_user": "10001:10001",
+        "package_administrator": "0:0"
+      },
+      "architecture": "x86_64",
+      "base_image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
+      "container_controls": {
+        "capabilities_added": [],
+        "capabilities_dropped": [
+          "CAP_CHOWN",
+          "CAP_DAC_OVERRIDE",
+          "CAP_FOWNER",
+          "CAP_FSETID",
+          "CAP_KILL",
+          "CAP_NET_BIND_SERVICE",
+          "CAP_SETFCAP",
+          "CAP_SETGID",
+          "CAP_SETPCAP",
+          "CAP_SETUID",
+          "CAP_SYS_CHROOT"
+        ],
+        "init": true,
+        "memory_limit_bytes": 2147483648,
+        "network": "none",
+        "no_new_privileges": true,
+        "package_mount": "read-only",
+        "pid_limit": 1024,
+        "privileged": false,
+        "probe_mount": "read-only",
+        "runtime": "rootless-podman",
+        "seccomp_mode": 2,
+        "selinux_label_disabled": true,
+        "shared_memory_bytes": 268435456
+      },
+      "container_removed": true,
+      "distribution": "ubuntu",
+      "inference_descriptor": {
+        "accepted_operation": "self-check-only",
+        "authority_inputs": [],
+        "component_id": "platform-linux-native-inference",
+        "contract": "authenticated-local-endpoint-v1",
+        "enabled_models": 0,
+        "inference_available": false,
+        "network_listener": false,
+        "process_boundary_version": 1
+      },
+      "package_file_count": 12,
+      "package_format": "deb",
+      "platform_id": "ubuntu-x86_64",
+      "process_boundary": {
+        "process_counts": {
+          "Xvfb": 1,
+          "agentmage-host": 0,
+          "agentmage-native-inference": 0,
+          "at-spi-bus-launcher": 0,
+          "code": 10,
+          "dbus-daemon": 1
+        },
+        "standard_user_only": true
+      },
+      "residue": {
+        "active_extension_registration": false,
+        "isolated_user_profile": false,
+        "package_paths": false,
+        "package_record": false,
+        "runtime_processes": false,
+        "runtime_socket": false
+      },
+      "steps": [
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "platform-identity",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "standard-user-identity",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "package-administrator",
+          "expected_exit": "zero",
+          "id": "system-package-install",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "0:0"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "package-version",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "package-files",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "native-host-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-inference-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-version",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-install",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-registration",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-launch-and-provider-exercise",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "standard-user-process-boundary",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "vscode-shutdown",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-uninstall",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "extension-registration-absent",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "package-administrator",
+          "expected_exit": "zero",
+          "id": "system-package-uninstall",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "0:0"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "nonzero",
+          "id": "package-record-absent",
+          "observed_exit": "nonzero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "isolated-profile-cleanup",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "final-residue-scan",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        }
+      ],
+      "version": "26.04",
+      "vscode": {
+        "activation_event": "ExtensionService#_doActivateExtension agentmage-project.agentmage-vscode-shell",
+        "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
+        "chromium_sandbox": "disabled-inside-outer-test-container-only",
+        "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+        "extension_host_log_sha256": "76c3244bd37f1fb4aac5ac26d88690a687a96ba13f45882b88e251d28c30cd49",
+        "extension_id": "agentmage-project.agentmage-vscode-shell",
+        "extension_version": "0.0.0",
+        "provider_probe": {
+          "observed": {
+            "family": "agentmage-secure-read",
+            "id": "secure-local-read",
+            "tokenCount": 4,
+            "vendor": "agentmage",
+            "version": "0.0.0-phase9"
+          },
+          "schemaVersion": 1,
+          "status": "pass"
+        },
+        "version": "1.132.0"
+      }
+    }
+  ],
+  "private_values_present": false,
+  "published_procedure": {
+    "package_scripts": {
+      "evidence:story9.1-linux-acceptance:bootstrap": "python3 scripts/linux_clean_image_acceptance.py --bootstrap-images",
+      "evidence:story9.1-linux-acceptance:build": "python3 scripts/linux_clean_image_acceptance.py --write --source-revision HEAD",
+      "evidence:story9.1-linux-acceptance:check": "python3 scripts/linux_clean_image_acceptance.py"
+    },
+    "path": "docs/support/linux-clean-image-acceptance.md",
+    "vscode_archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
+    "vscode_archive_url": "https://update.code.visualstudio.com/1.132.0/linux-x64/stable"
+  },
+  "release_claim": "none",
+  "rootless_runtime": true,
+  "schema_version": 1,
+  "source": {
+    "files": [
+      {
+        "bytes": 51,
+        "path": ".cargo/config.toml",
+        "sha256": "b0cb6c9adc5542ecbbb938f54607fa18043cde4dd37b575ec577be6558d0fbb2"
+      },
+      {
+        "bytes": 13033,
+        "path": "Cargo.lock",
+        "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+      },
+      {
+        "bytes": 1442,
+        "path": "Cargo.toml",
+        "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+      },
+      {
+        "bytes": 11357,
+        "path": "LICENSE",
+        "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+      },
+      {
+        "bytes": 354,
+        "path": "capabilities/read-only/Cargo.toml",
+        "sha256": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a"
+      },
+      {
+        "bytes": 184,
+        "path": "capabilities/read-only/README.md",
+        "sha256": "5ceb10371396ab212f7aa2fbb18a4013b24008c9c6dfd96f3522c5a80369899d"
+      },
+      {
+        "bytes": 3764,
+        "path": "capabilities/read-only/src/lib.rs",
+        "sha256": "ef7d4c38ae0a29d40231ad4f23c6198d47d95d9a96a5db28611d2ab9ddce09ad"
+      },
+      {
+        "bytes": 3110,
+        "path": "docs/support/linux-clean-image-acceptance.md",
+        "sha256": "69e39960b521b4f45750ac0ef7c96b8d80cb9a8d7edaa42c4edd15a467f6e597"
+      },
+      {
+        "bytes": 471,
+        "path": "kernel/contracts/Cargo.toml",
+        "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088"
+      },
+      {
+        "bytes": 11357,
+        "path": "kernel/contracts/LICENSE",
+        "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+      },
+      {
+        "bytes": 220,
+        "path": "kernel/contracts/README.md",
+        "sha256": "7bfb1783bde9ccbbb10512d1906d89507c8e5ac3404676c2f747c34b0250f843"
+      },
+      {
+        "bytes": 86,
+        "path": "kernel/contracts/rust-toolchain.toml",
+        "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
+      },
+      {
+        "bytes": 6772,
+        "path": "kernel/contracts/src/approval.rs",
+        "sha256": "a00dcb3b13ffc03d190bc87d1471e545e7363df6130a9623c7b7dd703dcf49f8"
+      },
+      {
+        "bytes": 4380,
+        "path": "kernel/contracts/src/boundary.rs",
+        "sha256": "84876a0a834684fc25b24382ccbfae746ad9f57ea6b4f1e5be331acbe598d4ba"
+      },
+      {
+        "bytes": 5177,
+        "path": "kernel/contracts/src/common.rs",
+        "sha256": "5be4e6425ac42e358b12e4c05565eebd7f50eb2e5aa2eea555347bcaf9c11764"
+      },
+      {
+        "bytes": 7260,
+        "path": "kernel/contracts/src/display_link.rs",
+        "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
+      },
+      {
+        "bytes": 4969,
+        "path": "kernel/contracts/src/evidence.rs",
+        "sha256": "62dbb51deb31096e429499f7f5fd5014fdf43f6c0b0f206a3b1dff0fb352d691"
+      },
+      {
+        "bytes": 23505,
+        "path": "kernel/contracts/src/grant.rs",
+        "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+      },
+      {
+        "bytes": 3817,
+        "path": "kernel/contracts/src/ids.rs",
+        "sha256": "ab595f8011145d6c42d5668d3c95798162cf2082fdffe0807f9f79f8aaa4daf5"
+      },
+      {
+        "bytes": 3458,
+        "path": "kernel/contracts/src/lib.rs",
+        "sha256": "095b3ece8b29f6e47a25714efe9a9a6f0e1bb6884c3d0e8a2f38da6b700b0cb5"
+      },
+      {
+        "bytes": 15921,
+        "path": "kernel/contracts/src/network.rs",
+        "sha256": "08d981961254f32cbab84fe5144de10e90763919aed9fe0762eff01a4a73b5f0"
+      },
+      {
+        "bytes": 12999,
+        "path": "kernel/contracts/src/operation.rs",
+        "sha256": "19d29ac6702f9e8e2acf9c1fa41dc918ea128ddb8a00d85d1c0ee784977d2834"
+      },
+      {
+        "bytes": 18112,
+        "path": "kernel/contracts/src/path.rs",
+        "sha256": "32134f7e4ba693009f9fbfc8741ea22f4744081e4b0e78a02431728237aee4ea"
+      },
+      {
+        "bytes": 12017,
+        "path": "kernel/contracts/src/platform.rs",
+        "sha256": "43e9af9322414acf26b13b56f9f36d3b97562e38603da6ebe688c11bfd17aefa"
+      },
+      {
+        "bytes": 16733,
+        "path": "kernel/contracts/src/platform_path.rs",
+        "sha256": "0cff7fe61ab00464882b1dfc3a8be15e862bcd0ce0ee8bc1b4fff878fa1d03e1"
+      },
+      {
+        "bytes": 2895,
+        "path": "kernel/contracts/src/prompt.rs",
+        "sha256": "96501179eff279f87e75b06e2c94b0c6c6b7b288d535b04fe47326ac72d5850a"
+      },
+      {
+        "bytes": 10431,
+        "path": "kernel/contracts/src/serialization.rs",
+        "sha256": "c83cc15d2c30f4bac37916b57fbdf288ee870e5697c98e538a8e3c5d30323ff8"
+      },
+      {
+        "bytes": 15070,
+        "path": "kernel/contracts/src/task.rs",
+        "sha256": "3c4fc945faa3cdc635c630cac3dd28ceb853ae361b28d2d2dc232318b4c0e0ec"
+      },
+      {
+        "bytes": 6874,
+        "path": "kernel/contracts/src/tool.rs",
+        "sha256": "0c642bc6a2cf951eb024789fdad1509e2ee82f9aa6f8cc75a6aaf2b1e4d7b8a4"
+      },
+      {
+        "bytes": 5442,
+        "path": "kernel/contracts/src/transaction.rs",
+        "sha256": "98870b0926eaa3e5d32562779ce395bc6df5c98f5f3abc3511d037c78b6ff4ef"
+      },
+      {
+        "bytes": 21911,
+        "path": "kernel/contracts/tests/contract_family.rs",
+        "sha256": "96e6bd04cc61a1717af5fe8549136fc87b9f1fd5ce68f2ee5589b26c6304f6d0"
+      },
+      {
+        "bytes": 6833,
+        "path": "kernel/contracts/tests/grant_target_contract.rs",
+        "sha256": "b9c0a026718d731ba9fff7ae2ede32c05f82163de76372e07f98201655e7b357"
+      },
+      {
+        "bytes": 4149,
+        "path": "kernel/contracts/tests/path_corpus.rs",
+        "sha256": "11e4ef3977d46ff21b767cc7bdac8022c8ccda7e088673af9090a9580523cbca"
+      },
+      {
+        "bytes": 6861,
+        "path": "kernel/contracts/tests/platform_path_contract.rs",
+        "sha256": "f945976fcc428e87d4eb6ddf1f018da2a034c16665cd1dc6b5c52c94bb268b45"
+      },
+      {
+        "bytes": 498,
+        "path": "kernel/engine/Cargo.toml",
+        "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
+      },
+      {
+        "bytes": 527,
+        "path": "kernel/engine/README.md",
+        "sha256": "d890171c26a592798ddcebc7d2ff917db9dfb98e305069b508ebd8fd5f735100"
+      },
+      {
+        "bytes": 17674,
+        "path": "kernel/engine/src/approval.rs",
+        "sha256": "ca83dd5fb50f8267472930fc6806ceb009095f31edf87d92994cb26721bef8b3"
+      },
+      {
+        "bytes": 13840,
+        "path": "kernel/engine/src/authority.rs",
+        "sha256": "77f5d90e3882550ad28deadbb93dfc7a1e8623e394b724281c36b0ea7fc9edbd"
+      },
+      {
+        "bytes": 81328,
+        "path": "kernel/engine/src/authority_transaction.rs",
+        "sha256": "dffa4f7c807796a17312d7445c8452251361709756ad4512a5b4003ed95fafa1"
+      },
+      {
+        "bytes": 131642,
+        "path": "kernel/engine/src/configuration.rs",
+        "sha256": "c5e788b1cd4c84faab640213c1c8e07fe23f437a67498aff68bb9cf3132cd21f"
+      },
+      {
+        "bytes": 63006,
+        "path": "kernel/engine/src/grants.rs",
+        "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
+      },
+      {
+        "bytes": 1877,
+        "path": "kernel/engine/src/lib.rs",
+        "sha256": "812706df7a4c58263f8f08841e03dead780f5e7fb08b50ae173aaf12ba8a414b"
+      },
+      {
+        "bytes": 64725,
+        "path": "kernel/engine/src/operational_store.rs",
+        "sha256": "5d1f33743293e08169d3ad055304c3144aa28e3ba443622050607126bc495f08"
+      },
+      {
+        "bytes": 24626,
+        "path": "kernel/engine/src/platform_startup.rs",
+        "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
+      },
+      {
+        "bytes": 38894,
+        "path": "kernel/engine/src/policy.rs",
+        "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+      },
+      {
+        "bytes": 20481,
+        "path": "kernel/engine/src/propagation.rs",
+        "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
+      },
+      {
+        "bytes": 24476,
+        "path": "kernel/engine/src/run_control.rs",
+        "sha256": "54e43a2e1c3082b71062c734fa843d4730a7767bd05ef7f990b38f1490f5eb5a"
+      },
+      {
+        "bytes": 17274,
+        "path": "kernel/engine/src/strict_local.rs",
+        "sha256": "01a6eff71c2646840a9f3c230febf7c18e19658e5a5076518fcb83ebaa16d72c"
+      },
+      {
+        "bytes": 1793,
+        "path": "kernel/engine/src/test_target.rs",
+        "sha256": "bcf9817893c1368459a05bb48e174a443fd63e21df96c2fb21ad90d4b45ff4f5"
+      },
+      {
+        "bytes": 35323,
+        "path": "kernel/engine/src/tooling.rs",
+        "sha256": "1aff3e7318bc2957da0f59838359b3c71c9697b1514496a1a098b2fecdcb9be8"
+      },
+      {
+        "bytes": 48415,
+        "path": "kernel/engine/src/work_packet.rs",
+        "sha256": "579547244132d5db8f824ec94f9c841daa7c574034c7b8a5f5b339947c7da36e"
+      },
+      {
+        "bytes": 18038,
+        "path": "kernel/engine/tests/adversarial_grant_corpus.rs",
+        "sha256": "a01d871373721a16d9cffb1f3c43cca56b26d9b40d873c78cab24a5b7c6814d1"
+      },
+      {
+        "bytes": 8086,
+        "path": "kernel/engine/tests/authority_escalation_matrix.rs",
+        "sha256": "aab60684341ced1fa0b62fb8c6d57a118b3c2cdc8046e65cba07d50b88678369"
+      },
+      {
+        "bytes": 8704,
+        "path": "kernel/engine/tests/boundary_workflow.rs",
+        "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
+      },
+      {
+        "bytes": 1348,
+        "path": "kernel/engine/tests/common/mod.rs",
+        "sha256": "92442d6b926499022b176da95b36404d4afb0a1b3b2784dc54010cf7d8df57df"
+      },
+      {
+        "bytes": 4304,
+        "path": "kernel/engine/tests/display_link_authority.rs",
+        "sha256": "0a9c418772593510c4e9d8ecbaa787c04a148717e05f06efcc73b5a22491e57d"
+      },
+      {
+        "bytes": 12274,
+        "path": "kernel/engine/tests/grant_race_replay.rs",
+        "sha256": "d7c7e1aedd210f79eb333ab491c6df5ff1dbd04bfa5c352cc1989e6e232a6ea1"
+      },
+      {
+        "bytes": 16206,
+        "path": "kernel/engine/tests/grant_review_fixtures.rs",
+        "sha256": "9ef43e8b54a75844126fb55b3a81a32b6ab74be92dd5b77556da8ebba3e8950a"
+      },
+      {
+        "bytes": 13250,
+        "path": "kernel/engine/tests/grant_stale_dispatch.rs",
+        "sha256": "57304aab5a481633c3ab63c97d7107d22e672c8f7f7f5abdd8bd980cce0ce6ef"
+      },
+      {
+        "bytes": 4747,
+        "path": "kernel/engine/tests/platform_adapter_conformance.rs",
+        "sha256": "43be8fff79e866d85f5c393e01102af8f45c2b71101879b8bf36b1e933e05c6e"
+      },
+      {
+        "bytes": 182235,
+        "path": "package-lock.json",
+        "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+      },
+      {
+        "bytes": 18966,
+        "path": "package.json",
+        "sha256": "d01321049e70758cadb13835cb90547836aa9d9b9395772c800492b8dcfdfa93"
+      },
+      {
+        "bytes": 2921,
+        "path": "packaging/linux/README.md",
+        "sha256": "e1436664a6229f2d77024c63bf5c91f58d29585e5a8a5221268f6ec460390425"
+      },
+      {
+        "bytes": 1127,
+        "path": "packaging/linux/agentmage-release.spec.in",
+        "sha256": "c43ad10c2465f0a80f6c0d30fa6bf744453e3f49968583074c1786ef0e849476"
+      },
+      {
+        "bytes": 1111,
+        "path": "packaging/linux/agentmage.spec.in",
+        "sha256": "f15801395997418e4a37a209cee19f461ac7ba547e085ede9e54542e4e9dcd25"
+      },
+      {
+        "bytes": 397,
+        "path": "packaging/linux/debian-control.in",
+        "sha256": "b57853263e98357840ddea3489f40b43116fab0a48003fa8e5722db6169934df"
+      },
+      {
+        "bytes": 364,
+        "path": "packaging/linux/debian-release-control.in",
+        "sha256": "547d9da0e428801eb1f7adb3f9f26ee4c06eb6086d24d4695a4c156440fe0cdb"
+      },
+      {
+        "bytes": 441,
+        "path": "platforms/linux-inference/Cargo.toml",
+        "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+      },
+      {
+        "bytes": 690,
+        "path": "platforms/linux-inference/README.md",
+        "sha256": "681f058f17d607c73a789f82bdafa32601fd6cac4637209b8d284eb29b50eff0"
+      },
+      {
+        "bytes": 4828,
+        "path": "platforms/linux-inference/src/lib.rs",
+        "sha256": "423b603b0fa60b575a483fd5ea68e6af89b88babb707d96419835e7cf077da62"
+      },
+      {
+        "bytes": 574,
+        "path": "platforms/linux-inference/src/main.rs",
+        "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+      },
+      {
+        "bytes": 1192,
+        "path": "platforms/linux-inference/tests/process_boundary.rs",
+        "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
+      },
+      {
+        "bytes": 520,
+        "path": "platforms/linux/Cargo.toml",
+        "sha256": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5"
+      },
+      {
+        "bytes": 1046,
+        "path": "platforms/linux/README.md",
+        "sha256": "e54f7c2ecbb6b511e955bdd542e0ffa53eca3823e7ec679f7f934702139fc1ae"
+      },
+      {
+        "bytes": 36347,
+        "path": "platforms/linux/src/configuration_store.rs",
+        "sha256": "7ae8961307f7e9c7bd1a12add36e5421f89e5f84ecba9973683b844c620964b4"
+      },
+      {
+        "bytes": 33475,
+        "path": "platforms/linux/src/inventory.rs",
+        "sha256": "964b6603457fdf987019317cab53e3729cb84ec43cb56618723ce894228fc79d"
+      },
+      {
+        "bytes": 37082,
+        "path": "platforms/linux/src/ipc.rs",
+        "sha256": "b74c2d424365aa0faa267cc042214a86e99c97c99be854ac3daed4deabc89c21"
+      },
+      {
+        "bytes": 50688,
+        "path": "platforms/linux/src/lib.rs",
+        "sha256": "c6da7bab4782d8e048ead151741e9825e427cc49d507885f50e9e566977736ff"
+      },
+      {
+        "bytes": 11968,
+        "path": "platforms/linux/src/lifecycle.rs",
+        "sha256": "7ffcaf7720b166854b703f7b71561aebe46987141754f0cb06769cd8e01ddfdf"
+      },
+      {
+        "bytes": 29243,
+        "path": "platforms/linux/src/platform.rs",
+        "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
+      },
+      {
+        "bytes": 58277,
+        "path": "platforms/linux/src/sandbox.rs",
+        "sha256": "a1a14a5626b48f9b20158cad7e8b062ecf9521adb29f63f33ef9d6bf30069867"
+      },
+      {
+        "bytes": 40155,
+        "path": "platforms/linux/src/secret_service.rs",
+        "sha256": "52915f5c42d0fe9b07a3da56d3e5a87b11cf1b6f437e159be7aa2e8ebc35e120"
+      },
+      {
+        "bytes": 12352,
+        "path": "platforms/linux/src/security_controls.rs",
+        "sha256": "f354c6d689e7e48d2628d6c1183daa7be553e6f52c941f93a5f84173d23977e8"
+      },
+      {
+        "bytes": 22343,
+        "path": "platforms/linux/src/strict_local.rs",
+        "sha256": "09e58f53aebdba83089c5246aefd851a32f099f6d37c0c674a01e35ef826fbe2"
+      },
+      {
+        "bytes": 2540,
+        "path": "release/acceptance/Containerfile.linux-vscode",
+        "sha256": "1bd0f668a9dd1825e75d6b19113a606ded707f6b37986afad4bd88cc539a101f"
+      },
+      {
+        "bytes": 1547,
+        "path": "release/acceptance/vscode-probe/extension.js",
+        "sha256": "b2b2e2695d8fa5a64bd2ca86c05f7d32f39a1bd94fbc3c268304246ec6bab8db"
+      },
+      {
+        "bytes": 317,
+        "path": "release/acceptance/vscode-probe/package.json",
+        "sha256": "bf4fd1e448a4a84254c4c08260c7c50fac99ad4f9d794e5f704780acfcfdf338"
+      },
+      {
+        "bytes": 86,
+        "path": "rust-toolchain.toml",
+        "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
+      },
+      {
+        "bytes": 47139,
+        "path": "scripts/linux_clean_image_acceptance.py",
+        "sha256": "c990ad4d912f7bcd6aef3b9f21b260ad0ff41a8c6e485038db7291199316fca4"
+      },
+      {
+        "bytes": 17028,
+        "path": "scripts/package_candidate.py",
+        "sha256": "0d2cb4fc43f8e49e47857ed953a74ce2c966a8d24e0b8ded6cea64ab6d0f670f"
+      },
+      {
+        "bytes": 739,
+        "path": "shells/host/Cargo.toml",
+        "sha256": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
+      },
+      {
+        "bytes": 668,
+        "path": "shells/host/README.md",
+        "sha256": "4b999de01559eaea2f55c6b40443200ddced10d2da0ff061f5f26b388b4eb373"
+      },
+      {
+        "bytes": 305,
+        "path": "shells/host/src/lib.rs",
+        "sha256": "7ea77d17a427a0c2cf3967f42c02e90b399abee1b57346c3f12babff117f8af8"
+      },
+      {
+        "bytes": 18132,
+        "path": "shells/host/src/linux_bootstrap.rs",
+        "sha256": "dd8ae69988d5cafb1b10bea1fef8dfa87469c2cf90629bf044ecce1083052673"
+      },
+      {
+        "bytes": 43199,
+        "path": "shells/host/src/linux_read.rs",
+        "sha256": "b985a9aa651004a175b2435ba84409ae19568995ebc152bc0b2752a6973a87d2"
+      },
+      {
+        "bytes": 3504,
+        "path": "shells/host/src/main.rs",
+        "sha256": "dee10c3a3217905c4bf67224ba8587c169acee01b093dfa0de654fc6dc18ea46"
+      },
+      {
+        "bytes": 22546,
+        "path": "shells/host/src/package_verify.rs",
+        "sha256": "9b03ca0a81a81296f19b5c8e02c799bd6150f26387e3d84560faf8b167c5cc5f"
+      },
+      {
+        "bytes": 11688,
+        "path": "shells/host/src/protocol.rs",
+        "sha256": "ee3ced4e189c579ec0e1d6805cc4be1bbf5ca9b6d5aa4c3fa2e29fb5a5bd0ae1"
+      },
+      {
+        "bytes": 860,
+        "path": "shells/vscode/README.md",
+        "sha256": "c51911c78f89c4851a51d98a8a13bd39cef6a8c832a9e1c93fbef0838d057e2e"
+      },
+      {
+        "bytes": 362,
+        "path": "shells/vscode/eslint.config.mjs",
+        "sha256": "d3508615ce562c392a6445cfb367083751c1989eace48f65fb81b4baabefd4a0"
+      },
+      {
+        "bytes": 1151,
+        "path": "shells/vscode/package.json",
+        "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
+      },
+      {
+        "bytes": 4530,
+        "path": "shells/vscode/src/extension.ts",
+        "sha256": "898f3f5e2f7b9e403b382de96ce6230ac88465a262a95b2532924a8e1a455eec"
+      },
+      {
+        "bytes": 7302,
+        "path": "shells/vscode/src/host_bootstrap.ts",
+        "sha256": "378a62f8e54f6a6e5d50fe54cce27dae2ed803e8fe2e5bea9788dfec34d12c24"
+      },
+      {
+        "bytes": 12142,
+        "path": "shells/vscode/src/host_bridge.ts",
+        "sha256": "b0306f0a7fa8640d4d2333fbb0cd26cbfb3a1833e76859470221342d4fb3b0f2"
+      },
+      {
+        "bytes": 822,
+        "path": "shells/vscode/src/index.ts",
+        "sha256": "f54ce5d3cdc16707c19c16053d964e92b72fd4f26e8d94490d23e496aa6dd199"
+      },
+      {
+        "bytes": 13183,
+        "path": "shells/vscode/src/provider.ts",
+        "sha256": "48eb3b23d28d11d2d0e272863f39c9c8f26c0b681d53609e444fb7124311f118"
+      },
+      {
+        "bytes": 3940,
+        "path": "shells/vscode/test/host_bootstrap.test.ts",
+        "sha256": "c45565f36be13bc734b6c97008c555f82099fc2a388f0f2e25744981e2669285"
+      },
+      {
+        "bytes": 7122,
+        "path": "shells/vscode/test/host_bridge.test.ts",
+        "sha256": "f6589f3f60f5e6fac50ba4cc227d024bd626e55253089c5749565bf8241e149c"
+      },
+      {
+        "bytes": 869,
+        "path": "shells/vscode/test/index.test.ts",
+        "sha256": "7402fcba5fbb16295a9aa6a05b97637c51b3f6b412cb84e4272988a5de82329f"
+      },
+      {
+        "bytes": 8256,
+        "path": "shells/vscode/test/provider.test.ts",
+        "sha256": "8c3c9a689e784dbdec7e075ef2e05426c479188da831779f601eacddb8f76447"
+      },
+      {
+        "bytes": 445,
+        "path": "shells/vscode/tsconfig.json",
+        "sha256": "0611c22d779c7a8c8638847a8023f5642439a5b8770e723d8315c20956bacc00"
+      },
+      {
+        "bytes": 9464,
+        "path": "tests/test_linux_clean_image_acceptance.py",
+        "sha256": "7128a7df1d9daf407f2ee446a2fa70c77c1414f4126445842c0cb4a72e0c001d"
+      }
+    ],
+    "revision": "2ceaa93913de99495ea464abe91670cba18caf24",
+    "tree": "c66ae94e0f91bef868ab81f36617ac8e081f338e"
+  },
+  "status": "pass-clean-fedora-ubuntu-images",
+  "task_ids": [
+    "9.1.3.4"
+  ]
+}

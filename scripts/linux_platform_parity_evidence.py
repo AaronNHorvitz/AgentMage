@@ -72,6 +72,12 @@ INPUTS = (
         "linux-native-inference-package-boundary",
         "pass-fedora-package-boundary",
     ),
+    (
+        "clean-image-acceptance",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
+        "linux-clean-image-graphical-acceptance",
+        "pass-clean-fedora-ubuntu-images",
+    ),
 )
 DIMENSIONS = (
     {
@@ -139,26 +145,22 @@ DIMENSIONS = (
     },
     {
         "id": "graphical-vscode-workflow",
-        "fedora": "not-executed",
-        "ubuntu": "not-executed",
-        "parity": "blocked",
-        "evidence": ["package-lifecycle"],
+        "fedora": "verified-networkless-clean-image",
+        "ubuntu": "verified-networkless-clean-image",
+        "parity": "verified-clean-image",
+        "evidence": ["clean-image-acceptance"],
     },
 )
 BLOCKERS = (
     {
-        "task_id": "9.1.3.4",
-        "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution and graphical Visual Studio Code execution on both Linux targets remain absent.",
-    },
-    {
         "task_id": "9.1.3.5",
-        "reason": "Aggregate product-security mapping and review remain open.",
+        "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution plus aggregate product-security mapping and review remain open.",
     },
 )
 LIMITATIONS = (
-    "This report proves six complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks four dimensions; it is not a full platform-parity claim.",
+    "This report proves seven complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks three dimensions; it is not a full platform-parity claim.",
     "Ubuntu Bubblewrap, seccomp, and cgroup attacks pass in a rootless privileged test envelope; native Ubuntu isolation, live Secret Service closure, and complete native IPC integration remain pending.",
-    "Neither Linux target has completed the graphical Visual Studio Code workflow in a clean package environment.",
+    "The graphical Visual Studio Code workflow passes in clean rootless Fedora and Ubuntu container images, not on native physical hosts; Chromium's nested sandbox is disabled only inside the outer capability-free, no-new-privileges, networkless acceptance container.",
     "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
     "All packages are unsigned candidates and make no supported-release claim.",
     "macOS is outside this Linux parity matrix and no macOS evidence is substituted.",
@@ -456,11 +458,106 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or inference.get("private_values_present") is not False
     ):
         failures.append("inactive inference parity input is incomplete")
+
+    acceptance = values["clean-image-acceptance"]
+    acceptance_platforms = acceptance.get("platforms")
+    acceptance_map = {
+        item.get("platform_id"): item
+        for item in acceptance_platforms or []
+        if isinstance(item, dict)
+    }
+    acceptance_formats = {"fedora-x86_64": "rpm", "ubuntu-x86_64": "deb"}
+    expected_steps = [
+        "platform-identity",
+        "standard-user-identity",
+        "system-package-install",
+        "package-version",
+        "package-files",
+        "native-host-launch",
+        "inactive-inference-launch",
+        "vscode-version",
+        "extension-install",
+        "extension-registration",
+        "vscode-launch-and-provider-exercise",
+        "standard-user-process-boundary",
+        "vscode-shutdown",
+        "extension-uninstall",
+        "extension-registration-absent",
+        "system-package-uninstall",
+        "package-record-absent",
+        "isolated-profile-cleanup",
+        "final-residue-scan",
+    ]
+    expected_provider = {
+        "family": "agentmage-secure-read",
+        "id": "secure-local-read",
+        "tokenCount": 4,
+        "vendor": "agentmage",
+        "version": "0.0.0-phase9",
+    }
+    if (
+        acceptance.get("schema_version") != 1
+        or acceptance.get("task_ids") != ["9.1.3.4"]
+        or acceptance.get("status") != "pass-clean-fedora-ubuntu-images"
+        or acceptance.get("rootless_runtime") is not True
+        or acceptance.get("acceptance_network_used") is not False
+        or acceptance.get("bootstrap_network_separate") is not True
+        or acceptance.get("enabled_models") != 0
+        or acceptance.get("inference_performed") is not False
+        or acceptance.get("private_values_present") is not False
+        or acceptance.get("release_claim") != "none"
+        or acceptance.get("published_procedure", {}).get("path")
+        != "docs/support/linux-clean-image-acceptance.md"
+        or set(acceptance_map) != set(acceptance_formats)
+        or any(
+            item.get("package_format") != acceptance_formats[platform_id]
+            or item.get("actors")
+            != {
+                "agentmage_and_vscode_user": "10001:10001",
+                "package_administrator": "0:0",
+            }
+            or [step.get("id") for step in item.get("steps", [])] != expected_steps
+            or not _all_pass(item.get("steps"), 19)
+            or item.get("container_controls", {}).get("runtime")
+            != "rootless-podman"
+            or item.get("container_controls", {}).get("network") != "none"
+            or item.get("container_controls", {}).get("privileged") is not False
+            or item.get("container_controls", {}).get("capabilities_added") != []
+            or not item.get("container_controls", {}).get("capabilities_dropped")
+            or item.get("container_controls", {}).get("no_new_privileges") is not True
+            or item.get("container_controls", {}).get("seccomp_mode") != 2
+            or item.get("container_controls", {}).get("package_mount") != "read-only"
+            or item.get("container_controls", {}).get("probe_mount") != "read-only"
+            or item.get("process_boundary", {}).get("standard_user_only") is not True
+            or item.get("vscode", {}).get("version") != "1.132.0"
+            or REVISION.fullmatch(str(item.get("vscode", {}).get("commit"))) is None
+            or item.get("vscode", {}).get("extension_id")
+            != "agentmage-project.agentmage-vscode-shell"
+            or item.get("vscode", {}).get("chromium_sandbox")
+            != "disabled-inside-outer-test-container-only"
+            or item.get("vscode", {}).get("provider_probe", {}).get("schemaVersion")
+            != 1
+            or item.get("vscode", {}).get("provider_probe", {}).get("status") != "pass"
+            or item.get("vscode", {}).get("provider_probe", {}).get("observed")
+            != expected_provider
+            or item.get("inference_descriptor", {}).get("enabled_models") != 0
+            or item.get("inference_descriptor", {}).get("inference_available") is not False
+            or item.get("inference_descriptor", {}).get("authority_inputs") != []
+            or set(item.get("residue", {}).values()) != {False}
+            or item.get("container_removed") is not True
+            for platform_id, item in acceptance_map.items()
+        )
+    ):
+        failures.append("clean graphical image acceptance input is incomplete")
     return failures
 
 
 def input_revision(evidence_id: str, value: dict[str, Any]) -> str:
-    if evidence_id in {"clean-build", "package-lifecycle"}:
+    if evidence_id in {
+        "clean-build",
+        "package-lifecycle",
+        "clean-image-acceptance",
+    }:
         revision = value.get("source", {}).get("revision")
     elif evidence_id in {"path-conformance", "platform-contract"}:
         revision = value.get("reference_revision")
@@ -508,8 +605,8 @@ def build_report(revision: str) -> dict[str, Any]:
         "dimensions": list(DIMENSIONS),
         "summary": {
             "dimension_count": 10,
-            "verified_parity_dimensions": 6,
-            "blocked_parity_dimensions": 4,
+            "verified_parity_dimensions": 7,
+            "blocked_parity_dimensions": 3,
             "full_fedora_ubuntu_parity": False,
         },
         "blocking_gates": list(BLOCKERS),
@@ -554,8 +651,8 @@ def validate_report(value: Any) -> list[str]:
         failures.append("Linux platform parity dimensions changed")
     if value.get("summary") != {
         "dimension_count": 10,
-        "verified_parity_dimensions": 6,
-        "blocked_parity_dimensions": 4,
+        "verified_parity_dimensions": 7,
+        "blocked_parity_dimensions": 3,
         "full_fedora_ubuntu_parity": False,
     }:
         failures.append("Linux platform parity summary overclaimed or changed")
@@ -608,7 +705,7 @@ def main() -> int:
     except (OSError, UnicodeError, LinuxPlatformParityError, subprocess.SubprocessError) as error:
         print(f"Linux platform parity evidence failed: {error}", file=sys.stderr)
         return 1
-    print("Fedora/Ubuntu parity matrix validated with two explicit open gates")
+    print("Fedora/Ubuntu parity matrix validated with one explicit open gate")
     return 0
 
 

@@ -25,8 +25,8 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
             "dimensions": copy.deepcopy(list(evidence.DIMENSIONS)),
             "summary": {
                 "dimension_count": 10,
-                "verified_parity_dimensions": 6,
-                "blocked_parity_dimensions": 4,
+                "verified_parity_dimensions": 7,
+                "blocked_parity_dimensions": 3,
                 "full_fedora_ubuntu_parity": False,
             },
             "blocking_gates": copy.deepcopy(list(evidence.BLOCKERS)),
@@ -127,6 +127,14 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
         inference = copy.deepcopy(evidence.load_inputs())
         inference["inactive-inference"]["enabled_models"] = 1
         mutations.append((inference, "inactive inference parity input is incomplete"))
+
+        acceptance = copy.deepcopy(evidence.load_inputs())
+        acceptance["clean-image-acceptance"]["platforms"][1]["vscode"][
+            "provider_probe"
+        ]["observed"]["tokenCount"] = 5
+        mutations.append(
+            (acceptance, "clean graphical image acceptance input is incomplete")
+        )
 
         for values, expected in mutations:
             with self.subTest(expected=expected):
