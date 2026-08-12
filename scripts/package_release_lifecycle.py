@@ -68,6 +68,18 @@ def main() -> int:
         raise ReleaseLifecycleError("package.release.tool_unavailable")
     run(["npm", "run", "build", "--workspace", "@agentmage/vscode-shell"])
     run(["cargo", "build", "--release", "-p", "agentmage-host", "--locked"])
+    run(
+        [
+            "cargo",
+            "build",
+            "--release",
+            "-p",
+            "agentmage-platform-linux-inference",
+            "--bin",
+            "agentmage-native-inference",
+            "--locked",
+        ]
+    )
     host = ROOT / "target/release/agentmage-host"
     seed = hashlib.sha256(b"agentmage synthetic release lifecycle v1").digest()
     wrong_seed = hashlib.sha256(b"agentmage synthetic wrong release key v1").digest()

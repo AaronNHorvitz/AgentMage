@@ -21,6 +21,7 @@ EXPECTED_IMPORTS = {
     "kernel-contracts": set(),
     "kernel-engine": {"kernel-contracts"},
     "platform-linux": {"kernel-contracts", "kernel-engine"},
+    "platform-linux-native-inference": {"kernel-contracts"},
     "platform-macos": {"kernel-contracts", "kernel-engine"},
     "platform-windows": {"kernel-contracts"},
     "capability-read-only": {"kernel-contracts"},
@@ -42,6 +43,7 @@ EXPECTED_ASSEMBLY_INPUTS = {
     "kernel-contracts": set(),
     "kernel-engine": set(),
     "platform-linux": set(),
+    "platform-linux-native-inference": set(),
     "platform-macos": set(),
     "platform-windows": set(),
     "capability-read-only": set(),
@@ -51,6 +53,7 @@ EXPECTED_ASSEMBLY_INPUTS = {
     "packaging-linux": {
         "capability-read-only",
         "platform-linux",
+        "platform-linux-native-inference",
         "shell-host",
         "shell-vscode",
     },
@@ -74,6 +77,7 @@ EXPECTED_LAYERS = {
     "documentation": 0,
     "kernel-engine": 1,
     "platform-linux": 2,
+    "platform-linux-native-inference": 1,
     "platform-macos": 2,
     "platform-windows": 2,
     "capability-read-only": 1,
@@ -92,6 +96,7 @@ COMPILE_MODULE_IDS = (
     "kernel-contracts",
     "kernel-engine",
     "platform-linux",
+    "platform-linux-native-inference",
     "platform-macos",
     "platform-windows",
     "capability-read-only",
@@ -159,6 +164,8 @@ def validate_rules(rules: Any, inventory: Any) -> list[str]:
         failures.append("schema_version must equal 1")
     if rules.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
+    if rules.get("amendment_decision_ids") != ["ADR-0014", "ADR-0028"]:
+        failures.append("dependency rules must record accepted boundary amendments")
     if rules.get("status") != "accepted":
         failures.append("dependency rules status must be accepted")
 

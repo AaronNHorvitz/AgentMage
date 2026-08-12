@@ -38,6 +38,9 @@ class PackageCandidateTests(unittest.TestCase):
         self.host = self.root / "agentmage-host"
         self.host.write_bytes(b"synthetic-host")
         self.host.chmod(0o755)
+        self.inference_adapter = self.root / "agentmage-native-inference"
+        self.inference_adapter.write_bytes(b"synthetic-inference-adapter")
+        self.inference_adapter.chmod(0o755)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -63,7 +66,7 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, vsix, self.license, payload)
+        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
         verify_payload(payload)
 
         installed_host = payload / "usr/libexec/agentmage/agentmage-host"
@@ -87,7 +90,7 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, vsix, self.license, payload)
+        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
         control = self.root / "control.in"
         control.write_text(
             "Package: agentmage\nVersion: @VERSION@\nArchitecture: amd64\n"
@@ -105,9 +108,17 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, vsix, self.license, payload)
+        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
         self.assertEqual(
             stat.S_IMODE((payload / "usr/libexec/agentmage/agentmage-host").stat().st_mode),
+            0o755,
+        )
+        self.assertEqual(
+            stat.S_IMODE(
+                (
+                    payload / "usr/libexec/agentmage/agentmage-native-inference"
+                ).stat().st_mode
+            ),
             0o755,
         )
         self.assertEqual(stat.S_IMODE((payload / MANIFEST_PATH).stat().st_mode), 0o644)
@@ -118,6 +129,7 @@ class PackageCandidateTests(unittest.TestCase):
         payload = self.root / "release-payload"
         build_release_payload(
             self.host,
+            self.inference_adapter,
             vsix,
             self.license,
             payload,
@@ -137,6 +149,7 @@ class PackageCandidateTests(unittest.TestCase):
         ):
             build_release_payload(
                 self.host,
+                self.inference_adapter,
                 vsix,
                 self.license,
                 self.root / "invalid-release",
@@ -151,7 +164,14 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix, "0.0.1")
         payload = self.root / "payload"
-        manifest = build_payload(self.host, vsix, self.license, payload, "0.0.1")
+        manifest = build_payload(
+            self.host,
+            self.inference_adapter,
+            vsix,
+            self.license,
+            payload,
+            "0.0.1",
+        )
         self.assertEqual(manifest["package_id"], "agentmage-linux-x86_64-0.0.1-candidate")
         verify_payload(payload, version="0.0.1")
         with self.assertRaisesRegex(PackageCandidateError, "package.manifest_identity"):

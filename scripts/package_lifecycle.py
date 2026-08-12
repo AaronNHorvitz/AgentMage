@@ -171,6 +171,7 @@ rpm -U --oldpackage --nosignature /packages/agentmage-0.0.0-1.*.x86_64.rpm
 test "$(rpm -q --qf '%{VERSION}' agentmage)" = 0.0.0
 rpm -e agentmage
 test ! -e /usr/libexec/agentmage/agentmage-host
+test ! -e /usr/libexec/agentmage/agentmage-native-inference
 test ! -e /usr/share/agentmage/package-manifest.json
 """
     ubuntu_script = """set -e
@@ -188,6 +189,7 @@ dpkg -i /packages/agentmage_0.0.0_amd64.deb
 dpkg -s agentmage | grep -qx 'Version: 0.0.0'
 dpkg -r agentmage
 test ! -e /usr/libexec/agentmage/agentmage-host
+test ! -e /usr/libexec/agentmage/agentmage-native-inference
 test ! -e /usr/share/agentmage/package-manifest.json
 """
     for image, script in ((fedora_image, fedora_script), (ubuntu_image, ubuntu_script)):
@@ -208,6 +210,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         command(["npm", "run", "build", "--workspace", "@agentmage/vscode-shell"], cwd=ROOT)
         command(["cargo", "build", "-p", "agentmage-host", "--release", "--locked"], cwd=ROOT)
+        command(
+            [
+                "cargo",
+                "build",
+                "-p",
+                "agentmage-platform-linux-inference",
+                "--bin",
+                "agentmage-native-inference",
+                "--release",
+                "--locked",
+            ],
+            cwd=ROOT,
+        )
         artifacts = {
             version: build_all(args.output.resolve(), version) for version in ("0.0.0", "0.0.1")
         }
@@ -234,7 +249,9 @@ def main(argv: list[str] | None = None) -> int:
     results.update(
         {
             "release_signature": "blocked-external-signing-identity-unavailable",
-            "trusted_host_bootstrap": "blocked-not-implemented",
+            "trusted_host_bootstrap": (
+                "source-implemented-production-trust-and-platform-activation-blocked"
+            ),
             "release_claim": "none-pre-release",
         }
     )

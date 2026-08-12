@@ -37,7 +37,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "0e02e64aebea117325e2580fe108fec0ddaa777d6606a7408aa52b358ed8a321"
+          "content": "fbbedb90e39af9f7dd868df0ecb1a54d85420712c62d23ef036ac12c4d6f09a9"
         }
       ],
       "licenses": [
@@ -126,11 +126,42 @@
       "version": "0.0.0"
     },
     {
+      "bom-ref": "cargo:agentmage-platform-linux-inference@0.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1316b3c5781d8b6af8a31ba2341e8731d15817faac242f6780ca292e664d8bdb"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "agentmage-platform-linux-inference",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/agentmage-platform-linux-inference@0.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.0.0"
+    },
+    {
       "bom-ref": "cargo:agentmage-platform-linux@0.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a0811c9b8a0dd15eeefaf007d12a28287e751528f6fb52ee552424411c11db96"
+          "content": "ebad39fc781d014ac0b27188998edd0e45fdfd0bf1fc8b524e7c3fd227464b36"
         }
       ],
       "licenses": [
@@ -1772,7 +1803,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "0a4f5b52280b3656765a616751264a86a0daefcf67a04464541f279420f3a22d"
+          "content": "105710bf0ceabc769840e7439cbc503ccb8e70f042d91547bb3ccbf210a6a556"
         }
       ],
       "licenses": [
@@ -13339,6 +13370,12 @@
     },
     {
       "dependsOn": [
+        "cargo:agentmage-kernel-contracts@0.0.0"
+      ],
+      "ref": "cargo:agentmage-platform-linux-inference@0.0.0"
+    },
+    {
+      "dependsOn": [
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:rustix@1.1.4",
@@ -15998,7 +16035,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:f4d97446-a2fe-5830-9354-b14bfc05db03",
+  "serialNumber": "urn:uuid:d5f319d8-b12b-586e-a752-87ce44b1d18a",
   "specVersion": "1.6",
   "version": 1
 }

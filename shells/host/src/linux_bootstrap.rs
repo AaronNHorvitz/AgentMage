@@ -405,6 +405,11 @@ mod tests {
                 0o755,
             ),
             (
+                "usr/libexec/agentmage/agentmage-native-inference",
+                b"inference-adapter".as_slice(),
+                0o755,
+            ),
+            (
                 "usr/share/agentmage/agentmage.vsix",
                 b"vsix".as_slice(),
                 0o644,

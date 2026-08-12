@@ -25,6 +25,7 @@ tar -xzf %{SOURCE0} -C %{buildroot}
 %files
 %license /usr/share/licenses/agentmage/LICENSE
 /usr/libexec/agentmage/agentmage-host
+/usr/libexec/agentmage/agentmage-native-inference
 /usr/share/agentmage/agentmage.vsix
 /usr/share/agentmage/package-manifest.json
 

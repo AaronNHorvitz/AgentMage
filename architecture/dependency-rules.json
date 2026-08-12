@@ -2,7 +2,8 @@
   "schema_version": 1,
   "decision_id": "ADR-0004",
   "amendment_decision_ids": [
-    "ADR-0014"
+    "ADR-0014",
+    "ADR-0028"
   ],
   "candidate_amendment_status": "accepted",
   "status": "accepted",
@@ -35,6 +36,17 @@
       "declared_imports": [
         "kernel-contracts",
         "kernel-engine"
+      ],
+      "assembly_inputs": []
+    },
+    {
+      "id": "platform-linux-native-inference",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
       ],
       "assembly_inputs": []
     },
@@ -118,6 +130,7 @@
       "assembly_inputs": [
         "capability-read-only",
         "platform-linux",
+        "platform-linux-native-inference",
         "shell-host",
         "shell-vscode"
       ]

@@ -109,9 +109,12 @@ contents are not retained in inventory diagnostics.
 ## Deliberate Limits
 
 - Detached package signing and verification mechanics plus a package-verified
-  authentication-only bootstrap primitive are present. No production signer,
-  approved trust-root provisioning, signed platform release, installer,
-  updater, or model runtime is present.
+  authentication-only bootstrap primitive are present. Decision 0028 also
+  packages a separate inactive native-inference process that depends only on
+  shared contracts, accepts only an exact self-check, opens no listener, and
+  reports zero enabled models. No production signer, approved trust-root
+  provisioning, signed platform release, installer, updater, model runtime,
+  model artifact, or inference operation is present.
 - Unknown stale-socket recovery is not automated; startup fails closed and
   retains the object.
 - Operational-key deletion, state deletion, uninstall orchestration, and key

@@ -127,7 +127,10 @@ impl LinuxPlatformAdapter {
         let bubblewrap = observe_binary(Path::new("/usr/bin/bwrap"), true);
         let secret_tool = observe_binary(Path::new("/usr/bin/secret-tool"), true);
         let systemd_run = observe_binary(Path::new("/usr/bin/systemd-run"), true);
-        let llama_server = observe_binary(Path::new("/usr/libexec/agentmage/llama-server"), true);
+        let inference_adapter = observe_binary(
+            Path::new("/usr/libexec/agentmage/agentmage-native-inference"),
+            true,
+        );
         let model_installer = observe_binary(
             Path::new("/usr/libexec/agentmage/agentmage-model-installer"),
             true,
@@ -147,7 +150,11 @@ impl LinuxPlatformAdapter {
             ),
             observation(family, PlatformCapability::SecretStorage, &[secret_tool]),
             observation(family, PlatformCapability::ProcessLimits, &[systemd_run]),
-            observation(family, PlatformCapability::LocalInference, &[llama_server]),
+            observation(
+                family,
+                PlatformCapability::LocalInference,
+                &[inference_adapter],
+            ),
             observation(
                 family,
                 PlatformCapability::ModelInstallation,

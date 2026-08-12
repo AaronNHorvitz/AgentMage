@@ -6,7 +6,9 @@ failed or blocked gate.
 
 The current `xtask` can build deterministic unsigned RPM, DEB, and VSIX
 candidates and a separate deterministic signable Linux release bundle. The
-signer accepts exactly one raw Ed25519 private seed through standard input,
+Linux payload binds the host, inactive isolated native-inference adapter, VSIX,
+and license as four exact files. Adapter presence enables no model or inference.
+The signer accepts exactly one raw Ed25519 private seed through standard input,
 checks it against an external public key, and emits a new detached signature.
 It does not accept a private-key path, generate an identity, overwrite a
 signature, or place trust material inside the package.

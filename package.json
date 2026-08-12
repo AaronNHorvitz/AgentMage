@@ -118,6 +118,8 @@
     "evidence:story7.1-security:check": "python3 scripts/story_7_1_security_evidence.py",
     "evidence:story9.1-linux-controls:build": "python3 scripts/linux_sandbox_evidence.py --write --source-revision HEAD",
     "evidence:story9.1-linux-controls:check": "python3 scripts/linux_sandbox_evidence.py",
+    "evidence:story9.1-linux-inference:build": "python3 scripts/linux_inference_boundary_evidence.py --write --source-revision HEAD",
+    "evidence:story9.1-linux-inference:check": "python3 scripts/linux_inference_boundary_evidence.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",

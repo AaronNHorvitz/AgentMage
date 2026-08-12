@@ -9,6 +9,11 @@
 | Blocks | Production signer approval, trust-root distribution, RPM/DEB repository signing, supervised VS Code bootstrap, signed platform activation, support, and release |
 | Preserves | Decisions 0001 through 0021, no committed private key, no automatic update authority, and no pre-release support claim |
 
+> **Amendment:** Decision 0028 supersedes the three-file payload wording below
+> with the exact host, inactive native-inference adapter, VSIX, and license
+> closure. The signature, external trust-root, and release blockers are
+> unchanged.
+
 ## Context
 
 Decision 0020 introduced deterministic unsigned RPM, DEB, and VSIX candidates

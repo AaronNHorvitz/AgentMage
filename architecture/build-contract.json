@@ -3,7 +3,8 @@
   "decision_id": "ADR-0004",
   "amendment_decision_ids": [
     "ADR-0022",
-    "ADR-0024"
+    "ADR-0024",
+    "ADR-0028"
   ],
   "status": "configured",
   "toolchains": {
@@ -37,6 +38,10 @@
     "package.json",
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/lib.rs",
+    "platforms/linux-inference/Cargo.toml",
+    "platforms/linux-inference/src/lib.rs",
+    "platforms/linux-inference/src/main.rs",
+    "platforms/linux-inference/tests/process_boundary.rs",
     "platforms/windows/Cargo.toml",
     "platforms/windows/src/bin/native_evidence.rs",
     "platforms/windows/src/lib.rs",
@@ -49,6 +54,8 @@
     "release/xtask/src/main.rs",
     "scripts/package_release.py",
     "scripts/package_release_lifecycle.py",
+    "scripts/linux_inference_boundary_evidence.py",
+    "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
     "rust-toolchain.toml",
     "rustfmt.toml",
     "shells/host/Cargo.toml",
@@ -57,6 +64,7 @@
     "shells/host/src/main.rs",
     "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
+    "tests/test_linux_inference_boundary_evidence.py",
     "shells/vscode/eslint.config.mjs",
     "shells/vscode/package.json",
     "shells/vscode/src/extension.ts",

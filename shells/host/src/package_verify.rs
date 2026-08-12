@@ -16,8 +16,9 @@ const RELEASE_SIGNATURE_DOMAIN: &[u8] = b"agentmage.package-manifest.v2\0";
 const MAX_MANIFEST_BYTES: u64 = 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_FILES: usize = 32;
-const REQUIRED_FILES: [&str; 3] = [
+const REQUIRED_FILES: [&str; 4] = [
     "usr/libexec/agentmage/agentmage-host",
+    "usr/libexec/agentmage/agentmage-native-inference",
     "usr/share/agentmage/agentmage.vsix",
     "usr/share/licenses/agentmage/LICENSE",
 ];
@@ -496,6 +497,11 @@ mod tests {
             (
                 "usr/libexec/agentmage/agentmage-host",
                 b"host".as_slice(),
+                0o755,
+            ),
+            (
+                "usr/libexec/agentmage/agentmage-native-inference",
+                b"inference-adapter".as_slice(),
                 0o755,
             ),
             (

@@ -81,6 +81,17 @@
       ]
     },
     {
+      "id": "platform-linux-native-inference",
+      "path": "platforms/linux-inference",
+      "category": "platform-adapters",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ]
+    },
+    {
       "id": "platform-macos",
       "path": "platforms/macos",
       "category": "platform-adapters",

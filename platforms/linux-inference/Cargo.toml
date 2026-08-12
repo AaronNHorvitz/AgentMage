@@ -1,0 +1,19 @@
+[package]
+name = "agentmage-platform-linux-inference"
+description = "Isolated Fedora and Ubuntu native inference adapter boundary"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+agentmage-kernel-contracts.workspace = true
+
+[[bin]]
+name = "agentmage-native-inference"
+path = "src/main.rs"
+
+[lints]
+workspace = true

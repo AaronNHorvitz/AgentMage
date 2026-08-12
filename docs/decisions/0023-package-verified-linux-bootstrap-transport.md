@@ -9,6 +9,10 @@
 | Blocks | Approved production signer and trust-root provisioning, signed platform activation, usable product workflow, clean installation, support, and release |
 | Preserves | Decisions 0001 through 0022, no ambient shell, no secret in arguments/environment/files/logs, and no authority from authentication alone |
 
+> **Amendment:** Decision 0028 adds the inactive native-inference adapter to the
+> exact verified package payload. Bootstrap remains authentication-only and
+> conveys no model or product authority.
+
 ## Context
 
 Decision 0022 supplied deterministic package signing and verification mechanics,

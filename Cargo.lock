@@ -59,6 +59,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "agentmage-platform-linux-inference"
+version = "0.0.0"
+dependencies = [
+ "agentmage-kernel-contracts",
+]
+
+[[package]]
 name = "agentmage-platform-windows"
 version = "0.0.0"
 dependencies = [

@@ -9,6 +9,10 @@
 | Blocks | Signed release activation, trusted packaged host bootstrap, Windows-native enforcement, Windows MSIX, and Windows-native evidence |
 | Preserves | Decisions 0001 through 0019, strict-local authority, platform evidence non-substitution, and no pre-release support claim |
 
+> **Amendment:** Decision 0028 adds the separately packaged inactive Linux
+> native-inference adapter to this closed payload. All candidate/release
+> separation and lifecycle restrictions below remain in force.
+
 ## Context
 
 Phase 9 implemented and tested a source-composed Fedora read-and-receipt path,

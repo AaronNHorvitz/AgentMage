@@ -26,6 +26,12 @@ EXPECTED_MODULES = {
     "kernel-contracts": ("kernel/contracts", "kernel", "rust", "cargo"),
     "kernel-engine": ("kernel/engine", "kernel", "rust", "cargo"),
     "platform-linux": ("platforms/linux", "platform-adapters", "rust", "cargo"),
+    "platform-linux-native-inference": (
+        "platforms/linux-inference",
+        "platform-adapters",
+        "rust",
+        "cargo",
+    ),
     "platform-macos": (
         "platforms/macos",
         "platform-adapters",
