@@ -33,7 +33,7 @@ const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_DIRECTORY_ENTRIES: usize = 4_096;
 const MAX_DIRECTORY_PROJECTION_BYTES: usize = 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
-const WORKER_GUEST_PATH: &str = "/app/worker";
+const WORKER_GUEST_ROOT: &str = "/app";
 const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
 const DENIED_SYSCALLS: &[&str] = &[
     "accept",
@@ -334,13 +334,15 @@ impl LinuxSandboxManifest {
         if runtime_files.len() > MAX_RUNTIME_FILES {
             return Err(error(LinuxSandboxErrorKind::InvalidManifest));
         }
+        let worker_guest_path =
+            Path::new(WORKER_GUEST_ROOT).join(verified_worker_name(worker.as_ref())?);
         let systemd_run = verify_artifact(systemd_run.as_ref(), None, true)?;
         let bubblewrap = verify_artifact(bubblewrap.as_ref(), None, true)?;
-        let worker = verify_artifact(worker.as_ref(), Some(Path::new(WORKER_GUEST_PATH)), false)?;
+        let worker = verify_artifact(worker.as_ref(), Some(&worker_guest_path), false)?;
         let mut verified_runtime = Vec::with_capacity(runtime_files.len());
         for runtime in runtime_files {
             if !valid_runtime_guest_path(&runtime.guest_path)
-                || runtime.guest_path == Path::new(WORKER_GUEST_PATH)
+                || runtime.guest_path == worker_guest_path
                 || verified_runtime.iter().any(|artifact: &VerifiedArtifact| {
                     artifact.guest_path.as_deref() == Some(runtime.guest_path.as_path())
                 })
@@ -532,8 +534,14 @@ impl LinuxSandboxRunner {
             "/input/object",
             "--ro-bind-fd",
             "4",
-            WORKER_GUEST_PATH,
         ]);
+        command.arg(
+            self.manifest
+                .worker
+                .guest_path
+                .as_deref()
+                .expect("verified worker guest path"),
+        );
         for (index, runtime) in self.manifest.runtime_files.iter().enumerate() {
             command
                 .arg("--ro-bind-fd")
@@ -541,14 +549,14 @@ impl LinuxSandboxRunner {
                 .arg(runtime.guest_path.as_deref().expect("verified guest path"));
         }
         command
-            .args([
-                "--chdir",
-                "/input",
-                "--seccomp",
-                "0",
-                "--",
-                WORKER_GUEST_PATH,
-            ])
+            .args(["--chdir", "/input", "--seccomp", "0", "--"])
+            .arg(
+                self.manifest
+                    .worker
+                    .guest_path
+                    .as_deref()
+                    .expect("verified worker guest path"),
+            )
             .args(arguments)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -800,11 +808,13 @@ fn verify_artifact(
     )
     .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
     let stat = fstat(&descriptor).map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
+    let executable_guest = guest_path
+        .and_then(Path::parent)
+        .is_some_and(|parent| parent == Path::new(WORKER_GUEST_ROOT));
     if FileType::from_raw_mode(stat.st_mode) != FileType::RegularFile
         || stat.st_uid != 0
         || stat.st_mode & 0o022 != 0
-        || ((launch_by_path || guest_path == Some(Path::new(WORKER_GUEST_PATH)))
-            && stat.st_mode & 0o111 == 0)
+        || ((launch_by_path || executable_guest) && stat.st_mode & 0o111 == 0)
     {
         return Err(error(LinuxSandboxErrorKind::InvalidManifest));
     }
@@ -815,6 +825,22 @@ fn verify_artifact(
         launch_path: launch_by_path.then(|| path.to_path_buf()),
         sha256,
     })
+}
+
+fn verified_worker_name(path: &Path) -> Result<OsString, LinuxSandboxError> {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| {
+            !name.is_empty()
+                && name.len() <= 64
+                && !name.starts_with('-')
+                && name
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+        })
+        .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
+    Ok(OsString::from(name))
 }
 
 fn verify_root_owned_path(path: &Path) -> Result<(), LinuxSandboxError> {
@@ -1093,7 +1119,7 @@ mod tests {
     use super::{
         LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
         LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
-        compile_seccomp_policy, directory_projection, file_projection,
+        compile_seccomp_policy, directory_projection, file_projection, verified_worker_name,
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
@@ -1166,7 +1192,7 @@ mod tests {
         output
     }
 
-    fn runtime_files(executable: &str) -> Vec<LinuxWorkerRuntimeFile> {
+    fn runtime_files(executable: &Path) -> Vec<LinuxWorkerRuntimeFile> {
         let output = Command::new("/usr/bin/ldd")
             .arg(executable)
             .output()
@@ -1190,11 +1216,12 @@ mod tests {
     }
 
     fn runner_for(executable: &str, limits: LinuxSandboxLimits) -> LinuxSandboxRunner {
+        let executable = fs::canonicalize(executable).expect("canonical worker executable");
         let manifest = LinuxSandboxManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/bwrap",
-            executable,
-            &runtime_files(executable),
+            &executable,
+            &runtime_files(&executable),
         )
         .expect("verified host manifest");
         LinuxSandboxRunner::new(manifest, limits).expect("sandbox runner")
@@ -1243,6 +1270,12 @@ mod tests {
             .kind(),
             LinuxSandboxErrorKind::InvalidManifest
         );
+        assert_eq!(
+            verified_worker_name(Path::new("/usr/lib/coreutils/cat")).expect("bounded applet name"),
+            OsString::from("cat")
+        );
+        assert!(verified_worker_name(Path::new("/usr/bin/-worker")).is_err());
+        assert!(verified_worker_name(Path::new("/usr/bin/worker name")).is_err());
     }
 
     #[test]
@@ -1302,7 +1335,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn fresh_worker_reads_only_the_canonical_workspace_file() {
         let root = temp_directory("read");
         fs::write(root.join("allowed.txt"), b"bounded worker output\n").expect("fixture");
@@ -1321,7 +1354,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn directory_worker_receives_only_the_bounded_exclusion_safe_projection() {
         let root = temp_directory("directory-worker");
         fs::create_dir(root.join("folder")).expect("held directory");
@@ -1344,7 +1377,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn foreign_workspace_identity_never_starts_a_worker() {
         let root = temp_directory("foreign");
         fs::write(root.join("allowed.txt"), b"content").expect("fixture");
@@ -1362,7 +1395,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_cannot_write_the_read_only_workspace() {
         let root = temp_directory("read-only");
         let fixture = root.join("allowed.txt");
@@ -1379,7 +1412,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_has_no_ambient_host_paths_devices_or_processes() {
         let root = temp_directory("ambient");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -1400,7 +1433,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content() {
         let root = temp_directory("sibling");
         fs::write(root.join("allowed.txt"), b"allowed").expect("allowed fixture");
@@ -1426,7 +1459,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace() {
         let root = temp_directory("scratch");
         fs::write(root.join("allowed.txt"), b"original").expect("fixture");
@@ -1452,7 +1485,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_receives_only_the_fixed_environment_and_no_network() {
         let root = temp_directory("environment");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -1483,7 +1516,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_output_is_drained_but_never_retained_past_the_bound() {
         let root = temp_directory("output");
         fs::write(root.join("large.txt"), vec![b'x'; 4096]).expect("fixture");
@@ -1500,7 +1533,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn worker_kernel_status_confirms_no_new_privileges_and_seccomp() {
         let root = temp_directory("kernel-status");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
@@ -1516,7 +1549,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
     fn transient_service_terminates_an_unbounded_worker() {
         let root = temp_directory("runtime-limit");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");

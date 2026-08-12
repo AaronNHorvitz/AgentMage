@@ -3,11 +3,12 @@
 ## Status and Scope
 
 The Linux adapter implements one fresh Bubblewrap worker per admitted read
-operation. The Phase 6 candidate has been exercised locally on Fedora Kinoite
-44. Ubuntu package and clean-environment conformance remain unverified and are
-not claimed. The public mediated surface accepts one exact `LinuxHeldObject`
-and a matching kernel-issued `EffectAuthorization`; it is not a general command
-runner.
+operation. The worker boundary has been exercised natively on Fedora Kinoite
+44 and against Ubuntu 26.04 userspace in a disposable rootless container. The
+Ubuntu run required a privileged outer container envelope and therefore proves
+userspace portability, not native Ubuntu isolation or release support. The
+public mediated surface accepts one exact `LinuxHeldObject` and a matching
+kernel-issued `EffectAuthorization`; it is not a general command runner.
 
 ## Process and Data Flow
 
@@ -48,7 +49,7 @@ The supervisors are digest-revalidated immediately before launch.
 Each worker receives only:
 
 - one read-only object at `/input/object`;
-- one verified executable at `/app/worker`;
+- one verified executable at `/app/<verified-basename>`;
 - up to 16 verified root-owned runtime files below `/lib`, `/lib64`,
   `/usr/lib`, or `/usr/lib64`;
 - a private bounded `/tmp`, minimal private `/dev`, and new `/proc`;
@@ -110,9 +111,9 @@ Bubblewrap, seccomp, systemd user service, or declared resource controls.
 The default workspace suite verifies target/path parity, exact permit matching,
 sealed exact-file projection, directory projection bounds and exclusions,
 stale-object pre-launch denial, and content-free serialization.
-Environment-dependent tests remain explicitly
-marked and were separately executed on Fedora Kinoite 44 for this Phase 6
-candidate. All 11 Linux sandbox tests passed, including:
+Environment-dependent tests remain explicitly marked. All 11 Linux sandbox
+tests passed natively on Fedora Kinoite 44 and in the bounded Ubuntu 26.04
+userspace envelope described above, including:
 
 - exact canonical file reading and directory projection;
 - foreign-workspace and stale-object denial before process start;
@@ -122,8 +123,9 @@ candidate. All 11 Linux sandbox tests passed, including:
 - fixed environment, `NoNewPrivileges`, and seccomp enforcement; and
 - output and elapsed-runtime limits.
 
-These are source and local native-test results, not Ubuntu execution, package,
-installation, update, recovery, release, or integrated product evidence.
+These are source, native Fedora, and constrained Ubuntu userspace results. They
+do not establish native Ubuntu desktop execution, release support, or an
+integrated product claim. Package lifecycle evidence is maintained separately.
 
 ## Secret Service Boundary
 

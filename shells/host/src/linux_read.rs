@@ -911,7 +911,7 @@ mod tests {
         root
     }
 
-    fn runtime_files(executable: &str) -> Vec<LinuxWorkerRuntimeFile> {
+    fn runtime_files(executable: &Path) -> Vec<LinuxWorkerRuntimeFile> {
         let output = Command::new("/usr/bin/ldd")
             .arg(executable)
             .output()
@@ -935,12 +935,12 @@ mod tests {
     }
 
     fn sandbox() -> LinuxSandboxRunner {
-        let executable = "/usr/bin/cat";
+        let executable = fs::canonicalize("/usr/bin/cat").expect("canonical worker executable");
         let manifest = LinuxSandboxManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/bwrap",
-            executable,
-            &runtime_files(executable),
+            &executable,
+            &runtime_files(&executable),
         )
         .expect("verified worker manifest");
         LinuxSandboxRunner::new(manifest, LinuxSandboxLimits::default()).expect("sandbox runner")
