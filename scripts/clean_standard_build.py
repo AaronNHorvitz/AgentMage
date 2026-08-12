@@ -250,6 +250,7 @@ def execute(
 
         environment = {
             "CARGO_HOME": str(cargo_home),
+            "CARGO_INCREMENTAL": "0",
             "CARGO_TARGET_DIR": str(target),
             "HOME": str(home),
             "LANG": "C.UTF-8",
@@ -319,6 +320,7 @@ def execute(
                 "version_id": os_release["VERSION_ID"],
             },
             "execution": {
+                "cargo_incremental": "disabled",
                 "effective_gid": os.getegid(),
                 "effective_uid": os.geteuid(),
                 "privileged": False,

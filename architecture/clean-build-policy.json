@@ -150,10 +150,13 @@
   "container_controls": {
     "capabilities": "all-dropped",
     "host_source": "complete-committed-tree-in-image",
+    "memory_limit_bytes": 12884901888,
     "no_new_privileges": true,
+    "pids_limit": 512,
     "root_filesystem": "read-only",
     "runtime": "rootless-podman",
     "runtime_network": "disabled-after-bootstrap",
+    "tmpfs_size_bytes": 8589934592,
     "writable_storage": "fresh-tmpfs"
   },
   "execution_user": {

@@ -68,6 +68,7 @@ class CleanBuildEvidenceTests(unittest.TestCase):
                     "version_id": platform["version_id"],
                 },
                 "execution": {
+                    "cargo_incremental": "disabled",
                     "effective_gid": 10001,
                     "effective_uid": 10001,
                     "privileged": False,
@@ -168,6 +169,11 @@ class CleanBuildEvidenceTests(unittest.TestCase):
     def test_post_bootstrap_runtime_has_no_network(self) -> None:
         argv = container_run_argv("fixture", "fedora-x86_64", self.source)
         self.assertIn("--network=none", argv)
+        self.assertIn("--memory=12884901888", argv)
+        self.assertIn(
+            "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=8589934592",
+            argv,
+        )
         mutated = copy.deepcopy(self.report)
         mutated["platform_runs"]["fedora-x86_64"]["checks"][
             "post_bootstrap_network_denied"

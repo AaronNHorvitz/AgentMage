@@ -100,10 +100,13 @@ EXPECTED_TOOLCHAINS = (
 EXPECTED_CONTROLS = {
     "capabilities": "all-dropped",
     "host_source": "complete-committed-tree-in-image",
+    "memory_limit_bytes": 12 * 1024 * 1024 * 1024,
     "no_new_privileges": True,
+    "pids_limit": 512,
     "root_filesystem": "read-only",
     "runtime": "rootless-podman",
     "runtime_network": "disabled-after-bootstrap",
+    "tmpfs_size_bytes": 8 * 1024 * 1024 * 1024,
     "writable_storage": "fresh-tmpfs",
 }
 LEGACY_CONTROLS = {
@@ -479,6 +482,7 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         if (
             execution.get("effective_uid") != 10001
             or execution.get("effective_gid") != 10001
+            or (not legacy and execution.get("cargo_incremental") != "disabled")
             or execution.get("privileged") is not False
             or execution.get("user_class") != "standard-unprivileged"
         ):
@@ -602,8 +606,9 @@ def container_run_argv(
         "--security-opt=no-new-privileges",
         "--security-opt=label=disable",
         "--pids-limit=512",
-        "--memory=4g",
-        "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2147483648",
+        f"--memory={EXPECTED_CONTROLS['memory_limit_bytes']}",
+        "--tmpfs=/tmp:rw,exec,nosuid,nodev,"
+        f"size={EXPECTED_CONTROLS['tmpfs_size_bytes']}",
         "--user=10001:10001",
         tag,
         "python3",
