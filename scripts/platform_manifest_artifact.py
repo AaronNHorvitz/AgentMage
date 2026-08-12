@@ -147,6 +147,15 @@ def nested_keys(value: Any) -> set[str]:
     return keys
 
 
+def kernel_selector_source(selector_source: str) -> str | None:
+    production = selector_source.split("#[cfg(test)]", 1)[0]
+    start = production.find("pub fn activate_platform")
+    end = production.find("\nfn parse_family", start)
+    if start < 0 or end < 0:
+        return None
+    return production[start:end]
+
+
 def validate_manifest(value: Any, filename: str) -> list[str]:
     failures: list[str] = []
     if not isinstance(value, dict):
@@ -252,7 +261,7 @@ def validate_manifest(value: Any, filename: str) -> list[str]:
 
 def validate_contract_sources(contract_source: str, selector_source: str) -> list[str]:
     failures: list[str] = []
-    production_selector = selector_source.split("#[cfg(test)]", 1)[0]
+    production_selector = kernel_selector_source(selector_source)
     if f"PLATFORM_ADAPTER_API_VERSION: u16 = 1" not in contract_source:
         failures.append("platform adapter API version changed")
     for variant in RUST_CAPABILITY_VARIANTS:
@@ -261,13 +270,16 @@ def validate_contract_sources(contract_source: str, selector_source: str) -> lis
     for variant in RUST_STARTUP_FAILURE_VARIANTS:
         if f"Self::{variant} =>" not in contract_source:
             failures.append(f"startup failure closure changed: {variant}")
-    for token in KERNEL_SELECTOR_FORBIDDEN_TOKENS:
-        if token in production_selector:
-            failures.append(f"kernel selector contains an OS branch token: {token}")
-    if production_selector.count("adapter.probe_capability(capability)") != 1:
-        failures.append("kernel selector capability probe path changed")
-    if "for capability in REQUIRED_PLATFORM_CAPABILITIES" not in production_selector:
-        failures.append("kernel selector no longer iterates the closed capability set")
+    if production_selector is None:
+        failures.append("kernel selector source boundary changed")
+    else:
+        for token in KERNEL_SELECTOR_FORBIDDEN_TOKENS:
+            if token in production_selector:
+                failures.append(f"kernel selector contains an OS branch token: {token}")
+        if production_selector.count("adapter.probe_capability(capability)") != 1:
+            failures.append("kernel selector capability probe path changed")
+        if "for capability in REQUIRED_PLATFORM_CAPABILITIES" not in production_selector:
+            failures.append("kernel selector no longer iterates the closed capability set")
     return failures
 
 
@@ -436,6 +448,9 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
     contract_failures = validate_contract_sources(contract_source, selector_source)
     if contract_failures:
         raise PlatformManifestError("; ".join(contract_failures))
+    production_selector = kernel_selector_source(selector_source)
+    if production_selector is None:
+        raise PlatformManifestError("kernel selector source boundary changed")
     summaries = [manifest_summary(root / relative) for relative in MANIFEST_PATHS]
     run_host_contract(root)
     ubuntu_image_id = run_ubuntu_contract(reference_revision, root)
@@ -451,7 +466,7 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
             "required_capability_count": len(CAPABILITIES),
             "startup_failure_class_count": len(RUST_STARTUP_FAILURE_VARIANTS),
             "operating_system_branches_in_kernel_selector": sum(
-                selector_source.split("#[cfg(test)]", 1)[0].count(token)
+                production_selector.count(token)
                 for token in KERNEL_SELECTOR_FORBIDDEN_TOKENS
             ),
         },

@@ -71,6 +71,8 @@ class PlatformManifestArtifactTests(unittest.TestCase):
         selector = (ROOT / "kernel/engine/src/platform_startup.rs").read_text(
             encoding="utf-8"
         )
+        self.assertIn('"fedora" => Ok(PlatformFamily::Fedora)', selector)
+        self.assertIn('"ubuntu" => Ok(PlatformFamily::Ubuntu)', selector)
         self.assertEqual(MODULE.validate_contract_sources(contract, selector), [])
         self.assertTrue(
             MODULE.validate_contract_sources(
@@ -82,9 +84,22 @@ class PlatformManifestArtifactTests(unittest.TestCase):
             MODULE.validate_contract_sources(
                 contract,
                 selector.replace(
-                    "pub fn activate_platform", "// target_os\npub fn activate_platform", 1
+                    "    let manifest = release.identity();",
+                    "    // target_os\n    let manifest = release.identity();",
+                    1,
                 ),
             )
+        )
+
+    def test_missing_selector_boundary_fails_closed(self):
+        contract = (ROOT / "kernel/contracts/src/platform.rs").read_text(encoding="utf-8")
+        selector = (ROOT / "kernel/engine/src/platform_startup.rs").read_text(
+            encoding="utf-8"
+        )
+        changed = selector.replace("pub fn activate_platform", "pub fn renamed_platform", 1)
+        self.assertIn(
+            "kernel selector source boundary changed",
+            MODULE.validate_contract_sources(contract, changed),
         )
 
     def test_report_validation_rejects_macos_or_release_overclaim(self):
