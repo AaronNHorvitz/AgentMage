@@ -147,12 +147,8 @@ DIMENSIONS = (
 )
 BLOCKERS = (
     {
-        "task_id": "9.1.3.3",
-        "reason": "Independent control-disablement startup refusal and Ubuntu Secret Service closure are not yet complete.",
-    },
-    {
         "task_id": "9.1.3.4",
-        "reason": "Native Ubuntu worker isolation and graphical Visual Studio Code execution on both Linux targets remain absent.",
+        "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution and graphical Visual Studio Code execution on both Linux targets remain absent.",
     },
     {
         "task_id": "9.1.3.5",
@@ -385,6 +381,21 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or not _all_pass(controls.get("ipc_tests"), 8)
         or not _all_pass(controls.get("secret_service_tests"), 4)
         or not _all_pass(controls.get("secret_service_live_tests"), 3)
+        or controls.get("startup_control_ids")
+        != [
+            "bubblewrap",
+            "user-namespaces",
+            "seccomp",
+            "cgroups-v2",
+            "secret-service",
+            "descriptor-safe-paths",
+            "network-isolation",
+        ]
+        or controls.get("startup_mutation_statuses") != ["unavailable", "invalid"]
+        or controls.get("startup_platform_families") != ["fedora", "ubuntu"]
+        or not _all_pass(controls.get("startup_mapping_tests"), 2)
+        or not _all_pass(controls.get("kernel_startup_tests"), 1)
+        or not _all_pass(controls.get("startup_live_tests"), 1)
         or len(controls.get("attack_coverage", {})) != 16
         or set(controls.get("attack_coverage", {}).values()) != {"pass"}
         or controls.get("release_claim") != "none"
@@ -597,7 +608,7 @@ def main() -> int:
     except (OSError, UnicodeError, LinuxPlatformParityError, subprocess.SubprocessError) as error:
         print(f"Linux platform parity evidence failed: {error}", file=sys.stderr)
         return 1
-    print("Fedora/Ubuntu parity matrix validated with three explicit open gates")
+    print("Fedora/Ubuntu parity matrix validated with two explicit open gates")
     return 0
 
 

@@ -110,6 +110,12 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
         ] = "verified-local"
         mutations.append((controls, "live Linux control parity input is incomplete"))
 
+        startup_controls = copy.deepcopy(evidence.load_inputs())
+        startup_controls["linux-controls"]["startup_control_ids"].pop()
+        mutations.append(
+            (startup_controls, "live Linux control parity input is incomplete")
+        )
+
         attacks = copy.deepcopy(evidence.load_inputs())
         attacks["sandbox-attacks"]["summary"][
             "native_ubuntu_isolation_verified"

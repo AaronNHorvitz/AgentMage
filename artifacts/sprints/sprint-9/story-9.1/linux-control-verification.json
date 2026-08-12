@@ -82,9 +82,16 @@
       "test": "unsafe_parent_existing_socket_and_short_frame_fail_closed"
     }
   ],
+  "kernel_startup_tests": [
+    {
+      "status": "pass",
+      "test": "every_missing_invalid_or_substituted_mechanism_refuses"
+    }
+  ],
   "limitations": [
     "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
-    "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
+    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; native Ubuntu preflight execution remains pending.",
+    "The inactive inference package boundary is verified separately; enabled inference runtime remains pending.",
     "macOS implementation and execution remain blocked and are not substituted."
   ],
   "macos_evidence_substituted": false,
@@ -198,7 +205,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
+  "source_revision": "1083a042f48a0792a14572a53c12b05734244041",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -209,8 +216,20 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
+      "path": "docs/architecture/linux-platform-lifecycle.md",
+      "sha256": "43990c7ad0baa8a9bdd307d286f671459cb3a7e21b5d53a59d4baa6d1d5fbbac"
+    },
+    {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "327c872b56e04b1e2540736d97eb8cfe3c7ec58f0af3a3a78d84d424df792f25"
+      "sha256": "5e9663e177f396cfbf7577f1536d5671514907df4db3c5c37b020a9746929f26"
+    },
+    {
+      "path": "docs/architecture/platform-adapter-contract.md",
+      "sha256": "3abf23ba5a92fdcc563f704b8984d3175cb799a78a59302747d7c2ab6fd49e8b"
+    },
+    {
+      "path": "kernel/engine/src/platform_startup.rs",
+      "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
     },
     {
       "path": "platforms/linux/Cargo.toml",
@@ -222,24 +241,65 @@
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "138f5a352fd0da205b703590087896ccd823848fce105466c3512b7a250119a6"
+      "sha256": "c6da7bab4782d8e048ead151741e9825e427cc49d507885f50e9e566977736ff"
+    },
+    {
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "dcc158bb4ec9c23a4ee0697971b058734b5e27cfafdb18890946aaa157c43347"
+      "sha256": "a1a14a5626b48f9b20158cad7e8b062ecf9521adb29f63f33ef9d6bf30069867"
+    },
+    {
+      "path": "platforms/linux/src/security_controls.rs",
+      "sha256": "f354c6d689e7e48d2628d6c1183daa7be553e6f52c941f93a5f84173d23977e8"
     },
     {
       "path": "platforms/linux/src/secret_service.rs",
-      "sha256": "ca3d5edc100c430e9e7ad44e3c2c8887ac22f288c7aff514f18b3ab33d2e9bf7"
+      "sha256": "52915f5c42d0fe9b07a3da56d3e5a87b11cf1b6f437e159be7aa2e8ebc35e120"
     },
     {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "fef1941ec470965b94d0d5af1eecbc0f43e8ddec7572fea5bba79ad690c10b4c"
+      "sha256": "ffc3193676108e226066332912a4a2955613812e2d26589036bab8f8424c7cbe"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",
-      "sha256": "70d8d9677e146fcf7ab24128db91cdd97bc74c3826e97f6b6031661bd28ef9f9"
+      "sha256": "430f8461f0f7fc06fbd8709168b17165a6c62149e75b61f4c43b578403d3eaed"
     }
+  ],
+  "startup_control_ids": [
+    "bubblewrap",
+    "user-namespaces",
+    "seccomp",
+    "cgroups-v2",
+    "secret-service",
+    "descriptor-safe-paths",
+    "network-isolation"
+  ],
+  "startup_live_tests": [
+    {
+      "status": "pass",
+      "test": "live_required_control_preflight_verifies_without_workspace_authority"
+    }
+  ],
+  "startup_mapping_tests": [
+    {
+      "status": "pass",
+      "test": "control_identities_are_nonzero_distinct_and_status_independent"
+    },
+    {
+      "status": "pass",
+      "test": "every_linux_control_disablement_maps_to_fail_closed_startup_capabilities"
+    }
+  ],
+  "startup_mutation_statuses": [
+    "unavailable",
+    "invalid"
+  ],
+  "startup_platform_families": [
+    "fedora",
+    "ubuntu"
   ],
   "status": "pass-fedora-only",
   "task_ids": [
@@ -247,11 +307,13 @@
     "9.1.2.2",
     "9.1.2.3",
     "9.1.3.1",
-    "9.1.3.2"
+    "9.1.3.2",
+    "9.1.3.3"
   ],
   "test_ids": [
     "S-009-UT01",
-    "S-009-ST01"
+    "S-009-ST01",
+    "S-009-UT02"
   ],
   "trusted_tools": [
     {
