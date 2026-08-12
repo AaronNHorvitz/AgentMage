@@ -39,11 +39,18 @@ SOURCE_PATHS = (
     "tests/test_linux_sandbox_evidence.py",
 )
 SANDBOX_TESTS = (
+    "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
+    "directory_projection_never_contains_excluded_or_nested_workspace_content",
+    "directory_worker_receives_only_the_bounded_exclusion_safe_projection",
     "foreign_workspace_identity_never_starts_a_worker",
+    "file_projection_is_the_approved_preimage_and_cannot_be_modified",
     "fresh_worker_reads_only_the_canonical_workspace_file",
     "limits_and_manifests_fail_closed",
     "policy_compiles_to_nonempty_classic_bpf",
+    "stale_held_directory_fails_projection_before_any_worker_process_can_start",
+    "stale_held_file_fails_before_any_worker_process_can_start",
     "transient_service_terminates_an_unbounded_worker",
+    "worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content",
     "worker_cannot_write_the_read_only_workspace",
     "worker_has_no_ambient_host_paths_devices_or_processes",
     "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
@@ -51,25 +58,34 @@ SANDBOX_TESTS = (
     "worker_receives_only_the_fixed_environment_and_no_network",
 )
 SANDBOX_STATIC_TESTS = (
+    "directory_projection_never_contains_excluded_or_nested_workspace_content",
+    "file_projection_is_the_approved_preimage_and_cannot_be_modified",
     "limits_and_manifests_fail_closed",
     "policy_compiles_to_nonempty_classic_bpf",
+    "stale_held_directory_fails_projection_before_any_worker_process_can_start",
+    "stale_held_file_fails_before_any_worker_process_can_start",
 )
 SANDBOX_LIVE_TESTS = tuple(
     name for name in SANDBOX_TESTS if name not in SANDBOX_STATIC_TESTS
 )
 IPC_TESTS = (
+    "authenticated_endpoint_exposes_only_bounded_product_frames",
     "every_peer_and_frame_mutation_fails_without_consuming_valid_request",
     "exact_peer_authenticates_once_and_replay_fails",
     "generated_launch_material_is_fresh_and_redacted",
+    "listener_drop_removes_only_its_unchanged_socket_identity",
     "private_socket_uses_kernel_peer_credentials_and_exact_frame",
+    "process_start_parser_handles_parentheses_and_rejects_malformed_records",
     "unsafe_parent_existing_socket_and_short_frame_fail_closed",
 )
 SECRET_SERVICE_TESTS = (
     "key_debug_and_errors_never_disclose_candidate_content",
     "keys_values_and_manifests_are_bounded_and_redacted",
+    "operational_store_key_decode_is_exact_and_bounded",
     "sensitive_output_is_bounded_without_a_content_digest",
 )
 SECRET_SERVICE_LIVE_TESTS = (
+    "live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned",
     "live_service_probe_returns_only_a_content_free_receipt",
     "live_service_round_trip_is_exact_and_cleanup_is_verified",
 )
@@ -101,12 +117,18 @@ CONTROLS = {
 ATTACKS = (
     "ambient_home",
     "ambient_system_and_runtime_roots",
+    "directory_exclusion_bypass",
     "device",
     "environment_inheritance",
+    "foreign_workspace_identity",
     "host_processes",
     "network",
     "output_exhaustion",
+    "scratch_escape",
     "secret_store_reachability",
+    "sibling_parent_descriptor_resolution",
+    "stale_directory_preimage",
+    "stale_file_preimage",
     "ungranted_root",
     "workspace_write",
 )
@@ -116,8 +138,8 @@ PLATFORM_STATUS = {
     "macos": "blocked-macos",
 }
 LIMITATIONS = [
-    "Ubuntu clean-environment sandbox and package execution remain pending.",
-    "Inference runtime, package lifecycle, and complete adapter startup probes remain pending.",
+    "Clean package lifecycle is verified separately on Fedora and Ubuntu; Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted.",
 ]
 REVISION = re.compile(r"^[0-9a-f]{40}$")
