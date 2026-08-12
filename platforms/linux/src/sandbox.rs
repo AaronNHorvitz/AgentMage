@@ -34,6 +34,7 @@ const MAX_DIRECTORY_ENTRIES: usize = 4_096;
 const MAX_DIRECTORY_PROJECTION_BYTES: usize = 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const WORKER_GUEST_ROOT: &str = "/app";
+const PATH_EXECUTOR: &str = "/usr/bin/env";
 const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
 const DENIED_SYSCALLS: &[&str] = &[
     "accept",
@@ -318,6 +319,7 @@ impl fmt::Debug for VerifiedArtifact {
 /// Verified, descriptor-held Linux sandbox launch manifest.
 pub struct LinuxSandboxManifest {
     systemd_run: VerifiedArtifact,
+    path_executor: VerifiedArtifact,
     bubblewrap: VerifiedArtifact,
     worker: VerifiedArtifact,
     runtime_files: Vec<VerifiedArtifact>,
@@ -337,6 +339,9 @@ impl LinuxSandboxManifest {
         let worker_guest_path =
             Path::new(WORKER_GUEST_ROOT).join(verified_worker_name(worker.as_ref())?);
         let systemd_run = verify_artifact(systemd_run.as_ref(), None, true)?;
+        let path_executor_path = std::fs::canonicalize(PATH_EXECUTOR)
+            .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        let path_executor = verify_artifact(&path_executor_path, None, true)?;
         let bubblewrap = verify_artifact(bubblewrap.as_ref(), None, true)?;
         let worker = verify_artifact(worker.as_ref(), Some(&worker_guest_path), false)?;
         let mut verified_runtime = Vec::with_capacity(runtime_files.len());
@@ -357,6 +362,7 @@ impl LinuxSandboxManifest {
         }
         Ok(Self {
             systemd_run,
+            path_executor,
             bubblewrap,
             worker,
             runtime_files: verified_runtime,
@@ -369,6 +375,7 @@ impl fmt::Debug for LinuxSandboxManifest {
         formatter
             .debug_struct("LinuxSandboxManifest")
             .field("systemd_run", &self.systemd_run)
+            .field("path_executor", &self.path_executor)
             .field("bubblewrap", &self.bubblewrap)
             .field("worker", &self.worker)
             .field("runtime_files", &self.runtime_files)
@@ -448,6 +455,7 @@ impl LinuxSandboxRunner {
         let descriptor_source =
             |descriptor: &OwnedFd| format!("/proc/{parent_pid}/fd/{}", descriptor.as_raw_fd());
         revalidate_launch_artifact(&self.manifest.systemd_run)?;
+        revalidate_launch_artifact(&self.manifest.path_executor)?;
         revalidate_launch_artifact(&self.manifest.bubblewrap)?;
         let systemd_command = self
             .manifest
@@ -458,6 +466,12 @@ impl LinuxSandboxRunner {
         let bubblewrap_command = self
             .manifest
             .bubblewrap
+            .launch_path
+            .as_deref()
+            .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        let path_executor_command = self
+            .manifest
+            .path_executor
             .launch_path
             .as_deref()
             .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
@@ -475,8 +489,6 @@ impl LinuxSandboxRunner {
             .arg("--quiet")
             .arg("--pipe")
             .arg(format!("--unit={unit}"))
-            .arg("--property=NoNewPrivileges=yes")
-            .arg("--property=PrivateDevices=yes")
             .arg("--property=RestrictSUIDSGID=yes")
             .arg("--property=LockPersonality=yes")
             .arg("--property=RestrictAddressFamilies=AF_UNIX AF_NETLINK")
@@ -502,39 +514,43 @@ impl LinuxSandboxRunner {
                 descriptor_source(&runtime.descriptor)
             ));
         }
-        command.arg(bubblewrap_command).args([
-            "--unshare-all",
-            "--unshare-user",
-            "--disable-userns",
-            "--new-session",
-            "--die-with-parent",
-            "--clearenv",
-            "--setenv",
-            "PATH",
-            "/app",
-            "--setenv",
-            "LANG",
-            "C",
-            "--cap-drop",
-            "ALL",
-            "--proc",
-            "/proc",
-            "--dev",
-            "/dev",
-            "--size",
-            "16777216",
-            "--tmpfs",
-            "/tmp",
-            "--dir",
-            "/app",
-            "--dir",
-            "/input",
-            "--ro-bind-data",
-            "3",
-            "/input/object",
-            "--ro-bind-fd",
-            "4",
-        ]);
+        command
+            .arg(path_executor_command)
+            .arg("--")
+            .arg(bubblewrap_command)
+            .args([
+                "--unshare-all",
+                "--unshare-user",
+                "--disable-userns",
+                "--new-session",
+                "--die-with-parent",
+                "--clearenv",
+                "--setenv",
+                "PATH",
+                "/app",
+                "--setenv",
+                "LANG",
+                "C",
+                "--cap-drop",
+                "ALL",
+                "--proc",
+                "/proc",
+                "--dev",
+                "/dev",
+                "--size",
+                "16777216",
+                "--tmpfs",
+                "/tmp",
+                "--dir",
+                "/app",
+                "--dir",
+                "/input",
+                "--ro-bind-data",
+                "3",
+                "/input/object",
+                "--ro-bind-fd",
+                "4",
+            ]);
         command.arg(
             self.manifest
                 .worker
@@ -1119,7 +1135,8 @@ mod tests {
     use super::{
         LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
         LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
-        compile_seccomp_policy, directory_projection, file_projection, verified_worker_name,
+        PATH_EXECUTOR, compile_seccomp_policy, directory_projection, file_projection,
+        verified_worker_name,
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
@@ -1269,6 +1286,22 @@ mod tests {
             .expect_err("runtime destination must fail")
             .kind(),
             LinuxSandboxErrorKind::InvalidManifest
+        );
+        let worker = fs::canonicalize("/usr/bin/cat").expect("canonical worker");
+        let manifest = LinuxSandboxManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/bwrap",
+            &worker,
+            &runtime_files(&worker),
+        )
+        .expect("verified manifest");
+        assert_eq!(
+            manifest.path_executor.launch_path.as_deref(),
+            Some(
+                fs::canonicalize(PATH_EXECUTOR)
+                    .expect("canonical path executor")
+                    .as_path()
+            )
         );
         assert_eq!(
             verified_worker_name(Path::new("/usr/lib/coreutils/cat")).expect("bounded applet name"),

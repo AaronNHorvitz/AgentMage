@@ -86,9 +86,15 @@ and related dangerous syscall families.
 
 The transient user service applies exact `MemoryMax`, `MemorySwapMax=0`,
 `TasksMax`, `CPUQuota`, and `RuntimeMaxSec` properties. It also requires
-`NoNewPrivileges`, private devices, SUID/SGID restrictions, a locked
-personality, and address-family restriction during Bubblewrap setup. Public
-limit construction rejects values outside the closed supported ranges.
+SUID/SGID restrictions, a locked personality, and address-family restriction
+during Bubblewrap setup. Verified Bubblewrap creates the private device view and
+establishes `NoNewPrivileges` after Ubuntu's AppArmor transition and before the
+worker runs. A separately verified, root-owned `/usr/bin/env` path executor
+performs no shell interpretation and makes the Bubblewrap path execution visible
+to Ubuntu's distribution-provided AppArmor profile; applying systemd's
+`PrivateDevices` user-namespace setup before that transition would block the
+profile. Public limit construction rejects values outside the closed supported
+ranges.
 
 Standard output and diagnostics are drained concurrently. Retained bytes never
 exceed the declared output bound. An over-limit stream fails closed;
