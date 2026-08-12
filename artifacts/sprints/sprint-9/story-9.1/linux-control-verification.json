@@ -4,11 +4,17 @@
     "ambient_home": "pass",
     "ambient_system_and_runtime_roots": "pass",
     "device": "pass",
+    "directory_exclusion_bypass": "pass",
     "environment_inheritance": "pass",
+    "foreign_workspace_identity": "pass",
     "host_processes": "pass",
     "network": "pass",
     "output_exhaustion": "pass",
+    "scratch_escape": "pass",
     "secret_store_reachability": "pass",
+    "sibling_parent_descriptor_resolution": "pass",
+    "stale_directory_preimage": "pass",
+    "stale_file_preimage": "pass",
     "ungranted_root": "pass",
     "workspace_write": "pass"
   },
@@ -45,6 +51,10 @@
   "ipc_tests": [
     {
       "status": "pass",
+      "test": "authenticated_endpoint_exposes_only_bounded_product_frames"
+    },
+    {
+      "status": "pass",
       "test": "every_peer_and_frame_mutation_fails_without_consuming_valid_request"
     },
     {
@@ -57,7 +67,15 @@
     },
     {
       "status": "pass",
+      "test": "listener_drop_removes_only_its_unchanged_socket_identity"
+    },
+    {
+      "status": "pass",
       "test": "private_socket_uses_kernel_peer_credentials_and_exact_frame"
+    },
+    {
+      "status": "pass",
+      "test": "process_start_parser_handles_parentheses_and_rejects_malformed_records"
     },
     {
       "status": "pass",
@@ -65,8 +83,8 @@
     }
   ],
   "limitations": [
-    "Ubuntu clean-environment sandbox and package execution remain pending.",
-    "Inference runtime, package lifecycle, and complete adapter startup probes remain pending.",
+    "Clean package lifecycle is verified separately on Fedora and Ubuntu; Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted."
   ],
   "macos_evidence_substituted": false,
@@ -80,7 +98,23 @@
   "sandbox_tests": [
     {
       "status": "pass",
+      "test": "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace"
+    },
+    {
+      "status": "pass",
+      "test": "directory_projection_never_contains_excluded_or_nested_workspace_content"
+    },
+    {
+      "status": "pass",
+      "test": "directory_worker_receives_only_the_bounded_exclusion_safe_projection"
+    },
+    {
+      "status": "pass",
       "test": "foreign_workspace_identity_never_starts_a_worker"
+    },
+    {
+      "status": "pass",
+      "test": "file_projection_is_the_approved_preimage_and_cannot_be_modified"
     },
     {
       "status": "pass",
@@ -96,7 +130,19 @@
     },
     {
       "status": "pass",
+      "test": "stale_held_directory_fails_projection_before_any_worker_process_can_start"
+    },
+    {
+      "status": "pass",
+      "test": "stale_held_file_fails_before_any_worker_process_can_start"
+    },
+    {
+      "status": "pass",
       "test": "transient_service_terminates_an_unbounded_worker"
+    },
+    {
+      "status": "pass",
+      "test": "worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content"
     },
     {
       "status": "pass",
@@ -123,6 +169,10 @@
   "secret_service_live_tests": [
     {
       "status": "pass",
+      "test": "live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned"
+    },
+    {
+      "status": "pass",
       "test": "live_service_probe_returns_only_a_content_free_receipt"
     },
     {
@@ -141,50 +191,54 @@
     },
     {
       "status": "pass",
+      "test": "operational_store_key_decode_is_exact_and_bounded"
+    },
+    {
+      "status": "pass",
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "617731b671df3378652f771cb94773080d155298",
+  "source_revision": "e0b06e720008c9954e4c142197ed124b50eed05a",
   "sources": [
     {
       "path": "Cargo.lock",
-      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "6e38349678266d33285ed33bd0b0c51c6c82cab2009c15f5ba0aecd9eb8374d4"
+      "sha256": "8a1379a8513c08496e5588db3cb5daf0c905bc139436a70cb349ea4fa12c023b"
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "1cf6db916995a473297a4bfb78492d073240c2ccaa6eca6c52618264b02eb4d2"
+      "sha256": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5"
     },
     {
       "path": "platforms/linux/src/ipc.rs",
-      "sha256": "ee0714ed262b8222488545792ddf583e803861b376754a9e97b7cb70530b667d"
+      "sha256": "b74c2d424365aa0faa267cc042214a86e99c97c99be854ac3daed4deabc89c21"
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "669ad2faa862b71e171819ced145e31ac606c293787946e42981f82462ad0ca5"
+      "sha256": "138f5a352fd0da205b703590087896ccd823848fce105466c3512b7a250119a6"
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "45cf7b8995fb0bacf6d7dd43ef0c320cf93d827e05d1b2026c9d688df17fab3c"
+      "sha256": "8ff7684337a6d551159b84b674c88410eebc9404bf83dda392c86aa6e1d3ec6e"
     },
     {
       "path": "platforms/linux/src/secret_service.rs",
-      "sha256": "b439ef053383f737f1e9e92246564e9ab8982d597947e6cffc2e18ff32314142"
+      "sha256": "ca3d5edc100c430e9e7ad44e3c2c8887ac22f288c7aff514f18b3ab33d2e9bf7"
     },
     {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "64c8a08d2ce47a7330d8a34bf593ab9afe838815f9cc2e911ef02f7faecff0d0"
+      "sha256": "5aa1174d5da66ba350149ac1c89fa19e46262a838056f2b967758b77fffa8212"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",
-      "sha256": "225d36da4e0b39b3fa4ccdd2a3fac0398f7c85cf18cb99263211570f9e082047"
+      "sha256": "70d8d9677e146fcf7ab24128db91cdd97bc74c3826e97f6b6031661bd28ef9f9"
     }
   ],
   "status": "pass-fedora-only",
