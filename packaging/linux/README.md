@@ -12,5 +12,9 @@ packages live under ignored `release-output/` and are never source artifacts.
 
 Current lifecycle coverage includes install, candidate verification, upgrade,
 corrupt-upgrade refusal, rollback, uninstall, and residue checks in disposable
-Fedora and Ubuntu containers. External release signing and the trusted VS Code
-to-host bootstrap remain blocked release work.
+Fedora and Ubuntu containers. Decision 0022 adds a separate version 2 signable
+bundle and detached Ed25519 verifier. The signature and public trust root remain
+external to the package, and the private seed is accepted only through the
+isolated signer standard input. Production identity approval, independent
+trust-root delivery, RPM/DEB repository signing, and the trusted VS Code-to-host
+bootstrap remain blocked release work.

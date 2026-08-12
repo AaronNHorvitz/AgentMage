@@ -11,23 +11,27 @@ impl std::fmt::Debug for HostExit {
 }
 
 fn main() -> Result<(), HostExit> {
-    let mut arguments = std::env::args_os();
-    let _program = arguments.next();
-    if let Some(command) = arguments.next() {
-        let root = arguments.next();
-        if arguments.next().is_some() {
-            return invalid_package_arguments();
-        }
-        let result = match (command.to_str(), root) {
-            (Some("--verify-package-root"), Some(root)) => package_verify::verify_package_root(
-                &root,
-                package_verify::PackageClass::SignedRelease,
-            ),
-            (Some("--verify-package-candidate-root"), Some(root)) => {
-                package_verify::verify_package_root(
-                    &root,
-                    package_verify::PackageClass::UnsignedCandidate,
-                )
+    let arguments: Vec<_> = std::env::args_os().skip(1).collect();
+    if !arguments.is_empty() {
+        let result = match arguments.as_slice() {
+            [command, root] if command == "--verify-package-candidate-root" => {
+                package_verify::verify_package_candidate_root(root)
+            }
+            [
+                command,
+                root,
+                signature_option,
+                signature,
+                key_option,
+                public_key,
+            ] if command == "--verify-package-root"
+                && signature_option == "--signature"
+                && key_option == "--public-key" =>
+            {
+                package_verify::verify_signed_package_root(root, signature, public_key)
+            }
+            [command, _root] if command == "--verify-package-root" => {
+                Err(package_verify::PackageVerificationError::ReleaseVerificationUnavailable)
             }
             _ => return invalid_package_arguments(),
         };

@@ -67,6 +67,10 @@ def package_id(version: str) -> str:
     return f"agentmage-linux-x86_64-{version}-candidate"
 
 
+def release_package_id(version: str) -> str:
+    return f"agentmage-linux-x86_64-{version}-release"
+
+
 def valid_version(version: str) -> bool:
     parts = version.split(".")
     return len(parts) == 3 and all(part.isdigit() and str(int(part)) == part for part in parts)
@@ -137,6 +141,48 @@ def build_payload(
     root: Path,
     version: str = VERSION,
 ) -> dict[str, Any]:
+    return build_payload_class(
+        host,
+        vsix,
+        license_path,
+        root,
+        version=version,
+        status="unsigned-candidate",
+        release_sequence=None,
+    )
+
+
+def build_release_payload(
+    host: Path,
+    vsix: Path,
+    license_path: Path,
+    root: Path,
+    version: str,
+    release_sequence: int,
+) -> dict[str, Any]:
+    if release_sequence <= 0:
+        raise PackageCandidateError("package.release_sequence_invalid")
+    return build_payload_class(
+        host,
+        vsix,
+        license_path,
+        root,
+        version=version,
+        status="signed-release",
+        release_sequence=release_sequence,
+    )
+
+
+def build_payload_class(
+    host: Path,
+    vsix: Path,
+    license_path: Path,
+    root: Path,
+    *,
+    version: str,
+    status: str,
+    release_sequence: int | None,
+) -> dict[str, Any]:
     for path in (host, vsix, license_path):
         require_regular(path)
     destinations = {
@@ -159,13 +205,19 @@ def build_payload(
                 "mode": mode,
             }
         )
-    manifest = {
-        "schema_version": 1,
+    manifest: dict[str, Any] = {
+        "schema_version": 1 if status == "unsigned-candidate" else 2,
         "record_type": "agentmage-package-manifest",
-        "status": "unsigned-candidate",
-        "package_id": package_id(version),
+        "status": status,
+        "package_id": (
+            package_id(version)
+            if status == "unsigned-candidate"
+            else release_package_id(version)
+        ),
         "files": sorted(records, key=lambda item: item["path"]),
     }
+    if release_sequence is not None:
+        manifest["release_sequence"] = release_sequence
     manifest_path = root / MANIFEST_PATH
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_bytes(canonical_json(manifest))
@@ -279,13 +331,26 @@ def verify_payload(
     manifest_path = root / MANIFEST_PATH
     require_regular(manifest_path, 1024 * 1024)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if set(manifest) != {"schema_version", "record_type", "status", "package_id", "files"}:
+    signed_release = expected_status == "signed-release"
+    expected_fields = {"schema_version", "record_type", "status", "package_id", "files"}
+    if signed_release:
+        expected_fields.add("release_sequence")
+    if set(manifest) != expected_fields:
         raise PackageCandidateError("package.manifest_fields")
     if (
-        manifest["schema_version"] != 1
+        manifest["schema_version"] != (2 if signed_release else 1)
         or manifest["record_type"] != "agentmage-package-manifest"
         or manifest["status"] != expected_status
-        or manifest["package_id"] != package_id(version)
+        or manifest["package_id"]
+        != (release_package_id(version) if signed_release else package_id(version))
+        or (
+            signed_release
+            and (
+                not isinstance(manifest["release_sequence"], int)
+                or isinstance(manifest["release_sequence"], bool)
+                or manifest["release_sequence"] <= 0
+            )
+        )
     ):
         raise PackageCandidateError("package.manifest_identity")
     paths = [record.get("path") for record in manifest["files"]]
@@ -322,6 +387,48 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
             payload_root, ROOT / "packaging/linux/agentmage.spec.in", output, version
         )
     return {"vsix": vsix, "deb": deb, "rpm": rpm}
+
+
+def build_release_bundle(
+    output: Path,
+    version: str,
+    release_sequence: int,
+) -> dict[str, Path]:
+    if not valid_version(version) or release_sequence <= 0:
+        raise PackageCandidateError("package.release_identity_invalid")
+    host = ROOT / "target/release/agentmage-host"
+    extension = ROOT / "shells/vscode"
+    license_path = ROOT / "LICENSE"
+    output.mkdir(parents=True, exist_ok=True)
+    vsix = output / f"agentmage-vscode-{version}.vsix"
+    build_vsix(extension, license_path, vsix, version)
+    with tempfile.TemporaryDirectory(prefix="agentmage-release-payload-") as directory:
+        payload_root = Path(directory)
+        build_release_payload(
+            host,
+            vsix,
+            license_path,
+            payload_root,
+            version,
+            release_sequence,
+        )
+        verify_payload(payload_root, expected_status="signed-release", version=version)
+        manifest = output / f"agentmage-package-manifest-{version}.json"
+        shutil.copyfile(payload_root / MANIFEST_PATH, manifest)
+        deb = output / f"agentmage_{version}_amd64.deb"
+        build_deb(
+            payload_root,
+            ROOT / "packaging/linux/debian-release-control.in",
+            deb,
+            version,
+        )
+        rpm = build_rpm(
+            payload_root,
+            ROOT / "packaging/linux/agentmage-release.spec.in",
+            output,
+            version,
+        )
+    return {"manifest": manifest, "vsix": vsix, "deb": deb, "rpm": rpm}
 
 
 def main(argv: list[str] | None = None) -> int:

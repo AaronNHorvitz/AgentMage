@@ -27,7 +27,7 @@
     },
     {
       "document": "requirements/normative-map.json",
-      "sha256": "2505f96944e75b87296b05c497216dfb7d2dbd439137564934eb0edc590d6088"
+      "sha256": "93a84a798be964aa7ac7b28c8fe298bbd2d453454bdba03c6baba7af700bf183"
     },
     {
       "document": "requirements/policy-expectations.json",
@@ -433,7 +433,7 @@
         {
           "document": "PRD.md",
           "heading": "10. Capability Grants",
-          "line": 341,
+          "line": 347,
           "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
         }
       ],
@@ -1555,25 +1555,25 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 357,
+          "line": 363,
           "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 370,
+          "line": 376,
           "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 372,
+          "line": 378,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 420,
+          "line": 426,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -1823,7 +1823,7 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 448,
+          "line": 454,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -2007,13 +2007,13 @@
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 418,
+          "line": 424,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 420,
+          "line": 426,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -2906,25 +2906,25 @@
         {
           "document": "PRD.md",
           "heading": "6. Target v0.1 User Experience",
-          "line": 241,
+          "line": 247,
           "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
         },
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 401,
+          "line": 407,
           "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
         },
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 403,
+          "line": 409,
           "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 418,
+          "line": 424,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         }
       ],
@@ -3152,7 +3152,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 322,
+          "line": 328,
           "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
         }
       ],
@@ -3231,13 +3231,13 @@
         {
           "document": "PRD.md",
           "heading": "5. Product Architecture",
-          "line": 189,
+          "line": 195,
           "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
         },
         {
           "document": "PRD.md",
           "heading": "5.1 Kernel",
-          "line": 195,
+          "line": 201,
           "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
         }
       ],
@@ -3500,31 +3500,31 @@
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 304,
+          "line": 310,
           "statement_sha256": "d0c88d1751710766eada9e05e77fb3984ef390389bab084e28003859f5299f8e"
         },
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 306,
+          "line": 312,
           "statement_sha256": "32f0d8ef319bc3f2c6599a17facc8312842c1c042d977c0800e21b6b2b1551f6"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 324,
+          "line": 330,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 393,
+          "line": 399,
           "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 440,
+          "line": 446,
           "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
         }
       ],
@@ -3582,7 +3582,7 @@
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 314,
+          "line": 320,
           "statement_sha256": "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7"
         }
       ],
@@ -3642,19 +3642,19 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 300,
+          "line": 306,
           "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
         },
         {
           "document": "PRD.md",
           "heading": "8. Model Policy and Routing",
-          "line": 304,
+          "line": 310,
           "statement_sha256": "d0c88d1751710766eada9e05e77fb3984ef390389bab084e28003859f5299f8e"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 324,
+          "line": 330,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -3869,7 +3869,7 @@
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 393,
+          "line": 399,
           "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
         }
       ],
@@ -4108,25 +4108,25 @@
         {
           "document": "PRD.md",
           "heading": "5.1 Kernel",
-          "line": 195,
+          "line": 201,
           "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
         },
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 247,
+          "line": 253,
           "statement_sha256": "d67b774f233f094277ea45c7f4e4f02c89fcb9c447ad074728b04eebfd430abc"
         },
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 249,
+          "line": 255,
           "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 298,
+          "line": 304,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         }
       ],
@@ -4186,13 +4186,13 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 298,
+          "line": 304,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 385,
+          "line": 391,
           "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
         }
       ],
@@ -4250,7 +4250,7 @@
         {
           "document": "PRD.md",
           "heading": "11. Path Contract",
-          "line": 349,
+          "line": 355,
           "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
         }
       ],
@@ -4426,7 +4426,7 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 372,
+          "line": 378,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         }
       ],
@@ -4547,19 +4547,19 @@
         {
           "document": "PRD.md",
           "heading": "7.2 Fedora and Ubuntu Runtime",
-          "line": 298,
+          "line": 304,
           "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 324,
+          "line": 330,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 326,
+          "line": 332,
           "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
         }
       ],
@@ -4640,7 +4640,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 324,
+          "line": 330,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -4814,7 +4814,7 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 372,
+          "line": 378,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         }
       ],
@@ -5341,13 +5341,13 @@
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 249,
+          "line": 255,
           "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 448,
+          "line": 454,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -5451,19 +5451,19 @@
         {
           "document": "PRD.md",
           "heading": "7. Platform and Runtime",
-          "line": 249,
+          "line": 255,
           "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 440,
+          "line": 446,
           "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 448,
+          "line": 454,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -5607,7 +5607,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 324,
+          "line": 330,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],

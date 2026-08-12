@@ -13,6 +13,7 @@ from scripts.package_candidate import (
     PackageCandidateError,
     build_deb,
     build_payload,
+    build_release_payload,
     build_vsix,
     valid_version,
     verify_payload,
@@ -110,6 +111,38 @@ class PackageCandidateTests(unittest.TestCase):
             0o755,
         )
         self.assertEqual(stat.S_IMODE((payload / MANIFEST_PATH).stat().st_mode), 0o644)
+
+    def test_release_payload_is_distinct_and_requires_a_positive_sequence(self) -> None:
+        vsix = self.root / "agentmage.vsix"
+        build_vsix(self.extension, self.license, vsix, version="1.2.3")
+        payload = self.root / "release-payload"
+        build_release_payload(
+            self.host,
+            vsix,
+            self.license,
+            payload,
+            version="1.2.3",
+            release_sequence=7,
+        )
+        verify_payload(payload, expected_status="signed-release", version="1.2.3")
+        manifest = json.loads((payload / MANIFEST_PATH).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema_version"], 2)
+        self.assertEqual(manifest["status"], "signed-release")
+        self.assertEqual(manifest["release_sequence"], 7)
+        self.assertEqual(
+            manifest["package_id"], "agentmage-linux-x86_64-1.2.3-release"
+        )
+        with self.assertRaisesRegex(
+            PackageCandidateError, "package.release_sequence_invalid"
+        ):
+            build_release_payload(
+                self.host,
+                vsix,
+                self.license,
+                self.root / "invalid-release",
+                version="1.2.3",
+                release_sequence=0,
+            )
 
     def test_versions_are_closed_and_bound_into_payload_identity(self) -> None:
         self.assertTrue(valid_version("0.0.1"))

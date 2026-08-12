@@ -59,6 +59,12 @@ candidates and test their candidate lifecycles. This does not change the current
 integrated-workflow or support fields: candidates fail signed-release mode, the
 trusted packaged host bootstrap is not implemented, and Windows has only a
 versioned fail-closed contract scaffold without native enforcement or evidence.
+[`Decision 0022`](./docs/decisions/0022-detached-package-signing-boundary.md)
+adds deterministic signable Linux bundles plus exact detached Ed25519 signing
+and verification against an external trust root. The production signing
+identity, independent trust-root distribution, OS-package signatures, and
+trusted bootstrap remain blocked, so current workflow and support status do not
+change.
 
 ## Document Governance
 

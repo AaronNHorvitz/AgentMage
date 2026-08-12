@@ -63,9 +63,15 @@ applicability, composes platform lanes independently, records exact review
 provenance, retains real fuzzing as a separately approved manual security task,
 and reports zero enabled models. Accepted Decision 0020 adds deterministic
 unsigned RPM, DEB, and VSIX candidates with installed-payload verification and
-real candidate lifecycle tests. Those candidates cannot pass signed-release
-verification, and the trusted packaged host bootstrap remains absent. Decision
-0020 also adds a versioned Windows contract scaffold and Windows CI boundary;
+real candidate lifecycle tests. Under
+[`Decision 0022`](./docs/decisions/0022-detached-package-signing-boundary.md),
+the repository can also build a deterministic signable Linux bundle, sign its
+exact manifest with an external Ed25519 seed supplied only through standard
+input, and verify the detached signature and payload against an externally
+supplied trust root. No production signer, independently distributed trust
+root, OS-package signature, or trusted packaged host bootstrap exists, so no
+release or support claim follows. Decision 0020 also adds a versioned Windows
+contract scaffold and Windows CI boundary;
 Windows remains blocked because native enforcement and native evidence do not
 exist.
 

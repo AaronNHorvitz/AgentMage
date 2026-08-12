@@ -17,6 +17,7 @@ dependencies = [
  "agentmage-kernel-contracts",
  "agentmage-kernel-engine",
  "agentmage-platform-linux",
+ "ed25519-dalek",
  "rustix",
  "serde",
  "serde_json",
@@ -67,6 +68,11 @@ dependencies = [
 [[package]]
 name = "agentmage-xtask"
 version = "0.0.0"
+dependencies = [
+ "ed25519-dalek",
+ "rustix",
+ "zeroize",
+]
 
 [[package]]
 name = "bitflags"

@@ -1,6 +1,9 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0004",
+  "amendment_decision_ids": [
+    "ADR-0022"
+  ],
   "status": "configured",
   "toolchains": {
     "rust": "1.95.0",
@@ -41,12 +44,15 @@
     "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
     "release/xtask/Cargo.toml",
     "release/xtask/src/main.rs",
+    "scripts/package_release.py",
+    "scripts/package_release_lifecycle.py",
     "rust-toolchain.toml",
     "rustfmt.toml",
     "shells/host/Cargo.toml",
     "shells/host/src/lib.rs",
     "shells/host/src/linux_read.rs",
     "shells/host/src/main.rs",
+    "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
     "shells/vscode/eslint.config.mjs",
     "shells/vscode/package.json",

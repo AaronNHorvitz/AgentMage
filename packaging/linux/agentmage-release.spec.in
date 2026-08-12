@@ -1,0 +1,33 @@
+Name:           agentmage
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        Signable local AgentMage release bundle
+License:        Apache-2.0
+URL:            https://github.com/AaronNHorvitz/AgentMage
+Source0:        agentmage-@VERSION@-payload.tar.gz
+BuildArch:      x86_64
+Requires:       glibc, openssl-libs
+%global debug_package %{nil}
+%global __strip /bin/true
+
+%description
+AgentMage release bundle requiring an external detached manifest signature,
+independently distributed trust root, and successful host bootstrap verification.
+
+%prep
+
+%build
+
+%install
+mkdir -p %{buildroot}
+tar -xzf %{SOURCE0} -C %{buildroot}
+
+%files
+%license /usr/share/licenses/agentmage/LICENSE
+/usr/libexec/agentmage/agentmage-host
+/usr/share/agentmage/agentmage.vsix
+/usr/share/agentmage/package-manifest.json
+
+%changelog
+* Wed Aug 12 2026 AgentMage maintainers <security@example.invalid> - @VERSION@-1
+- Deterministic signable release bundle; signature and trust root remain external.

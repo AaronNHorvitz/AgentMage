@@ -1,0 +1,10 @@
+Package: agentmage
+Version: @VERSION@
+Section: devel
+Priority: optional
+Architecture: amd64
+Maintainer: AgentMage maintainers <security@example.invalid>
+Depends: libc6, libssl3
+Description: Signable local AgentMage release bundle
+ Requires an external detached manifest signature, independently distributed
+ trust root, and successful host bootstrap verification.

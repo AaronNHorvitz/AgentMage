@@ -67,7 +67,10 @@ EXPECTED_CARGO_PACKAGES = {
         "agentmage-platform-windows",
         {"agentmage-kernel-contracts"},
     ),
-    "release/xtask": ("agentmage-xtask", set()),
+    "release/xtask": (
+        "agentmage-xtask",
+        {"ed25519-dalek", "rustix", "zeroize"},
+    ),
     "shells/host": (
         "agentmage-host",
         {
@@ -75,6 +78,7 @@ EXPECTED_CARGO_PACKAGES = {
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",
             "agentmage-platform-linux",
+            "ed25519-dalek",
             "rustix",
             "serde",
             "serde_json",
@@ -169,6 +173,8 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         failures.append("schema_version must equal 1")
     if contract.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
+    if contract.get("amendment_decision_ids") != ["ADR-0022"]:
+        failures.append("build contract must record the Decision 0022 signing amendment")
     if contract.get("status") != "configured":
         failures.append("build contract status must be configured")
     if contract.get("toolchains") != EXPECTED_TOOLCHAINS:
