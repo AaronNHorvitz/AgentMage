@@ -335,7 +335,7 @@ def build_report(revision: str) -> dict[str, Any]:
     ipc_tests = observed_tests("ipc::tests", IPC_TESTS)
     secret_service_tests = observed_tests("secret_service::tests", SECRET_SERVICE_TESTS)
     secret_service_live_tests = observed_tests(
-        "secret_service::tests::live_service",
+        "secret_service::tests::live_",
         SECRET_SERVICE_LIVE_TESTS,
         ignored=True,
     )
