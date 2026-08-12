@@ -1,0 +1,27 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bash \
+        bubblewrap \
+        ca-certificates \
+        coreutils \
+        dbus-user-session \
+        gnome-keyring \
+        libsecret-tools \
+        procps \
+        systemd \
+        systemd-sysv \
+        util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 10001 agentmage-test \
+    && useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash agentmage-test \
+    && install -d -m 0755 /var/lib/systemd/linger \
+    && install -m 0644 /dev/null /var/lib/systemd/linger/agentmage-test
+
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]
