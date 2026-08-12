@@ -3,12 +3,12 @@
 | Field | Value |
 |---|---|
 | Status | Normative first-GA architecture |
-| Effective date | 2026-08-11 |
+| Effective date | 2026-08-12 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Runtime authority | `RUNTIME-BOUNDARIES.md` |
 | Trusted-operations authority | `TRUSTED-OPERATIONS.md` |
-| Scope decision | `docs/decisions/0011-whole-codebase-audit.md` |
+| Scope decisions | `docs/decisions/0011-whole-codebase-audit.md`; `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
 
 ## 1. Purpose
 
@@ -63,8 +63,9 @@ flowchart TB
     V --> O["Copy-on-write audit workspace"]
 
     A --> W["Bounded semantic work packets"]
-    W --> M["Approved local model runtime"]
-    M --> E[("Evidence cards and provisional findings")]
+    W --> M["Candidate-neutral local runtime"]
+    M --> F["Closed family codec"]
+    F --> E[("Untrusted evidence cards and provisional findings")]
 
     A --> Q["Cross-module reconciler"]
     X --> Q
@@ -78,9 +79,11 @@ flowchart TB
 ```
 
 No model receives a repository handle. The coordinator selects bounded packets from exact indexed
-records, and all model-produced observations return as untrusted provisional evidence. The
-deterministic reconciler and report compiler validate references, coverage, state, and claim
-relationships before presentation.
+records, and all model-produced observations return through the exact family codec as closed,
+untrusted provisional evidence. A candidate name, learned classifier, model confidence, or model
+judge cannot alter coverage, authority, queue state, or completion. The deterministic reconciler
+and report compiler validate references, coverage, state, and claim relationships before
+presentation.
 
 ## 4. Audit Scope and Repository Identity
 
@@ -153,15 +156,18 @@ Each evidence card records:
 - Audit, repository, revision, scope, file, symbol, module, and packet identities.
 - Exact source spans and hashes, parser facts, dependency relationships, tests, and relevant
   deterministic command results.
-- Model and runtime identity, prompt-template identity, creation time, resource use, and completion
-  state.
+- Exact model, artifact, tokenizer, template, codec, runtime, quantization, modality, context,
+  decoding, platform, hardware, driver, policy, prompt, packet, creation-time, resource, and
+  proposal identities plus the non-authoritative model terminal claim.
 - Observations, provisional findings, assumptions, uncertainty, conflicts, requested follow-up,
   and confidence.
 - Upstream evidence and downstream cards or findings that must be invalidated if the source changes.
 
-Evidence cards are not findings merely because a model produced them. Unsupported observations are
-discarded or retained as unresolved questions. Contradictory cards remain visible until a separate
-reconciliation pass resolves or reports the conflict.
+Evidence cards are not findings merely because a model produced them. Their closed decoder rejects
+partial, malformed, stale, replayed, duplicate, oversized, unknown-field, or ambiguous proposals
+before card creation. Unsupported observations are discarded or retained as unresolved questions.
+Contradictory cards remain visible until a separate reconciliation pass resolves or reports the
+conflict.
 
 ## 7. Cross-Module Reconciliation
 
@@ -200,9 +206,10 @@ attestation and report completion.
 ## 9. Checkpoint, Resume, and Invalidation
 
 Audit state is stored as encrypted structured records in the local operational store. Checkpoints
-contain no raw secret and bind the audit identity, coverage state, parser versions, model profile,
-completed work packets, evidence cards, contradictions, pending dependencies, resource totals, and
-next deterministic work queue.
+contain no raw secret and bind the audit identity, coverage state, parser versions, exact model and
+codec profile, completed work packets, evidence cards, contradictions, pending dependencies,
+resource totals, classifier dispositions, verifier results, named terminal state, and next
+deterministic work queue.
 
 Resume revalidates repository, policy, parser, model, runtime, and record identities before reuse.
 Changed files invalidate their own records plus reverse-dependent symbols, modules, evidence cards,
@@ -210,8 +217,10 @@ findings, coverage claims, and reports. A full rescan is required when identity 
 relationships cannot be reconstructed safely.
 
 The same unchanged audit resumed from any valid checkpoint produces the same deterministic census,
-structural graph, work queue, coverage totals, and evidence references. Model prose may vary only
-within recorded uncertainty and cannot alter deterministic completion state.
+structural graph, work queue, coverage totals, and evidence references. Model prose and learned
+classification may vary only within recorded uncertainty and cannot broaden authority or alter
+deterministic completion state. A resumed `SUCCESS` or verified `NO_OP` requires current
+postcondition evidence; all other terminal states remain non-success.
 
 ## 10. Findings and Reports
 
@@ -275,6 +284,12 @@ The integrated gate must prove:
   exports.
 - Semantic partition coverage, contradiction retention, cross-module reconciliation, targeted
   high-risk passes, and evidence-backed finding generation without summary drift.
+- Equivalent deterministic identity, coverage, structural, authority, and terminal-state outcomes
+  across packet ordering and admitted model/profile changes; model quality differences remain
+  attributable rather than being merged into deterministic state.
+- Closed proposal decoding, classifier non-authority, separate quality and
+  diagnostic-repeatability reports, and verifier-only completion across malformed, replayed,
+  uncertain, stalled, exhausted, cancelled, and false-completion cases.
 - Deterministic cancellation, crash recovery, checkpoint resume, source-change invalidation, and
   complete removal.
 - Every report claim resolves to current immutable evidence and every incomplete, excluded,

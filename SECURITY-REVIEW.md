@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document status | Public product-security planning baseline; no external certification claim |
-| Source review date | 2026-08-11 |
+| Source review date | 2026-08-12 |
 | Product ownership | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment |
 | Intended product boundary | Local, single-user desktop software |
 | First-GA validation targets | Fedora, Ubuntu, and Windows 11 x64 with native `llama.cpp` |
@@ -42,7 +42,7 @@ Recommended first-GA product-validation boundary:
 - One stable Visual Studio Code build.
 - One allowlisted AgentMage extension and signed platform package.
 - One user-selected workspace at a time, beginning with read-only mode before any write or delivery authority is enabled.
-- One manifest-pinned local model and runtime.
+- One explicitly selected, exact admitted local profile behind the candidate-neutral runtime and closed family codec; no named model family is a prerequisite.
 - Public, synthetic, or user-owned non-sensitive data only.
 - No cloud inference, product telemetry, analytics, crash upload, hidden remote tool, ambient connector, autonomous external effect, or automatic model switch.
 - Synthetic provider tenants, repositories, projects, pipelines, artifacts, environments, telemetry, and incidents for connected-capability conformance before user-controlled provider data.
@@ -58,7 +58,7 @@ A reviewer should be able to complete the initial assessment in this order:
 - [ ] Confirm who owns or manages the target device and whether installation is permitted.
 - [ ] Confirm that strict-local operation has no cloud or hosted service dependency and remains complete when connected packs are removed.
 - [ ] Confirm the Fedora, Ubuntu, Windows 11, Visual Studio Code, extension, model, runtime, and cryptographic module versions.
-- [ ] Confirm the model admission record, immutable artifact identity, runtime adapter, and fallback state against the model-provenance policy.
+- [ ] Confirm the exact model, artifact, tokenizer, template, codec, runtime, context, decoding, platform, hardware, evaluation, lifecycle, and fallback state against the model-provenance policy.
 - [ ] Review the architecture diagram, data-flow diagram, threat model, and shared-responsibility matrix.
 - [ ] Validate signatures, notarization, hashes, SBOM, model manifest, and release provenance.
 - [ ] Run the automated reviewer suite and retain its signed evidence bundle.
@@ -271,6 +271,10 @@ Each requirement must have an implementation owner, automated test where possibl
 | `SR-AI-012` | Support customer-requested model and system disclosures without exposing weights or secrets. | Package model card, system-behavior specification, known limits, evaluation methods, and results. | Reviewer verifies disclosures and tests a representative sample. |
 | `SR-AI-013` | Never silently change model, quantization, tokenizer, template, or runtime. | Require a new signed manifest and security impact review. | Modify each artifact and verify quarantine or startup refusal. |
 | `SR-AI-014` | Provide immediate suspension and secure containment. | Add a local administrative disable policy that prevents model loading while preserving authorized evidence. | Trigger a simulated model incident and verify stop, containment, evidence preservation, and recovery. |
+| `SR-AI-015` | Keep runtime supervision candidate neutral and model-family behavior inside closed codecs. | Bind every run to exact model, artifact, tokenizer, template, codec, runtime, quantization, modality, context, decoding, platform, hardware, driver, policy, and evaluation identities; decode only the closed proposal schema. | Substitute every tuple field and exercise unknown, malformed, partial, duplicate, stale, replayed, oversized, trailing, and unsupported output; require quarantine or inert rejection before authority. |
+| `SR-AI-016` | Separate model quality from diagnostic repeatability and make determinism claims exact. | Maintain first-party-recommended quality profiles and separately pinned diagnostic-repeatability profiles with raw repeated-trial evidence. | Change sampler order, seed, slot, draft, context, driver, hardware, runtime, template, or grader; require incomparable results and prohibit cross-device, cross-driver, cross-release, or universal determinism claims. |
+| `SR-AI-017` | Separate sensitivity, action risk, and model capability and keep learned classification non-authoritative. | Run static checks and deterministic deny-first policy over typed facts; permit a classifier only to deny, narrow, redact, isolate, or escalate. | Across at least 5,000 policy and 1,000 learned-classifier fixtures, attempt grant widening, denial override, destination substitution, model switching, and completion; require zero broader authority and narrower handling for uncertainty or failure. |
+| `SR-AI-018` | Make successful completion a deterministic verified state. | Persist named agent states, exact proposal identity, no-progress ceilings, consumed grants, uncertain effects, verifier results, and restart reconciliation; allow only `SUCCESS` and verified `NO_OP` as success. | Inject false completion, confidence, model-judge approval, stalls, exhaustion, uncertainty, cancellation, crash, replay, and stale postconditions; require the exact non-success state unless current deterministic evidence proves completion. |
 
 ### 8.8 Audit, Logging, Incident Response, and Monitoring
 
@@ -430,7 +434,8 @@ The normative implementation detail for this control family is
 | `SR-MGM-001` | Admit model catalog states only from exact evidence. | Sign candidate, evaluating, approved, degraded, quarantined, rejected, and retired entries with complete model-policy fields and transitions. | Mutate identity, license, lineage, artifact, hash, transformation, runtime, resource, quality, security, support, expiry, and state; require the exact block or transition. |
 | `SR-MGM-002` | Make chat-guided model operations deterministic and user confirmed. | Display exact profile, publisher, license, source, artifacts, size, disk, hardware fit, network, destination, checks, limitations, and rollback before launching the separate installer. | Mutate every displayed field after confirmation and exercise stale catalog, low disk, cancellation, crash, and retry; require no acquisition or activation outside the plan. |
 | `SR-MGM-003` | Keep model acquisition, admission, and inference separate. | Download or import into quarantine, verify signatures and hashes, scan, self-test, activate atomically, and roll back without workspace, session, connector, credential, or inference authority in the installer. | Attempt source substitution, redirect, artifact replacement, archive/path escape, credential access, workspace read, self-approval, partial activation, and automatic fallback; require denial or rollback. |
-| `SR-MGM-004` | Represent Muse Glimmer truthfully as a candidate. | Require verified first-party classification, license, origin, lineage, artifact, runtime, resource, quality, security, and platform evidence before any support or activation claim. | Remove, contradict, or fail each evidence class and require `BLOCKED` or `REJECTED`; a non-pass cannot block Gemma first GA or be hidden as support. |
+| `SR-MGM-004` | Represent Muse Glimmer truthfully as the primary deep-evaluation candidate. | Require verified first-party classification, license, origin, lineage, artifact, tokenizer, template, codec, runtime, resource, quality, repeatability, security, and platform evidence before any support or activation claim. | Remove, contradict, or fail each evidence class and require `BLOCKED` or `REJECTED`; a non-pass cannot block an independently conforming eligible profile or be hidden as support. |
+| `SR-MGM-005` | Inventory eligible official first-party Gemma profiles completely and evaluate them by role. | Freeze the authoritative source catalog; record exact identity, role, applicability, provenance, policy, artifact, runtime, hardware, suites, result, and exclusions; use `BLOCKED-HARDWARE` instead of silent omission. | Reconcile 100% of frozen catalog entries; mutate role, applicability, source, lineage, hardware, test, and state; require no omitted candidate, family-wide inference, role escalation, automatic activation, or borrowed result. |
 | `SR-LAB-001` | Isolate the post-GA Experimental Model Lab from trusted authority. | Give the lab a separate package, process, data root, synthetic corpus, no network, no credentials, no commands, no connectors, no canonical writes, and strict resource limits. | Probe every IPC, path, socket, tool, credential, connector, workspace, approved-store, and resource boundary with hostile models; require structural absence or denial. |
 | `SR-LAB-002` | Keep experimental provenance and license gaps visible. | Record user-selected source, hashes, observed license, lineage gaps, quarantine, format, resource preflight, warnings, and evaluation limitations without treating them as approval. | Import malformed, unknown, mirrored, mutable, provenance-incomplete, license-unclear, oversized, and policy-excluded artifacts; require truthful state and no ordinary activation. |
 | `SR-LAB-003` | Require normal admission for experimental promotion. | Provide no direct promotion route; create a new independent admission record and approved catalog transition for any candidate. | Attempt promotion through chat, files, catalog edits, lab results, model output, copied manifests, stale approval, or user preference; require zero activation until normal admission passes. |
@@ -604,15 +609,29 @@ Pass: zero unauthorized executions; every denial has a stable reason and audit e
 
 ### `RV-13` Model and Runtime Provenance
 
-Verify the `MODEL-PROVENANCE-POLICY.md` admission record, license, publisher/control, lineage, original artifact, conversion, quantization, tokenizer, chat template, GGUF, immutable OCI digest where applicable, runtime build, adapter, platform, resource requirements, and all hashes. Substitute each item independently. Run the same fixed response, tool-schema, cancellation, context-limit, and resource corpus through every enabled native and Docker adapter.
+Verify the `MODEL-PROVENANCE-POLICY.md` admission record, license, publisher/control, lineage,
+original artifact, conversion, quantization, tokenizer, chat template, family codec, GGUF, immutable
+OCI digest where applicable, runtime build, adapter, context and decoding profiles, platform,
+hardware/driver envelope, resource requirements, evaluation identity, and all hashes. Substitute each
+item independently. Run the same fixed response, closed-proposal, tool-schema, cancellation,
+context-limit, and resource corpus through every enabled native and Docker adapter.
 
-Pass: the exact approved identity loads; every silent substitution, mutable-tag-only identity, mismatch, corruption, prohibited lineage, or unsupported environment is quarantined or refused; all enabled adapters meet the same published contract thresholds, with differences recorded rather than hidden.
+Pass: the exact approved identity loads; every silent substitution, mutable-tag-only identity,
+mismatch, corruption, prohibited lineage, or unsupported environment is quarantined or refused;
+all enabled adapters meet the same published contract thresholds, with differences recorded rather
+than hidden; no kernel or capability behavior branches on a model-family name.
 
 ### `RV-14` Model Quality and Evidence Integrity
 
-Run the fixed repository, tool-call, factual-grounding, uncertainty, conflicting-evidence, stale-citation, and false-completion corpora across repeated trials.
+Run the fixed repository, tool-call, factual-grounding, uncertainty, conflicting-evidence,
+stale-citation, and false-completion corpora across repeated trials. Run the first-party-recommended
+quality profile and exact diagnostic-repeatability profile separately, and freeze the complete
+artifact, tokenizer, template, codec, runtime, sampler, seed, slot, context, platform, hardware,
+driver, tool, grader, and corpus tuples.
 
-Pass: all published thresholds are met; every material claim has the correct evidence state; negative results and limitations remain visible.
+Pass: all published thresholds are met; every material claim has the correct evidence state;
+negative results and limitations remain visible; incomparable tuples are never merged; repeated
+tokens are described only for the observed tuple and never as universal determinism.
 
 ### `RV-15` Fuzzing and Malformed Input
 
@@ -630,7 +649,9 @@ Pass: declared limits hold; cancellation is bounded; scratch is cleaned; state r
 
 Inject a crash before and after each durable transition and during grant validation, tool execution, model inference, receipt creation, checkpoint, and shutdown.
 
-Pass: 100 of 100 recovery fixtures select the correct safe state, repeat no completed operation, and produce no false success.
+Pass: 100 of 100 recovery fixtures select the correct named terminal state, repeat no completed
+operation or consumed grant, reconcile uncertain effects, and produce no false success; only
+current deterministic postcondition evidence produces `SUCCESS` or verified `NO_OP`.
 
 ### `RV-18` Audit Completeness and Redaction
 
@@ -830,15 +851,21 @@ activation matches one confirmed plan; the separate installer has no workspace o
 authority; no model approves, downloads, activates, replaces, or falls back to itself; interruption
 leaves the prior valid state or a visible block.
 
-### `RV-41` Muse Glimmer Candidate Admission
+### `RV-41` Muse-First and Role-Aware Candidate Admission
 
-Run Muse Glimmer through the normal first-party identity, classification, license, origin, lineage,
-artifact, transformation, hash, runtime, resource, coding, tool, security, platform, and support
-evidence pipeline. Independently remove, contradict, stale, or fail every evidence class.
+Run Muse Glimmer first through the normal exact-profile identity, classification, license, origin,
+lineage, artifact, transformation, tokenizer, template, codec, hash, runtime, context, decoding,
+resource, coding, tool, repeatability, security, platform, and support evidence pipeline. Freeze the
+eligible official first-party Gemma catalog; assign each exact profile a declared role and
+applicable suite; run every feasible case; and retain visible `BLOCKED-HARDWARE`, `BLOCKED`,
+`REJECTED`, and non-applicable evidence. Independently remove, contradict, stale, or fail every
+evidence class and introduce an additional eligible candidate through the same intake.
 
 Pass: complete conforming evidence yields `PASS`, incomplete or contradictory evidence yields
-`BLOCKED`, and non-waivable failure yields `REJECTED`; no unsupported open-source, compatibility,
-download, support, or activation claim appears; a non-pass does not block Gemma-based first GA.
+`BLOCKED`, and non-waivable failure yields `REJECTED`; 100% of frozen eligible Gemma entries have
+exact attributable records and no role escalation or silent omission; no unsupported open-source,
+compatibility, download, support, or activation claim appears; and no named-family non-pass blocks
+an independently conforming eligible profile.
 
 ### `RV-42` Experimental Model Lab Isolation and Promotion
 
@@ -1071,11 +1098,11 @@ Integrate this security baseline into the project without turning it into a pape
 5. Generate human-readable and machine-readable control evidence from the same source records.
 6. Assign the first execution of every `RV-*` protocol to the earliest sprint that implements its boundary; release sprints rerun the complete applicable suite and assemble evidence rather than discovering controls for the first time.
 7. Make failed critical gates block signing and packaging.
-8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows against its native reference runtime; require independent M5/macOS evidence for every later Mac claim.
+8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows against its native reference runtime; require independent M5/macOS evidence for every later Mac claim; and bind every result to an exact candidate-neutral profile and codec tuple.
 9. Run `RV-23` through `RV-35` for every promoted delivery and productivity adapter and applicable first-GA release candidate.
 10. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
 11. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
-12. Run `RV-36` through `RV-43` incrementally with the owning trusted-operations sprint and rerun the complete set at Sprint 166; run `RV-42` again for the post-GA Experimental Model Lab gate.
+12. Run `RV-36` through `RV-43` incrementally with the owning trusted-operations sprint and rerun the complete set at Sprint 166; extend `RV-13`, `RV-14`, `RV-17`, and `RV-41` for Decision 0027 in Sprints 12-15 and 165; run `RV-42` again for the post-GA Experimental Model Lab gate.
 13. Run `RV-44` through `RV-48` with their owning whole-codebase audit stories and rerun the complete set from raw evidence at Sprint 166.
 14. Run `RV-49` first across Sprints 42, 47, 71, 85-86, and 106 as its local, authentication, commit, push, and hosted boundaries become available; rerun it at Sprints 126 and 166 and for every source-control adapter promotion.
 
@@ -1086,7 +1113,7 @@ Recommended implementation gates:
 | `SEC-G0` Scope | Approved threat model, use-case boundary, data inventory, shared responsibilities, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake platform tests pass. |
 | `SEC-G2` Platforms | Fedora/Ubuntu confinement and Windows MSIX/AppContainer/IPC/NTFS/DPAPI evidence pass independently; retained Apple Silicon signing, notarization, App Sandbox, XPC, bookmarks, Keychain, and Metal evidence remains separate. |
-| `SEC-G3` Model | Installer separation, model/runtime provenance, native/container contract parity, Docker API isolation, injection resistance, context minimization, quality, uncertainty, and resource gates pass. |
+| `SEC-G3` Model | Candidate-neutral runtime and closed-codec conformance, exact-profile provenance, installer separation, native/container contract parity, Docker API isolation, Muse-first and complete role-aware eligible-Gemma evidence, classifier non-authority, verifier-only completion, separate quality/repeatability reporting, injection resistance, context minimization, uncertainty, and resource gates pass. |
 | `SEC-G4` Supply chain | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility/provenance, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete. |
 | `SEC-G6` Independent assessment | A reviewer independent of the implementation under test runs all applicable `RV-*` protocols and reproduces the signed evidence bundle. |

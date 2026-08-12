@@ -78,6 +78,17 @@
       "statement": "relationship links between people, meetings, projects, tasks, decisions, correspondence, and supporting files without requiring a graph database."
     },
     {
+      "id": "CL-016C4BB554BE25FCC511",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1522,
+        "semantic_sha256": "016c4bb554be25fcc511c36e18a71d52832d1b8d905bc0968d121cc5a0c44076"
+      },
+      "statement": "model-role suites for generative coding/planning, function/tool selection, advisory safety classification, embeddings/retrieval, multimodal input, specialist behavior, and legacy compatibility without comparing inapplicable roles as though they were interchangeable."
+    },
+    {
       "id": "CL-01A2CCD74113A1FFFE88",
       "label": "BUILD",
       "source": {
@@ -142,6 +153,17 @@
         "semantic_sha256": "02d727838b7c2ddcfce35709ac6fbe85b1fb572cca497147c04a1a787e5b82de"
       },
       "statement": "a capability matrix that records supported, degraded, unavailable, untested, and failed states for every model, tool, skill, file type, and interface."
+    },
+    {
+      "id": "CL-0303DBA4EF64E9668477",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 197,
+        "semantic_sha256": "0303dba4ef64e966847717703a89cd88ac0b51990d2a054a6d032362a41e3dc6"
+      },
+      "statement": "Create separate quality and diagnostic-repeatability profiles; never merge their results or claim that temperature zero, top-k one, a fixed seed, or repeated output proves cross-runtime, cross-driver, cross-device, or universal model determinism."
     },
     {
       "id": "CL-0312629FA76D07EC4827",
@@ -582,6 +604,17 @@
         "semantic_sha256": "0aaa68d7b58aa1242f30f0ada20bf3cb4a488d362ae4dec166b12930ed2416e1"
       },
       "statement": "remove every connected capability pack and rerun the complete strict-local suite with zero residual credential, cache, event, process, schedule, listener, or network authority."
+    },
+    {
+      "id": "CL-0AC9BB9047ACF118B9C0",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1523,
+        "semantic_sha256": "0ac9bb9047acf118b9c05658d4601409e97db7d00ae2826428a95d6104bd8fbe"
+      },
+      "statement": "exact hardware-fit matrices that retain visible supported, degraded, incompatible, unavailable, `BLOCKED-HARDWARE`, untested, failed, blocked, quarantined, and rejected results per artifact/runtime/context/platform tuple."
     },
     {
       "id": "CL-0ACD5332A0E38F4848C9",
@@ -1486,6 +1519,17 @@
       "statement": "cross-repository tracing for shared libraries, clients, schemas, events, deployment files, and version pins using only approved local clones unless remote access is separately enabled."
     },
     {
+      "id": "CL-1A40F216B67B85C6F27F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 192,
+        "semantic_sha256": "1a40f216b67b85c6f27f7793be1ce1fe9ae010635fe8249982565687c094df72"
+      },
+      "statement": "an initial development candidate inventory containing every eligible official first-party Gemma model at a pinned Google catalog freeze, with exact role, source, revision, license/use terms, lineage, artifact, runtime, modality, hardware preflight, applicable tests, and visible non-pass state."
+    },
+    {
       "id": "CL-1A794729D39235C7A368",
       "label": "BUILD",
       "source": {
@@ -1970,6 +2014,17 @@
       "statement": "Use Gemma 4 E4B for quick extraction, summaries, routine file work, and straightforward tool execution."
     },
     {
+      "id": "CL-23FB1A9C73B7B73F4366",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 215,
+        "semantic_sha256": "23fb1a9c73b7b73f436652efe42cb5ef78930964c7bc2ee192bb26e1f96edc9b"
+      },
+      "statement": "Separate deterministic policy decisions, exact effect mediation, verified outcomes, audit reproducibility, and narrow token repeatability in configuration, diagnostics, tests, receipts, and user-facing claims."
+    },
+    {
       "id": "CL-2493805C858517A42B5E",
       "label": "BUILD",
       "source": {
@@ -2144,6 +2199,17 @@
         "semantic_sha256": "2a5ce1fec33b05a08e0b71145b7ffd3b82f9cceb84cb78cbb475794c4594de11"
       },
       "statement": "Release Model Context Protocol support in a read-only phase first; writable tools require a separate threat model, write-transaction integration, adversarial tests, and explicit release gate."
+    },
+    {
+      "id": "CL-2ABF533DA011DFEC57D1",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 195,
+        "semantic_sha256": "2abf533da011dfec57d11db4fa9d18753d13208a57cff0a06f2a83484aace246"
+      },
+      "statement": "Permit other eligible first-party candidates to enter the development inventory through the same provenance, policy, profile, codec, runtime, hardware, quality, security, and evidence gates; retain arbitrary or provenance-incomplete user imports for the post-GA Experimental Model Lab."
     },
     {
       "id": "CL-2B1668160A563637CADC",
@@ -2595,6 +2661,17 @@
         "semantic_sha256": "33ee2e8f9705d128523aa3ec6440c3acb20c73a6970dc3769dbe043254f314e2"
       },
       "statement": "tool-result redaction before results enter model context or logs."
+    },
+    {
+      "id": "CL-33F549F404056A0DC111",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 186,
+        "semantic_sha256": "33f549f404056a0dc111b2f50f82d358952ac1cc1fdce527e6ea5d325cb06d11"
+      },
+      "statement": "Apply Decision 0027's candidate-neutral construction: keep runtime supervision separate from model-family codecs and bind every inference run to one exact model, artifact, tokenizer, template, codec, runtime, quantization, modality, context, decoding, platform, hardware, policy, and evaluation profile."
     },
     {
       "id": "CL-33F65E0764FFA84D69C1",
@@ -3323,6 +3400,17 @@
       "statement": "dependency-change review covering purpose, alternatives, license, provenance, maintenance, vulnerabilities, package size, lockfile effect, and removal plan."
     },
     {
+      "id": "CL-3FDB4A746B3A7ABB31BC",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1526,
+        "semantic_sha256": "3fdb4a746b3a7abb31bcc8a683cdc464c05bfef9df017822e10b1334c7647765"
+      },
+      "statement": "deterministic agent-loop, proposal-parser, classifier-authority, repeated-denial, no-progress, named-terminal-state, restart, and verifier-only completion suites before real-model workspace use."
+    },
+    {
       "id": "CL-3FDC86003F6A36E9FEBD",
       "label": "BUILD",
       "source": {
@@ -3620,6 +3708,28 @@
       "statement": "a complete path census with deterministic identities, classifications, hashes where readable, parser state, terminal disposition, errors, exclusions, and dependent records."
     },
     {
+      "id": "CL-444BCB4C7B6E482DD7B1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1521,
+        "semantic_sha256": "444bcb4c7b6e482dd7b132c9e2e96bc9ee3e9c86d9d3a074ed53a1d89623f415"
+      },
+      "statement": "a Muse-first deep-evaluation lane and a complete role-aware first-party Gemma inventory frozen to exact source-catalog evidence, with other eligible candidates accepted through the same model-neutral intake."
+    },
+    {
+      "id": "CL-445E07E788A730785590",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 217,
+        "semantic_sha256": "445e07e788a7307855908f7426a2531f564af409b6abd67b46d7dfd8c3ab73ab"
+      },
+      "statement": "role-specific Muse/Gemma comparison reports using the same AgentMage harness, fixtures, context policy, tool schemas, budgets, platform, and graders wherever tuples are comparable, while labeling every material difference."
+    },
+    {
       "id": "CL-44A0481A3EE3C65F9166",
       "label": "CAPABILITY GATE",
       "source": {
@@ -3675,6 +3785,17 @@
       "statement": "database configuration and fixture connections only for synthetic tests, not live access."
     },
     {
+      "id": "CL-459E8AA3D22EFF8F5275",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 263,
+        "semantic_sha256": "459e8aa3d22eff8f52756a25ab998a2c32eaa563d2e06ea1a25b0bbffdf5e00d"
+      },
+      "statement": "On interruption or restart, revalidate task, snapshot, policy, model profile, context packet, pending authority, in-flight effect, and verifier state; never replay a consumed grant or assume a timed-out effect did not occur."
+    },
+    {
       "id": "CL-45D1F4E6E54B6B8D3F6B",
       "label": "BUILD",
       "source": {
@@ -3684,6 +3805,17 @@
         "semantic_sha256": "45d1f4e6e54b6b8d3f6b5beb8b576bccb49ac5805242e8e13d2f1399074ce237"
       },
       "statement": "an abstract `Tool` interface for registered, schema-validated capabilities."
+    },
+    {
+      "id": "CL-45ECF661043FD21F6362",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1525,
+        "semantic_sha256": "45ecf661043fd21f6362f72f52694c6176959a3b32803d04580db3d1971a5a08"
+      },
+      "statement": "pass-at-one, pass-at-k, pass-to-the-k, confidence-interval, variance, tool-validity, false-completion, latency, memory, cancellation, and user-intervention reporting without merging incomparable tuples."
     },
     {
       "id": "CL-45FC04D71DD49D3E4D1D",
@@ -4344,6 +4476,17 @@
         "semantic_sha256": "512f9fb4405e94e156b0b3034cd29e35121cd09efed587e928761266f1584c88"
       },
       "statement": "source-pinned evidence cards with parser facts, neighboring interfaces, tests, model/runtime identity, assumptions, uncertainty, conflicts, confidence, and reverse dependencies."
+    },
+    {
+      "id": "CL-5135C729908EBFE1C041",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 191,
+        "semantic_sha256": "5135c729908ebfe1c041f7498fcc6e4ec938539180f64cf8a83bfbc7f67a2b53"
+      },
+      "statement": "Muse Glimmer first through an exact first-party text-only artifact, pinned native llama.cpp build, one inference slot, zero egress, no workspace/tool/grant/credential authority, no vision, no speculative draft, synthetic data, and bounded 8k context before separately measured 16k and 32k profiles."
     },
     {
       "id": "CL-5155BD7245188B7E07AB",
@@ -5116,6 +5259,17 @@
       "statement": "alternative generation that compares at least two viable approaches when architecture, access, cost, or irreversible choices are involved."
     },
     {
+      "id": "CL-5D3B17CEB310F32828BB",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 196,
+        "semantic_sha256": "5d3b17ceb310f32828bbc1e2ae3148306d008cc0fafd95583257f973c972200c"
+      },
+      "statement": "Keep one large active model and one inference slot by default until a separately measured concurrency or routing profile passes; Muse focus does not authorize hidden model switching."
+    },
+    {
       "id": "CL-5D9F0B1EA0B0D3679BBD",
       "label": "VERIFY",
       "source": {
@@ -5457,6 +5611,17 @@
       "statement": "a redacted portable evidence bundle containing claims, evidence states, citations, receipts, methods, model manifests, constraints, and approved excerpts needed to review or continue work without copying the full private session."
     },
     {
+      "id": "CL-6240C4D8C013ED8F6FB3",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 301,
+        "semantic_sha256": "6240c4d8c013ed8f6fb3c1112664abe4a4dc9466cd736bf22edcaf2efb288773"
+      },
+      "statement": "deterministic policy invariance under model, prompt, packet-order, classifier-score, confidence, candidate-profile, and explanation mutations; require zero authority or completion change unless a typed policy fact changes."
+    },
+    {
       "id": "CL-626F4B76BED189F1A994",
       "label": "DEFER",
       "source": {
@@ -5523,6 +5688,17 @@
       "statement": "local JSON Lines export generated from canonical records using a non-executable versioned schema, hashes, and encryption; exclude file contents and secrets unless the user explicitly includes them."
     },
     {
+      "id": "CL-62D524575507ADAE2CAA",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 216,
+        "semantic_sha256": "62d524575507adae2caa2b836ab72de8e0f0fe8f9b015053d0f9d02b5615fc66"
+      },
+      "statement": "exact comparison manifests and repeated-trial reports containing artifact, tokenizer, template, codec, runtime, sampler order, seed, reasoning, context, slot, draft, vision, platform, hardware, driver, prompt, tool, grader, resource, and corpus identities."
+    },
+    {
       "id": "CL-6346EE9056F6E284A999",
       "label": "BUILD",
       "source": {
@@ -5587,6 +5763,17 @@
         "semantic_sha256": "646232cc45a08dedf624598c0447f1b99dbddb98c02ec0557e125a81fc52de79"
       },
       "statement": "complete work-item-to-release and incident-to-rollback workflows across the first-GA reference adapter matrix with exact cross-system identity and no hidden authority."
+    },
+    {
+      "id": "CL-6476B54487FA5B634801",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 188,
+        "semantic_sha256": "6476b54487fa5b634801ef7d5612a5b7a7a16c775645eaa9c902dffdd3047153"
+      },
+      "statement": "Preserve the existing Gemma-specific rows as historical candidate requirements while using `AM-MDL-004` through `AM-MDL-007` as the model-neutral product direction; no old rejected result becomes an approval."
     },
     {
       "id": "CL-649F7B17A0ED6A9A517D",
@@ -5994,6 +6181,17 @@
         "semantic_sha256": "6d1b09bdb3fe5911eaa6af1fe292af686d966fc792e860ece95ac5c67aaf4605"
       },
       "statement": "an instruction-provenance record containing workspace-relative path, content hash, discovered scope, trust decision, conflicts, and citations used in the current task."
+    },
+    {
+      "id": "CL-6D38C47E740EF35F1E34",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1A. Model Routing and Local Resource Management",
+        "line": 218,
+        "semantic_sha256": "6d38c47e740ef35f1e34f0e7967ee5155c92823ccc3e2eb217ef3ca4b51b5eab"
+      },
+      "statement": "Require explicit user selection for every admitted profile in the initial product path and leave Sprint 49 as the first eligible automatic measured-routing gate."
     },
     {
       "id": "CL-6D82127173D7C47A43BD",
@@ -6634,6 +6832,17 @@
       "statement": "authenticated named-pipe IPC with user, logon-session, integrity-level, executable, package, protocol, sequence, and launch-challenge validation."
     },
     {
+      "id": "CL-77DE5ED9104F8732798F",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 260,
+        "semantic_sha256": "77de5ed9104f8732798f87011bcd9539f277bcbb682000f7683b2b71936e292f"
+      },
+      "statement": "Make `SUCCESS` and independently verified `NO_OP` the only successful terminal states; retain `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`, and `FAILED` as explicit non-success results."
+    },
+    {
       "id": "CL-77ED5127FBF6F39A3323",
       "label": "BUILD",
       "source": {
@@ -6687,6 +6896,17 @@
         "semantic_sha256": "7892c98cd0a4500dc9f4fc37e4486e1bb2ec6b8cdd8444d835abf25a0a7e7e12"
       },
       "statement": "a scope guard that rejects actions outside the active workspace or user-approved task."
+    },
+    {
+      "id": "CL-78B5D6DADAC51A2171FF",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31A. Capability, Model, and Recovery Evaluation",
+        "line": 1524,
+        "semantic_sha256": "78b5d6dadac51a2171ffd53384937343ea594c1027c8f04183cd9632888e89ce"
+      },
+      "statement": "separate first-party quality and diagnostic-repeatability trials with at least four stochastic trials where applicable, deterministic graders first, independently identified model judges only when necessary, and no self-grading completion path."
     },
     {
       "id": "CL-78C42BB18AAA915F0632",
@@ -6786,6 +7006,17 @@
         "semantic_sha256": "7ad49966712538726e83029fe48b1ffdfd8e9b3fa87b9b1c403272b81bc21770"
       },
       "statement": "`openssl` for certificates, hashes, and cryptographic inspection."
+    },
+    {
+      "id": "CL-7AEB12BFEF4612C64C68",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 299,
+        "semantic_sha256": "7aeb12bfef4612c64c680952d88c10d6d5a061abd961819ec252aa0e2429cc11"
+      },
+      "statement": "Treat low confidence, truncation, disagreement, unavailable classification, and out-of-distribution input as a narrower boundary, user decision, or blocked result rather than a permissive default."
     },
     {
       "id": "CL-7AEE1F65318BD3E9503D",
@@ -7129,6 +7360,17 @@
       "statement": "Reject automatic download, installation, enabling, updating, or execution of public plugins, skills, hooks, agent packages, models, or capability bundles."
     },
     {
+      "id": "CL-8096FB301BC10FC0A5AB",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 189,
+        "semantic_sha256": "8096fb301bc10fc0a5ab5604135245834cb888a915663254daa8ced577ea42fc"
+      },
+      "statement": "a deterministic fake-model adapter and fake Muse, Gemma, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion codecs before loading a real model artifact."
+    },
+    {
       "id": "CL-80AB679606C745C09987",
       "label": "CAPABILITY GATE",
       "source": {
@@ -7149,6 +7391,17 @@
         "semantic_sha256": "80bea5374f6d786ce3b5188700a5953a4a61a1ffea41d46848f9e7eaba65f250"
       },
       "statement": "optional parallel read-only review for independent questions, followed by one controlled reconciliation step."
+    },
+    {
+      "id": "CL-80C2126AE28E6E29F25E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 259,
+        "semantic_sha256": "80c2126ae28e6e29f25e7f907ba160df29df756fa65ee2080c76323e704a7ff1"
+      },
+      "statement": "Persist the loop states intake, snapshot, classify, plan, validate, authorize, execute, observe, verify, wait-for-user, and every terminal result without allowing model output to transition directly into effect or success."
     },
     {
       "id": "CL-811C08F7306D136861A2",
@@ -8482,6 +8735,17 @@
       "statement": "page-image comparison for layout quality assurance."
     },
     {
+      "id": "CL-96BF7395D8D625684251",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 193,
+        "semantic_sha256": "96bf7395d8d62568425147b53b72ac8754cf009c406bf4f624fc142240850fb4"
+      },
+      "statement": "general/coding, function/tool, safety, embedding, multimodal, specialist, research, and legacy Gemma profiles only against role-appropriate suites; never silently promote a safety, embedding, specialist, or legacy profile into the coding-planner role."
+    },
+    {
       "id": "CL-96EA010364D03D48D0D6",
       "label": "DEFER",
       "source": {
@@ -9120,6 +9384,17 @@
       "statement": "per-worktree records for task identity, source commit, branch, owner, grants, file ownership, active processes, resource budgets, retention, cleanup, and final disposition."
     },
     {
+      "id": "CL-A3AF665A1104C572DE84",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 187,
+        "semantic_sha256": "a3af665a1104c572de8471d7731228934290ff6cdb46dd6a660c4bdc1d066e99"
+      },
+      "statement": "Treat every complete or streamed model response as an untrusted proposal; require a closed schema and exact session, task, turn, model-run, context-packet, snapshot, tool-catalog, proposal, and correlation identity before kernel consideration, and keep malformed, partial, stale, duplicate, oversized, unknown-field, or ambiguous output inert."
+    },
+    {
       "id": "CL-A3CCBB6665F6ABF53B84",
       "label": "BUILD",
       "source": {
@@ -9129,6 +9404,17 @@
         "semantic_sha256": "a3ccbb6665f6abf53b84731fcab61e9b47ef1c3a3e88c2b416a962137455739b"
       },
       "statement": "a fictional Git repository with tests and one deliberate defect."
+    },
+    {
+      "id": "CL-A3E523B2C605EC386CC4",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 297,
+        "semantic_sha256": "a3e523b2c605ec386cc49ded17eba6dbe1e19876c07b379ba598effcc86f813a"
+      },
+      "statement": "Classify data sensitivity, action risk, and model capability as separate dimensions; only deterministic policy over typed current facts can decide eligibility and required authority."
     },
     {
       "id": "CL-A3EC6BB837BBA3BC6FE3",
@@ -9813,6 +10099,17 @@
       "statement": "accessibility review for user-interface changes using repository standards and deterministic checks where available."
     },
     {
+      "id": "CL-B00709CD2431E3332F7F",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 298,
+        "semantic_sha256": "b00709cd2431e3332f7ff564eea584a5af2b7d3292f85c12b715c2dd693e3188"
+      },
+      "statement": "Permit learned or model-based classifiers only to deny, remove tools, narrow scope, require redaction or isolation, or escalate to the user; prohibit classifier-created grants, denial overrides, prohibited destinations, model switches, or completion state."
+    },
+    {
       "id": "CL-B00E0550A49A74931814",
       "label": "BUILD",
       "source": {
@@ -9890,6 +10187,17 @@
       "statement": "event forgery, replay, duplication, omission, reordering, cursor loss, backfill, clock skew, rate limit, revocation, outage, partition, and restart."
     },
     {
+      "id": "CL-B0B0B7D712AA57C09E5A",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 194,
+        "semantic_sha256": "b0b0b7d712aa57c09e5a02efaa1a0ba39e116bfc2dd63a7afcc02ea7f62fb634"
+      },
+      "statement": "record `BLOCKED-HARDWARE` for an exact profile that cannot run within a declared reference-machine envelope instead of silently omitting it or treating the result as family-wide rejection."
+    },
+    {
       "id": "CL-B174F78398785419B204",
       "label": "BUILD",
       "source": {
@@ -9954,6 +10262,17 @@
         "semantic_sha256": "b1b8398a4e28278828cc03f8bcc4cb817c9b84f3dcd7fd05ec9f6af563019bde"
       },
       "statement": "a tamper-evident local action ledger using append-only records, chained hashes, and a per-session keyed integrity anchor stored outside the ledger; do not describe chained hashes alone as immutable."
+    },
+    {
+      "id": "CL-B1C81A51F962DAEAA072",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 262,
+        "semantic_sha256": "b1c81a51f962daeaa0723761fcb9dd1a3a86c831c630367bfc0b4fad28f54a21"
+      },
+      "statement": "turn, token, context, retry, parser-failure, denial, repeated-proposal, tool, effect, elapsed-time, resource, and no-progress ceilings enforced outside the model."
     },
     {
       "id": "CL-B25B0D7262F87DA647A2",
@@ -10350,6 +10669,17 @@
         "semantic_sha256": "bb11340835827bf61cbbdde30de1878214679443bca0361979ec45c45344c1ac"
       },
       "statement": "exact effect previews containing actor, target, object, payload, attachment, visibility, source revision, environment, expected state change, cost or budget, and recovery path where applicable."
+    },
+    {
+      "id": "CL-BB1149CA410ED9D4D3B1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 190,
+        "semantic_sha256": "bb1149ca410ed9d4d3b13bf1dbd127d337ec495dbe6b85c967b97f76ea0dc858"
+      },
+      "statement": "first-party Muse Glimmer and Gemma family codecs behind the common proposal contract, including exact chat template, tokenizer, reasoning control, tool protocol, message boundary, end token, streaming, and error semantics."
     },
     {
       "id": "CL-BB1F3CC09FC7F9638648",
@@ -10977,6 +11307,17 @@
         "semantic_sha256": "c5343e442a6a0ce8b29811ae753c10369d2bada50918893bbe298412a322a2e9"
       },
       "statement": "a capability matrix stating what the local agent can do, cannot do, and has not yet been tested to do."
+    },
+    {
+      "id": "CL-C574ED1E737B138A663E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 264,
+        "semantic_sha256": "c574ed1e737b138a663ebae125abc3bd6e0ceddf8c7dcb6cb699ea7a64ee179d"
+      },
+      "statement": "a verifier registry that prefers exact state, hash, schema, compiler, test, linter, policy, or provider field truth and keeps any model judge separately identified, authority-free, and unable to approve its own work."
     },
     {
       "id": "CL-C5A792270175C7C2AB24",
@@ -11780,6 +12121,17 @@
         "semantic_sha256": "d56022a3b70b86ee74c087a03ba6cc7df2c6ac7b9a73b410bd4f286f2354028f"
       },
       "statement": "a rule that partial validation cannot be reported as a full repository pass."
+    },
+    {
+      "id": "CL-D575B88F121DACBD735C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2B. Reasoning, Verification, and Decision Quality",
+        "line": 300,
+        "semantic_sha256": "d575b88f121dacbd735c355046a7833d1cf6c190a845e4e2b709fe6f3a65a1b2"
+      },
+      "statement": "continuous reclassification before each new boundary for newly read files, attachments, command output, test logs, patches, diffs, messages, connector results, summaries, diagnostics, backups, and exports."
     },
     {
       "id": "CL-D590F85A03480B145EDC",
@@ -13355,6 +13707,17 @@
       "statement": "a large vector database until measured retrieval failures justify it."
     },
     {
+      "id": "CL-F53AD98E8A53E88854E6",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 261,
+        "semantic_sha256": "f53ad98e8a53e88854e6cfbb8730cbf3fb7626d46e7e7d3b1e0ea189d7d7302d"
+      },
+      "statement": "deterministic no-progress detection over observable evidence, accepted plan change, authorized state change, or verifier result rather than additional model prose."
+    },
+    {
       "id": "CL-F589DA7A24A703D59D2B",
       "label": "BUILD",
       "source": {
@@ -13884,8 +14247,8 @@
     }
   ],
   "counts": {
-    "checklist": 1262,
-    "requirements": 229
+    "checklist": 1295,
+    "requirements": 241
   },
   "policy": {
     "mode": "additions_only",
@@ -13948,6 +14311,25 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Implement a versioned provider-adapter SDK, lifecycle, capability-level model, support-matrix schema, event contract, removal contract, and conformance harness."
+    },
+    {
+      "acceptance_tests": [
+        "AT-AGENT-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-AUT-001",
+        "AM-DAT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-AGT-001",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Implement a persisted deterministic agent state machine with bounded progress, named success and non-success terminal states, exact proposal identity, restart reconciliation, and verifier-only completion so model text, confidence, classifiers, and model judges cannot grant authority or convert uncertainty, exhaustion, error, or cancellation into success."
     },
     {
       "acceptance_tests": [
@@ -15029,6 +15411,81 @@
     },
     {
       "acceptance_tests": [
+        "AT-MODEL-003"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-PLT-001",
+        "AM-NET-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MDL-004",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Implement a candidate-neutral `LocalModelRuntime`, model-family codec, exact profile, and closed untrusted proposal boundary so Muse, Gemma, and later eligible models share runtime, authority, context, cancellation, resource, and evidence contracts without model-specific kernel branches."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MODEL-004"
+      ],
+      "dependencies": [
+        "AM-MDL-004",
+        "AM-MDL-006",
+        "AM-MDL-007",
+        "AM-AGT-001"
+      ],
+      "disposition": "verify",
+      "id": "AM-MDL-005",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Establish Muse Glimmer as the primary deep-evaluation candidate; inventory and run role-appropriate preflight and tests for every eligible official first-party Gemma model at a pinned catalog freeze; and admit other eligible candidates through the same exact profile and evidence contract without pre-approval, silent omission, or automatic activation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MODEL-005"
+      ],
+      "dependencies": [
+        "AM-MDL-004"
+      ],
+      "disposition": "build",
+      "id": "AM-MDL-006",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Separate first-party-recommended quality profiles from exact diagnostic-repeatability profiles and record the complete artifact, tokenizer, template, codec, runtime, sampler, seed, context, hardware, driver, tool, and evaluation tuple without claiming universal model determinism."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CLASS-001"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-AUT-001",
+        "AM-PRV-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MDL-007",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Classify data sensitivity, action risk, and model capability separately; apply deterministic deny-first policy over typed facts; and constrain probabilistic or learned classifiers to deny, narrow, redact, isolate, or escalate without granting authority, overriding a denial, selecting a prohibited destination, switching models, or establishing completion."
+    },
+    {
+      "acceptance_tests": [
         "AT-MGR-001"
       ],
       "dependencies": [
@@ -15670,6 +16127,25 @@
     },
     {
       "acceptance_tests": [
+        "AT-VSC-003"
+      ],
+      "dependencies": [
+        "AM-KRN-001",
+        "AM-MDL-004",
+        "AM-MDL-005"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-003",
+      "kind": "product_requirement",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Executable v0.1 Backlog"
+      },
+      "title": "Discover and display only exact admitted local profiles in the native Visual Studio Code model picker, with Muse-first evaluation focus, manual selection, visible profile/runtime/limit identity, zero hard-coded model prerequisite, and no automatic substitution or activation."
+    },
+    {
+      "acceptance_tests": [
         "AT-WEB-001"
       ],
       "dependencies": [
@@ -15851,6 +16327,19 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Run the adapter lifecycle and capability-level suite against fake, fault, reference, future-version, and malicious providers."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-AGENT-001",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Drive the persisted loop with fake clocks, models, tools, workers, verifiers, interruptions, restarts, no-progress sequences, parser failures, denials, uncertain effects, budget exhaustion, cancellation, false completion, and every allowed state transition."
     },
     {
       "acceptance_tests": [],
@@ -16111,6 +16600,19 @@
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix"
       },
       "title": "Pause, crash, restart, restore, change, delete, rename, reclassify, or reparse inputs at every audit stage and mutate scope, parser, model, runtime, policy, graph, checkpoint, and reverse-dependency records."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CLASS-001",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Mutate typed sensitivity, action-risk, capability, actor, autonomy, operation, source, destination, path, repository, credential, disclosure, reversibility, budget, classifier output, confidence, truncation, availability, disagreement, profile, packet order, and model explanation across at least 5,000 deterministic-policy cases and 1,000 semantic-classifier cases."
     },
     {
       "acceptance_tests": [],
@@ -16662,6 +17164,45 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-MODEL-003",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Run the candidate-neutral runtime and proposal conformance corpus against deterministic fake, Muse-family, Gemma-family, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion adapters across exact tokenizer, template, reasoning, tool, message-boundary, end-token, streaming, context, cancellation, and resource cases."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MODEL-004",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Freeze the eligible first-party source catalogs; deeply evaluate exact Muse Glimmer profiles; inventory every eligible official first-party Gemma model; assign role-specific suites; preflight hardware; and evaluate additional eligible candidates through the same profile contract."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MODEL-005",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Execute first-party-recommended quality and diagnostic-repeatability profiles over pinned comparable corpora with repeated stochastic trials and exact model, artifact, tokenizer, template, codec, runtime, sampler, seed, reasoning, context, slot, speculation, vision, hardware, driver, prompt, tool, grader, and resource manifests."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-MTH-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -17125,6 +17666,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-VSC-003",
+      "kind": "acceptance_test",
+      "release": "v0.1",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "31B. v0.1 Quantitative Acceptance Matrix"
+      },
+      "title": "Discover candidate, evaluating, approved, degraded, quarantined, rejected, retired, incompatible, and blocked model fixtures through the native Visual Studio Code provider surface while mutating profile identity, runtime, limits, status, selection, availability, and activation state."
     },
     {
       "acceptance_tests": [],

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
+| Status | Pre-alpha scaffold; stabilization sequence closed, numbered roadmap resumed under Decision 0021, and future model work reconciled under Decision 0027 |
 | Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
 | Scope | Complete AgentMage roadmap from foundation through expanded v1.0 GA closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
@@ -33,12 +33,15 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive.
 
-The complete 17-epic, 169-sprint, 229-requirement plan below remains the
+The complete 17-epic, 169-sprint, 241-requirement plan below remains the
 granular execution authority for the accepted target product. It is preserved,
 not cancelled or renumbered. Decision 0021 resumes execution at the first
 authoritative incomplete dependency gate. Decision 0026 appends the Proton
 Calendar confirmed-UI requirement and Story 139.2 inside the existing
-productivity capability family without changing dependency order.
+productivity capability family without changing dependency order. Decision
+0027 appends candidate-neutral model, Muse-first evaluation, role-aware Gemma,
+classifier-authority, agent-state, and admitted-picker work inside existing
+future sprints without changing current zero-model truth or any completed item.
 
 ## Planning Hierarchy and Numbering
 
@@ -71,6 +74,7 @@ productivity capability family without changing dependency order.
 | Current documentation and machine architecture conflated planned, scaffolded, tested, enabled, and shipped states. | Accepted stabilization decision | Apply `docs/decisions/0012-stabilization-truth-and-status-model.md`: use `architecture/status-model.json` for current truth, freeze new capability families, and pause the numbered roadmap until the final stabilization resumption gate passes. |
 | Real product-boundary fuzzing requires a separately supervised security session and would become stale while active boundaries continue to change. | Accepted sequencing decision | Apply `docs/decisions/0025-final-manual-fuzz-campaign.md`: keep `RM-024`, every affected `RV-15` result, and final `G-GA` open; run all non-fuzz verification during development and execute the bound real-fuzz campaign after first-GA surfaces freeze but before Sprint 166 closes. |
 | Proton Calendar lacks an admitted structured write path while direct invitations and email-first event confirmation remain required user workflows. | Accepted scope refinement | Apply `docs/decisions/0026-proton-calendar-confirmation-workflow.md`: append `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2; require structured providers where available and confine Proton Calendar to a visible, user-authenticated, versioned, confirmed-UI adapter with exact postcondition reconciliation. |
+| Rejected Gemma feasibility records and future E4B-specific sprint wording conflicted with the desired Muse-first, model-neutral architecture and exact determinism claims. | Accepted architecture refinement | Apply `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md`: preserve all completed work and stable requirements; append `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their tests; reconcile Sprints 12-15, 23, 49, 163-166; evaluate Muse first and every eligible official first-party Gemma profile by role; and keep all candidates disabled until exact admission passes. |
 
 ### Blocked Platform Lane
 
@@ -163,11 +167,11 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-10` Retention, backup, and sanitization | Sprint 11 | Every durable store and Sprint 25 |
 | `RV-11` Prompt injection and authority escalation | Sprint 17 | Every new untrusted-content or tool surface and Sprint 25 |
 | `RV-12` Grant mutation and replay | Sprint 5 | Every authority-bearing capability and Sprint 25 |
-| `RV-13` Model and runtime provenance | Sprint 13 | Every model, quantization, runtime, image, or adapter change and Sprint 25 |
-| `RV-14` Model quality and evidence integrity | Sprint 13, extended in Sprint 15 | Every model/profile change and Sprint 25 |
+| `RV-13` Model and runtime provenance | Sprint 13 | Every model, artifact, tokenizer, template, codec, quantization, context, decoding, runtime, image, hardware/driver, or adapter change and Sprint 25 |
+| `RV-14` Model quality and evidence integrity | Sprint 13, extended across Sprints 14-15 | Every model/profile/evaluation change, every changed quality or repeatability tuple, and Sprint 25 |
 | `RV-15` Fuzzing and malformed input | Sprint 2 harness/corpus foundation | Continuous at every parser, IPC, model-output, path, and FFI boundary; Sprint 25 |
 | `RV-16` Resource exhaustion and cancellation | Sprint 15 | Every model/runtime/tool resource-policy change and Sprint 25 |
-| `RV-17` Crash recovery and state integrity | Sprint 22 | Every durable-state transition and Sprint 25 |
+| `RV-17` Crash recovery and state integrity | Sprint 12 for agent-state transitions; Sprint 22 for integrated durable resume | Every durable-state or terminal-state transition and Sprint 25 |
 | `RV-18` Audit completeness and redaction | Sprint 21 | Every event/schema/export change and Sprint 25 |
 | `RV-19` Vulnerability and supply-chain review | Sprint 3 for source/build inputs | Sprint 25 for shipped packages and models |
 | `RV-20` Accessibility | Sprint 23 | Every user-facing surface and Sprint 25 |
@@ -191,7 +195,7 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-38` Credential broker isolation and lifecycle | Sprint 158 | Every credential-store, identity, provider, worker, rotation, restore, or removal change and Sprint 166 |
 | `RV-39` Encrypted continuity and disaster recovery | Sprints 161-162 | Every snapshot, encryption, provider, restore, retention, deletion, or recovery change and Sprint 166 |
 | `RV-40` Approved catalog and chat-guided model management | Sprints 163-164 | Every catalog, installer, model, runtime, platform, activation, rollback, or removal change and Sprint 166 |
-| `RV-41` Muse Glimmer candidate admission | Sprint 165 | Every Muse identity, license, provenance, artifact, runtime, quality, security, support, or disposition change and Sprint 166 |
+| `RV-41` Muse-first and role-aware candidate admission | Sprints 13-15 for early evidence; Sprint 165 for final disposition | Every Muse or eligible Gemma identity, role, license, provenance, artifact, tokenizer, codec, runtime, context, decoding, quality, repeatability, security, hardware, support, or disposition change and Sprint 166 |
 | `RV-42` Experimental Model Lab isolation and promotion | Sprint 167 | Every post-GA lab artifact, authority, resource, promotion, or removal change and Sprint 168 |
 | `RV-43` Trusted-operations removal and superseding first-GA closure | Sprint 165 | Every trusted-operations capability lifecycle change and Sprint 166 |
 | `RV-44` Repository census and coverage truth | Sprints 157 and 159 | Every scope, path, source-control, census, exclusion, or coverage change and Sprint 166 |
@@ -1055,7 +1059,7 @@ claims.
 
 **Sprint goal:** Implement the bounded single-agent control loop and truthful user-visible work behavior.
 
-**Source coverage:** inventory Sections 2, 2A, 2B, 3, and 11; `AM-KRN-001`, `AM-SES-001` foundations.
+**Source coverage:** inventory Sections 1, 1A, 2, 2A, 2B, 3, and 11; `AM-KRN-001`, `AM-SES-001`, `AM-AGT-001`, `AM-MDL-007`; `AT-AGENT-001`, `AT-CLASS-001`; Decision 0027.
 
 **Dependencies:** Sprint 11; legacy dependency record: Sprint 4 (legacy S-004), Sprint 5 (legacy S-005), Sprint 11 (legacy S-011).
 
@@ -1092,6 +1096,68 @@ claims.
 - [ ] **Story AC 12.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the single-agent loop remains within declared turns, tools, resources, context, and stop conditions, and no plan or natural-language text can broaden capability.
 - [ ] **Story AC 12.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every final response distinguishes completed, failed, blocked, unknown, and not-run work and resolves material claims to current evidence.
 
+#### [ ] Story 12.2 - Deterministic Agent State, Classification, and Completion
+
+**User-facing value:** As a user and reviewer, I need every model proposal to remain inside a persisted, bounded state machine so that uncertain classification, persuasive prose, interruption, or false completion can never create authority or success.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 12.2.1 - Define the persisted control and terminal-state contracts**
+  - [ ] **Sub-task 12.2.1.1:** Define legal transitions for observation, proposal, validation, clarification, approval, execution, verification, checkpoint, and the terminal states `SUCCESS`, verified `NO_OP`, `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`, and `FAILED`.
+  - [ ] **Sub-task 12.2.1.2:** Bind each proposal to schema, proposal, session, task, turn, model-run, context-packet, repository-snapshot, tool-catalog, policy, and correlation identities; keep malformed, partial, duplicate, stale, replayed, oversized, unknown-field, or ambiguous proposals inert.
+  - [ ] **Sub-task 12.2.1.3:** Enforce turn, token, context, retry, denial, tool, effect, elapsed-time, resource, and repeated-no-progress ceilings with one exact terminal result.
+  - [ ] **Sub-task 12.2.1.4:** Implement a deterministic verifier registry whose typed postcondition records are the only route to `SUCCESS` or verified `NO_OP`; reject model prose, confidence, self-review, model-judge output, and classifier output as completion evidence.
+  - [ ] **Sub-task 12.2.1.5:** Reconcile interruption and restart against current task, snapshot, policy, selected profile, pending authority, consumed grants, receipts, and uncertain effects before another transition.
+
+- [ ] **Task 12.2.2 - Separate deterministic policy from learned classification**
+  - [ ] **Sub-task 12.2.2.1:** Define separate closed schemas for data sensitivity, action risk, model capability, deterministic policy facts, and advisory classifier results.
+  - [ ] **Sub-task 12.2.2.2:** Run static secret, path, executable-content, destination, repository-state, credential-class, disclosure, reversibility, network, budget, and exact-authority checks before semantic classification where applicable.
+  - [ ] **Sub-task 12.2.2.3:** Restrict learned or model-based classifiers to `deny`, `narrow`, `redact`, `isolate`, or `escalate`; prohibit grant creation/widening, denial override, prohibited-destination selection, model switching, execution, or completion.
+  - [ ] **Sub-task 12.2.2.4:** Map low confidence, truncation, disagreement, unavailable classification, out-of-distribution input, timeout, and malformed output to a narrower boundary, user decision, or `BLOCKED` state.
+  - [ ] **Sub-task 12.2.2.5:** Reclassify newly read content, tool output, patches, diffs, messages, attachments, connector results, summaries, diagnostics, and export payloads before their next trust boundary.
+
+- [ ] **Task 12.2.3 - Produce reviewable artifacts**
+  - [ ] **Sub-task 12.2.3.1:** Versioned agent-state, proposal-identity, terminal-state, no-progress, and verifier schemas plus legal-transition diagrams.
+  - [ ] **Sub-task 12.2.3.2:** Deterministic policy fact table, learned-classifier output schema, authority matrix, failure map, and reclassification trigger inventory.
+  - [ ] **Sub-task 12.2.3.3:** Restart, uncertain-effect, consumed-grant, false-completion, classifier-disagreement, and no-progress evidence corpus.
+
+- [ ] **Task 12.2.4 - Verify and close the story**
+  - [ ] **Sub-task 12.2.4.1:** `D027-S12-STATE` exercises every legal and illegal transition, terminal state, ceiling, duplicate/replayed proposal, and false-completion path; require one deterministic state and no unverified success.
+  - [ ] **Sub-task 12.2.4.2:** `D027-S12-POLICY` runs at least 5,000 seeded deterministic fact mutations across actor, session, task, autonomy, operation, source, destination, path, repository state, credential, label, reversibility, network, disclosure, budget, and authority; require identical deny-first decisions for identical facts.
+  - [ ] **Sub-task 12.2.4.3:** `D027-S12-CLASSIFIER` runs at least 1,000 advisory-classifier outputs including allow-like text, low confidence, disagreement, truncation, timeout, malformed output, and attempted escalation; require zero broader authority or completion.
+  - [ ] **Sub-task 12.2.4.4:** `D027-S12-RESTART` crashes before and after every state, grant, worker, receipt, verifier, and terminal transition; require exact reconciliation, no grant replay, no duplicate effect, and no false success.
+  - [ ] **Sub-task 12.2.4.5 - Product security evidence:** Complete `AT-AGENT-001` and `AT-CLASS-001`; map `SR-ACC-001`, `SR-AI-003`, `SR-AI-005`, `SR-AI-007`, `SR-AI-015`, `SR-AI-017`, `SR-AI-018`, `SR-OPS-001`, and the agent-state portion of `RV-17`; retain raw seeds, transition coverage, denial invariance, classifier traces, verifier evidence, and restart receipts.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 12.2.AC1:** Given any model proposal, classifier output, confidence value, or model-judge conclusion, when the kernel evaluates authority and completion, then none can broaden a deterministic policy decision or produce success without a current verifier result.
+- [ ] **Story AC 12.2.AC2:** Given identical typed policy facts and any changed model, prompt, packet order, or classifier result, when policy is recomputed, then the deterministic grant and denial outcome is identical or narrower.
+- [ ] **Story AC 12.2.AC3:** Given interruption, restart, no progress, exhaustion, uncertainty, cancellation, or an ambiguous effect, when the state machine resumes or terminates, then it selects the exact named non-success state, replays no grant, and claims no unverified completion.
+
+#### [ ] Story 12.3 - Decision-Aware Planning Validation
+
+**User-facing value:** As a maintainer or reviewer, I need accepted additive decisions to update planning truth without weakening historical protections so the repository can recognize new requirements while still rejecting silent deletion, mutation, renumbering, or unsupported scope claims.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 12.3.1 - Replace stale fixed assumptions with accepted machine truth**
+  - [ ] **Sub-task 12.3.1.1:** Replace the fixed `229` stable-requirement and `26` normative-statement expectations with validation derived from the accepted requirement registry, additions-only baseline, normative map, status model, and an explicit accepted-decision record; retain fixed epic and sprint counts unless a later accepted decision changes them.
+  - [ ] **Sub-task 12.3.1.2:** Replace stale model-family wording checks with decision-aware current-boundary checks that preserve historical Decision 0001 text while recognizing Decision 0027's explicit product-direction supersession.
+  - [ ] **Sub-task 12.3.1.3:** Keep every existing fail-closed protection for missing, duplicate, mutated, reordered, or renumbered stable requirements; reject a count change that lacks an accepted additive decision and reconciled machine artifacts.
+  - [ ] **Sub-task 12.3.1.4:** Generate a validation report that names the accepted decision, previous and current counts, appended identifiers, preserved identifiers, superseded assumptions, source hashes, and every executed negative control.
+
+- [ ] **Task 12.3.2 - Verify and close the story**
+  - [ ] **Sub-task 12.3.2.1:** `D027-S12-SCOPE` validates the exact Decision 0027 baseline of 241 stable records, 30 normative statement mappings, 17 epics, and 169 sprints, then independently recomputes all four values from canonical sources.
+  - [ ] **Sub-task 12.3.2.2:** Mutate, delete, duplicate, reorder, or renumber one preserved record at a time and add an unapproved record; require every case to fail without changing the accepted baseline.
+  - [ ] **Sub-task 12.3.2.3:** Remove or corrupt the Decision 0027 approval, appended-ID set, status count, supersession boundary, or generated registry linkage; require a precise validation failure rather than acceptance through count agreement alone.
+  - [ ] **Sub-task 12.3.2.4:** Run Markdown, Mermaid, documentation, registry, additions-only, normative coverage, schema, policy, and traceability checks from a clean checkout; require one coherent pass with no ignored or waived failure.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 12.3.AC1:** Given the accepted Decision 0027 sources, all 241 stable records, and all 30 normative mappings, when planning validation runs, then it derives and reconciles the current counts and passes without weakening preservation of the prior 229 records and 26 mappings.
+- [ ] **Story AC 12.3.AC2:** Given a stable-record mutation or an unsupported additive count change, when planning validation runs, then it fails closed with the exact changed identity and cannot be satisfied by editing only the reported count.
+- [ ] **Story AC 12.3.AC3:** Given preserved historical Gemma wording and the accepted Decision 0027 supersession boundary, when current model-direction validation runs, then it recognizes the model-neutral direction without deleting history or requiring a rejected model family for release.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 12.AC1:** Only one plan step can be in progress.
@@ -1099,56 +1165,61 @@ claims.
 - [ ] **Sprint AC 12.AC3:** New user messages correctly replace, extend, or query status without corrupting the active task.
 - [ ] **Sprint AC 12.AC4:** Adversarial prompts cannot make the runtime claim unperformed work.
 - [ ] **Sprint AC 12.AC5:** Bounded loops terminate on completion, denial, failure, exhaustion, clarification, or cancellation.
+- [ ] **Sprint AC 12.AC6:** `AT-AGENT-001` and `AT-CLASS-001` pass with every successful state backed by current deterministic postcondition evidence.
+- [ ] **Sprint AC 12.AC7:** Identical typed policy facts produce invariant authority decisions across model, prompt, packet-order, confidence, and classifier variation.
+- [ ] **Sprint AC 12.AC8:** Learned classification has no representable grant, execution, model-switch, destination-selection, denial-override, or completion path.
+- [ ] **Sprint AC 12.AC9:** Crash and restart replay no consumed grant or completed effect and preserve the exact terminal or resumable state.
+- [ ] **Sprint AC 12.AC10:** Decision-aware planning validation accepts the approved 241-record baseline while rejecting every preservation violation, unsupported count change, stale current-direction assertion, and broken decision linkage.
 
-**Gate decision:** Sprint 12 is PASS only when Story 12.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 12 is PASS only when Stories 12.1 through 12.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-AGT-001`, `AM-MDL-007`, `AT-AGENT-001`, `AT-CLASS-001`, the Decision 0027 planning baseline, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 13 - Model Manifest and Runtime Contract
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-013`.
 
-**Sprint goal:** Load the one approved Gemma 4 E4B profile through interchangeable, verified local runtime adapters.
+**Sprint goal:** Prove one candidate-neutral runtime, closed family-codec, exact-profile, and untrusted-proposal boundary with deterministic fakes, then produce the first isolated Muse Glimmer text-profile evidence without enabling a model.
 
-**Source coverage:** `AM-MDL-001`, `CR-P0-MDL`; PRD Section 8; inventory Sections 1 and 1A; `AT-MODEL-001`.
+**Source coverage:** preserved `AM-MDL-001`, `AM-MDL-004`, `AM-MDL-006`, `CR-P0-MDL`; PRD Section 8; inventory Sections 1 and 1A; `AT-MODEL-001`, `AT-MODEL-003`, `AT-MODEL-005`; Decision 0027.
 
 **Dependencies:** Sprint 12; legacy dependency record: Sprint 7 (legacy S-007), Sprint 8 (legacy S-008), Sprint 9 (legacy S-009), Sprint 10 (legacy S-010).
 
 #### [ ] Story 13.1 - Model Manifest and Runtime Contract
 
-**User-facing value:** As an AgentMage user, maintainer, or reviewer, I need model manifest and runtime contract so that AgentMage delivers the following bounded outcome: Load the one approved Gemma 4 E4B profile through interchangeable, verified local runtime adapters.
+**User-facing value:** As an AgentMage user, maintainer, or reviewer, I need a model-neutral runtime and exact-profile contract so any eligible candidate can be evaluated without model-specific kernel branches, hidden authority, or silent substitution.
 
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 13.1.1 - Implement the bounded story**
   - [ ] **Sub-task 13.1.1.1** (legacy `S-013-I01`): Implement `LocalModelRuntime` load, unload, health, token count, streaming, cancellation, resource reporting, manifest verification, and zero-network contracts.
-  - [ ] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Define the approved Gemma 4 E4B manifest under `MODEL-PROVENANCE-POLICY.md` with identity, publisher/control, lineage, Apache-2.0 disposition, quantization, conversion, tokenizer, GGUF hashes, immutable OCI digests where applicable, runtime compatibility, context ceiling, and resource expectations.
+  - [ ] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Preserve the rejected Gemma 4 E4B feasibility record and define the candidate-neutral exact-profile manifest under `MODEL-PROVENANCE-POLICY.md`, including identity, publisher/control, lineage, license, artifacts, transformations, tokenizer, template, family codec, hashes/digests, runtime, quantization, modalities, context, decoding, platform, hardware/driver envelope, policy, evaluation, lifecycle state, and resources.
   - [ ] **Sub-task 13.1.1.3** (legacy `S-013-I03`): Implement the signed native `llama.cpp` Metal adapter for the Mac reference path.
   - [ ] **Sub-task 13.1.1.4** (legacy `S-013-I04`): Implement native `llama.cpp` as the approved Linux reference adapter and Docker Model Runner as a separately gated compatibility adapter behind the same contract.
-  - [ ] **Sub-task 13.1.1.5** (legacy `S-013-I05`): Implement provider-neutral model client, response, message, tool-call, tool-result, capability, and role schemas.
-  - [ ] **Sub-task 13.1.1.6** (legacy `S-013-I06`): Implement model health, structured-output validation, plain-text fallback, bounded retry, cancellation, and malformed-response reporting.
+  - [ ] **Sub-task 13.1.1.5** (legacy `S-013-I05`): Implement candidate-neutral client, message, capability, role, context-packet, model-run, streamed-fragment, closed proposal, tool-call, tool-result, terminal-claim, and correlation schemas.
+  - [ ] **Sub-task 13.1.1.6** (legacy `S-013-I06`): Implement model health, complete closed-proposal validation, bounded plain-text advisory fallback, bounded retry, cancellation, and inert malformed/partial/stale/replayed-response reporting.
   - [ ] **Sub-task 13.1.1.7** (legacy `S-013-I07`): Prohibit unapproved model families, changed manifests, cloud fallback, arbitrary endpoints, and automatic model switching.
 
 - [ ] **Task 13.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 13.1.2.1:** Approved Gemma 4 E4B manifest and artifact catalog entry.
+  - [ ] **Sub-task 13.1.2.1:** Candidate-neutral profile schema, preserved E4B rejected-evidence reference, and fake exact-profile catalog entries.
   - [ ] **Sub-task 13.1.2.2:** macOS and Linux runtime adapter implementations.
   - [ ] **Sub-task 13.1.2.3:** Runtime conformance and offline response reports.
-  - [ ] **Sub-task 13.1.2.4:** Model capability and known-limitation record.
+  - [ ] **Sub-task 13.1.2.4:** Family-codec contract, closed proposal schema, capability/limitation record, and exact comparison manifest.
 
 - [ ] **Task 13.1.3 - Verify and close the story**
-  - [ ] **Sub-task 13.1.3.1:** `S-013-UT01` validates manifest fields, model/tokenizer/template/runtime hashes, architecture, quantization, license, conversion recipe, limits, and platform compatibility; assert any mismatch quarantines the profile.
-  - [ ] **Sub-task 13.1.3.2:** `S-013-UT02` runs identical protocol vectors against fake, macOS, and Linux runtime adapters for valid, malformed, oversized, cancelled, timed-out, and resource-exhausted calls; assert typed parity.
+  - [ ] **Sub-task 13.1.3.1:** `S-013-UT01` validates every exact-profile field, hash, digest, architecture, quantization, license, transformation, limit, codec, decoding, hardware/driver, and platform relation; assert any mismatch quarantines the profile and cannot be merged with another tuple.
+  - [ ] **Sub-task 13.1.3.2:** `S-013-UT02` runs identical protocol vectors against deterministic fake Muse, Gemma, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion codecs plus fake/macOS/Linux runtime adapters; assert typed parity and inert rejection before authority.
   - [ ] **Sub-task 13.1.3.3:** `S-013-ST01` attempts runtime access to files, tools, grants, credentials, environment, unrelated sockets, and raw workspace content; assert zero authority and bounded process termination.
-  - [ ] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call evaluation corpus repeatedly with fixed decoding; assert reported schema validity, grounding, uncertainty, reproducibility, and negative results meet declared thresholds.
-  - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-014`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, conversion provenance, adapter traces, evaluations, and independent parser review.
+  - [ ] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call corpus under separately named quality and diagnostic-repeatability profiles; assert schema validity, grounding, uncertainty, repeated-trial statistics, negative results, and tuple differences are reported without a universal determinism claim.
+  - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Complete `AT-MODEL-003` and the contract portion of `AT-MODEL-005`; map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-016`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, transformation provenance, codec vectors, adapter traces, evaluations, and independent decoder review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then only the exact approved Gemma 4 E4B artifact set loads; silent changes to any model/runtime component trigger a new manifest and security-impact review.
+- [ ] **Story AC 13.1.AC1:** Given any candidate profile, when load or inference is requested, then only its exact admitted artifact, tokenizer, template, codec, runtime, context, decoding, platform, and hardware tuple is eligible; every silent change triggers quarantine and security-impact review.
 - [ ] **Story AC 13.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then runtime adapters are interchangeable at the kernel contract while platform, performance, quality, and limitation evidence remains separately attributable.
 
-#### [ ] Story 13.2 - Cross-Adapter Model Parity and Fallback Gate
+#### [ ] Story 13.2 - Cross-Adapter Model Parity and No-Fallback Gate
 
-**User-facing value:** As a user, I need the selected Gemma profile to behave predictably across native macOS, native Linux, and Docker Linux paths, with a visible stop instead of a silent model or runtime substitution.
+**User-facing value:** As a user, I need the selected exact profile to satisfy the same contract across every enabled adapter, with a visible stop instead of silent model, codec, runtime, context, or decoding substitution.
 
 ##### Tasks and Sub-tasks
 
@@ -1156,12 +1227,12 @@ claims.
   - [ ] **Sub-task 13.2.1.1:** Use the versioned Story 0.3 corpus and explicit context/output/resource settings for every enabled adapter; record adapter-specific prompt template or tool-call transformations without changing the shared contract.
   - [ ] **Sub-task 13.2.1.2:** Compare schema validity, tool-call recovery, grounding, citations, uncertainty, cancellation latency, context behavior, output limits, memory, throughput, and repeated-run variance against one published threshold set.
   - [ ] **Sub-task 13.2.1.3:** Quarantine an adapter that fails identity, isolation, contract, quality, or resource thresholds while leaving other approved adapters and the user's selected profile unchanged.
-  - [ ] **Sub-task 13.2.1.4:** Keep Gemma 4 12B Unified disabled unless E4B is formally rejected and the fallback independently passes the full admission, runtime, hardware-fit, and evaluation gate through a recorded decision.
+  - [ ] **Sub-task 13.2.1.4:** Preserve the rejected E4B and 12B records, keep every candidate disabled until it independently passes complete exact-profile admission, and provide no automatic fallback path between profiles or adapters.
 
 - [ ] **Task 13.2.2 - Verify and close the story**
   - [ ] **Sub-task 13.2.2.1:** Run matched native/Docker corpus trials with one changed model hash, image digest, template, context setting, decoding setting, and runtime build at a time; assert incomparable or unapproved results cannot be merged or enabled.
-  - [ ] **Sub-task 13.2.2.2:** Force each adapter below every threshold and make E4B unavailable; assert a visible blocked result with no automatic adapter, model, frontier, or cloud fallback.
-  - [ ] **Sub-task 13.2.2.3 - Product security evidence:** Complete `RV-13` and the first full `RV-14`; map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-006`/`SR-AI-010` through `SR-AI-014`, and `SR-TST-006`; retain matched manifests, raw corpus results, parity calculations, quarantine receipts, negative results, and fallback decision state.
+  - [ ] **Sub-task 13.2.2.2:** Force each adapter below every threshold and make the selected profile unavailable; assert a visible blocked result with no automatic adapter, model, frontier, or cloud fallback.
+  - [ ] **Sub-task 13.2.2.3 - Product security evidence:** Complete `RV-13` and the first `RV-14` contract run; map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-006`, `SR-AI-010` through `SR-AI-016`, and `SR-TST-006`; retain matched manifests, raw corpus results, parity calculations, quarantine receipts, negative results, and no-fallback state.
 
 ##### Story Acceptance Criteria
 
@@ -1169,24 +1240,58 @@ claims.
 - [ ] **Story AC 13.2.AC2:** Given any adapter, model, manifest, or threshold failure, when selection is attempted, then AgentMage stops visibly and preserves the current task without automatically selecting another local or remote model.
 - [ ] **Story AC 13.2.AC3:** Given a proposed fallback enablement, when reviewers inspect it, then a separate complete admission record, platform results, hardware-fit evidence, and accepted decision exist before the profile is selectable.
 
+#### [ ] Story 13.3 - Isolated Muse-First Text Profile Spike
+
+**User-facing value:** As a maintainer and reviewer, I need the first real candidate exercised through the common boundary so model-specific complexity is discovered early without giving the candidate workspace, tool, credential, network, or product authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 13.3.1 - Freeze the exact Muse evaluation tuple**
+  - [ ] **Sub-task 13.3.1.1:** Verify first-party Muse Glimmer identity, release, license/use terms, origin, lineage, text artifact, tokenizer, template, reasoning controls, native llama.cpp compatibility, transformations, hashes, and known limitations without claiming support.
+  - [ ] **Sub-task 13.3.1.2:** Define one Fedora text-only profile with a pinned native llama.cpp build, one active model, one inference slot, zero egress, no vision, no speculative draft, synthetic data, and bounded 8k context before separately measured 16k or 32k profiles.
+  - [ ] **Sub-task 13.3.1.3:** Implement the Muse family codec only at the model edge and prove the kernel, agent state, tool schemas, verifier, and capability packs contain no Muse-specific branch.
+  - [ ] **Sub-task 13.3.1.4:** Define separate first-party-recommended quality and diagnostic-repeatability profiles, including exact sampler order, seed, slot, context, runtime, driver, hardware, prompt, tool, grader, and corpus identities.
+
+- [ ] **Task 13.3.2 - Execute isolated preflight and evidence runs**
+  - [ ] **Sub-task 13.3.2.1:** Run artifact, license, provenance, runtime-build, hardware-memory, disk, acceleration, context, and zero-egress preflight before loading the profile; record `BLOCKED` or `BLOCKED-HARDWARE` instead of bypassing a failed prerequisite.
+  - [ ] **Sub-task 13.3.2.2:** Run closed-proposal, plain-text, streaming, stop-token, malformed-output, cancellation, crash, timeout, memory-pressure, prompt-injection, authority, false-completion, and unload fixtures using synthetic content only.
+  - [ ] **Sub-task 13.3.2.3:** Repeat quality and diagnostic profiles independently; retain pass-at-one, pass-at-k, pass-to-the-k, variance, confidence interval, invalid-proposal, false-completion, latency, memory, and intervention results without merging incomparable tuples.
+  - [ ] **Sub-task 13.3.2.4:** Produce a truthful early `PASS-EVALUATION`, `BLOCKED`, `BLOCKED-HARDWARE`, or `REJECTED` evidence disposition that activates nothing and records every re-review trigger.
+
+- [ ] **Task 13.3.3 - Verify and close the story**
+  - [ ] **Sub-task 13.3.3.1:** `D027-S13-MUSE-CODEC` mutates tokenizer, template, reasoning flag, message boundary, end token, tool envelope, stream split, unknown field, trailing bytes, and proposal identity; require inert rejection or exact decoding with no authority change.
+  - [ ] **Sub-task 13.3.3.2:** `D027-S13-MUSE-ISOLATION` probes workspace, environment, credentials, grants, tools, sockets, network, sibling processes, and persistent files; require zero access and bounded termination.
+  - [ ] **Sub-task 13.3.3.3:** `D027-S13-MUSE-REPEAT` reruns both profiles while changing one tuple field at a time; require separate reports, visible incomparability, and no universal determinism language.
+  - [ ] **Sub-task 13.3.3.4 - Product security evidence:** Extend `AT-MODEL-003`, `AT-MODEL-005`, `RV-13`, `RV-14`, and the early Muse portion of `RV-41`; map `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`; retain first-party sources, exact manifests, preflight, packet capture, raw trials, resource traces, codec vectors, and disposition.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 13.3.AC1:** Given the exact Muse text profile, when the isolated spike runs, then the model receives only bounded synthetic context and inference resources and receives no workspace, tool, grant, credential, connector, shell, or network authority.
+- [ ] **Story AC 13.3.AC2:** Given any missing, incompatible, unsupported, under-resourced, or failed evidence class, when the spike is classified, then it yields a truthful non-pass state without activation, substitution, or a family-wide conclusion.
+- [ ] **Story AC 13.3.AC3:** Given quality and diagnostic-repeatability trials, when results are reported, then every tuple and statistical limitation is visible and no repeated token result is represented as universal determinism.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 13.AC1:** `AT-MODEL-001` passes on all reference platforms.
+- [ ] **Sprint AC 13.AC1:** `AT-MODEL-003` and the applicable historical `AT-MODEL-001` contract evidence pass; unavailable platform-specific activation remains visibly blocked rather than borrowed.
 - [ ] **Sprint AC 13.AC2:** Every response identifies the selected local model and verified runtime.
 - [ ] **Sprint AC 13.AC3:** Manifest, tokenizer, artifact, runtime, lineage, or license mismatch prevents load.
 - [ ] **Sprint AC 13.AC4:** Cancellation unloads or stops work cleanly without corrupting session state.
 - [ ] **Sprint AC 13.AC5:** No adapter gives the model tools, grants, workspace access, credentials, or network authority.
+- [ ] **Sprint AC 13.AC6:** Deterministic fake Muse, Gemma, malformed, delayed, cancelled, crashed, exhausted, replayed, and false-completion adapters cover every closed proposal and runtime state before a real profile is considered.
+- [ ] **Sprint AC 13.AC7:** The isolated Muse 8k text profile has one exact truthful evidence disposition; no result activates a model or becomes evidence for vision, speculative decoding, larger context, Docker, Windows, or macOS.
+- [ ] **Sprint AC 13.AC8:** `AT-MODEL-005` keeps quality and diagnostic-repeatability evidence separate and rejects every unrecorded tuple change.
+- [ ] **Sprint AC 13.AC9:** Kernel and capability dependency checks contain no Muse-, Gemma-, or other family-specific branch.
 
-**Gate decision:** Sprint 13 is PASS only when Stories 13.1 and 13.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 13 is PASS only when Stories 13.1 through 13.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-004`, `AM-MDL-006`, `AT-MODEL-003`, `AT-MODEL-005`, applicable preserved historical requirements, and the Universal Story Definition of Done are complete with current evidence. A truthful Muse non-pass may close the evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-014`.
 
-**Sprint goal:** Acquire or import approved model artifacts safely without giving acquisition code session or workspace authority.
+**Sprint goal:** Freeze the eligible candidate inventory and acquire or import only one exact approved artifact safely without giving catalog or acquisition code session, workspace, inference, or self-approval authority.
 
-**Source coverage:** `AM-MDL-003`; inventory Sections 1, 1A, 5A, and 32; `AT-MODEL-002`.
+**Source coverage:** `AM-MDL-003`, `AM-MDL-005`; inventory Sections 1, 1A, 5A, and 32; `AT-MODEL-002`, `AT-MODEL-004`; Decision 0027.
 
 **Dependencies:** Sprint 13; legacy dependency record: Sprint 10 (legacy S-010), Sprint 13 (legacy S-013).
 
@@ -1223,6 +1328,37 @@ claims.
 - [ ] **Story AC 14.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no artifact becomes selectable before license acceptance, complete hash/manifest verification, malware policy checks, compatibility checks, and atomic activation.
 - [ ] **Story AC 14.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every successful, cancelled, failed, and corrupt acquisition ends with an inspectable receipt and a fresh offline preflight before normal operation.
 
+#### [ ] Story 14.2 - Role-Aware Candidate Inventory and Hardware Preflight
+
+**User-facing value:** As a user and reviewer, I need every eligible official candidate to remain visible with an exact role and machine-fit result so promising models are not silently omitted and specialist models are not misrepresented as coding agents.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 14.2.1 - Freeze and normalize first-party candidate sources**
+  - [ ] **Sub-task 14.2.1.1:** Freeze the dated first-party Meta Muse and Google Gemma catalogs, retrieval identities, license/use-term sources, model cards, artifact listings, runtime documentation, and eligibility policy used for the initial inventory.
+  - [ ] **Sub-task 14.2.1.2:** Enumerate 100% of eligible official first-party Gemma entries and exact variants, including current and legacy general, coding, function/tool, safety, embedding, multimodal, specialist, research, and other published roles; record every exclusion with a named policy reason.
+  - [ ] **Sub-task 14.2.1.3:** Normalize exact developer, publisher, revision, role, source, origin, lineage, license/use terms, artifact, transformation, tokenizer, template, codec, runtime, modality, context, hardware, applicable test, lifecycle, and evidence fields without treating mutable names as identity.
+  - [ ] **Sub-task 14.2.1.4:** Admit other eligible first-party candidates into the development inventory only through the same schema and policy; direct arbitrary, mirrored, provenance-incomplete, community-converted, merged, or fine-tuned artifacts to the post-GA Experimental Model Lab unless separately admitted.
+
+- [ ] **Task 14.2.2 - Assign role and preflight every exact profile**
+  - [ ] **Sub-task 14.2.2.1:** Assign each profile one or more explicit applicable roles and prohibit safety, embedding, translation, medical, research, interpretability, specialist, or legacy models from silently entering the coding-planner role.
+  - [ ] **Sub-task 14.2.2.2:** Run non-acquiring architecture, runtime, format, acceleration, disk, memory, context, modality, and expected-working-set preflight against each declared reference-machine envelope.
+  - [ ] **Sub-task 14.2.2.3:** Record `CANDIDATE`, `INELIGIBLE`, `BLOCKED`, `BLOCKED-HARDWARE`, `REJECTED`, or ready-for-isolated-evaluation evidence for every exact entry; never infer one profile's result across a family.
+  - [ ] **Sub-task 14.2.2.4:** Generate the candidate-to-role-to-suite matrix and a completeness reconciliation against the frozen source catalogs.
+
+- [ ] **Task 14.2.3 - Verify and close the story**
+  - [ ] **Sub-task 14.2.3.1:** `D027-S14-CATALOG` independently enumerate the frozen catalogs and diff them against the normalized inventory; require 100% exact disposition coverage with no silent omission or duplicate identity.
+  - [ ] **Sub-task 14.2.3.2:** `D027-S14-ROLE` mutate role, modality, specialization, source, lineage, license, runtime, and suite applicability; require denial of role escalation and visible conflict.
+  - [ ] **Sub-task 14.2.3.3:** `D027-S14-HARDWARE` test fit boundaries immediately below, at, and above disk, memory, acceleration, context, and runtime limits; require exact `BLOCKED-HARDWARE` rather than download, family rejection, or guessed compatibility.
+  - [ ] **Sub-task 14.2.3.4:** `D027-S14-INTAKE` submit eligible, ineligible, mirrored, community-converted, mutable, provenance-incomplete, and policy-excluded candidates; require the exact ordinary-evaluation, lab-only, blocked, or rejected path with no activation.
+  - [ ] **Sub-task 14.2.3.5 - Product security evidence:** Complete the inventory/preflight portion of `AT-MODEL-004` and `RV-41`; map `SR-MGM-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015`; retain frozen catalogs, source hashes, normalized records, exclusion ledger, role matrix, preflight results, and completeness diff.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 14.2.AC1:** Given the pinned first-party source catalogs, when the inventory is built, then every eligible Muse and Gemma entry has one exact attributable record, role, applicability decision, preflight, and visible disposition or exclusion.
+- [ ] **Story AC 14.2.AC2:** Given a specialist, safety, embedding, legacy, or hardware-incompatible profile, when role and fit are evaluated, then it cannot silently become a coding planner, disappear from coverage, or create a family-wide conclusion.
+- [ ] **Story AC 14.2.AC3:** Given another eligible candidate, when it enters the development inventory, then it uses the same provenance, policy, profile, codec, runtime, hardware, test, and evidence contracts and receives no automatic approval or acquisition.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 14.AC1:** `AT-MODEL-002` passes on all reference platforms.
@@ -1230,8 +1366,11 @@ claims.
 - [ ] **Sprint AC 14.AC3:** Every valid artifact activates atomically and passes self-test.
 - [ ] **Sprint AC 14.AC4:** Failed acquisition leaves the previous active model intact.
 - [ ] **Sprint AC 14.AC5:** Offline startup proves no installer process or acquisition network authority remains.
+- [ ] **Sprint AC 14.AC6:** The frozen Muse and eligible official first-party Gemma catalogs reconcile 100% to exact inventory, role, applicability, preflight, and disposition records.
+- [ ] **Sprint AC 14.AC7:** Every incompatible reference-machine tuple records `BLOCKED-HARDWARE`; no candidate is silently omitted, downloaded, activated, or rejected at family scope.
+- [ ] **Sprint AC 14.AC8:** `AT-MODEL-004` inventory and preflight cases pass, including another eligible candidate and prohibited community/provenance-incomplete inputs.
 
-**Gate decision:** Sprint 14 is PASS only when Story 14.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 14 is PASS only when Stories 14.1 and 14.2, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-003`, `AM-MDL-005`, `AT-MODEL-002`, the inventory/preflight portion of `AT-MODEL-004`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1240,7 +1379,7 @@ claims.
 
 **Sprint goal:** Make the active local boundary inspectable and keep model selection explicit and resource-bounded.
 
-**Source coverage:** `AM-MDL-002`, `AM-DIA-001`, `CR-P0-DIA`; inventory Sections 1A, 1B, 23, and 31A; `AT-DIA-001`, `AT-ROUTE-001`.
+**Source coverage:** preserved `AM-MDL-002`, `AM-MDL-005`, `AM-MDL-006`, `AM-DIA-001`, `CR-P0-DIA`; inventory Sections 1, 1A, 1B, 23, and 31A; `AT-DIA-001`, `AT-ROUTE-001`, `AT-MODEL-004`, `AT-MODEL-005`; Decision 0027.
 
 **Dependencies:** Sprint 14; legacy dependency record: Sprint 11 (legacy S-011), Sprint 13 (legacy S-013), Sprint 14 (legacy S-014).
 
@@ -1301,15 +1440,50 @@ claims.
 - [ ] **Story AC 15.2.AC2:** Given prohibited data in every potential source, when Chat, internal harness, logs, and export paths are exercised, then none of that data appears and equivalent non-sensitive results reconcile.
 - [ ] **Story AC 15.2.AC3:** Given an export request, when preview, grant, destination, or lifecycle validation fails, then no diagnostic file is written or retained.
 
+#### [ ] Story 15.3 - Muse-First and Complete Gemma Role-Matrix Evaluation
+
+**User-facing value:** As a user and reviewer, I need comparable local candidates measured transparently by role so I can select an admitted profile from evidence without assuming one family wins every task or that repeated output makes a model deterministic.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 15.3.1 - Freeze comparable evaluation profiles**
+  - [ ] **Sub-task 15.3.1.1:** Freeze the AgentMage repository, planning, coding, tool, grounding, citation, uncertainty, false-completion, injection, context, cancellation, resource, safety-classification, embedding/retrieval, multimodal, and specialist corpora with role applicability and deterministic graders.
+  - [ ] **Sub-task 15.3.1.2:** Deeply evaluate the exact Muse Glimmer text profile first and evaluate every feasible eligible official first-party Gemma profile only against its assigned roles; retain `BLOCKED-HARDWARE`, `BLOCKED`, `REJECTED`, failed, and not-applicable results.
+  - [ ] **Sub-task 15.3.1.3:** Run comparable generative candidates with the same platform, AgentMage harness, fixtures, context policy, tool schemas, budgets, graders, and resource collection wherever possible; label every differing tuple instead of normalizing it away.
+  - [ ] **Sub-task 15.3.1.4:** Run every quality profile and diagnostic-repeatability profile separately and retain pass-at-one, pass-at-k, pass-to-the-k, confidence intervals, variance, invalid-proposal rate, false-completion rate, latency, memory, thermal behavior where measured, and user-intervention rate.
+
+- [ ] **Task 15.3.2 - Produce manual-selection evidence**
+  - [ ] **Sub-task 15.3.2.1:** Produce an exact candidate-role-capability matrix that distinguishes measured pass, measured failure, blocked, blocked-hardware, rejected, stale, incomparable, unknown, and not-applicable states.
+  - [ ] **Sub-task 15.3.2.2:** Define admission thresholds per role, negative-control behavior, minimum repeated trials, statistical reporting, evidence expiry, and re-review triggers without pre-selecting a winning family.
+  - [ ] **Sub-task 15.3.2.3:** Admit only exact profiles that independently satisfy every provenance, policy, hardware, runtime, security, role-quality, resource, and platform gate; keep all others unselectable.
+  - [ ] **Sub-task 15.3.2.4:** Keep initial product selection manual, one large model and one inference slot by default, with no hidden fallback, ensemble, classifier routing, self-confidence routing, or frontier transfer.
+
+- [ ] **Task 15.3.3 - Verify and close the story**
+  - [ ] **Sub-task 15.3.3.1:** `D027-S15-COMPARISON` reruns comparable Muse/Gemma profiles with one tuple difference at a time; require exact comparability labels and no merged or borrowed result.
+  - [ ] **Sub-task 15.3.3.2:** `D027-S15-ROLE-MATRIX` independently recomputes every inventory row, role, applicable suite, result, exclusion, statistic, and admission state from raw evidence; require 100% reconciliation.
+  - [ ] **Sub-task 15.3.3.3:** `D027-S15-SELECTION` request unavailable, blocked, rejected, stale, wrong-role, under-resourced, and differently configured profiles plus automatic substitution; require visible refusal and preservation of the current task.
+  - [ ] **Sub-task 15.3.3.4:** `D027-S15-CLAIMS` seed universal-determinism, family-wide, support, hardware-fit, winner, and hidden-failure claims unsupported by raw results; require claim-lint failure and blocked evidence publication.
+  - [ ] **Sub-task 15.3.3.5 - Product security evidence:** Complete `AT-MODEL-004`, `AT-MODEL-005`, extended `RV-14`, and early `RV-41`; map `SR-AI-006`, `SR-AI-010`, `SR-AI-011`, `SR-AI-013`, `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`, `SR-MGM-005`; retain frozen corpora, exact tuples, raw trials, graders, statistics, resource traces, role matrix, admission decisions, and claim-lint output.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 15.3.AC1:** Given the frozen candidate inventory and role suites, when evaluation closes, then every eligible official first-party Gemma profile and the exact Muse profile has a complete attributable result, visible non-pass, or exact not-applicable reason.
+- [ ] **Story AC 15.3.AC2:** Given two candidate results, when they are compared, then only matching tuples are treated as comparable and every artifact, codec, runtime, context, decoding, platform, hardware, driver, tool, grader, and corpus difference remains visible.
+- [ ] **Story AC 15.3.AC3:** Given any candidate result or model request, when ordinary selection is computed, then only an exact independently admitted profile is available, selection remains manual, and no family name, classifier, confidence value, or failure causes an automatic switch.
+- [ ] **Story AC 15.3.AC4:** Given repeated diagnostic output, when documentation or diagnostics describe it, then the claim is limited to the exact observed tuple and does not imply universal determinism.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 15.AC1:** `AT-DIA-001` and `AT-ROUTE-001` pass.
+- [ ] **Sprint AC 15.AC1:** `AT-DIA-001`, `AT-ROUTE-001`, `AT-MODEL-004`, and `AT-MODEL-005` pass.
 - [ ] **Sprint AC 15.AC2:** Diagnostics accurately distinguish healthy, degraded, missing, mismatched, quarantined, offline, and unrecoverable states.
 - [ ] **Sprint AC 15.AC3:** No diagnostic output contains a secret or unrelated private path.
 - [ ] **Sprint AC 15.AC4:** Applicable deterministic operations always precede model inference.
 - [ ] **Sprint AC 15.AC5:** No task causes an automatic model switch, external call, or frontier transfer.
+- [ ] **Sprint AC 15.AC6:** The Muse-first deep report and complete eligible official first-party Gemma role matrix reconcile to raw evidence with no omitted candidate, role escalation, hidden non-pass, or borrowed profile result.
+- [ ] **Sprint AC 15.AC7:** Only exact admitted profiles are manually selectable; one large model and one inference slot remain the initial default.
+- [ ] **Sprint AC 15.AC8:** Quality and diagnostic-repeatability results, statistics, claims, and limitations remain separate and attributable.
 
-**Gate decision:** Sprint 15 is PASS only when Stories 15.1 and 15.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 15 is PASS only when Stories 15.1 through 15.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-005`, `AM-MDL-006`, `AT-MODEL-004`, `AT-MODEL-005`, and the Universal Story Definition of Done are complete with current evidence. A candidate may remain non-pass, but missing or hidden required evidence blocks the sprint. Otherwise it is BLOCKED.
 ### [ ] Sprint 16 - Sandboxed Read-Only Tool Protocol
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1683,7 +1857,7 @@ claims.
 
 **Sprint goal:** Deliver native visual studio code chat experience as a bounded part of the legacy goal: Deliver the complete v0.1 workflow in native Visual Studio Code Chat and close every blocking release threshold.
 
-**Source coverage:** `AM-HOF-001`, `AM-VSC-001`, `AM-VSC-002`, `AM-TST-001`, `AM-TST-002`, `AM-DOC-001`, `CR-P0-EVAL`; inventory Sections 27, 31A-34; `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`.
+**Source coverage:** `AM-HOF-001`, preserved `AM-VSC-001`, `AM-VSC-002`, `AM-VSC-003`, `AM-TST-001`, `AM-TST-002`, `AM-DOC-001`, `CR-P0-EVAL`; inventory Sections 27, 31A-34; `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-VSC-003`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`; Decision 0027.
 
 **Dependencies:** Sprint 22; legacy dependency record: Sprint 8 (legacy S-008) through Sprint 22 (legacy S-020).
 
@@ -1695,7 +1869,7 @@ claims.
 
 - [ ] **Task 23.1.1 - Implement the bounded story**
   - [ ] **Sub-task 23.1.1.1** (legacy `S-021-I01`): Register the AgentMage language-model provider through the pinned stable Visual Studio Code API.
-  - [ ] **Sub-task 23.1.1.2** (legacy `S-021-I02`): Expose **AgentMage - Gemma 4 E4B (Local, Read Only)** in the native model picker with exact capabilities and limits.
+  - [ ] **Sub-task 23.1.1.2** (legacy `S-021-I02`, superseded in product direction by Decision 0027): Preserve traceability to the original E4B picker requirement but discover and expose only exact currently admitted local profiles with current capabilities, limits, runtime, and limitations; require no E4B or other family as a hard-coded prerequisite.
   - [ ] **Sub-task 23.1.1.3** (legacy `S-021-I03`): Route every request through the authenticated bridge, kernel runtime, selected model adapter, grants, and tool dispatcher.
   - [ ] **Sub-task 23.1.1.4** (legacy `S-021-I04`): Stream text, evidence states, citations, progress, diagnostics, tool results, denials, cancellation, and failures.
   - [ ] **Sub-task 23.1.1.5** (legacy `S-021-I05`): Render validated clickable display links and session, workspace, model, permission, tool, and offline indicators.
@@ -1740,15 +1914,41 @@ claims.
 - [ ] **Story AC 23.2.AC2:** Given supported screen readers and zoom/reflow settings, when Chat streams text, tools, evidence states, diagnostics, and failures, then updates are announced in order without lost content, color-only meaning, overlap, or forced timing.
 - [ ] **Story AC 23.2.AC3:** Given raw automated and manual results, when the conformance report is generated, then every pass, failure, not-tested item, platform difference, and remediation reconciles to current evidence.
 
+#### [ ] Story 23.3 - Admitted-Profile Discovery and Native Picker Truth
+
+**User-facing value:** As a user, I need the native Visual Studio Code model picker to show only local profiles that are actually admitted and usable on this machine so a candidate label, stale catalog row, or historical Gemma requirement cannot launch the wrong model.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.3.1 - Implement candidate-neutral discovery and display**
+  - [ ] **Sub-task 23.3.1.1:** Resolve picker entries from the current signed local catalog, exact profile state, activation record, runtime health, platform/hardware compatibility, policy, support, and limitations rather than a compiled family name or mutable tag.
+  - [ ] **Sub-task 23.3.1.2:** Display exact profile and runtime identity, role, modalities, context/output limits, tool capability, resource state, support/limitation state, and whether selection requires a new user decision without exposing private paths or secrets.
+  - [ ] **Sub-task 23.3.1.3:** Keep candidate, evaluating, quarantined, rejected, retired, incompatible, stale, and blocked profiles visible only in the appropriate management/diagnostic view and absent from ordinary selectable entries.
+  - [ ] **Sub-task 23.3.1.4:** Preserve the current task, plan, evidence, and checkpoint during explicit profile changes; require revalidation and a visible stop when the selected profile becomes unavailable, with no automatic substitution.
+
+- [ ] **Task 23.3.2 - Verify and close the story**
+  - [ ] **Sub-task 23.3.2.1:** `D027-S23-PICKER` enumerate zero-profile, one-profile, multiple-profile, Muse, Gemma, additional-candidate, blocked, incompatible, stale, quarantined, rejected, retired, degraded, and changed-profile fixtures; require exact ordinary selection and management visibility.
+  - [ ] **Sub-task 23.3.2.2:** `D027-S23-IDENTITY` mutate family name, display name, artifact, tokenizer, template, codec, runtime, context, decoding, hardware, policy, activation, and support state between discovery and use; require stale refusal and no launch.
+  - [ ] **Sub-task 23.3.2.3:** `D027-S23-NO-FALLBACK` remove, crash, quarantine, or exhaust the selected profile during every request phase; require preservation, one truthful terminal state, and no hidden local, Docker, frontier, or cloud switch.
+  - [ ] **Sub-task 23.3.2.4:** `D027-S23-ACCESSIBILITY` exercise picker identity, status, limitations, selection, failure, and revalidation by keyboard and supported screen readers; require no color-only or hover-only meaning.
+  - [ ] **Sub-task 23.3.2.5 - Product security evidence:** Complete `AT-VSC-003`; map `SR-AI-013`, `SR-AI-015`, `SR-MGM-001`, `SR-CIV-006` through `SR-CIV-009`; retain discovery inputs, displayed entries, stale-state traces, no-fallback receipts, redaction scans, and accessibility evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.3.AC1:** Given the current exact catalog and activation state, when native Chat discovers models, then only currently admitted, compatible, activated profiles are ordinarily selectable and every displayed identity and limit resolves to current evidence.
+- [ ] **Story AC 23.3.AC2:** Given a candidate, stale, quarantined, rejected, retired, incompatible, blocked, or silently changed profile, when discovery or launch occurs, then it cannot run and the precise state remains visible without exposing sensitive data.
+- [ ] **Story AC 23.3.AC3:** Given selected-profile failure or explicit profile change, when the request continues, then AgentMage preserves task state, revalidates the new exact profile, and never substitutes automatically.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 and 23.2 is complete and linked to its source requirement or issue identity.
+- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 through 23.3 is complete and linked to its source requirement or issue identity.
 - [ ] **Sprint AC 23.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [ ] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [ ] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix.
 
-**Gate decision:** Sprint 23 is PASS only when Stories 23.1 and 23.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 23 is PASS only when Stories 23.1 through 23.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-VSC-003`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1757,7 +1957,7 @@ claims.
 
 **Sprint goal:** Deliver manual codex handoff boundary as a bounded part of the legacy goal: Deliver the complete v0.1 workflow in native Visual Studio Code Chat and close every blocking release threshold.
 
-**Source coverage:** `AM-HOF-001`, `AM-VSC-001`, `AM-VSC-002`, `AM-TST-001`, `AM-TST-002`, `AM-DOC-001`, `CR-P0-EVAL`; inventory Sections 27, 31A-34; `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`.
+**Source coverage:** every executable v0.1 backlog row, including preserved historical model requirements plus `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, and `AM-VSC-003`; `AM-HOF-001`, `AM-VSC-002`, `AM-TST-001`, `AM-TST-002`, `AM-DOC-001`, `CR-P0-EVAL`; inventory Sections 27, 31A-34; every v0.1 `AT-*`, including `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, and `AT-VSC-003`; Decision 0027.
 
 **Dependencies:** Sprint 23; legacy dependency record: Sprint 8 (legacy S-008) through Sprint 22 (legacy S-020).
 
@@ -1853,7 +2053,7 @@ claims.
   - [ ] **Sub-task 25.1.3.1:** `S-021-UT01` validates every extension/host message, Chat response, command, cancellation, status, citation, and error schema with malformed/replayed/wrong-session inputs; assert authenticated fail-closed handling.
   - [ ] **Sub-task 25.1.3.2:** `S-021-ST01` attempts filesystem, Git, model, key, grant, raw-runtime, network, Codex-handoff, write, shell, and external-action access from the extension and native Chat surface; assert display/interaction authority only.
   - [ ] **Sub-task 25.1.3.3:** `S-021-IT01` runs the complete v0.1 task corpus through native VS Code Chat on macOS, Fedora, and Ubuntu; assert shell parity, exact citations, truthful statuses, accessibility behavior, and no alternate UI requirement.
-  - [ ] **Sub-task 25.1.3.4:** `S-021-AT01` performs three independent clean standard-user installs per supported platform, imports the pinned model, goes offline, completes every workflow, exports evidence, and uninstalls using published instructions.
+  - [ ] **Sub-task 25.1.3.4:** `S-021-AT01` performs three independent clean standard-user installs per supported platform, imports one exact admitted and manually selected profile, goes offline, completes every workflow, exports evidence, and uninstalls using published instructions; no named family is assumed.
   - [ ] **Sub-task 25.1.3.5:** `S-021-AT02` forces each blocking threshold, exclusion, dependency, and security control to fail independently; assert no signed production release or closed `G-V0.1` is produced.
   - [ ] **Sub-task 25.1.3.6 - Product security evidence:** Map all applicable v0.1 `SR-GOV-*`, `SR-PLT-*`, `SR-ACC-*`, `SR-DAT-*`, `SR-NET-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; execute `RV-01` through `RV-22` as applicable and retain the complete reviewer evidence bundle defined by `SECURITY-REVIEW.md`.
 
@@ -1890,9 +2090,10 @@ claims.
 
 - [ ] **Sprint AC 25.AC1:** Every `AM-*` v0.1 backlog row is complete with its required `AT-*` receipts.
 - [ ] **Sprint AC 25.AC2:** Every Section 31B threshold passes without waiver on the declared platforms.
-- [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`, `RV-21`, and v0.1 `RV-22` pass.
+- [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, applicable historical `AT-VSC-001`, `AT-VSC-002`, `AT-VSC-003`, `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`, `RV-21`, and v0.1 `RV-22` pass.
 - [ ] **Sprint AC 25.AC4:** Release notes list every v0.1 exclusion, including writes, semantic indexing, Obsidian, full CLI, desktop, GitHub, browser, connectors, schedules, child agents, and Codex transfer.
 - [ ] **Sprint AC 25.AC5:** `G-V0.1` closes only after the signed artifacts, documentation, tests, and offline proof agree exactly.
+- [ ] **Sprint AC 25.AC6:** The release uses one explicitly selected exact admitted profile; the candidate-neutral kernel/codec boundary, complete initial candidate evidence, classifier non-authority, verifier-only completion, separate repeatability claims, and no-fallback behavior reproduce from raw evidence.
 
 **Gate decision:** Sprint 25 is PASS only when Stories 25.1 and 25.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -3150,7 +3351,7 @@ claims.
 
 **Sprint goal:** Evaluate additional approved local profiles and enable routing only where measured evidence justifies it.
 
-**Source coverage:** inventory Sections 1, 1A, 1B, 2B, and 31A; `CR-P1-ROL`.
+**Source coverage:** inventory Sections 1, 1A, 1B, 2B, and 31A; `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `CR-P1-ROL`; Decision 0027.
 
 **Dependencies:** Sprint 48; legacy dependency record: Sprint 15 (legacy S-015), Sprint 43 (legacy S-036), Sprint 46 (legacy S-039).
 
@@ -3161,11 +3362,11 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 49.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 49.1.1.1** (legacy `S-042-I01`): Verify Gemma 4 26B and Devstral Small 2 identities, publishers, lineage, licenses, origin policy, artifacts, tokenizers, runtimes, resources, and platform support before configuration.
+  - [ ] **Sub-task 49.1.1.1** (legacy `S-042-I01`): Preserve Gemma 4 26B and Devstral Small 2 as named historical later candidates while verifying every proposed routing profile's exact identity, publisher, lineage, license, origin policy, artifact, tokenizer, template, codec, runtime, context, decoding, resources, role evidence, and platform support before configuration.
   - [ ] **Sub-task 49.1.1.2** (legacy `S-042-I02`): Benchmark dialogue, tool selection, summarization, repository maps, embeddings, reranking, patch generation, citation verification, planning, coding, retrieval, and document roles independently.
   - [ ] **Sub-task 49.1.1.3** (legacy `S-042-I03`): Implement role-to-profile allowlists and refuse unmeasured role assignments.
   - [ ] **Sub-task 49.1.1.4** (legacy `S-042-I04`): Implement visible fast, standard, deep, and verify budgets with explicit model, context, tools, and review boundaries.
-  - [ ] **Sub-task 49.1.1.5** (legacy `S-042-I05`): Implement a measured local router that uses task class, risk, and capability results rather than model self-confidence.
+  - [ ] **Sub-task 49.1.1.5** (legacy `S-042-I05`): Implement a measured local router that uses deterministic task class, separately computed action risk, admitted role capability, current resource fit, and published benchmark results rather than model self-confidence or an authority-bearing learned classifier.
   - [ ] **Sub-task 49.1.1.6** (legacy `S-042-I06`): Preserve manual selection and expose every routing choice and disagreement.
   - [ ] **Sub-task 49.1.1.7** (legacy `S-042-I07`): Add optional second-model verification only where it improves measured high-risk results.
   - [ ] **Sub-task 49.1.1.8** (legacy `S-042-I08`): Keep invisible fallback, broad provider marketplace, automatic frontier routing, and unmeasured ensembles disabled.
@@ -3178,7 +3379,7 @@ claims.
 
 - [ ] **Task 49.1.3 - Verify and close the story**
   - [ ] **Sub-task 49.1.3.1:** `S-042-UT01` verifies each later profile's model/runtime/license/lineage/quantization/template/hash/resource/platform manifest; assert unapproved, Chinese, Chinese-derived, incompatible, or silently changed profiles cannot register.
-  - [ ] **Sub-task 49.1.3.2:** `S-042-UT02` evaluates deterministic-first and measured routing rules at every threshold/tie/degraded state; assert stable chosen profile, visible rationale, and manual override within approved choices.
+  - [ ] **Sub-task 49.1.3.2:** `S-042-UT02` evaluates deterministic-first and measured routing rules at every threshold, tie, degraded, stale, blocked-hardware, disagreement, classifier-failure, and no-profile state; assert stable chosen profile, visible rationale, and manual override within approved choices.
   - [ ] **Sub-task 49.1.3.3:** `S-042-ST01` attempts model self-selection, profile escalation, cloud fallback, automatic install, authority transfer, and disagreement suppression; assert zero hidden switch or expanded capability.
   - [ ] **Sub-task 49.1.3.4:** `S-042-AT01` runs role-specific quality, grounding, reliability, latency, memory, energy where measured, and failure benchmarks repeatedly; assert routing activates only for statistically supported declared benefit.
   - [ ] **Sub-task 49.1.3.5 - Product security evidence:** Map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-001`/`SR-AI-006`/`SR-AI-010` through `SR-AI-014`, `SR-TST-006`; retain manifests, supplier decisions, benchmark code/raw results, routing traces, disagreement cases, and impact reviews.
@@ -3186,15 +3387,17 @@ claims.
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 49.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every enabled profile satisfies security, license, provenance, platform, resource, and quality policy independently; routing evidence cannot waive a failed boundary.
-- [ ] **Story AC 49.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then users and reviewers can see which deterministic method/model/runtime handled each step, why it was selected, what disagreed, and how evidence was validated.
+- [ ] **Story AC 49.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then users and reviewers can see which deterministic method and exact model/artifact/codec/runtime/context/decoding profile handled each step, why it was selected, what disagreed, and how evidence was validated.
+- [ ] **Story AC 49.1.AC3:** Given any classifier, model confidence, unavailable tier, or profile failure, when routing is computed, then no broader authority, prohibited role, hidden fallback, or unadmitted profile can be selected.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 49.AC1:** No profile or role is enabled without passing its license, lineage, origin, security, quality, hardware, and platform gates.
-- [ ] **Sprint AC 49.AC2:** Routing improves declared acceptance metrics over manual E4B selection for the promoted task classes.
+- [ ] **Sprint AC 49.AC2:** Routing improves declared acceptance metrics over the best published manual-selection baseline for each promoted task class without weakening security, evidence, latency, resource, or user-intervention thresholds.
 - [ ] **Sprint AC 49.AC3:** Unmeasured, unavailable, degraded, or failing tiers are never selected.
 - [ ] **Sprint AC 49.AC4:** User selection and visible stop behavior remain available.
 - [ ] **Sprint AC 49.AC5:** No local routing decision can invoke or transfer content to a frontier service.
+- [ ] **Sprint AC 49.AC6:** Routing decisions preserve Decision 0027's separation of sensitivity, risk, capability, policy, and completion and remain reproducible from typed facts without model self-confidence.
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 50 - Coding Skills, Documentation, and v0.4 Release
@@ -8861,7 +9064,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Represent every exact model profile truthfully and build deterministic repository structure plus bounded semantic analysis whose coverage cannot be broadened by mutable names, retrieval, missing evidence, or model output.
 
-**Source coverage:** `AM-MCAT-001`, `AM-STR-001`, `AM-SEM-001`, `AT-MCAT-001`, `AT-STR-001`, `AT-SEM-001`, `SR-MGM-001`, `SR-AUD-004`, `SR-AUD-005`, `MODEL-PROVENANCE-POLICY.md`, `CODEBASE-AUDIT.md`, `RV-40` catalog cases, `RV-46` structural and partition cases.
+**Source coverage:** `AM-MCAT-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-STR-001`, `AM-SEM-001`, `AT-MCAT-001`, `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, `AT-STR-001`, `AT-SEM-001`, `SR-MGM-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015` through `SR-AI-018`, `SR-AUD-004`, `SR-AUD-005`, `MODEL-PROVENANCE-POLICY.md`, `CODEBASE-AUDIT.md`, Decision 0027, `RV-40` catalog cases, `RV-41` reconciliation cases, `RV-46` structural and partition cases.
 
 **Dependencies:** Sprints 13-15, 103, 157, and 158.
 
@@ -8875,6 +9078,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 163.1.1.1:** Record exact developer, publisher, model and artifact revision, origin, lineage, license, format, transformation, hashes, size, tokenizer, template, runtime, platform, hardware, quality, security, support, and re-review evidence.
   - [ ] **Sub-task 163.1.1.2:** Implement candidate, evaluating, approved, degraded, quarantined, rejected, and retired states with closed transition rules and immutable decision history.
   - [ ] **Sub-task 163.1.1.3:** Sign catalog releases and bind every entry to model, runtime, component, release, and support manifests.
+  - [ ] **Sub-task 163.1.1.4:** Reconcile the early Muse-first and complete frozen eligible-Gemma inventory, role assignments, hardware blocks, quality/repeatability tuples, negative results, and other eligible candidate records into the signed catalog without changing their evidence or silently promoting them.
 - [ ] **Task 163.1.2 - Implement compatibility and lifecycle evaluation**
   - [ ] **Sub-task 163.1.2.1:** Compare exact profile disk, memory, acceleration, context, concurrency, latency, and runtime requirements with measured platform facts.
   - [ ] **Sub-task 163.1.2.2:** Distinguish compatible, compatible with limitations, incompatible, unknown, stale, revoked, and blocked states without guessing.
@@ -8883,12 +9087,14 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 163.1.3.1:** Mutate every catalog identity, evidence, state, transition, signature, expiry, support, and compatibility field.
   - [ ] **Sub-task 163.1.3.2:** Exercise mutable tags, mirrors, aliases, substituted manifests, stale measurements, unsupported runtimes, and conflicting lineage or license evidence.
   - [ ] **Sub-task 163.1.3.3:** Verify inaccessible states are absent from ordinary model selection and cannot be loaded through CLI, Chat, configuration, import, or fallback.
+  - [ ] **Sub-task 163.1.3.4:** Recompute catalog completeness from the pinned first-party source freezes and Decision 0027 records; require every eligible profile, role, test applicability, context/decoding tuple, lifecycle result, and hardware disposition to resolve exactly.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 163.1.AC1:** Given an exact model profile, when displayed, then its catalog state, evidence identity, compatibility, limitations, support, and re-review status are current and reproducible.
 - [ ] **Story AC 163.1.AC2:** Given missing, stale, conflicting, invalid, revoked, or changed evidence, when catalog state is computed, then the profile cannot become ordinarily usable.
 - [ ] **Story AC 163.1.AC3:** Given a mutable name or model request, when resolution occurs, then only an exact signed artifact identity can be selected.
+- [ ] **Story AC 163.1.AC4:** Given the early Muse/Gemma evaluation inventory, when the signed catalog is built, then every record and negative result remains attributable and complete, no family or role gains approval by inheritance, and no candidate is omitted because it failed or did not fit the hardware.
 
 #### [ ] Story 163.2 - Deterministic Structure and Bounded Semantic Analysis
 
@@ -8903,7 +9109,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Task 163.2.2 - Implement coherent semantic partitioning**
   - [ ] **Sub-task 163.2.2.1:** Partition by package, service, responsibility, state boundary, feature, workflow, schema family, and cross-cutting concern under explicit context and resource budgets.
   - [ ] **Sub-task 163.2.2.2:** Construct redacted work packets containing minimum exact spans, structural facts, neighbor interfaces, tests, decisions, prior conflicts, and one bounded audit question.
-  - [ ] **Sub-task 163.2.2.3:** Store model observations as provisional evidence cards with source and model identity, assumptions, uncertainty, confidence, conflict, requested follow-up, and reverse dependencies.
+  - [ ] **Sub-task 163.2.2.3:** Store decoded model observations as provisional evidence cards with exact source, packet, model, artifact, tokenizer, template, codec, runtime, context, decoding, platform/hardware, proposal, assumptions, uncertainty, confidence, conflict, requested follow-up, verifier, and reverse-dependency identities.
 - [ ] **Task 163.2.3 - Verify model-memory independence**
   - [ ] **Sub-task 163.2.3.1:** Vary packet order, partition size, context limit, retrieval ranking, interruption, approved model profile, runtime restart, and summary depth.
   - [ ] **Sub-task 163.2.3.2:** Inject false file, symbol, graph, coverage, authority, completion, and dependency claims into repository content and model output.
@@ -8922,8 +9128,9 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 163.AC3:** Catalog, Model BOM, runtime, package, platform, and support manifests reconcile exactly.
 - [ ] **Sprint AC 163.AC4:** Quarantine, degradation, retirement, re-review, accessibility, removal, and offline selection behavior pass.
 - [ ] **Sprint AC 163.AC5:** `AT-STR-001`, `AT-SEM-001`, and structural and partition portions of `RV-46` pass across the published language/build matrix, context budgets, packet orderings, and approved model profiles with no silent structural or coverage gap.
+- [ ] **Sprint AC 163.AC6:** Decision 0027 candidate, role, exact-profile, codec, quality/repeatability, hardware, lifecycle, and negative-evidence records reconcile 100% between the frozen source catalogs, early evaluation evidence, signed catalog, model/runtime manifests, and picker eligibility.
 
-**Gate decision:** Sprint 163 is PASS only when Stories 163.1-163.2, all criteria, `AM-MCAT-001`, `AM-STR-001`, `AM-SEM-001`, named acceptance tests, `SR-MGM-001`, `SR-AUD-004`, `SR-AUD-005`, applicable model and audit policy, catalog `RV-40`, structural and partition `RV-46`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 163 is PASS only when Stories 163.1-163.2, all criteria, `AM-MCAT-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-STR-001`, `AM-SEM-001`, named acceptance tests, `SR-MGM-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015` through `SR-AI-018`, applicable model and audit policy, catalog `RV-40`, Decision 0027 reconciliation `RV-41`, structural and partition `RV-46`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
 ### [ ] Sprint 164 - Chat-Guided Model Installation and Lifecycle
 
@@ -8943,14 +9150,14 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 - [ ] **Task 164.1.1 - Implement deterministic Chat intents and preflight**
   - [ ] **Sub-task 164.1.1.1:** Support list, explain, recommend, download, import, resume, verify, activate, compare, cancel, roll back, remove, and clean-storage intents through closed schemas.
-  - [ ] **Sub-task 164.1.1.2:** Show exact profile, publisher, license, source host, artifact/runtime identities, expected size, free-space need, measured hardware fit, network use, destination, checks, limitations, and rollback.
+  - [ ] **Sub-task 164.1.1.2:** Show exact profile, publisher, license, source host, artifact, tokenizer, template, codec, runtime, context, decoding, modality, expected size, free-space need, measured hardware fit, network use, destination, checks, limitations, and rollback.
   - [ ] **Sub-task 164.1.1.3:** Bind confirmation to the exact plan digest and invalidate it on catalog, artifact, source, hardware, storage, policy, runtime, or support change.
 - [ ] **Task 164.1.2 - Implement isolated acquisition and activation**
   - [ ] **Sub-task 164.1.2.1:** Launch the separate installer/importer with only one confirmed acquisition or import plan and no workspace, session, provider, credential, shell, or inference authority.
   - [ ] **Sub-task 164.1.2.2:** Download or import into quarantine with bounded resume, hash/signature verification, scanning, format validation, hardware and runtime self-test, cancellation, and cleanup.
   - [ ] **Sub-task 164.1.2.3:** Activate atomically, preserve the prior valid profile, verify postconditions, and implement crash-safe rollback, removal, and disk reclamation.
 - [ ] **Task 164.1.3 - Verify substitution, interruption, and usability**
-  - [ ] **Sub-task 164.1.3.1:** Mutate source, redirect, artifact, hash, license, size, tokenizer, template, runtime, platform, hardware, disk, catalog, preview, scan, and activation state.
+  - [ ] **Sub-task 164.1.3.1:** Mutate source, redirect, artifact, hash, license, size, tokenizer, template, codec, runtime, context, decoding, modality, platform, hardware, disk, catalog, preview, scan, and activation state.
   - [ ] **Sub-task 164.1.3.2:** Interrupt every download, resume, import, verify, scan, self-test, activation, rollback, removal, and cleanup transition.
   - [ ] **Sub-task 164.1.3.3:** Test novice Chat flows, clear errors, progress, cancellation, keyboard, screen reader, focus, storage explanation, and recovery guidance.
 
@@ -8973,32 +9180,35 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
-**Sprint goal:** Produce a truthful Muse Glimmer candidate disposition, prove trusted operations cannot aggregate authority, and complete cross-module reconciliation plus evidence-based whole-codebase reporting.
+**Sprint goal:** Produce a truthful final Muse Glimmer disposition, reconcile the complete role-aware eligible-Gemma and other-candidate evidence, prove trusted operations cannot aggregate authority, and complete cross-module reconciliation plus evidence-based whole-codebase reporting.
 
-**Source coverage:** `AM-MUSE-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, `AT-MUSE-001`, `AT-XOP-001`, `AT-RCN-001`, `AT-AUR-001`, `SR-MGM-004`, `SR-TOP-001`, `SR-AUD-007` through `SR-AUD-010`, `RV-41`, `RV-43` pre-release cases, `RV-46` reconciliation, `RV-47` reporting, `RV-48` pre-release cases.
+**Source coverage:** `AM-MUSE-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, `AT-MUSE-001`, `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, `AT-XOP-001`, `AT-RCN-001`, `AT-AUR-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015` through `SR-AI-018`, `SR-TOP-001`, `SR-AUD-007` through `SR-AUD-010`, Decision 0027, `RV-41`, `RV-43` pre-release cases, `RV-46` reconciliation, `RV-47` reporting, `RV-48` pre-release cases.
 
 **Dependencies:** Sprints 157-164 and every prior first-GA security/removal gate.
 
-#### [ ] Story 165.1 - Truthful Muse Glimmer Admission
+#### [ ] Story 165.1 - Truthful Muse-First and Candidate-Family Reconciliation
 
-**User-facing value:** As a user, I can see whether an exact Muse Glimmer profile is genuinely supported, blocked for missing evidence, or rejected, without marketing language being mistaken for technical approval.
+**User-facing value:** As a user, I can see whether an exact Muse Glimmer or other candidate profile is genuinely supported, blocked, hardware blocked, or rejected, with complete role-aware Gemma coverage and no marketing language mistaken for technical approval.
 
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 165.1.1 - Acquire and verify first-party evidence**
   - [ ] **Sub-task 165.1.1.1:** Record exact developer, publisher, release, model card, source locations, open-source or open-weight classification, license text, origin, lineage, formats, and support state.
-  - [ ] **Sub-task 165.1.1.2:** Pin exact original and packaged artifacts, transformations, hashes, tokenizer, template, runtime identities, and platform profiles.
+  - [ ] **Sub-task 165.1.1.2:** Pin exact original and packaged artifacts, transformations, hashes, tokenizer, template, codec, runtime, context, decoding, modality, platform, hardware/driver, quality, repeatability, and evaluation profiles.
   - [ ] **Sub-task 165.1.1.3:** Mark every unavailable, contradictory, stale, secondary-only, or unverifiable evidence class explicitly.
+  - [ ] **Sub-task 165.1.1.4:** Reconcile 100% of the frozen eligible official first-party Gemma inventory to exact role, applicability, provenance, policy, artifact, runtime, hardware, suite, result, negative-evidence, and signed-catalog records; retain every `BLOCKED-HARDWARE`, `BLOCKED`, `REJECTED`, failed, and not-applicable outcome.
+  - [ ] **Sub-task 165.1.1.5:** Reconcile any other eligible candidate admitted during development through the identical exact-profile and evidence contract and retain arbitrary/provenance-incomplete artifacts in the post-GA lab boundary.
 - [ ] **Task 165.1.2 - Run normal admission and measurements**
   - [ ] **Sub-task 165.1.2.1:** Measure disk, memory, acceleration, context, latency, concurrency, cancellation, thermal, and stability behavior on available reference platforms.
-  - [ ] **Sub-task 165.1.2.2:** Run coding, repository, tool-call, grounding, citation, uncertainty, malformed-output, prompt-injection, egress, credential, path, and authority corpora.
+  - [ ] **Sub-task 165.1.2.2:** Run applicable coding, repository, tool-call, grounding, citation, uncertainty, malformed-output, prompt-injection, egress, credential, path, authority, false-completion, classifier, verifier, quality, and diagnostic-repeatability corpora.
   - [ ] **Sub-task 165.1.2.3:** Produce `PASS`, `BLOCKED`, or `REJECTED` with exact rationale, limitations, evidence index, and re-review triggers.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 165.1.AC1:** Given complete verified first-party and measured evidence, when admission is decided, then the exact Muse profile receives only the disposition supported by that evidence.
 - [ ] **Story AC 165.1.AC2:** Given missing, contradictory, stale, secondary-only, or failed evidence, when product documentation and Chat display the candidate, then no unsupported open-source, compatibility, download, support, hardware-fit, or activation claim appears.
-- [ ] **Story AC 165.1.AC3:** Given Muse is blocked or rejected, when first-GA status is computed, then the Gemma reference lane remains independently eligible and no failure is concealed.
+- [ ] **Story AC 165.1.AC3:** Given Muse or any named family is blocked or rejected, when first-GA status is computed, then another eligible exact profile remains independently eligible if it satisfies every release gate, and no failure is concealed or borrowed.
+- [ ] **Story AC 165.1.AC4:** Given the frozen official Gemma catalog, when final candidate evidence is reconciled, then every eligible entry has an exact role-aware disposition and no specialist, safety, embedding, legacy, or hardware-blocked profile is silently omitted or promoted to a coding role.
 
 #### [ ] Story 165.2 - Cross-Capability Authority and Removal Campaign
 
@@ -9053,13 +9263,14 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 165.AC1:** `AT-MUSE-001` and `RV-41` produce a truthful exact candidate disposition without making first GA depend on `PASS`.
+- [ ] **Sprint AC 165.AC1:** `AT-MUSE-001`, `AT-MODEL-003` through `AT-MODEL-005`, and `RV-41` produce a truthful Muse-first exact disposition, complete eligible official first-party Gemma role matrix, and attributable other-candidate evidence without making first GA depend on any named family receiving `PASS`.
 - [ ] **Sprint AC 165.AC2:** `AT-XOP-001` and pre-release `RV-43` pass at least 10,000 composed attacks with zero unauthorized command, secret disclosure, private upload, backup escape, model substitution, persistent child, or authority reuse.
 - [ ] **Sprint AC 165.AC3:** Disablement and removal restore complete strict-local behavior on Fedora, Ubuntu, and Windows with zero residue or neighboring-pack damage.
 - [ ] **Sprint AC 165.AC4:** Accessibility, incident tabletop, resource, crash, recovery, support, limitation, and raw-to-summary evidence reconciliation pass.
 - [ ] **Sprint AC 165.AC5:** `AT-RCN-001`, `AT-AUR-001`, reconciliation `RV-46`, reporting `RV-47`, and pre-release `RV-48` detect the complete seeded cross-module corpus, preserve every contradiction and gap, and produce only current evidence-backed findings with zero audit residue.
+- [ ] **Sprint AC 165.AC6:** `AT-CLASS-001` and `AT-AGENT-001` remain invariant across the final candidate matrix: classifiers only restrict or escalate, and every successful terminal result resolves to current deterministic postcondition evidence.
 
-**Gate decision:** Sprint 165, `G-TRUSTED-OPERATIONS`, and `G-CODEBASE-AUDIT` are PASS only when Stories 165.1-165.3, all criteria, `AM-MUSE-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, named acceptance tests, applicable security requirements, `RV-41`, pre-release `RV-43`, `RV-46` through `RV-48`, every prior trusted-operations and audit story, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+**Gate decision:** Sprint 165, `G-TRUSTED-OPERATIONS`, and `G-CODEBASE-AUDIT` are PASS only when Stories 165.1-165.3, all criteria, `AM-MUSE-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, named acceptance tests, applicable security requirements, `RV-41`, pre-release `RV-43`, `RV-46` through `RV-48`, every prior trusted-operations and audit story, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
 
 ### [ ] Sprint 166 - Superseding First-GA Evidence and Release Decision
 
@@ -9067,7 +9278,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Independently reproduce the complete AgentMage v1.0 release, including trusted operations and whole-codebase auditing, and issue a truthful final release decision from current signed raw evidence.
 
-**Source coverage:** `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`; Decisions 0010-0011; entire canonical document set through Inventory Section 40B; `RV-01` through `RV-49`.
+**Source coverage:** `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`; Decisions 0010, 0011, and 0027; every promoted stable requirement and acceptance test; entire canonical document set through Inventory Section 40B; `RV-01` through `RV-49`.
 
 **Dependencies:** Sprints 0-165 and every promoted first-GA gate; post-GA Sprints 167-168 excluded.
 
@@ -9081,9 +9292,10 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 166.1.1.1:** Rebuild the requirement graph and prove every promoted `AM-*`, `AT-*`, `SR-*`, `RV-*`, story, task, test, artifact, owner, support state, limitation, and release claim has current linkage.
   - [ ] **Sub-task 166.1.1.2:** Generate signed platform, model, runtime, process, socket, path, command-level, research, credential, backup, provider, audit-scope, parser, structural-graph, evidence, data-flow, retention, recovery, exclusion, and removal manifests.
   - [ ] **Sub-task 166.1.1.3:** Regenerate source and binary bills of materials, Model BOM, licenses, provenance, signatures, hashes, vulnerabilities, support, degradation, and end-of-support metadata.
+  - [ ] **Sub-task 166.1.1.4:** Reconcile the exact candidate-neutral runtime, family codecs, admitted profiles, Muse-first evidence, complete eligible official first-party Gemma role inventory, other-candidate intake, quality/repeatability reports, classifier authority, agent terminal states, verifier registry, picker state, historical rejected profiles, and zero hidden fallback against Decision 0027 and every signed release artifact.
 - [ ] **Task 166.1.2 - Independently rerun the complete release**
   - [ ] **Sub-task 166.1.2.1:** Perform three clean standard-user install, upgrade, rollback, uninstall, residue, backup, and restore lifecycles per first-GA platform using published instructions only.
-  - [ ] **Sub-task 166.1.2.2:** Rerun every promoted provider, command level, research, credential, continuity, model, finance, cloud, autonomy, object, operation, and scope matrix against exact release candidates.
+  - [ ] **Sub-task 166.1.2.2:** Rerun every promoted provider, command level, research, credential, continuity, exact model/profile/codec/context/decoding tuple, classifier, verifier, agent terminal state, finance, cloud, autonomy, object, operation, and scope matrix against exact release candidates.
   - [ ] **Sub-task 166.1.2.3:** Rerun `RV-01` through `RV-49`, accessibility, performance, recovery, incident tabletop, removal, strict-local restoration, and documentation gates.
   - [ ] **Sub-task 166.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, stale result, suppression, quarantine, flake, unavailable dependency, and reviewer finding.
   - [ ] **Sub-task 166.1.2.5:** Independently run comprehensive audits against each release-reference repository and known-answer corpus, then reconcile census, graphs, packets, cards, contradictions, checkpoints, findings, reports, read-only attestations, platform results, and removal evidence.
@@ -9099,6 +9311,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Story AC 166.1.AC2:** Given any blocking non-pass state, when release status is computed, then `G-GA` remains blocked and no supported package is published.
 - [ ] **Story AC 166.1.AC3:** Given final packages, registrations, manifests, audit reports, coverage records, support matrices, limitations, and release notes, when compared, then every claim agrees exactly and every prohibited or incomplete path remains absent, denied, or visibly blocking.
 - [ ] **Story AC 166.1.AC4:** Given optional capabilities are disabled or removed, when strict-local restoration runs, then no undeclared authority or residue remains.
+- [ ] **Story AC 166.1.AC5:** Given any supported model claim, when an independent reviewer reconstructs it, then the exact profile, role, codec, runtime, hardware, quality, repeatability, security, lifecycle, picker, and limitation evidence agrees, every candidate non-pass remains visible, and no family result or model output supplies authority or completion.
 
 #### Sprint Acceptance Criteria
 
@@ -9108,6 +9321,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 166.AC4:** Bills of materials, provenance, signatures, hashes, manifests, audit census, graphs, findings, coverage, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 166.AC5:** `G-GA` closes only after independent reproduction, explicit user approval, and zero hidden blocker.
 - [ ] **Sprint AC 166.AC6:** The real `RM-024` campaign has current reviewed sanitizer, coverage, crash, minimization, and rerun evidence for every promoted target; synthetic or property-test records do not substitute for this evidence.
+- [ ] **Sprint AC 166.AC7:** Decision 0027's 12 stable requirements/tests, all owning stories and gates, `SR-AI-015` through `SR-AI-018`, `SR-MGM-004`, `SR-MGM-005`, and extended `RV-13`, `RV-14`, `RV-17`, and `RV-41` reconcile to current signed raw evidence with zero unsupported determinism, model support, family-wide, authority, or completion claim.
 
 **Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-49`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
 

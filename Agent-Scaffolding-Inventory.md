@@ -23,13 +23,18 @@ Current supported platforms: none.
 Stabilization scope freeze: inactive.
 
 This inventory preserves accepted target requirements and historical wording; it
-does not promote them to current product claims. The 229 stable requirements and
+does not promote them to current product claims. The 241 stable requirements and
 their additions-only identities remain protected. Under
 [Decision 0021](docs/decisions/0021-stabilization-resumption.md), the original
 roadmap resumes at its first incomplete dependency gate while all open release,
 platform, security, and evidence blockers remain in force. Decision 0026 appends
 the Proton Calendar confirmed-UI adapter and its acceptance test without
-renumbering or weakening any prior requirement.
+renumbering or weakening any prior requirement. [Decision
+0027](docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md)
+adds the candidate-neutral model runtime, Muse-first evaluation, complete
+eligible first-party Gemma inventory, classifier-authority, deterministic agent
+state, and admitted-profile discovery requirements without enabling a model or
+changing current implementation truth.
 
 The context that makes this project worth building is simple: frontier models are extraordinary but expensive, token-limited, cloud-bound, and unavailable for content that must never leave the machine — while most of a working day's actual load is not frontier work at all. Reading notes, tracking tasks, cleaning meeting records, converting documents, inspecting repositories, assembling briefings, and preserving continuity are often mechanical jobs with checkable answers. AgentMage's long-term direction is to use the least powerful measured tier that satisfies explicit acceptance checks. v0.1 is intentionally simpler: deterministic operations run first when applicable, the user selects the local model explicitly, no automatic model switch occurs, and no frontier transfer exists.
 
@@ -41,19 +46,41 @@ The trajectory and posture are deliberate. v0.1 remains an internal read-only ta
 
 The agent is designed around a provider-neutral model interface rather than one model family. A model can be added when a local runtime exposes a compatible chat endpoint and the model profile records its identifier, context limits, output limits, tool support, vision support, timeout, and known limitations.
 
-v0.1 originally named **Gemma 4 E4B** as its first candidate local profile, subject to the early feasibility and admission gate in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md). Its current feasibility disposition is rejected and disabled. **Gemma 4 12B Unified**, the named fallback candidate, is also rejected and disabled. Neither is an enabled model, and either requires a new revision-bound admission and evaluation decision before activation. A future admitted model manifest binds the first-party model identity, Apache-2.0 license disposition, upstream hash, conversion and quantization recipe, packaged-artifact hash, tokenizer hash, and runtime compatibility. `ai/gemma4:e4b` remains only a candidate Docker Model Runner tag; only an admitted immutable OCI digest may identify a release artifact. Native adapters may use only the same admitted, hash-pinned profile through `llama.cpp`. A model may handle routine chat, extraction, summaries, and bounded read-only tool-assisted tasks only after the fixed quality and resource corpus passes.
+v0.1 originally named **Gemma 4 E4B** as its first candidate local profile, subject to the early feasibility and admission gate in [MODEL-PROVENANCE-POLICY.md](MODEL-PROVENANCE-POLICY.md). Its current feasibility disposition is rejected and disabled. **Gemma 4 12B Unified**, the named fallback candidate, is also rejected and disabled. Neither is an enabled model, and either requires a new revision-bound admission and evaluation decision before activation. These records remain immutable historical evidence, but Decision 0027 supersedes the unimplemented assumption that either profile is a product prerequisite or automatic fallback.
 
-**Gemma 4 12B Unified** remains the named fallback candidate. Its rejected
-disposition keeps it disabled; reopening it requires the complete provenance,
-license, security, runtime, hardware-fit, quality, and resource admission
-process. AgentMage never switches to it automatically.
+The current construction is candidate-neutral and **Muse-first**. Muse Glimmer is
+the primary deep-evaluation candidate, not an approved or supported model. The
+initial development inventory also covers every eligible official first-party
+Gemma model at a pinned catalog freeze, with tests selected by model role and a
+visible `BLOCKED-HARDWARE`, `BLOCKED`, or `REJECTED` result when applicable.
+Other eligible first-party candidates may enter through the same exact profile,
+codec, provenance, runtime, security, hardware, quality, and evidence gates.
 
-Two later candidate profiles remain disabled until their release-specific capability and resource gates pass:
+A future admitted model manifest binds the first-party model identity, license
+disposition, upstream hash, conversion and quantization recipe, packaged-artifact
+hash, tokenizer and template hashes, family codec, runtime build, context and
+decoding profiles, modality, platform, hardware envelope, and evaluation result.
+Native adapters may load only an admitted, hash-pinned profile through
+`llama.cpp`; an optional Docker profile additionally requires its own immutable
+OCI digest and isolation evidence. A model may handle routine chat, extraction,
+summaries, and bounded tool-assisted tasks only for roles whose fixed quality,
+security, and resource corpus passes.
+
+**Gemma 4 12B Unified** remains a rejected historical candidate. Reopening a new
+exact profile requires the complete provenance, license, security, runtime,
+hardware-fit, quality, and resource admission process. AgentMage never switches
+to it or any other model automatically in the initial product path.
+
+Previously named later candidates remain disabled until their exact
+release-specific capability and resource gates pass:
 
 - **Gemma 4 26B** — later deep and verification work; its exact runtime identifier and digest must be verified before it can be configured.
 - **Mistral Devstral Small 2** — later coding work, identified as `ai/devstral-small-2:24B` and digest-pinned before use.
 
-Frontier consultation is a later, manually approved export/import workflow and is not a local model profile or a v0.1 capability. Other compatible model families may be evaluated only when a measured capability gap justifies the additional profile.
+Frontier consultation is a later, manually approved export/import workflow and
+is not a local model profile or a v0.1 capability. Eligible local model families
+may be evaluated without changing the kernel, but no candidate is pre-approved,
+silently downloaded, or automatically activated.
 
 v0.1 uses explicit user model selection and never performs an automatic model switch, fallback, ensemble call, or frontier transfer. Later routing work requires repeatable benchmarks and a separate release decision.
 
@@ -114,6 +141,11 @@ The following table is the complete executable backlog for v0.1, **Read-Only Loc
 | `AM-MDL-001` | Verify the same manifest-pinned Gemma 4 E4B profile through native `llama.cpp` on macOS, Fedora, and Ubuntu, and through the separately gated Docker Model Runner compatibility adapter on Linux; require contract and evaluation parity before enabling either Linux adapter. | `AM-PLT-001`, `AM-NET-001` | Verify | v0.1 | `AT-MODEL-001` |
 | `AM-MDL-002` | Use deterministic operations first and explicit user model selection; record benchmark data without automatic routing. | `AM-MDL-001` | Build | v0.1 | `AT-ROUTE-001` |
 | `AM-MDL-003` | Implement the separate approved-model installer/importer with hardware-fit checks, license and lineage display, resumable staging, hash verification, quarantine, atomic activation, self-test, unload, and cleanup. | `AM-PLT-001`, `AM-NET-001`, `AM-MDL-001` | Build | v0.1 | `AT-MODEL-002` |
+| `AM-MDL-004` | Implement a candidate-neutral `LocalModelRuntime`, model-family codec, exact profile, and closed untrusted proposal boundary so Muse, Gemma, and later eligible models share runtime, authority, context, cancellation, resource, and evidence contracts without model-specific kernel branches. | `AM-KRN-001`, `AM-PLT-001`, `AM-NET-001` | Build | v0.1 | `AT-MODEL-003` |
+| `AM-MDL-005` | Establish Muse Glimmer as the primary deep-evaluation candidate; inventory and run role-appropriate preflight and tests for every eligible official first-party Gemma model at a pinned catalog freeze; and admit other eligible candidates through the same exact profile and evidence contract without pre-approval, silent omission, or automatic activation. | `AM-MDL-004`, `AM-MDL-006`, `AM-MDL-007`, `AM-AGT-001` | Verify | v0.1 | `AT-MODEL-004` |
+| `AM-MDL-006` | Separate first-party-recommended quality profiles from exact diagnostic-repeatability profiles and record the complete artifact, tokenizer, template, codec, runtime, sampler, seed, context, hardware, driver, tool, and evaluation tuple without claiming universal model determinism. | `AM-MDL-004` | Build | v0.1 | `AT-MODEL-005` |
+| `AM-MDL-007` | Classify data sensitivity, action risk, and model capability separately; apply deterministic deny-first policy over typed facts; and constrain probabilistic or learned classifiers to deny, narrow, redact, isolate, or escalate without granting authority, overriding a denial, selecting a prohibited destination, switching models, or establishing completion. | `AM-KRN-001`, `AM-AUT-001`, `AM-PRV-001` | Build | v0.1 | `AT-CLASS-001` |
+| `AM-AGT-001` | Implement a persisted deterministic agent state machine with bounded progress, named success and non-success terminal states, exact proposal identity, restart reconciliation, and verifier-only completion so model text, confidence, classifiers, and model judges cannot grant authority or convert uncertainty, exhaustion, error, or cancellation into success. | `AM-KRN-001`, `AM-AUT-001`, `AM-DAT-001` | Build | v0.1 | `AT-AGENT-001` |
 | `AM-DIA-001` | Produce a redacted local doctor response inside native Visual Studio Code Chat for model/runtime identity, offline state, platform boundary, workspace grant, capability versions, repository-map health, encrypted storage, and session recovery without exposing secrets; retain a non-user-facing diagnostic harness for automated testing. | `AM-SEC-001`, `AM-PRV-001`, `AM-MDL-003` | Build | v0.1 | `AT-DIA-001`, `AT-DOC-001` |
 | `AM-TOL-001` | Implement bounded list, read, search, metadata, and hash tools. | `AM-SEC-002`, `AM-PTH-001` | Build | v0.1 | `AT-TOOL-001`, `AT-PATH-001` |
 | `AM-GIT-001` | Implement read-only Git status, diff, log, branch, and object inspection. | `AM-SEC-002`, `AM-PTH-001` | Build | v0.1 | `AT-GIT-001` |
@@ -125,6 +157,7 @@ The following table is the complete executable backlog for v0.1, **Read-Only Loc
 | `AM-SES-001` | Persist and resume one active local session without duplicating completed actions. | `AM-DAT-001`, `AM-EVD-002` | Build | v0.1 | `AT-CRASH-001`, `AT-RESUME-001` |
 | `AM-VSC-001` | Register AgentMage as a Visual Studio Code language-model chat provider and expose Gemma 4 E4B in the native model picker. | `AM-MDL-001`, `AM-KRN-001` | Build | v0.1 | `AT-VSC-001` |
 | `AM-VSC-002` | Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat. | `AM-VSC-001`, `AM-EVD-002`, `AM-DIA-001` | Build | v0.1 | `AT-VSC-002` |
+| `AM-VSC-003` | Discover and display only exact admitted local profiles in the native Visual Studio Code model picker, with Muse-first evaluation focus, manual selection, visible profile/runtime/limit identity, zero hard-coded model prerequisite, and no automatic substitution or activation. | `AM-KRN-001`, `AM-MDL-004`, `AM-MDL-005` | Build | v0.1 | `AT-VSC-003` |
 | `AM-TST-001` | Run the complete platform, path, sandbox, instruction-injection, network, privacy, handoff, and crash security suite. | `AM-PLT-001`, `AM-SEC-001`, `AM-SEC-002`, `AM-NET-001`, `AM-PTH-001`, `AM-AUT-001`, `AM-DAT-001`, `AM-PRV-001`, `AM-INS-001`, `AM-HOF-001` | Build | v0.1 | `AT-PLAT-001`, `AT-SEC-001`, `AT-SBX-001`, `AT-INJ-001`, `AT-INS-001`, `AT-NET-001`, `AT-NET-002`, `AT-PATH-001`, `AT-AUTH-001`, `AT-DATA-001`, `AT-CRASH-001`, `AT-PRIV-001`, `AT-PRIV-002`, `AT-HOF-001` |
 | `AM-TST-002` | Run the repository-map, evidence-state, model lifecycle, diagnostics, quality, latency, memory, context, and model capability suite against fixed fixtures. | `AM-MDL-001`, `AM-MDL-002`, `AM-MDL-003`, `AM-DIA-001`, `AM-TOL-001`, `AM-GIT-001`, `AM-REP-001`, `AM-EVD-002`, `AM-SES-001`, `AM-VSC-001`, `AM-VSC-002` | Build | v0.1 | `AT-MODEL-001`, `AT-MODEL-002`, `AT-DIA-001`, `AT-ROUTE-001`, `AT-TOOL-001`, `AT-GIT-001`, `AT-REP-001`, `AT-EVD-001`, `AT-EVD-002`, `AT-EVD-003`, `AT-RESUME-001`, `AT-VSC-001`, `AT-VSC-002`, `AT-QUAL-001`, `AT-PERF-001` |
 | `AM-DOC-001` | Publish startup, limitation, privacy, recovery, and offline-verification instructions. | `AM-TST-001`, `AM-TST-002` | Build | v0.1 | `AT-SPEC-001`, `AT-DOC-001` |
@@ -135,7 +168,7 @@ Every `Build` row is new AgentMage work. A `Verify` row establishes an environme
 
 | Release | Product increment | Explicit exclusions |
 |---|---|---|
-| v0.1 | MacBook Pro M5-first, Fedora-compatible, and Ubuntu-compatible read-only evidence assistant in native Visual Studio Code Chat using verified local Gemma 4 E4B, model diagnostics, deterministic repository maps, explicit evidence states, and local Codex handoff previews. | Intel Mac, Windows, Codex invocation or transfer, Obsidian, semantic/vector indexing, writes, coding changes, frontier delivery, full CLI, standalone desktop UI, GitHub, browser, connectors, schedules, child agents. |
+| v0.1 | MacBook Pro M5-first, Fedora-compatible, and Ubuntu-compatible read-only evidence assistant in native Visual Studio Code Chat using one manually selected admitted local profile, model diagnostics, deterministic repository maps, explicit evidence states, and local Codex handoff previews. Muse Glimmer is the primary deep-evaluation candidate, and the initial development inventory evaluates eligible official first-party Gemma profiles by role without making any one candidate a prerequisite. | Intel Mac, Windows, Codex invocation or transfer, Obsidian, semantic/vector indexing, writes, coding changes, frontier delivery, full CLI, standalone desktop UI, GitHub, browser, connectors, schedules, child agents. |
 | v0.2 | Knowledge pack: direct read-only Obsidian and Markdown knowledge, portable long-term memory, and handoffs. | Writes to user files and all external integrations. |
 | v0.3 | Controlled Writes pack: new-file staging and exact-preimage patches using capability grants. | Commit, push, publication, and unattended writes. |
 | v0.4 | Coding pack and complete command-line shell: repository comprehension, tests, bounded patches, and review packets. | Automatic commit, push, merge, or publication. |
@@ -149,6 +182,14 @@ Decision 0008 reclassifies every v0.x row above as an internal milestone and sup
 ## 1. Local Model and Runtime
 
 This section covers how the local assistant talks to a model and how different models can be selected safely. It exists so the rest of the system remains independent of Docker, `llama.cpp`, Metal, Gemma, or any single model provider.
+
+The E4B, 12B, Gemma 26B, Devstral, approved-Gemma-role, and E4B-default
+checkboxes below are protected historical planning text. Decision 0027 does not
+delete or rewrite them, but its appended candidate-neutral requirements and
+checks supersede their unimplemented named-model prerequisite, fallback, and
+default assumptions. Existing rejected evidence remains valid negative evidence;
+no historical checkbox can enable a model or override the current exact-profile
+gate.
 
 - [ ] `CAPABILITY GATE` Define a `LocalModelRuntime` contract for load, unload, health, token count, streaming inference, cancellation, resource reporting, model-manifest verification, and zero-network operation.
 - [ ] `CAPABILITY GATE` On the MacBook Pro M5 reference path, use a pinned, signed `llama.cpp` build with Metal acceleration inside the sandboxed inference service; do not require Docker Desktop, Homebrew, Rosetta, or a hosted account.
@@ -177,10 +218,28 @@ This section covers how the local assistant talks to a model and how different m
 - [ ] `ROADMAP` a benchmark-gated task router that can recommend or select among enabled profiles only after v0.1 records sufficient task-class evidence.
 - [ ] `VERIFY` that every configured model is locally permitted and is not based on a prohibited model family.
 - [ ] `VERIFY` offline behavior on the MacBook Pro M5, Fedora, and Ubuntu by disabling network access after model installation and proving that prompts and responses remain on the workstation.
+- [ ] `CAPABILITY GATE` Apply Decision 0027's candidate-neutral construction: keep runtime supervision separate from model-family codecs and bind every inference run to one exact model, artifact, tokenizer, template, codec, runtime, quantization, modality, context, decoding, platform, hardware, policy, and evaluation profile.
+- [ ] `CAPABILITY GATE` Treat every complete or streamed model response as an untrusted proposal; require a closed schema and exact session, task, turn, model-run, context-packet, snapshot, tool-catalog, proposal, and correlation identity before kernel consideration, and keep malformed, partial, stale, duplicate, oversized, unknown-field, or ambiguous output inert.
+- [ ] `CAPABILITY GATE` Preserve the existing Gemma-specific rows as historical candidate requirements while using `AM-MDL-004` through `AM-MDL-007` as the model-neutral product direction; no old rejected result becomes an approval.
+- [ ] `BUILD` a deterministic fake-model adapter and fake Muse, Gemma, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion codecs before loading a real model artifact.
+- [ ] `BUILD` first-party Muse Glimmer and Gemma family codecs behind the common proposal contract, including exact chat template, tokenizer, reasoning control, tool protocol, message boundary, end token, streaming, and error semantics.
+- [ ] `VERIFY` Muse Glimmer first through an exact first-party text-only artifact, pinned native llama.cpp build, one inference slot, zero egress, no workspace/tool/grant/credential authority, no vision, no speculative draft, synthetic data, and bounded 8k context before separately measured 16k and 32k profiles.
+- [ ] `BUILD` an initial development candidate inventory containing every eligible official first-party Gemma model at a pinned Google catalog freeze, with exact role, source, revision, license/use terms, lineage, artifact, runtime, modality, hardware preflight, applicable tests, and visible non-pass state.
+- [ ] `VERIFY` general/coding, function/tool, safety, embedding, multimodal, specialist, research, and legacy Gemma profiles only against role-appropriate suites; never silently promote a safety, embedding, specialist, or legacy profile into the coding-planner role.
+- [ ] `VERIFY` record `BLOCKED-HARDWARE` for an exact profile that cannot run within a declared reference-machine envelope instead of silently omitting it or treating the result as family-wide rejection.
+- [ ] `CAPABILITY GATE` Permit other eligible first-party candidates to enter the development inventory through the same provenance, policy, profile, codec, runtime, hardware, quality, security, and evidence gates; retain arbitrary or provenance-incomplete user imports for the post-GA Experimental Model Lab.
+- [ ] `CAPABILITY GATE` Keep one large active model and one inference slot by default until a separately measured concurrency or routing profile passes; Muse focus does not authorize hidden model switching.
+- [ ] `CAPABILITY GATE` Create separate quality and diagnostic-repeatability profiles; never merge their results or claim that temperature zero, top-k one, a fixed seed, or repeated output proves cross-runtime, cross-driver, cross-device, or universal model determinism.
 
 ## 1A. Model Routing and Local Resource Management
 
 This section controls how the agent chooses among installed models and stays responsive on a local computer. It exists so a larger model, failed endpoint, full disk, or memory pressure cannot silently stall or destabilize the entire assistant.
+
+Decision 0027 governs initial operation: deterministic work first, one explicit
+user-selected exact admitted profile, one large model and one slot by default,
+and no automatic fallback. Sprint 49 remains the first point where measured
+routing may be considered; model confidence and learned classification never
+carry routing authority.
 
 - [ ] `CAPABILITY GATE` Show the active model, exact digest, runtime, configured context limit, and known tool or vision limitations in every session.
 - [ ] `CAPABILITY GATE` Provide a redacted local doctor response in native Visual Studio Code Chat containing model and runtime manifests, hardware-fit result, offline state, platform sandbox and helper status, workspace grant, capability-pack versions, repository-map health, encrypted-store availability, last receipt sequence, and session recoverability without including secrets, prompts, or unrelated absolute paths. Keep any command-line diagnostic harness internal to development and verification in v0.1.
@@ -194,6 +253,10 @@ This section controls how the agent chooses among installed models and stays res
 - [ ] `BUILD` per-model benchmark results for coding, retrieval, planning, document work, tool use, and factual accuracy.
 - [ ] `BUILD` optional high-risk answer verification by a second installed model, with both models and disagreements shown to the user.
 - [ ] `DEFER` automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably.
+- [ ] `CAPABILITY GATE` Separate deterministic policy decisions, exact effect mediation, verified outcomes, audit reproducibility, and narrow token repeatability in configuration, diagnostics, tests, receipts, and user-facing claims.
+- [ ] `BUILD` exact comparison manifests and repeated-trial reports containing artifact, tokenizer, template, codec, runtime, sampler order, seed, reasoning, context, slot, draft, vision, platform, hardware, driver, prompt, tool, grader, resource, and corpus identities.
+- [ ] `BUILD` role-specific Muse/Gemma comparison reports using the same AgentMage harness, fixtures, context policy, tool schemas, budgets, platform, and graders wherever tuples are comparable, while labeling every material difference.
+- [ ] `CAPABILITY GATE` Require explicit user selection for every admitted profile in the initial product path and leave Sprint 49 as the first eligible automatic measured-routing gate.
 
 ## 1B. Tiered Local Routing and User-Initiated Frontier Handoff
 
@@ -234,6 +297,12 @@ The orchestrator is the control layer that turns a user request into bounded ste
 - [ ] `BUILD` a scope guard that rejects actions outside the active workspace or user-approved task.
 - [ ] `BUILD` a resumable session state that records the exact objective and next safe action.
 - [ ] `DEFER` autonomous self-improvement, self-modifying prompts, unlimited loops, and unsupervised background work.
+- [ ] `CAPABILITY GATE` Persist the loop states intake, snapshot, classify, plan, validate, authorize, execute, observe, verify, wait-for-user, and every terminal result without allowing model output to transition directly into effect or success.
+- [ ] `CAPABILITY GATE` Make `SUCCESS` and independently verified `NO_OP` the only successful terminal states; retain `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`, and `FAILED` as explicit non-success results.
+- [ ] `BUILD` deterministic no-progress detection over observable evidence, accepted plan change, authorized state change, or verifier result rather than additional model prose.
+- [ ] `BUILD` turn, token, context, retry, parser-failure, denial, repeated-proposal, tool, effect, elapsed-time, resource, and no-progress ceilings enforced outside the model.
+- [ ] `CAPABILITY GATE` On interruption or restart, revalidate task, snapshot, policy, model profile, context packet, pending authority, in-flight effect, and verifier state; never replay a consumed grant or assume a timed-out effect did not occur.
+- [ ] `BUILD` a verifier registry that prefers exact state, hash, schema, compiler, test, linter, policy, or provider field truth and keeps any model judge separately identified, authority-free, and unable to approve its own work.
 
 ## 2A. AgentMage Session Behavior
 
@@ -266,6 +335,11 @@ This section improves how the agent handles ambiguous, multistep, or high-risk w
 - [ ] `CAPABILITY GATE` Separate planning, execution, and verification so the same unsupported assumption cannot silently pass through every phase.
 - [ ] `CAPABILITY GATE` Prefer tool evidence, tests, source inspection, and small experiments over model speculation whenever the claim can be checked.
 - [ ] `BUILD` a complexity-and-risk classifier that recommends a reasoning mode while leaving the final model and budget visible to the user.
+- [ ] `CAPABILITY GATE` Classify data sensitivity, action risk, and model capability as separate dimensions; only deterministic policy over typed current facts can decide eligibility and required authority.
+- [ ] `CAPABILITY GATE` Permit learned or model-based classifiers only to deny, remove tools, narrow scope, require redaction or isolation, or escalate to the user; prohibit classifier-created grants, denial overrides, prohibited destinations, model switches, or completion state.
+- [ ] `CAPABILITY GATE` Treat low confidence, truncation, disagreement, unavailable classification, and out-of-distribution input as a narrower boundary, user decision, or blocked result rather than a permissive default.
+- [ ] `BUILD` continuous reclassification before each new boundary for newly read files, attachments, command output, test logs, patches, diffs, messages, connector results, summaries, diagnostics, backups, and exports.
+- [ ] `VERIFY` deterministic policy invariance under model, prompt, packet-order, classifier-score, confidence, candidate-profile, and explanation mutations; require zero authority or completion change unless a typed policy fact changes.
 - [ ] `BUILD` bounded task decomposition that turns a large request into ordered subproblems with dependencies, evidence needs, and stopping conditions.
 - [ ] `BUILD` an assumption register that records each material assumption, why it was needed, its risk, how it can be checked, and whether it was later confirmed or rejected.
 - [ ] `BUILD` a hypothesis ledger containing possible explanations, evidence for and against each one, discriminating tests, and current status.
@@ -1485,6 +1559,12 @@ This section measures whether each model and tool combination is safe and useful
 - [ ] `BUILD` crash and recovery tests for model-server restart, process termination, full disk, corrupt state, interrupted writes, lost network, and deleted worktrees.
 - [ ] `BUILD` performance budgets for first response, tool latency, full task time, peak memory, disk growth, and model load or unload time.
 - [ ] `BUILD` a release gate that prevents a new model, plugin, tool, or memory migration from becoming the default until its required tests pass.
+- [ ] `BUILD` a Muse-first deep-evaluation lane and a complete role-aware first-party Gemma inventory frozen to exact source-catalog evidence, with other eligible candidates accepted through the same model-neutral intake.
+- [ ] `BUILD` model-role suites for generative coding/planning, function/tool selection, advisory safety classification, embeddings/retrieval, multimodal input, specialist behavior, and legacy compatibility without comparing inapplicable roles as though they were interchangeable.
+- [ ] `BUILD` exact hardware-fit matrices that retain visible supported, degraded, incompatible, unavailable, `BLOCKED-HARDWARE`, untested, failed, blocked, quarantined, and rejected results per artifact/runtime/context/platform tuple.
+- [ ] `BUILD` separate first-party quality and diagnostic-repeatability trials with at least four stochastic trials where applicable, deterministic graders first, independently identified model judges only when necessary, and no self-grading completion path.
+- [ ] `BUILD` pass-at-one, pass-at-k, pass-to-the-k, confidence-interval, variance, tool-validity, false-completion, latency, memory, cancellation, and user-intervention reporting without merging incomparable tuples.
+- [ ] `BUILD` deterministic agent-loop, proposal-parser, classifier-authority, repeated-denial, no-progress, named-terminal-state, restart, and verifier-only completion suites before real-model workspace use.
 
 ## 31B. v0.1 Quantitative Acceptance Matrix
 
@@ -1510,6 +1590,11 @@ All v0.1 tests run on a clean, recorded Apple Silicon MacBook Pro M5 launch-refe
 | `AT-HOF-001` | Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts. | Every valid packet contains the objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions; across at least 200 delivery attempts there are zero Codex invocations, tab activations or population, clipboard writes, external calls, or transmitted bytes. The packet is submitted only after the user manually switches to Codex and chooses what to send. |
 | `AT-MODEL-001` | Admission record, license, publisher/control, lineage, artifact, tokenizer, native GGUF hash, immutable OCI digest where applicable, runtime, acceleration, and offline response verification for Gemma 4 E4B. | Every platform artifact resolves to the same approved model profile and quantization policy; hashes, image digests, and runtime builds match their manifests; native and Docker adapters pass the same response, tool-schema, cancellation, context, resource, and quality thresholds; 100% of 100 prompts per platform use the selected local model with no cloud or automatic model fallback. |
 | `AT-MODEL-002` | Installer/importer preflight, acquisition, cancellation, recovery, quarantine, atomic activation, self-test, load/unload, and cleanup across the supported platform matrix. | 100% correct hardware-fit and artifact decisions; every corrupt, incompatible, incomplete, cancelled, or hash-mismatched artifact remains unrunnable and outside the active store; every valid artifact activates atomically and passes its self-test. |
+| `AT-MODEL-003` | Run the candidate-neutral runtime and proposal conformance corpus against deterministic fake, Muse-family, Gemma-family, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion adapters across exact tokenizer, template, reasoning, tool, message-boundary, end-token, streaming, context, cancellation, and resource cases. | Every valid response produces the same closed model-neutral result semantics; every partial, malformed, stale, duplicate, oversized, unknown-field, unsupported, or ambiguous proposal remains inert; zero adapter receives workspace, tool, grant, credential, connector, or network authority; model-family behavior never enters kernel policy or effect code. |
+| `AT-MODEL-004` | Freeze the eligible first-party source catalogs; deeply evaluate exact Muse Glimmer profiles; inventory every eligible official first-party Gemma model; assign role-specific suites; preflight hardware; and evaluate additional eligible candidates through the same profile contract. | Muse remains the primary deep-evaluation candidate without pre-approval; 100% of eligible first-party Gemma entries receive exact identity, role, applicability, provenance, policy, artifact, runtime, hardware, and result records; every applicable test runs or records a precise `BLOCKED-HARDWARE`, `BLOCKED`, or `REJECTED` reason; zero candidate is silently omitted, family-promoted, automatically activated, or treated as supported without complete current evidence. |
+| `AT-MODEL-005` | Execute first-party-recommended quality and diagnostic-repeatability profiles over pinned comparable corpora with repeated stochastic trials and exact model, artifact, tokenizer, template, codec, runtime, sampler, seed, reasoning, context, slot, speculation, vision, hardware, driver, prompt, tool, grader, and resource manifests. | Quality and repeatability results remain separate; comparable trials report pass-at-one, pass-at-k, pass-to-the-k, variance, confidence intervals, tool validity, false completion, latency, memory, and intervention; changed tuples are never merged; repeatability claims are limited to the recorded tuple and no temperature, top-k, seed, or repeated output is represented as universal model determinism. |
+| `AT-CLASS-001` | Mutate typed sensitivity, action-risk, capability, actor, autonomy, operation, source, destination, path, repository, credential, disclosure, reversibility, budget, classifier output, confidence, truncation, availability, disagreement, profile, packet order, and model explanation across at least 5,000 deterministic-policy cases and 1,000 semantic-classifier cases. | Deterministic policy produces the same result whenever typed policy facts are unchanged; deny precedence always holds; semantic classification can only deny, remove tools, narrow, redact, isolate, or escalate; uncertainty fails toward a narrower boundary; zero classifier grants or widens authority, overrides denial, selects a prohibited destination, switches models, or establishes completion. |
+| `AT-AGENT-001` | Drive the persisted loop with fake clocks, models, tools, workers, verifiers, interruptions, restarts, no-progress sequences, parser failures, denials, uncertain effects, budget exhaustion, cancellation, false completion, and every allowed state transition. | Every run ends in exactly one typed `SUCCESS`, verified `NO_OP`, `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`, or `FAILED` result; only current deterministic postcondition evidence permits success; model prose, confidence, classifiers, model judges, errors, exhaustion, uncertainty, and cancellation never become success; no consumed grant or completed effect repeats after restart. |
 | `AT-DIA-001` | Redacted local doctor results rendered inside native Visual Studio Code Chat across model, runtime, offline, sandbox/helper, workspace, capability, repository-map, encrypted-store, receipt, and recovery states. | 100% expected status and remediation results across at least 100 fixtures, with zero secrets, prompts, private excerpts, environment values, or unrelated absolute paths in displayed or exported diagnostics; no user-facing command line is required. |
 | `AT-ROUTE-001` | Mixed deterministic and model-assisted task suite. | Deterministic operation attempted whenever applicable; zero automatic model switches or frontier transfers in 100 tasks. |
 | `AT-TOOL-001` | Golden list, read, search, metadata, and hash fixtures with size and result limits. | 100% exact deterministic results; every configured limit fails closed and produces a receipt. |
@@ -1521,6 +1606,7 @@ All v0.1 tests run on a clean, recorded Apple Silicon MacBook Pro M5 launch-refe
 | `AT-RESUME-001` | Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes. | 100% of material drift is detected before action and requires an explicit continue, restart, or cancel decision. |
 | `AT-VSC-001` | Clean extension and kernel-host installation plus model discovery on MacBook Pro M5, Fedora, and Ubuntu. | The extension uses the pinned stable Visual Studio Code provider API without proposed-API flags; AgentMage and the pinned Gemma 4 E4B profile appear in the native model picker with correct limits, runtime, and capabilities in every run; macOS refuses every bridge or host whose signature, designated requirement, bundle identifier, App Group, peer identity, or launch challenge is invalid. |
 | `AT-VSC-002` | Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests. | 100% complete rendering; cancellation stops within 2 seconds; failures never trigger a cloud fallback or hidden retry. |
+| `AT-VSC-003` | Discover candidate, evaluating, approved, degraded, quarantined, rejected, retired, incompatible, and blocked model fixtures through the native Visual Studio Code provider surface while mutating profile identity, runtime, limits, status, selection, availability, and activation state. | Only exact currently admitted profiles are selectable for ordinary operation; every displayed profile exposes current identity, runtime, limits, modalities, and limitations; Muse-first evaluation creates no automatic selection; no hard-coded E4B prerequisite, hidden model switch, stale profile, quarantined/rejected candidate, or unsupported artifact becomes active. |
 | `AT-QUAL-001` | Labeled read-only repository questions, extraction tasks, schema calls, malformed-tool recovery, and adversarial completion prompts. | At least 90% task accuracy, extraction F1 at least 0.95, at least 99% schema-valid calls, and zero false completion claims across 200 adversarial tasks; the suite includes symbol location, cited module summary, implementation comparison, import/call trace, and a required Unknown/Blocked response for absent evidence. |
 | `AT-PERF-001` | Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu. | On each reference machine: kernel startup p95 at most 5 seconds; deterministic file/Git tool p95 at most 2 seconds on 10,000 files/1 GiB; cold repository-map construction p95 at most 30 seconds and unchanged warm-map rendering p95 at most 3 seconds on the same fixture; warm Gemma first-token p95 at most 15 seconds and throughput at least 10 tokens/second; kernel peak memory at most 1.5 GiB excluding the model; total peak memory at most 12 GiB; prompts above the configured 32K-token v0.1 ceiling fail before inference. |
 | `AT-SPEC-001` | Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements. | Every backlog and test identifier is unique; every dependency and test reference resolves; every normative v0.1 PRD requirement maps to a backlog row; README, PRD, implementation plan, inventory, tasks, model policy, security policy, runtime boundary, and accepted decisions agree on scope; macOS M5, Fedora, and Ubuntu are v0.1 targets everywhere; native `llama.cpp` and Docker Model Runner roles are consistent; deterministic repository mapping and evidence states are v0.1 everywhere; semantic/vector indexing and every state-changing capability remain later; exactly one canonical authority is named for each data domain. |
@@ -1540,7 +1626,7 @@ This matrix makes the design review executable. Each concern has one governing d
 | Threat model and topology | The kernel, shell, tool worker, local model runtime, sockets, privileges, network boundaries, and untrusted-workspace-content rule are explicit and fail closed. | `AT-SEC-001`, `AT-SBX-001`, `AT-INJ-001`, `AT-INS-001`, `AT-NET-001`, `AT-NET-002` |
 | Approval and authority | `CapabilityGrant` is the sole authority-bearing object and is bound, expiring, non-broadenable, and single-use. | `AT-AUTH-001` |
 | Routing | Deterministic operations run first; the user selects the one enabled model; automatic switching and frontier transfer are absent. | `AT-ROUTE-001` |
-| Model lifecycle and diagnostics | The approved installer/importer proves hardware fit, artifact identity, recoverable installation, and clean activation; the native Chat doctor response proves the active runtime and boundary; native and Docker adapters meet the same contract. | `AT-MODEL-001`, `AT-MODEL-002`, `AT-DIA-001` |
+| Model lifecycle and diagnostics | The candidate-neutral runtime, closed family codec, and exact profile bind one untrusted proposal contract; the installer/importer proves hardware fit, artifact identity, recoverable installation, and clean activation; the native Chat doctor response proves the active runtime and boundary; every enabled native or Docker adapter meets the applicable published contract. | `AT-MODEL-001`, `AT-MODEL-002`, `AT-MODEL-003`, `AT-MODEL-004`, `AT-MODEL-005`, `AT-DIA-001` |
 | Repository map | v0.1 provides only deterministic, read-only, pinned-parser repository structure with exact coverage and citations; semantic/vector indexing is excluded. | `AT-REP-001`, `AT-SBX-001`, `AT-SPEC-001` |
 | Evidence states | Material claims are Observed, Derived, Inferred, or Unknown/Blocked, and stale source identities cannot be reused silently. | `AT-EVD-001`, `AT-EVD-002`, `AT-EVD-003`, `AT-RESUME-001` |
 | Codex handoff | AgentMage may render a local reviewed packet, but only the user may switch to Codex and submit selected content; autonomous delivery is prohibited in every release. | `AT-HOF-001`, `AT-NET-001`, `AT-SPEC-001` |
@@ -1548,7 +1634,7 @@ This matrix makes the design review executable. Each concern has one governing d
 | Path semantics | Tools accept only canonical workspace-relative paths; absolute paths are display-only. | `AT-PATH-001` |
 | Executable backlog | Every v0.1 row has a stable ID, explicit dependencies, disposition, target, and resolvable acceptance tests. | `AT-SPEC-001` |
 | Quantitative gates | Security, correctness, evidence, recovery, latency, memory, context, and documentation have blocking thresholds. | `AM-TST-001`, `AM-TST-002`, and `AM-DOC-001` receipts plus the complete Section 31B matrix |
-| Model identifiers | v0.1 admits Gemma 4 E4B only by immutable GGUF hash and, for Docker, resolved OCI digest; Gemma 4 12B Unified is a disabled fallback; later Devstral uses a digest-pinned `ai/devstral-small-2:24B`; all profiles require policy admission before enablement. | `AT-MODEL-001`, `AT-SPEC-001` |
+| Model identifiers | v0.1 admits no model by family name or mutable tag. Every selectable profile requires an immutable artifact identity and complete profile tuple; Muse is the primary evaluation candidate, eligible official first-party Gemma profiles receive role-aware evaluation, and every additional candidate uses the same admission boundary. Existing E4B and 12B records remain rejected historical evidence. | `AT-MODEL-003`, `AT-MODEL-004`, `AT-MODEL-005`, `AT-VSC-003`, `AT-SPEC-001` |
 | Complete product documents | The README, PRD, implementation plan, inventory, tasks, model-provenance policy, security policy, runtime-boundary specification, license, and accepted decisions agree on architecture, scope, exclusions, security, storage, models, runtimes, and releases. | `AT-SPEC-001`, `AT-DOC-001` |
 
 ## 32. Documentation and Operating Guides
@@ -1589,25 +1675,41 @@ This section lists the guides needed to install, operate, recover, and understan
 
 Only v0.1 is ordered here; later work follows the release sequence and is promoted into a new stable-ID backlog before implementation.
 
-1. **Policy and feasibility:** accept the architecture decision, establish license/security/model/runtime policies, run documentation CI, and resolve the Gemma 4 E4B native/Docker feasibility spike before implementation assumes a model or runtime.
+1. **Policy and feasibility:** accept the architecture decision, establish license/security/model/runtime policies, run documentation CI, preserve the completed rejected Gemma feasibility evidence, and freeze the Decision 0027 candidate-neutral profile, codec, proposal, evaluation, and authority contracts before implementation assumes a model or runtime.
 2. **Contracts:** complete `AM-KRN-001` and `AM-CFG-001`; freeze typed boundaries before writing an interface or tool.
 3. **Platform boundary:** complete `AM-PLT-001`; package and prove the MacBook Pro M5, Fedora, and Ubuntu adapters before capability code depends on them.
 4. **Security boundary:** complete `AM-SEC-001`, `AM-PTH-001`, `AM-AUT-001`, and `AM-NET-001`; prove all declared platform and runtime topologies with hostile fixtures and begin continuous trust-boundary fuzzing.
 5. **Canonical state:** complete `AM-DAT-001` and `AM-PRV-001`; inject crashes and secret canaries before storing real sessions.
-6. **Local model lifecycle:** complete `AM-MDL-001`, `AM-MDL-002`, `AM-MDL-003`, and `AM-DIA-001`; pin Gemma 4 E4B, prove native macOS/Linux and gated Docker parity, recover installation failures, and make the active boundary inspectable in native Chat.
+6. **Local model lifecycle:** complete `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-MDL-003`, `AM-DIA-001`, and `AM-VSC-003` while retaining `AM-MDL-001`/`AM-MDL-002` historical coverage; prove the candidate-neutral fake boundary, isolate the Muse-first text spike, inventory eligible official first-party Gemma profiles by role, admit one usable exact profile only from evidence, recover installation failures, and make the selected boundary inspectable in native Chat.
 7. **Read-only primitives and trust:** complete `AM-SEC-002`, `AM-TOL-001`, `AM-GIT-001`, and `AM-INS-001` inside each platform sandbox; workspace instructions remain untrusted content.
 8. **Repository map and evidence:** complete `AM-REP-001`, `AM-EVD-001`, and `AM-EVD-002`; deterministic structure, coverage, receipts, evidence states, and citations must agree before model synthesis is enabled.
 9. **Handoff and recovery:** complete `AM-HOF-001` and `AM-SES-001`; the Codex boundary must fail closed, handoff warnings must be explicit, and stale map or citation inputs must be detected before resume is enabled.
-10. **Native Chat shell:** complete `AM-VSC-001` and `AM-VSC-002`; the extension remains a thin kernel client and renders evidence states, accessible controls, and diagnostics.
+10. **Native Chat shell:** complete `AM-VSC-001` through `AM-VSC-003`; the extension remains a thin kernel client, discovers only admitted profiles without a hard-coded model prerequisite, and renders evidence states, accessible controls, and diagnostics.
 11. **Release gate:** complete `AM-TST-001`, `AM-TST-002`, and `AM-DOC-001`; rerun every applicable `RV-*` protocol and quantitative threshold on MacBook Pro M5, Fedora, and Ubuntu, then execute incident, support/patch, accessibility, and evidence-assembly gates.
 
 ## 34. v0.1 Completion Checklist
 
 v0.1 is complete only when all of the following are true:
 
+Protected Gemma-specific completion text is retained below for additions-only
+history. The current product gate is the Decision 0027 set: an exact admitted
+profile may satisfy the model lane regardless of family, while the original
+rejected E4B/12B evidence, complete Muse/Gemma candidate matrix, and every new
+model-neutral acceptance test remain visible. No named candidate is required to
+pass if another eligible exact profile independently passes every gate.
+
 - [ ] Every row in the executable v0.1 backlog is complete with its required acceptance receipts.
 - [ ] Every test in the v0.1 quantitative acceptance matrix passes on the clean recorded MacBook Pro M5, recorded Fedora workstation, and clean Ubuntu environment.
+The next checkbox is retained verbatim as historical additions-only text from
+the original E4B plan. Decision 0027 supersedes it as a product prerequisite;
+the five current model-closure checks immediately after it govern future work.
+
 - [ ] **AgentMage — Gemma 4 E4B (Local, Read Only)** appears in the native Visual Studio Code Chat model picker and communicates only through the guarded kernel.
+- [ ] At least one exact admitted local profile appears in the native Visual Studio Code Chat model picker with its current identity, runtime, limits, and limitations and communicates only through the guarded kernel; no hard-coded E4B prerequisite or automatic substitution remains.
+- [ ] The Muse-first exact profile and every eligible official first-party Gemma profile at the pinned catalog freeze have attributable role, provenance, policy, hardware, test, and disposition records; a candidate may remain blocked or rejected without being hidden or converted into a family-wide result.
+- [ ] Quality and diagnostic-repeatability results remain separate, and no report represents repeated token output as universal model, runtime, driver, or hardware determinism.
+- [ ] Data sensitivity, action risk, and model capability remain separate; learned classification can only deny, narrow, redact, isolate, or escalate and can never grant authority or establish completion.
+- [ ] The persisted agent loop reaches only named terminal states, and every `SUCCESS` or verified `NO_OP` resolves to current deterministic postcondition evidence after interruption and restart.
 - [ ] The separate installer/importer proves hardware fit, policy admission, license and lineage, manifest and immutable hashes/digests, recovery and quarantine behavior, atomic activation, and self-test; the native Chat doctor response reports the active redacted boundary correctly.
 - [ ] The user can select one workspace and use bounded list, read, search, metadata, hash, read-only Git, and deterministic repository-map operations without any workspace mutation.
 - [ ] Every map record resolves to the correct source hash and range, every coverage gap is visible, and unsupported languages or relationships are never fabricated.
@@ -2031,6 +2133,12 @@ evidence needed to support those capabilities publicly.
 | `AM-GAD-003` | Produce the superseding v1.0 GA decision at Sprint 166 from current delivery, Windows, productivity, finance, cloud-observer, trusted-operations, command-authority, research, credential, continuity, model-management, strict-local, recovery, accessibility, support, and independent-review evidence. | `AM-GAD-002`, `AM-XOP-001` | Build | v1.0 | `AT-GA-003` |
 
 ## 38A. First-GA Trusted Operations Quantitative Acceptance Matrix
+
+The protected `AT-MUSE-001` text below predates Decision 0027. Its requirement
+for a truthful Muse disposition remains in force; its historical reference to a
+Gemma-based first GA is superseded by `AT-MODEL-003` through `AT-MODEL-005` and
+Decision 0027's family-neutral rule: any eligible exact profile may qualify only
+by independently passing the complete release contract.
 
 | ID | Test | Passing threshold |
 |---|---|---|

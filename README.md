@@ -8,15 +8,15 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; no integrated end-user workflow or supported binary |
+| Status | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; model construction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
 | First interface target | Native Visual Studio Code Chat beside the separate Codex tab |
-| Current enabled model | None; evaluated Gemma 4 E4B and Gemma 4 12B Unified candidates are rejected and disabled |
+| Current enabled model | None; Muse Glimmer is the primary deep-evaluation candidate, eligible official first-party Gemma profiles form the initial role-aware comparison inventory, and evaluated E4B/12B profiles remain rejected |
 | Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
-| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions are appended under Decisions 0008, 0009, 0010, 0011, and 0026 |
+| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under Decisions 0008, 0009, 0010, 0011, 0026, and 0027 |
 | License | [Apache License 2.0](./LICENSE) |
 
 ## Current Implementation Truth
@@ -36,14 +36,19 @@ test, planning, or isolated Linux security work in the repository. The
 machine-readable source is
 [`architecture/status-model.json`](./architecture/status-model.json), governed
 by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
-The accepted 17-epic, 169-sprint, 229-requirement scope is preserved. Under
+The accepted 17-epic, 169-sprint, 241-requirement scope is preserved. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), the user
 accepted the recorded residual risks and authorized the original numbered
 roadmap to resume at its first incomplete dependency gate. Independent review
 remains required before signed release or connected-authority promotion.
 Decision 0026 appends the Proton Calendar confirmed-UI requirement and
 confirmation-to-calendar workflow without changing current implementation
-truth or dependency order.
+truth or dependency order. [Decision
+0027](./docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md)
+reconciles future model construction around one candidate-neutral runtime,
+closed family codecs, Muse-first evaluation, role-aware first-party Gemma
+coverage, deterministic effect gating, and verifier-only completion. It enables
+no model and preserves every prior artifact and requirement.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -110,10 +115,10 @@ Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-plat
 v0.1 remains intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat. It is a partially implemented internal engineering target and foundation, not the first supported public release. The Phase 9 candidate implements only one approved exact-file read; the larger acceptance contract still includes:
 
 - Fedora is the active Linux development and performance reference, and the identical target workflow must pass on clean Ubuntu. Windows 11 x64 is required for first-GA. Apple Silicon macOS on a MacBook Pro M5 remains a blocked, retained post-GA lane.
-- A model profile may run only after a new manifest-bound admission passes. Gemma 4 E4B and Gemma 4 12B Unified are currently rejected and disabled; neither is an enabled baseline model. A future admitted profile would use native `llama.cpp` and, on Linux, may use a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.
+- A model profile may run only after a new manifest-bound admission passes. Muse Glimmer is the primary deep-evaluation candidate, every eligible official first-party Gemma profile at the pinned catalog freeze receives role-appropriate evidence, and other eligible candidates use the same intake. Gemma 4 E4B and Gemma 4 12B Unified remain rejected historical profiles. A future admitted profile uses native `llama.cpp` and, on Linux, may use a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.
 - A separate model installer/importer checks hardware fit, disk and memory requirements, license, publisher, lineage, the [model provenance policy](./MODEL-PROVENANCE-POLICY.md), artifact or OCI hashes, runtime compatibility, quarantine, recovery, and clean activation before enabling the profile.
 - A redacted `agentmage doctor` response is rendered inside native Visual Studio Code Chat; v0.1 does not require an end-user command-line interface. It reports the active model, runtime, sandbox, workspace grant, encrypted store, repository-map health, receipt sequence, recovery state, and offline condition.
-- An admitted model appears in the native Chat model picker only after its exact artifact/runtime pair passes activation gates.
+- An admitted model appears in the native Chat model picker only after its exact artifact, tokenizer, template, codec, runtime, context, decoding, platform, and hardware profile passes activation gates. No model family or mutable name is hard-coded as a prerequisite.
 - The user selects one workspace and can list, read, search, inspect metadata, calculate hashes, and inspect Git without changing it.
 - A deterministic, Git-aware repository map inventories permitted files, identifies supported languages and symbols with pinned Tree-sitter parsers, records reliable definitions, imports, and relationships, and cites every structural fact to an exact source range.
 - Every tool attempt has a receipt and every file-grounded claim has a resolvable citation. Answers visibly distinguish **Observed**, **Derived**, **Inferred**, and **Unknown/Blocked** statements. Changed evidence makes prior citations stale rather than silently reinterpreting them.
@@ -142,7 +147,7 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
 - Operating-system-backed credential brokering using non-secret references and operation-scoped resolution; raw credentials never enter model context, prompts, chat logs, command arguments, diagnostics, exports, or continuity snapshots.
 - Local encrypted snapshots and optional client-side-encrypted cloud continuity through an exact backup namespace. The live operational store remains local, and backup write authority does not broaden read-only Cloud Observer.
 - A signed approved-model catalog and chat-guided model manager for compatible-model discovery, user-confirmed acquisition or import, quarantine, verification, admission testing, activation, comparison, rollback, removal, and storage cleanup.
-- Meta Muse Glimmer as a candidate only until its exact first-party license, open-source or open-weight classification, provenance, artifacts, runtime, resource, quality, security, and platform evidence produce a normal admission disposition.
+- A candidate-neutral model layer with Muse Glimmer as the primary deep-evaluation candidate, every eligible official first-party Gemma profile inventoried and tested by role, and other eligible first-party candidates admitted through the same exact evidence contract. No candidate becomes supported or active until its own evidence passes.
 - Comprehensive read-only whole-codebase audit with exact repository identity, complete path disposition, deterministic structural graphs, semantic review in bounded coherent units, persistent evidence cards, cross-module reconciliation, checkpoint resume, transitive invalidation, calibrated findings, and explicit coverage and uncertainty.
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
@@ -157,14 +162,16 @@ flowchart LR
     U["User intent and approval"] --> V["Native VS Code Chat"]
     V --> K["AgentMage kernel"]
     K --> P["Policy engine and CapabilityGrant validation"]
-    K <--> M["Approved local model runtime"]
+    K <--> M["Candidate-neutral LocalModelRuntime"]
+    M <--> F["Closed model-family codec"]
+    F <--> Q["Exact admitted local profile"]
     P --> T["Sandboxed deterministic tool worker"]
     T --> E["Receipts, citations, and evidence states"]
     E --> K
     K <--> S[("SQLCipher operational store")]
     K --> V
     I["Separate model installer/importer"] --> A["Verified local model store"]
-    A --> M
+    A --> Q
     K --> D["Provider-neutral delivery graph"]
     D --> C["Operation-scoped provider adapters"]
     K --> W["Unified inbox and work graph"]
@@ -179,7 +186,8 @@ flowchart LR
     Z --> J["Disposable verification workspace"]
     G["OS credential broker"] --> C
     G --> B
-    I --> Q["Candidate quarantine and admission"]
+    I --> AQ["Candidate quarantine and admission"]
+    AQ --> A
 ```
 
 AgentMage has three one-way product layers:
@@ -249,11 +257,13 @@ installations reauthenticate connected accounts instead of restoring raw credent
 
 ## Model Policy
 
-v0.1 uses explicit user model selection. It attempts deterministic operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract.
+v0.1 uses explicit user model selection. It attempts deterministic operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract. The product is a probabilistic planner inside a deterministic effect machine: model output is an untrusted proposal, `CapabilityGrant` is the only authority, and only deterministic postcondition evidence can establish `SUCCESS` or verified `NO_OP`.
 
-The initial candidate is Gemma 4 E4B. Its manifest pins identity, license, publisher, upstream lineage, conversion and quantization recipe, native artifact or immutable OCI digest, tokenizer and template hashes, runtime compatibility, platform support, and resource limits. Every enabled model, embedding model, reranker, tokenizer, conversion, runtime, and derived artifact must satisfy [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), including the project's non-Chinese and non-Chinese-derived model rule, as a supply-chain requirement.
+`LocalModelRuntime` is candidate neutral. Runtime adapters own verified loading, health, token counting, streaming, cancellation, resources, isolation, and zero-network behavior. Closed family codecs own tokenizer, chat template, reasoning controls, message boundaries, end tokens, tool protocol, and translation into AgentMage's typed proposal schema. An exact profile binds the model revision, artifacts, transformations, tokenizer, template, codec, runtime, quantization, modalities, context, decoding, platform, hardware envelope, policy, lifecycle state, and evaluation evidence. The kernel never branches on a Muse, Gemma, or other family name.
 
-Gemma 4 12B Unified is the named disabled fallback candidate if E4B fails a mandatory quality or tool-calling threshold. Gemma 4 26B A4B and other later candidates remain disabled until their separate registry, lineage, license, origin, resource, quality, security, and platform gates pass. Meta Muse Glimmer is recorded as a candidate only; no open-source, support, compatibility, download, or activation claim is made until first-party evidence and the complete admission pipeline pass. A broad model marketplace is not a v0.1 objective, and AgentMage never switches models or adapters automatically.
+Muse Glimmer is the primary implementation and deep-evaluation candidate, but it is not approved or supported. The initial development catalog also inventories every eligible official first-party Gemma model at a pinned source freeze and assigns role-appropriate generative, tool, safety, embedding, multimodal, specialist, research, or legacy tests. A profile that cannot run on a reference machine receives a visible `BLOCKED-HARDWARE` result instead of being omitted. Other eligible first-party candidates may enter through the same contract. Existing Gemma 4 E4B and Gemma 4 12B Unified rejected records remain historical evidence, not prerequisites or automatic fallbacks.
+
+Every enabled model, embedding model, reranker, tokenizer, conversion, codec, runtime, and derived artifact must satisfy [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), including the project's non-Chinese and non-Chinese-derived model rule, as a supply-chain requirement. Quality profiles and diagnostic-repeatability profiles remain separate; repeated tokens under one exact tuple do not establish universal model determinism. A broad arbitrary-model marketplace is not a v0.1 objective, and AgentMage never switches models or adapters automatically.
 
 For first GA, the user can ask Chat to list hardware-compatible approved profiles and to download,
 import, verify, activate, compare, roll back, remove, or clean up one. A deterministic model manager

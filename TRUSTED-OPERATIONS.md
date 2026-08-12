@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Status | Normative first-GA architecture; post-GA Experimental Model Lab boundary retained |
-| Effective date | 2026-08-11 |
+| Effective date | 2026-08-12 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Model authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime authority | `RUNTIME-BOUNDARIES.md` |
 | Whole-codebase audit authority | `CODEBASE-AUDIT.md` |
-| Scope decision | `docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md` |
+| Scope decisions | `docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md`; `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
 
 ## 1. Purpose
 
@@ -247,8 +247,9 @@ Every exact model profile is in one of these states:
 - `retired`: no longer supported and unavailable for new activation.
 
 The catalog records exact publisher, developer, model and artifact revision, origin and lineage,
-license disposition, format, transformation, hashes, size, runtime and platform support, measured
-resource envelope, context, quality, security, support, and re-review state. Marketing names and
+license disposition, format, transformation, hashes, size, tokenizer, template, family codec,
+runtime, context, decoding, modality, platform/hardware/driver support, measured resource envelope,
+role, quality, diagnostic repeatability, security, support, and re-review state. Marketing names and
 mutable tags are display metadata only.
 
 ### 8.2 Chat Workflow
@@ -258,26 +259,37 @@ model, import an already downloaded artifact, verify an installation, activate a
 approved profiles, roll back, remove a profile, or free storage.
 
 Before acquisition, the deterministic model manager displays the exact profile, publisher, license,
-source host, artifact and runtime identities, expected size, required free space, measured hardware
-fit, network use, destination, verification steps, and rollback. The user confirms the plan. The
-separate installer then downloads or imports into quarantine, supports bounded resume, verifies
-hashes and signatures, scans and validates the files, runs admission self-tests, and activates the
-profile atomically. The model never downloads or approves itself.
+source host, artifact, tokenizer, template, codec, runtime, context, decoding, modality,
+platform/hardware identities, expected size, required free space, measured hardware fit, network
+use, destination, verification steps, and rollback. The user confirms the plan. The separate
+installer then downloads or imports into quarantine, supports bounded resume, verifies hashes and
+signatures, scans and validates the files, runs admission self-tests, and activates the profile
+atomically. The model never downloads or approves itself.
 
 Automatic comparison means AgentMage can execute a user-approved bounded sequence over approved
 profiles. It does not mean silent acquisition, silent activation, automatic fallback, or bypass of
 resource, origin, license, quality, or security gates.
 
-### 8.3 Muse Glimmer Candidate
+### 8.3 Muse-First and Model-Neutral Candidate Strategy
 
-Meta Muse Glimmer is listed as a candidate only. Its open-source or open-weight classification,
-official model card, exact license, publisher artifact, lineage, formats, transformation history,
-hashes, runtime compatibility, hardware fit, coding quality, tool behavior, security behavior, and
-support state must be verified from first-party evidence before an admission disposition is issued.
+Meta Muse Glimmer is the primary deep-evaluation candidate only. Its open-source or open-weight
+classification, official model card, exact license and use terms, publisher artifact, lineage,
+formats, transformation history, hashes, tokenizer, template, codec, runtime, context, decoding,
+hardware fit, coding quality, tool behavior, repeatability, security behavior, and support state
+must be verified from first-party evidence before an admission disposition is issued.
 
 No release claim may describe Muse Glimmer as approved, supported, downloadable, open source, or
 compatible until its exact profile receives `PASS`. A failed or incomplete admission does not block
-first GA because Gemma remains the reference-model lane.
+another eligible exact profile or first GA when that other profile independently passes every
+model and release gate.
+
+The initial development inventory also reconciles every eligible official first-party Gemma model
+from a pinned source freeze. Each exact entry receives role, applicability, provenance, policy,
+artifact, runtime, hardware preflight, applicable suite, and result records. Safety, embedding,
+specialist, research, multimodal, and legacy profiles cannot silently become coding planners;
+hardware-incompatible entries receive visible `BLOCKED-HARDWARE` results. Other eligible
+first-party candidates use the same intake. No family, catalog entry, or runtime compatibility
+creates approval, automatic activation, or fallback.
 
 ## 9. Post-GA Experimental Model Lab
 

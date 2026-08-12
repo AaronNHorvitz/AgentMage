@@ -2,12 +2,12 @@
 
 | Field | Value |
 |---|---|
-| Status | Active product policy; initial and additional candidate evaluation is in progress |
-| Effective date | 2026-08-10 |
+| Status | Active product policy; zero enabled models; candidate evaluation planned under Decision 0027 |
+| Effective date | 2026-08-12 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Model-management architecture | `TRUSTED-OPERATIONS.md` |
-| Applies to | Models, adapters, tokenizers, templates, conversions, quantizations, and derived artifacts |
+| Applies to | Models, family codecs, adapters, tokenizers, templates, conversions, quantizations, decoding profiles, context profiles, and derived artifacts |
 
 ## 1. Purpose
 
@@ -58,9 +58,9 @@ Every candidate receives one signed or hash-bound record containing:
 | License | Exact license text and version, redistribution obligations, notices, use restrictions, and recorded disposition |
 | Artifacts | Original and packaged hashes, sizes, formats, tokenizer, templates, encoders, and auxiliary files |
 | Transformation | Conversion and quantization tools, versions, source hashes, commands, settings, environment identity, and output hashes |
-| Runtime | Adapter identity, native build or immutable Open Container Initiative digest, backend, configuration, platform, and isolation boundary |
+| Runtime and codec | Family codec, tokenizer/template protocol, adapter identity, native build or immutable Open Container Initiative digest, backend, context and decoding profiles, modality, platform, hardware/driver envelope, configuration, and isolation boundary |
 | Resources | Memory, disk, acceleration, context, concurrency, and cancellation limits measured on each reference platform |
-| Quality | Pinned task corpus, decoding profile, tool-call validity, grounding, uncertainty, citation, and reproducibility results |
+| Quality | Pinned role-specific task corpus, quality profile, diagnostic-repeatability profile, repeated trials, tool-call validity, grounding, uncertainty, citation, false-completion, latency, resource, and intervention results |
 | Security | Prompt-injection, malformed output, resource exhaustion, egress, file/tool/credential authority, and local endpoint exposure results |
 | Decision | `PASS`, `BLOCKED`, or `REJECTED`; reviewer, date, limitations, evidence index, expiry or re-review trigger, and fallback status |
 
@@ -75,45 +75,120 @@ AgentMage implements one `LocalModelRuntime` contract with separately attributab
 - Docker Model Runner with its `llama.cpp` backend is a supported Fedora and Ubuntu compatibility adapter when its additional admission gates pass.
 - Docker Model Runner on macOS is separately gated and is not required for the reference installation.
 
-The Docker and native adapters use the same approved model profile, tokenizer, template, context policy, decoding profile, tool schemas, cancellation contract, and evaluation corpus. Hardware and backend differences may prevent byte-identical output; behavioral, authority, evidence, and threshold parity remain mandatory.
+When AgentMage makes a cross-adapter parity claim, the Docker and native adapters use the same approved model profile, tokenizer, template, context policy, decoding profile, tool schemas, cancellation contract, and evaluation corpus. Hardware and backend differences may prevent byte-identical output; behavioral, authority, evidence, and threshold parity remain mandatory. A candidate may be evaluated on one declared development adapter without creating a parity, support, or platform claim.
 
 Docker Model Runner is treated as an unauthenticated local inference service. Loopback binding alone is not proof of exclusive access. Its adapter remains blocked from the strict-local release profile unless tests demonstrate the declared process, socket, namespace, container, and egress boundary and no undeclared client can exercise AgentMage authority through it.
 
-## 7. Initial and Fallback Profiles
+## 7. Muse-First, Multi-Model Candidate Strategy
 
-### Gemma 4 E4B
+Decision 0027 makes the model layer candidate-neutral while selecting Meta Muse Glimmer as the
+primary implementation and deep-evaluation candidate. Priority is not approval. No candidate can
+become a product prerequisite merely because it is evaluated first, loads successfully, or has a
+strong publisher-reported benchmark.
 
-Gemma 4 E4B is the initial candidate, not a pre-approved dependency. Its first admission record must verify the exact first-party artifact, Apache-2.0 license disposition, upstream and packaged hashes, tokenizer and template, official or reproducible GGUF, runtime compatibility, hardware fit, tool calling, evidence behavior, every quantitative internal-v0.1 model threshold, and first-GA platform behavior on Fedora, Ubuntu, and Windows 11.
+### 7.1 Meta Muse Glimmer
 
-The Docker compatibility path uses `ai/gemma4:e4b` only after resolving that mutable name to an approved immutable OCI digest. The native path uses an approved GGUF and supporting artifacts whose hashes resolve to the same admitted profile.
+The first Muse candidate tuple is an exact first-party text-only artifact through a pinned native
+llama.cpp build on the Fedora development workstation. It uses one inference slot, zero egress,
+synthetic data, no workspace handle, no tools, no grants, no credentials, no vision projection, no
+speculative draft, and an initially bounded 8k context. Separately measured 16k and 32k profiles may
+follow. Vision, draft/speculative decoding, dynamic quantization, Docker Model Runner, larger
+contexts, and other platforms are separate tuples that inherit no result.
 
-### Gemma 4 12B Unified
+Before any supported, downloadable, compatible, open-source, open-weight, or hardware-fit claim is
+made, the Muse record must verify from first-party evidence the exact developer and publisher,
+release and artifact revisions, model card, license and separate use terms, origin and upstream
+lineage, formats, transformations, hashes, tokenizer, template, codec, runtime compatibility,
+measured platform resources, coding and tool quality, security behavior, and support state.
 
-Gemma 4 12B Unified is the named fallback candidate if E4B fails a required quality or tool-calling threshold. It remains disabled unless a decision record promotes it after the complete, independent admission process. AgentMage never switches to it automatically, and a fallback decision cannot waive resource, license, origin, platform, security, or offline requirements.
+The disposition may be `PASS`, `BLOCKED`, or `REJECTED`. A non-pass does not block another eligible
+candidate or first GA. Mutable names, community mirrors, secondary reports, or descriptive use of
+the term open source cannot substitute for first-party and artifact evidence.
 
-Gemma 4 26B A4B and other later candidates remain disabled until separately promoted and admitted.
+### 7.2 Comprehensive First-Party Gemma Inventory
 
-### Meta Muse Glimmer
+At each declared evaluation freeze, AgentMage inventories every eligible official first-party Gemma
+model discoverable from the pinned Google catalog evidence. Each exact profile records its role,
+publisher-controlled source, revision, license and use terms, lineage, artifact, tokenizer,
+template, transformation, runtime, modality, context, hardware preflight, applicable test suites,
+and result.
 
-Meta Muse Glimmer is a named candidate only. Before any supported, downloadable, compatible,
-open-source, open-weight, or hardware-fit claim is made, its admission record must verify from
-first-party evidence the exact developer and publisher, release and artifact revisions, model card,
-license text and classification, origin and upstream lineage, formats, conversions and
-quantizations, hashes, tokenizer and template, runtime compatibility, measured platform resources,
-coding and tool quality, security behavior, and support state.
+Evaluation is role-specific:
 
-The disposition may be `PASS`, `BLOCKED`, or `REJECTED` under the same rules as every candidate. A
-non-pass does not block the Gemma reference profile or first GA. Mutable names, community mirrors,
-secondary reports, or descriptive use of the term open source cannot substitute for the required
-first-party and artifact evidence.
+- general, instruction, reasoning, coding, and multimodal generative profiles receive applicable
+  repository, planning, coding, tool, evidence, context, security, and resource tests;
+- function-specialized profiles receive tool-selection and structured-proposal tests;
+- safety profiles receive advisory-classification tests and can only deny, narrow, redact, isolate,
+  or escalate;
+- embedding profiles receive retrieval, source-provenance, contamination, invalidation, and
+  resource tests; and
+- specialist, research, interpretability, translation, medical, current, and legacy profiles
+  receive applicable role tests and cannot silently become the coding planner.
+
+An exact profile that cannot run within the reference-machine envelope receives a visible
+`BLOCKED-HARDWARE` evaluation result. It is not silently omitted, represented as tested, or treated
+as a family-wide rejection. Community conversions, fine-tunes, adapters, merges, and mirrors do not
+inherit a first-party result.
+
+The existing Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records remain historical
+evidence. Their exact text and prior requirement identities remain protected. A new revision,
+artifact, transformation, runtime, codec, or profile requires new admission and cannot relabel an
+old result.
+
+### 7.3 Other Eligible Candidates
+
+Other first-party candidates may enter the development evaluation inventory through the same
+origin, jurisdiction, lineage, license, use-policy, provenance, artifact, codec, runtime, hardware,
+quality, security, and evidence gates. Section 4's non-Chinese and non-Chinese-derived rule remains
+in force. Runtime compatibility alone creates no approval.
+
+User-selected arbitrary, community, or provenance-incomplete artifacts remain limited to the
+post-GA Experimental Model Lab. They cannot enter the ordinary candidate store merely because the
+runtime can parse them.
+
+### 7.4 Candidate and Product State
+
+The development inventory and signed product catalog use exact lifecycle states:
+
+- `candidate`: attributable profile awaiting evidence;
+- `evaluating`: exact profile allowed only in its declared isolated evidence run;
+- `approved`: exact profile allowed only for the proved capabilities and platforms;
+- `degraded`: explicitly supported limited profile;
+- `quarantined`: unusable pending investigation or re-review;
+- `rejected`: exact profile failed a non-waivable gate; and
+- `retired`: no new use after support or policy withdrawal.
+
+`BLOCKED-HARDWARE` is an evaluation result attached to an exact profile/platform/hardware tuple, not
+an activation state. Only `approved` and explicitly supported `degraded` profiles can enter ordinary
+operation. The current state remains zero enabled models.
+
+### 7.5 Quality and Diagnostic Repeatability
+
+Every serious generative candidate uses separately identified profiles:
+
+1. A first-party-recommended quality profile measures intended capability and may use stochastic
+   generation.
+2. A diagnostic-repeatability profile pins the artifact, tokenizer, template, codec, runtime,
+   sampler order, top-k one, seed, reasoning controls, context, slot count, speculative state,
+   platform, hardware, driver, prompt, tools, and limits.
+
+The profiles use separately reported results. Temperature zero, top-k one, a fixed seed, greedy
+sampling, or repeated output does not prove cross-runtime, cross-driver, cross-device, cross-release,
+or universal model determinism. AgentMage distinguishes narrow token repeatability from
+deterministic policy, deterministic authority and effect mediation, independently verified outcome
+state, and reproducible audit evidence.
+
+Stochastic evaluations run repeated trials and report the declared pass-at-one, pass-at-k,
+pass-to-the-k, variance, confidence interval, tool-validity, false-completion, latency, memory, and
+user-intervention measures. Incomparable tuples are labeled and never merged.
 
 ## 8. Re-Review Triggers
 
 Admission expires and the profile is disabled or quarantined when any of the following changes:
 
-- Model, tokenizer, template, encoder, adapter, conversion, quantization, runtime, or artifact identity.
+- Model, tokenizer, template, family codec, encoder, draft model, adapter, conversion, quantization, runtime, decoding, context, modality, or artifact identity.
 - Publisher, ownership, license, lineage, origin evidence, support status, or vulnerability disposition.
-- Platform, acceleration backend, context policy, tool grammar, sandbox, socket, or network behavior.
+- Platform, hardware, driver, acceleration backend, context policy, reasoning control, sampler order, tool grammar, sandbox, socket, or network behavior.
 - Quality corpus, acceptance threshold, threat model, or supported AgentMage capability.
 - A vulnerability, compromise, revocation, or unexplained reproducibility difference affects the admitted profile.
 
@@ -128,9 +203,10 @@ evidence, decision, reviewer, date, limitations, expiry, and triggering release 
 
 A user may ask Chat to list compatible approved profiles and to download, import, verify, activate,
 compare, roll back, remove, or clean up one. Before acquisition, the deterministic model manager
-shows the exact artifact and runtime identities, publisher, license, source, size, disk and memory
-requirements, measured hardware fit, expected network use, destination, verification sequence,
-limitations, and rollback. The user confirms that exact plan.
+shows the exact artifact, tokenizer, template, codec, runtime, context, decoding, modality, platform,
+and hardware identities plus publisher, license, source, size, disk and memory requirements,
+measured hardware fit, expected network use, destination, verification sequence, limitations, and
+rollback. The user confirms that exact plan.
 
 The separate installer/importer performs bounded acquisition or import into quarantine, resume,
 hash and signature verification, malware and format scanning, admission self-tests, atomic
@@ -164,7 +240,8 @@ evidence, malformed or adversarial repository content, context pressure, cancell
 stable structured output. The admission record stores the measured packet, context, latency,
 memory, and quality limits. A profile is not approved merely because it accepts a large prompt.
 
-Every semantic evidence card records the exact model, runtime, template, tokenizer, adapter, and
+Every semantic evidence card records the exact model, artifact, tokenizer, template, codec,
+runtime, adapter, context, decoding, modality, platform, hardware/driver, packet, proposal, and
 policy identities that produced it. Changing any of those identities invalidates affected semantic
 cards and their dependent findings, reconciliation records, and reports. It does not invalidate an
 unchanged deterministic structural index unless that index's own parser or source identity changed.

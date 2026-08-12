@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Status | Derived architecture and verification specification; shared/Linux implementation in progress |
-| Effective date | 2026-08-11 |
+| Effective date | 2026-08-12 |
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
@@ -11,6 +11,7 @@
 | Trusted-operations authority | `TRUSTED-OPERATIONS.md` |
 | Whole-codebase audit authority | `CODEBASE-AUDIT.md` |
 | Windows specialization | `WINDOWS-BOUNDARIES.md` |
+| Model construction decision | `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
 
 ## 1. Purpose
 
@@ -28,11 +29,13 @@ flowchart LR
     T -->|"read-only authorized bytes; restricted until classified"| W["User-selected workspace"]
     T -->|"bounded result; ephemeral"| K
 
-    K -->|"minimized model context; ephemeral or restricted"| A["LocalModelRuntime adapter"]
-    A -->|"one admitted profile"| N["Native llama.cpp"]
-    A -->|"guarded loopback; no AgentMage authority"| D["Docker Model Runner"]
-    N -->|"model output; untrusted"| A
-    D -->|"model output; untrusted"| A
+    K -->|"bounded context packet; ephemeral or restricted"| A["Candidate-neutral LocalModelRuntime"]
+    A -->|"one exact profile"| F["Closed family codec"]
+    F -->|"verified native profile"| N["Native llama.cpp"]
+    F -->|"verified compatibility profile"| D["Docker Model Runner"]
+    N -->|"raw output; untrusted"| F
+    D -->|"raw output; untrusted"| F
+    F -->|"typed proposal; untrusted and inert"| K
 
     K <--> |"operational records; encrypted"| S[("Encrypted SQLite")]
     K -->|"key reference only"| Q["OS secret store"]
@@ -87,6 +90,8 @@ The dotted handoff edge is not an AgentMage network path. It depicts a separate 
 | Sandboxed tool worker | One consumed grant and one bounded read-only workspace scope | Network, persistence, credentials, model access, and authority reuse |
 | Native model service | Inference for one hash-pinned model profile | Workspace, tools, grants, credentials, and network authority |
 | Docker Model Runner | Local inference for one digest-pinned model profile | AgentMage authority of any kind; non-loopback exposure; runtime artifact acquisition |
+| Model-family codec | Translate one exact tokenizer, template, reasoning, message, end-token, streaming, and tool protocol into the closed proposal schema | Policy, grants, completion, workspace handles, credentials, network, runtime selection, automatic fallback, or accepting malformed/partial output |
+| Deterministic proposal verifier | Validate proposal identity, schema, task/snapshot binding, policy, tool catalog, arguments, budgets, and postconditions | Model inference, semantic authority, grant minting outside the kernel transaction, or treating confidence/classifier output as completion |
 | Model installer/importer | Bounded acquisition or user-selected import into staging | Workspace, session, tool, grant, operational-store, and inference authority |
 | Review verifier | Read signed packages and synthetic evidence in an explicit test directory | Modifying user workspaces or trusting AgentMage summaries over raw evidence |
 | Provider adapter worker | One destination-, account-, capability-, and operation-scoped credential reference and network grant | Raw workspace access, model authority, unrelated credentials, alternate hosts, ambient network, and grant reuse |
@@ -143,7 +148,7 @@ AgentMage never describes a Docker-backed installation as wholly unprivileged un
 |---|---|---|
 | VS Code extension to bridge/kernel | macOS authenticated App Group IPC or Linux mode `0600` Unix socket | Peer identity, launch challenge, session binding, replay defense, version negotiation, size limits, and cancellation |
 | Kernel to tool worker | Private per-operation IPC | One consumed grant, worker identity, bounded schema, timeout, descendant cleanup, and one terminal receipt |
-| Kernel to native model adapter | Private local IPC, preferably a mode `0600` Unix socket | Model/runtime hash verification, process identity, no non-local bind, limits, cancellation, and no model authority |
+| Kernel to candidate-neutral model adapter | Private local IPC, preferably a mode `0600` Unix socket | Exact model/artifact/tokenizer/template/codec/runtime/context/decoding/profile verification, process identity, no non-local bind, limits, cancellation, and no model authority |
 | Kernel adapter to Docker Model Runner | Guarded loopback endpoint scoped by the approved Linux boundary | Exact host and port, immutable image/model digest, no non-loopback or ordinary-container access, no acquisition, egress proof, and local-client probes |
 | Windows extension/bridge to kernel | Access-controlled named pipe | Exact user and logon session, integrity level, executable/package identity, fresh challenge, version, sequence, size limits, cancellation, and replay defense |
 | Kernel to provider adapter worker | Private operation-scoped IPC | One consumed connected grant, exact host/tenant/account/capability, credential reference, byte/time budget, cancellation, result schema, and one terminal receipt |
@@ -172,20 +177,50 @@ Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access
 
 1. The separate installer/importer performs preflight, displays identity and license, acquires or imports into staging, verifies all hashes and manifests, runs malware and compatibility checks, activates atomically, and exits.
 2. Offline startup verifies package, platform, policy, workspace, storage, process, socket, model, runtime, and installer-absence state before registering tools.
-3. The kernel starts only declared helpers. Model services load on explicit demand and unload on cancellation, pressure, idle policy, disablement, shutdown, or incident containment.
+3. The kernel starts only declared helpers. Model services load one exact admitted, explicitly selected profile on demand and unload on cancellation, pressure, idle policy, disablement, shutdown, or incident containment. No family codec, classifier, model output, failure, or resource event can select or activate a replacement.
 4. Each tool worker is fresh and operation-scoped. It terminates with descendants and scratch cleanup after success, denial, cancellation, timeout, or failure.
 5. Shutdown closes sockets, unloads the model, completes or invalidates checkpoints, expires temporary authority, and records residue.
 6. Uninstall removes product-owned packages and optional user-selected data according to the published procedure while preserving user workspaces and unrelated platform dependencies.
 7. Owner / Unrestricted Session starts only from a direct authenticated user action and ends on expiry, panic stop, lock, logout, restart, policy change, emergency disablement, or integrity failure; termination includes every descendant.
 8. A continuity run snapshots local canonical state into staging, encrypts and seals it, completes the immutable manifest atomically, and only then permits an optional cloud transfer. Restore occurs into separate staging and swaps only after integrity, compatibility, and user confirmation pass.
-9. A model-manager operation launches the separate installer/importer for one confirmed catalog profile, keeps all acquisition in quarantine, and changes the active profile only through verified atomic activation or rollback.
+9. A model-manager operation launches the separate installer/importer for one confirmed catalog profile, keeps all acquisition in quarantine, and changes the active profile only through verified atomic activation or rollback. Muse-first evaluation priority and a Gemma catalog entry create no activation authority.
 10. A whole-codebase audit freezes its exact source and scope identity, inventories the repository, builds deterministic structure, processes bounded semantic packets, reconciles cross-module evidence, and compiles a report. Cancellation checkpoints current work; removal terminates every audit worker and deletes only retention-selected audit state.
 
 No AgentMage process silently persists as a system-wide daemon. Any user-session launch mechanism is declared, visible in diagnostics, removable, and tested for stop, restart, update, rollback, and uninstall behavior.
 
-## 7. Runtime Parity Gate
+## 7. Proposal, Classification, and Completion Boundary
 
-The native and Docker adapters run the same pinned corpus with the same model profile, template, context setting, decoding parameters, tool schemas, limits, and evidence rules. The gate records:
+One inference run binds the exact model, artifact, tokenizer, template, family
+codec, runtime build, quantization, modalities, context, decoding, platform,
+hardware, driver, policy, evaluation profile, session, task, turn, model run,
+context packet, repository snapshot, tool catalog, proposal, and correlation
+identities. Streaming fragments are display data until the complete proposal
+passes the closed decoder. Unknown fields, duplicate identities, invalid UTF-8,
+trailing bytes, malformed tool arguments, partial output, stale snapshots,
+replays, oversized values, unsupported versions, and ambiguous terminal claims
+remain inert.
+
+Data sensitivity, action risk, and model capability are separate typed inputs.
+Static checks and deterministic deny-first policy run before learned or
+model-based classification. A classifier may deny, narrow, redact, isolate, or
+request user review. It cannot issue or widen a grant, override a denial, select
+a prohibited destination, change the active profile, authorize an effect, or
+establish completion.
+
+The persisted agent loop records named terminal states: `SUCCESS`, verified
+`NO_OP`, `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`,
+and `FAILED`. Only current deterministic postcondition evidence can produce
+`SUCCESS` or verified `NO_OP`. Restart revalidates task, snapshot, policy,
+profile, pending authority, consumed grants, and uncertain effects; model prose,
+confidence, a model judge, or a classifier cannot convert any non-success state.
+
+## 8. Runtime Parity and Evaluation Gate
+
+Every enabled adapter for the same exact profile runs the same pinned corpus with
+the same template, codec, context, decoding, tool schemas, limits, and evidence
+rules. Quality profiles use the first-party recommended settings;
+diagnostic-repeatability profiles pin the complete sampler and environment tuple
+and remain separately reported. The gate records:
 
 - Artifact, tokenizer, template, runtime, backend, and environment identities.
 - Tool-call schema validity and malformed-stream behavior.
@@ -194,15 +229,20 @@ The native and Docker adapters run the same pinned corpus with the same model pr
 - Prompt-injection, tool-authority, workspace, credential, and endpoint probes.
 - Socket exposure, container reachability, Domain Name System activity, outbound attempts, and outbound bytes after acquisition.
 
-Neither adapter may borrow another adapter's result. A Docker failure blocks only the Docker profile unless it reveals a shared-contract defect; a shared-contract defect blocks every affected profile.
+Neither adapter, candidate, family, context, or decoding profile may borrow
+another profile's result. A Docker failure blocks only the Docker profile unless
+it reveals a shared-contract defect; a shared-contract defect blocks every
+affected profile. Repeated output within one exact tuple is not evidence of
+cross-runtime, cross-driver, cross-device, cross-release, or universal model
+determinism.
 
-## 8. Reviewer Evidence
+## 9. Reviewer Evidence
 
 Each release preserves a machine-readable process, privilege, entitlement, package, path, socket, container, and data-flow inventory. Before-and-after system snapshots, raw socket observations, packet captures, sandbox results, endpoint probes, install logs, and residue scans reconcile with that inventory.
 
 The evidence distinguishes product behavior from Visual Studio Code, Docker, operating-system, endpoint-security, and unrelated user-process behavior. Local execution alone is never represented as proof of confidentiality or exclusive access.
 
-## 9. Connected Delivery Topology
+## 10. Connected Delivery Topology
 
 Connected operation is a removable capability pack, not a new kernel mode with ambient network authority.
 

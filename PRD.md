@@ -5,15 +5,15 @@
 | **Product** | AgentMage - a portable, local-first AI agent |
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
-| **Date** | 2026-08-11 |
-| **Status** | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; no integrated end-user workflow or supported binary |
+| **Date** | 2026-08-12 |
+| **Status** | Pre-alpha scaffold; roadmap resumed under Decision 0021 and model direction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
 | **Execution plan** | [TASKS.md](./TASKS.md) - 17 epics and 169 sequential dependency gates |
 | **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
 | **First interface target** | Native Visual Studio Code Chat |
-| **Current enabled model** | None; evaluated Gemma 4 E4B and Gemma 4 12B Unified candidates are rejected and disabled |
+| **Current enabled model** | None; Muse Glimmer is the primary evaluation candidate, eligible first-party Gemma models form the initial role-aware comparison inventory, and prior evaluated Gemma 4 E4B and Gemma 4 12B Unified profiles remain rejected |
 | **License** | Apache License 2.0 |
 
 AgentMage is a brand-new, from-scratch project. It is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer, and it is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
@@ -38,13 +38,17 @@ This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json). The
-17 epics, 169 sprints, and 229 stable requirements remain accepted and
+    17 epics, 169 sprints, and 241 stable requirements remain accepted and
 protected. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
 records the user's acceptance of the stabilization residuals and authorizes
 execution to resume at the first incomplete dependency gate. It does not close
 the remaining release, platform, security, or evidence blockers. Decision 0026
-appends the Proton Calendar confirmed-UI requirement and Story 139.2 without
-renumbering the roadmap or changing current implementation truth.
+    appends the Proton Calendar confirmed-UI requirement and Story 139.2 without
+    renumbering the roadmap or changing current implementation truth.
+    [`Decision 0027`](./docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md)
+    appends the candidate-neutral runtime, Muse-first evaluation, comprehensive
+    first-party Gemma testing, deterministic classification, repeatability, agent-
+    state, and model-picker requirements while preserving zero enabled models.
 
 The accepted Phase 9 candidate under
 [`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md)
@@ -131,6 +135,10 @@ AgentMage separates deterministic work, model inference, authorization, evidence
 23. Keep user-selected unapproved model experimentation in a post-GA disposable lab with no connected, credential, command, or canonical-workspace-write authority and no automatic promotion.
 24. Audit an entire declared codebase through complete path disposition, deterministic structure, coherent bounded semantic review, cross-module reconciliation, encrypted checkpoint resume, transitive invalidation, canonical read-only enforcement, calibrated findings, and explicit coverage and uncertainty.
 25. Make repository mutation inaccessible to models and available only through exact adapter operations that preserve user and Git state, use isolated owned worktrees, bind authenticated host/repository/ref identities, create signed commits from temporary indexes, require a separate approval for one ordinary fast-forward push, and omit generic pull and destructive or implicit Git behavior.
+26. Construct the model layer around one candidate-neutral runtime and closed family codecs, with Muse Glimmer as the primary deep-evaluation candidate, every eligible official first-party Gemma model inventoried and tested by role, and other eligible candidates admitted through the same evidence contract.
+27. Distinguish narrow token repeatability from deterministic policy, authority, effect mediation, verified outcomes, and reproducible audit evidence; publish separate quality and diagnostic-repeatability results without claiming universal model determinism.
+28. Keep semantic classification advisory and authority-reducing: deterministic deny-first policy governs typed facts, while learned classifiers can only deny, narrow, redact, isolate, or escalate.
+29. Use a persisted bounded agent state machine in which only deterministic postcondition evidence can establish success or verified no-op and every other terminal result remains visibly non-successful.
 
 ## 4. Non-Goals
 
@@ -239,7 +247,7 @@ There is no Model-to-Tool, Shell-to-Tool, Shell-to-Model, or Capability-Pack-to-
 ## 6. Target v0.1 User Experience
 
 1. The user installs a verified Linux package on Fedora or Ubuntu. Windows 11 x64 belongs to the first-GA target set; Apple Silicon macOS remains a separately evidenced post-GA lane.
-2. A separate installer/importer assesses hardware, memory, disk space, model and quantization fit, license, publisher, lineage, `MODEL-PROVENANCE-POLICY.md`, native artifact or immutable OCI hashes, and runtime compatibility before atomically enabling an approved artifact.
+2. A separate installer/importer assesses hardware, memory, disk space, exact model/artifact/tokenizer/template/codec/runtime/context/decoding fit, license, publisher, lineage, `MODEL-PROVENANCE-POLICY.md`, native artifact or immutable OCI hashes, role evidence, and platform compatibility before atomically enabling an approved profile.
 3. A local, redacted `agentmage doctor` response renders inside native Visual Studio Code Chat and reports the active model and runtime manifests, offline state, platform boundary, workspace grant, capability versions, index health, encrypted-store availability, and session-recovery status without requiring the deferred end-user CLI.
 4. An admitted local read-only model profile appears in the native Chat model picker. No profile is currently enabled, and the rejected Gemma candidates are not offered.
 5. The user selects a workspace and sees its resolved root, exclusions, sensitivity, and read-grant expiration.
@@ -261,21 +269,23 @@ Across supported and retained platform lanes, AgentMage uses authenticated local
 ```mermaid
 flowchart TB
     V["Native VS Code Chat extension"] -->|"authenticated local IPC"| K["Kernel host"]
-    K -->|"inference only"| A["LocalModelRuntime adapter"]
-    A --> M["Native llama.cpp"]
-    A --> R["Gated Docker Model Runner"]
+    K -->|"bounded context; untrusted proposal"| A["Candidate-neutral LocalModelRuntime"]
+    A --> F["Closed family codec"]
+    F --> P["Exact admitted profile"]
+    P --> M["Native llama.cpp"]
+    P --> R["Gated Docker Model Runner"]
     K -->|"single-use grant"| T["Fresh sandboxed tool worker"]
     K <--> D[("Encrypted SQLite")]
     K <--> Q["Operating-system secret store"]
     T -->|"read-only authorized root"| W["User-selected workspace"]
 
     X["Separate installer/importer"] -->|"verified atomic activation"| MS["Approved model store"]
-    MS -->|"hash-verified load"| M
-    MS -->|"immutable OCI activation"| R
+    MS -->|"exact-profile activation"| P
 
     T -. "no network" .-> N["Network denied"]
     M -. "no tools, files, grants, credentials, or egress" .-> W
     R -. "unauthenticated local service; no AgentMage authority" .-> W
+    F -. "no policy, grants, completion, or fallback" .-> W
     X -. "no workspace or session authority" .-> W
 ```
 
@@ -309,17 +319,61 @@ Before acquisition, the installer/importer reports available memory, free disk s
 
 ## 8. Model Policy and Routing
 
-The first named candidate model is Gemma 4 E4B. Its current feasibility disposition is rejected and disabled, so it is not an enabled product model. Gemma 4 12B Unified is also rejected and disabled. Either candidate requires a new revision-bound admission and evaluation decision before activation. The target manifest records the first-party identity, publisher, Apache-2.0 license disposition, upstream lineage and hash, conversion and quantization recipe, packaged-artifact and tokenizer hashes, runtime build, supported platform, expected memory and disk use, context ceiling, acceleration requirements, and measured tool-call limitations. Docker's `ai/gemma4:e4b` name must resolve to an approved immutable OCI digest; native adapters use the same approved profile through a hash-pinned GGUF and supporting artifacts. A separate installer/importer must show the license, verify the manifest, prove hardware fit, and complete an installation self-test before an artifact becomes runnable. AgentMage refuses a silent artifact or runtime change.
+Decision 0027 makes model construction candidate-neutral and Muse-first. One
+`LocalModelRuntime` contract governs load, unload, health, token count, streaming, cancellation,
+resource reporting, manifest verification, and zero-network behavior. Separately attributable
+family codecs govern each model's tokenizer, template, reasoning controls, message boundaries, end
+tokens, tool grammar, and translation into the closed AgentMage proposal contract. Kernel policy,
+authority, context, workers, verifiers, and evidence never branch directly on a model family.
 
-Every model, embedding model, reranker, tokenizer, conversion, quantization, runtime, and derived artifact must pass `MODEL-PROVENANCE-POLICY.md`, including the documented non-Chinese and non-Chinese-derived model rule, in addition to license, publisher, lineage, provenance, integrity, resource, quality, security, and platform review. Gemma 4 12B Unified remains the named disabled fallback candidate, but its current rejected disposition prohibits activation or automatic substitution. Gemma 4 26B A4B and other later candidates remain disabled until their separate gates pass. v0.1 exposes an approved-artifact catalog, not an arbitrary model or provider marketplace.
+Muse Glimmer is the primary implementation and deep-evaluation candidate, not an approved or
+enabled dependency. Its first evaluation tuple is a first-party text-only artifact through a pinned
+native llama.cpp build on the Fedora development workstation, one inference slot, synthetic data,
+zero egress, no workspace/tool/grant/credential authority, no vision or speculative draft, and an
+initially bounded 8k context. Every wider context, vision, draft, dynamic-quantization, Docker,
+Windows, macOS, or connected profile is independently admitted.
 
-Meta Muse Glimmer is a candidate only. AgentMage does not claim its open-source or open-weight
-classification, exact license, supported artifact, lineage, runtime compatibility, hardware fit,
-coding quality, tool behavior, or security state until verified first-party evidence and the normal
-admission pipeline produce a complete disposition. A Muse non-pass does not block the Gemma-based
-first-GA lane.
+The initial development inventory includes every eligible official first-party Gemma model at a
+pinned Google catalog freeze. Each exact profile receives source, license/use-term, origin, lineage,
+artifact, role, runtime, modality, hardware, and applicability records. Generative, function, safety,
+embedding, multimodal, specialist, research, and legacy profiles receive role-appropriate tests. An
+incompatible profile is recorded as `BLOCKED-HARDWARE` rather than silently omitted or treated as a
+family-wide failure. Existing rejected Gemma 4 E4B and Gemma 4 12B Unified records remain immutable historical
+evidence and grant no approval to another revision or profile.
 
-v0.1 uses explicit user model selection. It attempts deterministic read-only operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract. It records benchmark data for a later measured router without changing behavior.
+Other eligible first-party candidates can enter through the same exact intake while the non-Chinese
+and non-Chinese-derived rule remains active. Community, arbitrary, or provenance-incomplete user
+artifacts remain in the post-GA Experimental Model Lab. Runtime compatibility is not admission.
+
+Every model, embedding model, reranker, codec, tokenizer, template, conversion, quantization,
+runtime, decoding profile, context profile, draft, encoder, and derived artifact must pass
+`MODEL-PROVENANCE-POLICY.md`. The profile binds exact identity, hashes, transformations, platform,
+hardware, policy, evaluation, and lifecycle state. Any material change triggers re-review rather
+than silent substitution.
+
+Each serious generative candidate uses a first-party-recommended quality profile and a separately
+identified diagnostic-repeatability profile. Temperature zero, top-k one, a fixed seed, or repeated
+output cannot establish universal model determinism. AgentMage reports narrow token repeatability,
+deterministic policy, deterministic authority/effect mediation, verified outcome state, and audit
+reproducibility as separate properties.
+
+Data sensitivity, action risk, and model capability are separate decisions. Deterministic
+deny-first policy governs typed current facts. A probabilistic or learned classifier can deny,
+remove tools, narrow, redact, isolate, or escalate; it cannot grant authority, override a denial,
+choose a prohibited destination, switch models, or establish completion. Classification uncertainty
+fails toward a narrower boundary, a user decision, or a blocked result.
+
+The bounded agent loop persists exact states, proposals, budgets, observations, verifiers, and
+terminal results. Only current deterministic postcondition evidence can establish `SUCCESS` or
+verified `NO_OP`. `BLOCKED`, `DECLINED`, `STALLED`, `EXHAUSTED`, `UNCERTAIN`, `CANCELLED`, and
+`FAILED` remain non-success results regardless of model prose, confidence, classifier output, or a
+model judge.
+
+The initial path uses explicit user model selection, one large active model, and one inference slot.
+It attempts deterministic read-only operations first, never switches models automatically, never
+contacts a frontier model, and stops visibly when the selected model cannot satisfy the task
+contract. It records role-specific benchmark data for later measured routing without changing
+behavior.
 
 Automatic routing, fallback, and ensembles remain disabled until a later release defines and passes task-class thresholds. A later release may recommend frontier consultation and prepare a packet, but no release may autonomously deliver it.
 
@@ -442,12 +496,17 @@ The inventory's v0.1 quantitative acceptance matrix is mandatory. Key gates incl
 - 100% tool receipt coverage and citation resolution.
 - At least 98% claim-support precision and zero false-completion claims across 200 adversarial tasks.
 - At least 90% labeled task accuracy, extraction F1 of at least 0.95, and at least 99% schema-valid model calls.
+- Zero authority or completion from partial, malformed, stale, duplicate, replayed, oversized, unknown-field, trailing, unsupported-version, or ambiguous model proposals across the closed codec corpus.
+- Identical deterministic authority outcomes across at least 5,000 typed policy mutations and zero classifier-created or classifier-broadened authority across at least 1,000 learned-classifier fixtures.
+- Every `SUCCESS` and verified `NO_OP` resolves to current deterministic postcondition evidence; stalls, exhaustion, uncertainty, cancellation, errors, model confidence, and model-judge output produce no false success across state-transition and restart fixtures.
 - 100% exact repository-map output for supported-language fixtures, with every structural fact resolving to the correct file hash and source range and every unsupported relationship omitted or labelled as inferred.
 - 100% correct evidence-state assignment and stale-citation detection on the labeled evidence corpus.
 - 100% correct model installation, recovery, hardware-fit, manifest, runtime, and redacted `agentmage doctor` results across clean supported platforms.
-- 100% immutable model, tokenizer, template, GGUF, OCI, and runtime identity resolution plus behavioral parity across every enabled native or Docker adapter; one adapter's result never substitutes for another.
+- 100% immutable model, artifact, tokenizer, template, codec, GGUF, OCI, runtime, context, decoding, platform, hardware/driver, policy, and evaluation identity resolution plus behavioral parity across every enabled native or Docker adapter; one tuple's result never substitutes for another.
+- 100% of eligible official first-party Gemma profiles in the frozen source catalog have exact role, applicability, provenance, policy, artifact, runtime, hardware, suite, and result records; incompatible profiles use visible `BLOCKED-HARDWARE`, and no candidate is omitted or promoted by family.
+- Muse-first and comparable Gemma quality/repeatability trials preserve complete tuples, raw repeated-trial statistics, negative results, and limitations; quality and diagnostic-repeatability evidence never merge and no report makes a universal determinism claim.
 - Zero non-loopback Docker Model Runner exposure, zero access from prohibited clients or ordinary containers under the approved profile, and zero runtime acquisition or egress after installation.
-- Kernel startup p95 at most 5 seconds, deterministic tool p95 at most 2 seconds on 10,000 files/1 GiB, and warm Gemma first-token p95 at most 15 seconds on the recorded MacBook Pro M5 and Fedora reference machines.
+- Kernel startup p95 at most 5 seconds and deterministic tool p95 at most 2 seconds on 10,000 files/1 GiB; each admitted model profile publishes and passes its own predeclared first-token, throughput, context, memory, cancellation, and recovery envelope on every claimed reference machine.
 - Kernel peak memory at most 1.5 GiB excluding the model and total peak memory at most 12 GiB.
 - The complete supported workflow passes on Apple Silicon MacBook Pro M5, Fedora, and Ubuntu.
 
@@ -465,13 +524,15 @@ The inventory owns the executable requirement definitions. The task plan owns ex
 | macOS and Linux platform adapters, topology, sandbox, and offline boundary | `AM-PLT-001`, `AM-SEC-001`, `AM-SEC-002`, `AM-NET-001` | 7-10, 16 |
 | Workspace paths and capability authority | `AM-PTH-001`, `AM-AUT-001` | 5-6 |
 | Canonical operational state, privacy, and recovery | `AM-DAT-001`, `AM-PRV-001`, `AM-SES-001` | 11-12, 22 |
-| Local model verification and deterministic-first manual routing | `AM-MDL-001`, `AM-MDL-002` | 13, 15 |
+| Candidate-neutral runtime, family codecs, proposals, and deterministic-first manual routing | `AM-MDL-002`, `AM-MDL-004`, `AM-MDL-006` | 13, 15 |
+| Muse-first, complete eligible first-party Gemma, and extensible candidate evaluation | `AM-MDL-005` | 13-15 |
+| Deterministic classification and verifier-only agent state | `AM-MDL-007`, `AM-AGT-001` | 12-15 |
 | Model acquisition, hardware fit, lifecycle, and diagnostics | `AM-MDL-003`, `AM-DIA-001` | 14-15 |
 | Bounded read-only files, Git, and deterministic repository map | `AM-TOL-001`, `AM-GIT-001`, `AM-REP-001` | 16-19 |
 | Untrusted workspace instructions | `AM-INS-001` | 17 |
 | Receipts, evidence states, and file-grounded citations | `AM-EVD-001`, `AM-EVD-002` | 20-21 |
 | Local Codex handoff preview and manual-transfer boundary | `AM-HOF-001` | 24 |
-| Native Visual Studio Code Chat | `AM-VSC-001`, `AM-VSC-002` | 23 |
+| Native Visual Studio Code Chat and admitted-profile discovery | `AM-VSC-001`, `AM-VSC-002`, `AM-VSC-003` | 23 |
 | Security, quality, performance, documentation, and cross-platform release | `AM-TST-001`, `AM-TST-002`, `AM-DOC-001` | 25 |
 
 ## 19. Implementation Sequence
@@ -496,7 +557,7 @@ flowchart LR
 | Epic | Product increment | Sprint range | Required boundary |
 |---|---|---|---|
 | Epic 0 | Foundation: scope, traceability, package architecture, synthetic fixtures, configuration, and build integrity | 0-3 | No feature implementation begins before the governing contracts and evidence framework are executable. |
-| Epic 1 / v0.1 internal | Read-only local evidence-assistant foundation in native Visual Studio Code Chat | 4-25 | One verified Gemma profile; deterministic repository map; local evidence; no writes, generic shell, semantic index, web, connectors, plugins, scheduling, child agents, or Codex transfer. |
+| Epic 1 / v0.1 internal | Read-only local evidence-assistant foundation in native Visual Studio Code Chat | 4-25 | One admitted user-selected local profile through the candidate-neutral runtime; Muse-first and role-aware Gemma evaluation; deterministic repository map and local evidence; no writes, generic shell, semantic index, web, connectors, plugins, scheduling, child agents, or Codex transfer. |
 | Epic 2 / v0.2 | Knowledge, direct read-only Obsidian and Markdown, rolling memory, conversation continuity, and optional approved local semantic retrieval | 26-34 | Markdown is canonical for human knowledge; semantic retrieval is opt-in, local, deletable, and never a replacement for deterministic search. The release remains read-only. |
 | Epic 3 / v0.3 | Controlled local file and knowledge writes | 35-40 | Exact-preimage shadow changes, exact preview, single-use grants, stale rejection, atomic application, receipts, verification, and rollback; no generic shell. |
 | Epic 4 / v0.4 | Coding, isolated worktrees, trusted validation commands, and complete local CLI | 41-50 | Worktrees supplement but never replace operating-system sandboxing; remote Git reads are visible and bounded; commands and every write remain separately granted and receipted. |
@@ -742,8 +803,10 @@ Decision 0010 adds the removable capabilities defined in
 - A signed approved-model catalog and chat-guided model manager for compatible-profile discovery,
   confirmed acquisition/import, quarantine, verification, admission testing, activation,
   comparison, rollback, removal, and storage cleanup.
-- Meta Muse Glimmer as a candidate whose exact status is determined by normal admission without
-  making first GA depend on a pass.
+- Meta Muse Glimmer as the primary deep-evaluation candidate whose exact status is determined by
+  normal admission without making first GA depend on a pass.
+- A complete role-aware initial inventory of eligible official first-party Gemma models plus the
+  same intake for other eligible candidates, without automatic activation or family-wide claims.
 
 Owner / Unrestricted Session intentionally permits host-user filesystem, process, and network
 authority for its short lifetime. It does not grant administrator or root authority automatically,
@@ -775,7 +838,11 @@ requires:
 - Zero model download or activation before exact confirmation and admission; zero source, artifact,
   hash, license, runtime, or profile substitution; and deterministic cancellation and rollback.
 - A truthful Muse Glimmer `PASS`, `BLOCKED`, or `REJECTED` disposition with no unsupported product
-  claim and no requirement that the candidate pass for Gemma-based first GA.
+  claim and no requirement that Muse or any Gemma candidate pass when another exact eligible profile
+  independently satisfies every promoted model gate.
+- Complete role, applicability, provenance, policy, hardware, test, and non-pass records for every
+  eligible official first-party Gemma profile in the frozen initial inventory, with no silent
+  omission or automatic activation.
 - Complete trusted-operations accessibility, resource, crash, update, rollback, disablement,
   removal, and strict-local-restoration results.
 - Complete whole-codebase audit census, deterministic graph, bounded semantic packet, evidence-card,

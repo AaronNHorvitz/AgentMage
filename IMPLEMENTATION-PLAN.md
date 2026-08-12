@@ -2,8 +2,8 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
-| Version | 1.7 |
+| Status | Pre-alpha scaffold; stabilization sequence closed, numbered roadmap resumed under Decision 0021, and model construction reconciled under Decision 0027 |
+| Version | 1.8 |
 | Date | 2026-08-12 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
@@ -38,7 +38,7 @@ Stabilization scope freeze: inactive.
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
 these current-state claims. This plan preserves the complete 17-epic,
-169-sprint, 229-requirement target sequence. Under
+169-sprint, 241-requirement target sequence. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), that
 sequence resumes at its first incomplete dependency gate. New capability
 families remain subject to explicit decisions and complete impact analysis.
@@ -62,7 +62,11 @@ remain open. Decision 0025 schedules real `RM-024` fuzz-engine execution for the
 final pre-release campaign without waiving any affected sprint or release gate.
 Decision 0026 appends a Proton Calendar confirmed-UI adapter and concrete
 direct-invitation and email-first confirmation workflows to the existing
-productivity family without changing the 169-gate sequence.
+productivity family without changing the 169-gate sequence. Decision 0027
+reconciles future model work around a candidate-neutral runtime, closed family
+codecs, Muse-first evaluation, complete role-aware first-party Gemma inventory,
+deterministic classifier limits, and verifier-only agent completion. It changes
+no completed work, enables no model, and adds no sprint.
 
 ## 2. Document Authority and Change Control
 
@@ -94,7 +98,7 @@ If documents conflict, the narrower safety boundary or release scope wins until 
 
 ## 3. Implementation Outcomes
 
-The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Gemma 4 E4B remains its first named candidate, but its current disposition is rejected and disabled. Gemma 4 12B Unified is the named fallback candidate and is also rejected and disabled. Either candidate requires a new revision-bound admission and evaluation decision before activation; no fallback is automatic. Gemma 4 26B A4B and other later candidates remain disabled until their separate admission gates pass.
+The first implementation objective remains the internal v0.1 read-only local evidence foundation in native Visual Studio Code Chat. Model construction is candidate neutral, with Muse Glimmer as the primary implementation and deep-evaluation candidate, every eligible official first-party Gemma profile at a pinned catalog freeze inventoried and evaluated by role, and other eligible candidates admitted through the same exact contract. No candidate is pre-approved. Existing Gemma 4 E4B and Gemma 4 12B Unified rejected profiles remain immutable historical evidence and are neither prerequisites nor automatic fallbacks. The product currently has zero enabled models.
 
 The complete roadmap expands that foundation through separately gated knowledge, writes, coding, manual frontier consultation, administrative and document work, read-only connectors, desktop interfaces, extensions, web research, hosted actions, schedules, bounded agents, a provider-neutral delivery system, Windows 11, communications, a unified work graph, personal information and documents, finance and budgeting, read-only cloud observation, tiered command authority, credential brokering, encrypted continuity, approved-model management, and comprehensive whole-codebase audit. The first supported public release is v1.0 GA after Sprint 166. The Experimental Model Lab remains post-GA in Sprints 167-168. A later capability remains absent until its own dependencies, threat model, authority path, recovery behavior, tests, and release gate pass.
 
@@ -108,8 +112,12 @@ The implementation must preserve these outcomes throughout the roadmap:
 - Every tool attempt produces one receipt, and every file-grounded claim has a resolvable, stale-aware citation.
 - The strict-local profile has no cloud model, external API, telemetry, analytics, cloud storage, hosted account, or cloud fallback.
 - Codex remains a separate user-controlled surface. AgentMage may prepare a local handoff preview with classification and unresolved-redaction warnings but cannot invoke, populate, copy to, call, or transmit to Codex.
-- Every enabled model and related artifact passes `MODEL-PROVENANCE-POLICY.md`, including license, publisher, lineage, origin, provenance, integrity, resource, quality, security, platform, and non-Chinese/non-Chinese-derived model gates.
-- Native `llama.cpp` and Docker Model Runner implement one `LocalModelRuntime` contract. Native inference is the Linux security reference; Docker is a supported compatibility adapter only after its additional privilege, endpoint, isolation, parity, and zero-egress gates pass.
+- Every enabled model and related artifact passes `MODEL-PROVENANCE-POLICY.md`, including license, publisher, lineage, origin, provenance, integrity, codec, context, decoding, resource, quality, security, platform, and non-Chinese/non-Chinese-derived model gates.
+- Native `llama.cpp` and Docker Model Runner implement one candidate-neutral `LocalModelRuntime` contract. Closed model-family codecs translate exact tokenizer, template, reasoning, message, end-token, and tool-protocol behavior into one typed untrusted proposal. Native inference is the Linux security reference; Docker is a supported compatibility adapter only after its additional privilege, endpoint, isolation, parity, and zero-egress gates pass.
+- Muse Glimmer is the primary deep-evaluation candidate; every eligible official first-party Gemma profile receives an explicit role, preflight, applicable test set, and visible disposition; other eligible first-party candidates enter through the same evidence boundary.
+- Quality and diagnostic-repeatability profiles are measured and reported separately. Token repetition under one pinned tuple is never represented as universal model, runtime, driver, device, or cross-release determinism.
+- Data sensitivity, action risk, and model capability are classified separately. Deterministic deny-first policy owns authority; probabilistic classifiers may only deny, narrow, redact, isolate, or escalate.
+- The persisted agent state machine has named terminal states, bounded no-progress handling, restart reconciliation, and verifier-only completion. Model prose, confidence, classifiers, and model judges cannot grant authority or establish success.
 - `agentmage doctor` is a deterministic diagnostics response rendered in native Visual Studio Code Chat for v0.1; it is not evidence that the deferred full CLI exists.
 - Security and release claims remain bounded to reproducible evidence and never imply external certification or customer deployment approval.
 - Provider adapters implement one delivery contract and never add provider conditionals or ambient credentials to the kernel.
@@ -123,7 +131,7 @@ The implementation must preserve these outcomes throughout the roadmap:
 - Command execution supports complete shell semantics while authority remains tiered; only a direct authenticated user can activate an expiring, visibly risky Owner / Unrestricted Session.
 - Connected secrets remain operating-system-backed references resolved inside one exact worker operation and never enter model context, ordinary logs, diagnostics, exports, or continuity snapshots.
 - Local continuity is canonical and cloud backup is client-side encrypted, versioned, namespace bounded, restorable, and separate from read-only Cloud Observer.
-- The approved-model manager is deterministic and user confirmed; Meta Muse Glimmer remains a candidate until complete admission evidence exists.
+- The approved-model manager is deterministic and user confirmed; Muse Glimmer and every other candidate remain non-runnable until complete exact-profile admission evidence exists.
 - Whole-codebase audit treats the encrypted structural index and evidence ledger as project memory, model contexts as bounded working memory, canonical source as read-only, and complete path disposition plus cross-module reconciliation as prerequisites for a comprehensive claim.
 - Unapproved models remain in a post-GA isolated lab without network, credentials, commands, connectors, or canonical workspace writes and cannot promote themselves.
 
@@ -138,12 +146,14 @@ flowchart TB
     KERNEL --> POLICY["Policy, grants, receipts, classification, and recovery"]
     POLICY --> PLATFORM["Linux, Windows, and retained macOS platform adapters"]
     PLATFORM --> TOOLS["Sandboxed deterministic workers"]
-    PLATFORM --> ADAPTER["LocalModelRuntime contract"]
-    ADAPTER --> NATIVE["Native llama.cpp"]
-    ADAPTER --> DMR["Gated Docker Model Runner"]
+    PLATFORM --> ADAPTER["Candidate-neutral LocalModelRuntime"]
+    ADAPTER --> CODEC["Closed family codec"]
+    CODEC --> PROFILE["Exact admitted profile"]
+    PROFILE --> NATIVE["Native llama.cpp"]
+    PROFILE --> DMR["Gated Docker Model Runner"]
     POLICY <--> STATE[("Encrypted operational store")]
     TOOLS --> EVIDENCE["Receipts and citations"]
-    MODEL --> EVIDENCE
+    CODEC --> EVIDENCE
     POLICY --> GRAPH["Provider-neutral delivery graph"]
     GRAPH --> PROVIDERS["Operation-scoped provider adapters"]
     POLICY --> WORK["Unified activity inbox and work graph"]
@@ -169,23 +179,43 @@ Platform adapters are implemented and tested before tools depend on them. The ad
 
 Fedora is the Linux development and performance reference. Ubuntu must pass the same supported workflow. Windows 11 x64 is the first-GA Windows reference. Native `llama.cpp` is the Linux and Windows security reference, while Docker Model Runner supplies a separately gated Linux compatibility path matching Docker-based development. The Apple Silicon MacBook Pro M5 requirements remain retained post-GA. Platform-specific mechanisms may differ, but no platform or runtime may weaken the common contract.
 
-### 4.3 Deterministic Tools Before Model Synthesis
+### 4.3 Candidate-Neutral Models and Deterministic Agent State
+
+The kernel depends on one runtime contract and one closed proposal schema, never
+on a model family. Runtime adapters own process supervision, load/unload,
+streaming, cancellation, resource reporting, and isolation. Family codecs own
+tokenizer, template, reasoning, message-boundary, end-token, and tool-protocol
+translation. Exact profiles bind those parts to artifacts, hashes, context,
+decoding, platform, hardware, policy, and evidence.
+
+Muse Glimmer is the first deep implementation candidate. Every eligible
+official first-party Gemma profile is inventoried at a pinned source freeze and
+tested only in applicable roles; other eligible candidates use the same intake.
+All remain non-authoritative and disabled until exact-profile admission passes.
+
+The agent loop persists typed states and named terminal outcomes. Deterministic
+policy, a consumed grant, a restricted worker, and a deterministic postcondition
+verifier surround every model proposal. Learned classification can restrict or
+escalate but cannot grant authority, override denial, switch models, or establish
+completion. Quality and diagnostic-repeatability profiles remain separate.
+
+### 4.4 Deterministic Tools Before Model Synthesis
 
 Synthetic fixtures, read-only tools, Git inspection, repository mapping, receipts, citation resolution, evidence-state assignment, and stale-evidence detection are implemented before model-generated explanations are trusted. Unsupported or unavailable evidence is shown as Unknown/Blocked rather than invented.
 
-### 4.4 One Interface Before Additional Shells
+### 4.5 One Interface Before Additional Shells
 
 Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The complete CLI is introduced in v0.4, and standalone macOS and Linux desktop applications are introduced in v1+ only after the shared kernel is stable.
 
-### 4.5 Authority Added Incrementally
+### 4.6 Authority Added Incrementally
 
 Read-only local work is implemented first. File writes, command execution, remote reads, frontier export/import, connectors, hosted writes, CI execution, deployment, infrastructure application, secret operations, administration, browser actions, schedules, plugins, Model Context Protocol servers, and child agents are introduced in separate increments. Each new authority path reuses the kernel's exact grant, classification, receipt, cancellation, retention, isolation, and recovery contracts.
 
-### 4.6 Provider-Neutral Delivery
+### 4.7 Provider-Neutral Delivery
 
 The delivery graph and adapter SDK arrive only after local authority, writes, execution, and connected-read foundations are proven. Adapters advance from manifested to observable, writable, executable, deployable, and administrative conformance one level at a time. The kernel understands typed delivery objects and capability classes, not provider-specific API calls. [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md) owns this contract.
 
-### 4.7 Productivity Packs Through the Same Kernel
+### 4.8 Productivity Packs Through the Same Kernel
 
 Communications, personal-information, document, finance, and cloud-observer adapters reuse the
 provider lifecycle but do not flatten their domain semantics into delivery objects. The Autonomy
@@ -195,7 +225,7 @@ Financial arithmetic and reconciliation remain deterministic, bank and cloud ada
 read-only, and every pack is independently removable. [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md)
 owns this contract.
 
-### 4.8 Trusted Operations as Separate Authorities
+### 4.9 Trusted Operations as Separate Authorities
 
 Command execution, public research, credential resolution, continuity, and model acquisition use
 separate workers and capability registrations. The command language can be complete without making
@@ -206,7 +236,7 @@ Approved-model installation is deterministic and separate from inference. The po
 Model Lab has no connected or workspace-write authority. [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md)
 owns this contract.
 
-### 4.9 Whole-Codebase Audit as Persistent Evidence
+### 4.10 Whole-Codebase Audit as Persistent Evidence
 
 Comprehensive repository analysis does not depend on fitting a repository into one model context.
 An exact census and deterministic structural graph define coverage; coherent bounded model packets
@@ -342,7 +372,7 @@ lifecycle is not platform support; and platform support is not final release.
 - Synthetic workspaces, repositories, attacks, model fixtures, and evidence tooling.
 - Versioned configuration, pinned dependencies, reproducible builds, bills of materials, and no-install diagnostics.
 - Public licensing, model-provenance, vulnerability-response, runtime-boundary, decision, and documentation-validation foundations.
-- An early Gemma 4 E4B native/Docker feasibility record with Gemma 4 12B Unified retained as the disabled fallback candidate.
+- Preserved rejected Gemma 4 E4B and Gemma 4 12B Unified feasibility records plus an accepted candidate-neutral, Muse-first model construction decision that does not convert either historical result into a prerequisite or approval.
 
 **Exit condition:** `G-FOUNDATION` passes only when the governing contracts, architecture checks, fixture system, build integrity, and security-review baseline are executable and reproducible.
 
@@ -355,8 +385,8 @@ lifecycle is not platform support; and platform support is not final release.
 1. Freeze kernel contracts, capability grants, policy evaluation, and canonical workspace paths.
 2. Implement the platform-adapter contract, release manifests, macOS topology, Linux topology, and strict-local network boundary.
 3. Implement sensitivity-labeled encrypted operational state, transactions, checkpoints, and crash-safe recovery.
-4. Implement the agent runtime, bounded planning, context management, and session behavior.
-5. Implement the manifest-pinned model runtime, native `llama.cpp` and gated Docker Model Runner adapters, separate installer/importer, adapter-parity suite, manual model selection, native-Chat diagnostics, and resource controls.
+4. Implement the persisted agent state machine, bounded planning, exact proposal identity, classifier restriction, deterministic verifier registry, context management, restart reconciliation, and named terminal behavior.
+5. Implement the candidate-neutral runtime, deterministic fake adapter, closed family codecs, exact model profiles, native `llama.cpp` and gated Docker Model Runner adapters, separate installer/importer, quality and repeatability suites, Muse-first isolated text spike, complete role-aware eligible first-party Gemma inventory, other-candidate intake, manual model selection, native-Chat diagnostics, and resource controls.
 6. Implement sandboxed read-only file and Git tools with untrusted-instruction handling.
 7. Implement the deterministic repository map, coverage reporting, source resolution, evidence states, stale citations, and tamper-evident receipts.
 8. Implement native Visual Studio Code Chat, accessibility from its first increment, and the local-only manual Codex handoff boundary with classification and redaction warnings.
@@ -571,8 +601,10 @@ comprehensive repository audit deterministic, read-only, resumable, reconciled, 
    deletion, clean-device recovery, and one reference client-side-encrypted cloud backup adapter.
 6. Implement the signed approved-model catalog and chat-guided acquisition, import, quarantine,
    verification, activation, comparison, rollback, removal, and storage-cleanup workflow.
-7. Produce a truthful Meta Muse Glimmer candidate disposition through normal admission without
-   making first GA depend on a pass.
+7. Reconcile the early Muse-first evidence and complete eligible first-party Gemma role inventory
+   into the signed catalog, then produce truthful exact-profile dispositions without making first
+   GA depend on Muse, Gemma, or any other named family passing when another eligible profile
+   independently satisfies the release contract.
 8. Run integrated command, injection, disclosure, secret, backup, restore, model-substitution,
    resource, accessibility, removal, and strict-local-restoration campaigns.
 9. Freeze whole-codebase audit scope, coverage, process, record, checkpoint, finding, report,
@@ -735,6 +767,7 @@ Changes to the implementation sequence follow these rules:
 12. Decision 0012 froze new capability families and paused the original numbered roadmap during stabilization. Decision 0021 closes that pause and resumes the preserved roadmap; later capability-family additions still require explicit approval and a complete impact statement.
 13. Decision 0025 defers only real `RM-024` fuzz-engine execution to the final pre-release campaign. Every affected task and gate remains open, and all other verification continues with each bounded change.
 14. Decision 0026 appends `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2 inside the existing productivity family; it preserves dependency order, requires structured provider paths where available, and admits no Proton Calendar implementation or support claim before its confirmed-UI gate passes.
+15. Decision 0027 appends `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their acceptance tests; preserves every completed item and stable identifier; supersedes only unimplemented E4B prerequisite and hard-coded picker assumptions; and reconciles future work within Sprints 12-15, 23, 49, 163-165, and 166 without adding or renumbering a sprint.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
@@ -749,7 +782,7 @@ The first high-level sequence is:
 
 1. Establish the canonical requirement registry, decision and risk records, document traceability, public-authority provenance, conflict handling, and additions-only checks.
 2. Validate the Apache-2.0, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
-3. Preserve the completed Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records; admit a usable model only through a new revision-bound artifact, runtime, quality, and activation decision.
+3. Preserve the completed Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records; implement the candidate-neutral profile/codec/proposal boundary; evaluate Muse first and eligible official first-party Gemma models by role; and admit a usable exact profile only through a new revision-bound artifact, runtime, policy, hardware, quality, repeatability, security, and activation decision.
 4. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
 5. Build the synthetic fixture, attack, fuzz-harness, test-result, and evidence framework before real user data is touched; execute the real fuzz engine in the final campaign required by Decision 0025.
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
