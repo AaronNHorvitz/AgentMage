@@ -11,9 +11,11 @@ use std::path::{Path, PathBuf};
 use agentmage_kernel_contracts::{
     NetworkComponent, NetworkDestinationClass, classify_ip_destination,
 };
+use rustix::io::Errno;
+use rustix::process::{Pid, PidfdFlags, pidfd_open};
 use sha2::{Digest, Sha256};
 
-use crate::ipc::process_executable_sha256;
+use crate::ipc::{process_executable_sha256, process_start_time_ticks};
 
 /// Maximum number of explicitly attributed processes in one session snapshot.
 pub const MAX_INVENTORY_PROCESSES: usize = 128;
@@ -201,7 +203,18 @@ pub struct LinuxSessionProcessObservation {
     parent_pid: u32,
     uid: u32,
     component: NetworkComponent,
+    start_time_ticks: u64,
+    identity_binding: LinuxProcessIdentityBinding,
     executable_sha256: [u8; 32],
+}
+
+/// Strength of the kernel process identity retained during inventory collection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LinuxProcessIdentityBinding {
+    /// A pidfd retained the original process while start time rejected PID reuse.
+    PidFdAndStartTime,
+    /// The kernel lacks pidfd support; start time still rejected PID reuse.
+    StartTimeOnly,
 }
 
 impl LinuxSessionProcessObservation {
@@ -227,6 +240,18 @@ impl LinuxSessionProcessObservation {
     #[must_use]
     pub const fn component(&self) -> NetworkComponent {
         self.component
+    }
+
+    /// Returns the kernel process start time in clock ticks since boot.
+    #[must_use]
+    pub const fn start_time_ticks(&self) -> u64 {
+        self.start_time_ticks
+    }
+
+    /// Returns the process identity mechanism available for this observation.
+    #[must_use]
+    pub const fn identity_binding(&self) -> LinuxProcessIdentityBinding {
+        self.identity_binding
     }
 
     /// Returns the executable content digest.
@@ -277,6 +302,8 @@ pub enum LinuxInventoryErrorKind {
     InvalidProcess,
     /// Required process state disappeared or could not be read.
     ProcessUnavailable,
+    /// The PID referred to a different process before collection completed.
+    ProcessIdentityChanged,
     /// A kernel pseudo-file contained an unsupported or malformed record.
     InvalidKernelRecord,
 }
@@ -310,6 +337,7 @@ impl fmt::Display for LinuxInventoryError {
             LinuxInventoryErrorKind::DuplicateProcess => "inventory.duplicate_process",
             LinuxInventoryErrorKind::InvalidProcess => "inventory.invalid_process",
             LinuxInventoryErrorKind::ProcessUnavailable => "inventory.process_unavailable",
+            LinuxInventoryErrorKind::ProcessIdentityChanged => "inventory.process_identity_changed",
             LinuxInventoryErrorKind::InvalidKernelRecord => "inventory.invalid_kernel_record",
         })
     }
@@ -346,6 +374,10 @@ impl LinuxSessionInventoryCollector {
                 .ok()
                 .filter(|pid| *pid > 0)
                 .ok_or_else(|| error(LinuxInventoryErrorKind::InvalidProcess, Some(target.pid)))?;
+            let process_pid = Pid::from_raw(pid)
+                .ok_or_else(|| error(LinuxInventoryErrorKind::InvalidProcess, Some(target.pid)))?;
+            let start_time_ticks = observed_start_time(pid, target.pid)?;
+            let (pidfd, identity_binding) = retain_process_identity(process_pid, target.pid)?;
             let process_root = PathBuf::from(format!("/proc/{pid}"));
             let (parent_pid, uid) = parse_status(
                 &read_bounded(&process_root.join("status"), target.pid)?,
@@ -362,6 +394,8 @@ impl LinuxSessionInventoryCollector {
                 parent_pid,
                 uid,
                 component: target.component,
+                start_time_ticks,
+                identity_binding,
                 executable_sha256,
             });
 
@@ -376,6 +410,8 @@ impl LinuxSessionInventoryCollector {
                     Some(target.pid),
                 ));
             }
+            ensure_process_identity(pid, target.pid, start_time_ticks)?;
+            drop(pidfd);
         }
         sockets.sort_by_key(|entry| (entry.pid, entry.descriptor, entry.inode, entry.protocol));
         writables.sort_by_key(|entry| (entry.pid, entry.descriptor));
@@ -385,6 +421,49 @@ impl LinuxSessionInventoryCollector {
             writable_descriptors: writables,
         })
     }
+}
+
+fn observed_start_time(pid: i32, display_pid: u32) -> Result<u64, LinuxInventoryError> {
+    process_start_time_ticks(pid).map_err(|_| {
+        error(
+            LinuxInventoryErrorKind::ProcessUnavailable,
+            Some(display_pid),
+        )
+    })
+}
+
+fn ensure_process_identity(
+    pid: i32,
+    display_pid: u32,
+    expected_start_time_ticks: u64,
+) -> Result<(), LinuxInventoryError> {
+    if observed_start_time(pid, display_pid)? != expected_start_time_ticks {
+        return Err(error(
+            LinuxInventoryErrorKind::ProcessIdentityChanged,
+            Some(display_pid),
+        ));
+    }
+    Ok(())
+}
+
+fn retain_process_identity(
+    pid: Pid,
+    display_pid: u32,
+) -> Result<(Option<std::os::fd::OwnedFd>, LinuxProcessIdentityBinding), LinuxInventoryError> {
+    match pidfd_open(pid, PidfdFlags::empty()) {
+        Ok(pidfd) => Ok((Some(pidfd), LinuxProcessIdentityBinding::PidFdAndStartTime)),
+        Err(error) if pidfd_is_unsupported(error) => {
+            Ok((None, LinuxProcessIdentityBinding::StartTimeOnly))
+        }
+        Err(_) => Err(error(
+            LinuxInventoryErrorKind::ProcessUnavailable,
+            Some(display_pid),
+        )),
+    }
+}
+
+const fn pidfd_is_unsupported(error: Errno) -> bool {
+    matches!(error, Errno::NOSYS | Errno::INVAL | Errno::OPNOTSUPP)
 }
 
 struct DescriptorCollection {
@@ -730,7 +809,7 @@ mod tests {
     use super::{
         LinuxInventoryErrorKind, LinuxInventoryTarget, LinuxSessionInventoryCollector,
         LinuxSocketProtocol, LinuxSocketState, LinuxWritableTargetClass, descriptor_is_writable,
-        parse_internet_table, parse_ip_port, parse_unix_table,
+        parse_internet_table, parse_ip_port, parse_unix_table, pidfd_is_unsupported,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -804,6 +883,7 @@ mod tests {
         .expect("self inventory collects");
         assert_eq!(inventory.processes().len(), 1);
         assert_eq!(inventory.processes()[0].uid(), getuid().as_raw());
+        assert!(inventory.processes()[0].start_time_ticks() > 0);
         assert_ne!(inventory.processes()[0].executable_sha256(), &[0; 32]);
         let writable = inventory
             .writable_descriptors()
@@ -846,5 +926,22 @@ mod tests {
             .kind(),
             LinuxInventoryErrorKind::InvalidProcess
         );
+        assert_eq!(
+            LinuxSessionInventoryCollector::collect(&[LinuxInventoryTarget {
+                pid: 2_000_000_000,
+                component: NetworkComponent::Kernel,
+            }])
+            .expect_err("absent PID rejects")
+            .kind(),
+            LinuxInventoryErrorKind::ProcessUnavailable
+        );
+    }
+
+    #[test]
+    fn pidfd_fallback_is_limited_to_unsupported_kernel_errors() {
+        assert!(pidfd_is_unsupported(rustix::io::Errno::NOSYS));
+        assert!(pidfd_is_unsupported(rustix::io::Errno::INVAL));
+        assert!(pidfd_is_unsupported(rustix::io::Errno::OPNOTSUPP));
+        assert!(!pidfd_is_unsupported(rustix::io::Errno::ACCESS));
     }
 }

@@ -194,7 +194,6 @@ pub struct PlatformCapabilityObservation {
     capability: PlatformCapability,
     status: PlatformCapabilityStatus,
     platform: PlatformFamily,
-    manifest_sha256: [u8; 32],
     mechanism_sha256: [u8; 32],
 }
 
@@ -205,14 +204,12 @@ impl PlatformCapabilityObservation {
         capability: PlatformCapability,
         status: PlatformCapabilityStatus,
         platform: PlatformFamily,
-        manifest_sha256: [u8; 32],
         mechanism_sha256: [u8; 32],
     ) -> Self {
         Self {
             capability,
             status,
             platform,
-            manifest_sha256,
             mechanism_sha256,
         }
     }
@@ -235,12 +232,6 @@ impl PlatformCapabilityObservation {
         self.platform
     }
 
-    /// Returns the manifest digest to which the observation is bound.
-    #[must_use]
-    pub const fn manifest_sha256(&self) -> &[u8; 32] {
-        &self.manifest_sha256
-    }
-
     /// Returns the content-free digest of the observed mechanism identity.
     #[must_use]
     pub const fn mechanism_sha256(&self) -> &[u8; 32] {
@@ -251,6 +242,14 @@ impl PlatformCapabilityObservation {
 /// Stable, content-free platform-startup failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PlatformStartupErrorKind {
+    /// Trusted release-manifest bytes exceeded the closed input bound.
+    ManifestTooLarge,
+    /// Trusted release-manifest bytes did not match the closed schema.
+    ManifestMalformed,
+    /// The release manifest used an unsupported schema, status, or target.
+    ManifestUnsupported,
+    /// The detached release-manifest signature did not verify.
+    ManifestSignatureInvalid,
     /// The adapter implements an unsupported API version.
     ApiVersionMismatch,
     /// The observed operating-system family differs from the manifest.
@@ -269,6 +268,8 @@ pub enum PlatformStartupErrorKind {
     CapabilityMismatch,
     /// A probe returned evidence from another platform or manifest.
     ForeignCapabilityEvidence,
+    /// A verified observation did not match the independently trusted mechanism.
+    MechanismMismatch,
     /// A required platform primitive is unavailable.
     CapabilityUnavailable,
     /// A required platform primitive failed validation.
@@ -280,6 +281,10 @@ impl PlatformStartupErrorKind {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::ManifestTooLarge => "platform.startup.manifest_too_large",
+            Self::ManifestMalformed => "platform.startup.manifest_malformed",
+            Self::ManifestUnsupported => "platform.startup.manifest_unsupported",
+            Self::ManifestSignatureInvalid => "platform.startup.manifest_signature_invalid",
             Self::ApiVersionMismatch => "platform.startup.api_version_mismatch",
             Self::PlatformMismatch => "platform.startup.platform_mismatch",
             Self::ArchitectureMismatch => "platform.startup.architecture_mismatch",
@@ -289,6 +294,7 @@ impl PlatformStartupErrorKind {
             Self::PackageMismatch => "platform.startup.package_mismatch",
             Self::CapabilityMismatch => "platform.startup.capability_mismatch",
             Self::ForeignCapabilityEvidence => "platform.startup.foreign_capability_evidence",
+            Self::MechanismMismatch => "platform.startup.mechanism_mismatch",
             Self::CapabilityUnavailable => "platform.startup.capability_unavailable",
             Self::CapabilityInvalid => "platform.startup.capability_invalid",
         }
@@ -338,9 +344,6 @@ impl std::error::Error for PlatformStartupError {}
 /// Probes run before any workspace handle is created. Product logic selects an adapter
 /// only through the platform-independent kernel activation routine.
 pub trait PlatformAdapter: fmt::Debug + Send + Sync {
-    /// Returns the exact immutable release-manifest identity.
-    fn manifest_identity(&self) -> &PlatformManifestIdentity;
-
     /// Observes the allowlisted runtime identity without retaining ambient values.
     fn runtime_identity(&self) -> Result<PlatformRuntimeIdentity, PlatformStartupError>;
 

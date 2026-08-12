@@ -15,13 +15,14 @@ ENGINE = Path("kernel/engine/src/authority_transaction.rs")
 OPERATIONAL_STORE = Path("kernel/engine/src/operational_store.rs")
 CONFIGURATION = Path("kernel/engine/src/configuration.rs")
 LINUX_LIB = Path("platforms/linux/src/lib.rs")
+LINUX_CONFIGURATION = Path("platforms/linux/src/configuration_store.rs")
 LINUX_SANDBOX = Path("platforms/linux/src/sandbox.rs")
 LINUX_SECRETS = Path("platforms/linux/src/secret_service.rs")
 LINUX_IPC = Path("platforms/linux/src/ipc.rs")
 
 PERMIT_USERS = {
     ENGINE,
-    Path("kernel/engine/src/configuration_effect.rs"),
+    LINUX_CONFIGURATION,
     LINUX_SANDBOX,
     LINUX_SECRETS,
 }
@@ -98,6 +99,7 @@ def validate_effect_boundary(
     operational_store = _read(OPERATIONAL_STORE, root, replacements)
     configuration = _read(CONFIGURATION, root, replacements)
     linux_lib = _read(LINUX_LIB, root, replacements)
+    linux_configuration = _read(LINUX_CONFIGURATION, root, replacements)
     linux_sandbox = _read(LINUX_SANDBOX, root, replacements)
     linux_secrets = _read(LINUX_SECRETS, root, replacements)
     linux_ipc = _read(LINUX_IPC, root, replacements)
@@ -131,9 +133,11 @@ def validate_effect_boundary(
     ):
         failures.append("in-memory authority coordinator exposes an effect entry point")
 
-    for name in ("migrate_path_v0", "rollback_migration", "apply_with_backup", "rollback"):
-        if _public_function(configuration, name):
-            failures.append(f"raw configuration effect is public: {name}")
+    if re.search(r"\bstd::fs\b|\bstd::path\b", configuration):
+        failures.append("kernel configuration contains a native filesystem dependency")
+    for name in ("migrate_v0", "rollback_migration", "apply", "rollback", "publish"):
+        if _public_function(linux_configuration, name):
+            failures.append(f"raw Linux configuration effect is public: {name}")
     if _public_function(linux_sandbox, "run"):
         failures.append("raw Linux sandbox execution is public")
     for name in ("probe", "store", "lookup", "clear"):
@@ -147,12 +151,12 @@ def validate_effect_boundary(
         failures.append("private Unix listener exceeds module visibility")
 
     for required in (
-        "impl EffectDriver for ConfigurationEffectDriver",
+        "impl EffectDriver for LinuxConfigurationEffectDriver",
         "impl EffectDriver for LinuxSandboxEffectDriver",
         "impl EffectDriver for LinuxSecretEffectDriver",
     ):
         if required not in "\n".join((
-            _read(Path("kernel/engine/src/configuration_effect.rs"), root, replacements),
+            linux_configuration,
             linux_sandbox,
             linux_secrets,
         )):

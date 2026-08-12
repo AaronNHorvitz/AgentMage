@@ -78,5 +78,6 @@ and checks but cannot link to product internals, modify source, or waive a gate.
 - Compile cycles fail.
 - Linux and macOS package inputs cannot cross platform boundaries.
 - Sub-task 1.1.1.4 binds these selected rules to actual Cargo, npm, and Swift
-  manifests. The current graph records the accepted direction; it does not claim
-  that build manifests or platform implementations already exist.
+  manifests. The graph records current build-manifest edges and the Phase 8
+  Linux implementation, but it does not claim an integrated host, package,
+  supported platform, macOS implementation, or Windows implementation.

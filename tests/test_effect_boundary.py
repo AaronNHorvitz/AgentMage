@@ -21,6 +21,22 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn("raw Linux sandbox execution is public", failures)
 
+    def test_public_configuration_effect_is_rejected(self) -> None:
+        relative = Path("platforms/linux/src/configuration_store.rs")
+        source = self.source(str(relative)).replace(
+            "    fn apply(\n", "    pub fn apply(\n", 1
+        )
+        failures = validate_effect_boundary(overrides={relative: source})
+        self.assertIn("raw Linux configuration effect is public: apply", failures)
+
+    def test_kernel_configuration_filesystem_dependency_is_rejected(self) -> None:
+        relative = Path("kernel/engine/src/configuration.rs")
+        source = self.source(str(relative)) + "\nuse std::fs;\n"
+        failures = validate_effect_boundary(overrides={relative: source})
+        self.assertIn(
+            "kernel configuration contains a native filesystem dependency", failures
+        )
+
     def test_in_memory_coordinator_cannot_expose_effect_launch(self) -> None:
         relative = Path("kernel/engine/src/authority_transaction.rs")
         source = self.source(str(relative)).replace(

@@ -29,7 +29,11 @@ flowchart LR
     K -. denied .-> E[LAN, proxy, DNS, container, or external network]
 ```
 
-The policy evaluator opens no socket. A later platform-owned collector and confinement layer must establish process identity, peer identity, destination class, transport, and attempted byte count. Those observations are untrusted until supplied by that boundary.
+The policy evaluator opens no socket. Linux now supplies separate bounded IPC
+peer-identity and session-inventory primitives; they do not grant authority or
+replace normal-process network confinement. Destination class, transport, and
+attempted byte count remain untrusted observations until reconciled by the
+later product session boundary.
 
 ## Attempt Ledger
 
@@ -45,11 +49,25 @@ It stores no hostname, IP address, Unix-socket path, payload, prompt, repository
 
 ## Linux Session Inventory
 
-The Linux adapter can snapshot an explicit, bounded PID set. It records each attributed component's PID, parent PID, real UID, and executable SHA-256 identity. It inventories every socket descriptor found for those processes and joins socket inodes to the process network namespace's TCP, UDP, IPv6, and Unix tables. Unsupported socket families remain visible as `other` with an unknown destination rather than being dropped.
+The Linux adapter can snapshot an explicit, bounded PID set. It reads process
+start time before collection, retains a pidfd when supported, records whether
+the binding is `PidFdAndStartTime` or `StartTimeOnly`, and rechecks start time
+after collection. Each accepted record includes PID, parent PID, real UID, and
+executable SHA-256 identity. The collector inventories every socket descriptor
+for those processes and joins socket inodes to the process network namespace's
+TCP, UDP, IPv6, and Unix tables. Unsupported socket families remain visible as
+`other` with an unknown destination rather than being dropped.
 
 Internet addresses are immediately reduced to closed destination classes; only ports are retained. Unix endpoint names and writable-descriptor targets are replaced with SHA-256 digests. The collector does not read command lines, environment values, file contents, prompts, repository content, credentials, packet payloads, or socket payloads. Descriptor races, malformed kernel records, duplicate process attribution, and closed-bound overflow fail the snapshot.
 
-This inventory is an observation primitive, not an authority source or an enforcement claim. A later session manifest and platform confinement layer must reconcile every observed process, executable, socket, listener, port, and writable target against the exact declared session topology. The 60-minute packet/syscall acceptance harness remains separately required because a point-in-time `/proc` snapshot cannot prove the absence of short-lived connections.
+Process disappearance, PID reuse, partial or malformed `/proc` state, and
+unexpected pidfd failures reject the snapshot. This inventory is an observation
+primitive, not an authority source or an enforcement claim. A later session
+manifest and platform confinement layer must reconcile every observed process,
+executable, socket, listener, port, and writable target against the exact
+declared session topology. The 60-minute packet/syscall acceptance harness
+remains separately required because a point-in-time `/proc` snapshot cannot
+prove the absence of short-lived connections.
 
 ## Product-Source Gate
 
@@ -89,4 +107,10 @@ Before later storage use, the platform adapter revalidates the held object, moun
 
 ## Remaining Closure Work
 
-Sprint 10 remains open until the product has platform-owned process/socket attribution, listener and writable-path inventory, normal-process confinement, dependency/static checks for hidden network features, hostile-loopback tests, firewall and packet-capture acceptance, a complete offline workflow, and equivalent supported-platform evidence. macOS implementation and evidence are deliberately deferred and must not be inferred from the shared contracts.
+Sprint 10 remains open until the product composes the implemented Linux
+process/socket and writable-path observations into a declared session topology,
+adds normal-process confinement, dependency/static checks for hidden network
+features, hostile-loopback tests, firewall and packet-capture acceptance, a
+complete offline workflow, and equivalent supported-platform evidence. macOS
+implementation and evidence are deliberately deferred and must not be inferred
+from the shared contracts.

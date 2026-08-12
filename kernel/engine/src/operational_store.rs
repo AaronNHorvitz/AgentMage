@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs::{self, OpenOptions};
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
-use std::path::Path;
+use std::path::{Component, Path};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
@@ -543,13 +543,13 @@ fn open_connection(path: &Path, key: &[u8]) -> Result<Connection, OperationalSto
     if key.len() != KEY_BYTES {
         return Err(OperationalStoreError::InvalidKey);
     }
-    let connection = Connection::open_with_flags(
-        path,
-        OpenFlags::SQLITE_OPEN_READ_WRITE
-            | OpenFlags::SQLITE_OPEN_CREATE
-            | OpenFlags::SQLITE_OPEN_NO_MUTEX,
-    )
-    .map_err(classify_open_error)?;
+    let mut flags = OpenFlags::SQLITE_OPEN_READ_WRITE
+        | OpenFlags::SQLITE_OPEN_CREATE
+        | OpenFlags::SQLITE_OPEN_NO_MUTEX;
+    if !path.parent().is_some_and(is_linux_held_descriptor_path) {
+        flags |= OpenFlags::SQLITE_OPEN_NOFOLLOW;
+    }
+    let connection = Connection::open_with_flags(path, flags).map_err(classify_open_error)?;
     connection
         .busy_timeout(Duration::ZERO)
         .map_err(|_| OperationalStoreError::OpenFailed)?;
@@ -1307,7 +1307,11 @@ fn verify_integrity(connection: &Connection) -> Result<(), OperationalStoreError
 fn prepare_store_file(path: &Path) -> Result<(), OperationalStoreError> {
     let parent = path.parent().ok_or(OperationalStoreError::OpenFailed)?;
     let metadata = fs::symlink_metadata(parent).map_err(|_| OperationalStoreError::OpenFailed)?;
-    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+    let direct_directory = metadata.is_dir() && !metadata.file_type().is_symlink();
+    let held_descriptor_directory = metadata.file_type().is_symlink()
+        && is_linux_held_descriptor_path(parent)
+        && fs::metadata(parent).is_ok_and(|resolved| resolved.is_dir());
+    if !direct_directory && !held_descriptor_directory {
         return Err(OperationalStoreError::OpenFailed);
     }
     if path.exists() {
@@ -1315,6 +1319,16 @@ fn prepare_store_file(path: &Path) -> Result<(), OperationalStoreError> {
     } else {
         prepare_new_store_file(path)
     }
+}
+
+fn is_linux_held_descriptor_path(path: &Path) -> bool {
+    let mut components = path.components();
+    matches!(components.next(), Some(Component::RootDir))
+        && matches!(components.next(), Some(Component::Normal(value)) if value == "proc")
+        && matches!(components.next(), Some(Component::Normal(value)) if value == "self")
+        && matches!(components.next(), Some(Component::Normal(value)) if value == "fd")
+        && matches!(components.next(), Some(Component::Normal(value)) if value.to_str().is_some_and(|value| !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit())))
+        && components.next().is_none()
 }
 
 fn prepare_new_store_file(path: &Path) -> Result<(), OperationalStoreError> {
@@ -1384,8 +1398,10 @@ fn hex_digest(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{self, OpenOptions};
+    use std::fs::{self, File, OpenOptions};
     use std::io::{Read as _, Seek as _, SeekFrom, Write as _};
+    use std::os::fd::AsRawFd;
+    use std::path::Path;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
@@ -1394,7 +1410,7 @@ mod tests {
 
     use super::{
         OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyProvider, SCHEMA_VERSION,
+        OperationalStoreKeyProvider, SCHEMA_VERSION, is_linux_held_descriptor_path,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -1460,6 +1476,37 @@ mod tests {
         assert!(!bytes.starts_with(b"SQLite format 3\0"));
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn encrypted_store_opens_through_exact_held_linux_directory_descriptor() {
+        let directory = temporary_directory();
+        let held = File::open(&directory).expect("directory descriptor");
+        let path =
+            std::path::PathBuf::from(format!("/proc/self/fd/{}/authority.db", held.as_raw_fd()));
+        assert!(is_linux_held_descriptor_path(
+            path.parent().expect("descriptor parent")
+        ));
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([44; 32]))
+            .expect("held-descriptor store");
+        assert!(directory.join("authority.db").is_file());
+        assert_eq!(store.generation(), 0);
+        drop(store);
+        drop(held);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn only_exact_numeric_proc_self_fd_parent_is_a_held_descriptor_path() {
+        assert!(is_linux_held_descriptor_path(Path::new("/proc/self/fd/9")));
+        for path in [
+            "/proc/self/fd",
+            "/proc/self/fd/not-a-number",
+            "/proc/self/fd/9/child",
+            "/tmp/proc/self/fd/9",
+        ] {
+            assert!(!is_linux_held_descriptor_path(Path::new(path)));
+        }
     }
 
     #[test]

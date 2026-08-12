@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io::Read;
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
@@ -30,6 +30,8 @@ pub enum LinuxIpcErrorKind {
     WrongUser,
     /// The kernel-reported peer process differs from the launched peer.
     WrongProcess,
+    /// The peer process disappeared or changed start identity during observation.
+    ProcessIdentityChanged,
     /// The peer executable digest differs from the launched executable.
     WrongExecutable,
     /// The peer used an unsupported protocol version.
@@ -57,6 +59,7 @@ impl LinuxIpcErrorKind {
             Self::UnsafeSocketMode => "linux.ipc.unsafe_socket_mode",
             Self::WrongUser => "linux.ipc.wrong_user",
             Self::WrongProcess => "linux.ipc.wrong_process",
+            Self::ProcessIdentityChanged => "linux.ipc.process_identity_changed",
             Self::WrongExecutable => "linux.ipc.wrong_executable",
             Self::VersionMismatch => "linux.ipc.version_mismatch",
             Self::ChallengeMismatch => "linux.ipc.challenge_mismatch",
@@ -100,16 +103,23 @@ impl std::error::Error for LinuxIpcError {}
 pub struct LinuxPeerIdentity {
     uid: u32,
     pid: i32,
+    start_time_ticks: u64,
     executable_sha256: [u8; 32],
 }
 
 impl LinuxPeerIdentity {
     /// Creates an exact peer identity from owner, process, and executable digest.
     #[must_use]
-    pub const fn new(uid: u32, pid: i32, executable_sha256: [u8; 32]) -> Self {
+    pub const fn new(
+        uid: u32,
+        pid: i32,
+        start_time_ticks: u64,
+        executable_sha256: [u8; 32],
+    ) -> Self {
         Self {
             uid,
             pid,
+            start_time_ticks,
             executable_sha256,
         }
     }
@@ -124,6 +134,12 @@ impl LinuxPeerIdentity {
     #[must_use]
     pub const fn pid(&self) -> i32 {
         self.pid
+    }
+
+    /// Returns the kernel process start time in clock ticks since boot.
+    #[must_use]
+    pub const fn start_time_ticks(&self) -> u64 {
+        self.start_time_ticks
     }
 
     /// Returns the exact executable digest without revealing a path.
@@ -320,6 +336,9 @@ impl LinuxIpcAuthenticator {
         if observed_peer.pid != self.expected_peer.pid {
             return Err(ipc_error(LinuxIpcErrorKind::WrongProcess));
         }
+        if observed_peer.start_time_ticks != self.expected_peer.start_time_ticks {
+            return Err(ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged));
+        }
         if observed_peer.executable_sha256 != self.expected_peer.executable_sha256 {
             return Err(ipc_error(LinuxIpcErrorKind::WrongExecutable));
         }
@@ -359,6 +378,10 @@ impl Drop for LinuxIpcAuthenticator {
 #[allow(dead_code)]
 struct PrivateUnixListener {
     listener: UnixListener,
+    path: PathBuf,
+    parent_identity: SocketPathIdentity,
+    socket_identity: SocketPathIdentity,
+    cleaned: bool,
 }
 
 impl fmt::Debug for PrivateUnixListener {
@@ -399,7 +422,13 @@ impl PrivateUnixListener {
         {
             return Err(ipc_error(LinuxIpcErrorKind::UnsafeSocketMode));
         }
-        Ok(Self { listener })
+        Ok(Self {
+            listener,
+            path: path.to_path_buf(),
+            parent_identity: SocketPathIdentity::from_metadata(&parent_metadata),
+            socket_identity: SocketPathIdentity::from_metadata(&socket_metadata),
+            cleaned: false,
+        })
     }
 
     /// Accepts, identifies, and authenticates exactly one peer connection.
@@ -417,11 +446,7 @@ impl PrivateUnixListener {
         let credentials =
             socket_peercred(&stream).map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
         let pid = credentials.pid.as_raw_pid();
-        let observed = LinuxPeerIdentity::new(
-            credentials.uid.as_raw(),
-            pid,
-            process_executable_sha256(pid)?,
-        );
+        let observed = stable_peer_identity(credentials.uid.as_raw(), pid)?;
         let mut frame = [0_u8; HANDSHAKE_FRAME_BYTES];
         stream
             .read_exact(&mut frame)
@@ -429,6 +454,91 @@ impl PrivateUnixListener {
         let peer = authenticator.authenticate(observed, &LinuxHandshakeRequest::decode(&frame))?;
         Ok((stream, peer))
     }
+
+    fn cleanup(&mut self) -> Result<(), LinuxIpcError> {
+        if self.cleaned {
+            return Ok(());
+        }
+        let parent = self
+            .path
+            .parent()
+            .ok_or_else(|| ipc_error(LinuxIpcErrorKind::UnsafeSocketParent))?;
+        let parent_metadata = fs::symlink_metadata(parent)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::UnsafeSocketParent))?;
+        let socket_metadata = fs::symlink_metadata(&self.path)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::UnsafeSocketMode))?;
+        if SocketPathIdentity::from_metadata(&parent_metadata) != self.parent_identity
+            || SocketPathIdentity::from_metadata(&socket_metadata) != self.socket_identity
+            || !socket_metadata.file_type().is_socket()
+        {
+            return Err(ipc_error(LinuxIpcErrorKind::UnsafeSocketMode));
+        }
+        fs::remove_file(&self.path).map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
+        self.cleaned = true;
+        Ok(())
+    }
+}
+
+impl Drop for PrivateUnixListener {
+    fn drop(&mut self) {
+        let _ = self.cleanup();
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct SocketPathIdentity {
+    device: u64,
+    inode: u64,
+    owner: u32,
+    mode: u32,
+}
+
+impl SocketPathIdentity {
+    fn from_metadata(metadata: &fs::Metadata) -> Self {
+        Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            owner: metadata.uid(),
+            mode: metadata.mode() & 0o777,
+        }
+    }
+}
+
+fn stable_peer_identity(uid: u32, pid: i32) -> Result<LinuxPeerIdentity, LinuxIpcError> {
+    let start_time_ticks = process_start_time_ticks(pid)?;
+    let executable_sha256 = process_executable_sha256(pid)?;
+    if process_start_time_ticks(pid)? != start_time_ticks {
+        return Err(ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged));
+    }
+    Ok(LinuxPeerIdentity::new(
+        uid,
+        pid,
+        start_time_ticks,
+        executable_sha256,
+    ))
+}
+
+pub(crate) fn process_start_time_ticks(pid: i32) -> Result<u64, LinuxIpcError> {
+    let bytes = fs::read(format!("/proc/{pid}/stat"))
+        .map_err(|_| ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged))?;
+    parse_process_start_time_ticks(&bytes)
+}
+
+fn parse_process_start_time_ticks(bytes: &[u8]) -> Result<u64, LinuxIpcError> {
+    if bytes.len() > 64 * 1024 {
+        return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+    }
+    let text = std::str::from_utf8(bytes)
+        .map_err(|_| ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged))?;
+    let end = text
+        .rfind(')')
+        .ok_or_else(|| ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged))?;
+    text[end + 1..]
+        .split_ascii_whitespace()
+        .nth(19)
+        .and_then(|value| value.parse::<u64>().ok())
+        .filter(|value| *value > 0)
+        .ok_or_else(|| ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged))
 }
 
 pub(crate) fn process_executable_sha256(pid: i32) -> Result<[u8; 32], LinuxIpcError> {
@@ -474,6 +584,7 @@ fn authentication_digest(
     inner.update(challenge);
     inner.update(peer.uid.to_be_bytes());
     inner.update(peer.pid.to_be_bytes());
+    inner.update(peer.start_time_ticks.to_be_bytes());
     inner.update(peer.executable_sha256);
     let inner_digest = inner.finalize();
 
@@ -500,7 +611,7 @@ const fn ipc_error(kind: LinuxIpcErrorKind) -> LinuxIpcError {
 mod tests {
     use std::io::Write;
     use std::os::unix::fs::PermissionsExt;
-    use std::os::unix::net::UnixStream;
+    use std::os::unix::net::{UnixListener, UnixStream};
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::thread;
@@ -509,16 +620,13 @@ mod tests {
 
     use super::{
         LINUX_IPC_PROTOCOL_VERSION, LinuxHandshakeRequest, LinuxIpcAuthenticator,
-        LinuxIpcErrorKind, LinuxPeerIdentity, PrivateUnixListener, process_executable_sha256,
+        LinuxIpcErrorKind, LinuxPeerIdentity, PrivateUnixListener, parse_process_start_time_ticks,
+        stable_peer_identity,
     };
 
     fn peer() -> LinuxPeerIdentity {
         let pid = getpid().as_raw_pid();
-        LinuxPeerIdentity::new(
-            getuid().as_raw(),
-            pid,
-            process_executable_sha256(pid).expect("test executable digest"),
-        )
+        stable_peer_identity(getuid().as_raw(), pid).expect("stable test peer")
     }
 
     fn authenticator() -> LinuxIpcAuthenticator {
@@ -571,16 +679,35 @@ mod tests {
             LinuxHandshakeRequest::new(LINUX_IPC_PROTOCOL_VERSION, [3; 32], &[4; 32], &exact);
         let peer_cases = [
             (
-                LinuxPeerIdentity::new(exact.uid() + 1, exact.pid(), *exact.executable_sha256()),
+                LinuxPeerIdentity::new(
+                    exact.uid() + 1,
+                    exact.pid(),
+                    exact.start_time_ticks(),
+                    *exact.executable_sha256(),
+                ),
                 LinuxIpcErrorKind::WrongUser,
             ),
             (
-                LinuxPeerIdentity::new(exact.uid(), exact.pid() + 1, *exact.executable_sha256()),
+                LinuxPeerIdentity::new(
+                    exact.uid(),
+                    exact.pid() + 1,
+                    exact.start_time_ticks(),
+                    *exact.executable_sha256(),
+                ),
                 LinuxIpcErrorKind::WrongProcess,
             ),
             (
-                LinuxPeerIdentity::new(exact.uid(), exact.pid(), [9; 32]),
+                LinuxPeerIdentity::new(exact.uid(), exact.pid(), exact.start_time_ticks(), [9; 32]),
                 LinuxIpcErrorKind::WrongExecutable,
+            ),
+            (
+                LinuxPeerIdentity::new(
+                    exact.uid(),
+                    exact.pid(),
+                    exact.start_time_ticks() + 1,
+                    *exact.executable_sha256(),
+                ),
+                LinuxIpcErrorKind::ProcessIdentityChanged,
             ),
         ];
         for (candidate, expected) in peer_cases {
@@ -647,7 +774,8 @@ mod tests {
             .expect("authenticated socket peer");
         assert_eq!(authenticated.identity(), &identity);
         client.join().expect("client thread");
-        std::fs::remove_file(socket).expect("remove socket");
+        drop(listener);
+        assert!(!socket.exists());
         std::fs::remove_dir(directory).expect("remove directory");
     }
 
@@ -688,6 +816,41 @@ mod tests {
         client.join().expect("client thread");
         std::fs::remove_file(socket).expect("remove socket");
         std::fs::remove_dir(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn listener_drop_removes_only_its_unchanged_socket_identity() {
+        let directory = private_test_directory();
+        let socket = directory.join("agentmage.sock");
+        let listener = PrivateUnixListener::bind(&socket).expect("listener");
+        std::fs::remove_file(&socket).expect("original socket removed");
+        let replacement = UnixListener::bind(&socket).expect("replacement socket");
+        std::fs::set_permissions(&socket, std::fs::Permissions::from_mode(0o600))
+            .expect("replacement mode");
+        drop(listener);
+        assert!(socket.exists(), "foreign replacement must be retained");
+        drop(replacement);
+        std::fs::remove_file(&socket).expect("replacement removes");
+        std::fs::remove_dir(directory).expect("directory removes");
+    }
+
+    #[test]
+    fn process_start_parser_handles_parentheses_and_rejects_malformed_records() {
+        let mut record = String::from("42 (worker ) name) R");
+        for _ in 0..18 {
+            record.push_str(" 0");
+        }
+        record.push_str(" 912345 0\n");
+        assert_eq!(
+            parse_process_start_time_ticks(record.as_bytes()).expect("start time parses"),
+            912_345
+        );
+        assert_eq!(
+            parse_process_start_time_ticks(b"42 malformed")
+                .expect_err("malformed record rejects")
+                .kind(),
+            LinuxIpcErrorKind::ProcessIdentityChanged
+        );
     }
 
     fn private_test_directory() -> PathBuf {

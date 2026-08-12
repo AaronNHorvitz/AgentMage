@@ -2,21 +2,40 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod configuration_store;
 mod inventory;
 mod ipc;
+mod lifecycle;
+mod platform;
 mod sandbox;
 mod secret_service;
 mod strict_local;
 
+pub use configuration_store::{
+    LinuxConfigurationEffectDriver, LinuxConfigurationEffectOutput,
+    LinuxConfigurationEffectRequest, LinuxConfigurationError, LinuxConfigurationErrorKind,
+    LinuxConfigurationStore, open_linux_configuration_store,
+};
 pub use inventory::{
-    LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget, LinuxSessionInventory,
-    LinuxSessionInventoryCollector, LinuxSessionProcessObservation, LinuxSocketObservation,
-    LinuxSocketProtocol, LinuxSocketState, LinuxWritableObservation, LinuxWritableTargetClass,
+    LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget,
+    LinuxProcessIdentityBinding, LinuxSessionInventory, LinuxSessionInventoryCollector,
+    LinuxSessionProcessObservation, LinuxSocketObservation, LinuxSocketProtocol, LinuxSocketState,
+    LinuxWritableObservation, LinuxWritableTargetClass,
 };
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
     LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,
     LinuxPeerIdentity,
+};
+pub use lifecycle::{
+    LinuxOperationalKeyLifecycleError, LinuxOperationalKeyLifecycleErrorKind,
+    LinuxOperationalKeyProvisionReceipt, provision_linux_operational_key,
+    rotate_linux_operational_key,
+};
+pub use platform::{
+    LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,
+    LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind, open_linux_authority,
+    resolve_linux_workspace_object, select_linux_workspace,
 };
 pub use sandbox::{
     LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
@@ -38,7 +57,7 @@ use std::fmt;
 use std::fs;
 use std::os::fd::AsRawFd;
 use std::os::unix::ffi::OsStrExt;
-use std::path::Path;
+use std::path::{Component, Path};
 
 use agentmage_kernel_contracts::{
     AdapterInstanceId, AuthorizedWorkspaceHandle, DisplayFileLink, DisplayLinkErrorKind,
@@ -48,7 +67,8 @@ use agentmage_kernel_contracts::{
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{
-    AtFlags, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, openat, openat2, statx,
+    AtFlags, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, open, openat, openat2,
+    statx,
 };
 use rustix::io::{Errno, pread};
 use sha2::{Digest, Sha256};
@@ -157,6 +177,59 @@ impl AuthorizedWorkspaceHandle for LinuxAuthorizedWorkspace {
     fn platform(&self) -> PathPlatform {
         PathPlatform::Linux
     }
+}
+
+fn authorize_workspace_root(
+    root: &Path,
+    workspace_id: WorkspaceId,
+    authorization_id: WorkspaceAuthorizationId,
+    adapter_instance_id: AdapterInstanceId,
+) -> Result<LinuxAuthorizedWorkspace, PathAdapterError> {
+    if !root.is_absolute() {
+        return Err(adapter_error(PathAdapterErrorKind::UnsafeComponent, None));
+    }
+    let mut descriptor = open(
+        "/",
+        OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+    )
+    .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+    let mut index = 0;
+    for component in root.components() {
+        match component {
+            Component::RootDir => {}
+            Component::Normal(name) => {
+                descriptor = openat(
+                    &descriptor,
+                    name,
+                    OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                    Mode::empty(),
+                )
+                .map_err(|error| open_error(error, index))?;
+                index += 1;
+            }
+            Component::CurDir | Component::ParentDir | Component::Prefix(_) => {
+                return Err(adapter_error(
+                    PathAdapterErrorKind::UnsafeComponent,
+                    Some(index),
+                ));
+            }
+        }
+    }
+    let root_snapshot = snapshot(&descriptor, None)?;
+    if root_snapshot.file_type != FileType::Directory {
+        return Err(adapter_error(
+            PathAdapterErrorKind::ObjectKindMismatch,
+            None,
+        ));
+    }
+    Ok(LinuxAuthorizedWorkspace {
+        workspace_id,
+        authorization_id,
+        adapter_instance_id,
+        root_descriptor: descriptor,
+        root_snapshot,
+    })
 }
 
 /// Linux object whose workspace root and resolved object descriptors remain held.

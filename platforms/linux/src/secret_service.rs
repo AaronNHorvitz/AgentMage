@@ -46,6 +46,10 @@ pub enum LinuxSecretServiceErrorKind {
     TimedOut,
     /// No credential matched the exact fixed attributes.
     NotFound,
+    /// Explicit first-install provisioning found an existing key.
+    AlreadyProvisioned,
+    /// A newly stored operational key could not be retrieved exactly.
+    VerificationFailed,
     /// The client returned output outside the closed protocol.
     ProtocolViolation,
     /// Client output exceeded the hard bound.
@@ -63,6 +67,8 @@ impl LinuxSecretServiceErrorKind {
             Self::ServiceUnavailable => "linux.secret.service.unavailable",
             Self::TimedOut => "linux.secret.service.timeout",
             Self::NotFound => "linux.secret.not-found",
+            Self::AlreadyProvisioned => "linux.secret.operational-key.already-provisioned",
+            Self::VerificationFailed => "linux.secret.operational-key.verification-failed",
             Self::ProtocolViolation => "linux.secret.protocol.invalid",
             Self::OutputLimitExceeded => "linux.secret.output.exceeded",
         }
@@ -456,6 +462,51 @@ impl LinuxSecretService {
     }
 }
 
+pub(crate) fn operational_store_key_exists(
+    service: &LinuxSecretService,
+    profile_id: impl Into<String>,
+) -> Result<bool, LinuxSecretServiceError> {
+    let key = LinuxSecretKey::new(profile_id, OPERATIONAL_STORE_KEY_PURPOSE)?;
+    match service.lookup(&key) {
+        Ok((value, _)) => {
+            decode_operational_store_key_with_service_error(&value)?;
+            Ok(true)
+        }
+        Err(failure) if failure.kind() == LinuxSecretServiceErrorKind::NotFound => Ok(false),
+        Err(failure) => Err(failure),
+    }
+}
+
+pub(crate) fn provision_operational_store_key(
+    service: &LinuxSecretService,
+    profile_id: impl Into<String>,
+) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
+    let key = LinuxSecretKey::new(profile_id, OPERATIONAL_STORE_KEY_PURPOSE)?;
+    match service.lookup(&key) {
+        Ok((value, _)) => {
+            decode_operational_store_key_with_service_error(&value)?;
+            return Err(error(LinuxSecretServiceErrorKind::AlreadyProvisioned));
+        }
+        Err(failure) if failure.kind() == LinuxSecretServiceErrorKind::NotFound => {}
+        Err(failure) => return Err(failure),
+    }
+
+    let mut raw = Zeroizing::new([0_u8; 32]);
+    let generated = getrandom(&mut raw[..], GetRandomFlags::empty())
+        .map_err(|_| error(LinuxSecretServiceErrorKind::ServiceUnavailable))?;
+    if generated != raw.len() {
+        return Err(error(LinuxSecretServiceErrorKind::ServiceUnavailable));
+    }
+    let encoded = Zeroizing::new(hex_digest(raw.as_slice()).into_bytes());
+    let receipt = service.store(&key, LinuxSecretValue::new(encoded.to_vec())?)?;
+    let (retrieved, _) = service.lookup(&key)?;
+    let decoded = decode_operational_store_key_with_service_error(&retrieved)?;
+    if !constant_time_equal(raw.as_slice(), decoded.as_slice()) {
+        return Err(error(LinuxSecretServiceErrorKind::VerificationFailed));
+    }
+    Ok(receipt)
+}
+
 /// Fixed-purpose Secret Service key source for the encrypted operational store.
 ///
 /// This startup boundary can only look up the one operational-store key for an
@@ -516,6 +567,26 @@ fn decode_operational_store_key(
         decoded[index] = (high << 4) | low;
     }
     Ok(decoded)
+}
+
+fn decode_operational_store_key_with_service_error(
+    value: &LinuxSecretValue,
+) -> Result<Zeroizing<[u8; 32]>, LinuxSecretServiceError> {
+    value
+        .with_exposed(decode_operational_store_key)
+        .map_err(|_| error(LinuxSecretServiceErrorKind::VerificationFailed))
+}
+
+fn constant_time_equal(left: &[u8], right: &[u8]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    left.iter()
+        .zip(right)
+        .fold(0_u8, |difference, (left, right)| {
+            difference | (left ^ right)
+        })
+        == 0
 }
 
 const fn decode_hex(value: u8) -> Option<u8> {
@@ -900,7 +971,8 @@ mod tests {
     use super::{
         LinuxSecretKey, LinuxSecretOperation, LinuxSecretService, LinuxSecretServiceErrorKind,
         LinuxSecretServiceManifest, LinuxSecretValue, MAX_SECRET_BYTES,
-        decode_operational_store_key, hex_digest, read_bounded,
+        OPERATIONAL_STORE_KEY_PURPOSE, decode_operational_store_key, hex_digest,
+        operational_store_key_exists, provision_operational_store_key, read_bounded,
     };
     use rustix::rand::{GetRandomFlags, getrandom};
     use sha2::Digest as _;
@@ -1006,5 +1078,31 @@ mod tests {
                 .kind(),
             LinuxSecretServiceErrorKind::NotFound
         );
+    }
+
+    #[test]
+    #[ignore = "requires an unlocked live Secret Service and provisions then clears a synthetic operational key"]
+    fn live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned() {
+        let mut random = [0_u8; 16];
+        getrandom(&mut random, GetRandomFlags::empty()).expect("random profile");
+        let profile_id = hex_digest(&random);
+        let key = LinuxSecretKey::new(&profile_id, OPERATIONAL_STORE_KEY_PURPOSE).expect("key");
+        let service = LinuxSecretService::new(
+            LinuxSecretServiceManifest::verify("/usr/bin/secret-tool").expect("manifest"),
+        );
+        let receipt = provision_operational_store_key(&service, &profile_id).expect("provisions");
+        let exists = operational_store_key_exists(&service, &profile_id);
+        let overwrite = provision_operational_store_key(&service, &profile_id);
+        let cleared = service.clear(&key);
+        let absent = operational_store_key_exists(&service, &profile_id);
+
+        assert_eq!(receipt.operation(), LinuxSecretOperation::Store);
+        assert!(exists.expect("key exists"));
+        assert_eq!(
+            overwrite.expect_err("overwrite refuses").kind(),
+            LinuxSecretServiceErrorKind::AlreadyProvisioned
+        );
+        cleared.expect("synthetic key clears");
+        assert!(!absent.expect("key absent"));
     }
 }

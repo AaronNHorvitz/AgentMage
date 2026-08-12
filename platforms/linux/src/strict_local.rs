@@ -1,7 +1,8 @@
 //! Descriptor-held Linux strict-local data-root inspection.
 
 use std::fmt;
-use std::path::{Component, Path};
+use std::os::fd::AsRawFd;
+use std::path::{Component, Path, PathBuf};
 
 use agentmage_kernel_contracts::{
     CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
@@ -11,6 +12,7 @@ use rustix::fs::{
     AtFlags, FileType, Mode, OFlags, StatxFlags, fstat, fstatfs, open, openat, statx,
 };
 use rustix::io::{Errno, fcntl_dupfd_cloexec};
+use rustix::process::getuid;
 use sha2::{Digest, Sha256};
 
 const EXT_FAMILY_MAGIC: u64 = 0x0000_ef53;
@@ -62,6 +64,10 @@ pub enum LinuxStrictLocalRootErrorKind {
     OpenFailed,
     /// Required descriptor or filesystem metadata was unavailable.
     MetadataUnavailable,
+    /// The root is not owned by the current user.
+    ForeignOwner,
+    /// The root grants any group or other permission.
+    UnsafeMode,
     /// The held root identity or filesystem changed.
     IdentityChanged,
 }
@@ -102,6 +108,8 @@ impl fmt::Display for LinuxStrictLocalRootError {
             LinuxStrictLocalRootErrorKind::MetadataUnavailable => {
                 "strict_local_root.metadata_unavailable"
             }
+            LinuxStrictLocalRootErrorKind::ForeignOwner => "strict_local_root.foreign_owner",
+            LinuxStrictLocalRootErrorKind::UnsafeMode => "strict_local_root.unsafe_mode",
             LinuxStrictLocalRootErrorKind::IdentityChanged => "strict_local_root.identity_changed",
         })
     }
@@ -158,6 +166,12 @@ impl LinuxStrictLocalRootInspector {
 
         synchronization_marker = synchronization_marker.or(detect_root_sentinel(&descriptor)?);
         let metadata = root_metadata(&descriptor)?;
+        if metadata.owner != getuid().as_raw() {
+            return Err(error(LinuxStrictLocalRootErrorKind::ForeignOwner, None));
+        }
+        if metadata.mode & 0o077 != 0 {
+            return Err(error(LinuxStrictLocalRootErrorKind::UnsafeMode, None));
+        }
         let observation = StrictLocalStorageObservation {
             filesystem: classify_linux_filesystem_magic(metadata.filesystem_magic),
             synchronization_marker,
@@ -192,6 +206,21 @@ impl LinuxStrictLocalRoot {
             .map_err(|_| error(LinuxStrictLocalRootErrorKind::OpenFailed, None))
     }
 
+    /// Opens the held directory for descriptor-relative I/O and directory synchronization.
+    pub(crate) fn duplicate_io_descriptor(&self) -> Result<OwnedFd, LinuxStrictLocalRootError> {
+        let descriptor = openat(
+            &self.descriptor,
+            ".",
+            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            Mode::empty(),
+        )
+        .map_err(|_| error(LinuxStrictLocalRootErrorKind::OpenFailed, None))?;
+        if root_metadata(&descriptor)? != self.metadata {
+            return Err(error(LinuxStrictLocalRootErrorKind::IdentityChanged, None));
+        }
+        Ok(descriptor)
+    }
+
     /// Revalidates object identity, filesystem class, and root-level sync sentinels.
     pub fn revalidate(&self) -> Result<(), LinuxStrictLocalRootError> {
         let current = root_metadata(&self.descriptor)?;
@@ -202,6 +231,14 @@ impl LinuxStrictLocalRoot {
             return Err(error(LinuxStrictLocalRootErrorKind::IdentityChanged, None));
         }
         Ok(())
+    }
+
+    /// Returns the fixed authority-database path through the continuously held root.
+    pub(crate) fn authority_database_path(&self) -> PathBuf {
+        PathBuf::from(format!(
+            "/proc/self/fd/{}/authority.db",
+            self.descriptor.as_raw_fd()
+        ))
     }
 }
 
@@ -225,6 +262,8 @@ struct RootMetadata {
     inode: u64,
     mount_id: Option<u64>,
     filesystem_magic: u64,
+    owner: u32,
+    mode: u32,
 }
 
 fn open_directory_component(
@@ -290,6 +329,8 @@ fn root_metadata(descriptor: &OwnedFd) -> Result<RootMetadata, LinuxStrictLocalR
         inode: stat.st_ino,
         mount_id,
         filesystem_magic: filesystem.f_type as u64,
+        owner: stat.st_uid,
+        mode: stat.st_mode & 0o777,
     })
 }
 
@@ -299,6 +340,8 @@ fn root_identity_digest(metadata: &RootMetadata) -> [u8; 32] {
     digest.update(metadata.device.to_le_bytes());
     digest.update(metadata.inode.to_le_bytes());
     digest.update(metadata.filesystem_magic.to_le_bytes());
+    digest.update(metadata.owner.to_le_bytes());
+    digest.update(metadata.mode.to_le_bytes());
     match metadata.mount_id {
         Some(mount_id) => {
             digest.update([1]);
@@ -390,7 +433,7 @@ mod tests {
     use std::fs;
     use std::os::fd::AsRawFd;
     use std::os::unix::ffi::OsStringExt;
-    use std::os::unix::fs::symlink;
+    use std::os::unix::fs::{PermissionsExt, symlink};
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -416,6 +459,8 @@ mod tests {
                 std::process::id()
             ));
             fs::create_dir(&path).expect("test root creates");
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o700))
+                .expect("test root is private");
             Self(path)
         }
     }
@@ -502,6 +547,26 @@ mod tests {
         held.revalidate().expect("held root revalidates");
         let duplicate = held.duplicate_descriptor().expect("descriptor duplicates");
         assert!(duplicate.as_raw_fd() >= 3);
+    }
+
+    #[test]
+    fn public_mode_is_rejected_and_a_mode_change_invalidates_a_held_root() {
+        let test = TestDirectory::new("mode");
+        fs::set_permissions(&test.0, fs::Permissions::from_mode(0o750)).expect("weaken root mode");
+        assert_eq!(
+            LinuxStrictLocalRootInspector::inspect(&test.0)
+                .expect_err("public root rejects")
+                .kind(),
+            LinuxStrictLocalRootErrorKind::UnsafeMode
+        );
+        fs::set_permissions(&test.0, fs::Permissions::from_mode(0o700)).expect("restore root mode");
+        let held = LinuxStrictLocalRootInspector::inspect(&test.0).expect("private root");
+        fs::set_permissions(&test.0, fs::Permissions::from_mode(0o750))
+            .expect("mutate held root mode");
+        assert_eq!(
+            held.revalidate().expect_err("mode mutation rejects").kind(),
+            LinuxStrictLocalRootErrorKind::IdentityChanged
+        );
     }
 
     #[test]

@@ -1,10 +1,11 @@
 # Effect Mediation Boundary
 
-This document describes the live mediation boundary through the Phase 7
+This document describes the live mediation boundary through the Phase 8
 candidate. Decision 0014 governs opaque effect permits, Decision 0015 governs
-their exact held-target payload and Linux object exposure, and proposed
-Decision 0016 governs encrypted checkpoints and recovery. The machine boundary
-check is `python3 scripts/effect_boundary.py`.
+their exact held-target payload and Linux object exposure, Decision 0016 governs
+encrypted checkpoints and recovery, and accepted Decision 0017 governs Linux
+composition and native configuration effects. The machine boundary check is
+`python3 scripts/effect_boundary.py`.
 
 ## Authority Flow
 
@@ -58,6 +59,13 @@ directly; the repository guard rejects those source patterns. A future network
 or command driver must add a closed operation mapping and consume the same
 permit type before the effect becomes available.
 
+The Linux listener owns the exact socket identity it creates and removes it on
+drop only while the private parent and named socket remain unchanged. Peer
+authentication binds kernel UID and PID to process start time and executable
+digest. Process inventory holds a pidfd where available, always compares start
+time before and after collection, and exposes the weaker start-time-only binding
+when the kernel does not support pidfd.
+
 ## Data Boundary
 
 ```mermaid
@@ -84,6 +92,14 @@ non-authoritative and have no conversion into a permit. The operational-store
 key is exposed only during a platform key-provider callback and never enters a
 receipt, command argument, environment variable, or plaintext fallback.
 
+Configuration parsing, canonicalization, migration calculation, policy
+comparison, and result binding remain in the kernel. Linux owns the fixed
+configuration target, descriptor-relative reads, owner/mode/link validation,
+immutable backups, atomic exchange, interrupted-exchange completion, and parent
+synchronization. Native apply, migrate, and rollback methods are private and
+reachable only through `LinuxConfigurationEffectDriver` with an exact
+administration permit.
+
 ## Public Surface Rules
 
 - The durable authority runtime is the sole public launch surface.
@@ -101,8 +117,9 @@ receipt, command argument, environment variable, or plaintext fallback.
 ## Current Limits
 
 This boundary is not complete product integration. Canonical target parity,
-exact-object Linux exposure, encrypted authority checkpoints, and restart
-recovery are implemented in the Phase 7 candidate. Full Linux state-root and
-key lifecycle composition remain Phase 8 work. The application host does not
-yet compose the real driver workflow. macOS is a declared but unmaterialized
-mediation edge and remains `blocked-macos`.
+exact-object Linux exposure, encrypted authority checkpoints, restart recovery,
+independent platform trust, private Linux state composition, and native
+configuration mediation exist as isolated candidate mechanisms. The application
+host does not yet compose the real Visual Studio Code workflow. Production
+signed manifests and packages do not exist; Ubuntu-native execution, macOS,
+Windows, model execution, and supported product behavior remain unclaimed.

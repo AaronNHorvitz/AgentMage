@@ -2,118 +2,119 @@
 
 ## Status and Scope
 
-This document freezes platform-adapter API version 1 and the pre-release
-manifest fields required before product logic may depend on a platform. The
-shared Rust contract and fail-closed kernel selector are implemented. Fedora and
-Ubuntu manifest fixtures are deterministic public examples. They are not signed
-packages, do not establish platform support, and make no release claim.
+This document describes platform-adapter API version 1 and the Phase 8 Linux
+candidate governed by accepted Decision 0017. Shared release verification and
+the Fedora/Ubuntu aggregate adapter are implemented. The repository does not
+contain a production signing key, signed release manifest, supported package,
+or integrated product workflow. Synthetic manifests used by tests make no
+release or platform-support claim.
 
-macOS field requirements are frozen here for compatibility, but macOS adapter,
-package, signing, entitlement, and execution evidence remain blocked. Linux
-results cannot satisfy those gates.
+macOS field requirements remain frozen but unimplemented. Windows remains a
+later independent platform increment. Evidence from one platform cannot satisfy
+another platform's gate.
 
-## Adapter Boundary
+## Independent Trust Boundary
 
-Operating-system decisions belong behind `PlatformAdapter`. Product code passes
-one adapter to `activate_platform` and receives a `VerifiedPlatformAdapter` only
-after exact runtime identity and every required capability pass. There is no
-weaker adapter, capability omission, or automatic fallback.
+The expected release identity and native observations enter from different
+boundaries. A native adapter cannot select or echo its own expected manifest.
 
 ```mermaid
 flowchart LR
-    M["Immutable platform manifest"] --> A["PlatformAdapter"]
-    E["Allowlisted runtime identity"] --> A
-    A --> P["Ten pre-workspace probes"]
-    P --> K["Kernel activate_platform"]
-    K -->|"all exact and verified"| V["VerifiedPlatformAdapter"]
-    K -->|"any mismatch or absence"| D["Typed startup refusal"]
-    V --> W["Workspace authorization may begin"]
+    MB["Exact release-manifest bytes"] --> RV["Strict schema and Ed25519 verification"]
+    SG["Detached signature"] --> RV
+    VK["Independent trusted public key"] --> RV
+    RV --> VR["VerifiedPlatformRelease"]
+    NA["Native PlatformAdapter observations"] --> AC["Kernel activate_platform"]
+    VR --> AC
+    AC -->|"runtime and ten mechanism digests match"| VA["VerifiedPlatformAdapter"]
+    AC -->|"any absence, mutation, or mismatch"| RF["Typed startup refusal"]
+    VA --> WA["Workspace and state composition may begin"]
 ```
 
-The shared API owns these exact domains:
+`verify_platform_release` accepts only bounded schema-version-2 JSON with the
+exact `platform-release-manifest` record type, `signed-release` status, current
+adapter API, supported Linux family and architecture, complete runtime identity,
+and one ordered nonzero mechanism digest for every required capability. The
+detached Ed25519 signature covers a versioned domain separator plus the exact
+manifest bytes.
+
+`PlatformAdapter` reports only observed runtime and capability evidence.
+`activate_platform` compares those observations with `VerifiedPlatformRelease`.
+There is no weaker activation form, omitted capability, unsigned fallback, or
+adapter-supplied expected identity.
+
+## Capability Closure
 
 | Capability | Required pre-workspace result |
 | --- | --- |
-| Workspace authorization | User-mediated mechanism identity verified |
+| Workspace authorization | Exact aggregate and descriptor-safe mechanism verified |
 | Secure path resolution | Descriptor-relative confinement identity verified |
-| Tool confinement | Fresh worker isolation identity verified |
-| Secret storage | Operating-system secret store identity verified |
-| Process limits | Enforced resource-control identity verified |
+| Tool confinement | Fresh worker-isolation identity verified |
+| Secret storage | Fixed native Secret Service mechanism verified |
+| Process limits | Enforced native resource-control identity verified |
 | Local inference | Approved local runtime identity verified |
 | Model installation | Separate verified installer identity verified |
-| Packaging | Exact installed package digest verified |
+| Packaging | Exact installed package identity verified |
 | Updates | Signed update and rollback mechanism identity verified |
 | Network isolation | Offline enforcement mechanism identity verified |
 
-Each observation is bound to one capability, platform family, immutable manifest
-digest, and mechanism digest. It contains no path, command output, hostname,
-username, environment value, credential, or native error text.
+An observation is bound to one capability and platform family and contains one
+mechanism digest. `Unavailable` and `Invalid` are distinct typed failures;
+neither reduces the capability set. The expected mechanism digest comes only
+from the independently verified release.
+
+## Linux Aggregate
+
+`LinuxPlatformAdapter::discover` observes Fedora or Ubuntu, x86-64 or AArch64,
+the operating-system build, fixed toolchain identity, Visual Studio Code build,
+current AgentMage executable, and fixed native mechanisms. Missing mechanisms
+are `Unavailable`; present but unsafe or changed mechanisms are `Invalid`.
+
+Construction conveys no workspace or state authority. Production workspace
+selection, path resolution, configuration opening, authority-state opening, and
+initial key provisioning require a `VerifiedPlatformAdapter<LinuxPlatformAdapter>`.
+Workspace selection is the only production constructor for a Linux authorized
+workspace and opens the selected root without following symbolic links.
+
+```mermaid
+flowchart TD
+    VA["Verified Linux aggregate"] --> WS["Descriptor-held workspace"]
+    VA --> CR["Private configuration root"]
+    VA --> SR["Private authority-state root"]
+    VA --> KL["Explicit key lifecycle"]
+    WS --> PR["Exact held-object resolution"]
+    CR --> CE["Kernel-mediated native configuration effects"]
+    SR --> DB["SQLCipher authority runtime"]
+    KL --> SS["Fixed Secret Service key identity"]
+```
+
+The current development executable and absent package-time helper paths do not
+constitute a signed production installation. Production discovery therefore
+fails closed at activation unless an independently signed manifest exactly
+matches the installed runtime and all ten mechanisms.
 
 ## Runtime Matching
 
-Startup compares fields in a fixed order and stops before capability probes when
-any field differs:
+Startup compares fields in fixed order before workspace access:
 
-1. Adapter API version.
-2. Platform family.
-3. Processor architecture.
-4. Normalized operating-system build digest.
-5. Product toolchain digest.
-6. Supported Visual Studio Code build digest.
-7. Installed AgentMage package digest.
+1. Adapter API, platform family, and processor architecture.
+2. Operating-system build, toolchain, Visual Studio Code, and package digests.
+3. Every required capability in the closed API order.
+4. Capability family, status, and independently expected mechanism digest.
 
-Capability probes then run in the closed API order. A probe for the wrong
-capability, platform, or manifest is foreign evidence and cannot activate the
-adapter. `Unavailable` and `Invalid` are distinct typed failures; neither causes
-fallback.
+Wrong capability order, foreign platform evidence, zero mechanisms, changed
+runtime fields, a substituted signer or signature, and an adapter that reports
+arbitrary `Verified` evidence all fail closed with content-free errors.
 
-## Manifest Field Contract
+## Dependency and Evidence Limits
 
-Every platform release manifest contains:
+Maintainer signing dependencies, end-user runtime dependencies, and excluded
+build-time dependencies remain disjoint. Signing secrets, tokens, certificates,
+passphrases, private paths, command output, environment values, and credentials
+never enter manifests or observations.
 
-- Schema, record, manifest, status, and adapter API identity.
-- Exact platform family, architecture, supported distribution/build set, and
-  normalized operating-system build digest.
-- Exact build toolchain, supported Visual Studio Code build, package format, and
-  package digest.
-- One mechanism identity and digest for every required platform capability.
-- Disjoint maintainer-release, end-user-runtime, and excluded-end-user
-  dependency classes.
-- Explicit assertions that credentials, private environment values, and
-  substituted macOS evidence are absent.
-- An explicit release-claim state.
-
-The macOS variant additionally requires minimum and tested macOS builds, Apple
-SDK and Swift versions, Team ID, host/bridge/helper/inference bundle IDs, App
-Group ID, designated requirements, complete entitlement sets, every helper
-digest, arm64 package digest, and supported Visual Studio Code build. Those
-fields must contain release-derived values; placeholders cannot pass a release
-gate.
-
-The Fedora and Ubuntu variants additionally require the supported distribution
-versions plus identities for Bubblewrap/seccomp, Secret Service, cgroup limits,
-descriptor-safe paths, native inference, package verification, update/rollback,
-and network isolation. Docker Model Runner remains a separate compatibility
-adapter and cannot replace the native Linux reference identity.
-
-## Dependency Separation
-
-| Class | May be present in release environment | May be required from end user | May enter package or diagnostics |
-| --- | --- | --- | --- |
-| Maintainer build and signing tools | Yes | No | Identity only, never credentials |
-| End-user runtime dependencies | Yes | Yes, when documented | Name/version/digest only |
-| Compilers and package build tools | Yes | No | No executable dependency |
-| Signing/notarization credentials | Isolated release environment only | No | Never |
-
-The fixture manifests list these classes independently and require them to be
-disjoint where their meaning conflicts. A signing identity name may be recorded
-for a fixture; signing keys, tokens, certificates, passphrases, environment
-values, and private paths may never be recorded.
-
-## Evidence Limits
-
-Current unit tests prove shared identity comparison, complete capability closure,
-wrong-capability and foreign-evidence rejection, and refusal for every absent or
-invalid capability. Fedora and Ubuntu native mechanism execution, packaging, and
-clean-environment proof belong to later Linux topology and release work. macOS
-implementation and execution remain blocked.
+Current tests prove strict signed-manifest parsing, signature and signer
+mutation, runtime and mechanism comparison, complete capability closure,
+Fedora/Ubuntu non-portability, and aggregate constructor gating. They do not
+prove a supported package, Ubuntu-native execution, model runtime, updater,
+installer, Visual Studio Code workflow, macOS, or Windows.

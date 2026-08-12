@@ -38,10 +38,13 @@ The accepted 17-epic, 169-sprint, 227-requirement scope is preserved, but the
 original numbered roadmap is paused until the stabilization gate authorizes its
 resumption.
 
-Accepted Decisions 0013 through 0015 define the current authority transaction,
-opaque effect permit, canonical held targets, and exact-object Linux worker.
-Proposed Decision 0016 records the Phase 7 SQLCipher authority and restart
-recovery candidate; it is not an integrated product or release claim.
+Accepted Decisions 0013 through 0016 define the current authority transaction,
+opaque effect permit, canonical held targets, exact-object Linux worker,
+SQLCipher authority, and restart recovery. Accepted Decision 0017 records the
+Phase 8 independent release trust, Fedora/Ubuntu aggregate, native configuration,
+private state/key lifecycle, IPC cleanup, and process-identity candidate. These
+remain isolated pre-alpha mechanisms, not an integrated product or release
+claim.
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
@@ -117,7 +120,7 @@ flowchart LR
     P --> T["Sandboxed deterministic tool worker"]
     T --> E["Receipts, citations, and evidence states"]
     E --> K
-    K <--> S[("Encrypted SQLite operational store")]
+    K <--> S[("SQLCipher operational store")]
     K --> V
     I["Separate model installer/importer"] --> A["Verified local model store"]
     A --> M
@@ -147,6 +150,15 @@ AgentMage has three one-way product layers:
 Shells and models carry no authority. Only the kernel can validate and consume a capability grant. Codex is an adjacent user-controlled surface, not an AgentMage shell, model, tool, fallback, router destination, or subagent.
 
 Platform adapters implement inference, workspace authorization, secure paths, tool confinement, secret storage, process limits, installation, and updates. Provider adapters implement the lifecycle in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md). Capability packs, provider adapters, and shells cannot bypass those contracts or weaken them on one operating system.
+
+The current Linux candidate obtains expected runtime and mechanism identities
+from a strictly parsed, detached-signature-verified release manifest independent
+of native observations. Its aggregate gates workspace and state construction,
+holds private roots by descriptor, owns native configuration publication and
+explicit key provisioning, binds IPC peers and inventory to process start
+identity, and fails closed because no production signed package is present. The
+detailed boundary is recorded in
+[`docs/architecture/linux-platform-lifecycle.md`](./docs/architecture/linux-platform-lifecycle.md).
 
 ## Platform Support
 

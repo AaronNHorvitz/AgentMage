@@ -2,11 +2,11 @@
 
 ## Status and Scope
 
-This document describes the Phase 7 candidate governed by proposed Decision
-0016. It covers only canonical grant, nonce, authority-transaction, receipt,
-and checkpoint state. It is not evidence that the complete Sprint 11 data
-lifecycle, application host, Ubuntu execution, macOS, or a supported product is
-implemented.
+This document describes the durable authority candidate governed by accepted
+Decision 0016 and composed on Linux by accepted Decision 0017. It covers only
+canonical grant, nonce, authority-transaction, receipt, and checkpoint state.
+It is not evidence that the complete Sprint 11 data lifecycle, application
+host, Ubuntu execution, macOS, Windows, or a supported product is implemented.
 
 ## Ownership
 
@@ -29,8 +29,20 @@ only from validated rows after every process restart.
 
 On Linux, `LinuxOperationalStoreKeyProvider` looks up one fixed
 `operational-store-key-v1` Secret Service item for one profile. It never exposes
-a general lookup, list, mutation, or returned-key API. Full state-root and key
-lifecycle composition remain Phase 8 work.
+a general lookup, list, mutation, or returned-key API. The Phase 8 aggregate
+opens the fixed database through the exact
+`/proc/self/fd/<held-root>/authority.db` shape after final-object creation or
+verification rejects symbolic links. Ordinary non-descriptor paths retain
+SQLite no-follow.
+
+Initial key provisioning is a separate explicit operation that requires the
+verified aggregate, a current-user owner-only strict-local root, and a
+single-writer lifecycle lock. It refuses an existing key and refuses an
+existing authority database without its key, obtains 256 random bits from the
+operating system, sends encoded material only through Secret Service standard
+input, and verifies exact lookup before success. Normal startup never provisions,
+repairs, clears, or rotates a key. Rotation is explicitly unavailable until an
+interruption-safe dual-key protocol exists.
 
 ## Schema
 
@@ -145,5 +157,8 @@ required before another effect can be considered.
 Current tests inspect encrypted database, WAL, shared-memory, and backup
 artifacts for plaintext canaries; force a rollback; corrupt an encrypted page;
 exercise wrong and missing keys; reject ineligible storage; deny a second
-writer; and restart from every authority transition. Retained historical story
-artifacts are not regenerated or represented as current Phase 7 evidence.
+writer; and restart from every authority transition. Linux tests additionally
+exercise private-root owner/mode drift, unsafe authority-state objects, and
+exclusive lifecycle locking. Live Secret Service tests remain explicitly
+environment-dependent. Retained historical story artifacts are not regenerated
+or represented as current Phase 8 evidence.

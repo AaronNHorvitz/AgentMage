@@ -1,16 +1,8 @@
-//! Closed configuration parsing, migration, comparison, and local recovery.
+//! Closed configuration parsing, migration, comparison, and authority policy.
 
 use std::collections::BTreeSet;
 use std::fmt;
 use std::fmt::Write as _;
-use std::fs::{self, OpenOptions};
-use std::io::Write;
-use std::path::{Path, PathBuf};
-
-#[cfg(unix)]
-use std::fs::File;
-#[cfg(unix)]
-use std::os::unix::fs::OpenOptionsExt;
 
 use ed25519_dalek::{Signature, VerifyingKey};
 use serde::de::{self, MapAccess, SeqAccess, Visitor};
@@ -33,8 +25,6 @@ enum ErrorCode {
     MalformedJson,
     UnsupportedVersion,
     ContractViolation,
-    Io,
-    Conflict,
     AuthorityBroadening,
     ParentSignatureInvalid,
 }
@@ -46,8 +36,6 @@ impl ErrorCode {
             Self::MalformedJson => "configuration-malformed-json",
             Self::UnsupportedVersion => "configuration-unsupported-version",
             Self::ContractViolation => "configuration-contract-violation",
-            Self::Io => "configuration-io-failure",
-            Self::Conflict => "configuration-state-conflict",
             Self::AuthorityBroadening => "configuration-authority-broadening",
             Self::ParentSignatureInvalid => "configuration-parent-signature-invalid",
         }
@@ -657,6 +645,38 @@ pub struct StartupArtifactIdentities {
     policy_sha256: String,
 }
 
+/// Content-free platform evidence that startup began in one clean held root.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StartupEnvironmentObservation {
+    clean: bool,
+    root_identity_sha256: [u8; 32],
+}
+
+impl StartupEnvironmentObservation {
+    /// Creates one platform observation after native root inspection.
+    pub fn new(clean: bool, root_identity_sha256: [u8; 32]) -> Result<Self, ConfigurationError> {
+        if root_identity_sha256 == [0; 32] {
+            return contract_error();
+        }
+        Ok(Self {
+            clean,
+            root_identity_sha256,
+        })
+    }
+
+    /// Returns whether the platform found no pre-existing startup state.
+    #[must_use]
+    pub const fn is_clean(&self) -> bool {
+        self.clean
+    }
+
+    /// Returns the held root identity without returning a path.
+    #[must_use]
+    pub const fn root_identity_sha256(&self) -> &[u8; 32] {
+        &self.root_identity_sha256
+    }
+}
+
 impl StartupArtifactIdentities {
     /// Hashes three non-empty bounded evidence artifacts without retaining their content.
     pub fn from_artifacts(
@@ -846,7 +866,7 @@ impl MigrationOutcome {
 pub struct ApplyReceipt {
     previous_sha256: String,
     applied_sha256: String,
-    backup_path: PathBuf,
+    backup_sha256: String,
 }
 
 /// Evidence returned after a durable version 0-to-1 file migration.
@@ -854,11 +874,33 @@ pub struct ApplyReceipt {
 pub struct MigrationApplyReceipt {
     previous_sha256: String,
     migrated_sha256: String,
-    backup_path: PathBuf,
+    backup_sha256: String,
     changes: Vec<String>,
 }
 
 impl MigrationApplyReceipt {
+    /// Constructs minimized evidence after native storage verifies publication.
+    pub fn from_verified_storage(
+        previous_sha256: String,
+        migrated_sha256: String,
+        backup_sha256: String,
+        changes: Vec<String>,
+    ) -> Result<Self, ConfigurationError> {
+        if !sha256_text(&previous_sha256)
+            || !sha256_text(&migrated_sha256)
+            || backup_sha256 != previous_sha256
+            || changes.is_empty()
+        {
+            return contract_error();
+        }
+        Ok(Self {
+            previous_sha256,
+            migrated_sha256,
+            backup_sha256,
+            changes,
+        })
+    }
+
     /// Returns the exact pre-migration file identity retained in the backup.
     #[must_use]
     pub fn previous_sha256(&self) -> &str {
@@ -871,10 +913,10 @@ impl MigrationApplyReceipt {
         &self.migrated_sha256
     }
 
-    /// Returns the content-addressed version 0 backup path.
+    /// Returns the content-addressed version 0 backup identity.
     #[must_use]
-    pub fn backup_path(&self) -> &Path {
-        &self.backup_path
+    pub fn backup_sha256(&self) -> &str {
+        &self.backup_sha256
     }
 
     /// Returns the deterministic migration operations in application order.
@@ -892,6 +934,20 @@ pub struct MigrationRollbackReceipt {
 }
 
 impl MigrationRollbackReceipt {
+    /// Constructs minimized evidence after native storage verifies restoration.
+    pub fn from_verified_storage(
+        restored_sha256: String,
+        already_restored: bool,
+    ) -> Result<Self, ConfigurationError> {
+        if !sha256_text(&restored_sha256) {
+            return contract_error();
+        }
+        Ok(Self {
+            restored_sha256,
+            already_restored,
+        })
+    }
+
     /// Returns the exact restored version 0 file identity.
     #[must_use]
     pub fn restored_sha256(&self) -> &str {
@@ -905,20 +961,27 @@ impl MigrationRollbackReceipt {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum MigrationDurableTransition {
-    Backup,
-    Candidate,
-    Target,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum TransitionBoundary {
-    Before,
-    After,
-}
-
 impl ApplyReceipt {
+    /// Constructs minimized evidence after native storage verifies publication.
+    pub fn from_verified_storage(
+        previous_sha256: String,
+        applied_sha256: String,
+        backup_sha256: String,
+    ) -> Result<Self, ConfigurationError> {
+        if !sha256_text(&previous_sha256)
+            || !sha256_text(&applied_sha256)
+            || previous_sha256 == applied_sha256
+            || backup_sha256 != previous_sha256
+        {
+            return contract_error();
+        }
+        Ok(Self {
+            previous_sha256,
+            applied_sha256,
+            backup_sha256,
+        })
+    }
+
     /// Returns the previous configuration identity.
     #[must_use]
     pub fn previous_sha256(&self) -> &str {
@@ -931,10 +994,10 @@ impl ApplyReceipt {
         &self.applied_sha256
     }
 
-    /// Returns the content-addressed backup path retained beside the target.
+    /// Returns the content-addressed backup identity retained by native storage.
     #[must_use]
-    pub fn backup_path(&self) -> &Path {
-        &self.backup_path
+    pub fn backup_sha256(&self) -> &str {
+        &self.backup_sha256
     }
 }
 
@@ -996,14 +1059,6 @@ impl ConfigurationManager {
         })?;
         validate_configuration(&configuration)?;
         loaded(configuration)
-    }
-
-    /// Loads a configuration from a file without retaining its private path in errors.
-    pub fn load_path(&self, path: &Path) -> Result<LoadedConfiguration, ConfigurationError> {
-        let input = fs::read(path).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "configuration file could not be read")
-        })?;
-        self.load_bytes(&input)
     }
 
     /// Returns an explicit strict-local, read-only, no-tool baseline.
@@ -1182,136 +1237,6 @@ impl ConfigurationManager {
         })
     }
 
-    /// Durably migrates a version 0 configuration file while retaining its exact preimage.
-    pub(crate) fn migrate_path_v0(
-        &self,
-        target: &Path,
-    ) -> Result<MigrationApplyReceipt, ConfigurationError> {
-        self.migrate_path_v0_with_observer(target, |_, _| Ok(()))
-    }
-
-    fn migrate_path_v0_with_observer<F>(
-        &self,
-        target: &Path,
-        mut observer: F,
-    ) -> Result<MigrationApplyReceipt, ConfigurationError>
-    where
-        F: FnMut(MigrationDurableTransition, TransitionBoundary) -> Result<(), ConfigurationError>,
-    {
-        let source = fs::read(target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "legacy configuration file could not be read")
-        })?;
-        let migration = self.migrate_v0(&source)?;
-        let previous_sha256 = sha256(&source);
-        let migrated_sha256 = migration.configuration.sha256.clone();
-        let migrated_bytes = migration.configuration.canonical_bytes.clone();
-        let backup_path = backup_path(target, &previous_sha256)?;
-        let temporary_path = temporary_path(target, &migrated_sha256)?;
-
-        observer(
-            MigrationDurableTransition::Backup,
-            TransitionBoundary::Before,
-        )?;
-        write_new_or_verify(&backup_path, &source)?;
-        sync_parent_directory(&backup_path)?;
-        observer(
-            MigrationDurableTransition::Backup,
-            TransitionBoundary::After,
-        )?;
-
-        observer(
-            MigrationDurableTransition::Candidate,
-            TransitionBoundary::Before,
-        )?;
-        prepare_migration_candidate(&temporary_path, &migrated_bytes)?;
-        sync_parent_directory(&temporary_path)?;
-        observer(
-            MigrationDurableTransition::Candidate,
-            TransitionBoundary::After,
-        )?;
-
-        observer(
-            MigrationDurableTransition::Target,
-            TransitionBoundary::Before,
-        )?;
-        let current = fs::read(target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "migration preimage could not be read")
-        })?;
-        if sha256(&current) != previous_sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "migration preimage changed before publication",
-            ));
-        }
-        fs::rename(&temporary_path, target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "migrated configuration publish failed")
-        })?;
-        sync_parent_directory(target)?;
-        observer(
-            MigrationDurableTransition::Target,
-            TransitionBoundary::After,
-        )?;
-
-        let observed = self.load_path(target)?;
-        if observed.sha256 != migrated_sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "migrated configuration identity did not verify",
-            ));
-        }
-        Ok(MigrationApplyReceipt {
-            previous_sha256,
-            migrated_sha256,
-            backup_path,
-            changes: migration.changes,
-        })
-    }
-
-    /// Restores an exact version 0 migration backup and succeeds on an identical retry.
-    pub(crate) fn rollback_migration(
-        &self,
-        target: &Path,
-        backup: &Path,
-        expected_migrated_sha256: &str,
-    ) -> Result<MigrationRollbackReceipt, ConfigurationError> {
-        let backup_bytes = fs::read(backup).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "migration backup could not be read")
-        })?;
-        self.migrate_v0(&backup_bytes)?;
-        let restored_sha256 = sha256(&backup_bytes);
-        let current_bytes = fs::read(target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "current configuration could not be read")
-        })?;
-        let current_sha256 = sha256(&current_bytes);
-        if current_sha256 == restored_sha256 {
-            return Ok(MigrationRollbackReceipt {
-                restored_sha256,
-                already_restored: true,
-            });
-        }
-        if current_sha256 != expected_migrated_sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "migration rollback preimage does not match current configuration",
-            ));
-        }
-        self.load_bytes(&current_bytes)?;
-        atomic_replace(target, &backup_bytes, &restored_sha256)?;
-        let observed = fs::read(target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "restored configuration could not be read")
-        })?;
-        if sha256(&observed) != restored_sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "migration rollback identity did not verify",
-            ));
-        }
-        Ok(MigrationRollbackReceipt {
-            restored_sha256,
-            already_restored: false,
-        })
-    }
-
     /// Compares two validated configurations without retaining raw changed values.
     pub fn diff(
         &self,
@@ -1361,25 +1286,6 @@ impl ConfigurationManager {
         })
     }
 
-    /// Reads a local candidate file and applies the same signed-parent restriction boundary.
-    pub fn load_restricted_path(
-        &self,
-        parent: &VerifiedParentProfile,
-        path: &Path,
-    ) -> Result<RestrictedConfigurationOutcome, ConfigurationError> {
-        let candidate = fs::read(path).map_err(|_| {
-            ConfigurationError::new(
-                ErrorCode::Io,
-                "restricted configuration file could not be read",
-            )
-        })?;
-        self.load_restricted_candidate(
-            parent,
-            RestrictedConfigurationSource::ConfigurationFile,
-            &candidate,
-        )
-    }
-
     /// Binds a session result to the exact validated configuration that produced it.
     pub fn bind_session_result(
         &self,
@@ -1413,12 +1319,17 @@ impl ConfigurationManager {
     /// Executes a clean startup verification without activating an unregistered profile.
     pub fn verify_profile_startup(
         &self,
-        clean_root: &Path,
+        environment: &StartupEnvironmentObservation,
         configuration_input: &[u8],
         declaration: &ProfileStartupDeclaration,
         artifacts: &StartupArtifactIdentities,
     ) -> Result<ProfileStartupResult, ConfigurationError> {
-        require_clean_directory(clean_root)?;
+        if !environment.is_clean() {
+            return Err(ConfigurationError::new(
+                ErrorCode::ContractViolation,
+                "startup environment is not clean",
+            ));
+        }
         let configuration = self.load_bytes(configuration_input)?;
         if configuration.profile_id() != declaration.profile_id
             || configuration.allowed_capabilities() != declaration.declared_capabilities
@@ -1472,71 +1383,6 @@ impl ConfigurationManager {
             )
         })?;
         Ok(result)
-    }
-
-    /// Atomically applies a valid configuration after retaining a content-addressed backup.
-    pub(crate) fn apply_with_backup(
-        &self,
-        target: &Path,
-        candidate: &[u8],
-    ) -> Result<ApplyReceipt, ConfigurationError> {
-        let current_bytes = fs::read(target).map_err(|_| {
-            ConfigurationError::new(ErrorCode::Io, "current configuration could not be read")
-        })?;
-        let current = self.load_bytes(&current_bytes)?;
-        let next = self.load_bytes(candidate)?;
-        if current.sha256 == next.sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "candidate configuration is identical to current configuration",
-            ));
-        }
-        let backup_path = backup_path(target, &current.sha256)?;
-        write_new_or_verify(&backup_path, &current.canonical_bytes)?;
-        sync_parent_directory(&backup_path)?;
-        atomic_replace(target, &next.canonical_bytes, &next.sha256)?;
-        let observed = self.load_path(target)?;
-        if observed.sha256 != next.sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "applied configuration identity did not verify",
-            ));
-        }
-        Ok(ApplyReceipt {
-            previous_sha256: current.sha256,
-            applied_sha256: next.sha256,
-            backup_path,
-        })
-    }
-
-    /// Restores a retained backup only when the current identity matches the caller's preimage.
-    pub(crate) fn rollback(
-        &self,
-        target: &Path,
-        backup: &Path,
-        expected_current_sha256: &str,
-    ) -> Result<LoadedConfiguration, ConfigurationError> {
-        let current = self.load_path(target)?;
-        if current.sha256 != expected_current_sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "rollback preimage does not match current configuration",
-            ));
-        }
-        let backup_configuration = self.load_path(backup)?;
-        atomic_replace(
-            target,
-            &backup_configuration.canonical_bytes,
-            &backup_configuration.sha256,
-        )?;
-        let restored = self.load_path(target)?;
-        if restored.sha256 != backup_configuration.sha256 {
-            return Err(ConfigurationError::new(
-                ErrorCode::Conflict,
-                "rollback configuration identity did not verify",
-            ));
-        }
-        Ok(restored)
     }
 }
 
@@ -2028,28 +1874,6 @@ fn strictly_sorted_unique(values: &[String]) -> bool {
     values.windows(2).all(|pair| pair[0] < pair[1])
 }
 
-fn require_clean_directory(path: &Path) -> Result<(), ConfigurationError> {
-    let metadata = fs::symlink_metadata(path).map_err(|_| {
-        ConfigurationError::new(ErrorCode::Io, "startup environment could not be inspected")
-    })?;
-    if !metadata.file_type().is_dir() || metadata.file_type().is_symlink() {
-        return Err(ConfigurationError::new(
-            ErrorCode::ContractViolation,
-            "startup environment is not a regular directory",
-        ));
-    }
-    let mut entries = fs::read_dir(path).map_err(|_| {
-        ConfigurationError::new(ErrorCode::Io, "startup environment could not be read")
-    })?;
-    if entries.next().is_some() {
-        return Err(ConfigurationError::new(
-            ErrorCode::ContractViolation,
-            "startup environment is not clean",
-        ));
-    }
-    Ok(())
-}
-
 fn relative_path(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 1024
@@ -2179,190 +2003,6 @@ fn pointer_escape(value: &str) -> String {
     value.replace('~', "~0").replace('/', "~1")
 }
 
-fn backup_path(target: &Path, hash: &str) -> Result<PathBuf, ConfigurationError> {
-    let parent = target.parent().ok_or_else(|| {
-        ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration parent directory is unavailable",
-        )
-    })?;
-    let filename = target
-        .file_name()
-        .and_then(|value| value.to_str())
-        .ok_or_else(|| {
-            ConfigurationError::new(ErrorCode::Io, "configuration filename is invalid")
-        })?;
-    Ok(parent.join(format!(".{filename}.agentmage-backup-{hash}.json")))
-}
-
-fn temporary_path(target: &Path, hash: &str) -> Result<PathBuf, ConfigurationError> {
-    let parent = target.parent().ok_or_else(|| {
-        ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration parent directory is unavailable",
-        )
-    })?;
-    let filename = target
-        .file_name()
-        .and_then(|value| value.to_str())
-        .ok_or_else(|| {
-            ConfigurationError::new(ErrorCode::Io, "configuration filename is invalid")
-        })?;
-    Ok(parent.join(format!(".{filename}.agentmage-new-{hash}.tmp")))
-}
-
-fn write_new_or_verify(path: &Path, content: &[u8]) -> Result<(), ConfigurationError> {
-    match create_private_new(path) {
-        Ok(mut file) => {
-            file.write_all(content).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "configuration backup write failed")
-            })?;
-            set_private_permissions(path)?;
-            file.sync_all().map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "configuration backup sync failed")
-            })?;
-            Ok(())
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-            let metadata = fs::symlink_metadata(path).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "configuration backup inspect failed")
-            })?;
-            if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
-                return Err(ConfigurationError::new(
-                    ErrorCode::Conflict,
-                    "configuration backup path is not a regular file",
-                ));
-            }
-            let existing = fs::read(path).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "configuration backup read failed")
-            })?;
-            if existing == content {
-                Ok(())
-            } else {
-                Err(ConfigurationError::new(
-                    ErrorCode::Conflict,
-                    "configuration backup identity conflicts with existing file",
-                ))
-            }
-        }
-        Err(_) => Err(ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration backup could not be created",
-        )),
-    }
-}
-
-fn prepare_migration_candidate(path: &Path, content: &[u8]) -> Result<(), ConfigurationError> {
-    match create_private_new(path) {
-        Ok(mut file) => {
-            file.write_all(content).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "migration candidate write failed")
-            })?;
-            set_private_permissions(path)?;
-            file.sync_all().map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "migration candidate sync failed")
-            })?;
-            Ok(())
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-            let metadata = fs::symlink_metadata(path).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "migration candidate could not be inspected")
-            })?;
-            if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
-                return Err(ConfigurationError::new(
-                    ErrorCode::Conflict,
-                    "migration candidate path is not a regular file",
-                ));
-            }
-            let existing = fs::read(path).map_err(|_| {
-                ConfigurationError::new(ErrorCode::Io, "migration candidate could not be read")
-            })?;
-            if existing == content {
-                set_private_permissions(path)?;
-                Ok(())
-            } else {
-                Err(ConfigurationError::new(
-                    ErrorCode::Conflict,
-                    "migration candidate conflicts with existing file",
-                ))
-            }
-        }
-        Err(_) => Err(ConfigurationError::new(
-            ErrorCode::Io,
-            "migration candidate could not be created",
-        )),
-    }
-}
-
-fn atomic_replace(target: &Path, content: &[u8], hash: &str) -> Result<(), ConfigurationError> {
-    let temporary = temporary_path(target, hash)?;
-    let mut file = create_private_new(&temporary).map_err(|_| {
-        ConfigurationError::new(ErrorCode::Conflict, "configuration temporary file exists")
-    })?;
-    if file.write_all(content).is_err() || file.sync_all().is_err() {
-        drop(file);
-        let _ = fs::remove_file(&temporary);
-        return Err(ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration temporary write failed",
-        ));
-    }
-    drop(file);
-    if let Err(error) = set_private_permissions(&temporary) {
-        let _ = fs::remove_file(&temporary);
-        return Err(error);
-    }
-    if fs::rename(&temporary, target).is_err() {
-        let _ = fs::remove_file(&temporary);
-        return Err(ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration atomic replacement failed",
-        ));
-    }
-    sync_parent_directory(target)?;
-    Ok(())
-}
-
-fn create_private_new(path: &Path) -> std::io::Result<std::fs::File> {
-    let mut options = OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    options.mode(0o600);
-    options.open(path)
-}
-
-#[cfg(unix)]
-fn sync_parent_directory(path: &Path) -> Result<(), ConfigurationError> {
-    let parent = path.parent().ok_or_else(|| {
-        ConfigurationError::new(
-            ErrorCode::Io,
-            "configuration parent directory is unavailable",
-        )
-    })?;
-    File::open(parent)
-        .and_then(|directory| directory.sync_all())
-        .map_err(|_| ConfigurationError::new(ErrorCode::Io, "configuration directory sync failed"))
-}
-
-#[cfg(not(unix))]
-fn sync_parent_directory(_path: &Path) -> Result<(), ConfigurationError> {
-    Ok(())
-}
-
-#[cfg(unix)]
-fn set_private_permissions(path: &Path) -> Result<(), ConfigurationError> {
-    use std::os::unix::fs::PermissionsExt;
-
-    fs::set_permissions(path, fs::Permissions::from_mode(0o600)).map_err(|_| {
-        ConfigurationError::new(ErrorCode::Io, "configuration permissions could not be set")
-    })
-}
-
-#[cfg(not(unix))]
-fn set_private_permissions(_path: &Path) -> Result<(), ConfigurationError> {
-    Ok(())
-}
-
 struct UniqueJson(Value);
 
 impl<'de> Deserialize<'de> for UniqueJson {
@@ -2470,8 +2110,6 @@ fn parse_unique_json(input: &[u8]) -> Result<Value, ConfigurationError> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::atomic::{AtomicU64, Ordering};
-
     use ed25519_dalek::{Signer, SigningKey};
 
     use super::*;
@@ -2506,7 +2144,6 @@ mod tests {
         include_bytes!("../../../fixtures/configuration/migration/v0.missing-section.invalid.json");
     const PERMISSION_BEARING_VALUES: &[u8] =
         include_bytes!("../../../configuration/permission-bearing-values.json");
-    static TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
     fn manager() -> ConfigurationManager {
         ConfigurationManager::default()
@@ -3028,16 +2665,6 @@ mod tests {
         serde_json::from_slice(SYNTHETIC_PROFILE).expect("fixture must parse")
     }
 
-    fn temporary_directory() -> PathBuf {
-        let identity = TEMPORARY_ID.fetch_add(1, Ordering::Relaxed);
-        let path = std::env::temp_dir().join(format!(
-            "agentmage-configuration-test-{}-{identity}",
-            std::process::id()
-        ));
-        fs::create_dir(&path).expect("temporary directory must be created");
-        path
-    }
-
     #[test]
     fn loads_canonical_profile_deterministically() {
         let first = manager()
@@ -3127,10 +2754,6 @@ mod tests {
             "unsupported-version",
             "ambiguous",
         ];
-        let directory = temporary_directory();
-        let target = directory.join("agentmage.json");
-        fs::write(&target, STRICT_LOCAL_PROFILE).expect("baseline writes");
-        let baseline = fs::read(&target).expect("baseline reads");
         let mut rejected = 0;
 
         for schema in schemas {
@@ -3146,18 +2769,6 @@ mod tests {
                 assert_eq!(first, second, "diagnostic must be deterministic");
                 assert_eq!((first.code(), first.diagnostic()), expected);
 
-                let apply_error = manager()
-                    .apply_with_backup(&target, &invalid)
-                    .expect_err("invalid schema cannot reach configuration activation");
-                assert_eq!(apply_error, first);
-                assert_eq!(fs::read(&target).expect("target reads"), baseline);
-                assert_eq!(
-                    fs::read_dir(&directory)
-                        .expect("temporary directory reads")
-                        .count(),
-                    1,
-                    "rejection must not create a backup or temporary file"
-                );
                 rejected += 1;
             }
         }
@@ -3170,7 +2781,6 @@ mod tests {
                 .profile_id(),
             "strict-local-read-only"
         );
-        fs::remove_dir_all(directory).expect("temporary directory removes");
     }
 
     #[test]
@@ -3365,8 +2975,6 @@ mod tests {
         assert_eq!(registry["status"], "enforced-test-closure");
         let entries = registry["entries"].as_array().expect("entries array");
         let mut seen = BTreeSet::new();
-        let directory = temporary_directory();
-        let candidate_path = directory.join("untrusted-candidate.json");
         let mut attempted = 0;
 
         for entry in entries {
@@ -3392,16 +3000,9 @@ mod tests {
             }
 
             for source in restricted_sources() {
-                let error = if source == RestrictedConfigurationSource::ConfigurationFile {
-                    fs::write(&candidate_path, &candidate).expect("candidate file writes");
-                    manager()
-                        .load_restricted_path(&parent, &candidate_path)
-                        .expect_err("file broadening must fail")
-                } else {
-                    manager()
-                        .load_restricted_candidate(&parent, source, &candidate)
-                        .expect_err("channel broadening must fail")
-                };
+                let error = manager()
+                    .load_restricted_candidate(&parent, source, &candidate)
+                    .expect_err("channel broadening must fail");
                 assert_eq!(error.code(), expected, "failed path: {path}");
                 assert_eq!(parent.configuration_sha256(), parent_identity);
                 attempted += 1;
@@ -3411,7 +3012,6 @@ mod tests {
         assert_eq!(entries.len(), 97);
         assert_eq!(seen.len(), entries.len());
         assert_eq!(attempted, entries.len() * restricted_sources().len());
-        fs::remove_dir_all(directory).expect("temporary directory removes");
     }
 
     #[test]
@@ -3651,6 +3251,8 @@ mod tests {
             PROFILE_CATALOG,
         )
         .expect("startup artifacts are bounded");
+        let clean_environment =
+            StartupEnvironmentObservation::new(true, [7; 32]).expect("clean observation");
         let mut observed_profiles = BTreeSet::new();
 
         for profile in profiles {
@@ -3682,13 +3284,12 @@ mod tests {
                 &declared_capabilities,
             )
             .expect("catalog declaration is valid");
-            let clean_root = temporary_directory();
             let configuration = manager()
                 .load_bytes(profile_bytes(profile_id))
                 .expect("profile configuration loads");
             let result = manager()
                 .verify_profile_startup(
-                    &clean_root,
+                    &clean_environment,
                     profile_bytes(profile_id),
                     &declaration,
                     &artifacts,
@@ -3696,7 +3297,7 @@ mod tests {
                 .expect("clean startup verification succeeds");
             let repeated = manager()
                 .verify_profile_startup(
-                    &clean_root,
+                    &clean_environment,
                     profile_bytes(profile_id),
                     &declaration,
                     &artifacts,
@@ -3715,26 +3316,15 @@ mod tests {
             assert_eq!(result.policy_sha256(), sha256(PROFILE_CATALOG));
             assert!(sha256_text(result.record_sha256()));
             assert_eq!(result.canonical_bytes(), repeated.canonical_bytes());
-            assert!(
-                !String::from_utf8_lossy(result.canonical_bytes())
-                    .contains(clean_root.to_string_lossy().as_ref())
-            );
             println!(
                 "agentmage-startup-result:{}",
                 String::from_utf8_lossy(result.canonical_bytes())
             );
-            assert!(
-                fs::read_dir(&clean_root)
-                    .expect("clean root reads")
-                    .next()
-                    .is_none()
-            );
-            fs::remove_dir_all(clean_root).expect("clean root removes");
         }
         assert_eq!(observed_profiles.len(), 7);
 
-        let clean_root = temporary_directory();
-        fs::write(clean_root.join("ambient-state"), b"synthetic").expect("dirty marker writes");
+        let dirty_environment =
+            StartupEnvironmentObservation::new(false, [8; 32]).expect("dirty observation");
         let empty = Vec::new();
         let development = ProfileStartupDeclaration::new(
             "development",
@@ -3745,12 +3335,15 @@ mod tests {
         .expect("development declaration builds");
         assert!(
             manager()
-                .verify_profile_startup(&clean_root, DEVELOPMENT_PROFILE, &development, &artifacts,)
+                .verify_profile_startup(
+                    &dirty_environment,
+                    DEVELOPMENT_PROFILE,
+                    &development,
+                    &artifacts,
+                )
                 .is_err()
         );
-        fs::remove_dir_all(clean_root).expect("dirty root removes");
 
-        let clean_root = temporary_directory();
         let early_registration = ProfileStartupDeclaration::new(
             "development",
             ProfileActivationStatus::InactiveNoProductRegistration,
@@ -3761,7 +3354,7 @@ mod tests {
         assert!(
             manager()
                 .verify_profile_startup(
-                    &clean_root,
+                    &clean_environment,
                     DEVELOPMENT_PROFILE,
                     &early_registration,
                     &artifacts,
@@ -3778,14 +3371,18 @@ mod tests {
         .expect("synthetic mismatch declaration builds");
         assert!(
             manager()
-                .verify_profile_startup(&clean_root, DEVELOPMENT_PROFILE, &mismatched, &artifacts,)
+                .verify_profile_startup(
+                    &clean_environment,
+                    DEVELOPMENT_PROFILE,
+                    &mismatched,
+                    &artifacts,
+                )
                 .is_err()
         );
         assert!(
             StartupArtifactIdentities::from_artifacts(b"", EXECUTABLE_EVIDENCE, PROFILE_CATALOG,)
                 .is_err()
         );
-        fs::remove_dir_all(clean_root).expect("clean root removes");
     }
 
     #[test]
@@ -3928,182 +3525,5 @@ mod tests {
         );
         let debug = format!("{diff:?}");
         assert!(!debug.contains("workspace.write"));
-    }
-
-    #[test]
-    fn atomic_apply_retains_backup_and_rollback_restores_exact_identity() {
-        let directory = temporary_directory();
-        let target = directory.join("agentmage.json");
-        fs::write(&target, STRICT_LOCAL_PROFILE).expect("fixture write succeeds");
-        let before = manager().load_path(&target).expect("current loads");
-        let receipt = manager()
-            .apply_with_backup(&target, SYNTHETIC_PROFILE)
-            .expect("apply succeeds");
-        assert_eq!(receipt.previous_sha256(), before.sha256());
-        assert!(receipt.backup_path().is_file());
-        assert_eq!(
-            manager()
-                .load_path(&target)
-                .expect("applied loads")
-                .sha256(),
-            receipt.applied_sha256()
-        );
-        let restored = manager()
-            .rollback(&target, receipt.backup_path(), receipt.applied_sha256())
-            .expect("rollback succeeds");
-        assert_eq!(restored.sha256(), before.sha256());
-        assert!(receipt.backup_path().is_file());
-        fs::remove_dir_all(directory).expect("temporary directory removes");
-    }
-
-    #[test]
-    fn migration_interruptions_select_valid_state_and_rollback_is_repeatable() {
-        let transition_points = [
-            (
-                MigrationDurableTransition::Backup,
-                TransitionBoundary::Before,
-                false,
-            ),
-            (
-                MigrationDurableTransition::Backup,
-                TransitionBoundary::After,
-                false,
-            ),
-            (
-                MigrationDurableTransition::Candidate,
-                TransitionBoundary::Before,
-                false,
-            ),
-            (
-                MigrationDurableTransition::Candidate,
-                TransitionBoundary::After,
-                false,
-            ),
-            (
-                MigrationDurableTransition::Target,
-                TransitionBoundary::Before,
-                false,
-            ),
-            (
-                MigrationDurableTransition::Target,
-                TransitionBoundary::After,
-                true,
-            ),
-        ];
-        let expected_migrated = manager()
-            .migrate_v0(MIGRATION_V0_PROFILE)
-            .expect("migration fixture is valid");
-        let expected_migrated_sha256 = expected_migrated.configuration().sha256().to_owned();
-        let previous_sha256 = sha256(MIGRATION_V0_PROFILE);
-
-        for (transition, boundary, migrated_selected) in transition_points {
-            let directory = temporary_directory();
-            let target = directory.join("agentmage.json");
-            fs::write(&target, MIGRATION_V0_PROFILE).expect("legacy fixture writes");
-            let interruption = manager()
-                .migrate_path_v0_with_observer(&target, |observed, position| {
-                    if observed == transition && position == boundary {
-                        return Err(ConfigurationError::new(
-                            ErrorCode::Io,
-                            "synthetic migration interruption",
-                        ));
-                    }
-                    Ok(())
-                })
-                .expect_err("selected transition must interrupt");
-            assert_eq!(interruption.code(), "configuration-io-failure");
-            assert_eq!(
-                sha256(&fs::read(&target).expect("selected target reads"))
-                    == expected_migrated_sha256,
-                migrated_selected,
-                "interruption must select exactly the prior or complete migrated state",
-            );
-
-            let receipt = if migrated_selected {
-                let backup = backup_path(&target, &previous_sha256).expect("backup path builds");
-                assert!(backup.is_file());
-                MigrationApplyReceipt {
-                    previous_sha256: previous_sha256.clone(),
-                    migrated_sha256: expected_migrated_sha256.clone(),
-                    backup_path: backup,
-                    changes: expected_migrated.changes().to_vec(),
-                }
-            } else {
-                manager()
-                    .migrate_path_v0(&target)
-                    .expect("migration resumes from prior state")
-            };
-            assert_eq!(receipt.previous_sha256(), previous_sha256);
-            assert_eq!(receipt.migrated_sha256(), expected_migrated_sha256);
-            assert_eq!(receipt.changes(), expected_migrated.changes());
-
-            let first = manager()
-                .rollback_migration(&target, receipt.backup_path(), receipt.migrated_sha256())
-                .expect("first rollback restores the exact legacy preimage");
-            assert!(!first.already_restored());
-            assert_eq!(first.restored_sha256(), previous_sha256);
-            assert_eq!(
-                fs::read(&target).expect("restored target reads"),
-                MIGRATION_V0_PROFILE,
-            );
-            let repeated = manager()
-                .rollback_migration(&target, receipt.backup_path(), receipt.migrated_sha256())
-                .expect("identical rollback retry succeeds");
-            assert!(repeated.already_restored());
-            assert_eq!(repeated.restored_sha256(), previous_sha256);
-            assert!(receipt.backup_path().is_file());
-            fs::remove_dir_all(directory).expect("temporary directory removes");
-        }
-
-        let directory = temporary_directory();
-        let target = directory.join("agentmage.json");
-        fs::write(&target, MIGRATION_V0_PROFILE).expect("legacy fixture writes");
-        let conflict = manager()
-            .migrate_path_v0_with_observer(&target, |transition, boundary| {
-                if transition == MigrationDurableTransition::Target
-                    && boundary == TransitionBoundary::Before
-                {
-                    fs::write(&target, SYNTHETIC_PROFILE)
-                        .expect("concurrent replacement fixture writes");
-                }
-                Ok(())
-            })
-            .expect_err("changed preimage must prevent migration publication");
-        assert_eq!(conflict.code(), "configuration-state-conflict");
-        assert_eq!(
-            fs::read(&target).expect("concurrent replacement reads"),
-            SYNTHETIC_PROFILE,
-        );
-        fs::remove_dir_all(directory).expect("temporary directory removes");
-    }
-
-    #[test]
-    fn invalid_candidate_and_stale_rollback_preimage_preserve_current_file() {
-        let directory = temporary_directory();
-        let target = directory.join("agentmage.json");
-        fs::write(&target, STRICT_LOCAL_PROFILE).expect("fixture write succeeds");
-        let before = fs::read(&target).expect("fixture reads");
-        let invalid = mutate(
-            fixture_value(),
-            &["permission", "default_effect"],
-            Value::String("allow".to_owned()),
-        );
-        assert!(manager().apply_with_backup(&target, &invalid).is_err());
-        assert_eq!(fs::read(&target).expect("target reads"), before);
-        let receipt = manager()
-            .apply_with_backup(&target, SYNTHETIC_PROFILE)
-            .expect("valid apply succeeds");
-        assert_eq!(
-            manager()
-                .rollback(&target, receipt.backup_path(), "0")
-                .expect_err("stale rollback must fail")
-                .code(),
-            "configuration-state-conflict"
-        );
-        assert_eq!(
-            manager().load_path(&target).expect("target loads").sha256(),
-            receipt.applied_sha256()
-        );
-        fs::remove_dir_all(directory).expect("temporary directory removes");
     }
 }

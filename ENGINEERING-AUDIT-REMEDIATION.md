@@ -1661,3 +1661,116 @@ Phase 7 verification produced the following candidate-gate results:
   silently refreshed or represented as Phase 7 evidence.
 - `git diff --check` passed. No push is authorized; the approved Phase 7
   candidate is authorized only for the local commit preceding Phase 8 work.
+
+## 19. Phase 8 Record
+
+Phase 8 was authorized only for RM-013 through RM-017 after the user approved
+Decision 0016, the Phase 7 local commit, and entry into Phase 8. The approved
+Phase 7 candidate was committed locally as `46fdd03`; no push occurred. Entry
+into Phase 8 did not authorize a Phase 8 commit, a push, or entry into Phase 9.
+
+The candidate separates expected release trust from native platform
+observations. Exact bounded schema-version-2 manifest bytes and a detached
+Ed25519 signature enter `verify_platform_release` with an independently supplied
+public key. The resulting `VerifiedPlatformRelease` binds the Linux family,
+architecture, four nonzero runtime identities, and ten ordered nonzero expected
+mechanism digests. `PlatformAdapter` can report only observations. Activation
+rejects signer, signature, schema, status, order, platform, architecture,
+runtime, capability, status, and mechanism substitution before workspace access.
+The historical unsigned version-1 fixtures remain preserved but cannot enter
+the production verifier; no signed release artifact or signing key is claimed.
+
+One `LinuxPlatformAdapter` now discovers Fedora or Ubuntu and reports the fixed
+native mechanism set. Construction conveys no authority. Production workspace
+selection, exact-object resolution, configuration opening, authority-state
+opening, and operational-key provisioning all require an independently
+activated `VerifiedPlatformAdapter<LinuxPlatformAdapter>`. Missing mechanisms
+are unavailable, changed or unsafe mechanisms are invalid, and the current
+development executable cannot masquerade as a supported package. Fedora and
+Ubuntu share the same activation semantics while retaining nonportable signed
+runtime identities.
+
+The kernel configuration module now contains only bounded parsing, migration
+calculation, canonicalization, authority comparison, diffing, and result
+binding. All native path and mutation code moved to `LinuxConfigurationStore`.
+It retains a private descriptor-held root; requires the fixed target, backups,
+and candidates to be current-user `0600`, single-link regular files on that
+filesystem; compares bounded reads before and after; retains immutable
+content-addressed backups; and publishes through synchronized same-directory
+atomic exchange. Transaction-named candidates safely complete the exact
+interrupted state after exchange and before displaced-file cleanup. Changed
+preimages, links, modes, identities, backup conflicts, and foreign objects fail
+without overwriting the selected target. Mutation remains private behind
+`LinuxConfigurationEffectDriver` and one kernel-issued administration permit.
+
+Linux strict-local roots now require current-user ownership and no group or
+other permission bits, retain owner and mode in their identity, and provide a
+separate I/O descriptor for synchronization. Authority state opens through the
+exact `/proc/self/fd/<held-root>/authority.db` form after final-object creation
+or verification rejects symbolic links; ordinary paths retain SQLite no-follow.
+The aggregate holds and revalidates the root around the SQLCipher runtime. A
+focused encrypted-store test proves that this descriptor path is executable,
+not merely type-correct.
+
+Initial operational-key provisioning is explicit and separate from startup. It
+requires the verified aggregate, a private state root, a private fixed
+single-writer lifecycle lock, an empty authority-state/key pairing, operating
+system entropy, Secret Service standard input, and exact post-store lookup.
+Existing keys are never overwritten, an existing database without its key is
+refused, and normal startup cannot provision or delete. Key and state deletion,
+uninstall orchestration, and interruption-safe rotation remain unimplemented;
+rotation is explicitly unavailable.
+
+The Linux listener now owns the parent and socket identities it creates and
+removes only that unchanged socket on drop. Unknown existing paths are retained
+and rejected; automated stale recovery is not claimed. Peer authentication binds
+UID, PID, process start time, and executable digest into the one-use frame.
+Inventory reads start time before collection, retains a pidfd when supported,
+captures status, executable, descriptors, and sockets, and rejects a changed or
+disappeared process after collection. Unsupported pidfd kernels expose the
+explicit `StartTimeOnly` binding rather than claiming pidfd strength.
+
+Accepted Decision 0017 and the platform, lifecycle, mediation, strict-local, and
+durable-store architecture references record this candidate. The candidate
+deliberately does not claim a production signer, signed manifest, package,
+installer, updater, local model, application-host workflow, Visual Studio Code
+workflow, Ubuntu-native execution, macOS, Windows, key rotation, automatic stale
+socket recovery, or a supported product. Those boundaries remain assigned to
+later phases.
+
+Phase 8 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed formatting, warnings-denied Clippy, ESLint,
+  strict-local and effect-boundary audits, every workspace build, all enabled
+  Rust and TypeScript tests, compile-fail authority tests, and the shell
+  scaffold test.
+- `cargo test --workspace --all-targets --locked` passed every enabled unit and
+  integration test. The focused totals include 96 kernel unit tests and 50
+  enabled Linux tests. Fifteen environment-dependent Linux tests remain
+  explicitly ignored by the default gate rather than silently represented as
+  ordinary execution evidence.
+- All 11 ignored Fedora Bubblewrap, systemd, seccomp, projection, network,
+  resource, and stale-object tests passed when explicitly executed on Fedora
+  Kinoite 44. All three ignored live Secret Service tests also passed, including
+  the new fixed operational-key provision, verify, overwrite-refusal, and
+  cleanup path.
+- The isolated bind-mount replacement test could not execute its attack setup
+  because this desktop session lacks mount privilege. Its explicit run failed
+  at `mount` before the mutation and remains ignored and unavailable, not passed.
+- The effect-boundary validator and all 12 mutation tests passed. They now reject
+  kernel configuration filesystem dependencies and any reopened public native
+  configuration-mutation surface.
+- Deterministic supply-chain provenance, dependency hashes, license inventory,
+  and CycloneDX validation passed after refresh. No new external package entered
+  the locked graph.
+- `npm run docs:validate` passed all 84 Markdown files and current policy
+  invariants, including the version-2 signed-manifest contract and three updated
+  architecture diagrams.
+- `npm run requirements:check` passed the registry, additions-only,
+  architecture, module, dependency, and effect-boundary checks before failing
+  closed at the retained stale dependency-injection report. Historical/current
+  evidence separation remains RM-019 and was not refreshed or represented as
+  Phase 8 evidence.
+- `git diff --check` passed. The user subsequently approved Decision 0017, the
+  Phase 8 local commit, and entry into Phase 9 on 2026-08-11. The branch has no
+  upstream; no push or Phase 9 commit was authorized by that approval.
