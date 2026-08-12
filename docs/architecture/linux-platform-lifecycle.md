@@ -117,7 +117,7 @@ contents are not retained in inventory diagnostics.
 - Operational-key deletion, state deletion, uninstall orchestration, and key
   rotation are not implemented.
 - The Phase 9 source candidate composes one exact read through host and Visual
-  Studio Code provider contracts. Ordinary activation and product authority
-  remain unavailable until the supervised extension launch and signed platform
-  activation increments are complete.
+  Studio Code provider contracts. The extension now supervises the fixed
+  installed bootstrap host, but product authority remains unavailable until
+  signed platform activation is complete.
 - Fedora execution does not substitute for Ubuntu, macOS, or Windows evidence.

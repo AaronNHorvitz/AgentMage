@@ -106,7 +106,7 @@ impl fmt::Debug for VerifiedLinuxBootstrap {
 }
 
 impl VerifiedLinuxBootstrap {
-    /// Writes one bounded JSON line directly to the inherited standard-output pipe.
+    /// Writes one bounded binary frame directly to the inherited standard-output pipe.
     ///
     /// No secret-bearing `String`, argument, environment variable, file, or log
     /// record is created by this serializer.
@@ -114,22 +114,25 @@ impl VerifiedLinuxBootstrap {
         &self,
         output: &mut impl Write,
     ) -> Result<(), LinuxBootstrapError> {
+        let endpoint = self
+            .endpoint
+            .path()
+            .to_str()
+            .filter(|value| !value.is_empty() && !value.as_bytes().contains(&0))
+            .ok_or(LinuxBootstrapError::TransferFailed)?;
+        let endpoint_length =
+            u16::try_from(endpoint.len()).map_err(|_| LinuxBootstrapError::TransferFailed)?;
         output
-            .write_all(b"{\"schema_version\":1,\"endpoint\":\"")
-            .and_then(|()| write_json_path(output, self.endpoint.path()))
-            .and_then(|()| output.write_all(b"\",\"challenge\":\""))
-            .and_then(|()| write_hex(output, self.credentials.challenge()))
-            .and_then(|()| output.write_all(b"\",\"launch_secret\":\""))
-            .and_then(|()| write_hex(output, self.credentials.launch_secret()))
-            .and_then(|()| output.write_all(b"\",\"peer\":{\"uid\":"))
-            .and_then(|()| write!(output, "{}", self.peer.uid()))
-            .and_then(|()| output.write_all(b",\"pid\":"))
-            .and_then(|()| write!(output, "{}", self.peer.pid()))
-            .and_then(|()| output.write_all(b",\"start_time_ticks\":\""))
-            .and_then(|()| write!(output, "{}", self.peer.start_time_ticks()))
-            .and_then(|()| output.write_all(b"\",\"executable_sha256\":\""))
-            .and_then(|()| write_hex(output, self.peer.executable_sha256()))
-            .and_then(|()| output.write_all(b"\"}}\n"))
+            .write_all(b"AGMB")
+            .and_then(|()| output.write_all(&BOOTSTRAP_SCHEMA_VERSION.to_be_bytes()))
+            .and_then(|()| output.write_all(&endpoint_length.to_be_bytes()))
+            .and_then(|()| output.write_all(endpoint.as_bytes()))
+            .and_then(|()| output.write_all(self.credentials.challenge()))
+            .and_then(|()| output.write_all(self.credentials.launch_secret()))
+            .and_then(|()| output.write_all(&self.peer.uid().to_be_bytes()))
+            .and_then(|()| output.write_all(&self.peer.pid().to_be_bytes()))
+            .and_then(|()| output.write_all(&self.peer.start_time_ticks().to_be_bytes()))
+            .and_then(|()| output.write_all(self.peer.executable_sha256()))
             .and_then(|()| output.flush())
             .map_err(|_| LinuxBootstrapError::TransferFailed)
     }
@@ -237,30 +240,6 @@ fn ensure_private_runtime_directory(path: &Path) -> Result<(), LinuxBootstrapErr
     Ok(())
 }
 
-fn write_json_path(output: &mut impl Write, path: &Path) -> io::Result<()> {
-    let value = path
-        .to_str()
-        .ok_or_else(|| io::Error::other("non-utf8 path"))?;
-    for byte in value.bytes() {
-        match byte {
-            b'"' | b'\\' | 0x00..=0x1f => return Err(io::Error::other("unsafe path")),
-            _ => output.write_all(&[byte])?,
-        }
-    }
-    Ok(())
-}
-
-fn write_hex(output: &mut impl Write, bytes: &[u8]) -> io::Result<()> {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    for byte in bytes {
-        output.write_all(&[
-            DIGITS[usize::from(byte >> 4)],
-            DIGITS[usize::from(byte & 0x0f)],
-        ])?;
-    }
-    Ok(())
-}
-
 const _: u16 = BOOTSTRAP_SCHEMA_VERSION;
 
 #[cfg(test)]
@@ -273,7 +252,7 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use ed25519_dalek::{Signer, SigningKey};
-    use serde_json::{Value, json};
+    use serde_json::json;
     use sha2::{Digest, Sha256};
 
     use super::{LinuxBootstrapError, LinuxBootstrapPaths, bootstrap_for_peer, parent_process_id};
@@ -297,16 +276,32 @@ mod tests {
         bootstrap
             .write_launch_envelope(&mut envelope)
             .expect("direct envelope");
-        assert!(envelope.len() < 1024);
-        let parsed: Value = serde_json::from_slice(&envelope).expect("bounded JSON line");
-        assert_eq!(parsed["schema_version"], 1);
-        assert_eq!(parsed["peer"]["pid"], std::process::id());
+        assert!(envelope.len() < 512);
+        assert_eq!(&envelope[..4], b"AGMB");
+        assert_eq!(u16::from_be_bytes([envelope[4], envelope[5]]), 1);
+        let endpoint_length = usize::from(u16::from_be_bytes([envelope[6], envelope[7]]));
+        let fixed = 8 + endpoint_length;
+        assert_eq!(envelope.len(), fixed + 32 + 32 + 4 + 4 + 8 + 32);
         assert_eq!(
-            parsed["peer"]["start_time_ticks"],
-            bootstrap.peer.start_time_ticks().to_string()
+            &envelope[fixed..fixed + 32],
+            bootstrap.credentials.challenge()
         );
-        assert_eq!(parsed["challenge"].as_str().map(str::len), Some(64));
-        assert_eq!(parsed["launch_secret"].as_str().map(str::len), Some(64));
+        assert_eq!(
+            &envelope[fixed + 32..fixed + 64],
+            bootstrap.credentials.launch_secret()
+        );
+        assert_eq!(
+            i32::from_be_bytes(envelope[fixed + 68..fixed + 72].try_into().expect("pid")),
+            std::process::id() as i32
+        );
+        assert_eq!(
+            u64::from_be_bytes(
+                envelope[fixed + 72..fixed + 80]
+                    .try_into()
+                    .expect("start time")
+            ),
+            bootstrap.peer.start_time_ticks()
+        );
 
         let endpoint = bootstrap.endpoint.path().to_path_buf();
         let endpoint_after_drop = endpoint.clone();

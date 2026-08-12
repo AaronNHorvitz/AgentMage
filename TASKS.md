@@ -1842,7 +1842,7 @@ claims.
 
 - [ ] **Task 25.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 25.1.2.1:** Signed and verified v0.1 packages for all reference platforms. Partial Linux mechanics: Decision 0022 implements deterministic detached package-manifest signing and external-trust verification; Decision 0023 verifies that package before creating an authentication-only owner-local bootstrap endpoint. This item remains open because no production signer or trust-root provisioning, OS-package signature, signed platform activation, clean package lifecycle, Windows package, or supported release evidence exists.
-  - [ ] **Sub-task 25.1.2.2:** Visual Studio Code extension and provider package.
+  - [ ] **Sub-task 25.1.2.2:** Visual Studio Code extension and provider package. Partial Linux mechanics: the extension now supervises only the fixed installed host, parses a bounded secret-bearing binary frame without creating a secret string, validates the exact extension-host PID and UID, authenticates the private socket, terminates malformed or extra-output children, and falls back to the inert bridge. This item remains open because signed platform activation, the usable model-enabled workflow, clean VSIX installation, Windows parity, and release evidence do not exist.
   - [ ] **Sub-task 25.1.2.3:** Complete v0.1 acceptance-result bundle and release manifest.
   - [ ] **Sub-task 25.1.2.4:** Published operating guides, capability matrix, limitations, and release notes.
 

@@ -41,10 +41,11 @@ signed platform manifest and all required native mechanisms activate.
 4. The endpoint is a new `0600` Unix socket inside
    `/run/user/<uid>/agentmage`, whose parent and child are current-user-owned
    owner-only directories. An existing path is never unlinked or reused.
-5. A fresh challenge and 256-bit launch secret are emitted once as a bounded
-   JSON line over the directly inherited standard-output pipe. The serializer
-   creates no secret-bearing string, argument, environment value, file, or log
-   record. Both host and extension erase retained secret byte arrays after use.
+5. A fresh challenge and 256-bit launch secret are emitted once as one
+   versioned, length-bounded binary frame over the directly inherited
+   standard-output pipe. The serializer and parser create no secret-bearing
+   string, argument, environment value, file, or log record. Both host and
+   extension erase retained secret byte arrays after use.
 6. Authentication-only bootstrap conveys no workspace handle, capability
    grant, tool permit, model authority, or effect authority. Until complete
    signed platform activation constructs the real workflow, an authenticated
@@ -57,7 +58,7 @@ signed platform manifest and all required native mechanisms activate.
 ## Verification
 
 - Rust tests create an ephemeral synthetic signing identity outside the source
-  tree, verify an exact package fixture, transfer one bounded launch envelope,
+  tree, verify an exact package fixture, transfer one bounded binary envelope,
   connect through a private Unix socket, and authenticate the kernel-observed
   exact process.
 - Focused refusal tests mutate the signed package, supply a public runtime
@@ -71,7 +72,9 @@ signed platform manifest and all required native mechanisms activate.
 - The platform-neutral product authority remains unavailable after transport
   authentication; a later bounded increment must activate the signed platform
   release and compose the durable workflow.
-- The Visual Studio Code extension can now supervise one fixed installed host
-  without accepting a configurable executable or secret-bearing launch input.
+- The Visual Studio Code extension supervises one fixed installed host without
+  accepting a configurable executable or secret-bearing launch input. It
+  validates the binary frame, exact UID and PID, timeout, output closure, and
+  child lifecycle before constructing the authenticated bridge.
 - No production identity, clean installation, package-manager signature,
   supported workflow, or release is claimed by this source-level evidence.

@@ -9,8 +9,8 @@ connector, or general agent path.
 
 The source harness runs the complete Rust read and receipt path on Fedora.
 Decision 0023 adds the package-verified authentication-only bootstrap primitive.
-The installed extension remains fail-closed until its supervised launch path is
-wired and the host activates a signed platform release before constructing this
+The installed extension supervises that fixed host path, but remains fail-closed
+until the host activates a signed platform release before constructing this
 workflow. This document is not a supported-installation claim.
 
 ## Request Sequence
@@ -75,9 +75,12 @@ The Visual Studio Code bridge is a Unix-socket client only. It serializes one
 request at a time, validates closed response fields and bounds, erases its
 copied launch secret, and returns a generic connection denial on framing,
 parsing, or transport failure. Normal extension activation injects no endpoint
-or secret and is therefore unavailable. The package-verified host can now
-create the private endpoint and transfer fresh launch material over its
-inherited pipe, but extension supervision is a separate increment.
+or secret. Instead, normal Linux activation launches only the fixed installed
+host with no shell or inherited environment, parses the bounded binary launch
+frame from its inherited pipe, validates that the peer is this exact extension
+process, and supervises the child lifecycle. Until signed platform activation
+constructs the read workflow, the authenticated host closes and requests remain
+unavailable.
 
 ## Recovery and Cancellation
 

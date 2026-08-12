@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 
 import { RegistrationSlot } from "./index.js";
+import { launchInstalledHost } from "./host_bootstrap.js";
 import {
   PROVIDER_FAMILY,
   PROVIDER_MODEL_ID,
   PROVIDER_VENDOR,
   SecureReadController,
   SessionRequestIdentitySource,
-  UnavailableHostBridge,
   type ApprovalUi,
   type LocalWorkspace,
   type ReadPreview,
@@ -76,7 +76,7 @@ export async function activate(
   context: vscode.ExtensionContext,
 ): Promise<void> {
   await deactivate();
-  const bridge = new UnavailableHostBridge();
+  const bridge = await launchInstalledHost();
   const controller = new SecureReadController(
     bridge,
     new VsCodeWorkspaceSource(),

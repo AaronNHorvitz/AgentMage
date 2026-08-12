@@ -50,8 +50,8 @@ authenticated framing, durable kernel transaction, offline worker, citation,
 and receipt. This is a vertical integration proof, not a model-enabled or
 supported workflow. Decisions 0022 and 0023 add detached package signing and a
 package-verified authentication-only Linux bootstrap. Supervised extension
-launch, signed platform activation, clean installation, and release authority
-remain later dependencies.
+launch now consumes that fixed bootstrap, but signed platform activation, clean
+installation, and release authority remain later dependencies.
 
 ## 2. Document Authority and Change Control
 

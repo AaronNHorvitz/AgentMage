@@ -53,11 +53,12 @@ workspace-file read through the real Visual Studio Code language-model provider
 surface. The candidate includes a closed protocol, authenticated IPC client and
 server framing, two explicit confirmations, one exact Linux worker projection,
 bounded UTF-8 output, a local citation, a durable receipt, replay denial, and
-restart verification. The installed extension still uses a fail-closed
-unavailable bridge. Decision 0023 adds package-first verification, a private
+restart verification. Decision 0023 adds package-first verification, a private
 authentication-only endpoint, direct inherited-pipe launch-material transfer,
-and exact Linux peer authentication, but the supervised extension launch and
-signed platform activation are not yet complete. The read path is therefore
+exact Linux peer authentication, and supervised launch of the fixed installed
+host during extension activation. Signed platform activation is not yet
+complete, so the authenticated host closes without constructing product
+authority and the extension remains fail-closed. The read path is therefore
 source-level vertical-slice evidence, not a supported or integrated workflow.
 
 Accepted Decision 0019 separates immutable historical evidence from current
