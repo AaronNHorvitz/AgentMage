@@ -28,5 +28,11 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.12.1
 
+      - name: Install documentation dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Install the lockfile-bound Mermaid browser
+        run: ./node_modules/.bin/puppeteer browsers install chrome-headless-shell
+
       - name: Reproduce clean documentation gate
         run: npm run docs:clean-check
