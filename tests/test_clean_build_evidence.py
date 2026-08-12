@@ -128,13 +128,18 @@ class CleanBuildEvidenceTests(unittest.TestCase):
             )
         )
 
-    def test_checked_in_legacy_report_remains_historically_valid(self) -> None:
+    def test_checked_in_current_report_remains_source_valid(self) -> None:
         self.assertEqual(check_report(), [])
         report = read_json(
             ROOT
             / "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json"
         )
-        self.assertEqual(report_applicability(report, "HEAD"), "historical-legacy")
+        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["status"], "pass-linux")
+        self.assertIn(
+            report_applicability(report, report["source"]["revision"]),
+            {"current-reviewed-source", "reviewed-source-dirty"},
+        )
 
     def test_complete_linux_fixture_does_not_promote_macos(self) -> None:
         self.assertEqual(validate_report(self.report), [])
