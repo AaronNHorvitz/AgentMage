@@ -83,15 +83,21 @@
       "--ignored"
     ],
     "expected_tests": [
+      "linux_read::tests::approved_read_is_receipted_replay_safe_and_restart_verifiable",
+      "linux_read::tests::stale_and_cancelled_previews_start_no_worker_and_publish_no_receipt",
       "inventory::tests::live_self_inventory_attributes_executable_and_open_writable_descriptor",
+      "sandbox::tests::bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
+      "sandbox::tests::directory_worker_receives_only_the_bounded_exclusion_safe_projection",
       "sandbox::tests::foreign_workspace_identity_never_starts_a_worker",
       "sandbox::tests::fresh_worker_reads_only_the_canonical_workspace_file",
       "sandbox::tests::transient_service_terminates_an_unbounded_worker",
+      "sandbox::tests::worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content",
       "sandbox::tests::worker_cannot_write_the_read_only_workspace",
       "sandbox::tests::worker_has_no_ambient_host_paths_devices_or_processes",
       "sandbox::tests::worker_kernel_status_confirms_no_new_privileges_and_seccomp",
       "sandbox::tests::worker_output_is_drained_but_never_retained_past_the_bound",
       "sandbox::tests::worker_receives_only_the_fixed_environment_and_no_network",
+      "secret_service::tests::live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned",
       "secret_service::tests::live_service_probe_returns_only_a_content_free_receipt",
       "secret_service::tests::live_service_round_trip_is_exact_and_cleanup_is_verified",
       "tests::isolated_bind_mount_swap_is_rejected_as_mount_changed"
