@@ -26,7 +26,7 @@
   "limitations": [
     "The candidate-neutral LocalModelRuntime, model-family codecs, profiles, streaming, cancellation, and resource protocol remain assigned to Sprint 13.",
     "No llama.cpp binary or model artifact is included in this package increment.",
-    "The DEB format is built and extracted on Fedora; clean Ubuntu installation and execution remain assigned to Sub-task 9.1.1.7.",
+    "This boundary report builds and extracts the DEB on Fedora; clean Ubuntu installation and execution are recorded separately under Sub-task 9.1.1.7.",
     "No supported package, enabled model, inference result, macOS result, or release claim is made."
   ],
   "model_artifacts_packaged": false,
@@ -37,9 +37,9 @@
   },
   "packages": [
     {
-      "bytes": 424129,
+      "bytes": 424470,
       "format": "rpm",
-      "sha256": "e66cc81d4fa374f4808c3fd6f3bdf43231effe0fbe1cd3d8517511502d30bcc5"
+      "sha256": "8b2fdf2d5948a4a340eca9b3d242e6932715c3d3e9c33db856c583f4c7a5bd73"
     },
     {
       "bytes": 616018,
@@ -70,7 +70,7 @@
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "454902ecc63a67db22544928c3d0fd5021c40245",
+  "source_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
   "sources": [
     {
       "bytes": 13033,
@@ -83,9 +83,9 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
-      "bytes": 3582,
+      "bytes": 3726,
       "path": "architecture/build-contract.json",
-      "sha256": "690dbc5ead5b0db7af0739987b308a8ec6f089a4ed5a651dfdecf09c9087d16b"
+      "sha256": "b1c9c556ffd7154dc5a997e23f05fe6cb190c8e723881d02339aa2def2040db0"
     },
     {
       "bytes": 4044,
@@ -128,24 +128,24 @@
       "sha256": "8b16e955dd06f4231f56e09b78c8ff4e5c00b997b3e65a40af2e894a82d0d602"
     },
     {
-      "bytes": 17741,
+      "bytes": 17972,
       "path": "package.json",
-      "sha256": "105710bf0ceabc769840e7439cbc503ccb8e70f042d91547bb3ccbf210a6a556"
+      "sha256": "af6d2038db7767bbba29d485006d96b9f50d4491a4db7540ee25ecd6a599e125"
     },
     {
-      "bytes": 1419,
+      "bytes": 2556,
       "path": "packaging/linux/README.md",
-      "sha256": "32932e553f68e4bd04b7b1fd56ad5b78d6ff695341f37a5d2c8d28e4e481b6c7"
+      "sha256": "57607a2764c9165c4f7712845f23f85efe613f540afdf1c75bd08a8e7df40e35"
     },
     {
-      "bytes": 1038,
+      "bytes": 1127,
       "path": "packaging/linux/agentmage-release.spec.in",
-      "sha256": "0ab22db3ee2da3b981cca4a4f0d4d643d3a34ff1aa2058c4ad6bd87e50e27873"
+      "sha256": "c43ad10c2465f0a80f6c0d30fa6bf744453e3f49968583074c1786ef0e849476"
     },
     {
-      "bytes": 1022,
+      "bytes": 1111,
       "path": "packaging/linux/agentmage.spec.in",
-      "sha256": "df2caf633a97878006dd52dbf4f967126809a0a702185300937fc5a4a90f38cf"
+      "sha256": "f15801395997418e4a37a209cee19f461ac7ba547e085ede9e54542e4e9dcd25"
     },
     {
       "bytes": 441,
@@ -203,9 +203,9 @@
       "sha256": "c103e9c1c840370753d9229d716da45dfcdc043a4eeda917446bdeae73810fcd"
     },
     {
-      "bytes": 18287,
+      "bytes": 18309,
       "path": "scripts/linux_inference_boundary_evidence.py",
-      "sha256": "e546fe6d7a97e7bfa7015911161962c7951d6c4562fbdce1ba34e3d46ffec207"
+      "sha256": "398cb13430e1e32bae595be6b5af8ac59cdac5da9298a3fb10de990da11698c4"
     },
     {
       "bytes": 6529,
@@ -218,9 +218,9 @@
       "sha256": "0d2cb4fc43f8e49e47857ed953a74ce2c966a8d24e0b8ded6cea64ab6d0f670f"
     },
     {
-      "bytes": 10777,
+      "bytes": 35885,
       "path": "scripts/package_lifecycle.py",
-      "sha256": "f366cca1820f3d30e6d903636bac9a38e6d3701b04f24fe71a85ad24c76259c8"
+      "sha256": "77d294a525349b2ff570497ee46661360c41f997955ba7192b55885e64023f79"
     },
     {
       "bytes": 6123,
@@ -240,17 +240,17 @@
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "6207af1af41c5440b11d50bad6e060ddbabc2ec33383f9759023fdcf1b487573"
+      "sha256": "63a1e6e68bc2e748da28072078df61639b05c387067d426d13dd57d67699f570"
     },
     {
       "bytes": 394816,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "55343a4823a5ebe9a060d9619af2ab0c5ffb150eceed13af2ddd7044772c72a1"
+      "sha256": "dd65031031faed2cb294f009493541d051bbc3ea299cd0a25775349ce62f2661"
     },
     {
       "bytes": 410747,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "46080b561213175d1900e00dfc7e259fd299bd4c495b9264ef65addb533cbef5"
+      "sha256": "907e3d65c4bc85457a15517240d081ef7119122421dadc2ae152350d45f44691"
     },
     {
       "bytes": 4429,
