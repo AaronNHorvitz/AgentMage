@@ -75,8 +75,10 @@ supplied trust root. No production signer, independently distributed trust
 root, OS-package signature, signed platform activation, or clean package
 lifecycle exists, so no release or support claim follows. Decision 0023
 supplies only the package-verified Linux bootstrap transport. Decision 0020
-also adds a versioned Windows contract scaffold and Windows CI boundary;
-Windows remains blocked because native enforcement and native evidence do not
+also adds a versioned Windows contract scaffold. Decision 0024 implements one
+native current-process identity observer and a genuine Windows-runner evidence
+lane. Windows remains blocked because named-pipe, NTFS, worker, DPAPI, model,
+MSIX, lifecycle, removal, hostile-matrix, and standard-user evidence do not
 exist.
 
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.

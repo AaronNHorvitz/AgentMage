@@ -36,6 +36,7 @@ EXPECTED_EXTERNAL_CARGO = {
     "serde_json",
     "sha2",
     "unicode-normalization",
+    "windows-sys",
     "zeroize",
 }
 EXPECTED_ROOT_NPM = {

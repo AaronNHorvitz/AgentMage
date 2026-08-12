@@ -126,18 +126,30 @@ def validate_contract(
     if tuple(native.get("expected_tests", [])) != EXPECTED_NATIVE_TESTS:
         failures.append("product CI native pending-test closure drifted")
     if policy.get("native_windows") != {
-        "disposition": "contract-only-native-enforcement-blocked",
+        "disposition": "partial-native-identity-evidence-other-controls-blocked",
         "runner": "windows-2022",
-        "command": [
-            "cargo",
-            "+1.95.0",
-            "test",
-            "-p",
-            "agentmage-platform-windows",
-            "--locked",
+        "commands": [
+            [
+                "cargo",
+                "+1.95.0",
+                "test",
+                "-p",
+                "agentmage-platform-windows",
+                "--locked",
+            ],
+            [
+                "cargo",
+                "+1.95.0",
+                "run",
+                "-p",
+                "agentmage-platform-windows",
+                "--bin",
+                "native_evidence",
+                "--locked",
+            ],
         ],
     }:
-        failures.append("product CI Windows contract closure drifted")
+        failures.append("product CI Windows native identity closure drifted")
     if policy.get("documentation_gate") != {
         "independent": True,
         "workflow": ".github/workflows/documentation.yml",
@@ -169,7 +181,13 @@ def validate_contract(
         failures.append("native Linux inventory lane is not invoked exactly once")
     windows_invocation = "cargo +1.95.0 test -p agentmage-platform-windows --locked"
     if workflow.count(windows_invocation) != 1:
-        failures.append("Windows boundary contract is not invoked exactly once")
+        failures.append("Windows native test boundary is not invoked exactly once")
+    windows_evidence = (
+        "cargo +1.95.0 run -p agentmage-platform-windows "
+        "--bin native_evidence --locked"
+    )
+    if workflow.count(windows_evidence) != 1:
+        failures.append("Windows native evidence boundary is not invoked exactly once")
     if f'node-version: "{toolchains.get("node")}"' not in workflow:
         failures.append("product CI workflow does not install the declared Node version")
     npm_install = f"npm install --global npm@{toolchains.get('npm')}"

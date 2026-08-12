@@ -65,7 +65,7 @@ EXPECTED_CARGO_PACKAGES = {
     ),
     "platforms/windows": (
         "agentmage-platform-windows",
-        {"agentmage-kernel-contracts"},
+        {"agentmage-kernel-contracts", "sha2", "windows-sys"},
     ),
     "release/xtask": (
         "agentmage-xtask",
@@ -173,8 +173,8 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         failures.append("schema_version must equal 1")
     if contract.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
-    if contract.get("amendment_decision_ids") != ["ADR-0022"]:
-        failures.append("build contract must record the Decision 0022 signing amendment")
+    if contract.get("amendment_decision_ids") != ["ADR-0022", "ADR-0024"]:
+        failures.append("build contract must record the signing and Windows amendments")
     if contract.get("status") != "configured":
         failures.append("build contract status must be configured")
     if contract.get("toolchains") != EXPECTED_TOOLCHAINS:

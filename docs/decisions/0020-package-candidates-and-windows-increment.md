@@ -117,6 +117,9 @@ Phase 11 verification includes:
 - Fedora and Ubuntu package mechanics can progress independently of Windows.
 - Windows has an exact source and CI boundary, but no claim of native
   implementation, native verification, packaging, support, or release.
+- Decision 0024 later supersedes only that native-implementation statement for
+  one current-process identity observer. Windows enrollment, packaging,
+  support, and release remain blocked.
 - The trusted packaged host bootstrap and external signing ceremony remain
   release blockers owned by the original roadmap after stabilization resumes.
 

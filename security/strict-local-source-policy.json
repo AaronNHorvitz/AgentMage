@@ -42,6 +42,7 @@
     "kernel/contracts/src",
     "kernel/engine/src",
     "platforms/linux/src",
+    "platforms/windows/src",
     "shells/host/src",
     "shells/vscode/src"
   ],

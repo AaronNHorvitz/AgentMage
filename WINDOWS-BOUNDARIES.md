@@ -14,6 +14,15 @@
 
 Windows 11 is a required v1.0 GA platform. The supported matrix begins with current serviced Windows 11 x64 releases, stable x64 Visual Studio Code, one standard non-administrator interactive user, NTFS workspaces, and the manifest-pinned native local-model profile. Windows on Arm, network shares, Windows Subsystem for Linux as an execution boundary, and containerized model inference remain disabled until separately promoted.
 
+### Current Implementation Boundary
+
+Decision 0024 implements only current-process token observation, redacted user
+SID identity, session identity, elevation observation, and executable hashing.
+It has a dedicated genuine Windows-runner test and evidence artifact. It does
+not implement named pipes, peer integrity or package identity, NTFS authority,
+workers, DPAPI, model runtime, MSIX, lifecycle, removal, or any release gate.
+Windows enrollment and support remain blocked.
+
 ## 2. Process Topology
 
 ```mermaid

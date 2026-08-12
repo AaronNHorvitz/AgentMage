@@ -1,9 +1,11 @@
 name: Product
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
+      - agent/expand-delivery-windows-ga
       - main
 
 permissions:
@@ -141,7 +143,7 @@ jobs:
         run: python3 scripts/product_ci.py --inventory-native
 
   windows_contract:
-    name: Windows Boundary Contract (Not Native Enrollment)
+    name: Windows Native Identity Evidence (Partial Boundary)
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
@@ -150,5 +152,22 @@ jobs:
       - name: Set up Rust
         shell: pwsh
         run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
-      - name: Test versioned Windows boundary scaffold
-        run: cargo +1.95.0 test -p agentmage-platform-windows --locked
+      - name: Test native Windows identity boundary
+        shell: pwsh
+        run: |
+          cargo +1.95.0 test -p agentmage-platform-windows --locked
+          cargo +1.95.0 run -p agentmage-platform-windows --bin native_evidence --locked | Set-Content -Encoding utf8 windows-native-identity.json
+          $record = Get-Content -Raw windows-native-identity.json | ConvertFrom-Json
+          if (-not $record.native_windows -or -not $record.process_identity_observed -or -not $record.session_identity_observed -or -not $record.elevation_observed -or -not $record.user_sid_digest_nonzero -or -not $record.executable_digest_nonzero) {
+            throw "Windows native identity evidence is incomplete"
+          }
+          $record | Add-Member -NotePropertyName source_sha -NotePropertyValue $env:GITHUB_SHA
+          $record | Add-Member -NotePropertyName runner_image -NotePropertyValue $env:ImageOS
+          $record | ConvertTo-Json -Compress | Set-Content -Encoding utf8 windows-native-identity.json
+      - name: Retain commit-bound native Windows evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-native-identity-${{ github.sha }}
+          path: windows-native-identity.json
+          if-no-files-found: error
+          retention-days: 14

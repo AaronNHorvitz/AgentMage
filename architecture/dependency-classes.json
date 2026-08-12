@@ -18,6 +18,7 @@
       "serde_json",
       "sha2",
       "unicode-normalization",
+      "windows-sys",
       "zeroize"
     ],
     "vscode_extension_packages": [],

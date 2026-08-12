@@ -27,7 +27,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "db3cfef5b486e9daa845a46899c3d3a324b9c08a3f3b2a20c7cbd95227fefc5d"
+          "content": "0e02e64aebea117325e2580fe108fec0ddaa777d6606a7408aa52b358ed8a321"
         }
       ],
       "integrity": null,
@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "2f92abb06b42c2e51bd1d1d01380de331f3ebb0286a9adb48caeae0c47d7ac07"
+          "content": "36ca817230bb91bfbf144ff0dec9015c53f56be9a52e42274ca43f93d9596b74"
         }
       ],
       "integrity": null,
@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ef0d73e0b76829a10e427b95d11509447b8916b2c4726ab0021ceb5d4460daeb"
+          "content": "a0811c9b8a0dd15eeefaf007d12a28287e751528f6fb52ee552424411c11db96"
         }
       ],
       "integrity": null,
@@ -102,12 +102,32 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:agentmage-platform-windows@0.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "61398cf475f1e924567be5f9f891044de517942dc681245cdd4fabc9006b154f"
+        }
+      ],
+      "integrity": null,
+      "license": "Apache-2.0",
+      "name": "agentmage-platform-windows",
+      "scope": "required",
+      "source": {
+        "path": "platforms/windows",
+        "type": "repository-path"
+      },
+      "version": "0.0.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:agentmage-xtask@0.0.0",
       "ecosystem": "cargo",
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "6013acfee99f9e8de568365de6a5233e2b890604695e8b7b8c1ed22ac6c4a8a4"
+          "content": "3449fc513d1e5ded89a7e6ea3056e9bf89a97ba21d98a36c899832206063aed0"
         }
       ],
       "integrity": null,
@@ -1167,7 +1187,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ce047c3a2fcda1a8d8a7aba410386eff404b10bc2c4a4539b0190ac0796b63d0"
+          "content": "5d1da99afcb6be6118e8bc35702eac2e2fbcaacdfa8dccefe41b12467985d9e8"
         }
       ],
       "integrity": null,
@@ -1187,7 +1207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "1279df2f38174af07a8ac8eff2bbdb9aed8117ea42372009107dcff11a248f4e"
+          "content": "0a4f5b52280b3656765a616751264a86a0daefcf67a04464541f279420f3a22d"
         }
       ],
       "integrity": null,
@@ -8636,6 +8656,7 @@
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
+        "cargo:ed25519-dalek@3.0.0",
         "cargo:rustix@1.1.4",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
@@ -8674,8 +8695,20 @@
       ]
     },
     {
+      "component_id": "cargo:agentmage-platform-windows@0.0.0",
+      "depends_on": [
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:sha2@0.11.0",
+        "cargo:windows-sys@0.61.2"
+      ]
+    },
+    {
       "component_id": "cargo:agentmage-xtask@0.0.0",
-      "depends_on": []
+      "depends_on": [
+        "cargo:ed25519-dalek@3.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:zeroize@1.9.0"
+      ]
     },
     {
       "component_id": "cargo:bitflags@2.13.1",
@@ -11292,14 +11325,14 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "517dc3d4424f9fe2034dc9938b9758060d9a58cba50db68441a1f1f72aee45d9",
-    "Cargo.toml": "d5fa6c17afac608c1b6441f139f23315c67520a405d800b0bc588c7ecaccb10a",
+    "Cargo.lock": "b7c377402a91bb0217204b1b04a1f037073c6aa23d1f93a8f0f5a64b638595e1",
+    "Cargo.toml": "63ce5f1b9f2cf2c1f31c660cfd9bda08e008a79642a960b8c72c013f3f0b8f7b",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "1279df2f38174af07a8ac8eff2bbdb9aed8117ea42372009107dcff11a248f4e",
+    "package.json": "0a4f5b52280b3656765a616751264a86a0daefcf67a04464541f279420f3a22d",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
-    "shells/vscode/package.json": "4ee8b03c9750bb77e316976d3a9cc0e8f914d4ccb9eed63fc577f69302960334",
+    "shells/vscode/package.json": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16",
     "supply-chain/cargo-external-catalog.json": "e65e0eef1e0f3bb63fa72b585605c73d21323144236597b7a8c9752df9bb71fb"
   },
   "platform_status": {

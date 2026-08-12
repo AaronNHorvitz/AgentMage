@@ -126,7 +126,7 @@ class ProductCiTests(unittest.TestCase):
         self.assertEqual(len(native["expected_tests"]), 12)
         self.assertEqual(
             self.policy["native_windows"]["disposition"],
-            "contract-only-native-enforcement-blocked",
+            "partial-native-identity-evidence-other-controls-blocked",
         )
 
 

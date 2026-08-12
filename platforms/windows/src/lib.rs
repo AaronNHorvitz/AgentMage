@@ -1,5 +1,13 @@
-#![forbid(unsafe_code)]
-//! Versioned, non-effecting Windows platform boundary.
+#![deny(unsafe_op_in_unsafe_fn)]
+//! Versioned Windows platform boundary with independently gated native controls.
+
+#[cfg(target_os = "windows")]
+mod native_identity;
+
+#[cfg(target_os = "windows")]
+pub use native_identity::{
+    WindowsNativeIdentityError, WindowsProcessIdentity, observe_windows_process_identity,
+};
 
 use agentmage_kernel_contracts::PLATFORM_ADAPTER_API_VERSION;
 
@@ -28,6 +36,13 @@ pub enum WindowsNativeControl {
     PackageLifecycle,
     RemovalReconciliation,
 }
+
+/// Native controls with implemented source and a dedicated Windows execution path.
+///
+/// This is not an enrollment or release list. Each control still requires its
+/// complete hostile matrix and release evidence before enrollment can change.
+pub const IMPLEMENTED_NATIVE_CONTROL_SOURCES: [WindowsNativeControl; 1] =
+    [WindowsNativeControl::StandardUserIdentity];
 
 /// Complete ordered control inventory for contract version 1.
 pub const REQUIRED_NATIVE_CONTROLS: [WindowsNativeControl; 12] = [
@@ -75,8 +90,9 @@ mod tests {
     use std::collections::BTreeSet;
 
     use super::{
-        REQUIRED_NATIVE_CONTROLS, SHARED_ADAPTER_API_VERSION, WINDOWS_PLATFORM_CONTRACT_VERSION,
-        WindowsEnrollmentBlocker, enrollment_status,
+        IMPLEMENTED_NATIVE_CONTROL_SOURCES, REQUIRED_NATIVE_CONTROLS, SHARED_ADAPTER_API_VERSION,
+        WINDOWS_PLATFORM_CONTRACT_VERSION, WindowsEnrollmentBlocker, WindowsNativeControl,
+        enrollment_status,
     };
 
     #[test]
@@ -108,5 +124,15 @@ mod tests {
             blocker.code(),
             "windows.enrollment.native_implementation_unavailable"
         );
+    }
+
+    #[test]
+    fn partial_native_source_never_implies_platform_enrollment() {
+        assert_eq!(
+            IMPLEMENTED_NATIVE_CONTROL_SOURCES,
+            [WindowsNativeControl::StandardUserIdentity]
+        );
+        assert!(IMPLEMENTED_NATIVE_CONTROL_SOURCES.len() < REQUIRED_NATIVE_CONTROLS.len());
+        assert!(enrollment_status().is_err());
     }
 }

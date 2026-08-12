@@ -98,15 +98,27 @@
     ]
   },
   "native_windows": {
-    "disposition": "contract-only-native-enforcement-blocked",
+    "disposition": "partial-native-identity-evidence-other-controls-blocked",
     "runner": "windows-2022",
-    "command": [
-      "cargo",
-      "+1.95.0",
-      "test",
-      "-p",
-      "agentmage-platform-windows",
-      "--locked"
+    "commands": [
+      [
+        "cargo",
+        "+1.95.0",
+        "test",
+        "-p",
+        "agentmage-platform-windows",
+        "--locked"
+      ],
+      [
+        "cargo",
+        "+1.95.0",
+        "run",
+        "-p",
+        "agentmage-platform-windows",
+        "--bin",
+        "native_evidence",
+        "--locked"
+      ]
     ]
   },
   "documentation_gate": {

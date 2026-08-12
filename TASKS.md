@@ -6824,7 +6824,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 121.1.1.4:** Publish signed process/file/path/pipe/package/hash/version indicators for endpoint reconciliation.
 - [ ] **Task 121.1.2 - Implement Windows bridge and named-pipe IPC**
   - [ ] **Sub-task 121.1.2.1:** Build the minimal signed native bridge and access-controlled named pipe with exact current-user ACL and no workspace/model/credential authority.
-  - [ ] **Sub-task 121.1.2.2:** Validate user SID, logon session, integrity level, executable identity, package identity, protocol version, message sequence, size, launch challenge, replay state, and cancellation.
+  - [ ] **Sub-task 121.1.2.2:** Validate user SID, logon session, integrity level, executable identity, package identity, protocol version, message sequence, size, launch challenge, replay state, and cancellation. Partial native source under Decision 0024 observes and hash-binds the current process token user SID, logon session, elevation state, and executable bytes through a narrowly audited Windows FFI module. The item remains open because integrity level, connecting peer, package identity, protocol, sequence, challenge, replay, cancellation, hostile clients, and clean standard-user evidence do not exist.
   - [ ] **Sub-task 121.1.2.3:** Prevent handle leakage/inheritance, alternate pipe names, cross-user access, elevation confusion, binary replacement, downgrade, and undeclared listener creation.
   - [ ] **Sub-task 121.1.2.4:** Register the stable native Visual Studio Code Chat model provider and redacted diagnostics using the same kernel contracts as Linux.
 - [ ] **Task 121.1.3 - Verify and close the story**

@@ -2,7 +2,8 @@
   "schema_version": 1,
   "decision_id": "ADR-0004",
   "amendment_decision_ids": [
-    "ADR-0022"
+    "ADR-0022",
+    "ADR-0024"
   ],
   "status": "configured",
   "toolchains": {
@@ -37,7 +38,9 @@
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/lib.rs",
     "platforms/windows/Cargo.toml",
+    "platforms/windows/src/bin/native_evidence.rs",
     "platforms/windows/src/lib.rs",
+    "platforms/windows/src/native_identity.rs",
     "platforms/macos/Package.resolved",
     "platforms/macos/Package.swift",
     "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",

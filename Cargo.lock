@@ -63,6 +63,8 @@ name = "agentmage-platform-windows"
 version = "0.0.0"
 dependencies = [
  "agentmage-kernel-contracts",
+ "sha2",
+ "windows-sys",
 ]
 
 [[package]]

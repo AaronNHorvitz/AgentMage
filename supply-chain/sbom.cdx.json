@@ -37,7 +37,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "db3cfef5b486e9daa845a46899c3d3a324b9c08a3f3b2a20c7cbd95227fefc5d"
+          "content": "0e02e64aebea117325e2580fe108fec0ddaa777d6606a7408aa52b358ed8a321"
         }
       ],
       "licenses": [
@@ -99,7 +99,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2f92abb06b42c2e51bd1d1d01380de331f3ebb0286a9adb48caeae0c47d7ac07"
+          "content": "36ca817230bb91bfbf144ff0dec9015c53f56be9a52e42274ca43f93d9596b74"
         }
       ],
       "licenses": [
@@ -130,7 +130,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ef0d73e0b76829a10e427b95d11509447b8916b2c4726ab0021ceb5d4460daeb"
+          "content": "a0811c9b8a0dd15eeefaf007d12a28287e751528f6fb52ee552424411c11db96"
         }
       ],
       "licenses": [
@@ -157,11 +157,42 @@
       "version": "0.0.0"
     },
     {
+      "bom-ref": "cargo:agentmage-platform-windows@0.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "61398cf475f1e924567be5f9f891044de517942dc681245cdd4fabc9006b154f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "agentmage-platform-windows",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/agentmage-platform-windows@0.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.0.0"
+    },
+    {
       "bom-ref": "cargo:agentmage-xtask@0.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6013acfee99f9e8de568365de6a5233e2b890604695e8b7b8c1ed22ac6c4a8a4"
+          "content": "3449fc513d1e5ded89a7e6ea3056e9bf89a97ba21d98a36c899832206063aed0"
         }
       ],
       "licenses": [
@@ -1710,7 +1741,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ce047c3a2fcda1a8d8a7aba410386eff404b10bc2c4a4539b0190ac0796b63d0"
+          "content": "5d1da99afcb6be6118e8bc35702eac2e2fbcaacdfa8dccefe41b12467985d9e8"
         }
       ],
       "licenses": [
@@ -1741,7 +1772,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "1279df2f38174af07a8ac8eff2bbdb9aed8117ea42372009107dcff11a248f4e"
+          "content": "0a4f5b52280b3656765a616751264a86a0daefcf67a04464541f279420f3a22d"
         }
       ],
       "licenses": [
@@ -13278,6 +13309,7 @@
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
+        "cargo:ed25519-dalek@3.0.0",
         "cargo:rustix@1.1.4",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
@@ -13317,7 +13349,19 @@
       "ref": "cargo:agentmage-platform-linux@0.0.0"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:sha2@0.11.0",
+        "cargo:windows-sys@0.61.2"
+      ],
+      "ref": "cargo:agentmage-platform-windows@0.0.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:ed25519-dalek@3.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:zeroize@1.9.0"
+      ],
       "ref": "cargo:agentmage-xtask@0.0.0"
     },
     {
@@ -15954,7 +15998,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:1ba9f1b4-3d33-51b7-bb41-4a975c1328c0",
+  "serialNumber": "urn:uuid:f4d97446-a2fe-5830-9354-b14bfc05db03",
   "specVersion": "1.6",
   "version": 1
 }
