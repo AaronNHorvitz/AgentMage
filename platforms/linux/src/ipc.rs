@@ -2,7 +2,7 @@
 
 use std::fmt;
 use std::fs::{self, File};
-use std::io::Read;
+use std::io::{Read, Write};
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
@@ -246,6 +246,99 @@ pub struct LinuxAuthenticatedPeer {
     protocol_version: u32,
 }
 
+/// Authenticated local byte channel with fixed length-bounded message framing.
+///
+/// Construction is private to the verified Linux endpoint. The channel carries
+/// authenticated bytes but no capability grant or effect authority.
+pub struct LinuxAuthenticatedIpcSession {
+    stream: UnixStream,
+    peer: LinuxAuthenticatedPeer,
+}
+
+impl fmt::Debug for LinuxAuthenticatedIpcSession {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxAuthenticatedIpcSession")
+            .field("peer", &self.peer)
+            .finish_non_exhaustive()
+    }
+}
+
+impl LinuxAuthenticatedIpcSession {
+    /// Returns the peer admitted by kernel credentials and the one-use handshake.
+    #[must_use]
+    pub const fn peer(&self) -> &LinuxAuthenticatedPeer {
+        &self.peer
+    }
+
+    /// Reads one big-endian length-prefixed frame within the caller's closed bound.
+    pub fn read_frame(&mut self, maximum_bytes: usize) -> Result<Vec<u8>, LinuxIpcError> {
+        if maximum_bytes == 0 || maximum_bytes > 4 * 1024 * 1024 {
+            return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+        }
+        let mut length = [0_u8; 4];
+        self.stream
+            .read_exact(&mut length)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        let length = usize::try_from(u32::from_be_bytes(length))
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))?;
+        if length == 0 || length > maximum_bytes {
+            return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+        }
+        let mut frame = vec![0_u8; length];
+        self.stream
+            .read_exact(&mut frame)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        Ok(frame)
+    }
+
+    /// Writes one big-endian length-prefixed frame within the caller's closed bound.
+    pub fn write_frame(&mut self, frame: &[u8], maximum_bytes: usize) -> Result<(), LinuxIpcError> {
+        if frame.is_empty() || frame.len() > maximum_bytes || maximum_bytes > 4 * 1024 * 1024 {
+            return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+        }
+        let length = u32::try_from(frame.len())
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))?;
+        self.stream
+            .write_all(&length.to_be_bytes())
+            .and_then(|()| self.stream.write_all(frame))
+            .and_then(|()| self.stream.flush())
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))
+    }
+}
+
+/// Verified aggregate-owned Linux host endpoint.
+///
+/// The underlying listener and socket identities remain private to this type.
+pub struct LinuxHostIpcEndpoint {
+    listener: PrivateUnixListener,
+}
+
+impl fmt::Debug for LinuxHostIpcEndpoint {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxHostIpcEndpoint")
+            .finish_non_exhaustive()
+    }
+}
+
+impl LinuxHostIpcEndpoint {
+    pub(crate) fn bind(path: &Path) -> Result<Self, LinuxIpcError> {
+        Ok(Self {
+            listener: PrivateUnixListener::bind(path)?,
+        })
+    }
+
+    /// Accepts exactly one peer and consumes its one-use launch authenticator.
+    pub fn accept(
+        &self,
+        authenticator: &LinuxIpcAuthenticator,
+    ) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        let (stream, peer) = self.listener.accept_authenticated(authenticator)?;
+        Ok(LinuxAuthenticatedIpcSession { stream, peer })
+    }
+}
+
 impl LinuxAuthenticatedPeer {
     /// Returns the kernel-observed peer identity.
     #[must_use]
@@ -452,6 +545,9 @@ impl PrivateUnixListener {
             .read_exact(&mut frame)
             .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
         let peer = authenticator.authenticate(observed, &LinuxHandshakeRequest::decode(&frame))?;
+        stream
+            .set_read_timeout(None)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
         Ok((stream, peer))
     }
 
@@ -609,7 +705,7 @@ const fn ipc_error(kind: LinuxIpcErrorKind) -> LinuxIpcError {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
+    use std::io::{Read, Write};
     use std::os::unix::fs::PermissionsExt;
     use std::os::unix::net::{UnixListener, UnixStream};
     use std::path::PathBuf;
@@ -619,9 +715,9 @@ mod tests {
     use rustix::process::{getpid, getuid};
 
     use super::{
-        LINUX_IPC_PROTOCOL_VERSION, LinuxHandshakeRequest, LinuxIpcAuthenticator,
-        LinuxIpcErrorKind, LinuxPeerIdentity, PrivateUnixListener, parse_process_start_time_ticks,
-        stable_peer_identity,
+        LINUX_IPC_PROTOCOL_VERSION, LinuxHandshakeRequest, LinuxHostIpcEndpoint,
+        LinuxIpcAuthenticator, LinuxIpcErrorKind, LinuxPeerIdentity, PrivateUnixListener,
+        parse_process_start_time_ticks, stable_peer_identity,
     };
 
     fn peer() -> LinuxPeerIdentity {
@@ -777,6 +873,38 @@ mod tests {
         drop(listener);
         assert!(!socket.exists());
         std::fs::remove_dir(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn authenticated_endpoint_exposes_only_bounded_product_frames() {
+        let directory = private_test_directory();
+        let socket = directory.join("agentmage-framed.sock");
+        let endpoint = LinuxHostIpcEndpoint {
+            listener: PrivateUnixListener::bind(&socket).expect("private listener"),
+        };
+        let expected = peer();
+        let (authenticator, credentials) =
+            LinuxIpcAuthenticator::generate(expected.clone()).expect("launch material");
+        let client = thread::spawn(move || {
+            let mut stream = UnixStream::connect(socket).expect("client connection");
+            stream
+                .write_all(&credentials.request(&expected).encode())
+                .expect("handshake");
+            stream.write_all(&4_u32.to_be_bytes()).expect("length");
+            stream.write_all(b"ping").expect("request");
+            let mut length = [0_u8; 4];
+            stream.read_exact(&mut length).expect("response length");
+            let mut response = vec![0_u8; u32::from_be_bytes(length) as usize];
+            stream.read_exact(&mut response).expect("response");
+            response
+        });
+        let mut session = endpoint.accept(&authenticator).expect("authenticated peer");
+        assert_eq!(session.read_frame(16).expect("bounded frame"), b"ping");
+        session.write_frame(b"pong", 16).expect("bounded response");
+        assert_eq!(client.join().expect("client result"), b"pong");
+        drop(session);
+        drop(endpoint);
+        std::fs::remove_dir(directory).expect("private directory cleanup");
     }
 
     #[test]

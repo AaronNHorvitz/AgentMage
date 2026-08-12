@@ -18,3 +18,5 @@ held targets, exact-object workers, SQLCipher authority, atomic checkpoints,
 and no-replay restart recovery. Accepted Decision 0017 defines independent
 release trust and the Phase 8 Linux platform, configuration, state, key, IPC,
 and process lifecycle candidate.
+Accepted Decision 0018 defines the Phase 9 exact Linux read-and-receipt source
+candidate and preserves the unavailable signed-package boundary for Phase 11.

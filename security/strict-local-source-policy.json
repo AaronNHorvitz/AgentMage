@@ -75,9 +75,16 @@
       "pattern": "(?:TcpStream|TcpListener|UdpSocket|ToSocketAddrs|reqwest::|hyper::|ureq::|curl::|tokio::net::|async_std::net::)"
     },
     {
+      "allowed_paths": [
+        "shells/vscode/src/host_bridge.ts"
+      ],
+      "id": "javascript-local-ipc-api",
+      "pattern": "(?:node:net|require\\([\\\"']net[\\\"']\\))"
+    },
+    {
       "allowed_paths": [],
       "id": "javascript-network-api",
-      "pattern": "(?:node:(?:http|https|net|tls|dns|dgram)|require\\([\\\"'](?:http|https|net|tls|dns|dgram)[\\\"']\\)|\\bfetch\\s*\\(|\\bWebSocket\\s*\\(|EventSource\\s*\\()"
+      "pattern": "(?:node:(?:http|https|tls|dns|dgram)|require\\([\\\"'](?:http|https|tls|dns|dgram)[\\\"']\\)|\\bfetch\\s*\\(|\\bWebSocket\\s*\\(|EventSource\\s*\\()"
     },
     {
       "allowed_paths": [],

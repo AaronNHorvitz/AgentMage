@@ -39,7 +39,9 @@
       "typescript",
       "typescript-eslint"
     ],
-    "cargo_packages": []
+    "cargo_packages": [
+      "agentmage-platform-linux[test-support]"
+    ]
   },
   "platform_packaging": {
     "linux_packages": [

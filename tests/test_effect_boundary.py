@@ -63,7 +63,21 @@ class EffectBoundaryTests(unittest.TestCase):
 
     def test_shell_process_launch_is_rejected(self) -> None:
         relative = Path("shells/host/src/main.rs")
-        source = self.source(str(relative)) + "\nuse std::process::Command;\n"
+        source = self.source(str(relative)).replace(
+            "#[cfg(test)]",
+            "use std::process::Command;\n\n#[cfg(test)]",
+            1,
+        )
+        failures = validate_effect_boundary(overrides={relative: source})
+        self.assertIn(f"{relative} contains direct process launch", failures)
+
+    def test_early_test_attribute_cannot_hide_later_product_process_authority(self) -> None:
+        relative = Path("shells/host/src/main.rs")
+        source = self.source(str(relative)).replace(
+            "fn main()",
+            "#[cfg(test)]\nuse std::fmt;\n\nuse std::process::Command;\n\nfn main()",
+            1,
+        )
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn(f"{relative} contains direct process launch", failures)
 
@@ -96,7 +110,9 @@ class EffectBoundaryTests(unittest.TestCase):
     def test_socket_listener_export_is_rejected(self) -> None:
         relative = Path("platforms/linux/src/lib.rs")
         source = self.source(str(relative)).replace(
-            "    LinuxPeerIdentity,\n", "    LinuxPeerIdentity, PrivateUnixListener,\n", 1
+            "    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity,\n",
+            "    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity, PrivateUnixListener,\n",
+            1,
         )
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn(

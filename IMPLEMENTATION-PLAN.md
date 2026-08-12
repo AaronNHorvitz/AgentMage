@@ -42,6 +42,14 @@ these current-state claims. This plan still preserves the complete 17-epic,
 the approval-gated stabilization phases run. A new capability family requires
 an explicitly approved scope-freeze exception and impact statement.
 
+Stabilization Phase 9 now has a source candidate under accepted
+[`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md): one
+exact approved Linux file read through the Visual Studio Code provider,
+authenticated framing, durable kernel transaction, offline worker, citation,
+and receipt. This is a vertical integration proof, not a model-enabled or
+supported workflow. Signed installation and automatic trusted host bootstrap
+remain Phase 11 dependencies.
+
 ## 2. Document Authority and Change Control
 
 ```mermaid

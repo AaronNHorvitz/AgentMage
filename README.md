@@ -46,6 +46,16 @@ private state/key lifecycle, IPC cleanup, and process-identity candidate. These
 remain isolated pre-alpha mechanisms, not an integrated product or release
 claim.
 
+Accepted Decision 0018 defines the Phase 9 source candidate for one exact Linux
+workspace-file read through the real Visual Studio Code language-model provider
+surface. The candidate includes a closed protocol, authenticated IPC client and
+server framing, two explicit confirmations, one exact Linux worker projection,
+bounded UTF-8 output, a local citation, a durable receipt, replay denial, and
+restart verification. The installed extension still uses a fail-closed
+unavailable bridge because no independently signed host package, trusted
+endpoint bootstrap, or production launch credentials exist. It is therefore
+source-level vertical-slice evidence, not a supported or integrated workflow.
+
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
 ## Document Authority
@@ -67,7 +77,7 @@ Current development follows [`Decision 0003`](./docs/decisions/0003-blocked-plat
 
 ## Internal v0.1 Milestone
 
-v0.1 remains intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat. It is an unimplemented internal engineering target and foundation, not the first supported public release. When implemented, its acceptance contract will include:
+v0.1 remains intentionally narrow: a **read-only local evidence assistant** in native Visual Studio Code Chat. It is a partially implemented internal engineering target and foundation, not the first supported public release. The Phase 9 candidate implements only one approved exact-file read; the larger acceptance contract still includes:
 
 - Fedora is the active Linux development and performance reference, and the identical target workflow must pass on clean Ubuntu. Windows 11 x64 is required for first-GA. Apple Silicon macOS on a MacBook Pro M5 remains a blocked, retained post-GA lane.
 - A model profile may run only after a new manifest-bound admission passes. Gemma 4 E4B and Gemma 4 12B Unified are currently rejected and disabled; neither is an enabled baseline model. A future admitted profile would use native `llama.cpp` and, on Linux, may use a separately gated Docker Model Runner compatibility adapter behind the same `LocalModelRuntime` contract.

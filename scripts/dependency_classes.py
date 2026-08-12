@@ -52,6 +52,7 @@ EXPECTED_VSCODE_DEV = {
     "typescript",
     "typescript-eslint",
 }
+EXPECTED_CARGO_DEV = {"agentmage-platform-linux[test-support]"}
 
 
 def read_json(path: Path) -> Any:
@@ -108,8 +109,8 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
         failures.append("root npm development class does not match package.json")
     if set(development.get("vscode_extension_npm_packages", [])) != EXPECTED_VSCODE_DEV:
         failures.append("VS Code npm development class does not match package.json")
-    if development.get("cargo_packages") != []:
-        failures.append("Cargo development dependency class must be empty")
+    if set(development.get("cargo_packages", [])) != EXPECTED_CARGO_DEV:
+        failures.append("Cargo development dependency class does not match manifests")
     if packaging != {
         "linux_packages": [
             "OpenSSL 3 libcrypto (distribution package selected by support matrix)"
@@ -157,6 +158,7 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
         failures.append("VS Code npm lock development class drifted")
 
     cargo_production: set[str] = set()
+    cargo_development: set[str] = set()
     for relative in CARGO_MANIFESTS:
         try:
             manifest = read_toml(root / relative)
@@ -167,12 +169,30 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
             _cargo_dependency_sections(manifest)
         )
         cargo_production.update(production_dependencies)
-        if development_dependencies:
+        if relative == "shells/host/Cargo.toml":
+            if development_dependencies != {"agentmage-platform-linux"}:
+                failures.append(
+                    f"{relative} development dependencies do not match the test harness"
+                )
+            linux_test_dependency = manifest.get("dev-dependencies", {}).get(
+                "agentmage-platform-linux"
+            )
+            if not isinstance(linux_test_dependency, dict) or set(
+                linux_test_dependency.get("features", [])
+            ) != {"test-support"}:
+                failures.append(
+                    f"{relative} must enable only the Linux test-support feature in tests"
+                )
+            else:
+                cargo_development.add("agentmage-platform-linux[test-support]")
+        elif development_dependencies:
             failures.append(f"{relative} contains undeclared Cargo development dependencies")
         if build_dependencies:
             failures.append(f"{relative} contains undeclared Cargo build dependencies")
     if cargo_production != EXPECTED_INTERNAL_CARGO | EXPECTED_EXTERNAL_CARGO:
         failures.append("Cargo production dependency class drifted")
+    if cargo_development != EXPECTED_CARGO_DEV:
+        failures.append("Cargo development dependency class drifted")
 
     if ".package(" in swift_manifest:
         failures.append("Swift manifest contains an undeclared external dependency")

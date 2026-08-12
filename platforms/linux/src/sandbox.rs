@@ -656,6 +656,15 @@ impl LinuxSandboxEffectDriver {
     pub fn take_error(&mut self) -> Option<LinuxSandboxError> {
         self.error.take()
     }
+
+    /// Returns the still-verified runner after this one driver attempt closes.
+    ///
+    /// The runner exposes no public launch method, so recovering it does not
+    /// bypass the kernel effect permit required by the next driver.
+    #[must_use]
+    pub fn into_runner(self) -> LinuxSandboxRunner {
+        self.runner
+    }
 }
 
 impl fmt::Debug for LinuxSandboxEffectDriver {

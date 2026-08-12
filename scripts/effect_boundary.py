@@ -87,6 +87,15 @@ def _public_function(source: str, name: str) -> bool:
     return re.search(rf"(?m)^\s*pub\s+(?:const\s+)?fn\s+{re.escape(name)}\s*\(", source) is not None
 
 
+def _production_source(source: str) -> str:
+    """Exclude an end-of-file Rust unit-test module from product-effect scans."""
+
+    test_modules = list(
+        re.finditer(r"(?m)^#\[cfg\(test\)\]\s*\nmod\s+tests\s*\{", source)
+    )
+    return source[: test_modules[-1].start()] if test_modules else source
+
+
 def validate_effect_boundary(
     root: Path = ROOT,
     overrides: dict[Path, str] | None = None,
@@ -175,7 +184,7 @@ def validate_effect_boundary(
     for base in (Path("shells"), Path("capabilities")):
         for path in sorted((root / base).rglob("*.rs")):
             relative = path.relative_to(root)
-            source = _read(relative, root, replacements)
+            source = _production_source(_read(relative, root, replacements))
             for pattern, label in (
                 (r"\bstd::process\b|\bCommand::new\s*\(", "process launch"),
                 (r"\b(?:TcpListener|TcpStream|UnixListener)::", "socket creation"),

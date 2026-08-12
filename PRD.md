@@ -42,6 +42,15 @@ and [`architecture/status-model.json`](./architecture/status-model.json). The
 unchanged. Their original execution is paused until the stabilization gate
 authorizes resumption.
 
+The accepted Phase 9 candidate under
+[`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md)
+implements one source-level approved Linux file read through a registered
+Visual Studio Code provider, authenticated local protocol, exact-object worker,
+citation, and durable receipt. It does not change the current integrated-workflow
+or support fields: normal activation remains unavailable until Phase 11 provides
+an independently signed package and trusted host bootstrap, and no model is
+enabled.
+
 ## Document Governance
 
 | Document | Normative responsibility |

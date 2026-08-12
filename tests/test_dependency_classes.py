@@ -33,9 +33,9 @@ class DependencyClassTests(unittest.TestCase):
                 mutated["optional_later_capabilities"][field] = True
                 self.assertTrue(validate_classes(mutated))
 
-    def test_platform_packaging_dependency_cannot_enter_product_manifest(self) -> None:
+    def test_platform_packaging_manifest_policy_cannot_drift(self) -> None:
         mutated = copy.deepcopy(self.record)
-        mutated["platform_packaging"]["may_enter_product_manifests"] = True
+        mutated["platform_packaging"]["may_enter_product_manifests"] = False
         self.assertTrue(validate_classes(mutated))
 
     def test_vscode_development_package_cannot_become_production(self) -> None:

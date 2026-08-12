@@ -1774,3 +1774,118 @@ Phase 8 verification produced the following candidate-gate results:
 - `git diff --check` passed. The user subsequently approved Decision 0017, the
   Phase 8 local commit, and entry into Phase 9 on 2026-08-11. The branch has no
   upstream; no push or Phase 9 commit was authorized by that approval.
+
+## 20. Phase 9 Record
+
+Phase 9 was authorized only for RM-018 after the user approved Decision 0017,
+the Phase 8 local commit, and entry into Phase 9. The approved Phase 8 candidate
+was committed locally as `054476e`; no push occurred. Entry into Phase 9 did not
+authorize a Phase 9 commit, a push, or entry into Phase 10.
+
+Accepted Decision 0018 defines one bounded Linux Visual Studio Code read and
+receipt workflow. The extension registers vendor `agentmage` and model ID
+`secure-local-read`, accepts only `read <workspace-relative-path>`, requires one
+local workspace and two explicit modal confirmations, renders bounded UTF-8
+content with a local citation and receipt identity, and disposes its provider on
+deactivation. Deactivation also cancels each known unconsumed preview exactly
+once, closes retained bridge state, and denies later controller use. Remote,
+virtual, multiple-root, absolute, traversal, wildcard, encoded-separator,
+malformed, stale, cancelled, mismatched, replayed, and unavailable-host requests
+fail closed.
+
+The Rust host now owns a closed versioned protocol and one exact read workflow.
+It selects the workspace through the verified Linux adapter, descriptor-holds
+one regular file and preimage, creates one file-level session-read scope, renders
+an approval bound to the exact target and policy, derives one single-use
+operation grant only after confirmation, and calls
+`DurableAuthorityRuntime::execute_effect` as the sole worker boundary. The
+authority root is revalidated before parent issuance, before operation
+derivation, before execution, and after terminal receipt publication. Pending
+previews are memory-only, bounded to eight, expire after one minute, and are
+consumed before derivation. Completed transaction replay returns only the
+retained receipt identity and never repeats the read.
+
+The Linux endpoint now exposes only an opaque authenticated product-frame
+session after exact peer and one-use launch-secret authentication. Frames are
+length bounded and unknown protocol fields fail closed. The TypeScript bridge is
+a serialized Unix client with exact handshake bytes, HMAC response, bounded
+framing, closed response parsing, and copied-secret erasure. It has no listener,
+filesystem, process-launch, or Internet authority. Peer fields are range checked
+against their exact wire encodings, retained socket bytes are capped, and every
+terminal response must match the exact request identity before rendering.
+Ordinary activation injects an unavailable bridge: Phase 11 still owns
+independently signed package artifacts, trusted endpoint discovery, direct
+launch-credential delivery, and a clean supported installation.
+
+The read capability now declares the exact stable tool schema and one
+`WorkspaceRead` effect without acquiring an executor. Linux test-support
+constructors are feature gated and absent from normal builds. They permit a
+deterministic source harness to compose the real authority, sandbox, receipt,
+and recovery path, but cannot satisfy release evidence. The README, PRD,
+implementation plan, scaffolding inventory, shell documentation, architecture
+index, build contract, dependency-class policy, strict-local source policy,
+requirement registry, and deterministic supply-chain inventory were aligned to
+this boundary. The Linux `test-support` feature is classified as one exact
+development-only dependency and remains absent from normal builds. No retained
+historical artifact, fixture, or reference was refreshed.
+
+Phase 9 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed Rust formatting, warnings-denied Clippy,
+  TypeScript lint, strict-local and effect-boundary audits, all workspace builds,
+  all enabled Rust tests, compile-fail tests, and all 12 Visual Studio Code
+  provider and authenticated-bridge tests.
+- `cargo test -p agentmage-platform-linux -p agentmage-host --offline` passed
+  five enabled host workflow tests, the inert binary test, 51 enabled Linux
+  tests, and two Linux compile-fail tests. Fifteen environment-dependent Linux
+  tests and two full-workflow host tests remain explicitly ignored by the
+  default lane.
+- `cargo test -p agentmage-host --lib --offline -- --ignored` passed both Fedora
+  end-to-end cases: exact systemd/Bubblewrap read, durable receipt, replay,
+  reopen and restart; and stale preimage, cancellation, approval mismatch, and
+  expiry without an unauthorized worker or receipt.
+- The explicit Fedora sandbox lane passed all 11 Bubblewrap, systemd, seccomp,
+  exact-projection, adjacent-path, descriptor, process, environment, network,
+  write, scratch, output-bound, timeout, stale-object, and foreign-workspace
+  tests.
+- The effect-boundary validator and all 13 mutation tests passed. Product effect
+  scanning excludes only the final `#[cfg(test)]` fixture module while authority
+  scanning still covers the complete source.
+- The current build-contract and dependency-class checks pass, as do all 16
+  focused Python mutation tests for those guards. They bind the exact Phase 9
+  source closure and allow the Linux `test-support` feature only in the host's
+  development dependency class.
+- Deterministic dependency provenance, dependency hashes, and CycloneDX
+  validation pass after refresh. No new external locked package entered the
+  dependency graph.
+- `npm run docs:validate` passed all 86 Markdown files and policy invariants.
+  The Mermaid workflow and exact provider identity are valid.
+- `npm run requirements:check` passed the refreshed registry, additions-only,
+  architecture, module, dependency, and effect-boundary checks before failing
+  closed at the retained stale dependency-injection report. Historical/current
+  evidence separation remains RM-019 and was not represented as Phase 9
+  evidence.
+- The downstream current checks were also run individually so that the known
+  dependency-injection stop could not hide another regression. Build contract,
+  dependency classes, supply chain, diagnostics, references, and fuzz gates
+  pass. Locked resolution, artifact-scan evidence, policy expectations, and
+  traceability remain stale and assigned to RM-019 through RM-025. The live
+  artifact scan additionally reports the existing `libsqlite3-sys` combined
+  license expression as blocking because that exact expression has not yet been
+  deliberately admitted to the production allowlist.
+- `npm run requirements:test` ran all 898 Python policy and mutation tests: 747
+  passed, 52 failed, and 99 ended in cascading errors. The failures are dominated
+  by source-bound retained reports, current-count assumptions, and their gate
+  closures after the Phase 7 through Phase 9 source changes. They were recorded,
+  not waived or regenerated; reconciling that historical/current evidence model
+  remains the explicit Phase 10 scope.
+- `git diff --check` passed. The branch remains
+  `agent/expand-delivery-windows-ga` at `054476e`, has no upstream, and retains
+  the Phase 9 candidate uncommitted. The user subsequently approved Decision
+  0018, the Phase 9 local commit, and entry into Phase 10 on 2026-08-11. No push
+  or Phase 10 commit was authorized by that approval.
+
+The clean signed-install acceptance case remains unavailable rather than passed.
+Accordingly, this candidate demonstrates the complete source and native Fedora
+workflow but does not claim a supported installation, release package, Ubuntu
+native execution, macOS, Windows, a model runtime, or general agent capability.

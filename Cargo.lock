@@ -17,6 +17,10 @@ dependencies = [
  "agentmage-kernel-contracts",
  "agentmage-kernel-engine",
  "agentmage-platform-linux",
+ "rustix",
+ "serde",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]

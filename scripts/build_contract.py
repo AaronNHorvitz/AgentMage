@@ -44,15 +44,18 @@ EXPECTED_CARGO_PACKAGES = {
         {
             "agentmage-kernel-contracts",
             "ed25519-dalek",
+            "rusqlite",
             "serde",
             "serde_json",
             "sha2",
+            "zeroize",
         },
     ),
     "platforms/linux": (
         "agentmage-platform-linux",
         {
             "agentmage-kernel-contracts",
+            "agentmage-kernel-engine",
             "rustix",
             "seccompiler",
             "sha2",
@@ -67,8 +70,15 @@ EXPECTED_CARGO_PACKAGES = {
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",
             "agentmage-platform-linux",
+            "rustix",
+            "serde",
+            "serde_json",
+            "sha2",
         },
     ),
+}
+EXPECTED_CARGO_DEVELOPMENT_PACKAGES = {
+    "shells/host": {"agentmage-platform-linux"},
 }
 EXPECTED_TYPESCRIPT_DEPS = {
     "@eslint/js": "10.0.1",
@@ -104,7 +114,7 @@ EXPECTED_SCRIPTS = {
     "product:lint": (
         "cargo clippy --workspace --all-targets --locked -- -D warnings && "
         "npm run lint --workspace @agentmage/vscode-shell && "
-        "npm run strict-local-source:check"
+        "npm run strict-local-source:check && npm run effect-boundary:check"
     ),
     "product:test": (
         "cargo test --workspace --locked && "
@@ -218,8 +228,19 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         actual_dependencies = _all_cargo_dependencies(manifest)
         if actual_dependencies != expected_dependencies:
             failures.append(f"{path} Cargo dependencies do not match the accepted graph")
-        if any(section in manifest for section in ("build-dependencies", "dev-dependencies")):
-            failures.append(f"{path} contains an undeclared Cargo dependency class")
+        actual_development = set(manifest.get("dev-dependencies", {}))
+        for target in manifest.get("target", {}).values():
+            if isinstance(target, dict):
+                actual_development.update(target.get("dev-dependencies", {}))
+        if actual_development != EXPECTED_CARGO_DEVELOPMENT_PACKAGES.get(path, set()):
+            failures.append(
+                f"{path} Cargo development dependencies do not match the accepted graph"
+            )
+        if "build-dependencies" in manifest or any(
+            isinstance(target, dict) and "build-dependencies" in target
+            for target in manifest.get("target", {}).values()
+        ):
+            failures.append(f"{path} contains an undeclared Cargo build dependency class")
 
     lock_packages = cargo_lock.get("package", [])
     workspace_names = {value[0] for value in EXPECTED_CARGO_PACKAGES.values()}

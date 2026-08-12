@@ -40,6 +40,12 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             "rust-standard-internet-address-api found outside its closed allowlist: kernel/engine/src/injected.rs",
             audit.scan_sources(self.policy, moved),
         )
+        expanded = dict(self.sources)
+        expanded["shells/vscode/src/host_bridge.ts"] += '\nimport "node:https";\n'
+        self.assertIn(
+            "javascript-network-api found outside its closed allowlist: shells/vscode/src/host_bridge.ts",
+            audit.scan_sources(self.policy, expanded),
+        )
 
     def test_uri_allowance_is_exact_and_staleness_is_a_failure(self) -> None:
         sources = dict(self.sources)

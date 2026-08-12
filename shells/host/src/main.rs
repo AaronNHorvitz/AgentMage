@@ -2,6 +2,7 @@
 
 fn main() {
     let shared_components = (
+        agentmage_host::COMPONENT_ID,
         agentmage_kernel_contracts::COMPONENT_ID,
         agentmage_kernel_engine::COMPONENT_ID,
         agentmage_capability_read_only::COMPONENT_ID,
@@ -18,7 +19,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn host_scaffold_has_no_runtime_behavior() {
+    fn host_binary_waits_for_verified_package_bootstrap() {
+        assert_eq!(agentmage_host::COMPONENT_ID, "shell-host");
         assert_eq!(agentmage_kernel_engine::COMPONENT_ID, "kernel-engine");
     }
 }

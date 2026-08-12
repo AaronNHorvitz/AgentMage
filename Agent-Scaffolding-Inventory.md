@@ -1292,6 +1292,13 @@ This section extends file reading into controlled creation and editing of common
 
 This section connects the guarded local runtime to the native Visual Studio Code Chat window. Gemma 4 must appear in the standard model picker and operate through AgentMage's safety layer rather than through a separate chat panel or raw model endpoint.
 
+The accepted Phase 9 stabilization candidate proves a narrower source-level
+slice: one exact approved Linux file read through a registered Secure Read
+provider, authenticated IPC framing, a bounded worker, citation, and durable
+receipt. It does not satisfy the model-provider capability gate below, enable a
+model, or claim signed-package activation. Those requirements remain additions
+to, and are not replaced by, the candidate.
+
 - [ ] `CAPABILITY GATE` Build an AgentMage Visual Studio Code extension that registers a language-model chat provider and contributes local models to the native Chat model picker.
 - [ ] `CAPABILITY GATE` Pin `engines.vscode` to the first verified stable Visual Studio Code release that includes the required language-model chat-provider API; production packages cannot enable a proposed API or depend on Insiders behavior.
 - [ ] `CAPABILITY GATE` Register **AgentMage — Gemma 4 E4B (Local, Read Only)** as the default selectable model in the native Visual Studio Code Chat window.

@@ -23,9 +23,9 @@ pub use inventory::{
     LinuxWritableObservation, LinuxWritableTargetClass,
 };
 pub use ipc::{
-    LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedPeer, LinuxHandshakeRequest,
-    LinuxIpcAuthenticator, LinuxIpcError, LinuxIpcErrorKind, LinuxLaunchCredentials,
-    LinuxPeerIdentity,
+    LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedIpcSession, LinuxAuthenticatedPeer,
+    LinuxHandshakeRequest, LinuxHostIpcEndpoint, LinuxIpcAuthenticator, LinuxIpcError,
+    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity,
 };
 pub use lifecycle::{
     LinuxOperationalKeyLifecycleError, LinuxOperationalKeyLifecycleErrorKind,
@@ -35,7 +35,11 @@ pub use lifecycle::{
 pub use platform::{
     LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,
     LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind, open_linux_authority,
-    resolve_linux_workspace_object, select_linux_workspace,
+    open_linux_host_ipc, resolve_linux_workspace_object, select_linux_workspace,
+};
+#[cfg(feature = "test-support")]
+pub use platform::{
+    open_test_linux_authority, resolve_test_linux_workspace_object, select_test_linux_workspace,
 };
 pub use sandbox::{
     LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,

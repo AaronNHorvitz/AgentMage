@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document describes the Phase 8 Fedora/Ubuntu candidate under proposed
+This document describes the Phase 8 Fedora/Ubuntu candidate under accepted
 Decision 0017. It composes independently verified release trust, workspace and
 state roots, native configuration storage, operational-key provisioning, local
 IPC, and process inventory. It is not a supported-package or integrated-product
@@ -106,5 +106,7 @@ contents are not retained in inventory diagnostics.
   retains the object.
 - Operational-key deletion, state deletion, uninstall orchestration, and key
   rotation are not implemented.
-- The host and Visual Studio Code shell do not yet compose an end-user workflow.
+- The Phase 9 source candidate composes one exact read through host and Visual
+  Studio Code provider contracts, but ordinary activation remains unavailable
+  until signed packaging supplies trusted endpoint bootstrap and credentials.
 - Fedora execution does not substitute for Ubuntu, macOS, or Windows evidence.

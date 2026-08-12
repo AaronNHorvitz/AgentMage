@@ -8,6 +8,9 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+test-support = []
+
 [dependencies]
 agentmage-kernel-contracts.workspace = true
 agentmage-kernel-engine.workspace = true

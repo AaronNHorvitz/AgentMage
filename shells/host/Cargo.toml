@@ -12,9 +12,16 @@ publish.workspace = true
 agentmage-capability-read-only.workspace = true
 agentmage-kernel-contracts.workspace = true
 agentmage-kernel-engine.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+rustix.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 agentmage-platform-linux.workspace = true
+
+[dev-dependencies]
+agentmage-platform-linux = { workspace = true, features = ["test-support"] }
 
 [lints]
 workspace = true

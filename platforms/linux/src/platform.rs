@@ -19,8 +19,9 @@ use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use sha2::{Digest, Sha256};
 
 use crate::{
-    DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
-    LinuxStrictLocalRoot, LinuxStrictLocalRootInspector, authorize_workspace_root,
+    DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
+    LinuxIpcError, LinuxPathAdapter, LinuxStrictLocalRoot, LinuxStrictLocalRootInspector,
+    authorize_workspace_root,
 };
 
 const MAX_IDENTITY_FILE_BYTES: u64 = 256 * 1024 * 1024;
@@ -214,6 +215,43 @@ pub fn resolve_linux_workspace_object(
         .resolve(workspace, path, intent)
 }
 
+/// Binds one private authenticated host endpoint after aggregate activation.
+pub fn open_linux_host_ipc(
+    verified: &VerifiedPlatformAdapter<LinuxPlatformAdapter>,
+    path: &Path,
+) -> Result<LinuxHostIpcEndpoint, LinuxIpcError> {
+    let _verified_adapter = verified.adapter();
+    LinuxHostIpcEndpoint::bind(path)
+}
+
+/// Selects a Linux workspace without release activation for isolated test harnesses.
+///
+/// This function is absent from normal builds and cannot be used as production
+/// release or platform evidence.
+#[cfg(feature = "test-support")]
+pub fn select_test_linux_workspace(
+    root: &Path,
+    workspace_id: WorkspaceId,
+    authorization_id: WorkspaceAuthorizationId,
+    adapter_instance_id: agentmage_kernel_contracts::AdapterInstanceId,
+) -> Result<LinuxAuthorizedWorkspace, agentmage_kernel_contracts::PathAdapterError> {
+    authorize_workspace_root(root, workspace_id, authorization_id, adapter_instance_id)
+}
+
+/// Resolves one held object through a synthetic test-only Linux adapter identity.
+///
+/// This function is absent from normal builds and cannot satisfy release trust.
+#[cfg(feature = "test-support")]
+pub fn resolve_test_linux_workspace_object(
+    workspace: &LinuxAuthorizedWorkspace,
+    adapter_instance_id: agentmage_kernel_contracts::AdapterInstanceId,
+    path: &WorkspacePath,
+    intent: PathResolutionIntent,
+) -> Result<LinuxHeldObject, agentmage_kernel_contracts::PathAdapterError> {
+    LinuxPathAdapter::new(adapter_instance_id, crate::DEFAULT_MAX_PREIMAGE_BYTES)
+        .resolve(workspace, path, intent)
+}
+
 /// Durable authority runtime that retains its descriptor-held private Linux root.
 pub struct LinuxAuthorityRuntime {
     root: LinuxStrictLocalRoot,
@@ -276,6 +314,21 @@ fn open_linux_authority_in_root<P: OperationalStoreKeyProvider>(
             .map_err(LinuxAuthorityOpenError::Authority)?;
     root.revalidate().map_err(LinuxAuthorityOpenError::Root)?;
     Ok(LinuxAuthorityRuntime { root, runtime })
+}
+
+/// Opens a private Linux authority root for isolated test harnesses only.
+///
+/// This function is absent from normal builds and cannot satisfy platform
+/// activation, release, package, or support evidence.
+#[cfg(feature = "test-support")]
+pub fn open_test_linux_authority<P: OperationalStoreKeyProvider>(
+    state_root: &Path,
+    provider: &mut P,
+    recovery_epoch_ms: u64,
+) -> Result<LinuxAuthorityRuntime, LinuxAuthorityOpenError> {
+    let root = LinuxStrictLocalRootInspector::inspect(state_root)
+        .map_err(LinuxAuthorityOpenError::Root)?;
+    open_linux_authority_in_root(root, provider, recovery_epoch_ms)
 }
 
 /// Closed failure from Linux private-root and durable-authority composition.
