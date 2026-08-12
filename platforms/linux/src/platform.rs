@@ -591,6 +591,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires a supported Fedora or Ubuntu desktop with Visual Studio Code installed"]
     fn production_discovery_never_self_supplies_release_trust() {
         let adapter =
             LinuxPlatformAdapter::discover(AdapterInstanceId::from_raw("linux-platform-test-0001"))

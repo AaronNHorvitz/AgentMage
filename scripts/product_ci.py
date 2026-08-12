@@ -67,6 +67,7 @@ EXPECTED_NATIVE_TESTS = (
     "linux_read::tests::approved_read_is_receipted_replay_safe_and_restart_verifiable",
     "linux_read::tests::stale_and_cancelled_previews_start_no_worker_and_publish_no_receipt",
     "inventory::tests::live_self_inventory_attributes_executable_and_open_writable_descriptor",
+    "platform::tests::production_discovery_never_self_supplies_release_trust",
     "sandbox::tests::bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
     "sandbox::tests::directory_worker_receives_only_the_bounded_exclusion_safe_projection",
     "sandbox::tests::foreign_workspace_identity_never_starts_a_worker",

@@ -123,7 +123,7 @@ class ProductCiTests(unittest.TestCase):
     def test_native_inventory_is_explicitly_pending(self) -> None:
         native = self.policy["native_linux"]
         self.assertEqual(native["generic_ci_disposition"], "pending-native-execution")
-        self.assertEqual(len(native["expected_tests"]), 18)
+        self.assertEqual(len(native["expected_tests"]), 19)
         self.assertEqual(
             self.policy["native_windows"]["disposition"],
             "partial-native-identity-evidence-other-controls-blocked",

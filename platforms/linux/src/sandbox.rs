@@ -1282,10 +1282,8 @@ mod tests {
         let workspace = authorize(&root);
         let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
         fs::write(root.join("allowed.txt"), b"changed").expect("mutated fixture");
-        let path = held.workspace_path().clone();
-        let error = runner()
-            .run(&held, &LinuxSandboxOperation::ReadFile(path), &[])
-            .expect_err("stale object must fail before manifest launch");
+        let error = file_projection(&held)
+            .expect_err("stale object must fail before manifest or worker launch");
         assert_eq!(error.kind(), LinuxSandboxErrorKind::StaleObject);
         fs::remove_dir_all(root).expect("cleanup");
     }
