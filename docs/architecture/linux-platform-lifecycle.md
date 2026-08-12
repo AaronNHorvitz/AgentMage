@@ -92,6 +92,14 @@ removes only the same socket in the same private parent; a replacement remains.
 Authentication binds the one-use frame to kernel peer credentials and stable
 process identity.
 
+Decision 0023 additionally permits one authentication-only bootstrap endpoint
+after exact installed-package verification. That endpoint carries no platform
+or product authority. The host verifies the external package signature and
+payload before creating the endpoint, transfers fresh launch material only over
+its inherited standard-output pipe, and binds the peer to the exact parent
+process. A usable workflow still requires the independently signed aggregate
+activation shown above.
+
 Inventory records whether identity used `PidFdAndStartTime` or the explicit
 `StartTimeOnly` fallback on kernels where pidfd is unsupported. Malformed or
 partial `/proc` state, disappearance, and start-time drift fail without an
@@ -100,13 +108,16 @@ contents are not retained in inventory diagnostics.
 
 ## Deliberate Limits
 
-- No production release signer, signed release manifest, package, installer,
+- Detached package signing and verification mechanics plus a package-verified
+  authentication-only bootstrap primitive are present. No production signer,
+  approved trust-root provisioning, signed platform release, installer,
   updater, or model runtime is present.
 - Unknown stale-socket recovery is not automated; startup fails closed and
   retains the object.
 - Operational-key deletion, state deletion, uninstall orchestration, and key
   rotation are not implemented.
 - The Phase 9 source candidate composes one exact read through host and Visual
-  Studio Code provider contracts, but ordinary activation remains unavailable
-  until signed packaging supplies trusted endpoint bootstrap and credentials.
+  Studio Code provider contracts. Ordinary activation and product authority
+  remain unavailable until the supervised extension launch and signed platform
+  activation increments are complete.
 - Fedora execution does not substitute for Ubuntu, macOS, or Windows evidence.

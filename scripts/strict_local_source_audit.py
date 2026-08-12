@@ -111,6 +111,17 @@ def source_map(policy: dict[str, Any]) -> dict[str, str]:
     return sources
 
 
+def production_source(path: str, content: str) -> str:
+    """Exclude one terminal Rust unit-test module from product-source scans."""
+
+    if not path.endswith(".rs"):
+        return content
+    test_modules = list(
+        re.finditer(r"(?m)^#\[cfg\(test\)\]\s*\nmod\s+tests\s*\{", content)
+    )
+    return content[: test_modules[-1].start()] if test_modules else content
+
+
 def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
     failures: list[str] = []
     allowed_uris = policy["allowed_external_uris"]
@@ -122,8 +133,9 @@ def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
                 failures.append(f"undeclared external URI in product source: {path}")
             else:
                 observed_allowed[path].add(uri)
+        product_content = production_source(path, content)
         for rule in policy["symbol_rules"]:
-            if re.search(rule["pattern"], content) and path not in rule["allowed_paths"]:
+            if re.search(rule["pattern"], product_content) and path not in rule["allowed_paths"]:
                 failures.append(f"{rule['id']} found outside its closed allowlist: {path}")
     for path, expected in allowed_uris.items():
         if path not in sources:

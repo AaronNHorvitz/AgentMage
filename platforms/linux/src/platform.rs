@@ -224,6 +224,16 @@ pub fn open_linux_host_ipc(
     LinuxHostIpcEndpoint::bind(path)
 }
 
+/// Binds an authentication-only endpoint for a package-verified bootstrap.
+///
+/// This transport conveys no workspace handle, capability grant, tool permit,
+/// model authority, or effect authority. Product requests must remain denied
+/// until the caller separately verifies and activates the complete platform
+/// release through [`open_linux_host_ipc`].
+pub fn open_linux_bootstrap_ipc(path: &Path) -> Result<LinuxHostIpcEndpoint, LinuxIpcError> {
+    LinuxHostIpcEndpoint::bind(path)
+}
+
 /// Selects a Linux workspace without release activation for isolated test harnesses.
 ///
 /// This function is absent from normal builds and cannot be used as production

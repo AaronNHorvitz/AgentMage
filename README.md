@@ -54,8 +54,10 @@ surface. The candidate includes a closed protocol, authenticated IPC client and
 server framing, two explicit confirmations, one exact Linux worker projection,
 bounded UTF-8 output, a local citation, a durable receipt, replay denial, and
 restart verification. The installed extension still uses a fail-closed
-unavailable bridge because no independently signed host package, trusted
-endpoint bootstrap, or production launch credentials exist. It is therefore
+unavailable bridge. Decision 0023 adds package-first verification, a private
+authentication-only endpoint, direct inherited-pipe launch-material transfer,
+and exact Linux peer authentication, but the supervised extension launch and
+signed platform activation are not yet complete. The read path is therefore
 source-level vertical-slice evidence, not a supported or integrated workflow.
 
 Accepted Decision 0019 separates immutable historical evidence from current
@@ -69,9 +71,10 @@ the repository can also build a deterministic signable Linux bundle, sign its
 exact manifest with an external Ed25519 seed supplied only through standard
 input, and verify the detached signature and payload against an externally
 supplied trust root. No production signer, independently distributed trust
-root, OS-package signature, or trusted packaged host bootstrap exists, so no
-release or support claim follows. Decision 0020 also adds a versioned Windows
-contract scaffold and Windows CI boundary;
+root, OS-package signature, signed platform activation, or clean package
+lifecycle exists, so no release or support claim follows. Decision 0023
+supplies only the package-verified Linux bootstrap transport. Decision 0020
+also adds a versioned Windows contract scaffold and Windows CI boundary;
 Windows remains blocked because native enforcement and native evidence do not
 exist.
 

@@ -48,8 +48,10 @@ Stabilization Phase 9 now has a source candidate under accepted
 exact approved Linux file read through the Visual Studio Code provider,
 authenticated framing, durable kernel transaction, offline worker, citation,
 and receipt. This is a vertical integration proof, not a model-enabled or
-supported workflow. Signed installation and automatic trusted host bootstrap
-remain Phase 11 dependencies.
+supported workflow. Decisions 0022 and 0023 add detached package signing and a
+package-verified authentication-only Linux bootstrap. Supervised extension
+launch, signed platform activation, clean installation, and release authority
+remain later dependencies.
 
 ## 2. Document Authority and Change Control
 

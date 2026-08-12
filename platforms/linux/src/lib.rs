@@ -25,7 +25,7 @@ pub use inventory::{
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedIpcSession, LinuxAuthenticatedPeer,
     LinuxHandshakeRequest, LinuxHostIpcEndpoint, LinuxIpcAuthenticator, LinuxIpcError,
-    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity,
+    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity, observe_linux_process_identity,
 };
 pub use lifecycle::{
     LinuxOperationalKeyLifecycleError, LinuxOperationalKeyLifecycleErrorKind,
@@ -35,7 +35,8 @@ pub use lifecycle::{
 pub use platform::{
     LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,
     LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind, open_linux_authority,
-    open_linux_host_ipc, resolve_linux_workspace_object, select_linux_workspace,
+    open_linux_bootstrap_ipc, open_linux_host_ipc, resolve_linux_workspace_object,
+    select_linux_workspace,
 };
 #[cfg(feature = "test-support")]
 pub use platform::{

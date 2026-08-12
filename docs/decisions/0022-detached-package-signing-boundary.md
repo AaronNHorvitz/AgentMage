@@ -6,7 +6,7 @@
 | Date | 2026-08-12 |
 | Scope | Deterministic signable Linux bundles, external Ed25519 signing, and installed-payload verification against an external trust root |
 | Advances | Package-level portions of `RV-01`, `RV-22`, and Sprint 25 release preparation |
-| Blocks | Production signer approval, trust-root distribution, RPM/DEB repository signing, trusted VS Code host bootstrap, support, and release |
+| Blocks | Production signer approval, trust-root distribution, RPM/DEB repository signing, supervised VS Code bootstrap, signed platform activation, support, and release |
 | Preserves | Decisions 0001 through 0021, no committed private key, no automatic update authority, and no pre-release support claim |
 
 ## Context
@@ -46,7 +46,9 @@ their own trust root.
 7. The signable bundle is not a signed release until an approved external
    ceremony creates the detached signature and an independently distributed
    trust root selects the signer. RPM/DEB repository signatures and the trusted
-   VS Code-to-host bootstrap remain separate gates.
+   supervised VS Code launch, platform activation, and clean lifecycle evidence
+   remain separate gates. Decision 0023 supplies only the package-verified
+   authentication transport.
 
 ## Verification
 

@@ -220,6 +220,17 @@ impl LinuxLaunchCredentials {
         &self.challenge
     }
 
+    /// Returns the one-use secret for direct inherited-pipe transfer.
+    ///
+    /// Callers must not place these bytes in arguments, environment variables,
+    /// files, diagnostics, or logs. The credential object erases both fields on
+    /// drop; the receiving process must erase its copy after constructing the
+    /// authenticated bridge.
+    #[must_use]
+    pub const fn launch_secret(&self) -> &[u8; 32] {
+        &self.launch_secret
+    }
+
     /// Builds the exact handshake for the peer receiving these launch credentials.
     #[must_use]
     pub fn request(&self, peer: &LinuxPeerIdentity) -> LinuxHandshakeRequest {
@@ -327,6 +338,12 @@ impl LinuxHostIpcEndpoint {
         Ok(Self {
             listener: PrivateUnixListener::bind(path)?,
         })
+    }
+
+    /// Returns the private socket path for direct bootstrap transfer.
+    #[must_use]
+    pub fn path(&self) -> &Path {
+        &self.listener.path
     }
 
     /// Accepts exactly one peer and consumes its one-use launch authenticator.
@@ -612,6 +629,15 @@ fn stable_peer_identity(uid: u32, pid: i32) -> Result<LinuxPeerIdentity, LinuxIp
         start_time_ticks,
         executable_sha256,
     ))
+}
+
+/// Observes one same-user Linux process for an exact launch identity.
+///
+/// The resulting identity is suitable only for the fresh one-use local IPC
+/// authenticator. The kernel credentials observed at connection time are
+/// compared with this process, start time, and executable digest.
+pub fn observe_linux_process_identity(pid: i32) -> Result<LinuxPeerIdentity, LinuxIpcError> {
+    stable_peer_identity(rustix::process::getuid().as_raw(), pid)
 }
 
 pub(crate) fn process_start_time_ticks(pid: i32) -> Result<u64, LinuxIpcError> {

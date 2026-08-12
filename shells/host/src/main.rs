@@ -2,6 +2,9 @@
 
 mod package_verify;
 
+#[cfg(target_os = "linux")]
+mod linux_bootstrap;
+
 struct HostExit(&'static str);
 
 impl std::fmt::Debug for HostExit {
@@ -14,6 +17,8 @@ fn main() -> Result<(), HostExit> {
     let arguments: Vec<_> = std::env::args_os().skip(1).collect();
     if !arguments.is_empty() {
         let result = match arguments.as_slice() {
+            #[cfg(target_os = "linux")]
+            [command] if command == "--bootstrap-linux" => return bootstrap_linux(),
             [command, root] if command == "--verify-package-candidate-root" => {
                 package_verify::verify_package_candidate_root(root)
             }
@@ -58,6 +63,25 @@ fn main() -> Result<(), HostExit> {
 
     let _composition = (shared_components, platform_component);
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn bootstrap_linux() -> Result<(), HostExit> {
+    let runtime = linux_bootstrap::production_runtime_directory();
+    let paths = linux_bootstrap::LinuxBootstrapPaths::new(
+        std::ffi::OsStr::new(linux_bootstrap::PRODUCTION_PACKAGE_ROOT),
+        std::ffi::OsStr::new(linux_bootstrap::PRODUCTION_PACKAGE_SIGNATURE),
+        std::ffi::OsStr::new(linux_bootstrap::PRODUCTION_PACKAGE_PUBLIC_KEY),
+        &runtime,
+    );
+    let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
+    let bootstrap = linux_bootstrap::bootstrap_for_peer(&paths, parent)
+        .map_err(|error| HostExit(error.code()))?;
+    bootstrap
+        .write_launch_envelope(&mut std::io::stdout().lock())
+        .map_err(|error| HostExit(error.code()))?;
+    let _session = bootstrap.accept().map_err(|error| HostExit(error.code()))?;
+    Err(HostExit("agentmage.bootstrap.platform_activation_required"))
 }
 
 const fn invalid_package_arguments() -> Result<(), HostExit> {

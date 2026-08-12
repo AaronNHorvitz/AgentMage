@@ -47,6 +47,26 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             audit.scan_sources(self.policy, expanded),
         )
 
+    def test_terminal_rust_unit_tests_are_not_product_source(self) -> None:
+        test_only = dict(self.sources)
+        test_only["shells/host/src/test_fixture.rs"] = (
+            "pub fn product() {}\n"
+            "#[cfg(test)]\nmod tests {\n"
+            "    use std::os::unix::net::UnixStream;\n"
+            "}\n"
+        )
+        self.assertEqual(audit.scan_sources(self.policy, test_only), [])
+
+        production = dict(test_only)
+        production["shells/host/src/test_fixture.rs"] = (
+            "use std::os::unix::net::UnixStream;\n"
+            + production["shells/host/src/test_fixture.rs"]
+        )
+        self.assertIn(
+            "unix-domain-ipc-api found outside its closed allowlist: shells/host/src/test_fixture.rs",
+            audit.scan_sources(self.policy, production),
+        )
+
     def test_uri_allowance_is_exact_and_staleness_is_a_failure(self) -> None:
         sources = dict(self.sources)
         sources["kernel/contracts/src/display_link.rs"] += '\n"https://second.example.test/x";\n'

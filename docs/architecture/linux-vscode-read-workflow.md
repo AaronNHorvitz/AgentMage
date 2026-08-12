@@ -7,10 +7,11 @@ Decision 0018. It composes one user-approved exact file read. It does not add a
 model, repository index, search, Git inspection, write, command, network,
 connector, or general agent path.
 
-The source harness runs the complete Rust read and receipt path on Fedora. The
-installed extension remains fail-closed because Phase 11 has not produced an
-independently signed package, trusted endpoint bootstrap, or production launch
-credentials. This document is not a supported-installation claim.
+The source harness runs the complete Rust read and receipt path on Fedora.
+Decision 0023 adds the package-verified authentication-only bootstrap primitive.
+The installed extension remains fail-closed until its supervised launch path is
+wired and the host activates a signed platform release before constructing this
+workflow. This document is not a supported-installation claim.
 
 ## Request Sequence
 
@@ -74,7 +75,9 @@ The Visual Studio Code bridge is a Unix-socket client only. It serializes one
 request at a time, validates closed response fields and bounds, erases its
 copied launch secret, and returns a generic connection denial on framing,
 parsing, or transport failure. Normal extension activation injects no endpoint
-or secret and is therefore unavailable.
+or secret and is therefore unavailable. The package-verified host can now
+create the private endpoint and transfer fresh launch material over its
+inherited pipe, but extension supervision is a separate increment.
 
 ## Recovery and Cancellation
 
@@ -103,6 +106,6 @@ receipt. Existing Linux sandbox tests cover adjacent-file, parent-path,
 descriptor, environment, process, write, network, seccomp, output, and runtime
 attacks. Existing durable-authority tests cover every persisted crash boundary.
 
-Phase 11 still owns signed clean-install activation. Synthetic test-support
+Sprint 25 still owns signed clean-install activation. Synthetic test-support
 constructors are feature gated, absent from normal builds, and cannot satisfy a
 release or support gate.

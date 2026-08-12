@@ -1841,7 +1841,7 @@ claims.
   - [ ] **Sub-task 25.1.1.3** (legacy `S-021-I10`): Run clean installations and the identical supported workflow on the recorded MacBook Pro M5, Fedora, and Ubuntu environments.
 
 - [ ] **Task 25.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 25.1.2.1:** Signed and verified v0.1 packages for all reference platforms.
+  - [ ] **Sub-task 25.1.2.1:** Signed and verified v0.1 packages for all reference platforms. Partial Linux mechanics: Decision 0022 implements deterministic detached package-manifest signing and external-trust verification; Decision 0023 verifies that package before creating an authentication-only owner-local bootstrap endpoint. This item remains open because no production signer or trust-root provisioning, OS-package signature, signed platform activation, clean package lifecycle, Windows package, or supported release evidence exists.
   - [ ] **Sub-task 25.1.2.2:** Visual Studio Code extension and provider package.
   - [ ] **Sub-task 25.1.2.3:** Complete v0.1 acceptance-result bundle and release manifest.
   - [ ] **Sub-task 25.1.2.4:** Published operating guides, capability matrix, limitations, and release notes.
