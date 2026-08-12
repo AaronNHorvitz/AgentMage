@@ -24,7 +24,7 @@
         "definition_sha256": "59d6f368edbe5daa23fdd4355640c6841d915126a38dc29ad573ae0d5e1c5f17",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1860
+        "line": 1862
       },
       "status": "planned",
       "title": "Implement separately gated QuickBooks Online and Xero adapters for reads, drafts, and approval-gated non-money-movement accounting records after exact precision, identity, period, tax-code, reconciliation, idempotency, recovery, and removal gates pass."
@@ -44,7 +44,7 @@
         "definition_sha256": "7863ccc8c77fe7107f6c6946879d0559639b236f0bc5f4eae35dd74637b54334",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1854
+        "line": 1856
       },
       "status": "planned",
       "title": "Implement Actual Budget as the first local budgeting reference adapter through its supported local API with exact budget-file identity, import, export, account, payee, category, transaction, rule, schedule, budget, synchronization, backup, recovery, and removal behavior."
@@ -65,7 +65,7 @@
         "definition_sha256": "c1536e27af12a11c002d50e14de7a0c76fd74e459e0cc3704d8041e07df1b608",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1686
+        "line": 1688
       },
       "status": "planned",
       "title": "Implement a versioned provider-adapter SDK, lifecycle, capability-level model, support-matrix schema, event contract, removal contract, and conformance harness."
@@ -86,7 +86,7 @@
         "definition_sha256": "fe7c0d8727eb3518623dda6d16e6d9564a1da531608259a1fdff1511b7e16d9a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1692
+        "line": 1694
       },
       "status": "planned",
       "title": "Implement immutable-digest artifact discovery, verification, download, promotion, retention, and provenance links for OCI Distribution, GitHub Container Registry, Azure Container Registry, JFrog Artifactory, and Sonatype Nexus."
@@ -107,7 +107,7 @@
         "definition_sha256": "d41c1b4adabac46f0957e9308f204c5627e1192fc4a55c773c12a35e860b065d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1837
+        "line": 1839
       },
       "status": "planned",
       "title": "Implement a kernel-enforced Autonomy Center with Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, and Autonomous within policy levels plus global and narrower policy ceilings, authenticated changes, visible effective state, expiry, budgets, and emergency external-write disablement."
@@ -129,7 +129,7 @@
         "definition_sha256": "47415f791507874209bd14e20a56bc910f1fb50660f0d91d073ac9bc3b459153",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2124
+        "line": 2126
       },
       "status": "planned",
       "title": "Produce deduplicated audit findings and professional reports with stable identity, category, severity, confidence, status, impact, immutable file/line or symbol evidence, graph paths, counterevidence, uncertainty, recommendation, coverage totals, gaps, strengths, limitations, and observed-versus-inferred labels."
@@ -150,7 +150,7 @@
         "definition_sha256": "6692860760abf9bb938d4df40ecc5f691b26980c4f703cd7250f7b745ea9ab6f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 107
+        "line": 109
       },
       "status": "planned",
       "title": "Define and enforce the single-use `CapabilityGrant` contract for every authority-bearing action."
@@ -171,7 +171,7 @@
         "definition_sha256": "0594d6b4d025b673105afdf2e245ebd074faf81ef873d398dfda192e18697d6c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2009
+        "line": 2011
       },
       "status": "planned",
       "title": "Extend command authority with Disabled, Inspect, Workspace Autonomous, Connected Operations, and explicit Owner / Unrestricted Session levels intersected with every global and narrower autonomy ceiling. Owner mode requires direct authenticated activation, visible risk state, bounded duration, panic stop, automatic revocation, and prohibition from schedules, inheritance, model activation, or automatic renewal."
@@ -191,7 +191,7 @@
         "definition_sha256": "cd07fe13d5f9ac89137fa0f61f4d255b6a490c755f54bf26c21013846ce8c9b9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1863
+        "line": 1865
       },
       "status": "planned",
       "title": "Implement a conformance-gated AWS observer for approved organization and account inventory, resource configuration, tags, health, bounded CloudWatch metrics and logs, CloudTrail references, security observations, deployment identity, and Cost Explorer summaries."
@@ -211,7 +211,7 @@
         "definition_sha256": "6052228bef12650e774cce11b2c4c6713de49b1c89f74bf3283a1562c719b022",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1864
+        "line": 1866
       },
       "status": "planned",
       "title": "Implement a conformance-gated Azure observer for approved tenant, subscription, resource graph, configuration, tags, health, Azure Monitor metrics and logs, activity references, security observations, deployment identity, and Cost Management summaries."
@@ -232,7 +232,7 @@
         "definition_sha256": "e0cac6836a62c2ab570442026b8ec3cc3606554baa1b6336aa47c7920352e531",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1857
+        "line": 1859
       },
       "status": "planned",
       "title": "Implement recurring bill, income, fee, subscription, price-change, due-date, missing-payment, and cancellation-candidate detection with exact transaction evidence, communication links, user disposition, reminders, and no autonomous cancellation or payment."
@@ -252,7 +252,7 @@
         "definition_sha256": "3c3a8254cb49eaabf749f2c5e93734198d85e18556675d0445fe14c23e20afae",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2012
+        "line": 2014
       },
       "status": "planned",
       "title": "Implement immutable client-side-encrypted local continuity snapshots with versioned manifests, integrity trees, data classification, explicit exclusions, retention, atomic completion, staging restore, migration, clean-device recovery, rollback, deletion, and no live operational state on cloud-synchronized or network storage."
@@ -273,7 +273,7 @@
         "definition_sha256": "ecd12bb117b04b1beb8a77135c880a6287a2cfd6eefdfe2aaf2a524cbe619c9e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1855
+        "line": 1857
       },
       "status": "planned",
       "title": "Implement independently admitted read-only financial-data adapters for user-authorized transaction, balance, liability, investment, recurring-stream, and statement data with exact institution, item, account, consent, scope, freshness, cursor, revocation, and deletion behavior."
@@ -293,7 +293,7 @@
         "definition_sha256": "b278faa828a94cec2b6e8ceba84f25db3a28ef5c25a92258616bb40930207265",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1856
+        "line": 1858
       },
       "status": "planned",
       "title": "Implement deterministic category and envelope budgets, cash-flow forecasts, savings goals, debt scenarios, net-worth views, scenario comparisons, confidence and assumption disclosure, and local user-approved budget rules."
@@ -315,7 +315,7 @@
         "definition_sha256": "c5d11b0d7e90a0c8e83ae00754cee80852671f0f3cfca9d9f5b6fbe6f13037a8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1700
+        "line": 1702
       },
       "status": "planned",
       "title": "Implement a Backstage reference catalog adapter linking services, owners, repositories, pipelines, artifacts, environments, telemetry, incidents, and releases; retain Port, Cortex, and Compass as conformance-gated extensions."
@@ -335,7 +335,7 @@
         "definition_sha256": "8241ddda0d604201de986cd68f9114a8a616d70ce428ab9f81c5c07b597b79a8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2117
+        "line": 2119
       },
       "status": "planned",
       "title": "Implement `CODEBASE-AUDIT.md` as a separately registered read-only capability with exact repository and scope identity, complete path disposition, deterministic structural indexing, bounded semantic analysis, cross-module reconciliation, persistent evidence, truthful coverage, cancellation, recovery, removal, and separate platform evidence."
@@ -358,7 +358,7 @@
         "definition_sha256": "270917ee8909333ee904a13978028549a39b8bd2bc8cbee91a3a21add04ecf60",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2013
+        "line": 2015
       },
       "status": "planned",
       "title": "Implement optional cloud continuity through a separately writable, provider-scoped backup worker with one exact encrypted destination namespace, least-privilege credential, opaque object naming, bounded transfer, resumability, versioning, retention, integrity, deletion, restore, disaster-recovery, removal, and zero broadening of Cloud Observer."
@@ -381,7 +381,7 @@
         "definition_sha256": "92ca26096e5d1eab2a14cd098d2fb38e0610d84b35720a8f3ffbd33c7239ecab",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1866
+        "line": 1868
       },
       "status": "planned",
       "title": "Correlate bounded cloud health, configuration, metric, log, security, deployment, and cost observations with exact delivery and productivity identities without asserting unsupported causation or creating cloud or delivery authority."
@@ -401,7 +401,7 @@
         "definition_sha256": "29113dad778ca22f21fafbdc36a6e350170a14617ce92a266f39880cae274c58",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2118
+        "line": 2120
       },
       "status": "planned",
       "title": "Implement a deterministic repository census covering tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, symbolic-link, hard-link, inaccessible, malformed, special, external, and changing path states with one terminal disposition per in-scope path."
@@ -421,7 +421,7 @@
         "definition_sha256": "affb202b27825c9bef86ba424923fcd5939cca35b30404d00fce9efeee89ab15",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 101
+        "line": 103
       },
       "status": "planned",
       "title": "Load and validate versioned configuration without silently broadening authority."
@@ -443,7 +443,7 @@
         "definition_sha256": "1864cca010d8b6bb0279e4051a193fdc8f2ea24e479ff3823a9390c15f968e53",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1691
+        "line": 1693
       },
       "status": "planned",
       "title": "Implement inspect, correlate, dispatch, rerun, cancel, approve, log, and artifact behavior for GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins as separate read and execute capabilities."
@@ -464,7 +464,7 @@
         "definition_sha256": "bdd7d4c380c7367cf0199e19ac1b34d6cad3361bca04c6ec58496620b31bea93",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2123
+        "line": 2125
       },
       "status": "planned",
       "title": "Persist encrypted audit checkpoints containing exact source, scope, parser, model, policy, coverage, queue, evidence, contradiction, resource, and completion identities; revalidate on resume and transitively invalidate every dependent fact, card, finding, reconciliation, and report when an input changes."
@@ -485,7 +485,7 @@
         "definition_sha256": "17502214d6fce6de1055e393d1b4b1face2364d3d8bcfd9cada6319a3b216a91",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2010
+        "line": 2012
       },
       "status": "planned",
       "title": "Implement a fully capable local command execution broker supporting direct executables, shell syntax, pipelines, redirection, scripting, and explicit PTY sessions with exact command, working directory, path, environment, network, credential, descendant, resource, timeout, cancellation, changed-file, risk, rollback, and receipt contracts."
@@ -507,7 +507,7 @@
         "definition_sha256": "96ddfe167a0867f312e4d49544057dca572415d7129dc3509332afbfe24eb1a7",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1862
+        "line": 1864
       },
       "status": "planned",
       "title": "Implement a strictly read-only Cloud Observer contract with provider, organization or tenant, account, subscription or project, region, service, resource, query, time, field, row, byte, rate, credential, cache, freshness, correlation, recovery, and removal boundaries."
@@ -529,7 +529,7 @@
         "definition_sha256": "654aa13bb8bd6c84ec0900a3a6e934c719ba7db563a07026f69050dee567189a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1841
+        "line": 1843
       },
       "status": "planned",
       "title": "Implement a communications adapter contract covering mailbox, conversation, channel, thread, message, recipient, mention, reaction, attachment, formatting, visibility, event, draft, send, edit, delete, archive, recovery, and removal semantics."
@@ -550,7 +550,7 @@
         "definition_sha256": "b344b65bae21b5fd4ca82788557f4962470209073f8c5b320d8b4cee482540e6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1848
+        "line": 1850
       },
       "status": "planned",
       "title": "Register communication reads, drafts, sends, replies, forwards, edits, deletions, reactions, uploads, downloads, moves, labels, flags, and archives as distinct operations with exact recipient, visibility, payload, attachment, idempotency, uncertain-result, and postcondition controls."
@@ -571,7 +571,7 @@
         "definition_sha256": "348e02af58ab0edb2482bd632c8cb745dd7f47d93aff9831579f5553d4b05449",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2008
+        "line": 2010
       },
       "status": "planned",
       "title": "Implement an operating-system-backed credential broker using typed non-secret references, exact provider/host/tenant/account/operation/scope binding, system-browser or device OAuth where available, operation-scoped resolution, rotation, revocation, redaction, removal, and reauthentication after restore."
@@ -592,7 +592,7 @@
         "definition_sha256": "06cb7b7bfab5f6a91fae9394afd6e93427eb8e989302e5dfa39ede6e0c4a38e0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 108
+        "line": 110
       },
       "status": "planned",
       "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts."
@@ -612,7 +612,7 @@
         "definition_sha256": "0dda55264bc5f590d1afea9776d08709ec032e3648a333c16b32f06a57a76abd",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1685
+        "line": 1687
       },
       "status": "planned",
       "title": "Implement a provider-neutral delivery graph linking services, work, source, reviews, builds, artifacts, provenance, deployments, environments, telemetry, incidents, findings, releases, and rollback with immutable source identities and freshness."
@@ -633,7 +633,7 @@
         "definition_sha256": "9515cb17a71770b331b40d0d2d5a8a5efc08ce49d59e68087cdd7b9303275fde",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1694
+        "line": 1696
       },
       "status": "planned",
       "title": "Implement plan, diff, promote, health, drift, synchronize, and rollback support for Kubernetes, Helm, Kustomize, Argo CD, and Flux with immutable artifacts and environment-specific deployment grants."
@@ -656,7 +656,7 @@
         "definition_sha256": "56d25af7e1c3869428eef80646a4dc0b688acd0d471281cb58135ca4f4495fb4",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 113
+        "line": 115
       },
       "status": "planned",
       "title": "Produce a redacted local doctor response inside native Visual Studio Code Chat for model/runtime identity, offline state, platform boundary, workspace grant, capability versions, repository-map health, encrypted storage, and session recovery without exposing secrets; retain a non-user-facing diagnostic harness for automated testing."
@@ -678,7 +678,7 @@
         "definition_sha256": "8d123966f790f64c3044807385a3c9d81d421471c30193b39386a58ad881599e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 126
+        "line": 128
       },
       "status": "planned",
       "title": "Publish startup, limitation, privacy, recovery, and offline-verification instructions."
@@ -700,7 +700,7 @@
         "definition_sha256": "e658e8e362be9d9227a2ffd656303bb90ec8a8f7ed95c1b8db410cfdb047a892",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1850
+        "line": 1852
       },
       "status": "planned",
       "title": "Implement conformance-gated OneDrive, SharePoint, Google Drive, and Confluence adapters with separately promoted Notion, Box, and Dropbox extensions covering identity, versions, content, attachments, permissions, links, visibility, drafts, bounded writes, recovery, and removal."
@@ -718,7 +718,7 @@
         "definition_sha256": "866a139374397ef4913eba02503df807ec246ea874b13da85c5bc0f4dee4c7e1",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "39. Post-GA Experimental Model Lab Backlog",
-        "line": 2091
+        "line": 2093
       },
       "status": "planned",
       "title": "Implement a separately packaged Experimental Model Lab for user-selected unapproved artifacts with quarantine, explicit provenance and license gaps, no network, no credentials, no command or connector authority, no canonical workspace write, disposable synthetic evaluation, strict resource limits, truthful results, complete removal, and promotion only through normal independent model admission."
@@ -740,7 +740,7 @@
         "definition_sha256": "3e913470dcecd60b16a4fde8ba78df06abe4d500e28ac3920b20b6ce28b8f0d0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 118
+        "line": 120
       },
       "status": "planned",
       "title": "Require a receipt for every tool action and a resolvable citation for every file-grounded claim."
@@ -762,7 +762,7 @@
         "definition_sha256": "44263ba7bf294af5e9f568723c30316a64b1515a2872a0f5059d04d3d0ca6a7a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 119
+        "line": 121
       },
       "status": "planned",
       "title": "Label material claims as Observed, Derived, Inferred, or Unknown/Blocked and bind citations to source hashes and ranges so changed evidence becomes visibly stale."
@@ -783,7 +783,7 @@
         "definition_sha256": "57075ee628deca42645aac5a82bb5660d1ada65014c15a7b5c98a744c8129f16",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1859
+        "line": 1861
       },
       "status": "planned",
       "title": "Implement explainable statistical outlier and potential-fraud indicators that retain features, baseline, model or rule identity, confidence, limitations, source evidence, drift, user disposition, and no definitive fraud or automated external-action claim."
@@ -804,7 +804,7 @@
         "definition_sha256": "fd86524039299a46eb2c66ded623bc681dadebae64ecb9ac1686c7fe3e1707f6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1858
+        "line": 1860
       },
       "status": "planned",
       "title": "Implement receipt, invoice, reimbursement, statement, and tax-document organization with source-preserving extraction, transaction matching, duplicate detection, classification, retention, redaction, report export, and no unsupported tax or legal claim."
@@ -824,7 +824,7 @@
         "definition_sha256": "a8ad430aa1cea64c3112dc264293460f25763f868c7934d87bb6d736fe3bccee",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1853
+        "line": 1855
       },
       "status": "planned",
       "title": "Implement immutable CSV, OFX, and QFX financial imports with profile detection, source hashes, account and statement identity, pending and posted transitions, duplicate protection, transfer matching, corrections, and deterministic reconciliation."
@@ -845,7 +845,7 @@
         "definition_sha256": "66b57890e931c6bc2375993f2085e9d271c27bf1cea27219eb05fc2abf517ffc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1852
+        "line": 1854
       },
       "status": "planned",
       "title": "Implement a fixed-point financial domain with explicit currency, scale, sign, rounding, account, institution, statement, transaction, pending and posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, correction, receipt, invoice, reimbursement, and reconciliation contracts."
@@ -870,7 +870,7 @@
         "definition_sha256": "049f06f46c2b8f9c93c4f851e59b45b610d60db4b2ebaae29570c7e588efcd6a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1861
+        "line": 1863
       },
       "status": "planned",
       "title": "Enforce dedicated financial classification, encryption, minimization, retention, model-context, cross-pack disclosure, export, backup, deletion, and money-movement absence controls across every shell, policy, workflow, adapter, schedule, and autonomy level."
@@ -889,7 +889,7 @@
         "definition_sha256": "249b0f684acd84e84f1aff54e12275a1375276fe1180c26e9ac9ed70c4694844",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1684
+        "line": 1686
       },
       "status": "planned",
       "title": "Define v1.0 GA as the first supported public release, freeze its Fedora, Ubuntu, and Windows 11 x64 platform matrix, retain Apple Silicon macOS as post-GA work, and publish exact promoted and unsupported capabilities."
@@ -909,7 +909,7 @@
         "definition_sha256": "fe0f101e9a845b82ea23183fcfd69d162a8dc5ddcc0c5ec4018e3564e792dabf",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1704
+        "line": 1706
       },
       "status": "planned",
       "title": "Produce the v1.0 GA release decision from current Fedora, Ubuntu, Windows, strict-local, connected, provider-conformance, support-matrix, supply-chain, recovery, accessibility, and independent-review evidence."
@@ -930,7 +930,7 @@
         "definition_sha256": "06a96fbe3844bd6b97aee4c2238c87526dc3f6f1eb62cdf01d778e9c5f1d23ae",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1868
+        "line": 1870
       },
       "status": "planned",
       "title": "Produce the expanded v1.0 GA release decision from current delivery, Windows, productivity, communications, finance, cloud-observer, cross-pack, strict-local, support-matrix, recovery, accessibility, and independent-review evidence at Sprint 156."
@@ -951,7 +951,7 @@
         "definition_sha256": "9527e844d960a2fa9b770d19264bd6a3e5584b339ba7f5f85749dabf966a429b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2018
+        "line": 2020
       },
       "status": "planned",
       "title": "Produce the superseding v1.0 GA decision at Sprint 166 from current delivery, Windows, productivity, finance, cloud-observer, trusted-operations, command-authority, research, credential, continuity, model-management, strict-local, recovery, accessibility, support, and independent-review evidence."
@@ -972,7 +972,7 @@
         "definition_sha256": "e8ae16e5895bf1188e01b143d115f158e0c442c830f61fc780a6f3982c6ec17e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2125
+        "line": 2127
       },
       "status": "planned",
       "title": "Extend the Sprint 166 v1.0 GA decision with current whole-codebase audit architecture, census, structural, semantic, reconciliation, read-only, secret-protection, checkpoint, invalidation, reporting, platform, resource, accessibility, removal, and independent-review evidence."
@@ -992,7 +992,7 @@
         "definition_sha256": "2902b6fd31aceac71eec0c09d9b899b381d5d9cb12ab6e09ca9b11367283d3c2",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1865
+        "line": 1867
       },
       "status": "planned",
       "title": "Implement a conformance-gated Google Cloud observer for approved organization, folder, project, asset, configuration, labels, health, Cloud Monitoring metrics and logs, audit references, security observations, deployment identity, and billing summaries."
@@ -1013,7 +1013,7 @@
         "definition_sha256": "62fa495b5d9f8cb015076ea3d0fc34b11c650800f64c8bae48fb583bd6662e18",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1688
+        "line": 1690
       },
       "status": "planned",
       "title": "Support GitHub.com and user-approved GitHub Enterprise Server repositories, commits, issues, pull requests, reviews, checks, workflows, releases, local signed commits, approval-gated pushes, and hosted mutations within a published matrix."
@@ -1034,7 +1034,7 @@
         "definition_sha256": "bc35d84c5471c5d9971367e773d140b786ecdda6917adc7b808758fb0365b34b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 115
+        "line": 117
       },
       "status": "planned",
       "title": "Implement read-only Git status, diff, log, branch, and object inspection."
@@ -1054,7 +1054,7 @@
         "definition_sha256": "3e35c153c2498905d43bf510872438569a2dded30b2a3096881c1863f9e401a0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1844
+        "line": 1846
       },
       "status": "planned",
       "title": "Implement a conformance-gated Gmail adapter for mailboxes, messages, threads, labels, drafts, sends, replies, forwards, attachments, history, push notifications, bounded polling, recovery, and removal."
@@ -1075,7 +1075,7 @@
         "definition_sha256": "0257ca7f4b82ef4bd105638c56330d2ad5ee601093121805c060f529a1a64588",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 120
+        "line": 122
       },
       "status": "planned",
       "title": "Render a local, reviewable Codex handoff packet without invoking Codex, controlling its tab, writing the clipboard, or transmitting content."
@@ -1096,7 +1096,7 @@
         "definition_sha256": "b90e9843ea20ba5df81ead678ac3a13f04f13a38d7e501c93039302b823f2ab5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1695
+        "line": 1697
       },
       "status": "planned",
       "title": "Implement inspect, plan, policy-check, apply, reconcile, and recover support for Terraform and OpenTofu while keeping destructive and production actions separately approved."
@@ -1117,7 +1117,7 @@
         "definition_sha256": "7ef73afff37a4042ac303075614ddc089faa4de6e9d8095c12dddc8f3219104d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1687
+        "line": 1689
       },
       "status": "planned",
       "title": "Bind every connected credential and operation to exact provider, host, tenant, account, project, environment, capability class, purpose, scope, expiry, and secret-store reference without exposing secret values."
@@ -1139,7 +1139,7 @@
         "definition_sha256": "13754e9ac238292a1f076e05cde33112cfcbd8c85a0f93f916ad2bdf76ddfb8a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1698
+        "line": 1700
       },
       "status": "planned",
       "title": "Implement incident correlation, evidence, draft communication, bounded issue creation, escalation, rollback recommendation, and notification adapters with PagerDuty and compatible incident systems as independently gated capabilities."
@@ -1161,7 +1161,7 @@
         "definition_sha256": "4b6c7296404c152ef7c63183e0617b6dfe498bf35f327ec9c5874bed08d2ade8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 116
+        "line": 118
       },
       "status": "planned",
       "title": "Treat repository instructions and all workspace text as untrusted content; allow only cited or explicitly trust-gated behavioral guidance that cannot change policy, grants, roots, tools, or user intent."
@@ -1180,7 +1180,7 @@
         "definition_sha256": "5808b26eedffa6fce7a96190f4703efa5eab42f89f5ed78a9ebdfd57b0f0da5f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 100
+        "line": 102
       },
       "status": "planned",
       "title": "Implement the interface-independent kernel boundary and typed task, tool, result, and receipt contracts."
@@ -1200,7 +1200,7 @@
         "definition_sha256": "fde918f8a677992282bf4997d4ce05183f8cab56b50ce405f67c5b33ec501a1e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1847
+        "line": 1849
       },
       "status": "planned",
       "title": "Support Thunderbird, Evolution, and KMail through provider or standard protocol adapters plus explicit read-only mbox and Maildir import without direct writes to private client-profile databases or extraction of client credentials."
@@ -1220,7 +1220,7 @@
         "definition_sha256": "c586d30ae2b28df72172c0a27303f0c33b1913764d472b5a9111e1ff05e08f18",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1842
+        "line": 1844
       },
       "status": "planned",
       "title": "Implement a conformance-gated Outlook and Exchange Online adapter for supported mailboxes, folders, messages, threads, labels, flags, categories, drafts, sends, replies, forwards, attachments, events, and shared-mailbox behavior through Microsoft Graph."
@@ -1240,7 +1240,7 @@
         "definition_sha256": "fb1c470c9d1127bb3aacca3082fbbbbc92fe6e56023970c04c00b3d19e80739f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1845
+        "line": 1847
       },
       "status": "planned",
       "title": "Implement capability-detected IMAP, SMTP, and JMAP adapters plus an authenticated loopback Proton Mail Bridge profile with exact TLS, server, mailbox, folder, feature, credential, rate, and removal boundaries."
@@ -1260,7 +1260,7 @@
         "definition_sha256": "9efcec642722f0a4ef621cb7f1681e7ec58a96a079329945ca6c2a4b705defb3",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2014
+        "line": 2016
       },
       "status": "planned",
       "title": "Implement a signed approved-model catalog with exact candidate, evaluating, approved, degraded, quarantined, rejected, and retired states plus publisher, developer, license, origin, lineage, artifact, transformation, hash, size, runtime, platform, hardware, quality, security, support, and re-review evidence."
@@ -1281,7 +1281,7 @@
         "definition_sha256": "72c066824e095c253625fe843ae38426d1d05d5221c55c2c40ca341994901563",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 110
+        "line": 112
       },
       "status": "planned",
       "title": "Verify the same manifest-pinned Gemma 4 E4B profile through native `llama.cpp` on macOS, Fedora, and Ubuntu, and through the separately gated Docker Model Runner compatibility adapter on Linux; require contract and evaluation parity before enabling either Linux adapter."
@@ -1301,7 +1301,7 @@
         "definition_sha256": "cf67e89b311ad687a4f0d13843ade35531d6ea539247bd6a48970ef6931a9418",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 111
+        "line": 113
       },
       "status": "planned",
       "title": "Use deterministic operations first and explicit user model selection; record benchmark data without automatic routing."
@@ -1323,7 +1323,7 @@
         "definition_sha256": "bf77716245c20319797fb6e9fb3ae27c61f9ace0513beaea3315791e9e33da99",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 112
+        "line": 114
       },
       "status": "planned",
       "title": "Implement the separate approved-model installer/importer with hardware-fit checks, license and lineage display, resumable staging, hash verification, quarantine, atomic activation, self-test, unload, and cleanup."
@@ -1344,7 +1344,7 @@
         "definition_sha256": "d4e7be4f5bd68ca4889ecf9ff3d294e2c4b68cd09d721cf4324b90dc6b1dd697",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2015
+        "line": 2017
       },
       "status": "planned",
       "title": "Implement a deterministic chat-guided model manager that can list compatible approved profiles and perform user-confirmed download, bounded resume, import, quarantine, hash and signature verification, scan, admission self-test, atomic activation, comparison, rollback, removal, and storage cleanup through the separate installer/importer."
@@ -1365,7 +1365,7 @@
         "definition_sha256": "8fd16b95e0d8db65acf8353d0050916fa8049d12f392a9c09d034e470f1b8e80",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1702
+        "line": 1704
       },
       "status": "planned",
       "title": "Author, preserve, review, and render inline and display LaTeX-style mathematics in Markdown through a pinned offline safe subset with round-trip and accessibility support."
@@ -1386,7 +1386,7 @@
         "definition_sha256": "cd89e129cba547eec90c75d10992f3789bbf55e340056c743d81be416719c32a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2016
+        "line": 2018
       },
       "status": "planned",
       "title": "Add Meta Muse Glimmer to the candidate catalog and produce a truthful `PASS`, `BLOCKED`, or `REJECTED` admission disposition from verified first-party identity, open-source or open-weight classification, license, origin, lineage, artifact, transformation, runtime, resource, coding-quality, tool, security, and platform evidence without making first GA depend on a pass."
@@ -1407,7 +1407,7 @@
         "definition_sha256": "a3a5488f05c91727d98446b335b64314a884daf50cd97f4cbbb5c44c6c93061b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 105
+        "line": 107
       },
       "status": "planned",
       "title": "Enforce offline operation and restrict the selected local inference runtime to the guarded inference path."
@@ -1428,7 +1428,7 @@
         "definition_sha256": "f26708af63b3c9f6b8464986a8cede12fc4039dc0549c464f149cb03a7466120",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1697
+        "line": 1699
       },
       "status": "planned",
       "title": "Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation."
@@ -1450,7 +1450,7 @@
         "definition_sha256": "e4cc268c0d09d7bd0bd5a5a9c6c4b296636b95cfbe39ff357f67da07bec2e355",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1839
+        "line": 1841
       },
       "status": "planned",
       "title": "Extend the evidence-backed graph with provider-scoped people, accounts, organizations, mailboxes, workspaces, channels, meetings, tasks, documents, financial records, and cloud observations while requiring confirmed or deterministic cross-provider identity links."
@@ -1472,7 +1472,7 @@
         "definition_sha256": "379389226879783e13fa3f9ddc4102bc8581107dd99277a715443249a3b41f52",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1849
+        "line": 1851
       },
       "status": "planned",
       "title": "Implement Microsoft and Google calendar, contact, and task adapters plus CalDAV and CardDAV interoperability for availability, events, recurrence, invitations, responses, reminders, contacts, tasks, assignments, time zones, conflicts, writes, recovery, and removal."
@@ -1493,7 +1493,7 @@
         "definition_sha256": "7adddf72aa7708bf45f687ad45404a5953bd34c0f8eb81e5691759de61dd1393",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 102
+        "line": 104
       },
       "status": "planned",
       "title": "Implement and package the platform-adapter boundary for Apple Silicon macOS, Fedora, and Ubuntu, with MacBook Pro M5 as the primary launch reference."
@@ -1515,7 +1515,7 @@
         "definition_sha256": "fb88079c94f77158c98e85114c0fe3f1f29744b3b132f626ef5f0ed255867227",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 109
+        "line": 111
       },
       "status": "planned",
       "title": "Classify data before persistence and enforce encryption, minimization, retention, and operating-system key storage."
@@ -1535,7 +1535,7 @@
         "definition_sha256": "9075ee87ebe3a16a3898e7d6350b5f2d60725cc16fd3aa334094484df3391797",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 106
+        "line": 108
       },
       "status": "planned",
       "title": "Enforce canonical workspace-relative capability paths through the platform path adapter while generating absolute paths only for display links."
@@ -1555,7 +1555,7 @@
         "definition_sha256": "7eb78c50edfb592b85bb4ebfcebbb7b53059ac59b010ac722a6b148427af37eb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2121
+        "line": 2123
       },
       "status": "planned",
       "title": "Reconcile semantic conclusions across dependency, call, state, data, event, error, configuration, authorization, lifecycle, requirement, decision, test, deployment, and support relationships; retain contradictions and revisit every affected partition before making a repository-wide claim."
@@ -1577,7 +1577,7 @@
         "definition_sha256": "4ba5692304f7483220a7f7c593604cdafdb8b8cc8f546e8bce6569a347e5aea1",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1696
+        "line": 1698
       },
       "status": "planned",
       "title": "Implement semantic-version, changelog, release-manifest, promotion, progressive-delivery, feature-flag, database-migration, health, rollback, and compensating-action contracts."
@@ -1600,7 +1600,7 @@
         "definition_sha256": "7be1f14f2a4adbd23bd8202bab7c1a9f98c4c5f5f5cd87a3d8d989d263c545db",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 117
+        "line": 119
       },
       "status": "planned",
       "title": "Build a deterministic, Git-aware, policy-aware repository map with pinned Tree-sitter parsers, supported-language symbols, reliable definitions/imports/relationships, bounded cache, coverage report, and exact source citations."
@@ -1621,7 +1621,7 @@
         "definition_sha256": "c8528ff04fc6e8d103440e735572c1f3b2760dd4f7f0bb0c0f9790e969cae554",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2122
+        "line": 2124
       },
       "status": "planned",
       "title": "Enforce read-only audit behavior outside the model with no canonical-root write grant, no hosted mutation or credential authority, disposable copy-on-write execution for commands that may write, secret-safe packet construction, before-and-after repository attestation, process cleanup, and zero neighboring-data mutation."
@@ -1641,7 +1641,7 @@
         "definition_sha256": "60d329edad706b9a63dd417ae4e2e80b8fae5cdf69328dcb9d55a0c6ad3d3795",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 103
+        "line": 105
       },
       "status": "planned",
       "title": "Implement the shared threat model and documented macOS and Linux process topologies."
@@ -1662,7 +1662,7 @@
         "definition_sha256": "a7fc23f5350d302c5729075d496d60c862ee54dc02e6dda15dffe28aa4cf1661",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 104
+        "line": 106
       },
       "status": "planned",
       "title": "Run every file and Git tool inside the restricted platform tool worker."
@@ -1683,7 +1683,7 @@
         "definition_sha256": "29e4d0b0ed99837cfe2f9611be81177387b0bada4e25683cf9d82a9439c2fad5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1699
+        "line": 1701
       },
       "status": "planned",
       "title": "Normalize CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings without erasing provider provenance, conflicting severity, suppression, reachability, or source identity."
@@ -1703,7 +1703,7 @@
         "definition_sha256": "ce4a65c0d34069d8c36b770b58e1c16c59998543e629dce9e4a85678d14950d9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2120
+        "line": 2122
       },
       "status": "planned",
       "title": "Partition analysis by coherent architectural unit and create source-pinned semantic evidence cards containing exact spans, hashes, structural facts, neighboring interfaces, tests, model/runtime identity, assumptions, uncertainty, conflicts, confidence, and reverse-dependency invalidation links."
@@ -1725,7 +1725,7 @@
         "definition_sha256": "31acf3da6bf5827760074e6895532cb7c66f91484d97ea85d03d9fa1d8e362a2",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 121
+        "line": 123
       },
       "status": "planned",
       "title": "Persist and resume one active local session without duplicating completed actions."
@@ -1745,7 +1745,7 @@
         "definition_sha256": "27621cc90471c0d183917dd73701ae2810f686d7ad3822ad5b3e709fcf555f2d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1846
+        "line": 1848
       },
       "status": "planned",
       "title": "Implement a conformance-gated Slack adapter for workspaces, channels, direct and group messages, threads, replies, mentions, reactions, files, edits, deletions, events, rate limits, recovery, and removal."
@@ -1766,7 +1766,7 @@
         "definition_sha256": "74a91a994579ef9be448912dea5cfc7a52f6ebb8db949c292d8bac2a12e7cead",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1690
+        "line": 1692
       },
       "status": "planned",
       "title": "Implement conformance-gated source adapters for Azure Repos and GitLab, while keeping Bitbucket and Gerrit as disabled extension candidates until promoted."
@@ -1786,7 +1786,7 @@
         "definition_sha256": "c457c6d6144f6f321f838590a4737c2a709c760f3837c9100cec8685e7a9bd02",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40. First-GA Whole-Codebase Audit Backlog",
-        "line": 2119
+        "line": 2121
       },
       "status": "planned",
       "title": "Build an exact structural index from admitted compilers, abstract syntax trees, language services, package and build metadata, schema parsers, test discovery, workflow parsers, source-control records, and exact search, including modules, symbols, interfaces, dependencies, calls, state, data, events, errors, configuration, tests, releases, and provenance."
@@ -1807,7 +1807,7 @@
         "definition_sha256": "c1cb8f3576258ea00f50335a932ea6cc085ef8db81ab8eaf99fa9adfee60737e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1693
+        "line": 1695
       },
       "status": "planned",
       "title": "Normalize and verify SPDX, CycloneDX, SARIF, Sigstore/Cosign signatures, SLSA provenance, vulnerability results, and policy decisions against exact source, build, and artifact identities."
@@ -1828,7 +1828,7 @@
         "definition_sha256": "bf762c5da028a03e165477a6ab9fe9831ac361625ac83f1436981f7f4f5d70d6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1838
+        "line": 1840
       },
       "status": "planned",
       "title": "Implement provider-neutral delta, cursor, webhook, change-notification, bounded-polling, backfill, edit, deletion, tombstone, ordering, duplicate, gap, freshness, coverage, and reconciliation contracts for productivity adapters."
@@ -1848,7 +1848,7 @@
         "definition_sha256": "69131bff055ef6aac64ef80f52deef4f31515561e150507837815e2ad3726800",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1843
+        "line": 1845
       },
       "status": "planned",
       "title": "Implement a conformance-gated Microsoft Teams adapter for teams, channels, chats, threads, messages, replies, mentions, reactions, files, edits, deletions, membership visibility, and supported change notifications."
@@ -1870,7 +1870,7 @@
         "definition_sha256": "6832d618c21d6f2f9c402c5b839d0cb5e40eee386c0169936b3537ac03ff1eae",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 114
+        "line": 116
       },
       "status": "planned",
       "title": "Implement bounded list, read, search, metadata, and hash tools."
@@ -1891,7 +1891,7 @@
         "definition_sha256": "67871fd902c0d611c6a8a53e02af9cfcd0b46c03db8ff83ec2a3a688f73ff1b6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2007
+        "line": 2009
       },
       "status": "planned",
       "title": "Implement the `TRUSTED-OPERATIONS.md` architecture with separately registered and removable command, public-research, credential-broker, continuity, and model-manager capability classes, workers, data flows, network paths, limits, receipts, recovery, and platform evidence."
@@ -1933,7 +1933,7 @@
         "definition_sha256": "07f6b25f461a59af3bd070184b12d47e0f3af24d0ba853a44cf6e5975a336d5e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 124
+        "line": 126
       },
       "status": "planned",
       "title": "Run the complete platform, path, sandbox, instruction-injection, network, privacy, handoff, and crash security suite."
@@ -1977,7 +1977,7 @@
         "definition_sha256": "a054897bd62d12b61863c02e93eeda6352e25f16cd71239869f94f34fc264494",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 125
+        "line": 127
       },
       "status": "planned",
       "title": "Run the repository-map, evidence-state, model lifecycle, diagnostics, quality, latency, memory, context, and model capability suite against fixed fixtures."
@@ -1998,7 +1998,7 @@
         "definition_sha256": "e35bea852689d752063863057e8bf67d3aeac8dcef0f48b95db1a4d3af211811",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1840
+        "line": 1842
       },
       "status": "planned",
       "title": "Implement a unified activity inbox that preserves native source identity and classifies communication, delivery, meeting, task, finance, and cloud items with citations, freshness, permission gaps, coverage gaps, uncertainty, and local action state."
@@ -2019,7 +2019,7 @@
         "definition_sha256": "dc158cb1c6d7de236441dde30060846c4c7d0db7c9c3473d5832691dffd0f992",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 122
+        "line": 124
       },
       "status": "planned",
       "title": "Register AgentMage as a Visual Studio Code language-model chat provider and expose Gemma 4 E4B in the native model picker."
@@ -2041,7 +2041,7 @@
         "definition_sha256": "d4d7c668ee1f22d51be3b6f710423dd721d972a01db2255a72ef8d8d30bd072e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Executable v0.1 Backlog",
-        "line": 123
+        "line": 125
       },
       "status": "planned",
       "title": "Stream local responses, evidence states, citations, progress, cancellation, diagnostics, and failures in native Visual Studio Code Chat."
@@ -2062,7 +2062,7 @@
         "definition_sha256": "7766e41ed48b0a482cddf7261c1065991574c9bdd4948fc40cd26693160086c6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2011
+        "line": 2013
       },
       "status": "planned",
       "title": "Implement current public Internet search and retrieval with query, recency, domain, redirect, transport, item, byte, media, download-quarantine, cache, source-quality, publication/event-date, claim-level citation, excerpt-hash, inference-label, private-disclosure, cancellation, and hostile-content controls."
@@ -2085,7 +2085,7 @@
         "definition_sha256": "4408a9c31a4005befd58e008bee087dcd883e0b70b15e612e0f0ab3aea9359f4",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1851
+        "line": 1853
       },
       "status": "planned",
       "title": "Compile user-authored event and scheduled productivity workflows into deterministic graphs containing exact triggers, accounts, filters, joins, branches, operations, recipients, classifications, budgets, stop conditions, expiry, approvals, dry runs, recovery, and receipts."
@@ -2106,7 +2106,7 @@
         "definition_sha256": "daf7bceac9ed1ec062e5d4e9a085517a32414ef65f07f793287a8c4b49c60426",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1701
+        "line": 1703
       },
       "status": "planned",
       "title": "Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal."
@@ -2127,7 +2127,7 @@
         "definition_sha256": "8f983e5e68c5c3f297dad88b9a5cc292c975cf0509af63068c59210fdd9e52aa",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1689
+        "line": 1691
       },
       "status": "planned",
       "title": "Implement conformance-gated work-management adapters for GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards with stable identity, links, drafts, bounded writes, and complete audit receipts."
@@ -2151,7 +2151,7 @@
         "definition_sha256": "9efe055cd294343a08977ffe2b81ffce3faefe0e7f8dfc68e89239f584865c96",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38. First-GA Trusted Operations, Research, Continuity, and Model Management Backlog",
-        "line": 2017
+        "line": 2019
       },
       "status": "planned",
       "title": "Run integrated command-authority, owner-session, web-injection, private-disclosure, credential-leakage, backup-integrity, cross-account, restore, model-substitution, interruption, resource, accessibility, removal, and strict-local-restoration campaigns across every first-GA platform with no hidden blocker."
@@ -2174,7 +2174,7 @@
         "definition_sha256": "5a51c1c399c5549f419f489ad4f337d4081956176780f266b3d1ab9dc486faae",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog",
-        "line": 1867
+        "line": 1869
       },
       "status": "planned",
       "title": "Run cross-pack autonomy, identity, recipient, synchronization, injection, attachment, financial-precision, reconciliation, money-movement-absence, cloud-mutation-absence, resource, crash, recovery, removal, accessibility, and strict-local-restoration campaigns with no hidden blocker."
@@ -2207,7 +2207,7 @@
         "definition_sha256": "52f2014dd1e2117699d96799e934ebe6baf3d24c612c81cb7fec24d99dc759f0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36. First-GA Delivery and Windows Backlog",
-        "line": 1703
+        "line": 1705
       },
       "status": "planned",
       "title": "Run cross-provider, cross-platform, adversarial, mutation, fuzz, replay, confusion, partition, rate-limit, version-skew, crash, partial-effect, rollback, resource, removal, and end-to-end delivery tests with no hidden blocking result."
@@ -2223,7 +2223,7 @@
         "definition_sha256": "f119c6b0969d00ea94efe152f460f06aa6e5ca8c46192f2ecba14a6ea9db4649",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1897
+        "line": 1899
       },
       "status": "planned",
       "title": "Exercise QuickBooks Online and Xero reads, drafts, and promoted non-money-movement writes across organization, ledger, account, contact, item, invoice, bill, journal, period, tax code, precision, duplicate, conflict, timeout, recovery, and removal."
@@ -2239,7 +2239,7 @@
         "definition_sha256": "e3cbfaac9521329b43eba9aad0a1c172dc438c67e8d4324182835ba86a452e02",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1891
+        "line": 1893
       },
       "status": "planned",
       "title": "Exercise Actual Budget files through supported local API fixtures across import, export, account, payee, category, transaction, rule, schedule, budget, sync, backup, crash, recovery, and removal."
@@ -2255,7 +2255,7 @@
         "definition_sha256": "3ae699c39568f06ce03ca9061e2e9277abe1a4cee1b8c3867bcefb3dcb2a7d88",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1711
+        "line": 1713
       },
       "status": "planned",
       "title": "Run the adapter lifecycle and capability-level suite against fake, fault, reference, future-version, and malicious providers."
@@ -2271,7 +2271,7 @@
         "definition_sha256": "881b0b86b404a90db60449b02dd35b50e474f42893815efab7b948e0feceb8f7",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1491
+        "line": 1493
       },
       "status": "planned",
       "title": "Static and runtime dependency checks across kernel, Core Read-Only pack, and Visual Studio Code shell."
@@ -2287,7 +2287,7 @@
         "definition_sha256": "7952c58a65a148ec1f8c0544a786f2bb233c85d3f6a2e830d35019d23115e38e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1717
+        "line": 1719
       },
       "status": "planned",
       "title": "Discover, verify, download, compare, promote, retain, and remove artifacts across OCI, GitHub Container Registry, Azure Container Registry, Artifactory, and Nexus fixtures."
@@ -2303,7 +2303,7 @@
         "definition_sha256": "0b99c6c0cb4ec25fbe872012b5fe62507d916d349a5c3188e92b76fea19fcc0d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2138
+        "line": 2140
       },
       "status": "planned",
       "title": "Generate and independently verify findings and reports across supported strengths, defects, counterevidence, duplicates, conflicts, partial coverage, unavailable evidence, false-positive fixtures, severity boundaries, and model disagreement."
@@ -2319,7 +2319,7 @@
         "definition_sha256": "47ed9678225add000f80a1d8eab763dd98f6f3ad4c00c51f9d67cc7ad6752df6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1874
+        "line": 1876
       },
       "status": "planned",
       "title": "Cross product every autonomy level, parent and child ceiling, pack, connector, account, workspace, operation, destination, recipient, channel, schedule, budget, expiry, stale display, replay, race, cancellation, and emergency-disable fixture."
@@ -2335,7 +2335,7 @@
         "definition_sha256": "362478532d5b829af893dfa32b6c5bcf61faa9f6e65c4a2ef6d14a4b1b9f5b5f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2026
+        "line": 2028
       },
       "status": "planned",
       "title": "Cross every command level with global and narrower autonomy ceilings, activation source, authentication, session identity, expiry, lock, logout, restart, policy mutation, schedule, child agent, panic stop, race, replay, and emergency disablement."
@@ -2351,7 +2351,7 @@
         "definition_sha256": "6f4196ec9f28c1817367c9e881e47db710a34a3aeffc9350c986b4465b3133b6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1501
+        "line": 1503
       },
       "status": "planned",
       "title": "Grant mutation, replay, expiry, nonce reuse, preimage change, task change, target change, uncertain-result retry, and child-scope tests."
@@ -2367,7 +2367,7 @@
         "definition_sha256": "8e2c7d762ecda6a84f79b8e47b28c8cec1be7a5d13c02cd0ffcd2a0f0dc9ccb9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1900
+        "line": 1902
       },
       "status": "planned",
       "title": "Exercise AWS organization, account, region, service, resource, configuration, tag, health, CloudWatch, CloudTrail reference, security observation, deployment identity, cost, role, token, throttling, failure, and removal fixtures."
@@ -2383,7 +2383,7 @@
         "definition_sha256": "62400803116da917b34742ffb578e093b9dfd7e4fc229c35aabd7ab13c894964",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1901
+        "line": 1903
       },
       "status": "planned",
       "title": "Exercise Azure tenant, subscription, region, resource graph, configuration, tag, health, Monitor, activity reference, security observation, deployment identity, cost, role, token, throttling, failure, and removal fixtures."
@@ -2399,7 +2399,7 @@
         "definition_sha256": "e60f4392f7eaf5c3443b8af7186d940712eb310753d82505c0b3079055c48d1d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1894
+        "line": 1896
       },
       "status": "planned",
       "title": "Detect bills, income, fees, subscriptions, price changes, due dates, missing payments, and cancellation candidates across recurring, irregular, duplicate, refunded, renamed, and sparse-history fixtures."
@@ -2415,7 +2415,7 @@
         "definition_sha256": "534af57ed3b81f6bff37a811aa1ad43ecfa6c9fa76ca898e0d76ae41b1d2c588",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2029
+        "line": 2031
       },
       "status": "planned",
       "title": "Create, interrupt, corrupt, replay, migrate, restore, roll back, retain, expire, and delete local snapshots across empty, large, classified, partially written, cross-version, low-disk, locked, and ransomware-like loss fixtures."
@@ -2431,7 +2431,7 @@
         "definition_sha256": "1f3d951a397f9a5bbaf5dcdc101355d6a0dcdb71f2e6763156a0a944520db796",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1892
+        "line": 1894
       },
       "status": "planned",
       "title": "Exercise read-only financial-data fixtures across provider, institution, item, consent, account, product, transaction, balance, liability, investment, recurring stream, statement, cursor, freshness, revocation, deletion, outage, and removal."
@@ -2447,7 +2447,7 @@
         "definition_sha256": "7dc30657213b7b494ed1e69e780dc7b98d01035985f44894329aaae7ac5f0e65",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1893
+        "line": 1895
       },
       "status": "planned",
       "title": "Run budget, cash-flow, savings, debt, net-worth, scenario, assumption, confidence, category-rule, missing-data, and changed-history fixtures."
@@ -2463,7 +2463,7 @@
         "definition_sha256": "06b50bf91f28fda3f1a6603bf61c2a6fa2e9c6434cdfbb8b4786a16cd3c47ee5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1725
+        "line": 1727
       },
       "status": "planned",
       "title": "Build Backstage service-catalog relationships and run extension-contract fixtures for Port, Cortex, and Compass."
@@ -2479,7 +2479,7 @@
         "definition_sha256": "8ac9be2d20ac19ead42010ee2356a6f5ea0cadec333b426350e9e18868a4fdca",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2131
+        "line": 2133
       },
       "status": "planned",
       "title": "Exercise the complete audit lifecycle across empty, small, monorepo, polyglot, dirty, generated, vendored, partially unsupported, interrupted, and changing repository fixtures on every first-GA platform."
@@ -2495,7 +2495,7 @@
         "definition_sha256": "63170736f3bd208fd52b61eda60361e0e23bb6029de0b6d9845ee2d70ebfa4a4",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2030
+        "line": 2032
       },
       "status": "planned",
       "title": "Exercise the reference cloud backup adapter and conformance fixtures across destination identity, account, prefix, object, version, encryption, metadata, multipart transfer, retry, throttle, duplicate, missing object, corruption, replay, retention, deletion, revocation, provider outage, and full disaster recovery."
@@ -2511,7 +2511,7 @@
         "definition_sha256": "6ac7d4ad5099d81ca5386b1c864990fd2ccf35dba4133225c31dd9e7c06ac775",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1903
+        "line": 1905
       },
       "status": "planned",
       "title": "Correlate cloud configuration, health, metrics, logs, security observations, deployments, and costs with delivery and productivity fixtures across identity collision, time skew, rename, transfer, stale data, conflicting evidence, and injected causation."
@@ -2527,7 +2527,7 @@
         "definition_sha256": "b1f5662157b24d0f01c3414aa03ab9102819ee4b02915075ff5f68c02edf5749",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2132
+        "line": 2134
       },
       "status": "planned",
       "title": "Enumerate and mutate tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, link, inaccessible, malformed, special, external, and concurrently changing paths."
@@ -2543,7 +2543,7 @@
         "definition_sha256": "6de1efc92a254ea03d1b079e0e688cae6b1570c9e71f0a2dae1e3fafa9354b22",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1492
+        "line": 1494
       },
       "status": "planned",
       "title": "Invalid, unknown, and permission-broadening configuration mutations."
@@ -2559,7 +2559,7 @@
         "definition_sha256": "c22f612195dad8e7b8b1cfd082d563ae41ac79375d1348809d183d2b98c43dd7",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1716
+        "line": 1718
       },
       "status": "planned",
       "title": "Inspect and execute GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins fixtures across refs, inputs, environments, permissions, logs, artifacts, cancellation, rerun, and uncertain results."
@@ -2575,7 +2575,7 @@
         "definition_sha256": "2113b302eb93c5995f2cbec8f01da11a819b64a1b8412fa09e7b31e6a2890ddf",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2137
+        "line": 2139
       },
       "status": "planned",
       "title": "Pause, crash, restart, restore, change, delete, rename, reclassify, or reparse inputs at every audit stage and mutate scope, parser, model, runtime, policy, graph, checkpoint, and reverse-dependency records."
@@ -2591,7 +2591,7 @@
         "definition_sha256": "92619cc6acf2a2d64232cfa5c66fffd5efc73901036a8995f03a8f044ab82bbd",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2027
+        "line": 2029
       },
       "status": "planned",
       "title": "Run direct, shell, pipeline, redirection, script, interpreter, PTY, package, build, test, Git, Docker, process-tree, environment, filesystem, network, timeout, output, cancellation, rollback, and hostile-command fixtures at every authority level."
@@ -2607,7 +2607,7 @@
         "definition_sha256": "9458d37894f57ca862e5327958b2c8dc39bea1d321d39c3b666620428840eb9e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1899
+        "line": 1901
       },
       "status": "planned",
       "title": "Run the common Cloud Observer contract against fake, fault, future-version, malicious, AWS, Azure, and Google Cloud fixtures across scope, query, result, rate, cache, correlation, failure, recovery, and removal."
@@ -2623,7 +2623,7 @@
         "definition_sha256": "06fd355f06b8794edd1e5b971b47b27e6fd2a3d9cecac9ef8bfa788066e6db12",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1878
+        "line": 1880
       },
       "status": "planned",
       "title": "Run the common communications contract against fake, fault, future-version, malicious, Microsoft, Google, Slack, Proton Bridge, IMAP, SMTP, and JMAP fixtures."
@@ -2639,7 +2639,7 @@
         "definition_sha256": "1932fec270a8b8e04d150ae8d8afd24c934301531fc63ca420a3084e0e9f6e7b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1885
+        "line": 1887
       },
       "status": "planned",
       "title": "Mutate sender, account, recipient, external domain, channel, thread, mention, visibility, body, formatting, quote, link, attachment, classification, operation, idempotency key, provider result, and postcondition around every communication effect."
@@ -2655,7 +2655,7 @@
         "definition_sha256": "bce082393a038eb39d6c76e56edd79390344b8bcb0eb193cd4142a3afaf0aa88",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1503
+        "line": 1505
       },
       "status": "planned",
       "title": "Forced termination during model, file, Git, receipt, and checkpoint phases."
@@ -2671,7 +2671,7 @@
         "definition_sha256": "0b80e6d54f150fabb5dfc36d190a1e25d120c07ca60e2e79673b94a97d636e91",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2025
+        "line": 2027
       },
       "status": "planned",
       "title": "Exercise operating-system secret stores, OAuth and token references, provider/host/tenant/account/scope binding, expiry, rotation, revocation, crash, redirect, proxy, cross-worker, restore, export, diagnostics, logs, process metadata, and removal canaries."
@@ -2687,7 +2687,7 @@
         "definition_sha256": "09eeafdf4254f63b73f29e74cf35d79c12b2e48f1b3a1d3515d38e6b42ae4269",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1502
+        "line": 1504
       },
       "status": "planned",
       "title": "Transaction and migration invariants with crashes injected at every durable-write boundary."
@@ -2703,7 +2703,7 @@
         "definition_sha256": "66620486bc0b6b8cc4316e4b4cd3243c0e047e76759655903170f6ef521d9fa2",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1710
+        "line": 1712
       },
       "status": "planned",
       "title": "Build and mutate delivery graphs spanning work item, source, review, CI, artifact, provenance, deployment, telemetry, incident, release, and rollback fixtures."
@@ -2719,7 +2719,7 @@
         "definition_sha256": "43a8c0a937f6e2b6c9678ea2a45f660a62fcfe5c955235734c8e2370ebca3c48",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1719
+        "line": 1721
       },
       "status": "planned",
       "title": "Plan, preview, promote, health-check, detect drift, synchronize, fail, cancel, and roll back Kubernetes, Helm, Kustomize, Argo CD, and Flux fixtures."
@@ -2735,7 +2735,7 @@
         "definition_sha256": "90a6319a59e0eb13ee8d0dcefcad16ec5408929935efb1790249ea4ad3a5f9c3",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1509
+        "line": 1511
       },
       "status": "planned",
       "title": "Redacted local doctor results rendered inside native Visual Studio Code Chat across model, runtime, offline, sandbox/helper, workspace, capability, repository-map, encrypted-store, receipt, and recovery states."
@@ -2751,7 +2751,7 @@
         "definition_sha256": "91088a866b596c62243a119d2866ca31a9bd6dd9e25af7a7db48a2a3bc334098",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1523
+        "line": 1525
       },
       "status": "planned",
       "title": "Three clean installations, one each on MacBook Pro M5, Fedora, and Ubuntu, by a reader using only published instructions."
@@ -2767,7 +2767,7 @@
         "definition_sha256": "0a699e9225efe97cba00d43ff9197c9afecf42052b426e46c3b7a61de468efd9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1887
+        "line": 1889
       },
       "status": "planned",
       "title": "Exercise OneDrive, SharePoint, Google Drive, Confluence, and promoted extension fixtures across identity, version, content, attachment, link, permission, visibility, draft, write, conflict, malicious file, recovery, and removal."
@@ -2783,7 +2783,7 @@
         "definition_sha256": "45d521d6e1b12264a313213874d039048a0c0ba8d8f728d51085fd9d4634806f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "39A. Post-GA Experimental Model Acceptance Matrix",
-        "line": 2097
+        "line": 2099
       },
       "status": "planned",
       "title": "Import, parse, load, evaluate, interrupt, crash, replace, remove, and attempt promotion of unknown, malformed, oversized, hostile, unsupported, provenance-incomplete, license-unclear, and policy-excluded artifacts."
@@ -2799,7 +2799,7 @@
         "definition_sha256": "fe9dc987ba61f81ffab3eb71ef9ec5d6ac01092435c1c5e16447282a59abac18",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1514
+        "line": 1516
       },
       "status": "planned",
       "title": "Tool-action receipt coverage."
@@ -2815,7 +2815,7 @@
         "definition_sha256": "f1af2c30a44845bfc9bed0e6bcdafd8ea622d781c45132c498d2d8a8161aa569",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1515
+        "line": 1517
       },
       "status": "planned",
       "title": "File-grounded claim and citation scoring against a labeled corpus."
@@ -2831,7 +2831,7 @@
         "definition_sha256": "03c161ccf9635ac2eb02522c6fe8de4013bfebca75d8fbc1f9f3af20d8fd5f74",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1516
+        "line": 1518
       },
       "status": "planned",
       "title": "Evidence-state, deterministic-derivation, citation-hash, source-range, conflict, and stale-citation scoring against a labeled corpus."
@@ -2847,7 +2847,7 @@
         "definition_sha256": "82e007e04a2fb01c9054a1c6f5a8378261b55e2354cd53c05d4879e884259cae",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1896
+        "line": 1898
       },
       "status": "planned",
       "title": "Run statistical outlier and potential-fraud indicators across stable, drifting, sparse, poisoned, seasonal, duplicate-merchant, changed-category, adversarial-description, and known-anomaly fixtures."
@@ -2863,7 +2863,7 @@
         "definition_sha256": "e594547bfedadbe4338a9a5ab226aeb35b82c6a64c0a0b766f9f8f94b8718afc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1895
+        "line": 1897
       },
       "status": "planned",
       "title": "Match receipts, invoices, reimbursements, statements, and tax documents to transactions across duplicate, partial, multi-page, multi-currency, altered, malicious, unmatched, and redacted fixtures."
@@ -2879,7 +2879,7 @@
         "definition_sha256": "8a899970a5a91e8a432d6cfd39b06e45c0562b07f7b5bf6583ce0a9b344c4259",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1890
+        "line": 1892
       },
       "status": "planned",
       "title": "Import and reconcile CSV, OFX, and QFX fixtures across encodings, profiles, accounts, periods, opening and closing balances, pending and posted transitions, duplicates, transfers, splits, corrections, malformed data, and restarts."
@@ -2895,7 +2895,7 @@
         "definition_sha256": "d00fa735960bb4b88114fc9f9d95a4097a230ba33979e275f4310f61e6990fe9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1889
+        "line": 1891
       },
       "status": "planned",
       "title": "Exercise financial values and records across currencies, scales, signs, rounding modes, boundary magnitudes, splits, transfers, categories, recurring streams, debts, assets, liabilities, corrections, and aggregate order."
@@ -2911,7 +2911,7 @@
         "definition_sha256": "e5727f38fb2b8535d76897ef78aa72bbe4a91770f550bcaadec9abb1b65d6816",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1898
+        "line": 1900
       },
       "status": "planned",
       "title": "Seed financial canaries and probe classification, encryption, memory, model context, logs, diagnostics, exports, backups, cross-pack flows, deletion, crash, removal, and every money-movement family at every autonomy level."
@@ -2927,7 +2927,7 @@
         "definition_sha256": "ad96939721b037a81fca0542c117ba276be07ccc87ab49ac3f69e26c27c1f81b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1729
+        "line": 1731
       },
       "status": "planned",
       "title": "Rebuild all requirements and run the exact v1.0 GA platform, strict-local, connected, delivery, support-matrix, supply-chain, recovery, accessibility, documentation, and independent-review gates."
@@ -2943,7 +2943,7 @@
         "definition_sha256": "f9c7ab9687a1e392d04cd7b752f69e3b71093e3666ccb79223be400e03411fd9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1905
+        "line": 1907
       },
       "status": "planned",
       "title": "Rebuild all requirements and run the exact expanded v1.0 platform, delivery, productivity, communications, finance, cloud-observer, support-matrix, recovery, accessibility, removal, documentation, and independent-review gates."
@@ -2959,7 +2959,7 @@
         "definition_sha256": "ec3cf47ebcd59f69da236c117067b8bbc078e6e08401f242450dcf7afc9ef70f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2035
+        "line": 2037
       },
       "status": "planned",
       "title": "Rebuild and independently reproduce the complete v1.0 release from raw requirements, packages, manifests, bills of materials, platform results, provider matrices, trusted-operations evidence, reviewer protocols, limitations, and removal results."
@@ -2975,7 +2975,7 @@
         "definition_sha256": "e762939f1dc32bde1f68e07c03132cc51ea15b163248a52c5a3fba62fe65ee6c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2139
+        "line": 2141
       },
       "status": "planned",
       "title": "Independently reproduce a comprehensive audit of each release-reference repository and adversarial corpus from raw source, manifests, parser records, structural graphs, semantic packets, evidence cards, checkpoints, findings, reports, platform results, and removal evidence."
@@ -2991,7 +2991,7 @@
         "definition_sha256": "1c1e52503c058d65b6d9ec489d4ef7ac62e48c27792526764b7fb3ee21cfc9c2",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1902
+        "line": 1904
       },
       "status": "planned",
       "title": "Exercise Google Cloud organization, folder, project, region, asset, configuration, label, health, Monitoring, audit reference, security observation, deployment identity, billing, role, token, quota, failure, and removal fixtures."
@@ -3007,7 +3007,7 @@
         "definition_sha256": "2145271daef7aef6a21c5eae4e03fe91121bb065bb34df828a419964af5de9a5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1713
+        "line": 1715
       },
       "status": "planned",
       "title": "Exercise the complete published GitHub.com and GitHub Enterprise Server matrix across version, permission, object, branch, issue, pull request, review, workflow, release, local commit, signed push, and failure fixtures."
@@ -3023,7 +3023,7 @@
         "definition_sha256": "5832ea93ba32a5bde3dbfe4ae8553c1a1cfda33f188413ba117af5798384448b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1512
+        "line": 1514
       },
       "status": "planned",
       "title": "Read-only Git operations across clean, dirty, detached, untracked, and malformed fixture repositories."
@@ -3039,7 +3039,7 @@
         "definition_sha256": "5c7f2d20bb055f19a890b7784b485d9c773d4d218ca88c8d949f97b1584b0aeb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1881
+        "line": 1883
       },
       "status": "planned",
       "title": "Exercise the published Gmail matrix across mailbox, message, thread, label, draft, send, reply, forward, attachment, history, push, polling, permission, failure, and recovery fixtures."
@@ -3055,7 +3055,7 @@
         "definition_sha256": "cce2ccd7a7e7e85e19220e02a10f5a9ce5bf6c47bdb47de39c959ed63baa4848",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1506
+        "line": 1508
       },
       "status": "planned",
       "title": "Local Codex-handoff generation plus direct-request, prompt-injection, tool-call, Visual Studio Code command, clipboard, and network-delivery attempts."
@@ -3071,7 +3071,7 @@
         "definition_sha256": "cd925b1e3f571b04d7443a1147b94c09c297d91361c102763a65611705da569c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1720
+        "line": 1722
       },
       "status": "planned",
       "title": "Inspect, plan, policy-check, apply, crash, reconcile, and recover Terraform and OpenTofu fixtures including destructive, stale-state, lock, provider, and secret cases."
@@ -3087,7 +3087,7 @@
         "definition_sha256": "59163763a6bb0f13e9a20b865a89bb835baac48b4226064670e9a9a159257e04",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1712
+        "line": 1714
       },
       "status": "planned",
       "title": "Cross product provider, host, tenant, account, project, environment, credential, redirect, proxy, callback, and operation fixtures."
@@ -3103,7 +3103,7 @@
         "definition_sha256": "1a5556d8206c1cfd6bd6562cf622cefab0db1d66989471071a86b0387c872f4d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1723
+        "line": 1725
       },
       "status": "planned",
       "title": "Detect, correlate, draft, notify, create bounded work, recommend rollback, recover, and close incident fixtures across duplicate, delayed, partial, conflicting, and injected data."
@@ -3119,7 +3119,7 @@
         "definition_sha256": "39e7b4c1b075d11462418e0f4ef18bfdd0dc5afe8ab8a7bbb05e10a339e8a50d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1496
+        "line": 1498
       },
       "status": "planned",
       "title": "Prompt-injection and malicious-content suite."
@@ -3135,7 +3135,7 @@
         "definition_sha256": "276de9e71bf648700e2ac7e189d0e63c4b3439ae587b4a57d401ae2f837d9255",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1497
+        "line": 1499
       },
       "status": "planned",
       "title": "Repository-instruction trust and precedence suite covering nested instructions, conflicts, generated text, comments, policy-change requests, hidden-tool requests, broader-root requests, external transfer, and false-completion instructions."
@@ -3151,7 +3151,7 @@
         "definition_sha256": "8c5cfcfd96811d63cb3b652e05b1bcfda2cc8ff3972b49cb3a092b2893b3eb80",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1884
+        "line": 1886
       },
       "status": "planned",
       "title": "Run Thunderbird, Evolution, KMail, mbox, and Maildir interoperability against versioned, locked, corrupted, replaced, linked, raced, credential-seeded, and unsupported profile fixtures."
@@ -3167,7 +3167,7 @@
         "definition_sha256": "4c03d6ec8fec7a6f3032b3e3cd93d824cab16ce0fd5ddd99c691349a8c384498",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1879
+        "line": 1881
       },
       "status": "planned",
       "title": "Exercise the published Outlook and Exchange Online matrix across mailbox, folder, thread, message, flag, category, draft, send, reply, forward, attachment, shared-mailbox, permission, pagination, event, failure, and recovery fixtures."
@@ -3183,7 +3183,7 @@
         "definition_sha256": "2f2194f0c03aa7dd60ff31f197d4210863922643514ec6f6a94b68eba75a3cad",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1882
+        "line": 1884
       },
       "status": "planned",
       "title": "Exercise capability-negotiated IMAP, SMTP, JMAP, and Proton Bridge fixtures across server identity, TLS, authentication reference, mailbox, folder, feature, formatting, attachment, rate, disconnect, and removal states."
@@ -3199,7 +3199,7 @@
         "definition_sha256": "ce3a83058ea52cb0bd258fbc21a5d52f1f1a750d766c76f348d8fd40dc7f5ae8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2031
+        "line": 2033
       },
       "status": "planned",
       "title": "Mutate publisher, developer, license, origin, lineage, artifact, format, conversion, tokenizer, template, hash, size, runtime, platform, hardware, quality, security, support, state, expiry, and revocation for catalog fixtures."
@@ -3215,7 +3215,7 @@
         "definition_sha256": "873723274608489d1b59b0206d29c388c7a23b5b63e6072eaf50506b18f7014f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2032
+        "line": 2034
       },
       "status": "planned",
       "title": "Exercise chat requests for list, recommend, download, import, resume, verify, activate, compare, cancel, crash, roll back, remove, and clean storage with source substitution, size drift, low disk, malformed artifacts, failed scans, stale approval, and interrupted activation."
@@ -3231,7 +3231,7 @@
         "definition_sha256": "92b791e3c97fc1315332d6d932bcc304e5352da3e6d71e3525e27bf05a698cbe",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1507
+        "line": 1509
       },
       "status": "planned",
       "title": "Admission record, license, publisher/control, lineage, artifact, tokenizer, native GGUF hash, immutable OCI digest where applicable, runtime, acceleration, and offline response verification for Gemma 4 E4B."
@@ -3247,7 +3247,7 @@
         "definition_sha256": "7696cb983b7b8108bc27527699b017f2598d927821813cbe1e2211ee26032685",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1508
+        "line": 1510
       },
       "status": "planned",
       "title": "Installer/importer preflight, acquisition, cancellation, recovery, quarantine, atomic activation, self-test, load/unload, and cleanup across the supported platform matrix."
@@ -3263,7 +3263,7 @@
         "definition_sha256": "7e9e74a4296ec3e545a5841dca53dbcb16009f0419605c3bae630708987589bf",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1727
+        "line": 1729
       },
       "status": "planned",
       "title": "Round-trip and render Markdown containing inline/display mathematics, labels, references, escaping, code fences, malformed input, hostile commands, deep macros, accessibility labels, and cross-platform fixtures."
@@ -3279,7 +3279,7 @@
         "definition_sha256": "09b7b61faa188fef7e513b727c35a2808cf4af7f116dc17ba22c6a8cd5f09b08",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2033
+        "line": 2035
       },
       "status": "planned",
       "title": "Verify first-party Muse Glimmer identity, classification, license, origin, lineage, artifacts, transformations, hashes, runtime/platform compatibility, measured resource fit, coding/tool quality, security, and support evidence through the normal admission pipeline."
@@ -3295,7 +3295,7 @@
         "definition_sha256": "ff8a5bb1056dd4b8842c0ff948a231b8433599fe97788c7b9bbcbded5e43b02e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1498
+        "line": 1500
       },
       "status": "planned",
       "title": "Packet, socket, process, container, namespace, and Domain Name System monitoring for a 60-minute offline end-to-end run after the separate model installer has exited on each supported platform and adapter."
@@ -3311,7 +3311,7 @@
         "definition_sha256": "ad8292b4543d131beeb4eb2d25c29c156aec8643aa36d2fb457fb4e8ce0f8a7a",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1499
+        "line": 1501
       },
       "status": "planned",
       "title": "Reachability probes from a local-area-network peer, unrelated same-user process, ordinary container where applicable, separate network namespace, tool worker, XPC helper, extension host, and kernel."
@@ -3327,7 +3327,7 @@
         "definition_sha256": "24759d20ee95999946f848b852294cab53f6d5075ee00d463428f99cd5d1039e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1722
+        "line": 1724
       },
       "status": "planned",
       "title": "Correlate OpenTelemetry, Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry metrics, logs, traces, errors, monitors, releases, and time windows."
@@ -3343,7 +3343,7 @@
         "definition_sha256": "9179559a6e33173f74cbb334d8e53bfd3423752e00c1ad936bdabceba972f466",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1500
+        "line": 1502
       },
       "status": "planned",
       "title": "Absolute path, traversal, encoding, separator, symlink, alias, stale-bookmark, case-folding, Unicode-normalization, rename-race, mount, and file-replacement attacks."
@@ -3359,7 +3359,7 @@
         "definition_sha256": "4e1d612ba719c969c1c21916ce889bbdf79a1eb33f9ea70b744e237f05f9d33c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1521
+        "line": 1523
       },
       "status": "planned",
       "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu."
@@ -3375,7 +3375,7 @@
         "definition_sha256": "03369f172fbf142abafa6b7866003c9392e2e9b4ac317d1834ca6e26a9aa22fc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1876
+        "line": 1878
       },
       "status": "planned",
       "title": "Build and mutate identity and work graphs across people, accounts, organizations, mailboxes, channels, meetings, tasks, documents, delivery objects, financial records, and cloud observations."
@@ -3391,7 +3391,7 @@
         "definition_sha256": "362dde9546018d39f861f94683a841c5ab3634234d305832d4d1979f4ed42074",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1886
+        "line": 1888
       },
       "status": "planned",
       "title": "Exercise Microsoft, Google, CalDAV, and CardDAV calendar, contact, and task matrices across identity, availability, time zone, recurrence, invitations, responses, reminders, contacts, assignments, permissions, conflicts, writes, failures, and removal."
@@ -3407,7 +3407,7 @@
         "definition_sha256": "12a56f916bead89fabe3a523bdfc615129d8bb615b2da627738aaf36e7be2e57",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1493
+        "line": 1495
       },
       "status": "planned",
       "title": "Clean first-run packaging and platform-adapter verification on MacBook Pro M5, Fedora, and Ubuntu."
@@ -3423,7 +3423,7 @@
         "definition_sha256": "6c0353a92b95bd62e85ce7e30fb74fcda1f44e77bf19ba323fbea787a9254bb8",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1504
+        "line": 1506
       },
       "status": "planned",
       "title": "Secret canaries in prompts, files, attachments, tool output, errors, and model responses."
@@ -3439,7 +3439,7 @@
         "definition_sha256": "2571ae44791997b6c94bfdc8c0c81bc2f42af3f83b44da18055daa4c678551bb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1505
+        "line": 1507
       },
       "status": "planned",
       "title": "Encryption, ephemeral fallback, expiry, export, and cryptographic-erasure tests."
@@ -3455,7 +3455,7 @@
         "definition_sha256": "4a27634f923a1f5182805e8beae4d97eb1ea41fa091b2a011f740046ef730233",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1520
+        "line": 1522
       },
       "status": "planned",
       "title": "Labeled read-only repository questions, extraction tasks, schema calls, malformed-tool recovery, and adversarial completion prompts."
@@ -3471,7 +3471,7 @@
         "definition_sha256": "6e562a921d470ab6866467e0c1977a69545d2fb2d0d6ec2cf52dc4e8fb9e8f39",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2135
+        "line": 2137
       },
       "status": "planned",
       "title": "Seed cross-module architectural drift, duplicated responsibility, dead and orphaned code, circular dependencies, conflicting state models, incompatible paradigms, stale adapters, abandoned migrations, test gaps, and documentation-to-code conflicts."
@@ -3487,7 +3487,7 @@
         "definition_sha256": "ac502870325110f692280cf5ddf898f78e79fd73c49a3062b9320cc5b05c7650",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1721
+        "line": 1723
       },
       "status": "planned",
       "title": "Run version, changelog, manifest, promotion, flag, progressive-delivery, migration, health, rollback, and compensation fixtures."
@@ -3503,7 +3503,7 @@
         "definition_sha256": "dc0467900199dc8e1876cd7454784288ec18af03d1a52bf62048bedf9aaca5dc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1513
+        "line": 1515
       },
       "status": "planned",
       "title": "Deterministic repository-map construction, invalidation, coverage, rendering, source resolution, and read-only invariants across supported and unsupported fixture repositories."
@@ -3519,7 +3519,7 @@
         "definition_sha256": "33d35b4f9fad91ae917ccfd26b456b0ef0b9b491f2c06481ed1798fe3934b945",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1517
+        "line": 1519
       },
       "status": "planned",
       "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes."
@@ -3535,7 +3535,7 @@
         "definition_sha256": "2dec06bad60425e4d2ea58747a7da241f64a10d829256f2e26e4031857ea2a9b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2136
+        "line": 2138
       },
       "status": "planned",
       "title": "Run audits, parsers, language services, builds, tests, package operations, generators, formatters, coverage tools, cancellation, crashes, malicious repository instructions, and path races against canonical and disposable workspaces."
@@ -3551,7 +3551,7 @@
         "definition_sha256": "8883e2854d6da09cb935fd6866a6475cfc8528e3b463efec4739326adbc382c5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1510
+        "line": 1512
       },
       "status": "planned",
       "title": "Mixed deterministic and model-assisted task suite."
@@ -3567,7 +3567,7 @@
         "definition_sha256": "ca6ccee0e1d95ac61f13874f7a5ce4b62f5c6d8fcadec462be37f030f7d5344b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1495
+        "line": 1497
       },
       "status": "planned",
       "title": "Per-platform sandbox escape suite covering filesystem, process, device, environment, namespace, XPC, bookmark, and entitlement attacks."
@@ -3583,7 +3583,7 @@
         "definition_sha256": "9eb29d8f9fb20fa47dbaf06fe2b62f1aa473c64eea324276f182cc1c32daf8cc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1494
+        "line": 1496
       },
       "status": "planned",
       "title": "Process, socket, file-permission, entitlement, environment, identity, and privilege inspection on macOS, Fedora, and Ubuntu."
@@ -3599,7 +3599,7 @@
         "definition_sha256": "ac55530fd370aa505e7616c082058dea7e3a81d2ba735dd6501762558fc8e9f9",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1724
+        "line": 1726
       },
       "status": "planned",
       "title": "Ingest and reconcile CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF findings with conflicting severity, locations, suppressions, reachability, and tool versions."
@@ -3615,7 +3615,7 @@
         "definition_sha256": "62b253d194ef916c0b60d01a128c788265d2fb1d74e6593c49802fe575072e73",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2134
+        "line": 2136
       },
       "status": "planned",
       "title": "Partition repositories at architectural boundaries under varied context budgets, packet order, interruption points, model restarts, and approved model profiles while preserving exact evidence-card provenance."
@@ -3631,7 +3631,7 @@
         "definition_sha256": "cfef8fd527334935f258e5e7ddc6fb780e8429c70df9f73e9339f193592eb27d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1883
+        "line": 1885
       },
       "status": "planned",
       "title": "Exercise the published Slack matrix across workspace, channel, direct and group message, thread, reply, mention, reaction, file, edit, deletion, event, scope, pagination, rate, failure, and recovery fixtures."
@@ -3647,7 +3647,7 @@
         "definition_sha256": "2137970f3ec64877145d0cf1ed26b8c7a92181321e82df767a0daff11750b471",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1522
+        "line": 1524
       },
       "status": "planned",
       "title": "Static cross-document validation of v0.1 scope, backlog, dependency, acceptance-test, release, platform, model, runtime, repository-map, evidence-state, diagnostics, policy, license, and data-authority statements."
@@ -3663,7 +3663,7 @@
         "definition_sha256": "a861e298fc7d7d33d16ca33fb82831f537ef428e5ecdd482eaad7f84cb5d22b4",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1715
+        "line": 1717
       },
       "status": "planned",
       "title": "Exercise Azure Repos and GitLab repository, branch, commit, review, policy, local-worktree, signed-commit, and push fixtures."
@@ -3679,7 +3679,7 @@
         "definition_sha256": "f7ec54330179856ea80f9c4b6dcccada26983cebd74a3abfe4fc8663e5500bfe",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "40A. First-GA Whole-Codebase Audit Quantitative Acceptance Matrix",
-        "line": 2133
+        "line": 2135
       },
       "status": "planned",
       "title": "Build and independently reproduce module, symbol, interface, dependency, call, state, data, event, error, configuration, schema, test, build, workflow, release, and provenance graphs across the published language and build-system matrix."
@@ -3695,7 +3695,7 @@
         "definition_sha256": "57c3dc2d737ad09a2ad3de9144ff708c1bcdb876776751ef5499ba6ac423ba87",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1718
+        "line": 1720
       },
       "status": "planned",
       "title": "Validate SPDX, CycloneDX, Sigstore/Cosign, SLSA, policy, vulnerability, source, build, and artifact fixture chains."
@@ -3711,7 +3711,7 @@
         "definition_sha256": "ce515f686aa5ddb6422c8960cf9ade4396a4caf3ae34bb21a698b573d1098292",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1875
+        "line": 1877
       },
       "status": "planned",
       "title": "Exercise signed events, change notifications, delta cursors, polling, edits, deletions, tombstones, gaps, backfill, duplicates, reordering, clock skew, revocation, throttling, partition, restart, and removal."
@@ -3727,7 +3727,7 @@
         "definition_sha256": "865f412689cd85b0753e4970a9b095061b2abcdb9282deaeedd315141f3c0c15",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1880
+        "line": 1882
       },
       "status": "planned",
       "title": "Exercise the published Teams matrix across tenant, team, channel, chat, thread, message, reply, mention, reaction, file, edit, deletion, membership, event, permission, failure, and recovery fixtures."
@@ -3743,7 +3743,7 @@
         "definition_sha256": "38794252650831d8707836dc68ea28c8bafcab4df1a7d9a25da0eb4f68bfb321",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1511
+        "line": 1513
       },
       "status": "planned",
       "title": "Golden list, read, search, metadata, and hash fixtures with size and result limits."
@@ -3759,7 +3759,7 @@
         "definition_sha256": "13c8d4619ea365ec969dbda4cad2e115713f60bb145bd47cedeb23b7e7ec240c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2024
+        "line": 2026
       },
       "status": "planned",
       "title": "Enumerate and mutate every trusted-operations process, worker, IPC edge, network path, credential edge, store, capability registration, lifecycle transition, disablement, and removal state on every first-GA platform."
@@ -3775,7 +3775,7 @@
         "definition_sha256": "a3c9cfb7235d148ca2c6191eb98e46abcb2a51c6035890541512602190d8c3aa",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1877
+        "line": 1879
       },
       "status": "planned",
       "title": "Build unified-inbox views from mixed communication, delivery, personal-information, finance, and cloud fixtures with unread, due, blocked, duplicate, stale, incomplete, and uncertain states."
@@ -3791,7 +3791,7 @@
         "definition_sha256": "bb32b8479b7989290b47654b18c51772bac51d0652fd7c140b3ed1cab7ba4ca6",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1518
+        "line": 1520
       },
       "status": "planned",
       "title": "Clean extension and kernel-host installation plus model discovery on MacBook Pro M5, Fedora, and Ubuntu."
@@ -3807,7 +3807,7 @@
         "definition_sha256": "0ad6083e55497930e94b666db4f8b5065fa06e77c6dc04fd29920cb3e624d794",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "31B. v0.1 Quantitative Acceptance Matrix",
-        "line": 1519
+        "line": 1521
       },
       "status": "planned",
       "title": "Native Chat streaming, evidence-state, citation, diagnostics, progress, cancellation, unavailable-model, and malformed-response tests."
@@ -3823,7 +3823,7 @@
         "definition_sha256": "a7b593a23bd6f3d5a01db141d0bef1cc02bb0c4d285ce8956b14f98356ae882f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2028
+        "line": 2030
       },
       "status": "planned",
       "title": "Search and retrieve changing public facts across primary, secondary, stale, conflicting, redirected, malicious, oversized, script-heavy, archived, unavailable, authenticated, and private-data-requesting fixtures."
@@ -3839,7 +3839,7 @@
         "definition_sha256": "78008e309468b931076b563296b100f6902f19aed4ad676cb9b247eeeefd18d5",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1888
+        "line": 1890
       },
       "status": "planned",
       "title": "Compile, dry run, execute, cancel, crash, resume, expire, and remove productivity workflows with nested triggers, branches, joins, classifications, accounts, recipients, budgets, approvals, failures, and hostile external content."
@@ -3855,7 +3855,7 @@
         "definition_sha256": "ef45f9a161662e6b968702956f48e4aea5c903e6f1781a400804d8e866341a6b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1726
+        "line": 1728
       },
       "status": "planned",
       "title": "Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64."
@@ -3871,7 +3871,7 @@
         "definition_sha256": "35e2e56d241e2f83917009a6912f442ccc21b46770231becbd6513b2e2f96848",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1714
+        "line": 1716
       },
       "status": "planned",
       "title": "Exercise GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards reads, links, drafts, field updates, comments, transitions, attachments, permissions, pagination, and recovery."
@@ -3887,7 +3887,7 @@
         "definition_sha256": "63e03c9c496e772c87067fb1397faf74423eaab1b4003c9a85f5ef0abec7ffad",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "38A. First-GA Trusted Operations Quantitative Acceptance Matrix",
-        "line": 2034
+        "line": 2036
       },
       "status": "planned",
       "title": "Run cross-capability attacks joining hostile web or repository content, shell authority, credentials, backup destinations, model installation, provider workers, schedules, crashes, revocation, removal, and resource pressure."
@@ -3903,7 +3903,7 @@
         "definition_sha256": "a39fecce98773d034ce21156c09b66f93c42e754a567e45ba26252da9c51d45d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix",
-        "line": 1904
+        "line": 1906
       },
       "status": "planned",
       "title": "Run cross-pack mutation, fuzz, injection, identity, recipient, attachment, synchronization, financial-precision, reconciliation, money-movement-absence, cloud-mutation-absence, resource, crash, cancellation, recovery, removal, accessibility, and end-to-end campaigns."
@@ -3919,7 +3919,7 @@
         "definition_sha256": "28e8d6fdf3fc365ae8b0cb93355541bd23de2b0ce5fe423ab58c132b67a80f1e",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "36A. First-GA Quantitative Acceptance Matrix",
-        "line": 1728
+        "line": 1730
       },
       "status": "planned",
       "title": "Run cross-provider and cross-platform contract mutation, fuzzing, hostile content, credential confusion, event replay, version skew, rate limit, partition, crash, cancellation, partial effect, rollback, resource, removal, and end-to-end lifecycle campaigns."
@@ -3935,7 +3935,7 @@
         "definition_sha256": "877567aebd241067488d13afa50e8c65d634a1bee8c69cae8b2b1f15068fbdfd",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1630
+        "line": 1632
       },
       "status": "planned",
       "title": "Redacted runtime and capability diagnostics"
@@ -3951,7 +3951,7 @@
         "definition_sha256": "a4752d14e298850fc8b80970a9617a694337e0845fe78c3b2bfac2a5cbed5f58",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1631
+        "line": 1633
       },
       "status": "planned",
       "title": "Gemma 4 quality, tool-recovery, context, latency, citation, and injection evaluation on reference hardware"
@@ -3967,7 +3967,7 @@
         "definition_sha256": "0a24d974a5bf7e92b9a7d065e8aa83fea965cba0073493c0a101864552a2c95b",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1629
+        "line": 1631
       },
       "status": "planned",
       "title": "Observed, Derived, Inferred, and Unknown/Blocked answer states with resolvable and stale-aware citations"
@@ -3983,7 +3983,7 @@
         "definition_sha256": "2ba81cd03eb62a50e2a86677bb57b5f596e9824d7b6ce7848daaa4c0aeefc9aa",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1628
+        "line": 1630
       },
       "status": "planned",
       "title": "Complete approved local-model acquisition, verification, fit, lifecycle, diagnostics, cancellation, and offline proof"
@@ -3999,7 +3999,7 @@
         "definition_sha256": "8aee25d105937eb34f8056ba5a602dc4cddba094e8d882bab7de9a56b9e7855d",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1627
+        "line": 1629
       },
       "status": "planned",
       "title": "Deterministic, policy-aware, citation-preserving read-only repository map without required embeddings"
@@ -4015,7 +4015,7 @@
         "definition_sha256": "582027f0f14e0b7423338c3420b4a018ae1e53215f463b62980fca0ff0c0c9dc",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1632
+        "line": 1634
       },
       "status": "planned",
       "title": "Repository, notes, issues, tool output, and imported instructions remain untrusted data unless explicitly trust-gated as non-authority guidance"
@@ -4031,7 +4031,7 @@
         "definition_sha256": "6f375865398b1dcede9bf475eb089dd721344d09bf78adcd7bc3c3219e85fd29",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1633
+        "line": 1635
       },
       "status": "planned",
       "title": "Optional approved local hybrid structural, lexical, embedding, and reranking retrieval with deletion and deterministic fallback"
@@ -4047,7 +4047,7 @@
         "definition_sha256": "4a5fe87b735489782c3420515e574d1fae492d02da2c56ae061edc4f18ccd5c3",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1637
+        "line": 1639
       },
       "status": "planned",
       "title": "Provider-independent allowlisted internal roles for dialogue, tools, summaries, repository maps, embeddings, reranking, patches, and claim verification"
@@ -4063,7 +4063,7 @@
         "definition_sha256": "583e7b86716eae0ed548e57b490ad1828882977217b045ae842d4bc6da504997",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1638
+        "line": 1640
       },
       "status": "planned",
       "title": "Session fork, citation-preserving compaction, encrypted archive, controlled deletion, and redacted evidence bundle"
@@ -4079,7 +4079,7 @@
         "definition_sha256": "430906671d718e2169f0e835ed21793788feea7cedff40e176632967377a5a53",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1639
+        "line": 1641
       },
       "status": "planned",
       "title": "Declarative, provenance-recorded, trust-gated skills before executable plugins"
@@ -4095,7 +4095,7 @@
         "definition_sha256": "ca38cc59d009f00b99728710af19ad5c50327dcdcd934dbecdc820d692f6bdc1",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1636
+        "line": 1638
       },
       "status": "planned",
       "title": "Separately approved trusted test, lint, formatter, build, and scan templates with evidence-based receipts"
@@ -4111,7 +4111,7 @@
         "definition_sha256": "47bda9c287e6d4888d64bf7d30807da367de0e2be7291520a88ce09760590785",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1635
+        "line": 1637
       },
       "status": "planned",
       "title": "Git worktree isolation that supplements, but is never described as, the security sandbox"
@@ -4127,7 +4127,7 @@
         "definition_sha256": "4615bfd58d2bb8ebda6c82a4e35b0463083faf0f434cf328949237bdd57b687c",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1634
+        "line": 1636
       },
       "status": "planned",
       "title": "Exact-preimage controlled-write transaction with shadow changes, one-use grant, atomic application, receipts, verification, and rollback"
@@ -4143,7 +4143,7 @@
         "definition_sha256": "0b9ba91213e4b34958a99c46db004682c5c720bd7d9d68730a64064d1a2efdb0",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1641
+        "line": 1643
       },
       "status": "planned",
       "title": "CLI, JSON, software development kit, and Agent Client Protocol only after stable VS Code, with predeclared grants and fail-closed headless behavior"
@@ -4159,7 +4159,7 @@
         "definition_sha256": "67ca76bc68d7ee8dbea816347d6dfc359316c3347a011cf454be9294c3d943cb",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1642
+        "line": 1644
       },
       "status": "planned",
       "title": "User-initiated read-only GitHub and connector synchronization into a sensitivity-labeled local cache"
@@ -4175,7 +4175,7 @@
         "definition_sha256": "459ac274a77ee12ea0f6bc7aa8ecc3ac38dbf0b5321914d415c7e55fafcc1a57",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1643
+        "line": 1645
       },
       "status": "planned",
       "title": "Leased, idempotent, budgeted, cancellable, expiring scheduled work with read-only first release and post-run receipts"
@@ -4191,7 +4191,7 @@
         "definition_sha256": "8d015b42cbd0a8f159b2d2882bd751e72408059ddceaeac9baab63347ab45a11",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1644
+        "line": 1646
       },
       "status": "planned",
       "title": "Child grants, separate writable worktrees, ownership, conflicts, budgets, cancellation propagation, and attributable receipts"
@@ -4207,7 +4207,7 @@
         "definition_sha256": "3866411c1fff8f1b38d97623321d13f776f0244014b6fa587625b9bc70762a2f",
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35. Competitive Review Integration Register",
-        "line": 1640
+        "line": 1642
       },
       "status": "planned",
       "title": "Manifested MCP and plugins fully mediated by the kernel, with identity, scopes, limits, cancellation, receipts, and a read-only first phase"
@@ -4216,6 +4216,6 @@
   "schema_version": 2,
   "source": {
     "document": "Agent-Scaffolding-Inventory.md",
-    "sha256": "2e6ae6ce915dbe3b7bea306c54ad8f98b12745c8f1dfa49bc550353710d32d06"
+    "sha256": "256a1d388475fef1303877237a5820d89c081c891d59861130a4e2f6954ff89e"
   }
 }

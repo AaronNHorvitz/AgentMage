@@ -20,12 +20,14 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: active.
+Stabilization scope freeze: inactive.
 
 This inventory preserves accepted target requirements and historical wording; it
 does not promote them to current product claims. The 227 stable requirements and
-their additions-only identities remain unchanged while the original roadmap is
-paused for approval-gated stabilization.
+their additions-only identities remain unchanged. Under
+[Decision 0021](docs/decisions/0021-stabilization-resumption.md), the original
+roadmap resumes at its first incomplete dependency gate while all open release,
+platform, security, and evidence blockers remain in force.
 
 The context that makes this project worth building is simple: frontier models are extraordinary but expensive, token-limited, cloud-bound, and unavailable for content that must never leave the machine — while most of a working day's actual load is not frontier work at all. Reading notes, tracking tasks, cleaning meeting records, converting documents, inspecting repositories, assembling briefings, and preserving continuity are often mechanical jobs with checkable answers. AgentMage's long-term direction is to use the least powerful measured tier that satisfies explicit acceptance checks. v0.1 is intentionally simpler: deterministic operations run first when applicable, the user selects the local model explicitly, no automatic model switch occurs, and no frontier transfer exists.
 

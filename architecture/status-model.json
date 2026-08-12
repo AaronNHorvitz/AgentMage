@@ -414,9 +414,9 @@
     }
   ],
   "scope_control": {
-    "stabilization_active": true,
-    "new_capability_families_frozen": true,
-    "original_roadmap_paused": true,
+    "stabilization_active": false,
+    "new_capability_families_frozen": false,
+    "original_roadmap_paused": false,
     "accepted_epics": 17,
     "accepted_sprints": 169,
     "stable_requirements": 227,
@@ -448,7 +448,7 @@
       "Current integrated workflow: none.",
       "Current enabled models: none.",
       "Current supported platforms: none.",
-      "Stabilization scope freeze: active."
+      "Stabilization scope freeze: inactive."
     ]
   }
 }

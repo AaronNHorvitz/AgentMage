@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Pre-alpha scaffold under Decision 0012 stabilization; original numbered roadmap paused |
+| Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
 | Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
 | Scope | Complete AgentMage roadmap from foundation through expanded v1.0 GA closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
@@ -19,7 +19,7 @@
 | Windows 11 boundary | `WINDOWS-BOUNDARIES.md` |
 | Current status authority | `architecture/status-model.json` under Decision 0012 |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
-| Execution rule | During stabilization, execute only the separately approved stabilization phase. The preserved numbered roadmap resumes only after its final resumption gate under Decisions 0003 and 0008 through 0012; no platform evidence may be substituted |
+| Execution rule | Execute the first authoritative incomplete dependency gate under Decision 0021; no platform evidence may be substituted and no open release or security blocker is waived |
 
 ## Current Implementation Truth
 
@@ -31,14 +31,13 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: active.
+Stabilization scope freeze: inactive.
 
 The complete 17-epic, 169-sprint, 227-requirement plan below remains the
 granular execution authority for the accepted target product. It is preserved,
-not cancelled or renumbered. While stabilization is active, its next unchecked
-item is not an instruction to bypass the separately approved stabilization
-phase. A proposed capability-family addition requires an explicitly approved
-scope-freeze exception and impact statement.
+not cancelled or renumbered. Decision 0021 resumes execution at the first
+authoritative incomplete dependency gate. A proposed capability-family addition
+still requires an explicitly approved decision and complete impact statement.
 
 ## Planning Hierarchy and Numbering
 

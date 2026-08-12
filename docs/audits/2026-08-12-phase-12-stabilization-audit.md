@@ -7,7 +7,7 @@
 | Phase 11 source tree | `4d7fa4c7bde621ce42a8ca3be2e44782c40b961b` |
 | Audit scope | Architecture, authority, product, native Linux, package candidates, Windows boundary, current evidence, traceability, documentation, status, and overclaim review |
 | Provenance | Implementation-session engineering audit plus deterministic self-checks; not independent human or external review |
-| Current disposition | Technically acceptable stabilization candidate; roadmap resumption blocked pending provenance-valid final review and explicit user approval |
+| Current disposition | Accepted by the user for roadmap resumption under Decision 0021; independent provenance review remains open before signed release or connected-authority promotion |
 
 ## 1. Executive Result
 
@@ -17,13 +17,13 @@ evidence, status, and documentation gates pass. Candidate RPM, DEB, and VSIX
 lifecycles pass without creating a signed release, supported platform, enabled
 model, or integrated-product claim.
 
-Stabilization is not declared complete. The final review was performed in the
-same implementation session and therefore does not satisfy the repository's
+The same-session audit is complete but does not satisfy the repository's
 independent-human or external-review provenance classes. Real fuzz execution is
 still a separately approved manual P1 task. Release signing and trusted package
 bootstrap, Windows-native implementation and evidence, and one privilege-bound
-Linux mount test remain explicit P2 blockers. The original numbered roadmap
-also remains paused until the user explicitly authorizes resumption.
+Linux mount test remain explicit P2 blockers. Decision 0021 records the user's
+acceptance of the residual set and authorization to resume development without
+misrepresenting the audit as independent review.
 
 ## 2. Audit Method
 
@@ -79,12 +79,12 @@ and exact candidate bytes continue to verify.
 | ID | Priority | State | Owner | Exit condition |
 |---|---|---|---|---|
 | `P1-R01` | P1 | Open manual security task | Project maintainer | Separately approved real product-boundary fuzz run with exact toolchain, harness, corpus, sanitizer, resource, and result identities. |
-| `P1-R02` | P1 | Blocking final provenance gate | Project maintainer | Review of the exact final tree by a provenance-valid independent human, external reviewer, or separately accepted independent process. |
+| `P1-R02` | P1 | Open release and connected-authority provenance gate | Project maintainer | Review of the exact final tree by a provenance-valid independent human, external reviewer, or separately accepted independent process before signed release or connected-authority promotion. |
 | `P2-R01` | P2 | Release blocked | Release owner | External signing identity, detached-signature ceremony, independently distributed trust anchor, and trusted packaged VS Code-to-host bootstrap pass clean-install tests. |
 | `P2-R02` | P2 | Windows blocked | Windows platform owner | Native Windows adapter, hostile native matrix, standard-user MSIX lifecycle, and real Windows 11 x64 evidence pass without Linux substitution. |
 | `P2-R03` | P2 | One native test unavailable | Linux platform owner | Run the isolated bind-mount swap test in a permitted user/mount namespace and retain exact native evidence. |
 | `P2-R04` | P2 | Historical reports stale | Evidence owner | Migrate or supersede legacy supply-chain, locked-resolution, artifact-scan, and policy reports under the accepted historical/current evidence model. |
-| `P2-R05` | P2 | Roadmap resumption paused | Product owner | User explicitly accepts the residual risks and authorizes resuming the original numbered roadmap. |
+| `P2-R05` | P2 | Closed by Decision 0021 | Product owner | User accepted the residual risks and authorized resuming the original numbered roadmap on 2026-08-12. |
 
 The stale historical reports are not treated as current passes. Their failure is
 preserved by the historical replay while the current Phase 10 evidence gate
@@ -137,13 +137,15 @@ The repository continues to state:
 - no enabled model;
 - no supported platform;
 - no released package; and
-- stabilization scope freeze active.
+- stabilization scope freeze inactive under Decision 0021.
 
-Those statements match the audited tree. The Phase 11 package candidates and
-Windows contract are useful implementation increments but do not change them.
+The first five statements match the audited tree. The final statement records a
+planning-state transition after the audit and does not promote product status.
+The Phase 11 package candidates and Windows contract remain implementation
+increments rather than release claims.
 
-**Audit recommendation:** accept the final tree as a bounded stabilization
-candidate and obtain a provenance-valid review of this exact revision. After
-that review and explicit user acceptance of the listed residuals, resume the
-original numbered roadmap at its first incomplete dependency gate. Until both
-events occur, the roadmap remains paused.
+**Post-audit disposition:** the user accepted the recorded residual risks and
+authorized roadmap resumption on 2026-08-12. Decision 0021 therefore closes the
+development resumption gate. The provenance-valid independent review remains
+open and must pass before signed release or connected-authority promotion; this
+record does not attribute that review to the user.

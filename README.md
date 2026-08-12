@@ -6,7 +6,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Pre-alpha scaffold under stabilization; no integrated end-user workflow or supported binary |
+| Status | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; no integrated end-user workflow or supported binary |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
 | First interface target | Native Visual Studio Code Chat beside the separate Codex tab |
@@ -27,16 +27,18 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: active.
+Stabilization scope freeze: inactive.
 
 These statements describe the integrated product, not the amount of contract,
 test, planning, or isolated Linux security work in the repository. The
 machine-readable source is
 [`architecture/status-model.json`](./architecture/status-model.json), governed
 by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
-The accepted 17-epic, 169-sprint, 227-requirement scope is preserved, but the
-original numbered roadmap is paused until the stabilization gate authorizes its
-resumption.
+The accepted 17-epic, 169-sprint, 227-requirement scope is preserved. Under
+[`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), the user
+accepted the recorded residual risks and authorized the original numbered
+roadmap to resume at its first incomplete dependency gate. Independent review
+remains required before signed release or connected-authority promotion.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,

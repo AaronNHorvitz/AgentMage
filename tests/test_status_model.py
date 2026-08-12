@@ -84,9 +84,9 @@ class StatusModelTests(unittest.TestCase):
         mutated["scope_control"]["accepted_sprints"] = 168
         self.assertTrue(any("must equal 169" in item for item in self.validate(mutated)))
 
-    def test_scope_freeze_cannot_be_disabled_silently(self) -> None:
+    def test_scope_freeze_cannot_be_reactivated_silently(self) -> None:
         mutated = copy.deepcopy(self.model)
-        mutated["scope_control"]["new_capability_families_frozen"] = False
+        mutated["scope_control"]["new_capability_families_frozen"] = True
         self.assertTrue(
             any("new_capability_families_frozen" in item for item in self.validate(mutated))
         )

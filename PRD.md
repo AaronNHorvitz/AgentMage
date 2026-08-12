@@ -6,7 +6,7 @@
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
 | **Date** | 2026-08-11 |
-| **Status** | Pre-alpha scaffold under Decision 0012 stabilization; no integrated end-user workflow or supported binary |
+| **Status** | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; no integrated end-user workflow or supported binary |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
@@ -32,15 +32,17 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: active.
+Stabilization scope freeze: inactive.
 
 This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json). The
 17 epics, 169 sprints, and 227 stable requirements remain accepted and
-unchanged. Their original execution is paused until the stabilization gate
-authorizes resumption.
+unchanged. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
+records the user's acceptance of the stabilization residuals and authorizes
+execution to resume at the first incomplete dependency gate. It does not close
+the remaining release, platform, security, or evidence blockers.
 
 The accepted Phase 9 candidate under
 [`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md)

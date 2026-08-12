@@ -238,10 +238,11 @@ def _validate_scope(model: dict[str, Any], root: Path, failures: list[str]) -> N
         "stabilization_active",
         "new_capability_families_frozen",
         "original_roadmap_paused",
-        "exception_requires_explicit_approval",
     ):
-        if scope.get(field) is not True:
-            failures.append(f"scope control {field} must remain true during stabilization")
+        if scope.get(field) is not False:
+            failures.append(f"scope control {field} must remain false after Decision 0021")
+    if scope.get("exception_requires_explicit_approval") is not True:
+        failures.append("scope control exception_requires_explicit_approval must remain true")
 
     tasks = (root / "TASKS.md").read_text(encoding="utf-8")
     registry = load_json(root / "requirements" / "registry.json")

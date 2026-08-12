@@ -2,7 +2,7 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Pre-alpha scaffold under Decision 0012 stabilization; original numbered roadmap paused |
+| Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
 | Version | 1.5 |
 | Date | 2026-08-11 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
@@ -33,14 +33,15 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: active.
+Stabilization scope freeze: inactive.
 
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
-these current-state claims. This plan still preserves the complete 17-epic,
-169-sprint, 227-requirement target sequence, but that sequence is paused while
-the approval-gated stabilization phases run. A new capability family requires
-an explicitly approved scope-freeze exception and impact statement.
+these current-state claims. This plan preserves the complete 17-epic,
+169-sprint, 227-requirement target sequence. Under
+[`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), that
+sequence resumes at its first incomplete dependency gate. New capability
+families remain subject to explicit decisions and complete impact analysis.
 
 Stabilization Phase 9 now has a source candidate under accepted
 [`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md): one
@@ -687,9 +688,9 @@ The first high-level sequence is:
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
-While stabilization is active, use only the separately approved stabilization
-phase. After explicit resumption, use the first authoritative incomplete sprint,
-story, task, and sub-task in `TASKS.md`. Confirm its dependencies and source
+Stabilization resumption is recorded by Decision 0021. Use the first
+authoritative incomplete sprint, story, task, and sub-task in `TASKS.md`.
+Confirm its dependencies and source
 requirements, perform only that bounded work, run its inherited and named tests,
 and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it
 unchecked and move only to the next numbered item that is technically independent

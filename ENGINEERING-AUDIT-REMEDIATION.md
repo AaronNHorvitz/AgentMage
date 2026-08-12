@@ -6,7 +6,7 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
-Current authorized phase: **Phase 12 - Independent Stabilization Audit and Resumption Gate**
+Current authorized phase: **Stabilization closed; numbered roadmap resumed under Decision 0021**
 
 ## 1. Purpose and Authority Boundary
 
@@ -2095,10 +2095,13 @@ parent, mutation, and positive candidate tests pass.
 No unresolved P0 is known after that correction. The owned residuals are real
 manual fuzz execution and provenance-valid final review at P1; external release
 signing and trusted bootstrap, Windows native implementation and evidence, one
-mount-privilege test, stale historical reports, and explicit roadmap resumption
-at P2. No residual is represented as waived or passing.
+mount-privilege test, and stale historical reports at P2. No residual is
+represented as waived or passing.
 
-The technical candidate is acceptable for a final independent review, but the
-Phase 12 resumption gate remains blocked. This same-session audit cannot satisfy
-the repository's independent-review provenance rule, and the user has not yet
-explicitly accepted the final residual set or authorized roadmap resumption.
+The technical candidate is acceptable for a final independent review. On
+2026-08-12, the user explicitly accepted the final residual set and authorized
+roadmap resumption. Decision 0021 closes the development resumption gate and
+lifts the temporary stabilization scope freeze. It does not claim the user
+performed an independent technical review: that provenance-valid review remains
+open before signed release or connected-authority promotion. The numbered
+roadmap resumes at its first authoritative incomplete dependency gate.
