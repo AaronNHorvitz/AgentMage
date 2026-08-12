@@ -6,7 +6,7 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
-Current authorized phase: **Phase 11 - Packaging and Windows Increment**
+Current authorized phase: **Phase 12 - Independent Stabilization Audit and Resumption Gate**
 
 ## 1. Purpose and Authority Boundary
 
@@ -2073,3 +2073,32 @@ Phase 11 verification produced these candidate results:
   The historical supply-chain, locked-resolution, artifact-scan, and policy
   reports remain stale under the already recorded historical/current evidence
   split; they were not rewritten into current passes.
+
+## 23. Phase 12 Record
+
+The user authorized Phase 12 execution and its local commit on 2026-08-12 after
+authorizing the separate Phase 11 commit. The audit is retained at
+`docs/audits/2026-08-12-phase-12-stabilization-audit.md` and binds the committed
+Phase 11 source and tree identities. Its provenance is an implementation-session
+engineering audit plus deterministic self-checks, not independent human or
+external review.
+
+Manual review found one new P0 in the Phase 11 package verifier: a manifest
+status change from candidate to signed release could reach release-mode success
+without a signature. Phase 12 corrected the defect before final disposition.
+Signed-release verification now always returns a stable unavailable error until
+the external trust boundary exists. The verifier additionally requires the exact
+three-file payload, rejects multi-link files, and revalidates the same no-follow
+descriptors after each bounded read. Relabel, incomplete-manifest, symlinked
+parent, mutation, and positive candidate tests pass.
+
+No unresolved P0 is known after that correction. The owned residuals are real
+manual fuzz execution and provenance-valid final review at P1; external release
+signing and trusted bootstrap, Windows native implementation and evidence, one
+mount-privilege test, stale historical reports, and explicit roadmap resumption
+at P2. No residual is represented as waived or passing.
+
+The technical candidate is acceptable for a final independent review, but the
+Phase 12 resumption gate remains blocked. This same-session audit cannot satisfy
+the repository's independent-review provenance rule, and the user has not yet
+explicitly accepted the final residual set or authorized roadmap resumption.

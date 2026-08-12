@@ -14,6 +14,11 @@ const MANIFEST_PATH: &str = "usr/share/agentmage/package-manifest.json";
 const MAX_MANIFEST_BYTES: u64 = 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_FILES: usize = 32;
+const REQUIRED_FILES: [&str; 3] = [
+    "usr/libexec/agentmage/agentmage-host",
+    "usr/share/agentmage/agentmage.vsix",
+    "usr/share/licenses/agentmage/LICENSE",
+];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PackageClass {
@@ -22,10 +27,10 @@ pub enum PackageClass {
 }
 
 impl PackageClass {
-    const fn status(self) -> &'static str {
+    const fn status(self) -> Result<&'static str, PackageVerificationError> {
         match self {
-            Self::SignedRelease => "signed-release",
-            Self::UnsignedCandidate => "unsigned-candidate",
+            Self::SignedRelease => Err(PackageVerificationError::ReleaseVerificationUnavailable),
+            Self::UnsignedCandidate => Ok("unsigned-candidate"),
         }
     }
 }
@@ -36,6 +41,7 @@ pub enum PackageVerificationError {
     ManifestDenied,
     ManifestInvalid,
     StatusDenied,
+    ReleaseVerificationUnavailable,
     FileDenied,
     FileMismatch,
 }
@@ -47,6 +53,9 @@ impl PackageVerificationError {
             Self::ManifestDenied => "agentmage.package.manifest_denied",
             Self::ManifestInvalid => "agentmage.package.manifest_invalid",
             Self::StatusDenied => "agentmage.package.status_denied",
+            Self::ReleaseVerificationUnavailable => {
+                "agentmage.package.release_verification_unavailable"
+            }
             Self::FileDenied => "agentmage.package.file_denied",
             Self::FileMismatch => "agentmage.package.file_mismatch",
         }
@@ -76,6 +85,7 @@ pub fn verify_package_root(
     root: &std::ffi::OsStr,
     expected: PackageClass,
 ) -> Result<(), PackageVerificationError> {
+    let expected_status = expected.status()?;
     let root = open(
         Path::new(root),
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
@@ -86,7 +96,7 @@ pub fn verify_package_root(
         .map_err(|_| PackageVerificationError::ManifestDenied)?;
     let manifest: PackageManifest = serde_json::from_slice(&manifest_bytes)
         .map_err(|_| PackageVerificationError::ManifestInvalid)?;
-    validate_manifest(&manifest, expected)?;
+    validate_manifest(&manifest, expected_status)?;
     for record in &manifest.files {
         verify_file(&root, record)?;
     }
@@ -95,7 +105,7 @@ pub fn verify_package_root(
 
 fn validate_manifest(
     manifest: &PackageManifest,
-    expected: PackageClass,
+    expected_status: &str,
 ) -> Result<(), PackageVerificationError> {
     if manifest.schema_version != 1
         || manifest.record_type != "agentmage-package-manifest"
@@ -106,7 +116,7 @@ fn validate_manifest(
     {
         return Err(PackageVerificationError::ManifestInvalid);
     }
-    if manifest.status != expected.status() {
+    if manifest.status != expected_status {
         return Err(PackageVerificationError::StatusDenied);
     }
     let mut paths: Vec<&str> = manifest
@@ -117,7 +127,7 @@ fn validate_manifest(
     let original = paths.clone();
     paths.sort_unstable();
     paths.dedup();
-    if paths != original {
+    if paths != original || paths != REQUIRED_FILES {
         return Err(PackageVerificationError::ManifestInvalid);
     }
     Ok(())
@@ -134,6 +144,7 @@ fn verify_file(root: &OwnedFd, record: &PackageFile) -> Result<(), PackageVerifi
     if metadata.st_size < 0
         || metadata.st_size as u64 != record.size
         || metadata.st_mode & 0o777 != record.mode
+        || metadata.st_nlink != 1
     {
         return Err(PackageVerificationError::FileMismatch);
     }
@@ -209,20 +220,27 @@ fn read_bounded_beneath_with_metadata(
         Mode::empty(),
     )
     .map_err(std::io::Error::other)?;
-    let metadata = fstat(&descriptor).map_err(std::io::Error::other)?;
-    if FileType::from_raw_mode(metadata.st_mode) != FileType::RegularFile
-        || metadata.st_size < 0
-        || metadata.st_size as u64 > limit
+    let before = fstat(&descriptor).map_err(std::io::Error::other)?;
+    if FileType::from_raw_mode(before.st_mode) != FileType::RegularFile
+        || before.st_size < 0
+        || before.st_size as u64 > limit
     {
         return Err(std::io::Error::other("bounded regular file required"));
     }
-    let mut bytes = Vec::with_capacity(metadata.st_size as usize);
+    let mut bytes = Vec::with_capacity(before.st_size as usize);
     let file = fs::File::from(descriptor);
-    file.take(limit + 1).read_to_end(&mut bytes)?;
-    if bytes.len() as i64 != metadata.st_size {
+    (&file).take(limit + 1).read_to_end(&mut bytes)?;
+    let after = fstat(&file).map_err(std::io::Error::other)?;
+    if bytes.len() as i64 != before.st_size
+        || before.st_dev != after.st_dev
+        || before.st_ino != after.st_ino
+        || before.st_mode != after.st_mode
+        || before.st_size != after.st_size
+        || before.st_nlink != after.st_nlink
+    {
         return Err(std::io::Error::other("file changed during read"));
     }
-    Ok((bytes, metadata))
+    Ok((bytes, after))
 }
 
 fn lowercase_hex(bytes: &[u8]) -> String {
@@ -250,12 +268,8 @@ mod tests {
 
     #[test]
     fn exact_candidate_payload_verifies_and_mutation_fails_closed() {
-        let root = fixture_root();
+        let root = complete_fixture_root("unsigned-candidate");
         let payload = root.join("usr/libexec/agentmage/agentmage-host");
-        fs::create_dir_all(payload.parent().expect("payload parent")).expect("payload parent");
-        fs::write(&payload, b"candidate-host").expect("payload");
-        fs::set_permissions(&payload, fs::Permissions::from_mode(0o755)).expect("mode");
-        write_manifest(&root, "unsigned-candidate", &payload);
         verify_package_root(root.as_os_str(), PackageClass::UnsignedCandidate)
             .expect("candidate verifies");
         fs::write(&payload, b"changed-host").expect("mutation");
@@ -268,6 +282,26 @@ mod tests {
 
     #[test]
     fn candidate_cannot_satisfy_signed_release_mode() {
+        let root = complete_fixture_root("unsigned-candidate");
+        assert_eq!(
+            verify_package_root(root.as_os_str(), PackageClass::SignedRelease),
+            Err(PackageVerificationError::ReleaseVerificationUnavailable)
+        );
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn relabeled_manifest_cannot_enable_unimplemented_release_verification() {
+        let root = complete_fixture_root("signed-release");
+        assert_eq!(
+            verify_package_root(root.as_os_str(), PackageClass::SignedRelease),
+            Err(PackageVerificationError::ReleaseVerificationUnavailable)
+        );
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn candidate_manifest_must_bind_the_complete_payload_set() {
         let root = fixture_root();
         let payload = root.join("usr/libexec/agentmage/agentmage-host");
         fs::create_dir_all(payload.parent().expect("payload parent")).expect("payload parent");
@@ -275,29 +309,79 @@ mod tests {
         fs::set_permissions(&payload, fs::Permissions::from_mode(0o755)).expect("mode");
         write_manifest(&root, "unsigned-candidate", &payload);
         assert_eq!(
-            verify_package_root(root.as_os_str(), PackageClass::SignedRelease),
-            Err(PackageVerificationError::StatusDenied)
+            verify_package_root(root.as_os_str(), PackageClass::UnsignedCandidate),
+            Err(PackageVerificationError::ManifestInvalid)
         );
         fs::remove_dir_all(root).expect("cleanup");
     }
 
     #[test]
     fn symlinked_payload_parent_fails_closed() {
-        let root = fixture_root();
+        let root = complete_fixture_root("unsigned-candidate");
         let outside = fixture_root();
         let outside_payload = outside.join("agentmage-host");
         fs::write(&outside_payload, b"candidate-host").expect("outside payload");
         fs::set_permissions(&outside_payload, fs::Permissions::from_mode(0o755)).expect("mode");
         let libexec = root.join("usr/libexec");
-        fs::create_dir_all(&libexec).expect("libexec");
+        fs::remove_dir_all(libexec.join("agentmage")).expect("remove package directory");
         std::os::unix::fs::symlink(&outside, libexec.join("agentmage")).expect("parent symlink");
-        write_manifest(&root, "unsigned-candidate", &outside_payload);
         assert_eq!(
             verify_package_root(root.as_os_str(), PackageClass::UnsignedCandidate),
             Err(PackageVerificationError::FileDenied)
         );
         fs::remove_dir_all(root).expect("cleanup root");
         fs::remove_dir_all(outside).expect("cleanup outside");
+    }
+
+    fn complete_fixture_root(status: &str) -> PathBuf {
+        let root = fixture_root();
+        let files = [
+            (
+                "usr/libexec/agentmage/agentmage-host",
+                b"host".as_slice(),
+                0o755,
+            ),
+            (
+                "usr/share/agentmage/agentmage.vsix",
+                b"vsix".as_slice(),
+                0o644,
+            ),
+            (
+                "usr/share/licenses/agentmage/LICENSE",
+                b"license".as_slice(),
+                0o644,
+            ),
+        ];
+        let records: Vec<_> = files
+            .iter()
+            .map(|(relative, bytes, mode)| {
+                let path = root.join(relative);
+                fs::create_dir_all(path.parent().expect("parent")).expect("parent");
+                fs::write(&path, bytes).expect("payload");
+                fs::set_permissions(&path, fs::Permissions::from_mode(*mode)).expect("mode");
+                json!({
+                    "path": relative,
+                    "sha256": super::lowercase_hex(&Sha256::digest(bytes)),
+                    "size": bytes.len(),
+                    "mode": mode
+                })
+            })
+            .collect();
+        let manifest = root.join(super::MANIFEST_PATH);
+        fs::create_dir_all(manifest.parent().expect("manifest parent")).expect("manifest parent");
+        fs::write(
+            manifest,
+            serde_json::to_vec(&json!({
+                "schema_version": 1,
+                "record_type": "agentmage-package-manifest",
+                "status": status,
+                "package_id": "fixture",
+                "files": records
+            }))
+            .expect("manifest bytes"),
+        )
+        .expect("manifest");
+        root
     }
 
     fn write_manifest(root: &Path, status: &str, payload: &Path) {

@@ -49,11 +49,13 @@ execution as Windows evidence would weaken the established trust boundary.
    payload are regular, bounded, normalized, complete, correctly ordered, and
    byte-identical to the manifest.
 3. Candidate verification and signed-release verification are different command
-   modes. An `unsigned-candidate` manifest always fails signed-release mode.
+   modes. Signed-release mode returns unavailable until an independently
+   anchored detached-signature boundary exists; changing a manifest status can
+   never enable it.
 4. Manifest mutation, file mutation, mode mutation, missing files, extra or
    duplicate manifest paths, path aliases, and symlinks fail closed with
    content-free codes.
-5. A future signed-release mode must additionally verify an independently
+5. A future enabled signed-release mode must verify an independently
    anchored release manifest and detached signature before activation. Phase 11
    does not invent or retain signing credentials.
 
