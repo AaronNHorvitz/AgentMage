@@ -134,11 +134,11 @@ ATTACKS = (
 )
 PLATFORM_STATUS = {
     "fedora_44_x86_64": "verified-local",
-    "ubuntu_26_04_x86_64": "blocked-clean-environment",
+    "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately",
     "macos": "blocked-macos",
 }
 LIMITATIONS = [
-    "Clean package lifecycle is verified separately on Fedora and Ubuntu; Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
     "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted.",
 ]

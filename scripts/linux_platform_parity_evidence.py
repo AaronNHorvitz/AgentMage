@@ -61,6 +61,12 @@ INPUTS = (
         "pass-fedora-only",
     ),
     (
+        "sandbox-attacks",
+        "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
+        "linux-cross-distribution-sandbox-attacks",
+        "pass-bounded-cross-distribution",
+    ),
+    (
         "inactive-inference",
         "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
         "linux-native-inference-package-boundary",
@@ -113,9 +119,9 @@ DIMENSIONS = (
     {
         "id": "bubblewrap-seccomp-cgroup",
         "fedora": "verified-live",
-        "ubuntu": "blocked-live-execution",
+        "ubuntu": "verified-live-userspace-envelope-native-open",
         "parity": "blocked",
-        "evidence": ["linux-controls"],
+        "evidence": ["linux-controls", "sandbox-attacks"],
     },
     {
         "id": "authenticated-ipc",
@@ -141,16 +147,12 @@ DIMENSIONS = (
 )
 BLOCKERS = (
     {
-        "task_id": "9.1.3.2",
-        "reason": "Ubuntu live sandbox and attack execution is absent.",
-    },
-    {
         "task_id": "9.1.3.3",
-        "reason": "Independent control-disablement startup refusal is not yet complete.",
+        "reason": "Independent control-disablement startup refusal and Ubuntu Secret Service closure are not yet complete.",
     },
     {
         "task_id": "9.1.3.4",
-        "reason": "Graphical Visual Studio Code execution is absent on both Linux targets.",
+        "reason": "Native Ubuntu worker isolation and graphical Visual Studio Code execution on both Linux targets remain absent.",
     },
     {
         "task_id": "9.1.3.5",
@@ -158,8 +160,8 @@ BLOCKERS = (
     },
 )
 LIMITATIONS = (
-    "This report proves six bounded Fedora/Ubuntu parity dimensions and explicitly blocks four; it is not a full platform-parity claim.",
-    "Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "This report proves six complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks four dimensions; it is not a full platform-parity claim.",
+    "Ubuntu Bubblewrap, seccomp, and cgroup attacks pass in a rootless privileged test envelope; native Ubuntu isolation, live Secret Service closure, and complete native IPC integration remain pending.",
     "Neither Linux target has completed the graphical Visual Studio Code workflow in a clean package environment.",
     "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
     "All packages are unsigned candidates and make no supported-release claim.",
@@ -376,7 +378,7 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or controls.get("platform_status")
         != {
             "fedora_44_x86_64": "verified-local",
-            "ubuntu_26_04_x86_64": "blocked-clean-environment",
+            "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately",
             "macos": "blocked-macos",
         }
         or not _all_pass(controls.get("sandbox_tests"), 17)
@@ -389,6 +391,43 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or controls.get("private_values_present") is not False
     ):
         failures.append("live Linux control parity input is incomplete")
+
+    attacks = values["sandbox-attacks"]
+    attack_platforms = attacks.get("platforms", {})
+    if not isinstance(attack_platforms, dict):
+        attack_platforms = {}
+    fedora_attacks = attack_platforms.get("fedora-44-x86_64", {})
+    ubuntu_attacks = attack_platforms.get("ubuntu-26.04-x86_64", {})
+    attack_results = attacks.get("attack_results")
+    if (
+        attacks.get("status") != "pass-bounded-cross-distribution"
+        or set(attack_platforms) != {"fedora-44-x86_64", "ubuntu-26.04-x86_64"}
+        or fedora_attacks.get("execution_context") != "native-standard-user"
+        or fedora_attacks.get("native_platform_claim") is not True
+        or not _all_pass(fedora_attacks.get("tests"), 11)
+        or ubuntu_attacks.get("execution_context")
+        != "standard-user-in-rootless-privileged-test-envelope"
+        or ubuntu_attacks.get("native_platform_claim") is not False
+        or ubuntu_attacks.get("container_controls", {}).get("network") != "none"
+        or ubuntu_attacks.get("container_controls", {}).get("podman_rootless")
+        is not True
+        or ubuntu_attacks.get("container_controls", {}).get("outer_privileged_flag")
+        is not True
+        or not _all_pass(ubuntu_attacks.get("tests"), 11)
+        or not isinstance(attack_results, list)
+        or len(attack_results) != 8
+        or not all(isinstance(item, dict) for item in attack_results)
+        or any(item.get("fedora") != "pass-zero-escape" for item in attack_results)
+        or any(
+            item.get("ubuntu") != "pass-zero-escape-in-declared-envelope"
+            for item in attack_results
+        )
+        or attacks.get("summary", {}).get("native_ubuntu_isolation_verified")
+        is not False
+        or attacks.get("release_claim") != "none"
+        or attacks.get("private_values_present") is not False
+    ):
+        failures.append("bounded cross-distribution sandbox input is incomplete")
 
     inference = values["inactive-inference"]
     process = inference.get("process_boundary", {})
@@ -558,7 +597,7 @@ def main() -> int:
     except (OSError, UnicodeError, LinuxPlatformParityError, subprocess.SubprocessError) as error:
         print(f"Linux platform parity evidence failed: {error}", file=sys.stderr)
         return 1
-    print("Fedora/Ubuntu parity matrix validated with four explicit open gates")
+    print("Fedora/Ubuntu parity matrix validated with three explicit open gates")
     return 0
 
 

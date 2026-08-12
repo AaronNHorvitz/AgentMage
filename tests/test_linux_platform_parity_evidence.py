@@ -110,6 +110,14 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
         ] = "verified-local"
         mutations.append((controls, "live Linux control parity input is incomplete"))
 
+        attacks = copy.deepcopy(evidence.load_inputs())
+        attacks["sandbox-attacks"]["summary"][
+            "native_ubuntu_isolation_verified"
+        ] = True
+        mutations.append(
+            (attacks, "bounded cross-distribution sandbox input is incomplete")
+        )
+
         inference = copy.deepcopy(evidence.load_inputs())
         inference["inactive-inference"]["enabled_models"] = 1
         mutations.append((inference, "inactive inference parity input is incomplete"))
