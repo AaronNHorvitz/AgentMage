@@ -28,6 +28,7 @@ EXPECTED_INTERNAL_CARGO = {
 }
 EXPECTED_EXTERNAL_CARGO = {
     "ed25519-dalek",
+    "rusqlite",
     "rustix",
     "seccompiler",
     "serde",
@@ -110,9 +111,11 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
     if development.get("cargo_packages") != []:
         failures.append("Cargo development dependency class must be empty")
     if packaging != {
-        "linux_packages": [],
+        "linux_packages": [
+            "OpenSSL 3 libcrypto (distribution package selected by support matrix)"
+        ],
         "macos_packages": [],
-        "may_enter_product_manifests": False,
+        "may_enter_product_manifests": True,
     }:
         failures.append("platform packaging dependencies must remain isolated and empty")
     if optional != {

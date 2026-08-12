@@ -21,6 +21,18 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn("raw Linux sandbox execution is public", failures)
 
+    def test_in_memory_coordinator_cannot_expose_effect_launch(self) -> None:
+        relative = Path("kernel/engine/src/authority_transaction.rs")
+        source = self.source(str(relative)).replace(
+            "    pub(crate) fn execute_effect<D: EffectDriver>(",
+            "    pub fn execute_effect<D: EffectDriver>(",
+            1,
+        )
+        failures = validate_effect_boundary(overrides={relative: source})
+        self.assertIn(
+            "in-memory authority coordinator exposes an effect entry point", failures
+        )
+
     def test_clonable_permit_is_rejected(self) -> None:
         relative = Path("kernel/engine/src/authority_transaction.rs")
         source = self.source(str(relative)).replace(

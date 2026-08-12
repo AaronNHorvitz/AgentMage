@@ -3,8 +3,8 @@
 ## Status and Scope
 
 This document describes the current shared grant, policy, and held-target
-implementation through the Phase 6 candidate. It is a design and source-review
-artifact, not a release, durable-storage, Ubuntu, or macOS claim.
+implementation through the Phase 7 candidate. It is a design and source-review
+artifact, not a release, Ubuntu-execution, or macOS claim.
 
 `CapabilityGrant` is the only serializable authority candidate. The kernel may
 derive a nonserializable, non-cloneable `EffectAuthorization` from an exact
@@ -12,10 +12,11 @@ consumed operation grant for one driver call. `ApprovalRequest`, task records,
 plans, prompts, tool definitions, policy decisions, consumption records, and
 lifecycle records remain descriptive or evidentiary.
 
-The current issuer and transitions remain in-memory. Canonical target binding
-and exact-object Linux worker isolation are implemented; encrypted durable
-state, authenticated product IPC, host composition, and release integration
-remain later work.
+The issuer and transition maps are validated caches reconstructed from the
+SQLCipher authority. Canonical target binding, exact-object Linux worker
+isolation, encrypted authority checkpoints, and restart recovery are
+implemented; authenticated product IPC, host composition, and release
+integration remain later work.
 
 ## Grant Schema
 
@@ -90,9 +91,12 @@ digests, an unsupported schema, or revision zero fail policy construction.
 
 ## Policy Decision Table
 
-Evaluation returns at the first failing scope in this fixed order. `PolicyEngine::evaluate` never
-executes or mutates. `GrantIssuer::consume_for_execution` uses the decision in one exclusive
-in-memory transaction and terminalizes a stale otherwise-current operation grant.
+Evaluation returns at the first failing scope in this fixed order.
+`PolicyEngine::evaluate` never executes or mutates.
+`GrantIssuer::consume_for_execution` creates one exclusive candidate
+transition and terminalizes a stale otherwise-current operation grant.
+`DurableAuthorityRuntime` publishes that transition with the matching
+transaction revision before any worker launch.
 
 | Order | Scope | Stable code | Exact allow condition | On failure during consumption |
 |---:|---|---|---|---|
@@ -155,16 +159,19 @@ capability registration remain open work.
 7. Confirm approval, decision, consumption, and lifecycle records remain non-authoritative.
 8. Confirm the effect permit contains the consumed targets, exclusions, and preimages and that the
    Linux driver compares them to its held object before process launch.
-9. Do not infer durable storage, authenticated product IPC, host integration, Ubuntu, macOS, or
-   release behavior from this shared/Linux reference.
+9. Do not infer complete Sprint 11 data lifecycle, authenticated product IPC,
+   host integration, Ubuntu execution, macOS, or release behavior from this
+   shared/Linux reference.
 
 ## Limitations
 
-- Grant and policy state is currently in-memory and is not crash durable.
+- Grant, nonce, transaction, receipt, and checkpoint state is crash durable in
+  the Phase 7 candidate; policy construction remains an in-process input.
 - The mediated Linux driver and runner are implemented, but the application host does not yet
   compose them into a complete user workflow.
-- Schema version 2 now rejects the pre-Phase-6 raw `GrantTarget` shape. No durable version-2 grant
-  store or released compatibility promise exists; silent migration is intentionally unavailable.
+- Schema version 2 rejects the pre-Phase-6 raw `GrantTarget` shape. The new
+  version-1 database schema stores current version-2 contracts but creates no
+  released compatibility promise; silent contract migration remains unavailable.
 - Current policy callers are in-process; authenticated local IPC and process ownership are later.
 - The strict-local profile is not yet bound to startup configuration by the application host.
 - No macOS implementation, execution, signing, sandbox, or packaging evidence is claimed.

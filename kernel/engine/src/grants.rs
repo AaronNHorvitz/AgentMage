@@ -224,15 +224,22 @@ pub struct GrantLifecycleRecord {
     pub occurred_at_epoch_ms: u64,
 }
 
-/// In-memory kernel issuer used before durable grant storage is introduced.
+/// Kernel grant state machine cached from canonical encrypted state.
 ///
 /// Authority exists only when a candidate exactly matches this issuer's retained record.
 /// Publicly constructed `CapabilityGrant` values are not inserted implicitly.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct GrantIssuer {
     current: BTreeMap<GrantId, CapabilityGrant>,
+    histories: BTreeMap<GrantId, Vec<CapabilityGrant>>,
     revision_hashes: BTreeMap<(GrantId, u32), String>,
     used_nonces: BTreeSet<GrantNonce>,
+}
+
+pub(crate) struct GrantDurableParts<'a> {
+    pub(crate) histories: &'a BTreeMap<GrantId, Vec<CapabilityGrant>>,
+    pub(crate) revision_hashes: &'a BTreeMap<(GrantId, u32), String>,
+    pub(crate) used_nonces: &'a BTreeSet<GrantNonce>,
 }
 
 // Issuer construction must remain an explicit authority-boundary decision.
@@ -243,6 +250,7 @@ impl GrantIssuer {
     pub fn new() -> Self {
         Self {
             current: BTreeMap::new(),
+            histories: BTreeMap::new(),
             revision_hashes: BTreeMap::new(),
             used_nonces: BTreeSet::new(),
         }
@@ -262,12 +270,18 @@ impl GrantIssuer {
             .map(String::as_str)
     }
 
+    /// Returns the immutable revision history for one exact grant identity.
+    #[must_use]
+    pub fn history(&self, grant_id: &GrantId) -> Option<&[CapabilityGrant]> {
+        self.histories.get(grant_id).map(Vec::as_slice)
+    }
+
     /// Revalidates and atomically consumes one exact operation grant for execution.
     ///
     /// All fallible integrity, policy, arithmetic, and hashing work completes before issuer state
     /// changes. The exclusive borrow makes the current-record check and terminal transition one
-    /// in-memory transaction: after success, every replay observes `consumed` and fails closed.
-    /// Durable crash transactions remain the responsibility of the later encrypted grant store.
+    /// deterministic candidate update. The durable authority runtime publishes that update in the
+    /// same encrypted checkpoint as the transaction's `grant_consumed` revision before launch.
     pub fn consume_for_execution(
         &mut self,
         grant_id: &GrantId,
@@ -336,6 +350,10 @@ impl GrantIssuer {
             (consumed.grant_id.clone(), consumed.revision),
             consumed_sha256,
         );
+        self.histories
+            .get_mut(&consumed.grant_id)
+            .ok_or(GrantConsumeError::CorruptState)?
+            .push(consumed.clone());
         self.current.insert(consumed.grant_id.clone(), consumed);
         Ok(record)
     }
@@ -540,8 +558,14 @@ impl GrantIssuer {
         self.revision_hashes
             .insert((child.grant_id.clone(), child.revision), child_hash);
         self.current
-            .insert(updated_parent.grant_id.clone(), updated_parent);
+            .insert(updated_parent.grant_id.clone(), updated_parent.clone());
         self.current.insert(child.grant_id.clone(), child.clone());
+        self.histories
+            .get_mut(&updated_parent.grant_id)
+            .ok_or(GrantIssueError::ParentUnavailable)?
+            .push(updated_parent);
+        self.histories
+            .insert(child.grant_id.clone(), vec![child.clone()]);
         debug_assert!(
             self.revision_hashes
                 .contains_key(&(parent_grant_id.clone(), parent_revision))
@@ -568,6 +592,8 @@ impl GrantIssuer {
         self.used_nonces.insert(grant.nonce.clone());
         self.revision_hashes
             .insert((grant.grant_id.clone(), grant.revision), digest);
+        self.histories
+            .insert(grant.grant_id.clone(), vec![grant.clone()]);
         self.current.insert(grant.grant_id.clone(), grant);
         Ok(())
     }
@@ -603,8 +629,64 @@ impl GrantIssuer {
             (terminal.grant_id.clone(), terminal.revision),
             terminal_sha256,
         );
+        self.histories
+            .get_mut(&terminal.grant_id)
+            .ok_or(GrantLifecycleError::CorruptState)?
+            .push(terminal.clone());
         self.current.insert(terminal.grant_id.clone(), terminal);
         Ok(record)
+    }
+
+    pub(crate) fn durable_parts(&self) -> GrantDurableParts<'_> {
+        GrantDurableParts {
+            histories: &self.histories,
+            revision_hashes: &self.revision_hashes,
+            used_nonces: &self.used_nonces,
+        }
+    }
+
+    pub(crate) fn from_durable_parts(
+        histories: BTreeMap<GrantId, Vec<CapabilityGrant>>,
+        revision_hashes: BTreeMap<(GrantId, u32), String>,
+        used_nonces: BTreeSet<GrantNonce>,
+    ) -> Result<Self, GrantLifecycleError> {
+        let mut current = BTreeMap::new();
+        let mut observed_nonces = BTreeSet::new();
+        for (grant_id, history) in &histories {
+            if history.is_empty() {
+                return Err(GrantLifecycleError::CorruptState);
+            }
+            for (index, record) in history.iter().enumerate() {
+                let expected_revision = u32::try_from(index)
+                    .ok()
+                    .and_then(|value| value.checked_add(1))
+                    .ok_or(GrantLifecycleError::CorruptState)?;
+                let digest = grant_sha256(record).map_err(|_| GrantLifecycleError::CorruptState)?;
+                if &record.grant_id != grant_id
+                    || record.revision != expected_revision
+                    || revision_hashes.get(&(grant_id.clone(), record.revision)) != Some(&digest)
+                {
+                    return Err(GrantLifecycleError::CorruptState);
+                }
+                observed_nonces.insert(record.nonce.clone());
+            }
+            let latest = history
+                .last()
+                .cloned()
+                .ok_or(GrantLifecycleError::CorruptState)?;
+            current.insert(grant_id.clone(), latest);
+        }
+        if observed_nonces != used_nonces
+            || revision_hashes.len() != histories.values().map(Vec::len).sum::<usize>()
+        {
+            return Err(GrantLifecycleError::CorruptState);
+        }
+        Ok(Self {
+            current,
+            histories,
+            revision_hashes,
+            used_nonces,
+        })
     }
 }
 

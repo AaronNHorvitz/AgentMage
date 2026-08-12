@@ -14,6 +14,8 @@ pub mod configuration;
 pub mod configuration_effect;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Encrypted canonical operational state and crash recovery.
+pub mod operational_store;
 /// Fail-closed platform capability detection and adapter activation.
 pub mod platform_startup;
 /// Deterministic deny-first capability-grant policy evaluation.

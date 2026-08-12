@@ -64,7 +64,7 @@ pub struct AuthorityTransactionRecord {
     /// Canonical digest of the reconciled result, absent before reconciliation.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub result_sha256: Option<String>,
-    /// Terminal outcome, absent until the transaction is terminal.
+    /// Reconciled outcome, absent until a result is durably available.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub outcome: Option<OperationOutcome>,
     /// Whether a possible effect could not be established safely.

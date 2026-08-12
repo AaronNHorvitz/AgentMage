@@ -11,6 +11,7 @@
     ],
     "cargo_external_packages": [
       "ed25519-dalek",
+      "rusqlite",
       "rustix",
       "seccompiler",
       "serde",
@@ -41,9 +42,11 @@
     "cargo_packages": []
   },
   "platform_packaging": {
-    "linux_packages": [],
+    "linux_packages": [
+      "OpenSSL 3 libcrypto (distribution package selected by support matrix)"
+    ],
     "macos_packages": [],
-    "may_enter_product_manifests": false
+    "may_enter_product_manifests": true
   },
   "optional_later_capabilities": {
     "packages": [],

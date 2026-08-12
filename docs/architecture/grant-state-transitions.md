@@ -2,12 +2,15 @@
 
 ## Status and Scope
 
-This document describes the shared/Linux in-memory grant lifecycle implemented for AgentMage
-Story 5.1. It separates session-read parent behavior from derived operation behavior because the
-same status has different transition triggers for each grant class.
+This document describes the shared grant lifecycle through the Phase 7
+candidate. It separates session-read parent behavior from derived operation
+behavior because the same status has different transition triggers for each
+grant class.
 
-The diagrams and tables describe retained kernel state. They do not claim durable storage,
-authenticated IPC, worker execution, effect reconciliation, a revocation API, or macOS behavior.
+The diagrams and tables describe retained kernel state. Grant revisions,
+nonces, authority transactions, and receipts are now reconstructed from the
+encrypted canonical store. They do not claim authenticated product IPC, a
+revocation API, host composition, or macOS behavior.
 A parsed or caller-constructed `CapabilityGrant` is only a candidate; it has no authority unless
 it exactly matches the current revision retained by the originating `GrantIssuer`.
 
@@ -127,10 +130,12 @@ new revision, another use, or an authority refresh.
 
 ## Limitations
 
-- All issuer maps, nonce history, revision hashes, and transitions are currently in-memory.
+- In-memory maps are validated caches; the Phase 7 SQLCipher store is canonical
+  only for grants, nonces, authority transactions, receipts, and checkpoints.
 - Session parents are not rewritten to `expired` when a derivation observes parent expiration.
 - `revoked` is represented in the wire enum but no issuer transition currently produces it.
-- No success/failure effect receipt currently follows consumed worker execution; only uncertainty is
-  represented here.
-- The concrete isolated worker and durable atomic dispatch transaction remain later work.
+- Success, failure, cancellation, denial, and uncertain effect receipts are
+  persisted through the durable authority runtime.
+- The application host does not yet compose the isolated worker and durable
+  runtime into a product workflow.
 - No macOS implementation, execution, signing, sandbox, or packaging evidence is claimed.

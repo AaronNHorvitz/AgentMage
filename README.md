@@ -38,6 +38,11 @@ The accepted 17-epic, 169-sprint, 227-requirement scope is preserved, but the
 original numbered roadmap is paused until the stabilization gate authorizes its
 resumption.
 
+Accepted Decisions 0013 through 0015 define the current authority transaction,
+opaque effect permit, canonical held targets, and exact-object Linux worker.
+Proposed Decision 0016 records the Phase 7 SQLCipher authority and restart
+recovery candidate; it is not an integrated product or release claim.
+
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
 ## Document Authority

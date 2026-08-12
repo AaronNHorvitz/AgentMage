@@ -31,6 +31,8 @@ pub enum AuthorityTransactionError {
     IntegrityFailure,
     /// A deterministic test interruption stopped the transaction at one write boundary.
     SimulatedCrash,
+    /// Canonical state could not be committed before the next authority boundary.
+    PersistenceFailure,
 }
 
 impl AuthorityTransactionError {
@@ -43,6 +45,7 @@ impl AuthorityTransactionError {
             Self::InvalidTransition => "authority.transaction.transition_invalid",
             Self::IntegrityFailure => "authority.transaction.integrity_failed",
             Self::SimulatedCrash => "authority.transaction.simulated_crash",
+            Self::PersistenceFailure => "authority.transaction.persistence_failed",
         }
     }
 }
@@ -314,11 +317,12 @@ pub trait EffectDriver {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch;
 }
 
-/// In-memory Phase 4 owner of transaction revisions and terminal receipts.
+/// Deterministic transaction state machine cached from canonical encrypted state.
 ///
-/// The coordinator exposes only the mediated effect boundary. Phase 7 must
-/// replace this in-memory journal with one crash-durable encrypted transaction.
-#[derive(Debug, Default)]
+/// This type has no public launch method. [`crate::operational_store::DurableAuthorityRuntime`]
+/// is the sole public effect boundary and checkpoints this state machine before
+/// every transition that can advance authority.
+#[derive(Clone, Debug, Default)]
 pub struct AuthorityTransactionCoordinator {
     histories: BTreeMap<AuthorityTransactionId, Vec<AuthorityTransactionRecord>>,
     receipts: Vec<Receipt>,
@@ -357,8 +361,21 @@ impl AuthorityTransactionCoordinator {
         &self.receipts
     }
 
+    pub(crate) fn nonterminal_ids(&self) -> Vec<AuthorityTransactionId> {
+        self.histories
+            .iter()
+            .filter(|(_, history)| {
+                history
+                    .last()
+                    .is_some_and(|record| record.state != AuthorityTransactionState::Terminal)
+            })
+            .map(|(transaction_id, _)| transaction_id.clone())
+            .collect()
+    }
+
     /// Validates, consumes, records, and executes one exact effect transaction.
-    pub fn execute_effect<D: EffectDriver>(
+    #[cfg(test)]
+    pub(crate) fn execute_effect<D: EffectDriver>(
         &mut self,
         registry: &ToolRegistry,
         issuer: &mut GrantIssuer,
@@ -369,6 +386,7 @@ impl AuthorityTransactionCoordinator {
         self.run(registry, issuer, policy, &request, driver, None)
     }
 
+    #[cfg(test)]
     fn run<D: EffectDriver>(
         &mut self,
         registry: &ToolRegistry,
@@ -378,6 +396,48 @@ impl AuthorityTransactionCoordinator {
         driver: &mut D,
         fault: Option<FaultPoint>,
     ) -> Result<Receipt, AuthorityTransactionError> {
+        self.run_with_checkpoint(
+            registry,
+            issuer,
+            policy,
+            request,
+            driver,
+            fault,
+            &mut |_, _| Ok(()),
+        )
+    }
+
+    pub(crate) fn execute_with_checkpoint<D, F>(
+        &mut self,
+        registry: &ToolRegistry,
+        issuer: &mut GrantIssuer,
+        policy: &PolicyEngine,
+        request: &AuthorityTransactionRequest,
+        driver: &mut D,
+        checkpoint: &mut F,
+    ) -> Result<Receipt, AuthorityTransactionError>
+    where
+        D: EffectDriver,
+        F: FnMut(&GrantIssuer, &Self) -> Result<(), AuthorityTransactionError>,
+    {
+        self.run_with_checkpoint(registry, issuer, policy, request, driver, None, checkpoint)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn run_with_checkpoint<D, F>(
+        &mut self,
+        registry: &ToolRegistry,
+        issuer: &mut GrantIssuer,
+        policy: &PolicyEngine,
+        request: &AuthorityTransactionRequest,
+        driver: &mut D,
+        fault: Option<FaultPoint>,
+        checkpoint: &mut F,
+    ) -> Result<Receipt, AuthorityTransactionError>
+    where
+        D: EffectDriver,
+        F: FnMut(&GrantIssuer, &Self) -> Result<(), AuthorityTransactionError>,
+    {
         validate_identifier(request.transaction_id.as_str())?;
         validate_identifier(request.attempt_id.as_str())?;
         validate_identifier(request.approval_id.as_str())?;
@@ -411,26 +471,31 @@ impl AuthorityTransactionCoordinator {
             occurred_at: request.occurred_at.clone(),
         };
         self.append_initial(prepared)?;
+        checkpoint(issuer, self)?;
         if fault == Some(FaultPoint::PreparedStored) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
         if request.cancellation == CancellationPoint::BeforeConsume {
-            return self.terminalize(
+            return self.terminalize_with_checkpoint(
+                issuer,
                 &request.transaction_id,
                 OperationOutcome::Cancelled,
                 stable_result_sha256("cancelled-before-consume"),
                 false,
                 "authority.transaction.cancelled_before_consume",
+                checkpoint,
             );
         }
 
         let Some(grant) = issuer.current(&request.grant_id) else {
-            return self.terminalize(
+            return self.terminalize_with_checkpoint(
+                issuer,
                 &request.transaction_id,
                 OperationOutcome::Denied,
                 stable_result_sha256("grant-not-found"),
                 false,
                 "authority.transaction.grant_not_found",
+                checkpoint,
             );
         };
         if grant.approval_id.as_ref() != Some(&request.approval_id)
@@ -439,12 +504,14 @@ impl AuthorityTransactionCoordinator {
             || grant.tool_version.as_deref() != Some(request.call.tool_version.as_str())
             || grant.action_id.as_ref() != Some(&request.call.action_id)
         {
-            return self.terminalize(
+            return self.terminalize_with_checkpoint(
+                issuer,
                 &request.transaction_id,
                 OperationOutcome::Denied,
                 stable_result_sha256("authority-binding-mismatch"),
                 false,
                 "authority.transaction.binding_mismatch",
+                checkpoint,
             );
         }
         let targets = grant.targets.clone();
@@ -455,12 +522,14 @@ impl AuthorityTransactionCoordinator {
             match issuer.consume_for_execution(&request.grant_id, policy, &request.context) {
                 Ok(consumed) => consumed,
                 Err(error) => {
-                    return self.terminalize(
+                    return self.terminalize_with_checkpoint(
+                        issuer,
                         &request.transaction_id,
                         OperationOutcome::Denied,
                         stable_result_sha256(error.code()),
                         false,
                         error.code(),
+                        checkpoint,
                     );
                 }
             };
@@ -472,6 +541,7 @@ impl AuthorityTransactionCoordinator {
             None,
             false,
         )?;
+        checkpoint(issuer, self)?;
         if fault == Some(FaultPoint::GrantConsumed) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
@@ -484,16 +554,19 @@ impl AuthorityTransactionCoordinator {
             None,
             false,
         )?;
+        checkpoint(issuer, self)?;
         if fault == Some(FaultPoint::AttemptRecorded) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
         if request.cancellation == CancellationPoint::BeforeLaunch {
-            return self.terminalize(
+            return self.terminalize_with_checkpoint(
+                issuer,
                 &request.transaction_id,
                 OperationOutcome::Cancelled,
                 stable_result_sha256("cancelled-before-launch"),
                 false,
                 "authority.transaction.cancelled_before_launch",
+                checkpoint,
             );
         }
 
@@ -505,6 +578,7 @@ impl AuthorityTransactionCoordinator {
             None,
             false,
         )?;
+        checkpoint(issuer, self)?;
         if fault == Some(FaultPoint::LaunchBoundaryCommitted) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
@@ -525,12 +599,14 @@ impl AuthorityTransactionCoordinator {
         }
         let results = match launched.results {
             None => {
-                return self.terminalize(
+                return self.terminalize_with_checkpoint(
+                    issuer,
                     &request.transaction_id,
                     OperationOutcome::Failed,
                     stable_result_sha256("worker-launch-failed"),
                     false,
                     "authority.transaction.launch_failed",
+                    checkpoint,
                 );
             }
             Some(results) => results,
@@ -551,9 +627,10 @@ impl AuthorityTransactionCoordinator {
             AuthorityTransactionState::Reconciling,
             None,
             Some(result.result_sha256.clone()),
-            None,
+            Some(result.outcome),
             uncertain,
         )?;
+        checkpoint(issuer, self)?;
         if fault == Some(FaultPoint::ResultReconciled) {
             return Err(AuthorityTransactionError::SimulatedCrash);
         }
@@ -566,12 +643,14 @@ impl AuthorityTransactionCoordinator {
                 )
                 .map_err(|_| AuthorityTransactionError::InvalidTransition)?;
         }
-        self.terminalize(
+        self.terminalize_with_checkpoint(
+            issuer,
             &request.transaction_id,
             result.outcome,
             result.result_sha256,
             uncertain,
             outcome_code(result.outcome, uncertain),
+            checkpoint,
         )
     }
 
@@ -582,27 +661,46 @@ impl AuthorityTransactionCoordinator {
         transaction_id: &AuthorityTransactionId,
         occurred_at_epoch_ms: u64,
     ) -> Result<Receipt, AuthorityTransactionError> {
+        self.recover_with_checkpoint(issuer, transaction_id, occurred_at_epoch_ms, &mut |_, _| {
+            Ok(())
+        })
+    }
+
+    pub(crate) fn recover_with_checkpoint<F>(
+        &mut self,
+        issuer: &mut GrantIssuer,
+        transaction_id: &AuthorityTransactionId,
+        occurred_at_epoch_ms: u64,
+        checkpoint: &mut F,
+    ) -> Result<Receipt, AuthorityTransactionError>
+    where
+        F: FnMut(&GrantIssuer, &Self) -> Result<(), AuthorityTransactionError>,
+    {
         let current = self
             .current(transaction_id)
             .cloned()
             .ok_or(AuthorityTransactionError::InvalidIdentity)?;
         match current.state {
-            AuthorityTransactionState::Prepared => self.terminalize(
+            AuthorityTransactionState::Prepared => self.terminalize_with_checkpoint(
+                issuer,
                 transaction_id,
                 OperationOutcome::Failed,
                 stable_result_sha256("recovered-before-consume"),
                 false,
                 "authority.transaction.recovered_before_consume",
+                checkpoint,
             ),
             AuthorityTransactionState::GrantConsumed
-            | AuthorityTransactionState::AttemptRecorded => self.terminalize(
+            | AuthorityTransactionState::AttemptRecorded => self.terminalize_with_checkpoint(
+                issuer,
                 transaction_id,
                 OperationOutcome::Failed,
                 stable_result_sha256("recovered-before-launch"),
                 false,
                 "authority.transaction.recovered_before_launch",
+                checkpoint,
             ),
-            AuthorityTransactionState::LaunchCommitted | AuthorityTransactionState::Reconciling => {
+            AuthorityTransactionState::LaunchCommitted => {
                 let consumed = current
                     .consumed_grant_sha256
                     .as_deref()
@@ -610,12 +708,41 @@ impl AuthorityTransactionCoordinator {
                 issuer
                     .mark_execution_uncertain(&current.grant_id, consumed, occurred_at_epoch_ms)
                     .map_err(|_| AuthorityTransactionError::InvalidTransition)?;
-                self.terminalize(
+                self.terminalize_with_checkpoint(
+                    issuer,
                     transaction_id,
                     OperationOutcome::Uncertain,
                     stable_result_sha256("recovered-after-launch"),
                     true,
                     "authority.transaction.recovered_uncertain",
+                    checkpoint,
+                )
+            }
+            AuthorityTransactionState::Reconciling => {
+                let consumed = current
+                    .consumed_grant_sha256
+                    .as_deref()
+                    .ok_or(AuthorityTransactionError::InvalidTransition)?;
+                let result_sha256 = current
+                    .result_sha256
+                    .clone()
+                    .ok_or(AuthorityTransactionError::InvalidTransition)?;
+                let outcome = current
+                    .outcome
+                    .ok_or(AuthorityTransactionError::InvalidTransition)?;
+                if current.uncertain_effect {
+                    issuer
+                        .mark_execution_uncertain(&current.grant_id, consumed, occurred_at_epoch_ms)
+                        .map_err(|_| AuthorityTransactionError::InvalidTransition)?;
+                }
+                self.terminalize_with_checkpoint(
+                    issuer,
+                    transaction_id,
+                    outcome,
+                    result_sha256,
+                    current.uncertain_effect,
+                    outcome_code(outcome, current.uncertain_effect),
+                    checkpoint,
                 )
             }
             AuthorityTransactionState::Terminal => self
@@ -629,6 +756,31 @@ impl AuthorityTransactionCoordinator {
                 .cloned()
                 .ok_or(AuthorityTransactionError::IntegrityFailure),
         }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn terminalize_with_checkpoint<F>(
+        &mut self,
+        issuer: &GrantIssuer,
+        transaction_id: &AuthorityTransactionId,
+        outcome: OperationOutcome,
+        result_sha256: String,
+        uncertain_effect: bool,
+        error_code: &str,
+        checkpoint: &mut F,
+    ) -> Result<Receipt, AuthorityTransactionError>
+    where
+        F: FnMut(&GrantIssuer, &Self) -> Result<(), AuthorityTransactionError>,
+    {
+        let receipt = self.terminalize(
+            transaction_id,
+            outcome,
+            result_sha256,
+            uncertain_effect,
+            error_code,
+        )?;
+        checkpoint(issuer, self)?;
+        Ok(receipt)
     }
 
     fn append_initial(
@@ -776,6 +928,26 @@ impl AuthorityTransactionCoordinator {
         self.receipts.push(receipt.clone());
         Ok(receipt)
     }
+
+    pub(crate) fn durable_parts(
+        &self,
+    ) -> (
+        &BTreeMap<AuthorityTransactionId, Vec<AuthorityTransactionRecord>>,
+        &[Receipt],
+    ) {
+        (&self.histories, &self.receipts)
+    }
+
+    pub(crate) fn from_durable_parts(
+        histories: BTreeMap<AuthorityTransactionId, Vec<AuthorityTransactionRecord>>,
+        receipts: Vec<Receipt>,
+    ) -> Result<Self, AuthorityTransactionError> {
+        validate_durable_histories(&histories, &receipts)?;
+        Ok(Self {
+            histories,
+            receipts,
+        })
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -840,6 +1012,128 @@ fn valid_transition(from: AuthorityTransactionState, to: AuthorityTransactionSta
     )
 }
 
+fn validate_durable_histories(
+    histories: &BTreeMap<AuthorityTransactionId, Vec<AuthorityTransactionRecord>>,
+    receipts: &[Receipt],
+) -> Result<(), AuthorityTransactionError> {
+    let mut attempts = std::collections::BTreeSet::new();
+    for (transaction_id, history) in histories {
+        let Some(initial) = history.first() else {
+            return Err(AuthorityTransactionError::IntegrityFailure);
+        };
+        if initial.authority_transaction_id != *transaction_id
+            || initial.revision != 1
+            || initial.state != AuthorityTransactionState::Prepared
+            || !attempts.insert(initial.operation_attempt_id.clone())
+        {
+            return Err(AuthorityTransactionError::IntegrityFailure);
+        }
+        for (index, record) in history.iter().enumerate() {
+            let revision = u32::try_from(index)
+                .ok()
+                .and_then(|value| value.checked_add(1))
+                .ok_or(AuthorityTransactionError::IntegrityFailure)?;
+            if record.authority_transaction_id != *transaction_id
+                || record.revision != revision
+                || record.operation_attempt_id != initial.operation_attempt_id
+                || record.approval_id != initial.approval_id
+                || record.grant_id != initial.grant_id
+                || record.operation != initial.operation
+                || record.correlation_id != initial.correlation_id
+                || record.session_id != initial.session_id
+                || record.task_id != initial.task_id
+                || record.action_id != initial.action_id
+                || record.tool_call_id != initial.tool_call_id
+                || record.occurred_at != initial.occurred_at
+            {
+                return Err(AuthorityTransactionError::IntegrityFailure);
+            }
+            if index > 0 && !valid_transition(history[index - 1].state, record.state) {
+                return Err(AuthorityTransactionError::IntegrityFailure);
+            }
+            let valid_shape = match record.state {
+                AuthorityTransactionState::Prepared => {
+                    record.consumed_grant_sha256.is_none()
+                        && record.result_sha256.is_none()
+                        && record.outcome.is_none()
+                        && record.receipt_id.is_none()
+                        && record.receipt_sha256.is_none()
+                }
+                AuthorityTransactionState::GrantConsumed
+                | AuthorityTransactionState::AttemptRecorded
+                | AuthorityTransactionState::LaunchCommitted => {
+                    record.consumed_grant_sha256.is_some()
+                        && record.result_sha256.is_none()
+                        && record.outcome.is_none()
+                        && record.receipt_id.is_none()
+                        && record.receipt_sha256.is_none()
+                }
+                AuthorityTransactionState::Reconciling => {
+                    record.consumed_grant_sha256.is_some()
+                        && record.result_sha256.is_some()
+                        && record.outcome.is_some()
+                        && record.receipt_id.is_none()
+                        && record.receipt_sha256.is_none()
+                }
+                AuthorityTransactionState::Terminal => {
+                    record.result_sha256.is_some()
+                        && record.outcome.is_some()
+                        && record.receipt_id.is_some()
+                        && record.receipt_sha256.is_some()
+                }
+            };
+            if !valid_shape
+                || (record.state == AuthorityTransactionState::Terminal
+                    && index + 1 != history.len())
+            {
+                return Err(AuthorityTransactionError::IntegrityFailure);
+            }
+        }
+    }
+
+    let mut previous = ZERO_SHA256.to_owned();
+    for (index, receipt) in receipts.iter().enumerate() {
+        let sequence = u64::try_from(index)
+            .ok()
+            .and_then(|value| value.checked_add(1))
+            .ok_or(AuthorityTransactionError::IntegrityFailure)?;
+        let expected_sha256 = receipt.receipt_sha256.clone();
+        let mut candidate = receipt.clone();
+        candidate.receipt_sha256 = ZERO_SHA256.to_owned();
+        if receipt.sequence != sequence
+            || receipt.previous_receipt_sha256 != previous
+            || receipt_sha256(&candidate)? != expected_sha256
+        {
+            return Err(AuthorityTransactionError::IntegrityFailure);
+        }
+        let terminal = histories
+            .get(&receipt.authority_transaction_id)
+            .and_then(|history| history.last())
+            .ok_or(AuthorityTransactionError::IntegrityFailure)?;
+        if terminal.state != AuthorityTransactionState::Terminal
+            || terminal.receipt_id.as_ref() != Some(&receipt.receipt_id)
+            || terminal.receipt_sha256.as_deref() != Some(expected_sha256.as_str())
+            || terminal.operation_attempt_id != receipt.operation_attempt_id
+            || terminal.grant_id != receipt.grant_id
+        {
+            return Err(AuthorityTransactionError::IntegrityFailure);
+        }
+        previous = expected_sha256;
+    }
+    let terminal_count = histories
+        .values()
+        .filter(|history| {
+            history
+                .last()
+                .is_some_and(|record| record.state == AuthorityTransactionState::Terminal)
+        })
+        .count();
+    if terminal_count != receipts.len() {
+        return Err(AuthorityTransactionError::IntegrityFailure);
+    }
+    Ok(())
+}
+
 fn operation_sha256(
     operation: agentmage_kernel_contracts::OperationBinding,
 ) -> Result<String, AuthorityTransactionError> {
@@ -897,6 +1191,8 @@ fn outcome_code(outcome: OperationOutcome, uncertain: bool) -> &'static str {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
+    use std::fs;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     use super::{
         AuthorityTransactionCoordinator, AuthorityTransactionError, AuthorityTransactionRequest,
@@ -905,6 +1201,10 @@ mod tests {
     };
     use crate::{
         grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest},
+        operational_store::{
+            DurableAuthorityRuntime, OperationalStore, OperationalStoreKeyError,
+            OperationalStoreKeyProvider,
+        },
         policy::{
             PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
         },
@@ -913,13 +1213,46 @@ mod tests {
     };
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId,
-        CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity, FilePreimage, GrantId,
-        GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, HeldWorkspaceObject,
-        OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform, PathResolutionIntent,
-        RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, StateChange, TaskId, ToolCall,
-        ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId, WorkspaceId,
-        WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
+        AuthorityTransactionState, CapabilityGrant, ContractPayload, CorrelationId,
+        DataSensitivity, FilePreimage, GrantId, GrantNonce, GrantOperation, GrantSideEffect,
+        GrantStatus, HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome,
+        PathPlatform, PathResolutionIntent, RequiredGrantTemplate, SchemaId, SchemaReference,
+        SessionId, StateChange, StorageFilesystemClass, StrictLocalStorageObservation, TaskId,
+        ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId,
+        WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
     };
+
+    static NEXT_STORE_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+
+    struct TestStoreKey([u8; 32]);
+
+    impl OperationalStoreKeyProvider for TestStoreKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            Ok(operation(&self.0))
+        }
+    }
+
+    fn store_observation() -> StrictLocalStorageObservation {
+        StrictLocalStorageObservation {
+            filesystem: StorageFilesystemClass::Local,
+            synchronization_marker: None,
+            root_identity_sha256: [19; 32],
+            symlink_free: true,
+        }
+    }
+
+    fn store_directory() -> std::path::PathBuf {
+        let sequence = NEXT_STORE_DIRECTORY.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!(
+            "agentmage-authority-recovery-{}-{sequence}",
+            std::process::id()
+        ));
+        fs::create_dir(&path).expect("store directory");
+        path
+    }
 
     struct FixtureTool(ToolDefinition);
 
@@ -1577,11 +1910,11 @@ mod tests {
                 receipt.outcome,
                 if matches!(
                     fault,
-                    FaultPoint::LaunchBoundaryCommitted
-                        | FaultPoint::WorkerReturned
-                        | FaultPoint::ResultReconciled
+                    FaultPoint::LaunchBoundaryCommitted | FaultPoint::WorkerReturned
                 ) {
                     OperationOutcome::Uncertain
+                } else if fault == FaultPoint::ResultReconciled {
+                    OperationOutcome::Succeeded
                 } else {
                     OperationOutcome::Failed
                 }
@@ -1590,9 +1923,10 @@ mod tests {
             let expected_grant_status = match fault {
                 FaultPoint::PreparedStored => GrantStatus::Issued,
                 FaultPoint::GrantConsumed | FaultPoint::AttemptRecorded => GrantStatus::Consumed,
-                FaultPoint::LaunchBoundaryCommitted
-                | FaultPoint::WorkerReturned
-                | FaultPoint::ResultReconciled => GrantStatus::Uncertain,
+                FaultPoint::LaunchBoundaryCommitted | FaultPoint::WorkerReturned => {
+                    GrantStatus::Uncertain
+                }
+                FaultPoint::ResultReconciled => GrantStatus::Consumed,
             };
             assert_eq!(
                 fixture
@@ -1609,6 +1943,147 @@ mod tests {
                     .state,
                 agentmage_kernel_contracts::AuthorityTransactionState::Terminal
             );
+        }
+    }
+
+    #[test]
+    fn encrypted_restart_recovery_never_replays_and_publishes_one_receipt() {
+        for fault in [
+            FaultPoint::PreparedStored,
+            FaultPoint::GrantConsumed,
+            FaultPoint::AttemptRecorded,
+            FaultPoint::LaunchBoundaryCommitted,
+            FaultPoint::WorkerReturned,
+            FaultPoint::ResultReconciled,
+        ] {
+            let mut fixture = fixture();
+            let request = request(&fixture);
+            let directory = store_directory();
+            let path = directory.join("authority.db");
+            let observation = store_observation();
+            let mut key = TestStoreKey([23; 32]);
+            let mut store = OperationalStore::open(&path, &observation, &mut key)
+                .expect("encrypted store opens");
+            let mut coordinator = AuthorityTransactionCoordinator::new();
+            store
+                .persist_authority(&fixture.issuer, &coordinator)
+                .expect("initial grants persist");
+            let mut driver = FakeDriver {
+                launch: Some(EffectLaunch::completed(success())),
+                ..FakeDriver::default()
+            };
+            assert_eq!(
+                coordinator.run_with_checkpoint(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    &request,
+                    &mut driver,
+                    Some(fault),
+                    &mut |issuer, coordinator| {
+                        store
+                            .persist_authority(issuer, coordinator)
+                            .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+                    },
+                ),
+                Err(AuthorityTransactionError::SimulatedCrash)
+            );
+            let launches_before_restart = driver.launches;
+            drop(store);
+
+            let mut runtime = DurableAuthorityRuntime::open(
+                &path,
+                &observation,
+                &mut TestStoreKey([23; 32]),
+                7_000,
+            )
+            .expect("restart recovery closes interrupted state");
+            let receipt = runtime.receipts().last().expect("one terminal receipt");
+            let expected_outcome = match fault {
+                FaultPoint::PreparedStored
+                | FaultPoint::GrantConsumed
+                | FaultPoint::AttemptRecorded => OperationOutcome::Failed,
+                FaultPoint::LaunchBoundaryCommitted | FaultPoint::WorkerReturned => {
+                    OperationOutcome::Uncertain
+                }
+                FaultPoint::ResultReconciled => OperationOutcome::Succeeded,
+            };
+            assert_eq!(receipt.outcome, expected_outcome);
+            assert_eq!(runtime.receipts().len(), 1);
+            assert_eq!(
+                runtime
+                    .current_transaction(&fixture.transaction_id)
+                    .expect("terminal transaction")
+                    .state,
+                AuthorityTransactionState::Terminal
+            );
+            let expected_status = match fault {
+                FaultPoint::PreparedStored => GrantStatus::Issued,
+                FaultPoint::GrantConsumed
+                | FaultPoint::AttemptRecorded
+                | FaultPoint::ResultReconciled => GrantStatus::Consumed,
+                FaultPoint::LaunchBoundaryCommitted | FaultPoint::WorkerReturned => {
+                    GrantStatus::Uncertain
+                }
+            };
+            assert_eq!(
+                runtime
+                    .current_grant(&fixture.grant.grant_id)
+                    .expect("grant restored")
+                    .status,
+                expected_status
+            );
+
+            let mut replay_driver = FakeDriver {
+                launch: Some(EffectLaunch::completed(success())),
+                ..FakeDriver::default()
+            };
+            assert_eq!(
+                runtime.execute_effect(
+                    &fixture.registry,
+                    &fixture.policy,
+                    request.clone(),
+                    &mut replay_driver,
+                ),
+                Err(
+                    crate::operational_store::DurableAuthorityError::Transaction(
+                        AuthorityTransactionError::InvalidIdentity
+                    )
+                )
+            );
+            assert_eq!(replay_driver.launches, 0);
+            assert_eq!(driver.launches, launches_before_restart);
+
+            let backup = directory.join("authority.backup.db");
+            runtime
+                .backup(&backup, &observation, &mut TestStoreKey([31; 32]))
+                .expect("encrypted authority backup");
+            for artifact in [
+                path.clone(),
+                path.with_extension("db-wal"),
+                path.with_extension("db-shm"),
+                backup.clone(),
+            ] {
+                if let Ok(bytes) = fs::read(artifact) {
+                    assert!(
+                        !bytes
+                            .windows(b"transaction-0001".len())
+                            .any(|window| { window == b"transaction-0001" })
+                    );
+                }
+            }
+            drop(runtime);
+            let restored = DurableAuthorityRuntime::open(
+                &backup,
+                &observation,
+                &mut TestStoreKey([31; 32]),
+                8_000,
+            )
+            .expect("encrypted backup restores canonical authority");
+            assert_eq!(restored.receipts().len(), 1);
+            assert_eq!(restored.receipts()[0].outcome, expected_outcome);
+            drop(restored);
+            fs::remove_dir_all(directory).expect("cleanup");
         }
     }
 

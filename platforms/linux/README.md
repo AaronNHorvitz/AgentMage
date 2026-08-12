@@ -1,4 +1,6 @@
 # Linux Platform Adapter
 
-This Rust module will implement the Fedora and Ubuntu process, sandbox, path,
-peer-identity, local IPC, Secret Service, and resource-control boundaries.
+This Rust module implements the current Fedora/Ubuntu path, sandbox,
+peer-identity, local IPC, Secret Service, inventory, and fixed-purpose
+operational-store key boundaries. Full aggregate startup and lifecycle
+composition remain future work.

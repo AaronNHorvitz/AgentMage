@@ -13,6 +13,9 @@ use agentmage_kernel_contracts::{GrantOperation, OperationOutcome, StateChange};
 use agentmage_kernel_engine::authority_transaction::{
     EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
 };
+use agentmage_kernel_engine::operational_store::{
+    OperationalStoreKeyError, OperationalStoreKeyProvider,
+};
 use rustix::fd::OwnedFd;
 use rustix::fs::{FileType, Mode, OFlags, fstat, open};
 use rustix::io::pread;
@@ -26,6 +29,7 @@ const MAX_DIAGNOSTIC_BYTES: usize = 64 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(10);
 const FIXED_LABEL: &str = "AgentMage local credential";
+const OPERATIONAL_STORE_KEY_PURPOSE: &str = "operational-store-key-v1";
 
 /// Stable content-free Secret Service failures.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -452,6 +456,77 @@ impl LinuxSecretService {
     }
 }
 
+/// Fixed-purpose Secret Service key source for the encrypted operational store.
+///
+/// This startup boundary can only look up the one operational-store key for an
+/// exact profile. It cannot list, select, mutate, or return general credentials.
+pub struct LinuxOperationalStoreKeyProvider {
+    service: LinuxSecretService,
+    key: LinuxSecretKey,
+}
+
+impl LinuxOperationalStoreKeyProvider {
+    /// Binds one profile to the fixed version-1 operational-store key identity.
+    pub fn new(
+        service: LinuxSecretService,
+        profile_id: impl Into<String>,
+    ) -> Result<Self, LinuxSecretServiceError> {
+        Ok(Self {
+            service,
+            key: LinuxSecretKey::new(profile_id, OPERATIONAL_STORE_KEY_PURPOSE)?,
+        })
+    }
+}
+
+impl fmt::Debug for LinuxOperationalStoreKeyProvider {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxOperationalStoreKeyProvider")
+            .field("key", &self.key)
+            .finish_non_exhaustive()
+    }
+}
+
+impl OperationalStoreKeyProvider for LinuxOperationalStoreKeyProvider {
+    fn with_key<T>(
+        &mut self,
+        operation: impl FnOnce(&[u8]) -> T,
+    ) -> Result<T, OperationalStoreKeyError> {
+        let (value, _) = self
+            .service
+            .lookup(&self.key)
+            .map_err(|_| OperationalStoreKeyError::Unavailable)?;
+        value.with_exposed(|encoded| {
+            let decoded = decode_operational_store_key(encoded)?;
+            Ok(operation(decoded.as_slice()))
+        })
+    }
+}
+
+fn decode_operational_store_key(
+    encoded: &[u8],
+) -> Result<Zeroizing<[u8; 32]>, OperationalStoreKeyError> {
+    if encoded.len() != 64 {
+        return Err(OperationalStoreKeyError::Unavailable);
+    }
+    let mut decoded = Zeroizing::new([0_u8; 32]);
+    for (index, pair) in encoded.chunks_exact(2).enumerate() {
+        let high = decode_hex(pair[0]).ok_or(OperationalStoreKeyError::Unavailable)?;
+        let low = decode_hex(pair[1]).ok_or(OperationalStoreKeyError::Unavailable)?;
+        decoded[index] = (high << 4) | low;
+    }
+    Ok(decoded)
+}
+
+const fn decode_hex(value: u8) -> Option<u8> {
+    match value {
+        b'0'..=b'9' => Some(value - b'0'),
+        b'a'..=b'f' => Some(value - b'a' + 10),
+        b'A'..=b'F' => Some(value - b'A' + 10),
+        _ => None,
+    }
+}
+
 /// One exact Secret Service operation proposed for mediated execution.
 pub enum LinuxSecretEffectRequest {
     /// Verify that the local Secret Service is available.
@@ -824,7 +899,8 @@ const fn error(kind: LinuxSecretServiceErrorKind) -> LinuxSecretServiceError {
 mod tests {
     use super::{
         LinuxSecretKey, LinuxSecretOperation, LinuxSecretService, LinuxSecretServiceErrorKind,
-        LinuxSecretServiceManifest, LinuxSecretValue, MAX_SECRET_BYTES, hex_digest, read_bounded,
+        LinuxSecretServiceManifest, LinuxSecretValue, MAX_SECRET_BYTES,
+        decode_operational_store_key, hex_digest, read_bounded,
     };
     use rustix::rand::{GetRandomFlags, getrandom};
     use sha2::Digest as _;
@@ -876,6 +952,20 @@ mod tests {
         assert_eq!(output.total, 16);
         assert_eq!(output.retained, b"synt");
         assert_eq!(output.sha256, sha2::Sha256::digest([]).as_slice());
+    }
+
+    #[test]
+    fn operational_store_key_decode_is_exact_and_bounded() {
+        let encoded = b"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+        let decoded = decode_operational_store_key(encoded).expect("fixed key");
+        assert_eq!(decoded.as_slice(), &(0_u8..32).collect::<Vec<_>>());
+        assert!(decode_operational_store_key(b"too-short").is_err());
+        assert!(
+            decode_operational_store_key(
+                b"zz0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+            )
+            .is_err()
+        );
     }
 
     #[test]

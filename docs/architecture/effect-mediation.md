@@ -1,9 +1,10 @@
 # Effect Mediation Boundary
 
-This document describes the live mediation boundary through the Phase 6
-candidate. Decision 0014 governs opaque effect permits; proposed Decision 0015
-governs their exact held-target payload and Linux object exposure. The machine
-boundary check is `python3 scripts/effect_boundary.py`.
+This document describes the live mediation boundary through the Phase 7
+candidate. Decision 0014 governs opaque effect permits, Decision 0015 governs
+their exact held-target payload and Linux object exposure, and proposed
+Decision 0016 governs encrypted checkpoints and recovery. The machine boundary
+check is `python3 scripts/effect_boundary.py`.
 
 ## Authority Flow
 
@@ -12,22 +13,26 @@ sequenceDiagram
     participant S as Shell
     participant K as Kernel coordinator
     participant G as Grant issuer and policy
+    participant SDB as Encrypted canonical store
     participant D as Effect driver
     participant O as Operating system or service
 
     S->>K: Exact transaction request and inert driver
+    K->>SDB: Persist prepared revision
     K->>G: Validate current policy and exact grant
-    G-->>K: Atomically consumed grant, exact targets, exclusions, and preimages
-    K->>K: Record attempt and launch commitment
+    G-->>K: Candidate consumed grant and exact authority
+    K->>SDB: Atomically persist consumption and transaction revision
+    K->>SDB: Persist attempt and launch commitment
     K->>D: Consume opaque one-attempt permit
     D->>O: Perform exact configured effect
     O-->>D: Bounded result
     D-->>K: Outcome, digest, and state-change class
-    K->>K: Reconcile and append terminal receipt
+    K->>SDB: Persist result, terminal revision, and receipt
     K-->>S: Receipt with typed bounded output retained by driver
 ```
 
-The shell supplies a request and an inert driver. It never receives the permit.
+The shell supplies a request and an inert driver to the durable runtime. It
+never receives the permit.
 The driver cannot be invoked through its effect method without the permit, and
 the permit cannot be constructed, copied, serialized, or reused outside the
 kernel transaction. A held-object driver also must match its path,
@@ -65,7 +70,8 @@ flowchart LR
     E --> B["Bounded typed output"]
     B --> H["Content-free result digest"]
     H --> K
-    K --> T["Terminal receipt"]
+    K --> SDB["SQLCipher authority and checkpoint"]
+    SDB --> T["Terminal receipt"]
 
     O["Observation APIs"] --> V["Observed values"]
     V -. "no conversion" .-> P
@@ -74,11 +80,15 @@ flowchart LR
 Secret bytes are never placed in the permit, transaction record, result digest,
 or receipt. Sandbox diagnostics remain hashed and bounded. Configuration-driver
 debug output omits paths and candidate content. Observation values remain
-non-authoritative and have no conversion into a permit.
+non-authoritative and have no conversion into a permit. The operational-store
+key is exposed only during a platform key-provider callback and never enters a
+receipt, command argument, environment variable, or plaintext fallback.
 
 ## Public Surface Rules
 
-- The coordinator owns permit construction and grant consumption.
+- The durable authority runtime is the sole public launch surface.
+- The coordinator owns permit construction and grant consumption but has no
+  public launch method.
 - Drivers consume one permit by value and cannot retain its borrowed lifetime.
 - Raw sandbox, secret, configuration-mutation, and socket entry points are not
   public.
@@ -90,8 +100,9 @@ non-authoritative and have no conversion into a permit.
 
 ## Current Limits
 
-This boundary is not complete product integration. Canonical target parity and
-exact-object Linux exposure are implemented in the Phase 6 candidate. Durable
-atomic transaction storage and restart recovery remain Phase 7 work. The
-application host does not yet compose the real driver workflow. macOS is a
-declared but unmaterialized mediation edge and remains `blocked-macos`.
+This boundary is not complete product integration. Canonical target parity,
+exact-object Linux exposure, encrypted authority checkpoints, and restart
+recovery are implemented in the Phase 7 candidate. Full Linux state-root and
+key lifecycle composition remain Phase 8 work. The application host does not
+yet compose the real driver workflow. macOS is a declared but unmaterialized
+mediation edge and remains `blocked-macos`.

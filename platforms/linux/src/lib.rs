@@ -24,9 +24,10 @@ pub use sandbox::{
     LinuxWorkerRuntimeFile,
 };
 pub use secret_service::{
-    LinuxSecretEffectDriver, LinuxSecretEffectOutput, LinuxSecretEffectRequest, LinuxSecretKey,
-    LinuxSecretOperation, LinuxSecretReceipt, LinuxSecretService, LinuxSecretServiceError,
-    LinuxSecretServiceErrorKind, LinuxSecretServiceManifest, LinuxSecretValue,
+    LinuxOperationalStoreKeyProvider, LinuxSecretEffectDriver, LinuxSecretEffectOutput,
+    LinuxSecretEffectRequest, LinuxSecretKey, LinuxSecretOperation, LinuxSecretReceipt,
+    LinuxSecretService, LinuxSecretServiceError, LinuxSecretServiceErrorKind,
+    LinuxSecretServiceManifest, LinuxSecretValue,
 };
 pub use strict_local::{
     LinuxStrictLocalRoot, LinuxStrictLocalRootError, LinuxStrictLocalRootErrorKind,

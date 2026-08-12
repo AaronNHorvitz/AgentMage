@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 ENGINE = Path("kernel/engine/src/authority_transaction.rs")
+OPERATIONAL_STORE = Path("kernel/engine/src/operational_store.rs")
 CONFIGURATION = Path("kernel/engine/src/configuration.rs")
 LINUX_LIB = Path("platforms/linux/src/lib.rs")
 LINUX_SANDBOX = Path("platforms/linux/src/sandbox.rs")
@@ -94,6 +95,7 @@ def validate_effect_boundary(
     replacements = overrides or {}
     failures: list[str] = []
     engine = _read(ENGINE, root, replacements)
+    operational_store = _read(OPERATIONAL_STORE, root, replacements)
     configuration = _read(CONFIGURATION, root, replacements)
     linux_lib = _read(LINUX_LIB, root, replacements)
     linux_sandbox = _read(LINUX_SANDBOX, root, replacements)
@@ -122,8 +124,12 @@ def validate_effect_boundary(
         engine,
     ):
         failures.append("effect driver must consume one authorization by value")
-    if "pub fn execute_effect<D: EffectDriver>" not in engine:
-        failures.append("authority coordinator mediated entry point is missing")
+    if "pub fn execute_effect<D: EffectDriver>" not in operational_store:
+        failures.append("durable authority mediated entry point is missing")
+    if re.search(
+        r"(?m)^\s*pub\s+fn\s+execute_effect\s*<D:\s*EffectDriver>", engine
+    ):
+        failures.append("in-memory authority coordinator exposes an effect entry point")
 
     for name in ("migrate_path_v0", "rollback_migration", "apply_with_backup", "rollback"):
         if _public_function(configuration, name):

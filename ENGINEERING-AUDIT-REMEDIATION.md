@@ -1558,3 +1558,106 @@ Phase 6 verification produced the following candidate-gate results:
   `fixtures/`, and `references/` trees have no diff. Branch
   `agent/expand-delivery-windows-ga` remains local with no upstream. The Phase 6
   candidate is authorized for a local commit and no push is authorized.
+
+## 18. Phase 7 Record
+
+Phase 7 was authorized only for RM-011 and RM-012 after the user approved
+Decision 0015 and the Phase 6 local commit. The approved Phase 6 candidate was
+committed locally as `bf882d5`; no push occurred. Entry into Phase 7 did not
+authorize a Phase 7 commit, a push, or entry into Phase 8.
+
+The user subsequently approved Decision 0016, the Phase 7 local commit, and
+entry into Phase 8 on 2026-08-11. That approval did not authorize a push or a
+Phase 8 commit.
+
+The candidate adds one SQLCipher database as canonical authority for the
+currently implemented grants, anti-replay nonces, authority transactions,
+operation attempts, receipts, revision histories, heads, and checkpoints. It
+uses pinned `rusqlite` 0.40.2 with bundled SQLCipher and a Linux OpenSSL 3
+cryptographic provider. The direct and transitive Cargo packages, SQLCipher's
+BSD notice, and the Linux `libcrypto` runtime dependency are represented in the
+dependency classes, license catalog, provenance, hashes, and CycloneDX SBOM.
+
+The database key has one fixed 256-bit shape and is available to the kernel
+only inside an `OperationalStoreKeyProvider` callback. The Linux implementation
+can look up only the fixed `operational-store-key-v1` Secret Service identity
+for one profile. It cannot list, return, select, store, or clear general
+credentials through that boundary. Missing, malformed, and wrong keys fail
+closed; no plaintext fallback exists. SQLCipher logging is disabled before key
+validation, key material does not enter process arguments or environment
+variables, and public errors and debug representations remain content-free.
+
+Schema version 1 has an executable migration whose exact source text is hashed
+and revalidated at every open. The schema uses strict tables, foreign keys,
+immutable grant and transaction revisions, unique nonces and attempts, explicit
+heads, unique sequenced receipts, generation compare-and-swap, deterministic
+full-state digests, and append-only checkpoints. The connection requires an
+exclusive single writer, zero busy timeout, WAL, full synchronization, secure
+deletion, disabled trusted schema, and memory-only temporary storage. Every
+open checks SQLCipher pages, SQLite structure, foreign keys, schema history,
+heads, relational identity columns, canonical JSON digests, revision order,
+state shapes, nonce and attempt uniqueness, receipt chain, checkpoint head, and
+the complete authority-state digest.
+
+`DurableAuthorityRuntime` is now the sole public effect-launch boundary. The
+in-memory issuer and coordinator are deterministic caches with no public launch
+method. Prepared state is checkpointed first; grant consumption and the matching
+transaction revision are one publication; attempt and launch commitment are
+each durable before the effect driver; a reconciled bounded result is durable
+before terminal state; and the terminal transaction, applicable uncertain
+grant revision, and receipt are one publication. Any persistence ambiguity
+poisons the runtime and requires reopen and recovery before another effect.
+
+Restart recovery never invokes a driver. Prepared state closes as failed with
+the grant still issued. Grant-consumed and attempt-recorded state close as
+failed with the grant still consumed. Launch-committed state closes as
+uncertain and is never retried. A complete non-uncertain reconciled result
+publishes its one terminal receipt; an uncertain reconciled result remains
+uncertain. Terminal recovery is idempotent, and reuse of a retained transaction
+or consumed grant remains denied.
+
+A separately keyed SQLCipher online backup is verified before success and can
+reconstruct the same canonical receipt state. Database, WAL, shared-memory, and
+backup canary scans reject plaintext authority identifiers. Tests also cover
+missing and wrong keys, future and tampered migrations, page corruption,
+foreign-key orphans, a forced transaction abort with no partial generation or
+checkpoint, remote and synchronized storage denial, a second writer, and all
+six crash boundaries.
+
+Proposed Decision 0016 and the durable-store architecture reference record this
+candidate. The candidate deliberately does not claim complete Sprint 11 domain
+tables, retention, legal holds, erasure, export, descriptor-bound Linux
+state-root composition, initial key provisioning, key rotation, uninstall
+orchestration, application-host composition, Ubuntu execution, macOS, Windows,
+or a supported product. Those remain with their existing later phases. In
+particular, a full Linux aggregate adapter must bind the inspected root and key
+lifecycle before product integration.
+
+Phase 7 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed Rust and TypeScript formatting, Clippy with
+  warnings denied, ESLint, strict-local and effect-boundary audits, every
+  workspace build, all enabled default Rust tests, compile-fail tests, and the
+  Visual Studio Code shell test.
+- `cargo test --workspace --all-targets --locked` passed 95 kernel unit tests,
+  all kernel integration tests, 31 contract unit tests, all contract integration
+  tests, 35 enabled Linux tests, and the remaining workspace tests. Fourteen
+  environment-dependent Linux tests remain explicitly ignored rather than
+  represented as Phase 7 execution evidence.
+- The encrypted restart test persisted and reopened every declared crash point,
+  denied replay without another driver call, distinguished verified completion
+  from uncertainty, published one receipt, scanned live encrypted artifacts,
+  and restored the same state from a different-key backup.
+- The effect-boundary validator and all 10 mutation tests pass; exposing the
+  in-memory coordinator launch method now fails the guard.
+- Dependency-class validation and deterministic supply-chain provenance,
+  checksum, license, and CycloneDX validation pass with the new SQLCipher stack.
+- `npm run docs:validate` passed all 81 Markdown files and current policy
+  invariants, including the new Decision 0016 and architecture Mermaid blocks.
+- `npm run requirements:check` passed the registry, additions-only,
+  architecture, module, dependency, effect-boundary, and preceding checks before
+  failing closed at the retained stale dependency-injection report. That
+  historical/current evidence separation remains assigned to RM-019 and was not
+  silently refreshed or represented as Phase 7 evidence.
+- `git diff --check` passed. No push is authorized; the approved Phase 7
+  candidate is authorized only for the local commit preceding Phase 8 work.
