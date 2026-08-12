@@ -14,7 +14,7 @@
     "networked_test_count": 0,
     "ubuntu_contract": "verified-no-network-container",
     "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-    "ubuntu_image_id": "sha256:fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464"
+    "ubuntu_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57"
   },
   "limitations": [
     "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
@@ -51,37 +51,37 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "617731b671df3378652f771cb94773080d155298",
+  "reference_revision": "82c190db8b504330c98ccb8e2d315b98e4307a54",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/platform-adapter-contract.md",
-      "sha256": "6f48b66d591e25ae53d584fd41815034bbc989c04fb21479da2bae3ba9166f57"
+      "sha256": "e496d7f80794aced9f5a5f6c230797656555d6900a08ccc9301ce8a916f1e16c"
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "dc463ed156650593f2b8f51692d82262c3849d271588561fe378df0a56f28033"
+      "sha256": "095b3ece8b29f6e47a25714efe9a9a6f0e1bb6884c3d0e8a2f38da6b700b0cb5"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
-      "sha256": "0516054a15ceb238ea4f6b1b233caae4704f2ad628cda0cae4e0ee9073e7b2b8"
+      "sha256": "43e9af9322414acf26b13b56f9f36d3b97562e38603da6ebe688c11bfd17aefa"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "fac731b4c971dace8cff2391f5643ff3456943118942df83691c6be80239cc06"
+      "sha256": "812706df7a4c58263f8f08841e03dead780f5e7fb08b50ae173aaf12ba8a414b"
     },
     {
       "path": "kernel/engine/src/platform_startup.rs",
-      "sha256": "8aa495e12d635c1398823de675d6b2cffe42d51882e8a098758e911c99d950d0"
+      "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
     },
     {
       "path": "kernel/engine/tests/platform_adapter_conformance.rs",
-      "sha256": "c275562bf26657b1ad38d76d56e9fc8a039278c8645b83d316779740d60bbecf"
+      "sha256": "43be8fff79e866d85f5c393e01102af8f45c2b71101879b8bf36b1e933e05c6e"
     },
     {
       "path": "release/platform-manifests/README.md",
-      "sha256": "f7d60785d346dc4652e029f55b367b71c16ed05118baba5e3fb9dec07a3091ce"
+      "sha256": "03edbe9a7f00122cdf3a1c14f5f7f7e55989624451e8cc00739166878f3e1ac9"
     },
     {
       "path": "release/platform-manifests/v1/fedora-x86_64.json",
@@ -93,11 +93,11 @@
     },
     {
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "7375fdfa53892bd592a0bcaf47df6094cd637e9f8353331e8caf2e1b1c893233"
+      "sha256": "0129e11b46cba745b2e093c9b7b5244129bde7c249bfac4ea82a130d1d6b00c3"
     },
     {
       "path": "tests/test_platform_manifest_artifact.py",
-      "sha256": "f063bcc09599f724600d444934cea4bf8b9e977569c3aa771f12dc9223b447bd"
+      "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
     }
   ],
   "status": "pass-all-available-non-macos-contract-scope",
