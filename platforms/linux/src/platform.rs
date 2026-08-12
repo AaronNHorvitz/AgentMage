@@ -18,6 +18,7 @@ use agentmage_kernel_engine::operational_store::{
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use sha2::{Digest, Sha256};
 
+use crate::security_controls::{LinuxSecurityControl, LinuxSecurityControls};
 use crate::{
     DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
     LinuxIpcError, LinuxPathAdapter, LinuxStrictLocalRoot, LinuxStrictLocalRootInspector,
@@ -136,38 +137,22 @@ impl LinuxPlatformAdapter {
             true,
         );
         let updater = observe_binary(Path::new("/usr/libexec/agentmage/agentmage-updater"), true);
-        let observations = [
-            observation(
-                family,
-                PlatformCapability::WorkspaceAuthorization,
-                &[package],
-            ),
-            observation(family, PlatformCapability::SecurePathResolution, &[package]),
-            observation(
-                family,
-                PlatformCapability::ToolConfinement,
-                &[package, bubblewrap],
-            ),
-            observation(family, PlatformCapability::SecretStorage, &[secret_tool]),
-            observation(family, PlatformCapability::ProcessLimits, &[systemd_run]),
-            observation(
-                family,
-                PlatformCapability::LocalInference,
-                &[inference_adapter],
-            ),
-            observation(
-                family,
-                PlatformCapability::ModelInstallation,
-                &[model_installer],
-            ),
-            observation(family, PlatformCapability::Packaging, &[package]),
-            observation(family, PlatformCapability::Updates, &[updater]),
-            observation(
-                family,
-                PlatformCapability::NetworkIsolation,
-                &[package, bubblewrap],
-            ),
-        ];
+        let controls = LinuxSecurityControls::discover(
+            bubblewrap.status == PlatformCapabilityStatus::Verified,
+            systemd_run.status == PlatformCapabilityStatus::Verified,
+            secret_tool.status == PlatformCapabilityStatus::Verified,
+        );
+        let mechanisms = LinuxMechanismObservations {
+            package,
+            bubblewrap,
+            secret_tool,
+            systemd_run,
+            inference_adapter,
+            model_installer,
+            updater,
+            controls,
+        };
+        let observations = linux_capability_observations(family, &mechanisms);
         Ok(Self {
             family,
             adapter_instance_id: adapter_instance_id.clone(),
@@ -377,6 +362,95 @@ struct BinaryObservation {
     sha256: [u8; 32],
 }
 
+#[derive(Clone)]
+struct LinuxMechanismObservations {
+    package: BinaryObservation,
+    bubblewrap: BinaryObservation,
+    secret_tool: BinaryObservation,
+    systemd_run: BinaryObservation,
+    inference_adapter: BinaryObservation,
+    model_installer: BinaryObservation,
+    updater: BinaryObservation,
+    controls: LinuxSecurityControls,
+}
+
+fn linux_capability_observations(
+    family: PlatformFamily,
+    mechanisms: &LinuxMechanismObservations,
+) -> [PlatformCapabilityObservation; 10] {
+    let control = |control| {
+        let observed = mechanisms.controls.observation(control);
+        BinaryObservation {
+            status: observed.status(),
+            sha256: observed.mechanism_sha256(),
+        }
+    };
+    let bubblewrap_control = control(LinuxSecurityControl::Bubblewrap);
+    let user_namespaces = control(LinuxSecurityControl::UserNamespaces);
+    let seccomp = control(LinuxSecurityControl::Seccomp);
+    let cgroups = control(LinuxSecurityControl::Cgroups);
+    let secret_service = control(LinuxSecurityControl::SecretService);
+    let descriptor_paths = control(LinuxSecurityControl::DescriptorSafePaths);
+    let network = control(LinuxSecurityControl::NetworkIsolation);
+
+    [
+        observation(
+            family,
+            PlatformCapability::WorkspaceAuthorization,
+            &[mechanisms.package, descriptor_paths],
+        ),
+        observation(
+            family,
+            PlatformCapability::SecurePathResolution,
+            &[mechanisms.package, descriptor_paths],
+        ),
+        observation(
+            family,
+            PlatformCapability::ToolConfinement,
+            &[
+                mechanisms.package,
+                mechanisms.bubblewrap,
+                bubblewrap_control,
+                user_namespaces,
+                seccomp,
+            ],
+        ),
+        observation(
+            family,
+            PlatformCapability::SecretStorage,
+            &[mechanisms.secret_tool, secret_service],
+        ),
+        observation(
+            family,
+            PlatformCapability::ProcessLimits,
+            &[mechanisms.systemd_run, cgroups],
+        ),
+        observation(
+            family,
+            PlatformCapability::LocalInference,
+            &[mechanisms.inference_adapter],
+        ),
+        observation(
+            family,
+            PlatformCapability::ModelInstallation,
+            &[mechanisms.model_installer],
+        ),
+        observation(family, PlatformCapability::Packaging, &[mechanisms.package]),
+        observation(family, PlatformCapability::Updates, &[mechanisms.updater]),
+        observation(
+            family,
+            PlatformCapability::NetworkIsolation,
+            &[
+                mechanisms.package,
+                mechanisms.bubblewrap,
+                bubblewrap_control,
+                user_namespaces,
+                network,
+            ],
+        ),
+    ]
+}
+
 fn observation(
     family: PlatformFamily,
     capability: PlatformCapability,
@@ -549,16 +623,20 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, PlatformAdapter, PlatformCapability, PlatformCapabilityStatus,
-        PlatformFamily,
+        PlatformFamily, REQUIRED_PLATFORM_CAPABILITIES,
     };
     use agentmage_kernel_engine::operational_store::{
         OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
 
     use super::{
-        LinuxPlatformAdapter, combine_status, open_linux_authority_in_root, parse_distribution,
+        BinaryObservation, LinuxMechanismObservations, LinuxPlatformAdapter, combine_status,
+        linux_capability_observations, open_linux_authority_in_root, parse_distribution,
     };
     use crate::LinuxStrictLocalRootInspector;
+    use crate::security_controls::{
+        LinuxSecurityControl, LinuxSecurityControls, REQUIRED_LINUX_SECURITY_CONTROLS,
+    };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -598,6 +676,37 @@ mod tests {
     }
 
     #[test]
+    fn every_linux_control_disablement_maps_to_fail_closed_startup_capabilities() {
+        for family in [PlatformFamily::Fedora, PlatformFamily::Ubuntu] {
+            for control in REQUIRED_LINUX_SECURITY_CONTROLS {
+                for status in [
+                    PlatformCapabilityStatus::Unavailable,
+                    PlatformCapabilityStatus::Invalid,
+                ] {
+                    let mut mechanisms = synthetic_mechanisms();
+                    mechanisms.controls.set_status(control, status);
+                    let observations = linux_capability_observations(family, &mechanisms);
+                    let affected = affected_capabilities(control);
+
+                    assert!(!affected.is_empty(), "{}", control.id());
+                    for capability in REQUIRED_PLATFORM_CAPABILITIES {
+                        assert_eq!(
+                            observations[capability as usize].status(),
+                            if affected.contains(&capability) {
+                                status
+                            } else {
+                                PlatformCapabilityStatus::Verified
+                            },
+                            "{}:{capability:?}:{status:?}",
+                            control.id()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     #[ignore = "requires a supported Fedora or Ubuntu desktop with Visual Studio Code installed"]
     fn production_discovery_never_self_supplies_release_trust() {
         let adapter =
@@ -632,5 +741,42 @@ mod tests {
         runtime.revalidate_root().expect("root remains stable");
         drop(runtime);
         std::fs::remove_dir_all(directory).expect("fixture removes");
+    }
+
+    fn synthetic_mechanisms() -> LinuxMechanismObservations {
+        LinuxMechanismObservations {
+            package: verified_binary(1),
+            bubblewrap: verified_binary(2),
+            secret_tool: verified_binary(3),
+            systemd_run: verified_binary(4),
+            inference_adapter: verified_binary(5),
+            model_installer: verified_binary(6),
+            updater: verified_binary(7),
+            controls: LinuxSecurityControls::all_verified(),
+        }
+    }
+
+    const fn verified_binary(identity: u8) -> BinaryObservation {
+        BinaryObservation {
+            status: PlatformCapabilityStatus::Verified,
+            sha256: [identity; 32],
+        }
+    }
+
+    const fn affected_capabilities(control: LinuxSecurityControl) -> &'static [PlatformCapability] {
+        match control {
+            LinuxSecurityControl::Bubblewrap | LinuxSecurityControl::UserNamespaces => &[
+                PlatformCapability::ToolConfinement,
+                PlatformCapability::NetworkIsolation,
+            ],
+            LinuxSecurityControl::Seccomp => &[PlatformCapability::ToolConfinement],
+            LinuxSecurityControl::Cgroups => &[PlatformCapability::ProcessLimits],
+            LinuxSecurityControl::SecretService => &[PlatformCapability::SecretStorage],
+            LinuxSecurityControl::DescriptorSafePaths => &[
+                PlatformCapability::WorkspaceAuthorization,
+                PlatformCapability::SecurePathResolution,
+            ],
+            LinuxSecurityControl::NetworkIsolation => &[PlatformCapability::NetworkIsolation],
+        }
     }
 }

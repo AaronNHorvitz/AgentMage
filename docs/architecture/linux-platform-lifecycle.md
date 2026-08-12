@@ -21,6 +21,7 @@ sequenceDiagram
     C->>R: Exact manifest, detached signature, trusted public key
     R-->>C: VerifiedPlatformRelease
     C->>A: Discover native runtime and mechanisms
+    A->>A: Probe seven mandatory Linux controls
     C->>K: Release plus observed adapter
     K-->>C: VerifiedPlatformAdapter or refusal
     C->>P: Explicit workspace, configuration, state, or key operation
@@ -30,6 +31,15 @@ sequenceDiagram
 No workspace or state constructor accepts an unverified aggregate. The current
 repository has no production signed manifest or package, so development-host
 discovery does not imply successful production activation.
+
+Linux discovery performs seven bounded, no-input control probes before the
+aggregate can be activated: Bubblewrap, user namespaces, seccomp, cgroup v2,
+Secret Service, strict descriptor-safe paths, and network namespace isolation.
+The probes clear inherited environments, discard process output, enforce hard
+wait bounds, and receive no workspace or product authority. Each result is
+included in every capability that depends on it. An unavailable or invalid
+result remains visible to the shared activation routine and cannot select a
+weaker adapter.
 
 ## Filesystem Lifecycles
 
@@ -124,3 +134,6 @@ contents are not retained in inventory diagnostics.
   installed bootstrap host, but product authority remains unavailable until
   signed platform activation is complete.
 - Fedora execution does not substitute for Ubuntu, macOS, or Windows evidence.
+- The seven-control preflight passes on the current Fedora development host.
+  Fedora and Ubuntu mutation matrices prove shared fail-closed mapping, but
+  native Ubuntu control execution remains pending.

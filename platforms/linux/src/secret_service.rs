@@ -292,7 +292,7 @@ impl LinuxSecretService {
     }
 
     /// Proves the session service responds to a fresh no-match query.
-    fn probe(&self) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
+    pub(crate) fn probe(&self) -> Result<LinuxSecretReceipt, LinuxSecretServiceError> {
         let mut random = [0_u8; 16];
         getrandom(&mut random, GetRandomFlags::empty())
             .map_err(|_| error(LinuxSecretServiceErrorKind::ServiceUnavailable))?;

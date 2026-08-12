@@ -106,6 +106,14 @@ and output failures use stable content-free categories. There is no public raw
 runner method and no fallback without the kernel permit, exact held object,
 Bubblewrap, seccomp, systemd user service, or declared resource controls.
 
+Before aggregate platform activation, Linux discovery also runs fixed bounded
+probes for Bubblewrap, user namespaces, seccomp application, cgroup v2 resource
+placement, Secret Service reachability, strict descriptor-safe paths, and
+network namespace creation. These probes receive no workspace, model, secret,
+or tool input. Each control is independently bound to the shared capability
+observations, so disabling any one produces a non-verified mandatory capability
+and startup refusal rather than a degraded worker mode.
+
 ## Current Verification
 
 The default workspace suite verifies target/path parity, exact permit matching,

@@ -67,8 +67,32 @@ from the independently verified release.
 
 `LinuxPlatformAdapter::discover` observes Fedora or Ubuntu, x86-64 or AArch64,
 the operating-system build, fixed toolchain identity, Visual Studio Code build,
-current AgentMage executable, and fixed native mechanisms. Missing mechanisms
-are `Unavailable`; present but unsafe or changed mechanisms are `Invalid`.
+current AgentMage executable, fixed native mechanisms, and seven mandatory
+security controls. The control preflight uses fixed no-input operations with
+cleared environments and bounded waits. It verifies Bubblewrap execution, user
+namespace creation, application of the exact compiled seccomp program, a
+transient user cgroup with the required resource properties, an unlocked Secret
+Service no-match query, strict `openat2` descriptor resolution, and creation of
+a private network namespace. It receives no workspace, configuration, model,
+credential, or tool authority. Missing mechanisms are `Unavailable`; present
+but unsafe or changed mechanisms are `Invalid`.
+
+The controls contribute independently to the closed capability set:
+
+| Linux control | Capability blocked when unavailable or invalid |
+| --- | --- |
+| Bubblewrap | Tool confinement and network isolation |
+| User namespaces | Tool confinement and network isolation |
+| Seccomp | Tool confinement |
+| Cgroup v2 user service | Process limits |
+| Secret Service | Secret storage |
+| Descriptor-safe paths | Workspace authorization and secure path resolution |
+| Network namespace | Network isolation |
+
+The aggregate has no reduced-control mode. Each failed control makes at least
+one required capability non-verified, and the platform-independent kernel
+activation routine refuses every non-verified capability before constructing a
+`VerifiedPlatformAdapter`.
 
 Construction conveys no workspace or state authority. Production workspace
 selection, path resolution, configuration opening, authority-state opening, and
@@ -115,6 +139,9 @@ never enter manifests or observations.
 
 Current tests prove strict signed-manifest parsing, signature and signer
 mutation, runtime and mechanism comparison, complete capability closure,
-Fedora/Ubuntu non-portability, and aggregate constructor gating. They do not
-prove a supported package, Ubuntu-native execution, model runtime, updater,
-installer, Visual Studio Code workflow, macOS, or Windows.
+Fedora/Ubuntu non-portability, aggregate constructor gating, and every
+unavailable or invalid Linux control mapped independently to a mandatory
+startup capability. A live Fedora run verifies the seven-control preflight. The
+deterministic Ubuntu matrix is a unit result rather than native Ubuntu evidence.
+These tests do not prove a supported package, Ubuntu-native execution, model
+runtime, updater, installer, Visual Studio Code workflow, macOS, or Windows.

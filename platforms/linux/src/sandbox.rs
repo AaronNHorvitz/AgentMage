@@ -758,7 +758,7 @@ fn read_bounded(mut input: impl Read, limit: usize) -> Result<BoundedRead, Linux
     })
 }
 
-fn compile_seccomp_policy() -> Result<Vec<u8>, LinuxSandboxError> {
+pub(crate) fn compile_seccomp_policy() -> Result<Vec<u8>, LinuxSandboxError> {
     let rules = DENIED_SYSCALLS
         .iter()
         .map(|syscall| format!(r#"{{"syscall":"{syscall}"}}"#))

@@ -9,6 +9,7 @@ mod lifecycle;
 mod platform;
 mod sandbox;
 mod secret_service;
+mod security_controls;
 mod strict_local;
 
 pub use configuration_store::{
@@ -616,6 +617,25 @@ fn select_strategy(
         )),
         Err(_) => Err(adapter_error(PathAdapterErrorKind::PlatformFailure, None)),
     }
+}
+
+pub(crate) fn strict_descriptor_paths_available() -> bool {
+    let root = match open(
+        "/",
+        OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+    ) {
+        Ok(root) => root,
+        Err(_) => return false,
+    };
+    let root_snapshot = match snapshot(&root, None) {
+        Ok(snapshot) => snapshot,
+        Err(_) => return false,
+    };
+    matches!(
+        select_strategy(&root, &root_snapshot, ResolverPreference::Auto),
+        Ok(LinuxResolutionStrategy::OpenAt2)
+    )
 }
 
 fn verified_fallback(
