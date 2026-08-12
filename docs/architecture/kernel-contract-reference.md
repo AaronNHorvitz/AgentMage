@@ -162,18 +162,25 @@ grant.
 
 `CapabilityGrant` is the only wire contract permitted to carry an authority
 candidate. `GrantClass` distinguishes parent session-read scope from a derived
-single-operation scope. `GrantOperation` is a closed enumeration without a
-wildcard. `GrantTarget`, `GrantPreimage`, `GrantSideEffect`, `GrantNonce`, and
-`GrantStatus` bind exact target components, observed state, expected effects,
-anti-replay identity, use accounting, and lifecycle. Parsing the record does not
-validate policy or authorize execution; those are kernel responsibilities.
+single-operation scope. `OperationBinding` closes the operation and authority
+taxonomy without a wildcard. `GrantTarget` is a tagged private-field value: a
+session target contains an authorization-bound `WorkspaceScopePath`, while an
+operation target contains a non-empty `WorkspacePath`, authorization and
+adapter identities, platform, object kind, object identity, and required file
+preimage. `GrantPreimage`, `GrantSideEffect`, `GrantNonce`, and `GrantStatus`
+bind indexed state, expected effects, anti-replay identity, use accounting, and
+lifecycle. Parsing the record does not make it current or authorize execution;
+issuer retention, policy, consumption, and exact held-object matching remain
+kernel and platform-driver responsibilities.
 
 ### Canonical Paths and Display Links
 
-`WorkspacePath` and `WorkspacePathComponent` represent bounded,
-workspace-relative canonical components. `WorkspacePathError` and
-`WorkspacePathErrorKind` report content-free rejection classes. The contract
-limits are `MAX_WORKSPACE_PATH_COMPONENTS` and
+`WorkspacePath`, `WorkspaceScopePath`, and `WorkspacePathComponent` represent
+bounded, workspace-relative canonical components. `WorkspaceScopePath` alone
+may be empty to name an explicitly authorized root; every non-root component
+uses the same validator as `WorkspacePath`. `WorkspacePathError` and
+`WorkspacePathErrorKind` report content-free rejection classes. The limits are
+`MAX_WORKSPACE_PATH_COMPONENTS` and
 `MAX_WORKSPACE_PATH_COMPONENT_BYTES`.
 
 `PlatformPathAdapter` owns native `AuthorizedWorkspaceHandle` and

@@ -17,6 +17,13 @@ authorization remain outside this increment.
 contains one `WorkspaceId` and normalized relative components. Its private
 fields and custom deserializer force all values through the same validation.
 
+`WorkspaceScopePath` is the root-capable counterpart used only for approved
+session scope. It permits zero components for the workspace root and otherwise
+uses the exact `WorkspacePath` component validator. `GrantTarget` then closes
+the authority representation into either an authorization-bound scope or an
+exact held object; raw string components are not retained as a weaker grant
+path.
+
 `AuthorizedWorkspaceHandle` binds a workspace authorization to one
 `AdapterInstanceId`, `WorkspaceAuthorizationId`, `WorkspaceId`, and
 `PathPlatform`. Its native root capability remains private to the adapter.
@@ -65,6 +72,13 @@ held descriptor and pre/post metadata comparisons. Revalidation compares the
 held identity and, when present, recomputes the exact preimage from that same
 descriptor.
 
+For a mediated Linux operation, the consumed grant target must exactly match
+the held path, authorization event, adapter instance, platform, object kind,
+object identity, and preimage. The supervisor derives either a sealed immutable
+projection of the exact approved file bytes or a sealed bounded directory-name
+projection. The worker receives only that projection, never the original file,
+source directory, or workspace-root descriptor.
+
 ## Display-Only Links
 
 `DisplayFileLink` is a distinct one-way display type. It is created only from a
@@ -93,6 +107,9 @@ user interface. Debug and error output remain redacted. Any URI or rendered
 - Confirm all four strict `openat2` resolution flags remain present.
 - Confirm held-object identity and exact preimage checks span validation and
   use.
+- Confirm session scopes and operation targets share the canonical component
+  parser and that only a session scope may name the root.
+- Confirm the worker boundary receives no workspace-root descriptor.
 - Confirm denial errors remain content-free and display links remain one-way.
 - Confirm macOS and Ubuntu claims remain blocked until their own execution
   evidence exists.
@@ -101,6 +118,6 @@ user interface. Debug and error output remain redacted. Any URI or rendered
 
 This increment does not implement public workspace selection, durable workspace
 authorization, Visual Studio Code link activation, Ubuntu execution evidence,
-privileged bind-mount attack evidence, packaging, or macOS path behavior. The
-generated path corpus, race harness, display-authority matrix, and independent
-secure-path review are separate Story 6.1 artifacts.
+packaging, or macOS path behavior. The generated path corpus, race harness,
+display-authority matrix, and independent secure-path review remain separate
+Story 6.1 artifacts.

@@ -1,12 +1,7 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ActorId, DataSensitivity, DisplayFileLink, GrantId, GrantNonce, GrantTarget, SessionId, TaskId,
-    WorkspaceId, WorkspaceObjectIdentity, WorkspacePath,
-};
-use agentmage_kernel_engine::{
-    grants::{GrantIssueError, GrantIssuer, SessionReadGrantRequest},
-    policy::{PolicyBuildError, PolicyEngine, StrictLocalReadOnlyScope},
+    DisplayFileLink, GrantTarget, WorkspaceId, WorkspaceObjectIdentity, WorkspacePath,
 };
 use serde::Deserialize;
 
@@ -31,40 +26,32 @@ struct LinkCase {
     rendered_target: String,
 }
 
-fn target(candidate: &str) -> GrantTarget {
-    GrantTarget {
-        workspace_id: WorkspaceId::from_raw("workspace-display-0001"),
-        path_components: vec![candidate.to_owned()],
-    }
-}
-
-fn request(case_id: &str, candidate: &str) -> SessionReadGrantRequest {
-    SessionReadGrantRequest {
-        grant_id: GrantId::from_raw(format!("grant-{case_id}")),
-        actor_id: ActorId::from_raw("actor-local-0001"),
-        session_id: SessionId::from_raw("session-display-0001"),
-        task_id: TaskId::from_raw("task-display-0001"),
-        targets: vec![target(candidate)],
-        excluded_targets: Vec::new(),
-        sensitivity: DataSensitivity::Ephemeral,
-        issued_at_epoch_ms: 1_786_320_000_000,
-        expires_at_epoch_ms: 1_786_320_060_000,
-        nonce: GrantNonce::from_raw(format!("nonce-{case_id}")),
-        maximum_derived_operations: 1,
-        preview_sha256: "1".repeat(64),
-        policy_sha256: "2".repeat(64),
-    }
-}
-
-fn policy(candidate: &str) -> Result<PolicyEngine, PolicyBuildError> {
-    PolicyEngine::strict_local_read_only(StrictLocalReadOnlyScope {
-        revision: 1,
-        actors: BTreeSet::from([ActorId::from_raw("actor-local-0001")]),
-        tasks: BTreeSet::from([TaskId::from_raw("task-display-0001")]),
-        actions: BTreeSet::new(),
-        tools: BTreeSet::new(),
-        targets: BTreeSet::from([target(candidate)]),
-    })
+fn grant_target(candidate: &str, kind: &str) -> Result<GrantTarget, serde_json::Error> {
+    let value = if kind == "workspace_scope" {
+        serde_json::json!({
+            "target_kind": kind,
+            "path": {"workspace_id": "workspace-display-0001", "components": [candidate]},
+            "authorization_id": "authorization-display-0001",
+            "adapter_instance_id": "adapter-display-0001",
+            "platform": "deterministic_fake"
+        })
+    } else {
+        serde_json::json!({
+            "target_kind": kind,
+            "path": {"workspace_id": "workspace-display-0001", "components": [candidate]},
+            "authorization_id": "authorization-display-0001",
+            "adapter_instance_id": "adapter-display-0001",
+            "platform": "deterministic_fake",
+            "object_kind": "regular_file",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": vec![2_u8; 32]
+            },
+            "preimage": {"byte_len": 7, "content_sha256": vec![3_u8; 32]}
+        })
+    };
+    serde_json::from_value(value)
 }
 
 #[test]
@@ -120,19 +107,10 @@ fn generated_display_links_are_rejected_by_every_runtime_authority_boundary() {
             assert!(serde_json::from_value::<WorkspacePath>(wire).is_err());
             rejection_count += 1;
 
-            let mut issuer = GrantIssuer::new();
-            let grant_id = GrantId::from_raw(format!("grant-{}", case.case_id));
-            let error = issuer
-                .issue_session_read(request(&case.case_id, &candidate))
-                .expect_err("display candidate cannot become current grant authority");
-            assert_eq!(error, GrantIssueError::InvalidInput);
-            assert!(issuer.current(&grant_id).is_none());
+            assert!(grant_target(&candidate, "workspace_scope").is_err());
             rejection_count += 1;
 
-            assert_eq!(
-                policy(&candidate).unwrap_err(),
-                PolicyBuildError::InvalidDocument
-            );
+            assert!(grant_target(&candidate, "held_object").is_err());
             rejection_count += 1;
 
             // PlatformPathAdapter::resolve accepts only &WorkspacePath. Constructor

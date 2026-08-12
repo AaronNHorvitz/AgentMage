@@ -8,8 +8,6 @@ use sha2::{Digest, Sha256};
 use crate::tooling::ToolRegistry;
 
 const MAX_IDENTIFIER_BYTES: usize = 128;
-const MAX_PATH_COMPONENTS: usize = 64;
-const MAX_PATH_COMPONENT_BYTES: usize = 255;
 const MAX_TARGETS: usize = 128;
 const MAX_EFFECTS: usize = 128;
 const MAX_ROLLBACK_BYTES: usize = 1_024;
@@ -121,17 +119,24 @@ fn validate_preimages_and_effects(request: &ApprovalRequest) -> Result<(), Appro
     }
     let mut preimage_indexes = std::collections::BTreeSet::new();
     for preimage in &request.preimages {
-        if !valid_target_index(preimage.target_index, request.targets.len())
-            || !preimage_indexes.insert(preimage.target_index)
+        let Some(target_index) = usize::try_from(preimage.target_index)
+            .ok()
+            .filter(|index| *index < request.targets.len())
+        else {
+            return Err(ApprovalRenderError::InvalidInput);
+        };
+        if !preimage_indexes.insert(preimage.target_index)
             || !valid_digest(&preimage.content_sha256)
-            || preimage.observed_revision.as_ref().is_some_and(|value| {
-                value.is_empty()
-                    || value.len() > MAX_IDENTIFIER_BYTES
-                    || value.chars().any(char::is_control)
-            })
+            || !preimage.matches_target(preimage.target_index, &request.targets[target_index])
         {
             return Err(ApprovalRenderError::InvalidInput);
         }
+    }
+    if request.targets.iter().enumerate().any(|(index, target)| {
+        target.preimage().is_some()
+            != preimage_indexes.contains(&u32::try_from(index).unwrap_or(u32::MAX))
+    }) {
+        return Err(ApprovalRenderError::InvalidInput);
     }
     for effect in &request.expected_side_effects {
         if effect.operation != request.operation
@@ -155,29 +160,30 @@ fn validate_scope(
     if targets.is_empty() || targets.len() > MAX_TARGETS || excluded_targets.len() > MAX_TARGETS {
         return Err(ApprovalRenderError::InvalidInput);
     }
-    for target in targets.iter().chain(excluded_targets) {
-        validate_identifier(target.workspace_id.as_str())?;
-        if target.path_components.len() > MAX_PATH_COMPONENTS {
-            return Err(ApprovalRenderError::InvalidInput);
-        }
-        for component in &target.path_components {
-            if component.is_empty()
-                || component.len() > MAX_PATH_COMPONENT_BYTES
-                || matches!(component.as_str(), "." | ".." | "*" | "**")
-                || component
-                    .bytes()
-                    .any(|value| matches!(value, 0 | b'/' | b'\\'))
-            {
-                return Err(ApprovalRenderError::InvalidInput);
-            }
-        }
-    }
-    let workspace = &targets[0].workspace_id;
     if targets
         .iter()
-        .chain(excluded_targets)
-        .any(|target| &target.workspace_id != workspace)
+        .any(|target| target.workspace_path().is_none())
+        || excluded_targets
+            .iter()
+            .any(|target| target.scope_path().is_none())
     {
+        return Err(ApprovalRenderError::InvalidInput);
+    }
+    for target in targets.iter().chain(excluded_targets) {
+        validate_identifier(target.workspace_id().as_str())?;
+        validate_identifier(target.authorization_id().as_str())?;
+        validate_identifier(target.adapter_instance_id().as_str())?;
+    }
+    let workspace = targets[0].workspace_id();
+    let authorization = targets[0].authorization_id();
+    let adapter = targets[0].adapter_instance_id();
+    let platform = targets[0].platform();
+    if targets.iter().chain(excluded_targets).any(|target| {
+        target.workspace_id() != workspace
+            || target.authorization_id() != authorization
+            || target.adapter_instance_id() != adapter
+            || target.platform() != platform
+    }) {
         return Err(ApprovalRenderError::InvalidInput);
     }
     Ok(())
@@ -230,13 +236,14 @@ mod tests {
     use super::{ApprovalRenderError, render_approval_request, verify_approval_request};
     use crate::{
         authority::{DescriptiveArtifactKind, reject_as_authority},
+        test_target::{preimage, scope, target},
         tooling::{Tool, ToolRegistry},
     };
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, ContractPayload, CorrelationId,
-        DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget,
-        OperationBinding, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId,
-        ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId,
+        DataSensitivity, GrantId, GrantOperation, GrantSideEffect, OperationBinding,
+        RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId,
+        ToolDefinition, ToolId, ToolRiskLevel,
     };
 
     struct FixtureTool {
@@ -283,15 +290,9 @@ mod tests {
         registry
     }
 
-    fn target(path: &[&str]) -> GrantTarget {
-        GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: path.iter().map(|value| (*value).to_owned()).collect(),
-        }
-    }
-
     fn candidate() -> ApprovalRequest {
         let arguments = br#"{"path":["src","fixture.txt"]}"#.to_vec();
+        let target = target(&["src", "fixture.txt"]);
         ApprovalRequest {
             schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
             approval_id: ApprovalId::from_raw("approval-0001"),
@@ -317,14 +318,10 @@ mod tests {
                     bytes: arguments,
                 },
             },
-            targets: vec![target(&["src", "fixture.txt"])],
-            excluded_targets: vec![target(&["src", "private"])],
+            targets: vec![target.clone()],
+            excluded_targets: vec![scope(&["src", "private"])],
             sensitivity: DataSensitivity::Ephemeral,
-            preimages: vec![GrantPreimage {
-                target_index: 0,
-                content_sha256: "3".repeat(64),
-                observed_revision: Some("fixture-v1".to_owned()),
-            }],
+            preimages: vec![preimage(0, &target)],
             expected_side_effects: vec![GrantSideEffect {
                 operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
@@ -361,43 +358,59 @@ mod tests {
         let registry = registry();
         let rendered =
             render_approval_request(&registry, candidate()).expect("approval must render");
-        let mutations: Vec<ApprovalRequest> = vec![
-            {
-                let mut value = rendered.clone();
-                value.task_id = TaskId::from_raw("task-other");
-                value
-            },
-            {
-                let mut value = rendered.clone();
-                value.targets[0].path_components.push("changed".to_owned());
-                value
-            },
-            {
-                let mut value = rendered.clone();
-                value.preimages[0].content_sha256 = "a".repeat(64);
-                value
-            },
-            {
-                let mut value = rendered.clone();
-                value.expected_side_effects[0].details_sha256 = "b".repeat(64);
-                value
-            },
-            {
-                let mut value = rendered.clone();
-                value.expires_at_epoch_ms -= 1;
-                value
-            },
-            {
-                let mut value = rendered.clone();
-                value.policy_sha256 = "c".repeat(64);
-                value
-            },
+        let mutations: Vec<(ApprovalRequest, ApprovalRenderError)> = vec![
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.task_id = TaskId::from_raw("task-other");
+                    value
+                },
+                ApprovalRenderError::ConfirmationMismatch,
+            ),
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.targets[0] = target(&["src", "changed.txt"]);
+                    value.preimages[0] = preimage(0, &value.targets[0]);
+                    value
+                },
+                ApprovalRenderError::ConfirmationMismatch,
+            ),
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.preimages[0].content_sha256 = "a".repeat(64);
+                    value
+                },
+                ApprovalRenderError::InvalidInput,
+            ),
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.expected_side_effects[0].details_sha256 = "b".repeat(64);
+                    value
+                },
+                ApprovalRenderError::ConfirmationMismatch,
+            ),
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.expires_at_epoch_ms -= 1;
+                    value
+                },
+                ApprovalRenderError::ConfirmationMismatch,
+            ),
+            (
+                {
+                    let mut value = rendered.clone();
+                    value.policy_sha256 = "c".repeat(64);
+                    value
+                },
+                ApprovalRenderError::ConfirmationMismatch,
+            ),
         ];
-        for changed in mutations {
-            assert_eq!(
-                verify_approval_request(&registry, &changed),
-                Err(ApprovalRenderError::ConfirmationMismatch)
-            );
+        for (changed, expected) in mutations {
+            assert_eq!(verify_approval_request(&registry, &changed), Err(expected));
         }
     }
 
@@ -411,11 +424,22 @@ mod tests {
             Err(ApprovalRenderError::InvalidToolCall)
         );
 
-        let mut wildcard = candidate();
-        wildcard.targets[0].path_components = vec!["**".to_owned()];
-        assert_eq!(
-            render_approval_request(&registry, wildcard),
-            Err(ApprovalRenderError::InvalidInput)
+        let wildcard = serde_json::json!({
+            "target_kind": "held_object",
+            "path": {"workspace_id": "workspace-0001", "components": ["**"]},
+            "authorization_id": "authorization-0001",
+            "adapter_instance_id": "adapter-0001",
+            "platform": "deterministic_fake",
+            "object_kind": "regular_file",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": vec![2_u8; 32]
+            },
+            "preimage": {"byte_len": 7, "content_sha256": vec![3_u8; 32]}
+        });
+        assert!(
+            serde_json::from_value::<agentmage_kernel_contracts::GrantTarget>(wildcard).is_err()
         );
 
         let mut mismatched =

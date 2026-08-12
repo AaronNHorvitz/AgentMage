@@ -9,23 +9,29 @@ use std::process::{Command, Stdio};
 use std::thread;
 
 use agentmage_kernel_contracts::{
-    AuthorizedWorkspaceHandle, GrantOperation, OperationOutcome, StateChange, WorkspacePath,
+    GrantOperation, GrantTarget, HeldWorkspaceObject, OperationOutcome, PathResolutionIntent,
+    StateChange, WorkspaceObjectKind, WorkspacePath,
 };
 use agentmage_kernel_engine::authority_transaction::{
     EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
 };
 use rustix::fd::OwnedFd;
-use rustix::fs::{FileType, Mode, OFlags, fstat, open};
-use rustix::io::pread;
+use rustix::fs::{
+    Dir, FileType, MemfdFlags, Mode, OFlags, SealFlags, SeekFrom, fcntl_add_seals, fstat,
+    memfd_create, open, seek,
+};
+use rustix::io::{pread, write};
 use rustix::process::getuid;
 use rustix::rand::{GetRandomFlags, getrandom};
 use seccompiler::{BpfProgram, TargetArch, compile_from_json};
 use sha2::{Digest, Sha256};
 
-use crate::LinuxAuthorizedWorkspace;
+use crate::LinuxHeldObject;
 
 const MAX_RUNTIME_FILES: usize = 16;
 const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+const MAX_DIRECTORY_ENTRIES: usize = 4_096;
+const MAX_DIRECTORY_PROJECTION_BYTES: usize = 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const WORKER_GUEST_PATH: &str = "/app/worker";
 const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
@@ -101,6 +107,14 @@ pub enum LinuxSandboxErrorKind {
     InvalidManifest,
     /// A requested workspace path belongs to a different authorization.
     WorkspaceMismatch,
+    /// The operation, permit, and continuously held object do not match exactly.
+    TargetMismatch,
+    /// The continuously held object changed before the worker launch.
+    StaleObject,
+    /// An immutable file projection could not be constructed safely.
+    FileProjectionFailed,
+    /// A bounded directory projection could not be constructed safely.
+    DirectoryProjectionFailed,
     /// A resource bound is outside the supported range.
     InvalidLimit,
     /// The seccomp policy could not be compiled for the running architecture.
@@ -120,6 +134,10 @@ impl LinuxSandboxErrorKind {
         match self {
             Self::InvalidManifest => "linux.sandbox.manifest.invalid",
             Self::WorkspaceMismatch => "linux.sandbox.workspace.mismatch",
+            Self::TargetMismatch => "linux.sandbox.target.mismatch",
+            Self::StaleObject => "linux.sandbox.target.stale",
+            Self::FileProjectionFailed => "linux.sandbox.file_projection.failed",
+            Self::DirectoryProjectionFailed => "linux.sandbox.directory_projection.failed",
             Self::InvalidLimit => "linux.sandbox.limit.invalid",
             Self::SeccompUnavailable => "linux.sandbox.seccomp.unavailable",
             Self::IsolationUnavailable => "linux.sandbox.isolation.unavailable",
@@ -221,8 +239,10 @@ impl Default for LinuxSandboxLimits {
 /// Typed operations admitted by the Linux read-only worker boundary.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LinuxSandboxOperation {
-    /// Read one canonical file beneath the already-authorized workspace.
+    /// Read one exact canonical file already held by the path adapter.
     ReadFile(WorkspacePath),
+    /// Enumerate one exact held directory through a bounded isolated projection.
+    ReadDirectory(WorkspacePath),
 }
 
 /// Bounded result returned by a completed worker.
@@ -378,19 +398,48 @@ impl LinuxSandboxRunner {
 
     fn run(
         &self,
-        workspace: &LinuxAuthorizedWorkspace,
+        held: &LinuxHeldObject,
         operation: &LinuxSandboxOperation,
+        excluded_targets: &[GrantTarget],
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
-        let LinuxSandboxOperation::ReadFile(path) = operation;
-        if path.workspace_id() != workspace.workspace_id() {
+        let path = match operation {
+            LinuxSandboxOperation::ReadFile(path) | LinuxSandboxOperation::ReadDirectory(path) => {
+                path
+            }
+        };
+        if path.workspace_id() != held.workspace_path().workspace_id() {
             return Err(error(LinuxSandboxErrorKind::WorkspaceMismatch));
         }
-        self.run_arguments(workspace, &[guest_workspace_path(path).into_os_string()])
+        if path != held.workspace_path() {
+            return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+        }
+        held.revalidate()
+            .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
+        match operation {
+            LinuxSandboxOperation::ReadFile(_) => {
+                if held.intent() != PathResolutionIntent::ReadFile
+                    || held.object_kind() != WorkspaceObjectKind::RegularFile
+                {
+                    return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+                }
+                let projection = file_projection(held)?;
+                self.run_projection_arguments(&projection, &[OsString::from("/input/object")])
+            }
+            LinuxSandboxOperation::ReadDirectory(_) => {
+                if held.intent() != PathResolutionIntent::ReadDirectory
+                    || held.object_kind() != WorkspaceObjectKind::Directory
+                {
+                    return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+                }
+                let projection = directory_projection(held, excluded_targets)?;
+                self.run_projection_arguments(&projection, &[OsString::from("/input/object")])
+            }
+        }
     }
 
-    fn run_arguments(
+    fn run_projection_arguments(
         &self,
-        workspace: &LinuxAuthorizedWorkspace,
+        projection_descriptor: &OwnedFd,
         arguments: &[OsString],
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         let parent_pid = std::process::id();
@@ -438,8 +487,8 @@ impl LinuxSandboxRunner {
                 self.limits.runtime_seconds
             ))
             .arg(format!(
-                "--property=OpenFile={}:workspace:read-only",
-                descriptor_source(&workspace.root_descriptor)
+                "--property=OpenFile={}:object:read-only",
+                descriptor_source(projection_descriptor)
             ))
             .arg(format!(
                 "--property=OpenFile={}:worker:read-only",
@@ -451,38 +500,40 @@ impl LinuxSandboxRunner {
                 descriptor_source(&runtime.descriptor)
             ));
         }
-        command
-            .arg(bubblewrap_command)
-            .args([
-                "--unshare-all",
-                "--unshare-user",
-                "--disable-userns",
-                "--new-session",
-                "--die-with-parent",
-                "--clearenv",
-                "--setenv",
-                "PATH",
-                "/app",
-                "--setenv",
-                "LANG",
-                "C",
-                "--cap-drop",
-                "ALL",
-                "--proc",
-                "/proc",
-                "--dev",
-                "/dev",
-                "--size",
-                "16777216",
-                "--tmpfs",
-                "/tmp",
-                "--dir",
-                "/app",
-                "--dir",
-                "/workspace",
-            ])
-            .args(["--ro-bind-fd", "3", "/workspace"])
-            .args(["--ro-bind-fd", "4", WORKER_GUEST_PATH]);
+        command.arg(bubblewrap_command).args([
+            "--unshare-all",
+            "--unshare-user",
+            "--disable-userns",
+            "--new-session",
+            "--die-with-parent",
+            "--clearenv",
+            "--setenv",
+            "PATH",
+            "/app",
+            "--setenv",
+            "LANG",
+            "C",
+            "--cap-drop",
+            "ALL",
+            "--proc",
+            "/proc",
+            "--dev",
+            "/dev",
+            "--size",
+            "16777216",
+            "--tmpfs",
+            "/tmp",
+            "--dir",
+            "/app",
+            "--dir",
+            "/input",
+            "--ro-bind-data",
+            "3",
+            "/input/object",
+            "--ro-bind-fd",
+            "4",
+            WORKER_GUEST_PATH,
+        ]);
         for (index, runtime) in self.manifest.runtime_files.iter().enumerate() {
             command
                 .arg("--ro-bind-fd")
@@ -492,7 +543,7 @@ impl LinuxSandboxRunner {
         command
             .args([
                 "--chdir",
-                "/workspace",
+                "/input",
                 "--seccomp",
                 "0",
                 "--",
@@ -561,35 +612,35 @@ impl LinuxSandboxRunner {
 ///
 /// ```compile_fail
 /// use agentmage_platform_linux::{
-///     LinuxAuthorizedWorkspace, LinuxSandboxOperation, LinuxSandboxRunner,
+///     LinuxHeldObject, LinuxSandboxOperation, LinuxSandboxRunner,
 /// };
 /// fn bypass(
 ///     runner: &LinuxSandboxRunner,
-///     workspace: &LinuxAuthorizedWorkspace,
+///     held: &LinuxHeldObject,
 ///     operation: &LinuxSandboxOperation,
 /// ) {
-///     let _ = runner.run(workspace, operation);
+///     let _ = runner.run(held, operation, &[]);
 /// }
 /// ```
 pub struct LinuxSandboxEffectDriver {
     runner: LinuxSandboxRunner,
-    workspace: LinuxAuthorizedWorkspace,
+    held: LinuxHeldObject,
     operation: LinuxSandboxOperation,
     result: Option<LinuxSandboxResult>,
     error: Option<LinuxSandboxError>,
 }
 
 impl LinuxSandboxEffectDriver {
-    /// Creates an inert driver over an already-held workspace authorization.
+    /// Creates an inert driver over one continuously held exact object.
     #[must_use]
     pub const fn new(
         runner: LinuxSandboxRunner,
-        workspace: LinuxAuthorizedWorkspace,
+        held: LinuxHeldObject,
         operation: LinuxSandboxOperation,
     ) -> Self {
         Self {
             runner,
-            workspace,
+            held,
             operation,
             result: None,
             error: None,
@@ -620,10 +671,16 @@ impl fmt::Debug for LinuxSandboxEffectDriver {
 
 impl EffectDriver for LinuxSandboxEffectDriver {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
-        if authorization.operation().operation() != GrantOperation::WorkspaceRead {
+        if authorization.operation().operation() != GrantOperation::WorkspaceRead
+            || !authorization.authorizes_held_object(&self.held)
+        {
             return EffectLaunch::failed();
         }
-        match self.runner.run(&self.workspace, &self.operation) {
+        match self.runner.run(
+            &self.held,
+            &self.operation,
+            authorization.excluded_targets(),
+        ) {
             Ok(result) => {
                 let effect_result = EffectResult::from_redacted_material(
                     if result.success() {
@@ -831,12 +888,157 @@ fn valid_runtime_guest_path(path: &Path) -> bool {
     )
 }
 
-fn guest_workspace_path(path: &WorkspacePath) -> PathBuf {
-    let mut guest = PathBuf::from("/workspace");
-    for component in path.components() {
-        guest.push(component.as_str());
+fn file_projection(held: &LinuxHeldObject) -> Result<OwnedFd, LinuxSandboxError> {
+    let expected = held
+        .preimage()
+        .ok_or_else(|| error(LinuxSandboxErrorKind::TargetMismatch))?;
+    let descriptor = projection_descriptor(
+        "agentmage-file-projection",
+        LinuxSandboxErrorKind::FileProjectionFailed,
+    )?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
+    let mut offset = 0_u64;
+    while offset < expected.byte_len() {
+        let requested =
+            usize::try_from((expected.byte_len() - offset).min(HASH_BUFFER_BYTES as u64))
+                .map_err(|_| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
+        let count = pread(&held.object_descriptor, &mut buffer[..requested], offset)
+            .map_err(|_| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
+        if count == 0 {
+            return Err(error(LinuxSandboxErrorKind::StaleObject));
+        }
+        write_all_projection(
+            &descriptor,
+            &buffer[..count],
+            LinuxSandboxErrorKind::FileProjectionFailed,
+        )?;
+        digest.update(&buffer[..count]);
+        offset = offset
+            .checked_add(count as u64)
+            .ok_or_else(|| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
     }
-    guest
+    let observed: [u8; 32] = digest.finalize().into();
+    if &observed != expected.content_sha256() {
+        return Err(error(LinuxSandboxErrorKind::StaleObject));
+    }
+    held.revalidate()
+        .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
+    seal_projection(&descriptor, LinuxSandboxErrorKind::FileProjectionFailed)?;
+    Ok(descriptor)
+}
+
+fn directory_projection(
+    held: &LinuxHeldObject,
+    excluded_targets: &[GrantTarget],
+) -> Result<OwnedFd, LinuxSandboxError> {
+    let held_path = held.workspace_path();
+    let held_components = held_path.components();
+    let mut excluded_children = Vec::new();
+    for excluded in excluded_targets {
+        if excluded.authorization_id() != held.authorization_id()
+            || excluded.adapter_instance_id() != held.adapter_instance_id()
+            || excluded.platform() != held.object_identity().platform()
+        {
+            return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+        }
+        let Some(scope) = excluded.scope_path() else {
+            return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+        };
+        if scope.workspace_id() != held_path.workspace_id() {
+            return Err(error(LinuxSandboxErrorKind::WorkspaceMismatch));
+        }
+        let scope_components = scope.components();
+        if held_components.starts_with(scope_components) {
+            return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+        }
+        if scope_components.starts_with(held_components)
+            && let Some(component) = scope_components.get(held_components.len())
+        {
+            excluded_children.push(component.as_str().as_bytes().to_vec());
+        }
+    }
+
+    let mut entries = Vec::new();
+    let directory = Dir::read_from(&held.object_descriptor)
+        .map_err(|_| error(LinuxSandboxErrorKind::DirectoryProjectionFailed))?;
+    for entry in directory {
+        let entry = entry.map_err(|_| error(LinuxSandboxErrorKind::DirectoryProjectionFailed))?;
+        let name = entry.file_name().to_bytes();
+        if matches!(name, b"." | b"..") || excluded_children.iter().any(|item| item == name) {
+            continue;
+        }
+        if entries.len() >= MAX_DIRECTORY_ENTRIES {
+            return Err(error(LinuxSandboxErrorKind::DirectoryProjectionFailed));
+        }
+        entries.push(name.to_vec());
+    }
+    entries.sort_unstable();
+
+    let projected_size = entries
+        .iter()
+        .try_fold(0_usize, |total, entry| total.checked_add(entry.len() + 1))
+        .filter(|total| *total <= MAX_DIRECTORY_PROJECTION_BYTES)
+        .ok_or_else(|| error(LinuxSandboxErrorKind::DirectoryProjectionFailed))?;
+    let mut projection = Vec::with_capacity(projected_size);
+    for entry in entries {
+        projection.extend_from_slice(&entry);
+        projection.push(0);
+    }
+
+    held.revalidate()
+        .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
+
+    let descriptor = projection_descriptor(
+        "agentmage-directory-projection",
+        LinuxSandboxErrorKind::DirectoryProjectionFailed,
+    )?;
+    write_all_projection(
+        &descriptor,
+        &projection,
+        LinuxSandboxErrorKind::DirectoryProjectionFailed,
+    )?;
+    seal_projection(
+        &descriptor,
+        LinuxSandboxErrorKind::DirectoryProjectionFailed,
+    )?;
+    Ok(descriptor)
+}
+
+fn projection_descriptor(
+    name: &str,
+    error_kind: LinuxSandboxErrorKind,
+) -> Result<OwnedFd, LinuxSandboxError> {
+    memfd_create(name, MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING)
+        .map_err(|_| error(error_kind))
+}
+
+fn write_all_projection(
+    descriptor: &OwnedFd,
+    bytes: &[u8],
+    error_kind: LinuxSandboxErrorKind,
+) -> Result<(), LinuxSandboxError> {
+    let mut remaining = bytes;
+    while !remaining.is_empty() {
+        let count = write(descriptor, remaining).map_err(|_| error(error_kind))?;
+        if count == 0 {
+            return Err(error(error_kind));
+        }
+        remaining = &remaining[count..];
+    }
+    Ok(())
+}
+
+fn seal_projection(
+    descriptor: &OwnedFd,
+    error_kind: LinuxSandboxErrorKind,
+) -> Result<(), LinuxSandboxError> {
+    seek(descriptor, SeekFrom::Start(0)).map_err(|_| error(error_kind))?;
+    fcntl_add_seals(
+        descriptor,
+        SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE,
+    )
+    .map_err(|_| error(error_kind))
 }
 
 fn random_unit_name() -> Result<String, LinuxSandboxError> {
@@ -865,21 +1067,29 @@ const fn error(kind: LinuxSandboxErrorKind) -> LinuxSandboxError {
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::OsString;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
-        AdapterInstanceId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+        AdapterInstanceId, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
+        PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+        WorkspaceScopePath,
     };
-    use rustix::fs::{Mode, OFlags, open};
+    use rustix::fs::{Mode, OFlags, SealFlags, fcntl_get_seals, open};
+    use rustix::io::{pread, write};
 
     use super::{
-        LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxOperation,
-        LinuxSandboxRunner, LinuxWorkerRuntimeFile, compile_seccomp_policy,
+        LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
+        LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
+        compile_seccomp_policy, directory_projection, file_projection,
     };
-    use crate::{LinuxAuthorizedWorkspace, snapshot};
+    use crate::{
+        DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
+        snapshot,
+    };
 
     fn temp_directory(label: &str) -> PathBuf {
         let root = std::env::temp_dir().join(format!(
@@ -906,6 +1116,45 @@ mod tests {
             root_descriptor,
             root_snapshot,
         }
+    }
+
+    fn hold(
+        workspace: &LinuxAuthorizedWorkspace,
+        name: &str,
+        intent: PathResolutionIntent,
+    ) -> LinuxHeldObject {
+        let path = WorkspacePath::new(workspace.workspace_id.clone(), [name])
+            .expect("canonical test path");
+        LinuxPathAdapter::new(
+            workspace.adapter_instance_id.clone(),
+            DEFAULT_MAX_PREIMAGE_BYTES,
+        )
+        .resolve(workspace, &path, intent)
+        .expect("held test object")
+    }
+
+    fn exclusion(workspace: &LinuxAuthorizedWorkspace, components: &[&str]) -> GrantTarget {
+        GrantTarget::workspace_scope(
+            workspace,
+            WorkspaceScopePath::new(workspace.workspace_id.clone(), components.iter().copied())
+                .expect("canonical exclusion"),
+        )
+        .expect("bound exclusion")
+    }
+
+    fn descriptor_bytes(descriptor: &rustix::fd::OwnedFd) -> Vec<u8> {
+        let mut output = Vec::new();
+        let mut offset = 0_u64;
+        let mut buffer = [0_u8; 1024];
+        loop {
+            let count = pread(descriptor, &mut buffer, offset).expect("projection read");
+            if count == 0 {
+                break;
+            }
+            output.extend_from_slice(&buffer[..count]);
+            offset += count as u64;
+        }
+        output
     }
 
     fn runtime_files(executable: &str) -> Vec<LinuxWorkerRuntimeFile> {
@@ -946,6 +1195,15 @@ mod tests {
         runner_for("/usr/bin/cat", LinuxSandboxLimits::default())
     }
 
+    fn run_held_arguments(
+        runner: &LinuxSandboxRunner,
+        held: &LinuxHeldObject,
+        arguments: &[OsString],
+    ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        let projection = file_projection(held)?;
+        runner.run_projection_arguments(&projection, arguments)
+    }
+
     #[test]
     fn policy_compiles_to_nonempty_classic_bpf() {
         let policy = compile_seccomp_policy().expect("compiled policy");
@@ -979,6 +1237,64 @@ mod tests {
     }
 
     #[test]
+    fn directory_projection_never_contains_excluded_or_nested_workspace_content() {
+        let root = temp_directory("projection");
+        fs::create_dir(root.join("folder")).expect("held directory");
+        fs::write(root.join("folder").join("allowed.txt"), b"allowed").expect("allowed child");
+        fs::write(root.join("folder").join("secret.txt"), b"secret").expect("secret child");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "folder", PathResolutionIntent::ReadDirectory);
+        let excluded = exclusion(&workspace, &["folder", "secret.txt"]);
+        let projection = directory_projection(&held, &[excluded]).expect("bounded projection");
+        assert_eq!(descriptor_bytes(&projection), b"allowed.txt\0");
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn file_projection_is_the_approved_preimage_and_cannot_be_modified() {
+        let root = temp_directory("file-projection");
+        fs::write(root.join("allowed.txt"), b"approved bytes").expect("fixture");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let projection = file_projection(&held).expect("immutable file projection");
+        assert_eq!(descriptor_bytes(&projection), b"approved bytes");
+        assert_eq!(
+            fcntl_get_seals(&projection).expect("projection seals"),
+            SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE
+        );
+        assert!(write(&projection, b"changed").is_err());
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn stale_held_file_fails_before_any_worker_process_can_start() {
+        let root = temp_directory("stale");
+        fs::write(root.join("allowed.txt"), b"first").expect("fixture");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        fs::write(root.join("allowed.txt"), b"changed").expect("mutated fixture");
+        let path = held.workspace_path().clone();
+        let error = runner()
+            .run(&held, &LinuxSandboxOperation::ReadFile(path), &[])
+            .expect_err("stale object must fail before manifest launch");
+        assert_eq!(error.kind(), LinuxSandboxErrorKind::StaleObject);
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn stale_held_directory_fails_projection_before_any_worker_process_can_start() {
+        let root = temp_directory("stale-directory");
+        fs::create_dir(root.join("folder")).expect("held directory");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "folder", PathResolutionIntent::ReadDirectory);
+        fs::write(root.join("folder").join("changed.txt"), b"changed").expect("mutation");
+        let error = directory_projection(&held, &[])
+            .expect_err("stale directory must fail before manifest launch");
+        assert_eq!(error.kind(), LinuxSandboxErrorKind::StaleObject);
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
     #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn fresh_worker_reads_only_the_canonical_workspace_file() {
         let root = temp_directory("read");
@@ -986,9 +1302,10 @@ mod tests {
         let workspace = authorize(&root);
         let path = WorkspacePath::new(workspace.workspace_id.clone(), ["allowed.txt"])
             .expect("workspace path");
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
 
         let result = runner()
-            .run(&workspace, &LinuxSandboxOperation::ReadFile(path))
+            .run(&held, &LinuxSandboxOperation::ReadFile(path), &[])
             .expect("sandbox execution");
         assert!(result.success());
         assert_eq!(result.stdout(), b"bounded worker output\n");
@@ -998,16 +1315,40 @@ mod tests {
 
     #[test]
     #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    fn directory_worker_receives_only_the_bounded_exclusion_safe_projection() {
+        let root = temp_directory("directory-worker");
+        fs::create_dir(root.join("folder")).expect("held directory");
+        fs::write(root.join("folder").join("allowed.txt"), b"allowed").expect("allowed child");
+        fs::write(root.join("folder").join("secret.txt"), b"secret").expect("secret child");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "folder", PathResolutionIntent::ReadDirectory);
+        let path = held.workspace_path().clone();
+        let excluded = exclusion(&workspace, &["folder", "secret.txt"]);
+        let result = runner()
+            .run(
+                &held,
+                &LinuxSandboxOperation::ReadDirectory(path),
+                &[excluded],
+            )
+            .expect("directory projection worker");
+        assert!(result.success());
+        assert_eq!(result.stdout(), b"allowed.txt\0");
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
     fn foreign_workspace_identity_never_starts_a_worker() {
         let root = temp_directory("foreign");
         fs::write(root.join("allowed.txt"), b"content").expect("fixture");
         let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
         let foreign =
             WorkspacePath::new(WorkspaceId::from_raw("workspace-foreign"), ["allowed.txt"])
                 .expect("foreign path");
 
         let error = runner()
-            .run(&workspace, &LinuxSandboxOperation::ReadFile(foreign))
+            .run(&held, &LinuxSandboxOperation::ReadFile(foreign), &[])
             .expect_err("foreign workspace must fail");
         assert_eq!(error.kind(), LinuxSandboxErrorKind::WorkspaceMismatch);
         fs::remove_dir_all(root).expect("cleanup");
@@ -1020,10 +1361,10 @@ mod tests {
         let fixture = root.join("allowed.txt");
         fs::write(&fixture, b"original").expect("fixture");
         let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
         let touch = runner_for("/usr/bin/touch", LinuxSandboxLimits::default());
 
-        let result = touch
-            .run_arguments(&workspace, &["/workspace/allowed.txt".into()])
+        let result = run_held_arguments(&touch, &held, &["/input/object".into()])
             .expect("contained worker result");
         assert!(!result.success());
         assert_eq!(fs::read(&fixture).expect("unchanged fixture"), b"original");
@@ -1036,6 +1377,7 @@ mod tests {
         let root = temp_directory("ambient");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
         let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
         let bash = runner_for("/usr/bin/bash", LinuxSandboxLimits::default());
         let probe = concat!(
             "for path in /home /etc /sys /run /dev/sda; do ",
@@ -1043,11 +1385,62 @@ mod tests {
             "set -- /proc/[0-9]*; echo \"processes:$#\""
         );
 
-        let result = bash
-            .run_arguments(&workspace, &["-c".into(), probe.into()])
+        let result = run_held_arguments(&bash, &held, &["-c".into(), probe.into()])
             .expect("contained worker result");
         assert!(result.success());
         assert_eq!(result.stdout(), b"processes:2\n");
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    fn worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content() {
+        let root = temp_directory("sibling");
+        fs::write(root.join("allowed.txt"), b"allowed").expect("allowed fixture");
+        fs::write(root.join("secret.txt"), b"secret").expect("secret fixture");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let bash = runner_for("/usr/bin/bash", LinuxSandboxLimits::default());
+        let probe = concat!(
+            "test -r /input/object || exit 10; ",
+            "test ! -e /input/secret.txt || exit 11; ",
+            "test ! -e /workspace || exit 12; ",
+            "test ! -e /input/../secret.txt || exit 13; ",
+            "for fd in /proc/self/fd/*; do ",
+            "target=$(readlink \"$fd\" 2>/dev/null || true); ",
+            "case \"$target\" in *secret.txt*) exit 14;; esac; done; ",
+            "printf isolated"
+        );
+        let result = run_held_arguments(&bash, &held, &["-c".into(), probe.into()])
+            .expect("contained worker result");
+        assert!(result.success());
+        assert_eq!(result.stdout(), b"isolated");
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires the verified Fedora systemd user session and Bubblewrap runtime"]
+    fn bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace() {
+        let root = temp_directory("scratch");
+        fs::write(root.join("allowed.txt"), b"original").expect("fixture");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let bash = runner_for("/usr/bin/bash", LinuxSandboxLimits::default());
+        let probe = concat!(
+            "printf 'scratch\\n' >/tmp/value; ",
+            "IFS= read -r value </tmp/value; test \"$value\" = scratch || exit 20; ",
+            "printf changed >/input/object 2>/dev/null && exit 21; ",
+            "test ! -e /tmp/../input/secret.txt || exit 22; ",
+            "printf bounded"
+        );
+        let result = run_held_arguments(&bash, &held, &["-c".into(), probe.into()])
+            .expect("contained scratch result");
+        assert!(result.success());
+        assert_eq!(result.stdout(), b"bounded");
+        assert_eq!(
+            fs::read(root.join("allowed.txt")).expect("host read"),
+            b"original"
+        );
         fs::remove_dir_all(root).expect("cleanup");
     }
 
@@ -1057,26 +1450,27 @@ mod tests {
         let root = temp_directory("environment");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
         let workspace = authorize(&root);
-        let environment = runner_for("/usr/bin/env", LinuxSandboxLimits::default())
-            .run_arguments(&workspace, &[])
-            .expect("environment worker");
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let environment_runner = runner_for("/usr/bin/env", LinuxSandboxLimits::default());
+        let environment =
+            run_held_arguments(&environment_runner, &held, &[]).expect("environment worker");
         assert!(environment.success());
         let environment_text =
             String::from_utf8(environment.stdout().to_vec()).expect("environment UTF-8");
         let mut variables = environment_text.lines().collect::<Vec<_>>();
         variables.sort_unstable();
-        assert_eq!(variables, ["LANG=C", "PATH=/app", "PWD=/workspace"]);
+        assert_eq!(variables, ["LANG=C", "PATH=/app", "PWD=/input"]);
 
         let bash = runner_for("/usr/bin/bash", LinuxSandboxLimits::default());
-        let network = bash
-            .run_arguments(
-                &workspace,
-                &[
-                    "-c".into(),
-                    "if exec 9<>/dev/tcp/127.0.0.1/9; then exit 1; else exit 0; fi".into(),
-                ],
-            )
-            .expect("network denial result");
+        let network = run_held_arguments(
+            &bash,
+            &held,
+            &[
+                "-c".into(),
+                "if exec 9<>/dev/tcp/127.0.0.1/9; then exit 1; else exit 0; fi".into(),
+            ],
+        )
+        .expect("network denial result");
         assert!(network.success());
         fs::remove_dir_all(root).expect("cleanup");
     }
@@ -1087,12 +1481,12 @@ mod tests {
         let root = temp_directory("output");
         fs::write(root.join("large.txt"), vec![b'x'; 4096]).expect("fixture");
         let workspace = authorize(&root);
+        let held = hold(&workspace, "large.txt", PathResolutionIntent::ReadFile);
         let limits =
             LinuxSandboxLimits::new(32 * 1024 * 1024, 4, 100, 5, 128).expect("bounded limits");
         let cat = runner_for("/usr/bin/cat", limits);
 
-        let error = cat
-            .run_arguments(&workspace, &["/workspace/large.txt".into()])
+        let error = run_held_arguments(&cat, &held, &["/input/object".into()])
             .expect_err("oversized output must fail closed");
         assert_eq!(error.kind(), LinuxSandboxErrorKind::OutputLimitExceeded);
         fs::remove_dir_all(root).expect("cleanup");
@@ -1104,8 +1498,8 @@ mod tests {
         let root = temp_directory("kernel-status");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
         let workspace = authorize(&root);
-        let result = runner()
-            .run_arguments(&workspace, &["/proc/self/status".into()])
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let result = run_held_arguments(&runner(), &held, &["/proc/self/status".into()])
             .expect("kernel status result");
         assert!(result.success());
         let status = String::from_utf8(result.stdout().to_vec()).expect("status UTF-8");
@@ -1120,12 +1514,12 @@ mod tests {
         let root = temp_directory("runtime-limit");
         fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
         let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
         let limits =
             LinuxSandboxLimits::new(32 * 1024 * 1024, 4, 100, 1, 4096).expect("bounded limits");
         let bash = runner_for("/usr/bin/bash", limits);
         let started = Instant::now();
-        let result = bash
-            .run_arguments(&workspace, &["-c".into(), "while :; do :; done".into()])
+        let result = run_held_arguments(&bash, &held, &["-c".into(), "while :; do :; done".into()])
             .expect("limited worker result");
 
         assert!(!result.success());

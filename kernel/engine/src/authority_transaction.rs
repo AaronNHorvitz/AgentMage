@@ -4,9 +4,9 @@ use std::{collections::BTreeMap, fmt, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
     ApprovalId, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    ContractError, ErrorCategory, ErrorId, GrantId, OperationAttemptId, OperationBinding,
-    OperationOutcome, Receipt, ReceiptId, RetryDisposition, StateChange, ToolCall,
-    to_canonical_json,
+    ContractError, ErrorCategory, ErrorId, GrantId, GrantPreimage, GrantTarget,
+    HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome, Receipt,
+    ReceiptId, RetryDisposition, StateChange, ToolCall, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -144,6 +144,9 @@ pub struct EffectAuthorization<'transaction> {
     consumed_grant_sha256: &'transaction str,
     operation: OperationBinding,
     call: &'transaction ToolCall,
+    targets: &'transaction [GrantTarget],
+    excluded_targets: &'transaction [GrantTarget],
+    preimages: &'transaction [GrantPreimage],
 }
 
 impl EffectAuthorization<'_> {
@@ -176,6 +179,43 @@ impl EffectAuthorization<'_> {
     pub const fn call(&self) -> &ToolCall {
         self.call
     }
+
+    /// Returns the exact held-object targets bound into the consumed grant.
+    #[must_use]
+    pub const fn targets(&self) -> &[GrantTarget] {
+        self.targets
+    }
+
+    /// Returns inherited authorization-bound exclusion scopes.
+    #[must_use]
+    pub const fn excluded_targets(&self) -> &[GrantTarget] {
+        self.excluded_targets
+    }
+
+    /// Reports whether this one-target permit exactly names a continuously held object.
+    #[must_use]
+    pub fn authorizes_held_object(&self, held: &impl HeldWorkspaceObject) -> bool {
+        let [target] = self.targets else {
+            return false;
+        };
+        if !target.matches_held_object(held)
+            || self
+                .excluded_targets
+                .iter()
+                .any(|excluded| excluded.contains(target))
+        {
+            return false;
+        }
+        match target.preimage() {
+            Some(_) => {
+                let [preimage] = self.preimages else {
+                    return false;
+                };
+                preimage.matches_target(0, target)
+            }
+            None => self.preimages.is_empty(),
+        }
+    }
 }
 
 impl fmt::Debug for EffectAuthorization<'_> {
@@ -187,6 +227,8 @@ impl fmt::Debug for EffectAuthorization<'_> {
             .field("operation", &self.operation)
             .field("tool_id", &self.call.tool_id)
             .field("tool_call_id", &self.call.tool_call_id)
+            .field("target_count", &self.targets.len())
+            .field("excluded_target_count", &self.excluded_targets.len())
             .finish_non_exhaustive()
     }
 }
@@ -405,6 +447,9 @@ impl AuthorityTransactionCoordinator {
                 "authority.transaction.binding_mismatch",
             );
         }
+        let targets = grant.targets.clone();
+        let excluded_targets = grant.excluded_targets.clone();
+        let preimages = grant.preimages.clone();
 
         let consumed =
             match issuer.consume_for_execution(&request.grant_id, policy, &request.context) {
@@ -470,6 +515,9 @@ impl AuthorityTransactionCoordinator {
             consumed_grant_sha256: &consumed.consumed_grant_sha256,
             operation: definition.required_grant.operation,
             call: &request.call,
+            targets: &targets,
+            excluded_targets: &excluded_targets,
+            preimages: &preimages,
         };
         let launched = driver.execute(authorization);
         if fault == Some(FaultPoint::WorkerReturned) {
@@ -860,15 +908,17 @@ mod tests {
         policy::{
             PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
         },
+        test_target::{preimage, scope, target},
         tooling::{Tool, ToolRegistry},
     };
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, ApprovalId, AuthorityTransactionId, CapabilityGrant,
-        ContractPayload, CorrelationId, DataSensitivity, GrantId, GrantNonce, GrantOperation,
-        GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationAttemptId,
-        OperationBinding, OperationOutcome, RequiredGrantTemplate, SchemaId, SchemaReference,
-        SessionId, StateChange, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-        ToolRiskLevel, WorkspaceId,
+        ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId,
+        CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity, FilePreimage, GrantId,
+        GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, HeldWorkspaceObject,
+        OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform, PathResolutionIntent,
+        RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, StateChange, TaskId, ToolCall,
+        ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
     };
 
     struct FixtureTool(ToolDefinition);
@@ -901,6 +951,82 @@ mod tests {
         }
     }
 
+    #[derive(Debug)]
+    struct SyntheticHeldObject {
+        path: WorkspacePath,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        identity: WorkspaceObjectIdentity,
+        preimage: FilePreimage,
+    }
+
+    impl HeldWorkspaceObject for SyntheticHeldObject {
+        fn workspace_path(&self) -> &WorkspacePath {
+            &self.path
+        }
+
+        fn authorization_id(&self) -> &WorkspaceAuthorizationId {
+            &self.authorization_id
+        }
+
+        fn adapter_instance_id(&self) -> &AdapterInstanceId {
+            &self.adapter_instance_id
+        }
+
+        fn intent(&self) -> PathResolutionIntent {
+            PathResolutionIntent::ReadFile
+        }
+
+        fn object_kind(&self) -> WorkspaceObjectKind {
+            WorkspaceObjectKind::RegularFile
+        }
+
+        fn object_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.identity
+        }
+
+        fn preimage(&self) -> Option<&FilePreimage> {
+            Some(&self.preimage)
+        }
+    }
+
+    struct TargetCheckingDriver {
+        held: SyntheticHeldObject,
+        launches: usize,
+    }
+
+    impl EffectDriver for TargetCheckingDriver {
+        fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+            if !authorization.authorizes_held_object(&self.held) {
+                return EffectLaunch::failed();
+            }
+            self.launches += 1;
+            EffectLaunch::completed(EffectResult::from_redacted_material(
+                OperationOutcome::Succeeded,
+                b"exact-held-target",
+                StateChange::NotChanged,
+            ))
+        }
+    }
+
+    fn synthetic_held(authorization_id: &str, object_identity: u8) -> SyntheticHeldObject {
+        SyntheticHeldObject {
+            path: WorkspacePath::new(
+                WorkspaceId::from_raw("workspace-0001"),
+                ["src", "fixture.txt"],
+            )
+            .expect("synthetic path"),
+            authorization_id: WorkspaceAuthorizationId::from_raw(authorization_id),
+            adapter_instance_id: AdapterInstanceId::from_raw("adapter-0001"),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [1; 32],
+                [object_identity; 32],
+            ),
+            preimage: FilePreimage::new(7, [3; 32]),
+        }
+    }
+
     struct Fixture {
         registry: ToolRegistry,
         issuer: GrantIssuer,
@@ -911,13 +1037,6 @@ mod tests {
         transaction_id: AuthorityTransactionId,
         attempt_id: OperationAttemptId,
         approval_id: ApprovalId,
-    }
-
-    fn target(path: &[&str]) -> GrantTarget {
-        GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: path.iter().map(|value| (*value).to_owned()).collect(),
-        }
     }
 
     fn schema() -> SchemaReference {
@@ -976,8 +1095,8 @@ mod tests {
                 actor_id: actor_id.clone(),
                 session_id: session_id.clone(),
                 task_id: task_id.clone(),
-                targets: vec![target(&[])],
-                excluded_targets: vec![target(&["private"])],
+                targets: vec![scope(&[])],
+                excluded_targets: vec![scope(&["private"])],
                 sensitivity: DataSensitivity::Ephemeral,
                 issued_at_epoch_ms: 1_000,
                 expires_at_epoch_ms: 60_000,
@@ -1012,13 +1131,9 @@ mod tests {
                     operation,
                     tool_id: tool_id.clone(),
                     tool_version: "1.0.0".to_owned(),
-                    targets: vec![operation_target],
+                    targets: vec![operation_target.clone()],
                     argument_sha256: call.arguments.sha256.clone(),
-                    preimages: vec![GrantPreimage {
-                        target_index: 0,
-                        content_sha256: "3".repeat(64),
-                        observed_revision: Some("fixture-v1".to_owned()),
-                    }],
+                    preimages: vec![preimage(0, &operation_target)],
                     expected_side_effects: vec![GrantSideEffect {
                         operation,
                         target_indexes: vec![0],
@@ -1544,5 +1659,42 @@ mod tests {
             second
         );
         assert_eq!(coordinator.receipts().len(), 2);
+    }
+
+    #[test]
+    fn consumed_permit_launches_only_for_the_exact_held_authorization_and_object() {
+        for (held, expected_outcome, expected_launches) in [
+            (
+                synthetic_held("authorization-0001", 2),
+                OperationOutcome::Succeeded,
+                1,
+            ),
+            (
+                synthetic_held("authorization-stale", 2),
+                OperationOutcome::Failed,
+                0,
+            ),
+            (
+                synthetic_held("authorization-0001", 9),
+                OperationOutcome::Failed,
+                0,
+            ),
+        ] {
+            let mut fixture = fixture();
+            let mut coordinator = AuthorityTransactionCoordinator::new();
+            let mut driver = TargetCheckingDriver { held, launches: 0 };
+            let transaction_request = request(&fixture);
+            let receipt = coordinator
+                .execute_effect(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    transaction_request,
+                    &mut driver,
+                )
+                .expect("transaction closes");
+            assert_eq!(receipt.outcome, expected_outcome);
+            assert_eq!(driver.launches, expected_launches);
+        }
     }
 }

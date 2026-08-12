@@ -487,15 +487,14 @@ fn validate_document(document: &PolicyDocument) -> Result<(), PolicyBuildError> 
         .iter()
         .chain(&document.targets.denied)
     {
-        validate_scope_value(target.workspace_id.as_str())?;
-        for component in &target.path_components {
-            validate_scope_value(component)?;
-            if component.contains('/')
-                || component.contains('\\')
-                || matches!(component.as_str(), "." | "..")
-            {
-                return Err(PolicyBuildError::InvalidDocument);
-            }
+        if target.workspace_path().is_none() {
+            return Err(PolicyBuildError::InvalidDocument);
+        }
+        validate_scope_value(target.workspace_id().as_str())?;
+        validate_scope_value(target.authorization_id().as_str())?;
+        validate_scope_value(target.adapter_instance_id().as_str())?;
+        for component in target.path_components() {
+            validate_scope_value(component.as_str())?;
         }
     }
     for digest in document
@@ -554,10 +553,10 @@ mod tests {
         STRICT_LOCAL_DENIED_OPERATIONS, ScopeRules, StrictLocalReadOnlyScope, ToolPolicyBinding,
     };
     use crate::grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest};
+    use crate::test_target::{preimage, scope, target};
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, ApprovalId, DataSensitivity, GrantId, GrantNonce,
-        GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, OperationBinding, SessionId,
-        TaskId, ToolId, WorkspaceId,
+        GrantOperation, GrantSideEffect, OperationBinding, SessionId, TaskId, ToolId,
     };
 
     fn set<T: Ord>(value: T) -> BTreeSet<T> {
@@ -568,13 +567,6 @@ mod tests {
         ScopeRules {
             allowed: set(value),
             denied: BTreeSet::new(),
-        }
-    }
-
-    fn target(path: &[&str]) -> GrantTarget {
-        GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: path.iter().map(|value| (*value).to_owned()).collect(),
         }
     }
 
@@ -610,8 +602,8 @@ mod tests {
                 actor_id: ActorId::from_raw("actor-local-0001"),
                 session_id: SessionId::from_raw("session-0001"),
                 task_id: TaskId::from_raw("task-0001"),
-                targets: vec![target(&[])],
-                excluded_targets: vec![target(&["private"])],
+                targets: vec![scope(&[])],
+                excluded_targets: vec![scope(&["private"])],
                 sensitivity: DataSensitivity::Ephemeral,
                 issued_at_epoch_ms: 1_000,
                 expires_at_epoch_ms: 60_000,
@@ -622,8 +614,8 @@ mod tests {
             })
             .expect("parent must issue");
         let child = issuer
-            .derive_operation(
-                &parent.grant_id,
+            .derive_operation(&parent.grant_id, {
+                let target = target(&["src"]);
                 DerivedOperationGrantRequest {
                     grant_id: GrantId::from_raw("grant-child-0001"),
                     approval_id: ApprovalId::from_raw("approval-0001"),
@@ -632,13 +624,9 @@ mod tests {
                     operation: OperationBinding::new(operation),
                     tool_id: ToolId::from_raw("fixture.read"),
                     tool_version: "1.0.0".to_owned(),
-                    targets: vec![target(&["src"])],
+                    targets: vec![target.clone()],
                     argument_sha256: "2".repeat(64),
-                    preimages: vec![GrantPreimage {
-                        target_index: 0,
-                        content_sha256: "3".repeat(64),
-                        observed_revision: Some("fixture-v1".to_owned()),
-                    }],
+                    preimages: vec![preimage(0, &target)],
                     expected_side_effects: vec![GrantSideEffect {
                         operation: OperationBinding::new(operation),
                         target_indexes: vec![0],
@@ -650,8 +638,8 @@ mod tests {
                     nonce: GrantNonce::from_raw("nonce-child-0001"),
                     preview_sha256: "5".repeat(64),
                     policy_sha256: engine.policy_sha256().to_owned(),
-                },
-            )
+                }
+            })
             .expect("child must derive");
         (issuer, child)
     }
@@ -834,7 +822,7 @@ mod tests {
         let mut preimage_denied = document(operation);
         preimage_denied
             .denied_preimage_sha256s
-            .insert("3".repeat(64));
+            .insert(preimage(0, &target(&["src"])).content_sha256);
         collisions.push((preimage_denied, PolicyDenialScope::Preimage));
 
         for (denied_document, expected) in collisions {
@@ -955,11 +943,22 @@ mod tests {
             PolicyBuildError::InvalidDocument
         );
 
-        let mut traversal = baseline.clone();
-        traversal.targets.allowed.insert(target(&[".."]));
-        assert_eq!(
-            PolicyEngine::new(traversal).expect_err("traversal must fail"),
-            PolicyBuildError::InvalidDocument
+        let traversal = serde_json::json!({
+            "target_kind": "held_object",
+            "path": {"workspace_id": "workspace-0001", "components": [".."]},
+            "authorization_id": "authorization-0001",
+            "adapter_instance_id": "adapter-0001",
+            "platform": "deterministic_fake",
+            "object_kind": "regular_file",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": vec![2_u8; 32]
+            },
+            "preimage": {"byte_len": 7, "content_sha256": vec![3_u8; 32]}
+        });
+        assert!(
+            serde_json::from_value::<agentmage_kernel_contracts::GrantTarget>(traversal).is_err()
         );
 
         let mut malformed_digest = baseline;

@@ -63,8 +63,26 @@ mod tests {
         ActionId, ActionKind, ActorId, ApprovalId, ContractPayload, CorrelationId, DataSensitivity,
         GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget, OperationBinding,
         SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolId,
-        VersionedContract, WorkspaceId, from_json, to_canonical_json,
+        VersionedContract, from_json, to_canonical_json,
     };
+
+    fn target() -> GrantTarget {
+        serde_json::from_value(serde_json::json!({
+            "target_kind": "held_object",
+            "path": {"workspace_id": "workspace-0001", "components": ["src"]},
+            "authorization_id": "authorization-0001",
+            "adapter_instance_id": "adapter-0001",
+            "platform": "deterministic_fake",
+            "object_kind": "regular_file",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": vec![2_u8; 32]
+            },
+            "preimage": {"byte_len": 7, "content_sha256": vec![3_u8; 32]}
+        }))
+        .expect("exact target")
+    }
 
     fn fixture() -> ApprovalRequest {
         ApprovalRequest {
@@ -96,17 +114,10 @@ mod tests {
                     sha256: "3".repeat(64),
                 },
             },
-            targets: vec![GrantTarget {
-                workspace_id: WorkspaceId::from_raw("workspace-0001"),
-                path_components: vec!["src".to_owned()],
-            }],
+            targets: vec![target()],
             excluded_targets: Vec::new(),
             sensitivity: DataSensitivity::Ephemeral,
-            preimages: vec![GrantPreimage {
-                target_index: 0,
-                content_sha256: "4".repeat(64),
-                observed_revision: None,
-            }],
+            preimages: vec![GrantPreimage::for_target(0, &target()).expect("file preimage")],
             expected_side_effects: vec![GrantSideEffect {
                 operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],

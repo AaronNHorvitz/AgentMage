@@ -1478,3 +1478,83 @@ Phase 5 verification produced the following candidate-gate results:
   `references/` trees have no diff. The approved candidate is authorized for a
   local commit on branch `agent/expand-delivery-windows-ga`, which has no
   upstream. No push is authorized.
+
+## 17. Phase 6 Record
+
+Phase 6 was authorized only for RM-009 and RM-010 after the user approved
+Decision 0014 and the Phase 5 local commit. The approved Phase 5 candidate was
+committed locally as `c7bdeac`; no push occurred. Entry into Phase 6 did not
+authorize a Phase 6 commit, a push, or entry into Phase 7.
+
+The candidate replaces raw grant path components with two private-field tagged
+target forms. A `workspace_scope` uses the root-capable canonical
+`WorkspaceScopePath` and binds workspace authorization, adapter instance, and
+platform. A `held_object` uses the non-empty canonical `WorkspacePath` and also
+binds object kind, platform object identity, and a required nullable preimage.
+Regular files require an exact bounded preimage and directories prohibit one.
+Wildcard, empty object, dot, traversal, rooted, separator, encoded separator,
+colon, ambiguous suffix, invisible-format, non-normalized Unicode, missing
+field, and cross-platform identity forms fail at construction or
+deserialization.
+
+Session grants now admit only canonical scope targets and exclusions. Operation
+grants admit only exact held-object targets and may inherit only exclusions
+contained by the parent scope under the same authorization, adapter, and
+platform identities. Approval rendering, policy evaluation, grant issuance,
+final consumption, and preimage validation use those same typed targets without
+weaker path reparsing. The opaque `EffectAuthorization` borrows the consumed
+grant's exact targets, exclusions, and preimages. The Linux effect driver must
+match its continuously held object against that permit before the private
+runner can be entered.
+
+The Linux worker no longer receives the workspace-root descriptor or an
+original workspace object. For a file read, the supervisor copies only the
+grant-bound bytes from the continuously held descriptor into an anonymous
+file, verifies the exact byte count and SHA-256, revalidates the held object,
+and seals the projection against writes, growth, shrinkage, and seal removal.
+Bubblewrap copies only that immutable projection to `/input/object`. For a
+directory read, the supervisor performs bounded descriptor enumeration,
+conservatively removes the first descendant covered by every inherited
+exclusion, sorts raw names, and supplies only a sealed NUL-delimited projection.
+The source directory, children, file contents, siblings, parents, and excluded
+names are absent from the worker namespace. Private bounded scratch remains
+separate from canonical objects.
+
+The live contract schema remains version 2 because no durable grant store,
+released API, or compatibility promise exists before Phase 7. Raw pre-Phase 6
+version-2 targets reject rather than migrate silently. Frozen version-1 Story
+4.1 and Story 5.1 fixtures, references, and reports remain unchanged. Decision
+0015 recorded the candidate target and worker-boundary contract. The
+user subsequently accepted Decision 0015, authorized the Phase 6 local commit,
+and authorized entry into Phase 7 on 2026-08-11. No push was authorized.
+
+Phase 6 verification produced the following candidate-gate results:
+
+- `npm run product:check` passed Rust and TypeScript format checks, Clippy with
+  warnings denied, ESLint, strict-local and effect-boundary source audits, all
+  workspace builds, every enabled default Rust test, all compile-fail boundary
+  tests, and the Visual Studio Code shell test.
+- `cargo test --workspace --all-targets` passed every enabled unit and
+  integration test. Canonical-target tests cover parser parity, complete wire
+  requirements, authorization and platform affinity, object identity, and
+  preimage drift. Kernel tests prove that only the exact authorized held object
+  reaches a driver launch record.
+- Default Linux tests prove exact immutable file projection and sealing,
+  exclusion-safe bounded directory projection, and stale-object denial before
+  process launch.
+- All 11 environment-dependent Linux sandbox tests were executed separately on
+  Fedora Kinoite 44 and passed. They cover exact-file and directory-projection
+  reads, sibling, parent, ambient workspace, and `/proc/self/fd` denial,
+  read-only input, scratch isolation, absence of ambient paths, devices,
+  processes, and network, fixed environment, `NoNewPrivileges`, seccomp, output
+  bounds, and elapsed-runtime enforcement.
+- `npm run docs:validate` passed all 79 Markdown files and current policy
+  invariants. Ubuntu and macOS execution remain unverified and are not inferred
+  from Fedora evidence.
+- The broad historical Python evidence suite was not rerun for this candidate.
+  Retained historical reports were not refreshed or represented as current;
+  their applicability separation remains assigned to RM-019.
+- `git diff --check` passed, the index is empty, and the retained `artifacts/`,
+  `fixtures/`, and `references/` trees have no diff. Branch
+  `agent/expand-delivery-windows-ga` remains local with no upstream. The Phase 6
+  candidate is authorized for a local commit and no push is authorized.

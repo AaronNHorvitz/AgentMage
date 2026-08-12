@@ -30,6 +30,8 @@ pub enum WorkspacePathErrorKind {
     CurrentDirectoryComponent,
     /// One component is the parent-directory marker.
     ParentTraversalComponent,
+    /// One component is a wildcard scope marker.
+    WildcardComponent,
     /// One component carries an absolute-root prefix.
     RootedComponent,
     /// One component carries a drive or alternate-stream prefix.
@@ -63,6 +65,7 @@ impl WorkspacePathErrorKind {
             Self::EmptyComponent => "path.component.empty",
             Self::CurrentDirectoryComponent => "path.component.current_directory",
             Self::ParentTraversalComponent => "path.component.parent_traversal",
+            Self::WildcardComponent => "path.component.wildcard",
             Self::RootedComponent => "path.component.rooted",
             Self::ColonInComponent => "path.component.colon",
             Self::SeparatorInComponent => "path.component.separator",
@@ -143,6 +146,24 @@ pub struct WorkspacePath {
     components: Vec<WorkspacePathComponent>,
 }
 
+/// Canonical workspace scope used by a session-read parent.
+///
+/// Unlike [`WorkspacePath`], a scope may contain no components to represent the
+/// explicitly authorized workspace root. Non-root components pass through the
+/// exact same validation and normalization boundary as operation paths.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
+pub struct WorkspaceScopePath {
+    workspace_id: WorkspaceId,
+    components: Vec<WorkspacePathComponent>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceScopePathWire {
+    workspace_id: WorkspaceId,
+    components: Vec<String>,
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct WorkspacePathWire {
@@ -187,6 +208,15 @@ impl WorkspacePath {
     pub fn components(&self) -> &[WorkspacePathComponent] {
         &self.components
     }
+
+    /// Returns this non-empty path as a canonical session scope.
+    #[must_use]
+    pub fn as_scope(&self) -> WorkspaceScopePath {
+        WorkspaceScopePath {
+            workspace_id: self.workspace_id.clone(),
+            components: self.components.clone(),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for WorkspacePath {
@@ -195,6 +225,66 @@ impl<'de> Deserialize<'de> for WorkspacePath {
         D: Deserializer<'de>,
     {
         let wire = WorkspacePathWire::deserialize(deserializer)?;
+        Self::new(wire.workspace_id, wire.components).map_err(serde::de::Error::custom)
+    }
+}
+
+impl WorkspaceScopePath {
+    /// Constructs a canonical root or subtree scope from separated components.
+    pub fn new<I, S>(workspace_id: WorkspaceId, components: I) -> Result<Self, WorkspacePathError>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        validate_workspace_id(&workspace_id)?;
+        let candidates: Vec<String> = components.into_iter().map(Into::into).collect();
+        if candidates.len() > MAX_WORKSPACE_PATH_COMPONENTS {
+            return Err(path_error(WorkspacePathErrorKind::TooManyComponents, None));
+        }
+        let components = candidates
+            .iter()
+            .enumerate()
+            .map(|(index, candidate)| validate_component(candidate, index))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self {
+            workspace_id,
+            components,
+        })
+    }
+
+    /// Returns the exact approved workspace identity.
+    #[must_use]
+    pub const fn workspace_id(&self) -> &WorkspaceId {
+        &self.workspace_id
+    }
+
+    /// Returns the ordered canonical relative scope components.
+    #[must_use]
+    pub fn components(&self) -> &[WorkspacePathComponent] {
+        &self.components
+    }
+
+    /// Reports whether this scope contains another canonical scope.
+    #[must_use]
+    pub fn contains_scope(&self, candidate: &Self) -> bool {
+        self.workspace_id == candidate.workspace_id
+            && candidate.components.starts_with(&self.components)
+    }
+
+    /// Reports whether this scope contains one canonical non-empty path.
+    #[must_use]
+    pub fn contains_path(&self, candidate: &WorkspacePath) -> bool {
+        self.workspace_id == candidate.workspace_id
+            && candidate.components.starts_with(&self.components)
+    }
+}
+
+impl<'de> Deserialize<'de> for WorkspaceScopePath {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let wire = WorkspaceScopePathWire::deserialize(deserializer)?;
         Self::new(wire.workspace_id, wire.components).map_err(serde::de::Error::custom)
     }
 }
@@ -225,6 +315,8 @@ fn validate_component(
         Some(WorkspacePathErrorKind::CurrentDirectoryComponent)
     } else if candidate == ".." {
         Some(WorkspacePathErrorKind::ParentTraversalComponent)
+    } else if matches!(candidate, "*" | "**") {
+        Some(WorkspacePathErrorKind::WildcardComponent)
     } else if candidate.starts_with(['/', '\\']) {
         Some(WorkspacePathErrorKind::RootedComponent)
     } else if candidate.contains(':') {

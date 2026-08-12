@@ -1,11 +1,13 @@
 use std::{collections::BTreeSet, env, fmt::Write as _};
 
+mod common;
+use common::{preimage, scope, target};
+
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, CapabilityGrant, ContractPayload,
-    CorrelationId, DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantPreimage,
-    GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, RequiredGrantTemplate, SchemaId,
-    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-    ToolRiskLevel, WorkspaceId,
+    CorrelationId, DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantSideEffect,
+    GrantStatus, OperationBinding, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId,
+    TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel,
 };
 use agentmage_kernel_engine::{
     approval::render_approval_request,
@@ -132,13 +134,6 @@ fn registry() -> ToolRegistry {
     registry
 }
 
-fn target(path: &[&str]) -> GrantTarget {
-    GrantTarget {
-        workspace_id: WorkspaceId::from_raw("workspace-0001"),
-        path_components: path.iter().map(|value| (*value).to_owned()).collect(),
-    }
-}
-
 fn policy(revision: u32) -> PolicyEngine {
     PolicyEngine::strict_local_read_only(StrictLocalReadOnlyScope {
         revision,
@@ -168,8 +163,8 @@ fn fixture() -> Fixture {
             actor_id: actor_id.clone(),
             session_id: session_id.clone(),
             task_id: task_id.clone(),
-            targets: vec![target(&[])],
-            excluded_targets: vec![target(&["private"])],
+            targets: vec![scope(&[])],
+            excluded_targets: vec![scope(&["private"])],
             sensitivity: DataSensitivity::Ephemeral,
             issued_at_epoch_ms: 1_000,
             expires_at_epoch_ms: 60_000,
@@ -199,11 +194,8 @@ fn fixture() -> Fixture {
             sha256: argument_sha256.clone(),
         },
     };
-    let preimages = vec![GrantPreimage {
-        target_index: 0,
-        content_sha256: "3".repeat(64),
-        observed_revision: Some("fixture-v1".to_owned()),
-    }];
+    let operation_target = target(&["src", "fixture.txt"]);
+    let preimages = vec![preimage(0, &operation_target)];
     let effects = vec![GrantSideEffect {
         operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         target_indexes: vec![0],
@@ -223,7 +215,7 @@ fn fixture() -> Fixture {
             action_kind: ActionKind::DeterministicTool,
             operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_call: tool_call.clone(),
-            targets: vec![target(&["src", "fixture.txt"])],
+            targets: vec![operation_target],
             excluded_targets: parent.excluded_targets.clone(),
             sensitivity: DataSensitivity::Ephemeral,
             preimages: preimages.clone(),

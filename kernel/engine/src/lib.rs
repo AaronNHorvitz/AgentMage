@@ -29,6 +29,9 @@ pub mod tooling;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
 
+#[cfg(test)]
+mod test_target;
+
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-engine";
 

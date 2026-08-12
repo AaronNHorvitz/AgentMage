@@ -5,7 +5,10 @@ use std::fmt;
 use crate::{AdapterInstanceId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath};
 
 /// Closed platform family reported by one selected path adapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum PathPlatform {
     /// Deterministic in-memory adapter used only by contract tests.
     DeterministicFake,
@@ -29,7 +32,10 @@ pub enum PathResolutionIntent {
 }
 
 /// Closed filesystem-object kind admitted by a read-only path adapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum WorkspaceObjectKind {
     /// A regular file held for metadata, reading, or hashing.
     RegularFile,
@@ -38,7 +44,10 @@ pub enum WorkspaceObjectKind {
 }
 
 /// Content-free digest evidence for one platform filesystem identity.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct WorkspaceObjectIdentity {
     platform: PathPlatform,
     mount_identity_sha256: [u8; 32],
@@ -80,7 +89,10 @@ impl WorkspaceObjectIdentity {
 }
 
 /// Exact bounded content preimage computed from one continuously held file.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct FilePreimage {
     byte_len: u64,
     content_sha256: [u8; 32],

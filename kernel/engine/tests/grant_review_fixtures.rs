@@ -1,13 +1,15 @@
 use std::{collections::BTreeSet, env, fmt::Write as _, fs, path::PathBuf};
 
+mod common;
+use common::{preimage, scope, target};
+
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
     ContractError, ContractPayload, CorrelationId, DataSensitivity, ErrorCategory, ErrorId,
     EvidenceId, EvidenceKind, EvidenceReference, GrantId, GrantNonce, GrantOperation,
-    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationAttemptId, OperationBinding,
-    OperationOutcome, Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, SchemaId,
-    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-    ToolRiskLevel, WorkspaceId, to_canonical_json,
+    GrantSideEffect, GrantStatus, OperationAttemptId, OperationBinding, OperationOutcome, Receipt,
+    ReceiptId, RequiredGrantTemplate, RetryDisposition, SchemaId, SchemaReference, SessionId,
+    TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     approval::render_approval_request,
@@ -103,13 +105,6 @@ fn registry() -> ToolRegistry {
     registry
 }
 
-fn target(path: &[&str]) -> GrantTarget {
-    GrantTarget {
-        workspace_id: WorkspaceId::from_raw("workspace-0001"),
-        path_components: path.iter().map(|value| (*value).to_owned()).collect(),
-    }
-}
-
 fn generated_fixtures() -> Vec<FixtureRecord> {
     let registry = registry();
     let actor_id = ActorId::from_raw("actor-local-0001");
@@ -136,8 +131,8 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
             actor_id: actor_id.clone(),
             session_id: session_id.clone(),
             task_id: task_id.clone(),
-            targets: vec![target(&[])],
-            excluded_targets: vec![target(&["private"])],
+            targets: vec![scope(&[])],
+            excluded_targets: vec![scope(&["private"])],
             sensitivity: DataSensitivity::Ephemeral,
             issued_at_epoch_ms: 1_000,
             expires_at_epoch_ms: 60_000,
@@ -167,11 +162,7 @@ fn generated_fixtures() -> Vec<FixtureRecord> {
             sha256: argument_sha256.clone(),
         },
     };
-    let preimages = vec![GrantPreimage {
-        target_index: 0,
-        content_sha256: "3".repeat(64),
-        observed_revision: Some("fixture-v1".to_owned()),
-    }];
+    let preimages = vec![preimage(0, &operation_target)];
     let effects = vec![GrantSideEffect {
         operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         target_indexes: vec![0],

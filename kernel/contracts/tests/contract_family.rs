@@ -15,6 +15,35 @@ use agentmage_kernel_contracts::{
 };
 use std::fmt::Debug;
 
+fn grant_target(path: &[&str]) -> GrantTarget {
+    serde_json::from_value(serde_json::json!({
+        "target_kind": "held_object",
+        "path": {"workspace_id": "workspace-0001", "components": path},
+        "authorization_id": "authorization-0001",
+        "adapter_instance_id": "adapter-0001",
+        "platform": "deterministic_fake",
+        "object_kind": "regular_file",
+        "object_identity": {
+            "platform": "deterministic_fake",
+            "mount_identity_sha256": vec![1_u8; 32],
+            "object_identity_sha256": vec![2_u8; 32]
+        },
+        "preimage": {"byte_len": 7, "content_sha256": vec![3_u8; 32]}
+    }))
+    .expect("exact target")
+}
+
+fn grant_scope(path: &[&str]) -> GrantTarget {
+    serde_json::from_value(serde_json::json!({
+        "target_kind": "workspace_scope",
+        "path": {"workspace_id": "workspace-0001", "components": path},
+        "authorization_id": "authorization-0001",
+        "adapter_instance_id": "adapter-0001",
+        "platform": "deterministic_fake"
+    }))
+    .expect("workspace scope")
+}
+
 fn assert_round_trip<T>(value: &T)
 where
     T: VersionedContract + Debug + PartialEq,
@@ -267,21 +296,14 @@ fn complete_contract_family_preserves_linked_identities() {
         operation: OperationBinding::new(GrantOperation::WorkspaceRead),
         tool_id: Some(tool_id.clone()),
         tool_version: Some(tool.tool_version.clone()),
-        targets: vec![GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: vec!["fixtures".to_owned(), "input.txt".to_owned()],
-        }],
-        excluded_targets: vec![GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: vec!["fixtures".to_owned(), "private".to_owned()],
-        }],
+        targets: vec![grant_target(&["fixtures", "input.txt"])],
+        excluded_targets: vec![grant_scope(&["fixtures", "private"])],
         sensitivity: DataSensitivity::Ephemeral,
         argument_sha256: call.arguments.sha256.clone(),
-        preimages: vec![GrantPreimage {
-            target_index: 0,
-            content_sha256: "7".repeat(64),
-            observed_revision: Some("fixture-v1".to_owned()),
-        }],
+        preimages: vec![
+            GrantPreimage::for_target(0, &grant_target(&["fixtures", "input.txt"]))
+                .expect("file preimage"),
+        ],
         expected_side_effects: vec![GrantSideEffect {
             operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_indexes: vec![0],

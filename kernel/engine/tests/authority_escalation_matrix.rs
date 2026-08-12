@@ -1,11 +1,13 @@
 use std::env;
 
+mod common;
+use common::{preimage, target};
+
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, ContractPayload, CorrelationId,
-    DataSensitivity, GrantId, GrantOperation, GrantPreimage, GrantSideEffect, GrantTarget,
-    OperationBinding, Prompt, PromptId, PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId,
-    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-    ToolRiskLevel, WorkspaceId,
+    DataSensitivity, GrantId, GrantOperation, GrantSideEffect, OperationBinding, Prompt, PromptId,
+    PromptMessage, PromptRole, RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId,
+    ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel,
 };
 use agentmage_kernel_engine::authority::{
     AuthorityEscalationKind, AuthorityProposalSource, DescriptiveAuthorityReceipt,
@@ -58,6 +60,7 @@ fn tool_definition() -> ToolDefinition {
 }
 
 fn approval_request() -> ApprovalRequest {
+    let target = target(&["src", "fixture.txt"]);
     ApprovalRequest {
         schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         approval_id: ApprovalId::from_raw("approval-0001"),
@@ -83,17 +86,10 @@ fn approval_request() -> ApprovalRequest {
                 sha256: "3".repeat(64),
             },
         },
-        targets: vec![GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: vec!["src".to_owned(), "fixture.txt".to_owned()],
-        }],
+        targets: vec![target.clone()],
         excluded_targets: Vec::new(),
         sensitivity: DataSensitivity::Ephemeral,
-        preimages: vec![GrantPreimage {
-            target_index: 0,
-            content_sha256: "4".repeat(64),
-            observed_revision: Some("fixture-v1".to_owned()),
-        }],
+        preimages: vec![preimage(0, &target)],
         expected_side_effects: vec![GrantSideEffect {
             operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             target_indexes: vec![0],

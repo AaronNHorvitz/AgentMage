@@ -34,6 +34,7 @@ pub use display_link::{
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use grant::{
     CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    GrantTargetError,
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
@@ -52,7 +53,7 @@ pub use operation::{
 };
 pub use path::{
     MAX_WORKSPACE_PATH_COMPONENT_BYTES, MAX_WORKSPACE_PATH_COMPONENTS, WorkspacePath,
-    WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind,
+    WorkspacePathComponent, WorkspacePathError, WorkspacePathErrorKind, WorkspaceScopePath,
 };
 pub use platform::{
     PLATFORM_ADAPTER_API_VERSION, PlatformAdapter, PlatformArchitecture, PlatformCapability,

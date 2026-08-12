@@ -15,8 +15,6 @@ use sha2::{Digest, Sha256};
 use crate::policy::{PolicyDenialScope, PolicyEngine, PolicyEvaluationContext};
 
 const MAX_IDENTIFIER_BYTES: usize = 128;
-const MAX_PATH_COMPONENTS: usize = 64;
-const MAX_PATH_COMPONENT_BYTES: usize = 255;
 const MAX_TARGETS: usize = 128;
 const MAX_EFFECTS: usize = 128;
 const MAX_ROLLBACK_BYTES: usize = 1_024;
@@ -403,6 +401,14 @@ impl GrantIssuer {
             return Err(GrantIssueError::InvalidInput);
         }
         validate_scope(&request.targets, &request.excluded_targets)?;
+        if request
+            .targets
+            .iter()
+            .chain(&request.excluded_targets)
+            .any(|target| target.scope_path().is_none())
+        {
+            return Err(GrantIssueError::InvalidInput);
+        }
         let scope_sha256 = session_scope_sha256(
             &request.targets,
             &request.excluded_targets,
@@ -637,6 +643,13 @@ fn validate_derived_request(
         return Err(GrantIssueError::InvalidInput);
     }
     validate_scope(&request.targets, &[])?;
+    if request
+        .targets
+        .iter()
+        .any(|target| target.workspace_path().is_none())
+    {
+        return Err(GrantIssueError::InvalidInput);
+    }
     if request.targets.iter().any(|target| {
         !parent
             .targets
@@ -660,22 +673,24 @@ fn validate_derived_request(
     }
     let mut preimage_indexes = BTreeSet::new();
     for preimage in &request.preimages {
-        if usize::try_from(preimage.target_index)
+        let Some(target_index) = usize::try_from(preimage.target_index)
             .ok()
             .filter(|index| *index < request.targets.len())
-            .is_none()
-            || !preimage_indexes.insert(preimage.target_index)
+        else {
+            return Err(GrantIssueError::InvalidInput);
+        };
+        if !preimage_indexes.insert(preimage.target_index)
+            || !preimage.matches_target(preimage.target_index, &request.targets[target_index])
         {
             return Err(GrantIssueError::InvalidInput);
         }
         validate_digest(&preimage.content_sha256)?;
-        if preimage
-            .observed_revision
-            .as_ref()
-            .is_some_and(|revision| revision.is_empty() || revision.len() > MAX_IDENTIFIER_BYTES)
-        {
-            return Err(GrantIssueError::InvalidInput);
-        }
+    }
+    if request.targets.iter().enumerate().any(|(index, target)| {
+        target.preimage().is_some()
+            != preimage_indexes.contains(&u32::try_from(index).unwrap_or(u32::MAX))
+    }) {
+        return Err(GrantIssueError::InvalidInput);
     }
     for effect in &request.expected_side_effects {
         if effect.operation != request.operation
@@ -702,28 +717,20 @@ fn validate_scope(
         return Err(GrantIssueError::InvalidInput);
     }
     for target in targets.iter().chain(excluded_targets) {
-        validate_identifier(target.workspace_id.as_str())?;
-        if target.path_components.len() > MAX_PATH_COMPONENTS {
-            return Err(GrantIssueError::InvalidInput);
-        }
-        for component in &target.path_components {
-            if component.is_empty()
-                || component.len() > MAX_PATH_COMPONENT_BYTES
-                || matches!(component.as_str(), "." | ".." | "*" | "**")
-                || component
-                    .bytes()
-                    .any(|value| matches!(value, 0 | b'/' | b'\\'))
-            {
-                return Err(GrantIssueError::InvalidInput);
-            }
-        }
+        validate_identifier(target.workspace_id().as_str())?;
+        validate_identifier(target.authorization_id().as_str())?;
+        validate_identifier(target.adapter_instance_id().as_str())?;
     }
-    let workspace = targets[0].workspace_id.as_str();
-    if targets
-        .iter()
-        .chain(excluded_targets)
-        .any(|target| target.workspace_id.as_str() != workspace)
-    {
+    let workspace = targets[0].workspace_id();
+    let authorization = targets[0].authorization_id();
+    let adapter = targets[0].adapter_instance_id();
+    let platform = targets[0].platform();
+    if targets.iter().chain(excluded_targets).any(|target| {
+        target.workspace_id() != workspace
+            || target.authorization_id() != authorization
+            || target.adapter_instance_id() != adapter
+            || target.platform() != platform
+    }) {
         return Err(GrantIssueError::InvalidInput);
     }
     if excluded_targets.iter().any(|excluded| {
@@ -737,10 +744,7 @@ fn validate_scope(
 }
 
 fn target_within(candidate: &GrantTarget, scope: &GrantTarget) -> bool {
-    candidate.workspace_id == scope.workspace_id
-        && candidate
-            .path_components
-            .starts_with(&scope.path_components)
+    scope.contains(candidate)
 }
 
 fn validate_identifier(value: &str) -> Result<(), GrantIssueError> {
@@ -814,18 +818,12 @@ mod tests {
         PolicyDenialScope, PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules,
         ToolPolicyBinding,
     };
+    use crate::test_target::{preimage, scope, target, target_for};
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, ApprovalId, CapabilityGrant, DataSensitivity, GrantClass,
-        GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
-        GrantTarget, OperationBinding, SessionId, TaskId, ToolId, WorkspaceId,
+        GrantId, GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, OperationBinding,
+        SessionId, TaskId, ToolId,
     };
-
-    fn target(path: &[&str]) -> GrantTarget {
-        GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-0001"),
-            path_components: path.iter().map(|value| (*value).to_owned()).collect(),
-        }
-    }
 
     fn session_request() -> SessionReadGrantRequest {
         SessionReadGrantRequest {
@@ -833,8 +831,8 @@ mod tests {
             actor_id: ActorId::from_raw("actor-local-0001"),
             session_id: SessionId::from_raw("session-0001"),
             task_id: TaskId::from_raw("task-0001"),
-            targets: vec![target(&[])],
-            excluded_targets: vec![target(&["private"])],
+            targets: vec![scope(&[])],
+            excluded_targets: vec![scope(&["private"])],
             sensitivity: DataSensitivity::Ephemeral,
             issued_at_epoch_ms: 1_000,
             expires_at_epoch_ms: 61_000,
@@ -846,6 +844,7 @@ mod tests {
     }
 
     fn operation_request(id: &str, nonce: &str, path: &[&str]) -> DerivedOperationGrantRequest {
+        let target = target(path);
         DerivedOperationGrantRequest {
             grant_id: GrantId::from_raw(id),
             approval_id: ApprovalId::from_raw(format!("approval-{id}")),
@@ -854,13 +853,9 @@ mod tests {
             operation: OperationBinding::new(GrantOperation::WorkspaceRead),
             tool_id: ToolId::from_raw("fixture.read"),
             tool_version: "1.0.0".to_owned(),
-            targets: vec![target(path)],
+            targets: vec![target.clone()],
             argument_sha256: "3".repeat(64),
-            preimages: vec![GrantPreimage {
-                target_index: 0,
-                content_sha256: "4".repeat(64),
-                observed_revision: Some("fixture-v1".to_owned()),
-            }],
+            preimages: vec![preimage(0, &target)],
             expected_side_effects: vec![GrantSideEffect {
                 operation: OperationBinding::new(GrantOperation::WorkspaceRead),
                 target_indexes: vec![0],
@@ -1018,14 +1013,16 @@ mod tests {
             .expect_err("empty lifetime must fail");
         assert_eq!(error, GrantIssueError::InvalidInput);
 
-        let mut invalid_scope = session_request();
-        invalid_scope.grant_id = GrantId::from_raw("grant-session-wildcard");
-        invalid_scope.nonce = GrantNonce::from_raw("nonce-session-wildcard");
-        invalid_scope.targets[0].path_components = vec!["**".to_owned()];
-        let error = invalid_issuer
-            .issue_session_read(invalid_scope)
-            .expect_err("wildcard scope must fail");
-        assert_eq!(error, GrantIssueError::InvalidInput);
+        let malformed = serde_json::json!({
+            "target_kind": "workspace_scope",
+            "path": {"workspace_id": "workspace-0001", "components": ["**"]},
+            "authorization_id": "authorization-0001",
+            "adapter_instance_id": "adapter-0001",
+            "platform": "deterministic_fake"
+        });
+        assert!(
+            serde_json::from_value::<agentmage_kernel_contracts::GrantTarget>(malformed).is_err()
+        );
         assert!(invalid_issuer.current.is_empty());
 
         let mut issuer = GrantIssuer::new();
@@ -1056,10 +1053,12 @@ mod tests {
             .expect_err("excluded child must fail");
         assert_eq!(error, GrantIssueError::ScopeBroadened);
 
-        reused.targets = vec![GrantTarget {
-            workspace_id: WorkspaceId::from_raw("workspace-other"),
-            path_components: vec!["src".to_owned()],
-        }];
+        reused.targets = vec![target_for(
+            &["src"],
+            "workspace-other",
+            "authorization-other",
+            "adapter-0001",
+        )];
         let error = issuer
             .derive_operation(&parent.grant_id, reused.clone())
             .expect_err("other workspace must fail");
@@ -1078,8 +1077,8 @@ mod tests {
     fn child_derivation_rejects_siblings_exclusions_and_scope_aggregation() {
         let mut issuer = GrantIssuer::new();
         let mut parent_request = session_request();
-        parent_request.targets = vec![target(&["src"])];
-        parent_request.excluded_targets = vec![target(&["src", "private"])];
+        parent_request.targets = vec![scope(&["src"])];
+        parent_request.excluded_targets = vec![scope(&["src", "private"])];
         let parent = issuer
             .issue_session_read(parent_request)
             .expect("narrow parent must issue");
