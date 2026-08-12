@@ -29,11 +29,16 @@ REPORT_PATH = (
 SOURCE_PATHS = (
     "Cargo.lock",
     "Cargo.toml",
+    "docs/architecture/linux-platform-lifecycle.md",
     "docs/architecture/linux-worker-isolation.md",
+    "docs/architecture/platform-adapter-contract.md",
+    "kernel/engine/src/platform_startup.rs",
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/ipc.rs",
     "platforms/linux/src/lib.rs",
+    "platforms/linux/src/platform.rs",
     "platforms/linux/src/sandbox.rs",
+    "platforms/linux/src/security_controls.rs",
     "platforms/linux/src/secret_service.rs",
     "scripts/linux_sandbox_evidence.py",
     "tests/test_linux_sandbox_evidence.py",
@@ -89,6 +94,23 @@ SECRET_SERVICE_LIVE_TESTS = (
     "live_service_probe_returns_only_a_content_free_receipt",
     "live_service_round_trip_is_exact_and_cleanup_is_verified",
 )
+STARTUP_CONTROL_IDS = (
+    "bubblewrap",
+    "user-namespaces",
+    "seccomp",
+    "cgroups-v2",
+    "secret-service",
+    "descriptor-safe-paths",
+    "network-isolation",
+)
+STARTUP_MAPPING_TESTS = (
+    "control_identities_are_nonzero_distinct_and_status_independent",
+    "every_linux_control_disablement_maps_to_fail_closed_startup_capabilities",
+)
+KERNEL_STARTUP_TESTS = ("every_missing_invalid_or_substituted_mechanism_refuses",)
+STARTUP_LIVE_TESTS = (
+    "live_required_control_preflight_verifies_without_workspace_authority",
+)
 TOOLS = {
     "bubblewrap": Path("/usr/bin/bwrap"),
     "secret-tool": Path("/usr/bin/secret-tool"),
@@ -139,7 +161,8 @@ PLATFORM_STATUS = {
 }
 LIMITATIONS = [
     "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
-    "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
+    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; native Ubuntu preflight execution remains pending.",
+    "The inactive inference package boundary is verified separately; enabled inference runtime remains pending.",
     "macOS implementation and execution remain blocked and are not substituted.",
 ]
 REVISION = re.compile(r"^[0-9a-f]{40}$")
@@ -288,6 +311,7 @@ def observed_tests(
     expected: tuple[str, ...],
     *,
     ignored: bool = False,
+    package: str = "agentmage-platform-linux",
 ) -> list[dict[str, str]]:
     test_arguments = ["--test-threads=1"]
     if ignored:
@@ -299,7 +323,7 @@ def observed_tests(
             "--locked",
             "--offline",
             "-p",
-            "agentmage-platform-linux",
+            package,
             filter_name,
             "--",
             *test_arguments,
@@ -339,11 +363,38 @@ def build_report(revision: str) -> dict[str, Any]:
         SECRET_SERVICE_LIVE_TESTS,
         ignored=True,
     )
+    startup_mapping_tests = [
+        *observed_tests(
+            STARTUP_MAPPING_TESTS[0],
+            STARTUP_MAPPING_TESTS[:1],
+        ),
+        *observed_tests(
+            STARTUP_MAPPING_TESTS[1],
+            STARTUP_MAPPING_TESTS[1:],
+        ),
+    ]
+    kernel_startup_tests = observed_tests(
+        KERNEL_STARTUP_TESTS[0],
+        KERNEL_STARTUP_TESTS,
+        package="agentmage-kernel-engine",
+    )
+    startup_live_tests = observed_tests(
+        STARTUP_LIVE_TESTS[0],
+        STARTUP_LIVE_TESTS,
+        ignored=True,
+    )
     return {
         "schema_version": 1,
         "artifact_id": "linux-ipc-sandbox-control-verification",
-        "task_ids": ["9.1.1.5", "9.1.2.2", "9.1.2.3", "9.1.3.1", "9.1.3.2"],
-        "test_ids": ["S-009-UT01", "S-009-ST01"],
+        "task_ids": [
+            "9.1.1.5",
+            "9.1.2.2",
+            "9.1.2.3",
+            "9.1.3.1",
+            "9.1.3.2",
+            "9.1.3.3",
+        ],
+        "test_ids": ["S-009-UT01", "S-009-ST01", "S-009-UT02"],
         "status": "pass-fedora-only",
         "source_revision": revision,
         "sources": source_records(revision),
@@ -355,6 +406,12 @@ def build_report(revision: str) -> dict[str, Any]:
         "ipc_tests": ipc_tests,
         "secret_service_tests": secret_service_tests,
         "secret_service_live_tests": secret_service_live_tests,
+        "startup_control_ids": list(STARTUP_CONTROL_IDS),
+        "startup_mutation_statuses": ["unavailable", "invalid"],
+        "startup_platform_families": ["fedora", "ubuntu"],
+        "startup_mapping_tests": startup_mapping_tests,
+        "kernel_startup_tests": kernel_startup_tests,
+        "startup_live_tests": startup_live_tests,
         "platform_status": PLATFORM_STATUS,
         "private_values_present": False,
         "macos_evidence_substituted": False,
@@ -380,9 +437,10 @@ def validate_report(value: Any) -> list[str]:
         "9.1.2.3",
         "9.1.3.1",
         "9.1.3.2",
+        "9.1.3.3",
     ]:
         failures.append("Linux control task mapping changed")
-    if value.get("test_ids") != ["S-009-UT01", "S-009-ST01"]:
+    if value.get("test_ids") != ["S-009-UT01", "S-009-ST01", "S-009-UT02"]:
         failures.append("Linux control test mapping changed")
     if value.get("host") != {
         "distribution": "fedora",
@@ -432,6 +490,36 @@ def validate_report(value: Any) -> list[str]:
         or any(item.get("status") != "pass" for item in secret_service_live)
     ):
         failures.append("Secret Service live test closure is incomplete")
+    if value.get("startup_control_ids") != list(STARTUP_CONTROL_IDS):
+        failures.append("Linux startup control closure changed")
+    if value.get("startup_mutation_statuses") != ["unavailable", "invalid"]:
+        failures.append("Linux startup mutation closure changed")
+    if value.get("startup_platform_families") != ["fedora", "ubuntu"]:
+        failures.append("Linux startup platform matrix changed")
+    for field, expected, failure in (
+        (
+            "startup_mapping_tests",
+            STARTUP_MAPPING_TESTS,
+            "Linux startup mapping tests are incomplete",
+        ),
+        (
+            "kernel_startup_tests",
+            KERNEL_STARTUP_TESTS,
+            "kernel startup refusal tests are incomplete",
+        ),
+        (
+            "startup_live_tests",
+            STARTUP_LIVE_TESTS,
+            "Linux live startup preflight is incomplete",
+        ),
+    ):
+        records = value.get(field)
+        if (
+            not isinstance(records, list)
+            or [item.get("test") for item in records] != list(expected)
+            or any(item.get("status") != "pass" for item in records)
+        ):
+            failures.append(failure)
     attacks = value.get("attack_coverage")
     if attacks != {attack: "pass" for attack in ATTACKS}:
         failures.append("Linux attack coverage is incomplete")
