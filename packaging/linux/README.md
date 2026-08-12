@@ -45,3 +45,9 @@ manifest inspection, ownership checks, and residue scans run as numeric user
 `10001:10001`. A passing run covers clean install, corrupt-upgrade refusal,
 upgrade, rollback, uninstall, reinstall recovery, and a final residue-free
 uninstall on Fedora 44 and Ubuntu 26.04.
+
+The separate [Linux clean-image acceptance procedure](../../docs/support/linux-clean-image-acceptance.md)
+adds an actual Visual Studio Code extension-host launch and provider-contract
+exercise on both distributions. It keeps dependency bootstrap separate from
+the networkless acceptance run and records the test-only nested Chromium
+sandbox limitation explicitly.

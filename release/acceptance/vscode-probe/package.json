@@ -1,0 +1,14 @@
+{
+  "name": "agentmage-clean-image-acceptance-probe",
+  "displayName": "AgentMage Clean Image Acceptance Probe",
+  "publisher": "agentmage-project",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "engines": {
+    "vscode": "^1.125.0"
+  }
+}
