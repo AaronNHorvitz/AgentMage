@@ -1,0 +1,276 @@
+{
+  "artifact_id": "linux-cross-distribution-sandbox-attacks",
+  "attack_results": [
+    {
+      "attack": "ambient_home",
+      "fedora": "pass-zero-escape",
+      "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "device",
+      "fedora": "pass-zero-escape",
+      "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "environment",
+      "fedora": "pass-zero-escape",
+      "test": "worker_receives_only_the_fixed_environment_and_no_network",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "network",
+      "fedora": "pass-zero-escape",
+      "test": "worker_receives_only_the_fixed_environment_and_no_network",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "process",
+      "fedora": "pass-zero-escape",
+      "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "secret_store",
+      "fedora": "pass-zero-escape",
+      "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "ungranted_root",
+      "fedora": "pass-zero-escape",
+      "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    },
+    {
+      "attack": "workspace_write",
+      "fedora": "pass-zero-escape",
+      "test": "worker_cannot_write_the_read_only_workspace",
+      "ubuntu": "pass-zero-escape-in-declared-envelope"
+    }
+  ],
+  "controls": {
+    "bubblewrap_namespaces": "fresh-user-mount-pid-ipc-uts-cgroup-network",
+    "cgroup_limits": [
+      "CPUQuota",
+      "MemoryMax",
+      "MemorySwapMax=0",
+      "RuntimeMaxSec",
+      "TasksMax"
+    ],
+    "network": "new-network-namespace-plus-address-family-and-seccomp-denial",
+    "privileges": "no-new-privileges-private-devices-cap-drop-all",
+    "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
+    "workspace": "single-descriptor-projected-read-only-object"
+  },
+  "limitations": [
+    "The Fedora run is native local execution; the Ubuntu run is a userspace portability test inside a rootless Podman container.",
+    "Nested Bubblewrap requires the outer rootless test container's privileged flag; that flag grants only the invoking user's rootless-container envelope but prevents this artifact from claiming native Ubuntu isolation.",
+    "The Ubuntu control image resolves test-only operating-system packages during an explicit bootstrap step; exact resulting image and trusted-tool digests are recorded, but the image is not a production or release artifact.",
+    "Graphical Visual Studio Code execution, native Ubuntu desktop execution, installation support, and release support remain outside this artifact.",
+    "No macOS evidence is substituted and no model or inference process is enabled."
+  ],
+  "macos_evidence_substituted": false,
+  "platforms": {
+    "fedora-44-x86_64": {
+      "architecture": "x86_64",
+      "cgroup_filesystem": "cgroup2",
+      "distribution": "fedora",
+      "execution_context": "native-standard-user",
+      "native_platform_claim": true,
+      "tests": [
+        {
+          "status": "pass",
+          "test": "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "directory_worker_receives_only_the_bounded_exclusion_safe_projection"
+        },
+        {
+          "status": "pass",
+          "test": "foreign_workspace_identity_never_starts_a_worker"
+        },
+        {
+          "status": "pass",
+          "test": "fresh_worker_reads_only_the_canonical_workspace_file"
+        },
+        {
+          "status": "pass",
+          "test": "transient_service_terminates_an_unbounded_worker"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_write_the_read_only_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "worker_has_no_ambient_host_paths_devices_or_processes"
+        },
+        {
+          "status": "pass",
+          "test": "worker_kernel_status_confirms_no_new_privileges_and_seccomp"
+        },
+        {
+          "status": "pass",
+          "test": "worker_output_is_drained_but_never_retained_past_the_bound"
+        },
+        {
+          "status": "pass",
+          "test": "worker_receives_only_the_fixed_environment_and_no_network"
+        }
+      ],
+      "uid": 1000,
+      "version": "44"
+    },
+    "ubuntu-26.04-x86_64": {
+      "architecture": "x86_64",
+      "base_image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
+      "binary_sha256": "e62344b0ee2a2f87e8f79f5f57ac231c96271fc823bba8b5bae0695c44d5b2fb",
+      "build_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57",
+      "cgroup_filesystem": "cgroup2",
+      "container_controls": {
+        "cgroup_namespace": "private",
+        "memory_limit_bytes": 2147483648,
+        "network": "none",
+        "outer_privileged_flag": true,
+        "pids_limit": 512,
+        "podman_rootless": true
+      },
+      "container_image_id": "sha256:b7120805a9076da1110b962b8fba205a8a71f98ebc7d1397a2da00c13f5614e4",
+      "distribution": "ubuntu",
+      "execution_context": "standard-user-in-rootless-privileged-test-envelope",
+      "native_platform_claim": false,
+      "tests": [
+        {
+          "status": "pass",
+          "test": "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "directory_worker_receives_only_the_bounded_exclusion_safe_projection"
+        },
+        {
+          "status": "pass",
+          "test": "foreign_workspace_identity_never_starts_a_worker"
+        },
+        {
+          "status": "pass",
+          "test": "fresh_worker_reads_only_the_canonical_workspace_file"
+        },
+        {
+          "status": "pass",
+          "test": "transient_service_terminates_an_unbounded_worker"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_write_the_read_only_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "worker_has_no_ambient_host_paths_devices_or_processes"
+        },
+        {
+          "status": "pass",
+          "test": "worker_kernel_status_confirms_no_new_privileges_and_seccomp"
+        },
+        {
+          "status": "pass",
+          "test": "worker_output_is_drained_but_never_retained_past_the_bound"
+        },
+        {
+          "status": "pass",
+          "test": "worker_receives_only_the_fixed_environment_and_no_network"
+        }
+      ],
+      "trusted_tools": [
+        {
+          "canonical_path_class": "root-owned-system-path",
+          "group_or_world_writable": false,
+          "id": "bubblewrap",
+          "owner_uid": 0,
+          "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+          "version": "bubblewrap 0.11.1"
+        },
+        {
+          "canonical_path_class": "root-owned-system-path",
+          "group_or_world_writable": false,
+          "id": "systemd-run",
+          "owner_uid": 0,
+          "sha256": "03a68bafb0ebc0f5eff41cbdf3cbbdf126a3bb87e21140f9147bf78edce36d88",
+          "version": "systemd 259 (259.5-0ubuntu3.4)"
+        }
+      ],
+      "uid": 10001,
+      "version": "26.04"
+    }
+  },
+  "private_values_present": false,
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_revision": "29d15d1934683b3356a1b6b3640912c94118a4af",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "path": "architecture/clean-build-policy.json",
+      "sha256": "8852a4fe4527cf327eabe3695d273d34fb64da1be8b066e944d333b5d090a466"
+    },
+    {
+      "path": "docs/architecture/linux-worker-isolation.md",
+      "sha256": "327c872b56e04b1e2540736d97eb8cfe3c7ec58f0af3a3a78d84d424df792f25"
+    },
+    {
+      "path": "package.json",
+      "sha256": "d12fad663d71c735499edd14bec4fc4f21fd6363af71788233594ccf4472f097"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5"
+    },
+    {
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "dcc158bb4ec9c23a4ee0697971b058734b5e27cfafdb18890946aaa157c43347"
+    },
+    {
+      "path": "release/control-test/Containerfile.ubuntu",
+      "sha256": "6fba43a11dd0fc5a9decc43fdab5a45f7158b96c5bb44472741d9eccb5dbf1cd"
+    },
+    {
+      "path": "scripts/linux_cross_distribution_sandbox_evidence.py",
+      "sha256": "151201a042465614d44b22f12e67740f4fbda7bb3443fa3654ead4349ce97aa3"
+    },
+    {
+      "path": "tests/test_linux_cross_distribution_sandbox_evidence.py",
+      "sha256": "8e2f5389bf1d049902287834dc4ef3839918c82204d8cfaddc87d9ed8f41792b"
+    }
+  ],
+  "status": "pass-bounded-cross-distribution",
+  "summary": {
+    "attack_class_count": 8,
+    "cross_distribution_zero_escape_within_declared_boundaries": true,
+    "live_test_count_per_platform": 11,
+    "native_ubuntu_isolation_verified": false
+  },
+  "task_ids": [
+    "9.1.3.2"
+  ],
+  "test_ids": [
+    "S-009-ST01"
+  ]
+}

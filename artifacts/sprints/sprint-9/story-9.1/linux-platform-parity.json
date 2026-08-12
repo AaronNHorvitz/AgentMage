@@ -2,15 +2,11 @@
   "artifact_id": "linux-fedora-ubuntu-adapter-parity",
   "blocking_gates": [
     {
-      "reason": "Ubuntu live sandbox and attack execution is absent.",
-      "task_id": "9.1.3.2"
-    },
-    {
-      "reason": "Independent control-disablement startup refusal is not yet complete.",
+      "reason": "Independent control-disablement startup refusal and Ubuntu Secret Service closure are not yet complete.",
       "task_id": "9.1.3.3"
     },
     {
-      "reason": "Graphical Visual Studio Code execution is absent on both Linux targets.",
+      "reason": "Native Ubuntu worker isolation and graphical Visual Studio Code execution on both Linux targets remain absent.",
       "task_id": "9.1.3.4"
     },
     {
@@ -76,12 +72,13 @@
     },
     {
       "evidence": [
-        "linux-controls"
+        "linux-controls",
+        "sandbox-attacks"
       ],
       "fedora": "verified-live",
       "id": "bubblewrap-seccomp-cgroup",
       "parity": "blocked",
-      "ubuntu": "blocked-live-execution"
+      "ubuntu": "verified-live-userspace-envelope-native-open"
     },
     {
       "evidence": [
@@ -146,11 +143,19 @@
     },
     {
       "artifact_id": "linux-ipc-sandbox-control-verification",
-      "evidence_revision": "e0b06e720008c9954e4c142197ed124b50eed05a",
+      "evidence_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
       "id": "linux-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "29c054bbe846efa30a0173ebb5f8576e2f90f6b658254a4da695cd4d194a3822",
+      "sha256": "bbeed55c6bdc921e82c77d668ec9010b03db639935a207dea11b022d27cb9809",
       "status": "pass-fedora-only"
+    },
+    {
+      "artifact_id": "linux-cross-distribution-sandbox-attacks",
+      "evidence_revision": "29d15d1934683b3356a1b6b3640912c94118a4af",
+      "id": "sandbox-attacks",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
+      "sha256": "c28d48d006034be679431e85dc001906f9a054daea69def522d3fe5529bede9e",
+      "status": "pass-bounded-cross-distribution"
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
@@ -162,8 +167,8 @@
     }
   ],
   "limitations": [
-    "This report proves six bounded Fedora/Ubuntu parity dimensions and explicitly blocks four; it is not a full platform-parity claim.",
-    "Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "This report proves six complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks four dimensions; it is not a full platform-parity claim.",
+    "Ubuntu Bubblewrap, seccomp, and cgroup attacks pass in a rootless privileged test envelope; native Ubuntu isolation, live Secret Service closure, and complete native IPC integration remain pending.",
     "Neither Linux target has completed the graphical Visual Studio Code workflow in a clean package environment.",
     "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
     "All packages are unsigned candidates and make no supported-release claim.",
@@ -177,19 +182,19 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "9b7eaf292f98992b18c7d54eefbaff9cd157de44",
+  "source_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
   "sources": [
     {
       "path": "package.json",
-      "sha256": "fb572db0c542153757a4bdd8af43c3b50ded898e5e9b66928f8710f7484485b2"
+      "sha256": "d12fad663d71c735499edd14bec4fc4f21fd6363af71788233594ccf4472f097"
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",
-      "sha256": "9f13501b8432362d185dfdce40973b131f4682460139678baceae04f37303fd1"
+      "sha256": "c6c45772eaa9c077f3ba1b16e8da8420bbcb3f8c4e7dfdc3e975b8bc5a40c490"
     },
     {
       "path": "tests/test_linux_platform_parity_evidence.py",
-      "sha256": "64f400b291f9786759ca541784639f256e4d23292654074a5ece03b406510dce"
+      "sha256": "34723984fced5e621a69274f8ebc15ba055a6dbaa3b9ab8f8172e90fd1a380cd"
     }
   ],
   "status": "partial-parity-with-open-native-controls",

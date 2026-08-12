@@ -83,7 +83,7 @@
     }
   ],
   "limitations": [
-    "Clean package lifecycle is verified separately on Fedora and Ubuntu; Ubuntu live Bubblewrap, seccomp, cgroup, IPC, and Secret Service execution remains pending.",
+    "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
     "The inactive inference package boundary is verified separately; enabled inference runtime and complete adapter startup probes remain pending.",
     "macOS implementation and execution remain blocked and are not substituted."
   ],
@@ -91,7 +91,7 @@
   "platform_status": {
     "fedora_44_x86_64": "verified-local",
     "macos": "blocked-macos",
-    "ubuntu_26_04_x86_64": "blocked-clean-environment"
+    "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately"
   },
   "private_values_present": false,
   "release_claim": "none",
@@ -198,7 +198,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "e0b06e720008c9954e4c142197ed124b50eed05a",
+  "source_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -210,7 +210,7 @@
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "8a1379a8513c08496e5588db3cb5daf0c905bc139436a70cb349ea4fa12c023b"
+      "sha256": "327c872b56e04b1e2540736d97eb8cfe3c7ec58f0af3a3a78d84d424df792f25"
     },
     {
       "path": "platforms/linux/Cargo.toml",
@@ -226,7 +226,7 @@
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "8ff7684337a6d551159b84b674c88410eebc9404bf83dda392c86aa6e1d3ec6e"
+      "sha256": "dcc158bb4ec9c23a4ee0697971b058734b5e27cfafdb18890946aaa157c43347"
     },
     {
       "path": "platforms/linux/src/secret_service.rs",
@@ -234,7 +234,7 @@
     },
     {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "5aa1174d5da66ba350149ac1c89fa19e46262a838056f2b967758b77fffa8212"
+      "sha256": "fef1941ec470965b94d0d5af1eecbc0f43e8ddec7572fea5bba79ad690c10b4c"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",
