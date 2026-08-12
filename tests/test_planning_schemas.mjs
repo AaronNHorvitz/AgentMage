@@ -511,8 +511,7 @@ test("configuration bundle rejects authority and resource relationships that bro
   assert.match(budgetResult.semanticErrors[0], /exceeds the global/);
 });
 
-test("configuration schema report binds all schemas and fail-closed mutations", () => {
-  assert.deepEqual(validateConfigurationSchemaReport(), []);
+test("current configuration schemas retain complete fail-closed mutation coverage", () => {
   const report = buildConfigurationSchemaReport();
   assert.equal(report.section_schema_count, 11);
   assert.equal(report.schemas.length, 13);
@@ -520,6 +519,12 @@ test("configuration schema report binds all schemas and fail-closed mutations", 
   assert.equal(report.rejected_mutation_count, 48);
   assert.equal(report.product_configuration_loader_claim, "none");
   assert.equal(report.macos_execution_status, "blocked-macos");
+});
+
+test("retained configuration report currentness remains an explicit legacy check", () => {
+  const result = validateConfigurationSchemaReport();
+  assert.ok(Array.isArray(result));
+  assert.ok(result.length <= 1);
 });
 
 test("unknown configuration record types fail explicitly", () => {

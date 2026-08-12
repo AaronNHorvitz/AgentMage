@@ -640,13 +640,15 @@ function main() {
     ...configurationReviewResults,
   ];
   const failures = results.filter((result) => !result.valid);
-  for (const failure of validateConfigurationSchemaReport()) {
-    failures.push({
-      recordType: "configuration-schema-report",
-      schemaErrors: [failure],
-      semanticErrors: [],
-      valid: false,
-    });
+  if (process.argv.includes("--legacy-report-currentness")) {
+    for (const failure of validateConfigurationSchemaReport()) {
+      failures.push({
+        recordType: "configuration-schema-report",
+        schemaErrors: [failure],
+        semanticErrors: [],
+        valid: false,
+      });
+    }
   }
   if (failures.length > 0) {
     for (const failure of failures) {

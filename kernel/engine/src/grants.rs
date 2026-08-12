@@ -3,6 +3,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::Write,
+    sync::Mutex,
 };
 
 use agentmage_kernel_contracts::{
@@ -236,6 +237,76 @@ pub struct GrantIssuer {
     used_nonces: BTreeSet<GrantNonce>,
 }
 
+/// Product-owned synchronization for concurrent final grant transitions.
+///
+/// Callers race through this boundary directly. The boundary, rather than a test
+/// harness or shell, serializes the exact validate-and-transition operation.
+pub struct SynchronizedGrantIssuer {
+    issuer: Mutex<GrantIssuer>,
+}
+
+impl SynchronizedGrantIssuer {
+    /// Takes ownership of one issuer and exposes only synchronized final transitions.
+    #[must_use]
+    pub fn from_issuer(issuer: GrantIssuer) -> Self {
+        Self {
+            issuer: Mutex::new(issuer),
+        }
+    }
+
+    /// Revalidates and consumes one exact grant under product-owned synchronization.
+    pub fn consume_for_execution(
+        &self,
+        grant_id: &GrantId,
+        policy: &PolicyEngine,
+        context: &PolicyEvaluationContext,
+    ) -> Result<GrantConsumptionRecord, GrantConsumeError> {
+        self.issuer
+            .lock()
+            .map_err(|_| GrantConsumeError::CorruptState)?
+            .consume_for_execution(grant_id, policy, context)
+    }
+
+    /// Cancels one still-issued operation grant under the same synchronization boundary.
+    pub fn cancel_before_execution(
+        &self,
+        grant_id: &GrantId,
+        expected_issued_sha256: &str,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<GrantLifecycleRecord, GrantLifecycleError> {
+        self.issuer
+            .lock()
+            .map_err(|_| GrantLifecycleError::CorruptState)?
+            .cancel_before_execution(grant_id, expected_issued_sha256, occurred_at_epoch_ms)
+    }
+
+    /// Marks one consumed attempt uncertain under product-owned synchronization.
+    pub fn mark_execution_uncertain(
+        &self,
+        grant_id: &GrantId,
+        expected_consumed_sha256: &str,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<GrantLifecycleRecord, GrantLifecycleError> {
+        self.issuer
+            .lock()
+            .map_err(|_| GrantLifecycleError::CorruptState)?
+            .mark_execution_uncertain(grant_id, expected_consumed_sha256, occurred_at_epoch_ms)
+    }
+
+    /// Returns a cloned current record without lending mutable issuer state.
+    pub fn current(
+        &self,
+        grant_id: &GrantId,
+    ) -> Result<Option<CapabilityGrant>, GrantLifecycleError> {
+        Ok(self
+            .issuer
+            .lock()
+            .map_err(|_| GrantLifecycleError::CorruptState)?
+            .current(grant_id)
+            .cloned())
+    }
+}
+
 pub(crate) struct GrantDurableParts<'a> {
     pub(crate) histories: &'a BTreeMap<GrantId, Vec<CapabilityGrant>>,
     pub(crate) revision_hashes: &'a BTreeMap<(GrantId, u32), String>,
@@ -395,6 +466,43 @@ impl GrantIssuer {
             &consumed,
             &consumed_sha256,
             GrantStatus::Uncertain,
+            occurred_at_epoch_ms,
+        )
+    }
+
+    /// Invalidates one exact still-issued operation after cancellation wins the final race.
+    pub fn cancel_before_execution(
+        &mut self,
+        grant_id: &GrantId,
+        expected_issued_sha256: &str,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<GrantLifecycleRecord, GrantLifecycleError> {
+        if validate_digest(expected_issued_sha256).is_err() {
+            return Err(GrantLifecycleError::RevisionMismatch);
+        }
+        let issued = self
+            .current
+            .get(grant_id)
+            .cloned()
+            .ok_or(GrantLifecycleError::NotFound)?;
+        if issued.status != GrantStatus::Issued
+            || issued.grant_class != GrantClass::Operation
+            || issued.use_limit != 1
+            || issued.use_count != 0
+            || occurred_at_epoch_ms < issued.issued_at_epoch_ms
+        {
+            return Err(GrantLifecycleError::InvalidState);
+        }
+        let issued_sha256 = grant_sha256(&issued).map_err(|_| GrantLifecycleError::CorruptState)?;
+        if issued_sha256 != expected_issued_sha256
+            || self.revision_hash(grant_id, issued.revision) != Some(issued_sha256.as_str())
+        {
+            return Err(GrantLifecycleError::RevisionMismatch);
+        }
+        self.transition_status(
+            &issued,
+            &issued_sha256,
+            GrantStatus::Invalidated,
             occurred_at_epoch_ms,
         )
     }
@@ -888,13 +996,13 @@ fn hex_sha256(value: &[u8]) -> String {
 mod tests {
     use std::{
         collections::BTreeSet,
-        sync::{Arc, Barrier, Mutex},
+        sync::{Arc, Barrier},
         thread,
     };
 
     use super::{
         DerivedOperationGrantRequest, GrantConsumeError, GrantIssueError, GrantIssuer,
-        GrantLifecycleError, SessionReadGrantRequest,
+        GrantLifecycleError, SessionReadGrantRequest, SynchronizedGrantIssuer, grant_sha256,
     };
     use crate::policy::{
         PolicyDenialScope, PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules,
@@ -1387,7 +1495,7 @@ mod tests {
     #[test]
     fn two_racing_consumers_produce_exactly_one_terminal_transition() {
         let (issuer, policy, grant) = issued_for_consumption();
-        let issuer = Arc::new(Mutex::new(issuer));
+        let issuer = Arc::new(SynchronizedGrantIssuer::from_issuer(issuer));
         let policy = Arc::new(policy);
         let barrier = Arc::new(Barrier::new(3));
         let handles = (0..2)
@@ -1399,10 +1507,7 @@ mod tests {
                 let context = consumption_context(&grant);
                 thread::spawn(move || {
                     barrier.wait();
-                    issuer
-                        .lock()
-                        .expect("issuer lock must not be poisoned")
-                        .consume_for_execution(&grant_id, &policy, &context)
+                    issuer.consume_for_execution(&grant_id, &policy, &context)
                 })
             })
             .collect::<Vec<_>>();
@@ -1424,12 +1529,62 @@ mod tests {
                 .count(),
             1
         );
-        let issuer = issuer.lock().expect("issuer lock must not be poisoned");
         let consumed = issuer
             .current(&grant.grant_id)
+            .expect("issuer state must remain readable")
             .expect("grant remains retained");
         assert_eq!(consumed.revision, 2);
         assert_eq!(consumed.use_count, 1);
         assert_eq!(consumed.status, GrantStatus::Consumed);
+    }
+
+    #[test]
+    fn cancellation_and_consumption_race_inside_the_product_boundary() {
+        let (issuer, policy, grant) = issued_for_consumption();
+        let grant_id = grant.grant_id.clone();
+        let issued_sha256 = grant_sha256(&grant).expect("issued grant hashes");
+        let issuer = Arc::new(SynchronizedGrantIssuer::from_issuer(issuer));
+        let policy = Arc::new(policy);
+        let barrier = Arc::new(Barrier::new(3));
+
+        let consume = {
+            let issuer = Arc::clone(&issuer);
+            let policy = Arc::clone(&policy);
+            let barrier = Arc::clone(&barrier);
+            let grant_id = grant_id.clone();
+            let context = consumption_context(&grant);
+            thread::spawn(move || {
+                barrier.wait();
+                issuer.consume_for_execution(&grant_id, &policy, &context)
+            })
+        };
+        let cancel = {
+            let issuer = Arc::clone(&issuer);
+            let barrier = Arc::clone(&barrier);
+            let grant_id = grant_id.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                issuer.cancel_before_execution(&grant_id, &issued_sha256, 3_000)
+            })
+        };
+        barrier.wait();
+        let consumed = consume.join().expect("consumer finishes");
+        let cancelled = cancel.join().expect("canceller finishes");
+        assert_ne!(consumed.is_ok(), cancelled.is_ok());
+        let retained = issuer
+            .current(&grant_id)
+            .expect("issuer state must remain readable")
+            .expect("grant remains retained");
+        if consumed.is_ok() {
+            assert_eq!(retained.status, GrantStatus::Consumed);
+            assert_eq!(cancelled, Err(GrantLifecycleError::InvalidState));
+        } else {
+            assert_eq!(retained.status, GrantStatus::Invalidated);
+            assert_eq!(retained.use_count, 0);
+            assert!(matches!(
+                consumed,
+                Err(GrantConsumeError::PolicyDenied(PolicyDenialScope::Grant))
+            ));
+        }
     }
 }

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "policy_id": "agentmage-model-activation-policy-v1",
+  "allowed_platforms": [
+    "fedora-x86_64",
+    "ubuntu-x86_64",
+    "windows-x86_64"
+  ],
+  "automatic_fallback": false,
+  "baseline_enabled_profiles": [],
+  "candidate_profile_ids": [
+    "gemma-4-12b-unified-it",
+    "gemma-4-e4b-it"
+  ],
+  "deterministic_provider": {
+    "model_id": "secure-local-read",
+    "model_inference": false,
+    "vendor": "agentmage"
+  },
+  "required_binding_ids": [
+    "artifact",
+    "conversion",
+    "license",
+    "lineage",
+    "runtime",
+    "tokenizer"
+  ]
+}

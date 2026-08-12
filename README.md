@@ -315,7 +315,23 @@ From a clean checkout, one command installs the lockfile-pinned documentation to
 npm run docs:clean-check
 ```
 
-The gate validates Markdown, Mermaid diagrams, local links, secret signatures, prohibited deployment claims, stable identifiers, the generated requirement registry, required files, and cross-document platform/model/runtime assertions. It writes generated renderer output only to temporary or ignored paths.
+The gate validates Markdown, Mermaid diagrams, local links, secret signatures,
+prohibited deployment claims, stable identifiers, the generated requirement
+registry, required files, cross-document platform/model/runtime assertions, and
+the current Phase 10 evidence, platform, review-provenance, and model-activation
+views. Historical artifact validity and current applicability are separate;
+retained reports are not regenerated merely to make the current gate pass. It
+writes generated renderer output only to temporary or ignored paths.
+
+The complete pre-stabilization replay remains available for historical audit:
+
+```bash
+npm run requirements:historical-replay
+```
+
+That command intentionally invokes old source-currentness assertions and may
+report retained records as stale against a later tree. It is not the current CI
+gate and its failures must not be relabeled as passes.
 
 Product compilation and tests run through a separate contract and workflow:
 

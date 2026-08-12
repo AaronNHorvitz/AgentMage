@@ -1,7 +1,7 @@
 use std::{
     collections::BTreeSet,
     env,
-    sync::{Arc, Barrier, Mutex},
+    sync::{Arc, Barrier},
     thread,
 };
 
@@ -16,6 +16,7 @@ use agentmage_kernel_contracts::{
 use agentmage_kernel_engine::{
     grants::{
         DerivedOperationGrantRequest, GrantConsumeError, GrantIssuer, SessionReadGrantRequest,
+        SynchronizedGrantIssuer,
     },
     policy::{
         PolicyDenialScope, PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope,
@@ -233,7 +234,7 @@ fn run_scenario(scenario: Scenario) -> RaceReplayTrace {
     if matches!(scenario, Scenario::Denial) {
         race_context.argument_sha256 = "f".repeat(64);
     }
-    let issuer = Arc::new(Mutex::new(fixture.issuer));
+    let issuer = Arc::new(SynchronizedGrantIssuer::from_issuer(fixture.issuer));
     let policy = Arc::new(fixture.policy);
     let barrier = Arc::new(Barrier::new(3));
     let handles = (0..2)
@@ -245,10 +246,7 @@ fn run_scenario(scenario: Scenario) -> RaceReplayTrace {
             let context = race_context.clone();
             thread::spawn(move || {
                 barrier.wait();
-                issuer
-                    .lock()
-                    .expect("issuer lock must not be poisoned")
-                    .consume_for_execution(&grant_id, &policy, &context)
+                issuer.consume_for_execution(&grant_id, &policy, &context)
             })
         })
         .collect::<Vec<_>>();
@@ -284,7 +282,6 @@ fn run_scenario(scenario: Scenario) -> RaceReplayTrace {
         0
     };
     let mut uncertain_transition_count = 0;
-    let mut issuer = issuer.lock().expect("issuer lock must not be poisoned");
     if scenario.needs_uncertain_transition() {
         let consumed_hash = outcomes
             .iter()
@@ -307,6 +304,7 @@ fn run_scenario(scenario: Scenario) -> RaceReplayTrace {
     );
     let retained = issuer
         .current(&grant_id)
+        .expect("issuer state must remain readable")
         .expect("terminal grant must remain");
     let expected_status = match scenario {
         Scenario::Success => GrantStatus::Consumed,

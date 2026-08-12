@@ -27,7 +27,7 @@ class TraceabilityReportTests(unittest.TestCase):
         committed = json.loads(DEFAULT_OUTPUT.read_text(encoding="utf-8"))
 
         self.assertEqual(committed, report)
-        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["schema_version"], 2)
         self.assertEqual(report["counts"]["total"], 227)
         self.assertEqual(
             report["counts"]["by_kind"],
@@ -53,7 +53,16 @@ class TraceabilityReportTests(unittest.TestCase):
                 )
                 self.assertIn(
                     requirement["evidence"]["status"],
-                    {"not_yet_produced", "current", "stale", "blocked"},
+                    {
+                        "absent",
+                        "produced",
+                        "current",
+                        "stale",
+                        "blocked",
+                        "superseded",
+                        "historical-only",
+                        "rejected",
+                    },
                 )
                 self.assertTrue(requirement["evidence"]["expected_roots"])
                 self.assertIn(
@@ -75,6 +84,29 @@ class TraceabilityReportTests(unittest.TestCase):
         for record in records.values():
             if record["normative_statements"]:
                 self.assertEqual(record["kind"], "product_requirement")
+
+    def test_catalog_discovers_existing_auth_artifact_without_promoting_it(self) -> None:
+        report = build_traceability_report()
+        records = {record["id"]: record for record in report["requirements"]}
+        evidence = records["AT-AUTH-001"]["evidence"]
+
+        self.assertEqual(evidence["status"], "stale")
+        self.assertEqual(
+            evidence["paths"],
+            ["artifacts/sprints/sprint-5/sprint-gate-report.json"],
+        )
+        self.assertEqual(evidence["records"][0]["historical_validity"], "valid")
+        self.assertEqual(records["AT-AUTH-001"]["status"], "planned")
+
+    def test_outside_release_absence_is_not_missing_required_evidence(self) -> None:
+        report = build_traceability_report()
+        evidence = next(
+            record["evidence"]
+            for record in report["requirements"]
+            if record["release"] != report["evidence_view"]["selected_release"]
+            and record["evidence"]["status"] == "absent"
+        )
+        self.assertEqual(evidence["absence_disposition"], "expected-outside-release")
 
     def test_unlisted_acceptance_test_inherits_owning_requirement_plan(self) -> None:
         report = build_traceability_report()

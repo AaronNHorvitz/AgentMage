@@ -1,0 +1,56 @@
+{
+  "classes": [
+    "automated-aggregation",
+    "deterministic-self-check",
+    "external-review",
+    "independent-automated-analysis",
+    "independent-human-review",
+    "native-execution"
+  ],
+  "records": [
+    {
+      "findings": [],
+      "original_label": "independent-automated-boundary-review",
+      "performer": {
+        "distinct_implementation": false,
+        "distinct_process": false,
+        "external_organization": null,
+        "human": false,
+        "identity": "agentmage-grant-boundary-review-v1",
+        "kind": "repository-automation"
+      },
+      "rereview_of": null,
+      "review_class": "automated-aggregation",
+      "review_id": "review-grant-boundary-historical",
+      "status": "completed",
+      "subject": {
+        "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
+        "revision": "617731b671df3378652f771cb94773080d155298",
+        "sha256": "e46920461272bab2f04e068c5f9435eb967be311108c084bbd4b1de6d53d6a4d"
+      }
+    },
+    {
+      "findings": [],
+      "original_label": "independent-automated-secure-path-review",
+      "performer": {
+        "distinct_implementation": false,
+        "distinct_process": false,
+        "external_organization": null,
+        "human": false,
+        "identity": "agentmage-path-boundary-review-v1",
+        "kind": "repository-automation"
+      },
+      "rereview_of": null,
+      "review_class": "automated-aggregation",
+      "review_id": "review-path-boundary-historical",
+      "status": "completed",
+      "subject": {
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+        "revision": "9f0662588ac416f1bd038d5ed5d14cdccf2e973c",
+        "sha256": "c0ae668bbb40d6d5654faf3fbe684b13ea03b8f35dc7a478646d581c422db81d"
+      }
+    }
+  ],
+  "registry_id": "agentmage-review-provenance-v1",
+  "schema_version": 1
+}

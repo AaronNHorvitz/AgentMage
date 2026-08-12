@@ -12,6 +12,7 @@ from scripts.requirement_coverage import (
     ROOT,
     build_coverage_report,
     load_json,
+    rebase_normative_map,
 )
 
 
@@ -151,6 +152,25 @@ class RequirementCoverageTests(unittest.TestCase):
             ROOT,
         )
         self.assertIn("release_mismatch", self.categories(mismatch_report))
+
+    def test_rebase_updates_only_locations_for_unchanged_statements(self) -> None:
+        shifted = copy.deepcopy(self.normative_map)
+        shifted["mappings"][0]["line"] = 1
+        shifted["mappings"][0]["heading"] = "Old heading"
+
+        rebased = rebase_normative_map(ROOT, shifted)
+
+        self.assertEqual(
+            rebased["mappings"][0]["statement_sha256"],
+            shifted["mappings"][0]["statement_sha256"],
+        )
+        self.assertNotEqual(rebased["mappings"][0]["line"], 1)
+        self.assertNotEqual(rebased["mappings"][0]["heading"], "Old heading")
+
+        changed = copy.deepcopy(self.normative_map)
+        changed["mappings"][0]["statement_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "changed or missing"):
+            rebase_normative_map(ROOT, changed)
 
     def test_report_is_deterministic_and_does_not_mutate_inputs(self) -> None:
         registry_before = copy.deepcopy(self.registry)

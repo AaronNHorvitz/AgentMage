@@ -1,0 +1,160 @@
+{
+  "inputs": [
+    {
+      "path": "architecture/platform-lane-policy.json",
+      "sha256": "82d8d0c4827cbf9009149f819263d1bf9bc490b6348dec6272c433cd218d9548"
+    },
+    {
+      "path": "architecture/platform-lane-status.json",
+      "sha256": "a2ab18c9982f6f98757da69726fd84b5f2f5d0d98cd734304335a17b600ebe07"
+    }
+  ],
+  "lanes": [
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "kernel/engine/tests/platform_adapter_conformance.rs",
+        "platforms/linux/src/lib.rs"
+      ],
+      "lane_id": "fedora-x86_64",
+      "native_lane": "fedora-x86_64",
+      "reason": "contract-tested-native-source-boundary",
+      "state": "pass"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "docs/decisions/0003-blocked-platform-lane-continuation.md",
+        "platforms/macos/Package.swift"
+      ],
+      "lane_id": "macos-arm64-retained",
+      "native_lane": "macos-arm64-retained",
+      "reason": "native-execution-unavailable",
+      "state": "block"
+    },
+    {
+      "evidence_basis": [
+        "kernel/contracts/src/lib.rs",
+        "kernel/engine/src/lib.rs",
+        "shells/vscode/src/index.ts"
+      ],
+      "lane_id": "shared",
+      "native_lane": "shared",
+      "reason": "current-source-contracts-pass",
+      "state": "pass"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "platforms/linux/src/lib.rs"
+      ],
+      "lane_id": "ubuntu-x86_64",
+      "native_lane": "ubuntu-x86_64",
+      "reason": "native-execution-not-run",
+      "state": "block"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+      ],
+      "lane_id": "windows-x86_64",
+      "native_lane": "windows-x86_64",
+      "reason": "implementation-planned",
+      "state": "block"
+    }
+  ],
+  "milestones": [
+    {
+      "blocking_lanes": [],
+      "lane_results": [
+        {
+          "lane_id": "fedora-x86_64",
+          "reason": "contract-tested-native-source-boundary",
+          "required": true,
+          "state": "pass"
+        },
+        {
+          "lane_id": "shared",
+          "reason": "current-source-contracts-pass",
+          "required": true,
+          "state": "pass"
+        }
+      ],
+      "milestone_id": "linux-source-candidate",
+      "required_lanes": [
+        "fedora-x86_64",
+        "shared"
+      ],
+      "status": "pass"
+    },
+    {
+      "blocking_lanes": [
+        "macos-arm64-retained"
+      ],
+      "lane_results": [
+        {
+          "lane_id": "macos-arm64-retained",
+          "reason": "native-execution-unavailable",
+          "required": true,
+          "state": "block"
+        },
+        {
+          "lane_id": "shared",
+          "reason": "current-source-contracts-pass",
+          "required": true,
+          "state": "pass"
+        }
+      ],
+      "milestone_id": "macos-retained-milestone",
+      "required_lanes": [
+        "macos-arm64-retained",
+        "shared"
+      ],
+      "status": "block"
+    },
+    {
+      "blocking_lanes": [
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "lane_results": [
+        {
+          "lane_id": "fedora-x86_64",
+          "reason": "contract-tested-native-source-boundary",
+          "required": true,
+          "state": "pass"
+        },
+        {
+          "lane_id": "shared",
+          "reason": "current-source-contracts-pass",
+          "required": true,
+          "state": "pass"
+        },
+        {
+          "lane_id": "ubuntu-x86_64",
+          "reason": "native-execution-not-run",
+          "required": true,
+          "state": "block"
+        },
+        {
+          "lane_id": "windows-x86_64",
+          "reason": "implementation-planned",
+          "required": true,
+          "state": "block"
+        }
+      ],
+      "milestone_id": "v1.0-first-ga",
+      "required_lanes": [
+        "fedora-x86_64",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "status": "block"
+    }
+  ],
+  "report_id": "agentmage-current-platform-gates-v1",
+  "schema_version": 1,
+  "support_claim": "none-pre-release"
+}

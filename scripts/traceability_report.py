@@ -4,13 +4,19 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Final
+
+try:
+    from scripts.evidence_applicability import build_report as build_evidence_report
+    from scripts.evidence_core import atomic_write, canonical_json_bytes, sha256_bytes
+except ModuleNotFoundError:
+    from evidence_applicability import build_report as build_evidence_report
+    from evidence_core import atomic_write, canonical_json_bytes, sha256_bytes
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
@@ -19,7 +25,8 @@ DEFAULT_NORMATIVE_MAP: Final = ROOT / "requirements" / "normative-map.json"
 DEFAULT_POLICY_REGISTER: Final = ROOT / "requirements" / "policy-expectations.json"
 DEFAULT_TASKS: Final = ROOT / "TASKS.md"
 DEFAULT_OUTPUT: Final = ROOT / "requirements" / "traceability-report.json"
-SCHEMA_VERSION: Final = 1
+DEFAULT_EVIDENCE_CATALOG: Final = ROOT / "evidence" / "catalog.json"
+SCHEMA_VERSION: Final = 2
 SPRINT_HEADING: Final = re.compile(r"^### \[[ x]\] Sprint (\d+) - (.+?)\s*$")
 STORY_HEADING: Final = re.compile(r"^#### \[[ x]\] Story (\d+\.\d+) - (.+?)\s*$")
 REFERENCE_ID: Final = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
@@ -46,7 +53,103 @@ def source_name(path: Path, root: Path = ROOT) -> str:
 def input_identity(path: Path, root: Path = ROOT) -> dict[str, str]:
     return {
         "document": source_name(path, root),
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "sha256": sha256_bytes(path.read_bytes()),
+    }
+
+
+def evidence_claim_index(
+    report: dict[str, object], registry_ids: set[str]
+) -> dict[str, list[dict[str, object]]]:
+    """Index only historically valid catalog records by exact registry claim."""
+
+    records = report.get("records")
+    if not isinstance(records, list):
+        raise TraceabilityError("evidence applicability records must be an array")
+    indexed: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for record in records:
+        if not isinstance(record, dict):
+            raise TraceabilityError("evidence applicability record must be an object")
+        evidence_id = record.get("evidence_id")
+        claims = record.get("claims")
+        artifact = record.get("artifact")
+        historical = record.get("historical_validity")
+        applicability = record.get("current_applicability")
+        if (
+            not isinstance(evidence_id, str)
+            or not isinstance(claims, list)
+            or not isinstance(artifact, dict)
+            or historical not in {"valid", "invalid", "unverifiable-legacy"}
+            or applicability
+            not in {
+                "current",
+                "stale",
+                "blocked",
+                "superseded",
+                "historical-only",
+                "produced",
+                "rejected",
+            }
+        ):
+            raise TraceabilityError("evidence applicability record is malformed")
+        if historical != "valid":
+            continue
+        path = artifact.get("path")
+        if not isinstance(path, str):
+            raise TraceabilityError("evidence artifact path is malformed")
+        for claim in claims:
+            if not isinstance(claim, str) or claim not in registry_ids:
+                raise TraceabilityError(f"unknown evidence claim: {claim}")
+            indexed[claim].append(
+                {
+                    "evidence_id": evidence_id,
+                    "path": path,
+                    "historical_validity": historical,
+                    "current_applicability": applicability,
+                    "platform_lanes": record.get("platform_lanes", []),
+                    "revision": artifact.get("revision"),
+                    "sha256": artifact.get("sha256"),
+                }
+            )
+    for claim, items in indexed.items():
+        current = [item for item in items if item["current_applicability"] == "current"]
+        if len(current) > 1:
+            raise TraceabilityError(f"ambiguous current evidence claim: {claim}")
+        items.sort(key=lambda item: (str(item["path"]), str(item["evidence_id"])))
+    return dict(indexed)
+
+
+def evidence_state(
+    records: list[dict[str, object]], *, outside_selected_release: bool
+) -> dict[str, object]:
+    """Render evidence without converting a produced artifact into completion."""
+
+    if not records:
+        return {
+            "status": "absent",
+            "absence_disposition": (
+                "expected-outside-release"
+                if outside_selected_release
+                else "missing-required"
+            ),
+            "paths": [],
+            "records": [],
+        }
+    priority = (
+        "current",
+        "blocked",
+        "stale",
+        "produced",
+        "historical-only",
+        "superseded",
+        "rejected",
+    )
+    states = {str(record["current_applicability"]) for record in records}
+    status = next(state for state in priority if state in states)
+    return {
+        "status": status,
+        "absence_disposition": "not-applicable",
+        "paths": sorted({str(record["path"]) for record in records}),
+        "records": records,
     }
 
 
@@ -171,6 +274,7 @@ def build_traceability_report(
     normative_map_path: Path = DEFAULT_NORMATIVE_MAP,
     policy_register_path: Path = DEFAULT_POLICY_REGISTER,
     tasks_path: Path = DEFAULT_TASKS,
+    evidence_catalog_path: Path = DEFAULT_EVIDENCE_CATALOG,
 ) -> dict[str, object]:
     """Build complete planning traceability without editing any input."""
     registry = load_object(registry_path)
@@ -178,6 +282,9 @@ def build_traceability_report(
     policy_register = load_object(policy_register_path)
     records = _requirements(registry)
     by_id = {str(record["id"]): record for record in records}
+    evidence_report = build_evidence_report(ROOT, evidence_catalog_path)
+    evidence_by_requirement = evidence_claim_index(evidence_report, set(by_id))
+    selected_release = str(evidence_report["catalog"]["selected_release"])
     sprint_coverage = parse_sprint_coverage(tasks_path)
     normative_by_requirement = reverse_normative_mappings(normative_map)
     policy_by_requirement = policy_references(policy_register)
@@ -217,6 +324,11 @@ def build_traceability_report(
         evidence_roots = [
             f"artifacts/sprints/sprint-{int(item['sprint'])}" for item in plan_items
         ]
+        discovered_evidence = evidence_state(
+            evidence_by_requirement.get(identifier, []),
+            outside_selected_release=release != selected_release,
+        )
+        discovered_evidence["expected_roots"] = sorted(set(evidence_roots))
         traceability.append(
             {
                 "id": identifier,
@@ -239,16 +351,13 @@ def build_traceability_report(
                     "state": exclusion_state,
                     "policy_expectation_ids": expectation_ids,
                 },
-                "evidence": {
-                    "status": "not_yet_produced",
-                    "expected_roots": sorted(set(evidence_roots)),
-                    "paths": [],
-                },
+                "evidence": discovered_evidence,
             }
         )
 
     by_kind = Counter(str(item["kind"]) for item in traceability)
     by_exclusion = Counter(str(item["exclusion"]["state"]) for item in traceability)
+    by_evidence = Counter(str(item["evidence"]["status"]) for item in traceability)
     return {
         "schema_version": SCHEMA_VERSION,
         "report_id": "agentmage-cross-document-traceability",
@@ -257,12 +366,21 @@ def build_traceability_report(
             input_identity(normative_map_path),
             input_identity(policy_register_path),
             input_identity(tasks_path),
+            input_identity(evidence_catalog_path),
         ],
+        "evidence_view": {
+            "report_id": evidence_report["report_id"],
+            "sha256": sha256_bytes(canonical_json_bytes(evidence_report)),
+            "selected_release": selected_release,
+        },
         "counts": {
             "total": len(traceability),
             "by_kind": {kind: by_kind[kind] for kind in sorted(by_kind)},
             "by_exclusion_state": {
                 state: by_exclusion[state] for state in sorted(by_exclusion)
+            },
+            "by_evidence_status": {
+                state: by_evidence[state] for state in sorted(by_evidence)
             },
         },
         "requirements": traceability,
@@ -270,14 +388,13 @@ def build_traceability_report(
 
 
 def render_traceability_report(report: dict[str, object]) -> str:
-    return json.dumps(report, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
+    return canonical_json_bytes(report).decode("ascii")
 
 
 def write_traceability_report(output_path: Path = DEFAULT_OUTPUT, **paths: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        render_traceability_report(build_traceability_report(**paths)),
-        encoding="utf-8",
+    atomic_write(
+        output_path,
+        canonical_json_bytes(build_traceability_report(**paths)),
     )
 
 

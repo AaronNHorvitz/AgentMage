@@ -1,0 +1,42 @@
+{
+  "lane_ids": [
+    "fedora-x86_64",
+    "macos-arm64-retained",
+    "shared",
+    "ubuntu-x86_64",
+    "windows-x86_64"
+  ],
+  "milestones": [
+    {
+      "milestone_id": "linux-source-candidate",
+      "required_lanes": [
+        "fedora-x86_64",
+        "shared"
+      ]
+    },
+    {
+      "milestone_id": "macos-retained-milestone",
+      "required_lanes": [
+        "macos-arm64-retained",
+        "shared"
+      ]
+    },
+    {
+      "milestone_id": "v1.0-first-ga",
+      "required_lanes": [
+        "fedora-x86_64",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ]
+    }
+  ],
+  "policy_id": "agentmage-platform-lane-policy-v1",
+  "schema_version": 1,
+  "states": [
+    "block",
+    "not-applicable",
+    "pass",
+    "unsupported"
+  ]
+}

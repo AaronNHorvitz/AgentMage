@@ -1,0 +1,49 @@
+{
+  "activation_status": "disabled-until-new-hash-bound-admission",
+  "automatic_fallback": false,
+  "candidates": [
+    {
+      "automatic_fallback": false,
+      "disposition": "rejected",
+      "enabled": false,
+      "picker_visible": false,
+      "profile_id": "gemma-4-12b-unified-it"
+    },
+    {
+      "automatic_fallback": false,
+      "disposition": "rejected",
+      "enabled": false,
+      "picker_visible": false,
+      "profile_id": "gemma-4-e4b-it"
+    }
+  ],
+  "deterministic_provider": {
+    "classification": "bounded-non-inference-workflow",
+    "model_id": "secure-local-read",
+    "model_inference": false,
+    "vendor": "agentmage"
+  },
+  "enabled_profile_count": 0,
+  "enabled_profiles": [],
+  "inputs": [
+    {
+      "path": "architecture/model-activation-policy.json",
+      "sha256": "ddf847899c7ede94e8fdee5a3f7e6edef9751970735c040baae131ece4e44ed2"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "e7ebd2e921ae40875e3f86bcbcb988cef9ad6bf8637b397ec919693771fb3311"
+    },
+    {
+      "path": "shells/vscode/package.json",
+      "sha256": "4ee8b03c9750bb77e316976d3a9cc0e8f914d4ccb9eed63fc577f69302960334"
+    },
+    {
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "48eb3b23d28d11d2d0e272863f39c9c8f26c0b681d53609e444fb7124311f118"
+    }
+  ],
+  "report_id": "agentmage-current-model-activation-v1",
+  "schema_version": 1,
+  "support_claim": "none-pre-release"
+}

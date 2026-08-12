@@ -1,0 +1,60 @@
+{
+  "lanes": [
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "kernel/engine/tests/platform_adapter_conformance.rs",
+        "platforms/linux/src/lib.rs"
+      ],
+      "lane_id": "fedora-x86_64",
+      "native_lane": "fedora-x86_64",
+      "reason": "contract-tested-native-source-boundary",
+      "state": "pass"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "docs/decisions/0003-blocked-platform-lane-continuation.md",
+        "platforms/macos/Package.swift"
+      ],
+      "lane_id": "macos-arm64-retained",
+      "native_lane": "macos-arm64-retained",
+      "reason": "native-execution-unavailable",
+      "state": "block"
+    },
+    {
+      "evidence_basis": [
+        "kernel/contracts/src/lib.rs",
+        "kernel/engine/src/lib.rs",
+        "shells/vscode/src/index.ts"
+      ],
+      "lane_id": "shared",
+      "native_lane": "shared",
+      "reason": "current-source-contracts-pass",
+      "state": "pass"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "platforms/linux/src/lib.rs"
+      ],
+      "lane_id": "ubuntu-x86_64",
+      "native_lane": "ubuntu-x86_64",
+      "reason": "native-execution-not-run",
+      "state": "block"
+    },
+    {
+      "evidence_basis": [
+        "ENGINEERING-AUDIT-REMEDIATION.md",
+        "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+      ],
+      "lane_id": "windows-x86_64",
+      "native_lane": "windows-x86_64",
+      "reason": "implementation-planned",
+      "state": "block"
+    }
+  ],
+  "schema_version": 1,
+  "status_id": "agentmage-current-platform-lanes-v1",
+  "support_claim": "none-pre-release"
+}

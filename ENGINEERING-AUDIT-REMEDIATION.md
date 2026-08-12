@@ -171,7 +171,7 @@ requirements or accepted task identifiers.
 | `RM-021` | P1 | TRUTH-DEFECT | 10 | Introduce lane-scoped product and release gates. |
 | `RM-022` | P1 | TRUTH-DEFECT | 10 | Label automated, native, and human review provenance exactly. |
 | `RM-023` | P1 | CONFIRMED-DEFECT | 10 | Consolidate high-leverage evidence primitives. |
-| `RM-024` | P1 | CONFIRMED-GAP | 10 | Add real fuzzing and meaningful concurrency tests. |
+| `RM-024` | P1 | CONFIRMED-GAP | 10 / manual security validation | Add product-owned concurrency tests now; defer real fuzz execution to a separately approved manual task. |
 | `RM-025` | P1 | TRUTH-DEFECT | 10 | Reconcile model catalog, admission, and runtime state. |
 | `RM-026` | P2 | CONFIRMED-GAP | 11 | Implement and test production Linux and VSIX packaging. |
 | `RM-027` | P2 | CONFIRMED-GAP | 11 | Implement Windows as a versioned independent platform increment. |
@@ -915,6 +915,9 @@ historical report tests.
 **Priority:** P1
 **Class:** CONFIRMED-GAP
 **Dependencies:** RM-006 through RM-010
+**Disposition:** Concurrency assurance remains in Phase 10. Real fuzz-engine
+execution is deferred to separately approved manual security validation and
+cannot be claimed by the Phase 10 gate.
 
 **Risk addressed:** Current fuzzing is policy, registry, corpus, schema, and
 synthetic pipeline scaffolding rather than executed product-boundary fuzzing.
@@ -1106,13 +1109,16 @@ configuration, IPC, storage, and process lifecycle tests pass.
 publishes one durable receipt; denial, attack, cancellation, crash, and restart
 tests pass.
 
-### Phase 10: Evidence, Traceability, Gates, and Fuzzing
+### Phase 10: Evidence, Traceability, Gates, and Model Truth
 
-**Candidate items:** RM-019 through RM-025.
+**Candidate items:** RM-019 through RM-023, the concurrency portion of RM-024,
+and RM-025.
 
 **Gate:** Historical/current evidence is distinct; traceability discovers real
-artifacts; platform lanes compose honestly; real fuzz targets run; model state is
-accurate.
+artifacts; platform lanes compose honestly; contested grant synchronization is
+product-owned; synthetic evidence makes no real fuzzing claim; model state is
+accurate. Real fuzz-engine execution remains an explicit open manual-security
+task and is not silently waived or represented as passing.
 
 ### Phase 11: Packaging and Windows Increment
 
@@ -1125,7 +1131,9 @@ native Windows evidence, the Windows portion remains blocked rather than waived.
 ### Phase 12: Independent Stabilization Audit and Resumption Gate
 
 **Candidate work:** Re-run architecture, security, product, native, packaging,
-evidence, traceability, fuzz, and overclaim reviews against the exact final tree.
+evidence, traceability, and overclaim reviews against the exact final tree.
+Record real fuzz execution as an owned residual P1 risk unless its separately
+approved manual security-validation task has completed.
 
 **Gate:** No unresolved P0 finding; accepted P1/P2 residual risks explicitly
 owned; authoritative documents aligned; repository clean; user explicitly
@@ -1205,7 +1213,9 @@ Stabilization is complete only when all of the following are true:
 - Native tests are represented independently from generic contract tests.
 - Historical evidence remains immutable and current evidence is impact-aware.
 - Traceability discovers and validates actual artifacts.
-- Real fuzzing covers promoted high-risk boundaries.
+- Real fuzzing is either completed through separately approved manual security
+  validation or retained as an explicit owned P1 residual risk without an
+  execution, sanitizer, coverage, or completion claim.
 - Linux packages complete their lifecycle tests.
 - Windows is either independently implemented and natively verified for the
   accepted first-GA gate or remains explicitly blocked without substitution.
@@ -1889,3 +1899,94 @@ The clean signed-install acceptance case remains unavailable rather than passed.
 Accordingly, this candidate demonstrates the complete source and native Fedora
 workflow but does not claim a supported installation, release package, Ubuntu
 native execution, macOS, Windows, a model runtime, or general agent capability.
+
+## 21. Phase 10 Record
+
+Phase 10 was authorized after the user accepted Decision 0018 and the Phase 9
+local commit. The approved Phase 9 candidate was committed locally as
+`3cbe9fb`; no push had occurred when Phase 10 began. On 2026-08-12, the user
+authorized completing Phase 10 and pushing the verified candidate, but did not
+authorize Phase 11.
+
+Accepted Decision 0019 separates immutable historical validity from current
+applicability. `evidence/catalog.json` binds exact retained artifact bytes,
+historical commit and tree identities, owned inputs, claims, dependencies,
+platform lanes, dispositions, and supersession. The generated current view
+reports all three admitted historical artifacts as historically valid and
+currently stale because their owning sources changed. No retained artifact was
+rewritten to make a current gate pass.
+
+Traceability now discovers only exact structured claims admitted through that
+catalog. It binds the real `AT-AUTH-001` artifact rather than hard-coding all
+evidence absent, rejects forged or ambiguous bindings, and keeps evidence state
+separate from requirement lifecycle. The current report contains 227 records:
+224 have no accepted current evidence and three have valid but stale evidence.
+This is not a completion claim.
+
+Platform state is now composed from independent `shared`, Fedora, Ubuntu,
+Windows, and retained macOS lanes. The shared-plus-Fedora source candidate
+passes. The v1.0 composition remains blocked by absent Ubuntu native execution
+and planned Windows implementation. The retained macOS milestone remains
+independently blocked. No platform substitutes for another. Review provenance
+uses closed automated, native, human, and external classes; repository
+aggregation is no longer labeled independent human review.
+
+Shared evidence primitives provide bounded no-follow regular-file reads,
+canonical ASCII JSON, SHA-256, repository-relative path validation, atomic
+same-directory replacement, Git source identity, historical blob replay, and
+content-free diagnostics. The current tools and traceability generator use
+those primitives without bulk rewriting old generators.
+
+The kernel now owns synchronization for contested grant consumption and
+cancellation. Callers race unsynchronized behind a barrier; one single-use
+grant produces at most one consume, cancellation and consumption yield one
+terminal state, and replay cannot admit a second effect.
+
+Model activation truth now reports zero enabled profiles. Both Gemma candidates
+remain rejected, disabled, absent from the picker, and unavailable for automatic
+fallback. The deterministic `secure-local-read` provider remains explicitly
+non-inference. A future admitted profile must bind exact artifact, tokenizer,
+conversion, runtime, license, and lineage hashes; mutation, unsupported
+platform, missing offline runtime, rejected state, or fallback request stops
+visibly before inference.
+
+Real product-boundary fuzzing was initially attempted with the exact pinned
+`cargo-fuzz 0.13.2` and `nightly-2026-08-01` policy. The automated environment
+displayed a cybersecurity review warning, and the host also lacked the C++
+compiler required by `libfuzzer-sys`. At the user's direction, the new harness,
+registry overlay, and generated build output were removed. Existing historical
+synthetic fuzz policy, fixtures, and regressions were preserved. Real fuzzing
+remains an open, separately approved manual security-validation task and is not
+represented as executed, waived, or passing.
+
+Phase 10 verification produced these results:
+
+- `npm run product:check` passed formatting, warnings-denied Clippy, TypeScript
+  lint, strict-local and effect-boundary audits, all workspace builds, all
+  enabled Rust tests, five compile-fail checks, and all 12 VS Code tests.
+- The Rust test run passed more than 200 enabled unit, integration, and documentation
+  tests. Fifteen Linux environment-dependent tests and two host workflow tests
+  remain intentionally ignored in the generic lane and are not represented as
+  native execution.
+- `npm run phase10:check` passed historical replay/applicability, exact
+  traceability, independent platform composition, review provenance, zero-model
+  activation, and 44 focused mutation tests.
+- `npm run schemas:check` passed 32 Node tests plus every planning, testing,
+  configuration, profile, result, and review fixture validation. Retained
+  configuration-report currentness remains an explicit legacy check rather
+  than a default schema-definition assertion.
+- `npm run docs:clean-check` passed from the lockfile-pinned dependency install:
+  87 Markdown files, 47 Mermaid blocks, document invariants, all 227 requirement
+  records, 26 normative mappings, current Phase 10 gates, and schema tests.
+- The complete pre-stabilization Python replay remained visible and was run:
+  935 tests, 756 passed, 78 failed, and 101 errored. The non-passing cases are
+  old report-currentness assertions, source-parser/count assumptions, and their
+  cascading story gates. They were not converted into passes or used as the
+  current CI gate. The exact replay remains available as
+  `npm run requirements:historical-replay`.
+- `git diff --check` passed during candidate verification. No file beneath
+  `artifacts/`, `fixtures/`, or `references/` changed.
+
+Phase 10 does not claim a supported package, Ubuntu native execution, Windows
+implementation, retained macOS completion, enabled model, release, or completed
+requirements. Phase 11 packaging and Windows work remains approval-gated.

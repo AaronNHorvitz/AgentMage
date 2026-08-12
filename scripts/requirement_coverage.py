@@ -13,6 +13,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Final
 
+try:
+    from scripts.evidence_core import atomic_write, canonical_json_bytes
+except ModuleNotFoundError:
+    from evidence_core import atomic_write, canonical_json_bytes  # type: ignore[no-redef]
+
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY: Final = ROOT / "requirements" / "registry.json"
@@ -501,18 +506,58 @@ def build_coverage_report(
     }
 
 
+def rebase_normative_map(
+    root: Path, normative_map: dict[str, object]
+) -> dict[str, object]:
+    """Refresh only heading and line metadata for unchanged mapped statements."""
+
+    statements = normative_statements(root, normative_map)
+    by_hash = {statement["statement_sha256"]: statement for statement in statements}
+    mappings = normative_map.get("mappings")
+    if not isinstance(mappings, list):
+        raise ValueError("normative map mappings must be an array")
+    rebased: list[dict[str, object]] = []
+    for mapping in mappings:
+        if not isinstance(mapping, dict):
+            raise ValueError("normative map mapping must be an object")
+        statement = by_hash.get(mapping.get("statement_sha256"))
+        if statement is None:
+            raise ValueError("cannot rebase a changed or missing normative statement")
+        rebased.append(
+            {
+                **mapping,
+                "heading": statement["heading"],
+                "line": statement["line"],
+            }
+        )
+    return {**normative_map, "mappings": rebased}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
     parser.add_argument("--normative-map", type=Path, default=DEFAULT_NORMATIVE_MAP)
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--json", action="store_true", help="emit the complete JSON report")
+    parser.add_argument(
+        "--update-map-lines",
+        action="store_true",
+        help="refresh locations only when every statement hash is unchanged",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
+        if args.update_map_lines:
+            current_map = load_json(args.normative_map)
+            atomic_write(
+                args.normative_map,
+                canonical_json_bytes(
+                    rebase_normative_map(args.root, current_map)
+                ),
+            )
         report = build_coverage_report(
             load_json(args.registry),
             load_json(args.normative_map),
