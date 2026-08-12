@@ -93,6 +93,10 @@ __pycache__/
 target/
 build/
 dist/
+release-output/
+*.rpm
+*.deb
+*.vsix
 coverage/
 .mermaid-output/
 .vscode-test/

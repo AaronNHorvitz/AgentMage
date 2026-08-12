@@ -17,6 +17,7 @@ CARGO_MANIFESTS = (
     "kernel/contracts/Cargo.toml",
     "kernel/engine/Cargo.toml",
     "platforms/linux/Cargo.toml",
+    "platforms/windows/Cargo.toml",
     "release/xtask/Cargo.toml",
     "shells/host/Cargo.toml",
 )

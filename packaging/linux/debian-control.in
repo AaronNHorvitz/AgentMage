@@ -1,0 +1,10 @@
+Package: agentmage
+Version: @VERSION@
+Section: devel
+Priority: optional
+Architecture: amd64
+Maintainer: AgentMage maintainers <security@example.invalid>
+Depends: libc6, libssl3
+Description: Local AgentMage host and Visual Studio Code extension
+ Pre-release package candidate. Runtime activation remains fail-closed until an
+ independently signed release manifest and trusted host bootstrap exist.

@@ -4,6 +4,7 @@ members = [
   "kernel/contracts",
   "kernel/engine",
   "platforms/linux",
+  "platforms/windows",
   "release/xtask",
   "shells/host",
 ]
@@ -22,6 +23,7 @@ agentmage-capability-read-only = { path = "capabilities/read-only" }
 agentmage-kernel-contracts = { path = "kernel/contracts" }
 agentmage-kernel-engine = { path = "kernel/engine" }
 agentmage-platform-linux = { path = "platforms/linux" }
+agentmage-platform-windows = { path = "platforms/windows" }
 ed25519-dalek = { version = "=3.0.0", default-features = false, features = ["fast", "signature", "zeroize"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"

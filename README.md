@@ -56,6 +56,17 @@ unavailable bridge because no independently signed host package, trusted
 endpoint bootstrap, or production launch credentials exist. It is therefore
 source-level vertical-slice evidence, not a supported or integrated workflow.
 
+Accepted Decision 0019 separates immutable historical evidence from current
+applicability, composes platform lanes independently, records exact review
+provenance, retains real fuzzing as a separately approved manual security task,
+and reports zero enabled models. Accepted Decision 0020 adds deterministic
+unsigned RPM, DEB, and VSIX candidates with installed-payload verification and
+real candidate lifecycle tests. Those candidates cannot pass signed-release
+verification, and the trusted packaged host bootstrap remains absent. Decision
+0020 also adds a versioned Windows contract scaffold and Windows CI boundary;
+Windows remains blocked because native enforcement and native evidence do not
+exist.
+
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
 ## Document Authority

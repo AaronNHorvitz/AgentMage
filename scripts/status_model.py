@@ -87,7 +87,7 @@ EXPECTED_PLATFORM_STATES = {
         "first-ga-required",
     ),
     "ubuntu-x86_64": ("scaffolded", "not-run", "active", "first-ga-required"),
-    "windows-x86_64": ("planned", "not-run", "active", "first-ga-required"),
+    "windows-x86_64": ("scaffolded", "not-run", "blocked", "first-ga-required"),
 }
 EXPECTED_MODEL_DISPOSITIONS = {
     "gemma-4-e4b-it": (

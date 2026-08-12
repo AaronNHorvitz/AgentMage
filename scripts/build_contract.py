@@ -27,6 +27,7 @@ EXPECTED_MEMBERS = {
     "kernel/contracts",
     "kernel/engine",
     "platforms/linux",
+    "platforms/windows",
     "release/xtask",
     "shells/host",
 }
@@ -61,6 +62,10 @@ EXPECTED_CARGO_PACKAGES = {
             "sha2",
             "zeroize",
         },
+    ),
+    "platforms/windows": (
+        "agentmage-platform-windows",
+        {"agentmage-kernel-contracts"},
     ),
     "release/xtask": ("agentmage-xtask", set()),
     "shells/host": (

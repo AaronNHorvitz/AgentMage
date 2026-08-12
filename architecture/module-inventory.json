@@ -91,6 +91,16 @@
       ]
     },
     {
+      "id": "platform-windows",
+      "path": "platforms/windows",
+      "category": "platform-adapters",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "windows-x86_64"
+      ]
+    },
+    {
       "id": "capability-read-only",
       "path": "capabilities/read-only",
       "category": "capability-packs",

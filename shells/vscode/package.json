@@ -1,11 +1,16 @@
 {
   "name": "@agentmage/vscode-shell",
+  "displayName": "AgentMage",
+  "publisher": "agentmage-project",
   "version": "0.0.0",
   "private": true,
   "description": "Display-only AgentMage Visual Studio Code shell",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/src/extension.js",
+  "extensionKind": [
+    "ui"
+  ],
   "activationEvents": [
     "onStartupFinished"
   ],

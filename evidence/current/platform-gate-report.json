@@ -6,7 +6,7 @@
     },
     {
       "path": "architecture/platform-lane-status.json",
-      "sha256": "a2ab18c9982f6f98757da69726fd84b5f2f5d0d98cd734304335a17b600ebe07"
+      "sha256": "00cee1f823f0e468c5cc17f50ae1121b3d51b9a6711226f3b60fb220f31a22db"
     }
   ],
   "lanes": [
@@ -56,11 +56,12 @@
     {
       "evidence_basis": [
         "ENGINEERING-AUDIT-REMEDIATION.md",
-        "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        "docs/decisions/0008-first-ga-delivery-system-and-windows.md",
+        "platforms/windows/src/lib.rs"
       ],
       "lane_id": "windows-x86_64",
       "native_lane": "windows-x86_64",
-      "reason": "implementation-planned",
+      "reason": "contract-scaffolded-native-implementation-unavailable",
       "state": "block"
     }
   ],
@@ -139,7 +140,7 @@
         },
         {
           "lane_id": "windows-x86_64",
-          "reason": "implementation-planned",
+          "reason": "contract-scaffolded-native-implementation-unavailable",
           "required": true,
           "state": "block"
         }

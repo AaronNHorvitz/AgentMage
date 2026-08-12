@@ -32,11 +32,11 @@
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "e7ebd2e921ae40875e3f86bcbcb988cef9ad6bf8637b397ec919693771fb3311"
+      "sha256": "21aa5b4dc4e2029af5135fa22ae2242eae18e46eca8f5e20d699adb5b1733976"
     },
     {
       "path": "shells/vscode/package.json",
-      "sha256": "4ee8b03c9750bb77e316976d3a9cc0e8f914d4ccb9eed63fc577f69302960334"
+      "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
     },
     {
       "path": "shells/vscode/src/provider.ts",

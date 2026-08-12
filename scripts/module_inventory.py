@@ -32,6 +32,12 @@ EXPECTED_MODULES = {
         "swift",
         "swiftpm-xcode",
     ),
+    "platform-windows": (
+        "platforms/windows",
+        "platform-adapters",
+        "rust",
+        "cargo",
+    ),
     "capability-read-only": (
         "capabilities/read-only",
         "capability-packs",

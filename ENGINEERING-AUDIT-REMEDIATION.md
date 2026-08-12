@@ -6,7 +6,7 @@ Baseline reviewed: `abe664bde138d50fd52b3973cb70c7b5e93f5007`
 
 Created: 2026-08-11
 
-Current authorized phase: **Phase 4 - Authority Transaction and Taxonomy (pending user gate review)**
+Current authorized phase: **Phase 11 - Packaging and Windows Increment**
 
 ## 1. Purpose and Authority Boundary
 
@@ -1990,3 +1990,86 @@ Phase 10 verification produced these results:
 Phase 10 does not claim a supported package, Ubuntu native execution, Windows
 implementation, retained macOS completion, enabled model, release, or completed
 requirements. Phase 11 packaging and Windows work remains approval-gated.
+
+## 22. Phase 11 Record
+
+The user authorized Phase 11 implementation and a local Phase 11 commit on
+2026-08-12. Accepted Decision 0020 defines deterministic unsigned package
+candidates and the first versioned Windows contract increment without weakening
+signed-release or platform evidence boundaries.
+
+The release `xtask` is no longer empty. Its closed `package-candidate` command
+forwards only an explicit three-component version and output directory to a
+standard-library builder. The builder produces real RPM, DEB, and VSIX
+candidates from the release host, runtime extension output, and license. It
+emits generated artifacts only beneath ignored output, includes no private key,
+and makes no release or support claim.
+
+Both Linux package formats install the same canonical payload manifest. The host
+has distinct unsigned-candidate and signed-release verification modes and checks
+bounded regular-file paths, sizes, modes, and SHA-256 values. Candidate manifests
+cannot satisfy release mode. Mutation, wrong mode, wrong status, malformed or
+duplicate paths, and changed bytes fail closed with content-free errors.
+
+Disposable network-isolated Fedora and Ubuntu containers passed real install,
+upgrade from `0.0.0` to `0.0.1`, corrupted-upgrade refusal with the prior valid
+version preserved, explicit rollback, verification, uninstall, and binary and
+manifest residue checks. A disposable Visual Studio Code 1.132.0 profile passed
+VSIX install, upgrade, corrupt-upgrade refusal, rollback, uninstall, and residue
+checks through the real Code CLI. The VSIX contains only its manifest, license,
+and runtime JavaScript; tests, declaration files, source, and `node_modules` are
+absent.
+
+`platforms/windows` now freezes Windows platform contract version 1 against the
+unchanged shared adapter API and names twelve required native controls. It
+exposes no effect implementation and always returns a stable native
+implementation blocker. A separately declared Windows workflow compiles and
+tests this contract on `windows-2022`; because that workflow has not executed on
+the unpushed commit and the crate implements no native enforcement, no native
+Windows evidence or release claim exists. The Windows platform and v1.0 gate
+remain visibly blocked with no Linux substitution.
+
+The package mechanics portion of the Phase 11 gate passes. The clean supported
+installation criterion remains blocked because an external release-signing
+identity and trusted packaged VS Code-to-host bootstrap do not exist. Windows
+native implementation, hostile native tests, MSIX lifecycle, and native evidence
+also remain blocked. These are recorded P2 release blockers rather than waivers.
+Real fuzz execution remains the separately owned P1 manual security-validation
+risk from Phase 10.
+
+The full parallel workspace test exposed that the live self-inventory test can
+race unrelated test-thread descriptor closure and correctly fail the entire
+`/proc` snapshot. Its isolated execution passes. The production collector was
+not weakened to skip vanished descriptors; the test was moved to the explicit
+native inventory with its quiescent-descriptor requirement. The generic lane now
+contains only deterministic contract tests, while native execution must run this
+case in a controlled process environment.
+
+Phase 11 verification produced these candidate results:
+
+- `npm run phase11:check` passed five package-builder tests, deterministic RPM,
+  DEB, and VSIX reconstruction, extracted payload verification, mutation
+  refusal, real Visual Studio Code lifecycle, three Windows boundary contract
+  tests, and independent platform-gate composition.
+- The explicit network-isolated Podman lifecycle passed on exact local Fedora
+  image digest `6c75d5bf57cb0fa5aa4b92c6a83c86c791644496d9ac230de7711f5b8ec3b898`
+  and Ubuntu image digest
+  `678c6550cc43645e08669028bc177f50be4e7c5b8cca677067b1914d4afc7a03`.
+  These are candidate execution identities, not release support identities.
+- `npm run product:check` passed formatting, warnings-denied Clippy, TypeScript
+  lint, strict-local and effect-boundary audits, all workspace builds, all
+  deterministic Rust tests, documentation compile-fail tests, and all 12 VS Code
+  tests. Sixteen Linux environment-dependent tests and two host workflow tests
+  remain ignored in the generic lane; twelve are named by the native-inventory
+  contract and the remaining live tests retain their own exact ignore reasons.
+- `npm run docs:clean-check` passed a lockfile-clean install, 89 Markdown files,
+  47 Mermaid blocks, all document and status invariants, 227 requirement records,
+  26 normative mappings, current evidence and platform gates, and 32 schema
+  tests.
+- The package verifier's focused tests include candidate/release separation,
+  content mutation, and descriptor-relative `NOFOLLOW` rejection of a symlinked
+  payload parent. `git diff --check` and Python bytecode compilation pass.
+- No retained file beneath `artifacts/`, `fixtures/`, or `references/` changed.
+  The historical supply-chain, locked-resolution, artifact-scan, and policy
+  reports remain stale under the already recorded historical/current evidence
+  split; they were not rewritten into current passes.

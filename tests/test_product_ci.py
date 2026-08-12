@@ -123,7 +123,11 @@ class ProductCiTests(unittest.TestCase):
     def test_native_inventory_is_explicitly_pending(self) -> None:
         native = self.policy["native_linux"]
         self.assertEqual(native["generic_ci_disposition"], "pending-native-execution")
-        self.assertEqual(len(native["expected_tests"]), 11)
+        self.assertEqual(len(native["expected_tests"]), 12)
+        self.assertEqual(
+            self.policy["native_windows"]["disposition"],
+            "contract-only-native-enforcement-blocked",
+        )
 
 
 if __name__ == "__main__":

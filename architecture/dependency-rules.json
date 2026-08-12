@@ -52,6 +52,17 @@
       "assembly_inputs": []
     },
     {
+      "id": "platform-windows",
+      "layer": 2,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
       "id": "capability-read-only",
       "layer": 1,
       "allowed_imports": [

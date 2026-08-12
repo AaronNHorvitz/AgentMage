@@ -33,6 +33,8 @@
     "package.json",
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/lib.rs",
+    "platforms/windows/Cargo.toml",
+    "platforms/windows/src/lib.rs",
     "platforms/macos/Package.resolved",
     "platforms/macos/Package.swift",
     "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",

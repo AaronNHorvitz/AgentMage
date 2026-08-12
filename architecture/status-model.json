@@ -201,14 +201,22 @@
     },
     {
       "id": "windows-platform-adapter",
-      "lifecycle_status": "planned",
+      "lifecycle_status": "scaffolded",
       "verification_status": "not-run",
-      "disposition_status": "active",
+      "disposition_status": "blocked",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
           "kind": "accepted-decision",
           "path": "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        },
+        {
+          "kind": "source",
+          "path": "platforms/windows/src/lib.rs"
+        },
+        {
+          "kind": "blocker",
+          "path": "docs/decisions/0020-package-candidates-and-windows-increment.md"
         },
         {
           "kind": "status-assessment",
@@ -239,14 +247,18 @@
     },
     {
       "id": "build-orchestrator",
-      "lifecycle_status": "scaffolded",
-      "verification_status": "not-run",
+      "lifecycle_status": "implemented",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "source",
+          "kind": "implementation",
           "path": "release/xtask/src/main.rs"
+        },
+        {
+          "kind": "test",
+          "path": "tests/test_package_candidate.py"
         },
         {
           "kind": "status-assessment",
@@ -320,15 +332,23 @@
     },
     {
       "id": "windows-x86_64",
-      "lifecycle_status": "planned",
+      "lifecycle_status": "scaffolded",
       "verification_status": "not-run",
-      "disposition_status": "active",
+      "disposition_status": "blocked",
       "support_status": "unsupported-pre-release",
       "release_lane": "first-ga-required",
       "evidence_basis": [
         {
           "kind": "accepted-decision",
           "path": "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        },
+        {
+          "kind": "source",
+          "path": "platforms/windows/src/lib.rs"
+        },
+        {
+          "kind": "blocker",
+          "path": "docs/decisions/0020-package-candidates-and-windows-increment.md"
         },
         {
           "kind": "status-assessment",

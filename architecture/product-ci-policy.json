@@ -14,7 +14,8 @@
     "build",
     "rust_unit_contract",
     "vscode_shell",
-    "native_linux_status"
+    "native_linux_status",
+    "windows_contract"
   ],
   "lanes": {
     "format": [
@@ -82,6 +83,7 @@
       "--ignored"
     ],
     "expected_tests": [
+      "inventory::tests::live_self_inventory_attributes_executable_and_open_writable_descriptor",
       "sandbox::tests::foreign_workspace_identity_never_starts_a_worker",
       "sandbox::tests::fresh_worker_reads_only_the_canonical_workspace_file",
       "sandbox::tests::transient_service_terminates_an_unbounded_worker",
@@ -93,6 +95,18 @@
       "secret_service::tests::live_service_probe_returns_only_a_content_free_receipt",
       "secret_service::tests::live_service_round_trip_is_exact_and_cleanup_is_verified",
       "tests::isolated_bind_mount_swap_is_rejected_as_mount_changed"
+    ]
+  },
+  "native_windows": {
+    "disposition": "contract-only-native-enforcement-blocked",
+    "runner": "windows-2022",
+    "command": [
+      "cargo",
+      "+1.95.0",
+      "test",
+      "-p",
+      "agentmage-platform-windows",
+      "--locked"
     ]
   },
   "documentation_gate": {

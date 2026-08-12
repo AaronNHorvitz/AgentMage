@@ -33,6 +33,7 @@ EXPECTED_JOBS = (
     "rust_unit_contract",
     "vscode_shell",
     "native_linux_status",
+    "windows_contract",
 )
 EXPECTED_LANES = {
     "format": [
@@ -63,6 +64,7 @@ EXPECTED_LANES = {
     ],
 }
 EXPECTED_NATIVE_TESTS = (
+    "inventory::tests::live_self_inventory_attributes_executable_and_open_writable_descriptor",
     "sandbox::tests::foreign_workspace_identity_never_starts_a_worker",
     "sandbox::tests::fresh_worker_reads_only_the_canonical_workspace_file",
     "sandbox::tests::transient_service_terminates_an_unbounded_worker",
@@ -123,6 +125,19 @@ def validate_contract(
         failures.append("product CI native inventory command drifted")
     if tuple(native.get("expected_tests", [])) != EXPECTED_NATIVE_TESTS:
         failures.append("product CI native pending-test closure drifted")
+    if policy.get("native_windows") != {
+        "disposition": "contract-only-native-enforcement-blocked",
+        "runner": "windows-2022",
+        "command": [
+            "cargo",
+            "+1.95.0",
+            "test",
+            "-p",
+            "agentmage-platform-windows",
+            "--locked",
+        ],
+    }:
+        failures.append("product CI Windows contract closure drifted")
     if policy.get("documentation_gate") != {
         "independent": True,
         "workflow": ".github/workflows/documentation.yml",
@@ -152,6 +167,9 @@ def validate_contract(
     native_invocation = "python3 scripts/product_ci.py --inventory-native"
     if workflow.count(native_invocation) != 1:
         failures.append("native Linux inventory lane is not invoked exactly once")
+    windows_invocation = "cargo +1.95.0 test -p agentmage-platform-windows --locked"
+    if workflow.count(windows_invocation) != 1:
+        failures.append("Windows boundary contract is not invoked exactly once")
     if f'node-version: "{toolchains.get("node")}"' not in workflow:
         failures.append("product CI workflow does not install the declared Node version")
     npm_install = f"npm install --global npm@{toolchains.get('npm')}"

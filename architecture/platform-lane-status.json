@@ -46,11 +46,12 @@
     {
       "evidence_basis": [
         "ENGINEERING-AUDIT-REMEDIATION.md",
-        "docs/decisions/0008-first-ga-delivery-system-and-windows.md"
+        "docs/decisions/0008-first-ga-delivery-system-and-windows.md",
+        "platforms/windows/src/lib.rs"
       ],
       "lane_id": "windows-x86_64",
       "native_lane": "windows-x86_64",
-      "reason": "implementation-planned",
+      "reason": "contract-scaffolded-native-implementation-unavailable",
       "state": "block"
     }
   ],

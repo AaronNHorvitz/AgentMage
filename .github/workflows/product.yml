@@ -139,3 +139,16 @@ jobs:
         run: python3 scripts/product_ci.py --check-environment rust
       - name: Inventory tests requiring native execution
         run: python3 scripts/product_ci.py --inventory-native
+
+  windows_contract:
+    name: Windows Boundary Contract (Not Native Enrollment)
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Rust
+        shell: pwsh
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy,rustfmt
+      - name: Test versioned Windows boundary scaffold
+        run: cargo +1.95.0 test -p agentmage-platform-windows --locked

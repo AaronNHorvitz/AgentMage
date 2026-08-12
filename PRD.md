@@ -51,6 +51,13 @@ or support fields: normal activation remains unavailable until Phase 11 provides
 an independently signed package and trusted host bootstrap, and no model is
 enabled.
 
+Under [`Decision 0020`](./docs/decisions/0020-package-candidates-and-windows-increment.md),
+the repository can now construct deterministic unsigned RPM, DEB, and VSIX
+candidates and test their candidate lifecycles. This does not change the current
+integrated-workflow or support fields: candidates fail signed-release mode, the
+trusted packaged host bootstrap is not implemented, and Windows has only a
+versioned fail-closed contract scaffold without native enforcement or evidence.
+
 ## Document Governance
 
 | Document | Normative responsibility |
