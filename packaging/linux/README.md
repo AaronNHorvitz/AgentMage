@@ -21,3 +21,27 @@ external to the package, and the private seed is accepted only through the
 isolated signer standard input. Production identity approval, independent
 trust-root delivery, RPM/DEB repository signing, and the trusted VS Code-to-host
 bootstrap remain blocked release work.
+
+## Clean candidate lifecycle
+
+Run the complete source build separately through `npm run clean-build:run`, then
+exercise package installation and recovery against the pinned minimal base
+images with:
+
+```bash
+python3 scripts/package_lifecycle.py \
+  --output release-output \
+  --with-containers \
+  --fedora-image docker.io/library/fedora@sha256:89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b \
+  --ubuntu-image docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960
+```
+
+The command uses rootless Podman with local images only, disables container
+networking, drops all capabilities, and mounts a temporary package-only
+directory read-only. Container root is limited to the inert container lifecycle
+process and native package-manager operations. Both AgentMage executables,
+package verification, component
+manifest inspection, ownership checks, and residue scans run as numeric user
+`10001:10001`. A passing run covers clean install, corrupt-upgrade refusal,
+upgrade, rollback, uninstall, reinstall recovery, and a final residue-free
+uninstall on Fedora 44 and Ubuntu 26.04.

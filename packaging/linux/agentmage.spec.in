@@ -23,6 +23,9 @@ mkdir -p %{buildroot}
 tar -xzf %{SOURCE0} -C %{buildroot}
 
 %files
+%dir /usr/libexec/agentmage
+%dir /usr/share/agentmage
+%dir /usr/share/licenses/agentmage
 %license /usr/share/licenses/agentmage/LICENSE
 /usr/libexec/agentmage/agentmage-host
 /usr/libexec/agentmage/agentmage-native-inference

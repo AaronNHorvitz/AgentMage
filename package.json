@@ -120,6 +120,8 @@
     "evidence:story9.1-linux-controls:check": "python3 scripts/linux_sandbox_evidence.py",
     "evidence:story9.1-linux-inference:build": "python3 scripts/linux_inference_boundary_evidence.py --write --source-revision HEAD",
     "evidence:story9.1-linux-inference:check": "python3 scripts/linux_inference_boundary_evidence.py",
+    "evidence:story9.1-linux-package:build": "python3 scripts/linux_package_lifecycle_evidence.py --write --source-revision HEAD",
+    "evidence:story9.1-linux-package:check": "python3 scripts/linux_package_lifecycle_evidence.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",

@@ -96,7 +96,7 @@ FORBIDDEN_COMPILE_REFERENCES = (
 LIMITATIONS = [
     "The candidate-neutral LocalModelRuntime, model-family codecs, profiles, streaming, cancellation, and resource protocol remain assigned to Sprint 13.",
     "No llama.cpp binary or model artifact is included in this package increment.",
-    "The DEB format is built and extracted on Fedora; clean Ubuntu installation and execution remain assigned to Sub-task 9.1.1.7.",
+    "This boundary report builds and extracts the DEB on Fedora; clean Ubuntu installation and execution are recorded separately under Sub-task 9.1.1.7.",
     "No supported package, enabled model, inference result, macOS result, or release claim is made.",
 ]
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
