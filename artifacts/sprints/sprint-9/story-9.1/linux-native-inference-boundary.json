@@ -1,0 +1,270 @@
+{
+  "adapter_binary": {
+    "bytes": 453792,
+    "mode": 493,
+    "path_class": "package-owned-libexec",
+    "sha256": "738be08a67afa45695e7847c19f5bc2824ba5e58d92d18f1dca4b808efe216f2"
+  },
+  "artifact_id": "linux-native-inference-package-boundary",
+  "compile_boundary": {
+    "allowed_dependencies": [
+      "agentmage-kernel-contracts"
+    ],
+    "credential_authority": false,
+    "grant_authority": false,
+    "kernel_engine": false,
+    "tool_authority": false,
+    "workspace_authority": false
+  },
+  "enabled_models": 0,
+  "host": {
+    "architecture": "x86_64",
+    "distribution": "fedora",
+    "version": "44"
+  },
+  "inference_started": false,
+  "limitations": [
+    "The candidate-neutral LocalModelRuntime, model-family codecs, profiles, streaming, cancellation, and resource protocol remain assigned to Sprint 13.",
+    "No llama.cpp binary or model artifact is included in this package increment.",
+    "The DEB format is built and extracted on Fedora; clean Ubuntu installation and execution remain assigned to Sub-task 9.1.1.7.",
+    "No supported package, enabled model, inference result, macOS result, or release claim is made."
+  ],
+  "model_artifacts_packaged": false,
+  "network_used": false,
+  "package_verification": {
+    "extracted_payloads": "pass",
+    "mutation_refusal": "pass"
+  },
+  "packages": [
+    {
+      "bytes": 424129,
+      "format": "rpm",
+      "sha256": "e66cc81d4fa374f4808c3fd6f3bdf43231effe0fbe1cd3d8517511502d30bcc5"
+    },
+    {
+      "bytes": 616018,
+      "format": "deb",
+      "sha256": "75aeeb374aba6825a1787e726ea9514b72cda22b4fbe14b69a77b4baff0f8010"
+    },
+    {
+      "bytes": 15193,
+      "format": "vsix",
+      "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392"
+    }
+  ],
+  "platform_status": {
+    "fedora_44_x86_64": "verified-local",
+    "macos": "blocked-macos",
+    "ubuntu_26_04_x86_64": "format-built-and-extracted-not-clean-run"
+  },
+  "private_values_present": false,
+  "process_boundary": {
+    "accepted_operation": "self-check-only",
+    "authority_inputs": [],
+    "component_id": "platform-linux-native-inference",
+    "contract": "authenticated-local-endpoint-v1",
+    "enabled_models": 0,
+    "inference_available": false,
+    "network_listener": false,
+    "process_boundary_version": 1
+  },
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_revision": "454902ecc63a67db22544928c3d0fd5021c40245",
+  "sources": [
+    {
+      "bytes": 13033,
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "bytes": 1442,
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "bytes": 3582,
+      "path": "architecture/build-contract.json",
+      "sha256": "690dbc5ead5b0db7af0739987b308a8ec6f089a4ed5a651dfdecf09c9087d16b"
+    },
+    {
+      "bytes": 4044,
+      "path": "architecture/dependency-rules.json",
+      "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
+    },
+    {
+      "bytes": 4844,
+      "path": "architecture/module-inventory.json",
+      "sha256": "6024c1207cc28ae1ab71d62883cc39a948a82d6001e66cbb9d5b9d5a143a7138"
+    },
+    {
+      "bytes": 5962,
+      "path": "docs/architecture/linux-platform-lifecycle.md",
+      "sha256": "4bf30959476421ac255c320b977eda18798071db2d9e05e5be7aa65dcb3f8d9d"
+    },
+    {
+      "bytes": 7183,
+      "path": "docs/decisions/0020-package-candidates-and-windows-increment.md",
+      "sha256": "9143792a35337a4129532e77a5040e1b8699f8a3f206492a4fd28ebe5ca1e975"
+    },
+    {
+      "bytes": 4447,
+      "path": "docs/decisions/0022-detached-package-signing-boundary.md",
+      "sha256": "a7bbfcc963b5102e5a908762be027f3bdb13a7e8011121b261f9e535c330860a"
+    },
+    {
+      "bytes": 4946,
+      "path": "docs/decisions/0023-package-verified-linux-bootstrap-transport.md",
+      "sha256": "6205cef4447ea2740e5dca8c9e8dae7db9e21e8e58d22748c64a7da8a098156f"
+    },
+    {
+      "bytes": 4868,
+      "path": "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
+      "sha256": "0b8050650a7597eaf3b0e5a77c0436055c6d025569e2c84fd52f3ba428f89c53"
+    },
+    {
+      "bytes": 79839,
+      "path": "IMPLEMENTATION-PLAN.md",
+      "sha256": "8b16e955dd06f4231f56e09b78c8ff4e5c00b997b3e65a40af2e894a82d0d602"
+    },
+    {
+      "bytes": 17741,
+      "path": "package.json",
+      "sha256": "105710bf0ceabc769840e7439cbc503ccb8e70f042d91547bb3ccbf210a6a556"
+    },
+    {
+      "bytes": 1419,
+      "path": "packaging/linux/README.md",
+      "sha256": "32932e553f68e4bd04b7b1fd56ad5b78d6ff695341f37a5d2c8d28e4e481b6c7"
+    },
+    {
+      "bytes": 1038,
+      "path": "packaging/linux/agentmage-release.spec.in",
+      "sha256": "0ab22db3ee2da3b981cca4a4f0d4d643d3a34ff1aa2058c4ad6bd87e50e27873"
+    },
+    {
+      "bytes": 1022,
+      "path": "packaging/linux/agentmage.spec.in",
+      "sha256": "df2caf633a97878006dd52dbf4f967126809a0a702185300937fc5a4a90f38cf"
+    },
+    {
+      "bytes": 441,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+    },
+    {
+      "bytes": 690,
+      "path": "platforms/linux-inference/README.md",
+      "sha256": "681f058f17d607c73a789f82bdafa32601fd6cac4637209b8d284eb29b50eff0"
+    },
+    {
+      "bytes": 4828,
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "423b603b0fa60b575a483fd5ea68e6af89b88babb707d96419835e7cf077da62"
+    },
+    {
+      "bytes": 574,
+      "path": "platforms/linux-inference/src/main.rs",
+      "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+    },
+    {
+      "bytes": 1192,
+      "path": "platforms/linux-inference/tests/process_boundary.rs",
+      "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
+    },
+    {
+      "bytes": 1046,
+      "path": "platforms/linux/README.md",
+      "sha256": "e54f7c2ecbb6b511e955bdd542e0ffa53eca3823e7ec679f7f934702139fc1ae"
+    },
+    {
+      "bytes": 23654,
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "e093eb2d7de7b5e2443a970ef4250e38d9258bb25f278b1b5ce476b1235429e2"
+    },
+    {
+      "bytes": 1047,
+      "path": "release/README.md",
+      "sha256": "248a9a3f0f32c35b76c7071d269f09fbd9b9aa3e9cbf532ba5dc40a1b824f153"
+    },
+    {
+      "bytes": 13995,
+      "path": "scripts/build_contract.py",
+      "sha256": "fafc104966804cb6a344a827db0263514365869f2e516b17611436bed4e145e6"
+    },
+    {
+      "bytes": 8935,
+      "path": "scripts/dependency_classes.py",
+      "sha256": "5579b1e210f394220fb78f39513e6b0cbeaa3a43e531d03f23cfa810bc4b2c7d"
+    },
+    {
+      "bytes": 10189,
+      "path": "scripts/dependency_rules.py",
+      "sha256": "c103e9c1c840370753d9229d716da45dfcdc043a4eeda917446bdeae73810fcd"
+    },
+    {
+      "bytes": 18287,
+      "path": "scripts/linux_inference_boundary_evidence.py",
+      "sha256": "e546fe6d7a97e7bfa7015911161962c7951d6c4562fbdce1ba34e3d46ffec207"
+    },
+    {
+      "bytes": 6529,
+      "path": "scripts/module_inventory.py",
+      "sha256": "b2b407849661be58794f086c7d241a7f3b58e63e32b3644fbabd78afecc13ee3"
+    },
+    {
+      "bytes": 17028,
+      "path": "scripts/package_candidate.py",
+      "sha256": "0d2cb4fc43f8e49e47857ed953a74ce2c966a8d24e0b8ded6cea64ab6d0f670f"
+    },
+    {
+      "bytes": 10777,
+      "path": "scripts/package_lifecycle.py",
+      "sha256": "f366cca1820f3d30e6d903636bac9a38e6d3701b04f24fe71a85ad24c76259c8"
+    },
+    {
+      "bytes": 6123,
+      "path": "scripts/package_release_lifecycle.py",
+      "sha256": "e4e9e656f7a67ac7730f450ffbf75939cc80b480dafcd3686f38ff695afc2565"
+    },
+    {
+      "bytes": 18132,
+      "path": "shells/host/src/linux_bootstrap.rs",
+      "sha256": "dd8ae69988d5cafb1b10bea1fef8dfa87469c2cf90629bf044ecce1083052673"
+    },
+    {
+      "bytes": 22546,
+      "path": "shells/host/src/package_verify.rs",
+      "sha256": "9b03ca0a81a81296f19b5c8e02c799bd6150f26387e3d84560faf8b167c5cc5f"
+    },
+    {
+      "bytes": 997,
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "6207af1af41c5440b11d50bad6e060ddbabc2ec33383f9759023fdcf1b487573"
+    },
+    {
+      "bytes": 394816,
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "55343a4823a5ebe9a060d9619af2ab0c5ffb150eceed13af2ddd7044772c72a1"
+    },
+    {
+      "bytes": 410747,
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "46080b561213175d1900e00dfc7e259fd299bd4c495b9264ef65addb533cbef5"
+    },
+    {
+      "bytes": 4429,
+      "path": "tests/test_linux_inference_boundary_evidence.py",
+      "sha256": "bae5005cee78c8f0be6151cf67c93e961a43db82139f25e37421f5e4ac6b4a3e"
+    },
+    {
+      "bytes": 7649,
+      "path": "tests/test_package_candidate.py",
+      "sha256": "7abdb1e2deaf9073ad6061921d3fcf165e1e361443900d5aaeea4979b2c5ddaf"
+    }
+  ],
+  "status": "pass-fedora-package-boundary",
+  "task_ids": [
+    "9.1.1.6"
+  ]
+}
