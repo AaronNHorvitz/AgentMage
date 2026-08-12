@@ -1,5 +1,7 @@
 # AgentMage
 
+**AgentMage is being built as a universal, cross-platform, local-first agent harness for coding, software delivery, research, productivity, and automation, with explicit user control over every consequential action.**
+
 **AgentMage is a brand-new, from-scratch project.** It is a portable, local-first development, delivery, productivity, research, continuity, whole-codebase audit, and financial-management assistant that combines deterministic tools with approved local models under enforceable Linux and Windows security boundaries.
 
 AgentMage is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer. It is intended for public distribution. Any future installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
@@ -14,7 +16,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
-| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions are appended under Decisions 0008, 0009, 0010, and 0011 |
+| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions are appended under Decisions 0008, 0009, 0010, 0011, and 0026 |
 | License | [Apache License 2.0](./LICENSE) |
 
 ## Current Implementation Truth
@@ -34,11 +36,14 @@ test, planning, or isolated Linux security work in the repository. The
 machine-readable source is
 [`architecture/status-model.json`](./architecture/status-model.json), governed
 by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
-The accepted 17-epic, 169-sprint, 227-requirement scope is preserved. Under
+The accepted 17-epic, 169-sprint, 229-requirement scope is preserved. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), the user
 accepted the recorded residual risks and authorized the original numbered
 roadmap to resume at its first incomplete dependency gate. Independent review
 remains required before signed release or connected-authority promotion.
+Decision 0026 appends the Proton Calendar confirmed-UI requirement and
+confirmation-to-calendar workflow without changing current implementation
+truth or dependency order.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -127,7 +132,8 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
 - Full GitHub.com and user-approved GitHub Enterprise Server behavior within a versioned matrix covering repositories, branches, commits, issues, pull requests, reviews, checks, workflows, releases, local commits, signed pushes, and separately approved hosted mutations.
 - Kernel-mediated repository mutation with pre/post preservation manifests, exact namespaced fetches, AgentMage-owned worktrees and temporary indexes, pinned signers, separately approved ordinary fast-forward pushes, short-lived host-bound credentials, and structural absence of generic pull, force, reset, clean, discard, implicit ref updates, and hook or filter execution.
 - Provider-neutral adapters for Jira, Azure DevOps, GitLab, Jenkins, artifacts, Kubernetes/GitOps, infrastructure, OpenTelemetry and observability, incidents, security findings, catalogs, feature flags, migrations, and release operations.
-- Removable communications and productivity packs for Outlook and Exchange Online, Teams, Gmail, Slack, Proton Mail Bridge, generic mail protocols, Linux mail-client interoperability, calendars, contacts, tasks, document repositories, a unified activity inbox, and a confirmed cross-provider work graph.
+- Removable communications and productivity packs for Outlook and Exchange Online, Teams, Gmail, Slack, Proton Mail Bridge, a confirmed-UI Proton Calendar adapter, generic mail protocols, Linux mail-client interoperability, calendars, contacts, tasks, document repositories, a unified activity inbox, and a confirmed cross-provider work graph.
+- Direct-invitation and email-first confirmation-to-calendar workflows through structured Google and Microsoft adapters or the narrower Proton Calendar UI exception, with exact recipient, proposal, response, event, approval, and postcondition evidence.
 - A kernel-enforced Autonomy Center with Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, and Autonomous within policy levels, narrowed independently by pack, connector, account, operation, destination, recipient, channel, and schedule.
 - A local-first Finance and Budgeting pack with fixed-point arithmetic, statement import and reconciliation, Actual Budget integration, read-only bank data, budgets, cash-flow forecasts, bills, subscriptions, receipts, accounting workflows, and explainable anomaly indicators. Money movement and trading are absent.
 - A read-only Cloud Observer pack for bounded AWS, Azure, and Google Cloud inventory, configuration, health, logs, security observations, and cost summaries. It has no cloud write, remote-command, deploy, secret-read, identity, policy, or administration authority.

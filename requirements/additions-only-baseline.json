@@ -298,6 +298,17 @@
       "statement": "Keep cloud observations and correlations non-authoritative; require separate delivery-system plans, policies, previews, and grants for every delivery or infrastructure effect."
     },
     {
+      "id": "CL-0651293227A7BB68C9A5",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 915,
+        "semantic_sha256": "0651293227a7bb68c9a574da92aaefabed01a5aed0bbac8047174333e17c8f4d"
+      },
+      "statement": "Prohibit push defaults, configured push-URL substitution, multiple destinations, `--all`, `--branches`, `--mirror`, tags, follow-tags, deletion refspecs, push options, upstream mutation, recursive submodules, force, and every form of force-with-lease."
+    },
+    {
       "id": "CL-06862B638ED8CF597D05",
       "label": "VERIFY",
       "source": {
@@ -934,6 +945,17 @@
         "semantic_sha256": "1006383e2ad1342e7b52aec21a1baffc5fc06aa713af1b4f72d5bd5942d52dda"
       },
       "statement": "preservation rules for every meeting note's `## Raw Notes` section."
+    },
+    {
+      "id": "CL-103E3D0A810134364A07",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 891,
+        "semantic_sha256": "103e3d0a810134364a07ab089fffb874385a205bde111928f9ab79b4a415f4bc"
+      },
+      "statement": "Bind the current branch protection, ruleset, signed-commit requirement, required reviews/checks, push rules, and bypass capability to every push preview; never exercise a bypass merely because the authenticated actor possesses it."
     },
     {
       "id": "CL-104FDAE5034FCC860647",
@@ -1739,6 +1761,17 @@
       "statement": "timeout and cancellation support for model calls and tool loops."
     },
     {
+      "id": "CL-20318FD8E2C3808A7D5C",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 826,
+        "semantic_sha256": "20318fd8e2c3808a7d5c72f147f6206516d8e70c7a6d33e333114e09a0aa03ff"
+      },
+      "statement": "Give the model no raw Git executable, generic shell, transport, credential, socket, signer, or ref-update authority; route every representable operation through the kernel transaction coordinator and dedicated adapter."
+    },
+    {
       "id": "CL-206FF823C1E70F9677BD",
       "label": "BUILD",
       "source": {
@@ -2254,6 +2287,17 @@
         "semantic_sha256": "2e0f8c276d88e897cd3eed074c60240c4e44f7c11b924aa41e888be8c066fc2f"
       },
       "statement": "a token-budget estimator for instructions, user messages, retrieved sources, tool results, memory, and expected output."
+    },
+    {
+      "id": "CL-2E1D5D6C7E4B2BE2D31A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
+        "line": 859,
+        "semantic_sha256": "2e1d5d6c7e4b2be2d31ac7631e6900439ee43d2b6b7d3cbef4e1b367f1c14223"
+      },
+      "statement": "cleanup that removes only a proven AgentMage-owned, process-free, clean worktree after recovery retention; retain dirty, inaccessible, uncertain, or interrupted worktrees for explicit recovery."
     },
     {
       "id": "CL-2EC341771E770C0374B7",
@@ -3136,6 +3180,17 @@
       "statement": "risk-directed prioritization for high-centrality, privileged, stateful, concurrent, exposed, weakly tested, frequently changed, and historically unstable areas without reducing baseline coverage."
     },
     {
+      "id": "CL-3E4D8B4A9F1DE10C5DA8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
+        "line": 854,
+        "semantic_sha256": "3e4d8b4a9f1de10c5da8444ab0397cba4755a6dfb77a3ef26680fb94c21f4517"
+      },
+      "statement": "a separately previewed and granted compare-and-swap fast-forward of one exact local branch from an expected object to a proven descendant; generic pull and automatic reset, stash, rebase, merge, conflict resolution, or discard remain absent."
+    },
+    {
       "id": "CL-3E55938957806DF517CB",
       "label": "BUILD",
       "source": {
@@ -3378,6 +3433,17 @@
       "statement": "Repository Cartographer skill \u2014 structure, entry points, dependencies, architecture, data flow, permissions, tests, and glossary."
     },
     {
+      "id": "CL-416DAECF3E3FD4A62B09",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1770,
+        "semantic_sha256": "416daecf3e3fd4a62b098cf48c5dca9621060308fc2e9b0c201e463721b205c8"
+      },
+      "statement": "exact preservation manifests, namespaced fetches, owned worktrees, compare-and-swap branch fast-forwards, temporary commit indexes, exact staged-tree and commit-message approval, pinned required signing, signature verification, and a separate exact approval for every ordinary fast-forward remote push."
+    },
+    {
       "id": "CL-419B681E2E1C999B250D",
       "label": "CAPABILITY GATE",
       "source": {
@@ -3576,6 +3642,17 @@
       "statement": "fail-closed behavior for malformed frontmatter."
     },
     {
+      "id": "CL-44A9AB9EBF4BD41DD865",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1772,
+        "semantic_sha256": "44a9ab9ebf4bd41dd865a0feb9b2467350bf8f87cc2124893a6eeffdbec2dfd5"
+      },
+      "statement": "Keep generic pull, destructive/implicit Git, hooks/filters/helpers, force and force-with-lease push, implicit/multi-ref/tag/deletion/mirror push, bypass use, secret changes, repository administration, organization administration, and ruleset administration absent unless a future taxonomy decision and separately promoted L5 contract admit them."
+    },
+    {
       "id": "CL-45183AB202ABAEC74B2B",
       "label": "BUILD",
       "source": {
@@ -3651,6 +3728,17 @@
         "semantic_sha256": "46407244d85edccb295ca9e4697618532aecff638bcd15c503a4d68d5dc71a8d"
       },
       "statement": "an approval tracker containing the item, exact version, required approver, requested date, response, conditions, and proof of approval."
+    },
+    {
+      "id": "CL-4724F1A1B1CD0C383737",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 827,
+        "semantic_sha256": "4724f1a1b1cd0c383737704317861cac669df347b28776a492cf8d3412e12929"
+      },
+      "statement": "a pinned Git process boundary with literal arguments, canonical working directory, sanitized environment, bounded input/output, descendant containment, cancellation, and receipts; reject aliases, broad `safe.directory`, URL rewrites, remote helpers, repository credential helpers, hooks, executable filters, external diff/merge drivers, pagers, editors, repository-selected signers, alternates, replacement refs, and unsupported extensions."
     },
     {
       "id": "CL-4757A4B0AB85F0AE8D7A",
@@ -3926,6 +4014,17 @@
         "semantic_sha256": "4b0ed7e456b0cb2acc0a33efff5e2cd4d5e35fea102bcf2277fb33e2af8a501e"
       },
       "statement": "enforce expiration during startup and daily maintenance, with legal or user holds represented explicitly rather than silently defeating retention."
+    },
+    {
+      "id": "CL-4B19D4FCA7D8D0B456EF",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 916,
+        "semantic_sha256": "4b19d4fca7d8d0b456ef0b4cf48a4773dd21a3ff961f0d62985b021b6938ed2c"
+      },
+      "statement": "Bind push to exact host, account, repository, credential reference, full destination ref, expected old object, and expected new object; after timeout, disconnect, crash, or malformed response, reconcile through a fresh bounded observation and refuse retry while the effect remains unknown."
     },
     {
       "id": "CL-4B62D3C1733A94BCE5A6",
@@ -4313,6 +4412,17 @@
       "statement": "per-job resource budgets for model tokens, model loads, tool calls, elapsed time, CPU, memory, disk, network bytes, retries, and retained output."
     },
     {
+      "id": "CL-521603B1D9CDCCF88A5C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 835,
+        "semantic_sha256": "521603b1d9cdccf88a5c6a66e7575bc4e31ebd719510fdc942131a16c22755f0"
+      },
+      "statement": "commits from an AgentMage-owned temporary index seeded from the exact immutable base, stage only approved path identities and bytes, use one pinned approved signer, and compare-and-swap only the owned task branch."
+    },
+    {
       "id": "CL-5219C7D2310645253200",
       "label": "BUILD",
       "source": {
@@ -4388,6 +4498,17 @@
         "semantic_sha256": "5312e9a72dda5ce1d77c2ec67095a41c8a529236aae174889bfe4b9732e127fa"
       },
       "statement": "that building, reading, invalidating, and rendering the map leaves the workspace tree, Git index, refs, object set, instructions, and file metadata unchanged."
+    },
+    {
+      "id": "CL-53149122FD4736040298",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1960,
+        "semantic_sha256": "53149122fd4736040298dffebbaa0618fb8b56be91f7309721069b29fd3d50a3"
+      },
+      "statement": "persisted pre-effect intent, fresh field-bound approval, no-blind-retry submission, provider-state re-reading, explicit unknown outcomes, and deterministic reconciliation for Proton Calendar effects."
     },
     {
       "id": "CL-5322293F3AF77422FC95",
@@ -4476,6 +4597,17 @@
         "semantic_sha256": "55531d26ab9a18b44375fa731f7279cdd240c4673f7abb0e348f94e0b915f79b"
       },
       "statement": "Omit transfers, payments, bill pay, trades, orders, withdrawals, deposits, credit, loans, tax filing, beneficiaries, financial-account administration, and credential recovery from every first-GA schema, manifest, policy, tool, adapter, shell, workflow, and autonomy level."
+    },
+    {
+      "id": "CL-557BEED57EAC53CE1C57",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1768,
+        "semantic_sha256": "557beed57eac53ce1c5701ed9aad2a956fa27ae3c3f65cb71a20ffd519f7c091"
+      },
+      "statement": "Enforce [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) across local Git, GitHub.com, GitHub Enterprise Server, Azure Repos, GitLab, and every future source adapter without provider-specific weakening."
     },
     {
       "id": "CL-558677F55838BB03327B",
@@ -4938,6 +5070,17 @@
         "semantic_sha256": "5bdf15a7bd3441edab191b16e90ce74244bcf3a1fe45c1f5fafb8b84cc91f321"
       },
       "statement": "complete connector removal including credentials, caches, cursors, webhooks, schedules, indexes, workers, sockets, network scopes, and retained data."
+    },
+    {
+      "id": "CL-5C23E280CD931D21B277",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1959,
+        "semantic_sha256": "5c23e280cd931d21b277a6f58258bdc7bb4c7d262964eec8145fb63b4a8792d9"
+      },
+      "statement": "direct-invitation and email-first confirmation workflows with exact account, recipient, thread, proposal, reply, event, and expiry correlation; route ambiguous, conditional, conflicting, stale, superseded, or identity-uncertain responses to user review."
     },
     {
       "id": "CL-5C66BB580AABF4CFCCB5",
@@ -5642,6 +5785,17 @@
         "semantic_sha256": "690549ffdd285ffabb79ad441a55d2620f043c4e885ba789144fbcf216fc6cf4"
       },
       "statement": "Validate and atomically consume the grant immediately before execution so it cannot be replayed, raced, delegated beyond scope, or reused after an uncertain result."
+    },
+    {
+      "id": "CL-692CB32C501D2C0B74D4",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1955,
+        "semantic_sha256": "692cb32c501d2c0b74d4df28add36b6582e04b7891bf858c52546859bf0f7c68"
+      },
+      "statement": "a Proton Calendar confirmed-UI adapter bound to one allowlisted origin, visible user-authenticated profile, calendar, event, operation, provider-surface version, exact event fields, attendees, expected notifications, preconditions, and postconditions."
     },
     {
       "id": "CL-693D7F4CD98E99BCFACB",
@@ -6601,6 +6755,17 @@
       "statement": "executing unsigned or unapproved packages and packages that request broader authority than the active task."
     },
     {
+      "id": "CL-79F5FB573B5EDFEB092F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 880,
+        "semantic_sha256": "79f5fb573b5edfeb092f043ee9918dfce48ecf2fca53411bfbd4503deeb7120b"
+      },
+      "statement": "authentication that prefers a repository-scoped GitHub App with minimum permissions and short-lived installation tokens; allow an approved Secure Shell agent, operating-system credential helper, or expiring fine-grained personal access token only as a host/account/repository/operation-bound fallback; never store tokens in prompts, memory, logs, repositories, ordinary environments, process arguments, receipts, backups, or plain-text configuration."
+    },
+    {
       "id": "CL-7AB92E8A23351241E283",
       "label": "BUILD",
       "source": {
@@ -6698,6 +6863,17 @@
         "semantic_sha256": "7b96b70fe7d48d744ce13684ceb9abc4fc4e7e777da14fd1124bb48ffb26314c"
       },
       "statement": "Resume the latest checkpoint in the same conversation and append new turns without losing or rewriting the earlier transcript."
+    },
+    {
+      "id": "CL-7BA1D4D1074F21D7A875",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1956,
+        "semantic_sha256": "7ba1d4d1074f21d7a8752bb8b1d8f854eb0f4f19c768b776ba6cd01bd2faa8c3"
+      },
+      "statement": "Prefer an admitted structured calendar path; use Proton UI interaction only when no structured write path satisfies the operation, and never infer writable support from read-only ICS subscription or import behavior."
     },
     {
       "id": "CL-7C3A358000C11B969B7F",
@@ -6819,6 +6995,17 @@
         "semantic_sha256": "7e9437b03b8599b9516142f3e1d5f26ba96ed24261561d713fb418e76ce78654"
       },
       "statement": "L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative conformance levels."
+    },
+    {
+      "id": "CL-7EAE54647C699E365A6E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13B. Complete GitHub Integration",
+        "line": 914,
+        "semantic_sha256": "7eae54647c699e365a6e14b8d46d25624b00e82bc9ca2cb69f63baf2a8b190f8"
+      },
+      "statement": "approval-gated commits and pushes that enforce the repository's signing method, show the exact staged diff and message, verify the resulting signature, and require a separate approval before one explicit ordinary fast-forward update of one full task-branch ref."
     },
     {
       "id": "CL-7EC81EA86E02762D999A",
@@ -7017,6 +7204,17 @@
         "semantic_sha256": "81f22e4b12ef21610066e1d9753c36ed59ba86f3c88501687f76b897cf796258"
       },
       "statement": "format-specific round-trip tests that detect lost formulas, comments, links, notes, layout, metadata, or accessibility information."
+    },
+    {
+      "id": "CL-82406055A4301ED40C5A",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 825,
+        "semantic_sha256": "82406055a4301ed40c5a075f478e51058592af5b473bfa91faa0b8b229cd637d"
+      },
+      "statement": "Preserve the active checkout, user index, staged/unstaged/untracked/ignored files, Markdown and other user notes, `refs/notes/*`, stashes, reflogs, tags, replacement refs, unrelated branches, remote-tracking refs, repository configuration, hooks, filters, submodules, Large File Storage state, and in-progress Git operations unless one separately registered exact operation owns that state."
     },
     {
       "id": "CL-82970C75E1A94560E0AC",
@@ -9923,6 +10121,17 @@
       "statement": "a document register containing title, purpose, owner, version, status, source path, reviewers, approval state, related meeting, retention class, and content hash."
     },
     {
+      "id": "CL-B5D2E13F1525BFF7C3BB",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1961,
+        "semantic_sha256": "b5d2e13f1525bff7c3bba9877c07a163f4f444e5883d6cd4afb8b595d96b3980"
+      },
+      "statement": "UI drift, inaccessible controls, changed labels, focus loss, overlays, redirects, popups, session expiry, reauthentication and second-factor prompts, cancellation, crash, timeout, partial effect, duplicate submission, malicious replies, and complete removal."
+    },
+    {
       "id": "CL-B5EA89FCB911800819AC",
       "label": "VERIFY",
       "source": {
@@ -10968,6 +11177,17 @@
       "statement": "a local conversation search, exact-point resume, branch, retention, export, and recovery guide."
     },
     {
+      "id": "CL-C94CE0FE383C3F840EF5",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1957,
+        "semantic_sha256": "c94ce0fe383c3f840ef5941bb8d7ed1fe57b05a147fdaf49f1f2bff746a1e649"
+      },
+      "statement": "Keep Proton passwords, second factors, recovery material, cookies, session tokens, and browser-profile state outside model context, logs, receipts, screenshots, exports, and operation payloads; AgentMage never enters or recovers those credentials."
+    },
+    {
       "id": "CL-C962A39D40E4C7671712",
       "label": "ROADMAP",
       "source": {
@@ -11593,6 +11813,28 @@
         "semantic_sha256": "d5a2efc910b7505d837a5fbcdabc0e36694f6ea0fe6a5f95db1a9dc64bb3b442"
       },
       "statement": "Refuse startup if Docker Model Runner or any required service is bound to `0.0.0.0`, a local-area-network address, an undeclared container-accessible address, or any non-loopback interface, or if an undeclared local peer can reach the service despite loopback binding."
+    },
+    {
+      "id": "CL-D5CBE59CC738AB4F8CB8",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13. Git and Source-Control Tools",
+        "line": 824,
+        "semantic_sha256": "d5cbe59cc738ab4f8cb88fc0814d4cac40f1fdf55ffe99800904885c7ef99f6d"
+      },
+      "statement": "Build and reconcile a content-minimized repository preservation manifest before preview, immediately before grant consumption, and after every terminal result; unknown, unsupported, inaccessible, racing, or unexplained state blocks mutation."
+    },
+    {
+      "id": "CL-D5E3F63D5A9E518023B8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
+        "line": 850,
+        "semantic_sha256": "d5e3f63d5a9e518023b809cb9139b92463ba369541e3cc91acb2833b4bf2918b"
+      },
+      "statement": "exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`, with atomic local ref update and no prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph write, or user remote-tracking-ref update."
     },
     {
       "id": "CL-D61BDA0C0B43DD22BD59",
@@ -13113,6 +13355,17 @@
       "statement": "a large vector database until measured retrieval failures justify it."
     },
     {
+      "id": "CL-F589DA7A24A703D59D2B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
+        "line": 852,
+        "semantic_sha256": "f589da7a24a703d59d2b5dc293842b45a7608c22dd3f89f11030c9d4925176a7"
+      },
+      "statement": "a currentness report that shows ahead, behind, diverged, stale, and uncommitted states before any fetch or branch action."
+    },
+    {
       "id": "CL-F5963C4A7BF28A046E57",
       "label": "CAPABILITY GATE",
       "source": {
@@ -13454,6 +13707,17 @@
       "statement": "report-scope and authorization controls."
     },
     {
+      "id": "CL-FBCC78BC7D77C1742B30",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1773,
+        "semantic_sha256": "fbcc78bc7d77c1742b30b9f4e0a69a3e87b1f4cb584f74e570da1b2494d4aee3"
+      },
+      "statement": "`RV-49` across at least 10,000 composed repository/provider mutations with zero user-work loss, credential crossover, unsafe retry, or unauthorized local/remote effect."
+    },
+    {
       "id": "CL-FBFB4A07156CE99C9A99",
       "label": "CAPABILITY GATE",
       "source": {
@@ -13485,6 +13749,17 @@
         "semantic_sha256": "fc4f1973d13c187d4f607b19a7866362a0529a2e86abe2a0593f2acce2d86d18"
       },
       "statement": "a pure-Python or equivalent local Markdown adapter that implements vault discovery, parsing, search, links, backlinks, tasks, and note creation without Obsidian plugins or APIs."
+    },
+    {
+      "id": "CL-FC9B2929F143BEE8FA80",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
+        "line": 1958,
+        "semantic_sha256": "fc9b2929f143bee8fa80e67f69cbb563c28938c798afe09595a59d307511d0c9"
+      },
+      "statement": "structured document and accessibility interaction before bounded screenshot or OCR fallback; visual evidence alone cannot establish identity, consent, authorization, successful effect, or standing authority."
     },
     {
       "id": "CL-FCB855C2C7554242AEAE",
@@ -13609,8 +13884,8 @@
     }
   ],
   "counts": {
-    "checklist": 1237,
-    "requirements": 227
+    "checklist": 1262,
+    "requirements": 229
   },
   "policy": {
     "mode": "additions_only",
@@ -14841,6 +15116,25 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Use OpenTelemetry as the provider-neutral correlation foundation and implement reference adapters for Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry without converting correlation into unsupported causation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-PCAL-001"
+      ],
+      "dependencies": [
+        "AM-PIM-001",
+        "AM-MAIL-001",
+        "AM-COMW-001"
+      ],
+      "disposition": "build",
+      "id": "AM-PCAL-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
+      },
+      "title": "Implement a conformance-gated Proton Calendar confirmed-UI adapter for an exact visible user-authenticated session when no admitted structured write path exists, covering calendar and event identity, attendees, invitations, responses, direct-invitation and email-first confirmation workflows, versioned document and accessibility capabilities, visual fallback, postcondition re-reading, uncertain-result reconciliation, and removal without credential extraction or standing computer-use authority."
     },
     {
       "acceptance_tests": [
@@ -16441,6 +16735,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Absolute path, traversal, encoding, separator, symlink, alias, stale-bookmark, case-folding, Unicode-normalization, rename-race, mount, and file-replacement attacks."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PCAL-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
+      },
+      "title": "Exercise Proton Calendar confirmed-UI fixtures across exact origin, authenticated profile, calendar, event, title, time, time zone, recurrence, location, attendees, invitations, direct and email-first confirmation, reply correlation, provider-surface version, document and accessibility state, bounded visual fallback, focus, navigation, timeout, partial effect, postcondition, recovery, and removal."
     },
     {
       "acceptance_tests": [],

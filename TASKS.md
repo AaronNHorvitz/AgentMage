@@ -33,11 +33,12 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive.
 
-The complete 17-epic, 169-sprint, 227-requirement plan below remains the
+The complete 17-epic, 169-sprint, 229-requirement plan below remains the
 granular execution authority for the accepted target product. It is preserved,
 not cancelled or renumbered. Decision 0021 resumes execution at the first
-authoritative incomplete dependency gate. A proposed capability-family addition
-still requires an explicitly approved decision and complete impact statement.
+authoritative incomplete dependency gate. Decision 0026 appends the Proton
+Calendar confirmed-UI requirement and Story 139.2 inside the existing
+productivity capability family without changing dependency order.
 
 ## Planning Hierarchy and Numbering
 
@@ -69,6 +70,7 @@ still requires an explicitly approved decision and complete impact statement.
 | Whole-codebase audit became a first-GA capability without fitting an entire repository into model context. | Accepted scope decision | Apply `docs/decisions/0011-whole-codebase-audit.md`: preserve the Sprint 166 final gate and add census, structural index, evidence-ledger, reconciliation, read-only, checkpoint, and coverage work within the accepted sprint sequence. |
 | Current documentation and machine architecture conflated planned, scaffolded, tested, enabled, and shipped states. | Accepted stabilization decision | Apply `docs/decisions/0012-stabilization-truth-and-status-model.md`: use `architecture/status-model.json` for current truth, freeze new capability families, and pause the numbered roadmap until the final stabilization resumption gate passes. |
 | Real product-boundary fuzzing requires a separately supervised security session and would become stale while active boundaries continue to change. | Accepted sequencing decision | Apply `docs/decisions/0025-final-manual-fuzz-campaign.md`: keep `RM-024`, every affected `RV-15` result, and final `G-GA` open; run all non-fuzz verification during development and execute the bound real-fuzz campaign after first-GA surfaces freeze but before Sprint 166 closes. |
+| Proton Calendar lacks an admitted structured write path while direct invitations and email-first event confirmation remain required user workflows. | Accepted scope refinement | Apply `docs/decisions/0026-proton-calendar-confirmation-workflow.md`: append `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2; require structured providers where available and confine Proton Calendar to a visible, user-authenticated, versioned, confirmed-UI adapter with exact postcondition reconciliation. |
 
 ### Blocked Platform Lane
 
@@ -7631,11 +7633,11 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
-**Sprint goal:** Implement Microsoft, Google, CalDAV, and CardDAV personal-information operations with exact identity, time, recurrence, invitation, recipient, assignment, conflict, write, recovery, and removal semantics.
+**Sprint goal:** Implement Microsoft, Google, CalDAV, CardDAV, and the confirmed-UI Proton Calendar exception with exact identity, time, recurrence, invitation, recipient, assignment, conflict, write, recovery, and removal semantics.
 
 **Source coverage:** `AM-PIM-001`, `AT-PIM-001`, `SR-PRD-001` through `SR-PRD-003`, `SR-PRD-006`, `RV-23` through `RV-26`, `RV-31`, `RV-32`.
 
-**Dependencies:** Sprints 128-130 and 138.
+**Dependencies:** Sprints 83-84, 128-130, 135, and 138.
 
 #### [ ] Story 139.1 - Exact Personal Information Management
 
@@ -7662,14 +7664,45 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Story AC 139.1.AC2:** Given a contact or task operation, when identity, account, assignment, or conflict state changes, then stale approval is invalidated before effect.
 - [ ] **Story AC 139.1.AC3:** Given provider differences or unsupported behavior, when discovery runs, then exact supported semantics and limitations remain visible.
 
+#### [ ] Story 139.2 - Confirmed Proton Calendar Invitations
+
+**User-facing value:** As a user, I can ask AgentMage to invite someone directly or ask by email first and create the agreed Proton Calendar event without exposing my Proton credentials, guessing consent, repeating an uncertain submission, or granting the model general control of my browser.
+
+**Source coverage:** `AM-PCAL-001`, `AT-PCAL-001`, `SR-PRD-001` through `SR-PRD-003`, `SR-PRD-005` through `SR-PRD-007`, `SR-PRD-012`, `RV-23` through `RV-26`, `RV-31`, `RV-32`.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 139.2.1 - Define the Proton Calendar confirmed-UI contract**
+  - [ ] **Sub-task 139.2.1.1:** Publish a capability manifest for exact Proton origin, supported visible interface and version, authenticated profile reference, calendar, event fields, attendee and invitation operations, document or accessibility controls, bounded visual fallbacks, provider limitations, and removal behavior.
+  - [ ] **Sub-task 139.2.1.2:** Bind each operation to visible foreground state, current account and calendar identity, title, start, end, time zone, recurrence, location, description, attendees, expected notifications, preconditions, postconditions, policy version, and one consumed grant.
+  - [ ] **Sub-task 139.2.1.3:** Keep passwords, second factors, recovery material, cookies, session tokens, and browser-profile state outside model context, logs, receipts, screenshots, exports, and operation payloads; require the user to establish or restore the authenticated session.
+  - [ ] **Sub-task 139.2.1.4:** Prefer structured document and accessibility controls, declare screenshot or OCR use explicitly, and prohibit visual evidence alone from establishing identity, consent, authorization, successful effect, or standing authority.
+- [ ] **Task 139.2.2 - Implement direct and email-first confirmation paths**
+  - [ ] **Sub-task 139.2.2.1:** Implement a direct-invitation plan that previews one exact event and attendee set, performs only the approved Proton Calendar operation, and expects the provider's declared invitation notifications.
+  - [ ] **Sub-task 139.2.2.2:** Implement an email-first plan that sends one approved question through the exact mail account, correlates only the approved recipient, thread, proposal, and expiry, and records affirmative, negative, tentative, alternative, ambiguous, conflicting, stale, superseded, and identity-uncertain response states.
+  - [ ] **Sub-task 139.2.2.3:** Permit event preparation after a clear correlated affirmative response, but route every ambiguous, conditional, conflicting, multi-proposal, stale, superseded, or identity-uncertain response to the user without treating model interpretation as consent.
+  - [ ] **Sub-task 139.2.2.4:** Apply the effective Autonomy Center policy separately to the email send, event write, attendee invitation, update, cancellation, and deletion operations; generic computer-use approval never substitutes for an event or invitation grant.
+- [ ] **Task 139.2.3 - Reconcile effects and verify UI drift safety**
+  - [ ] **Sub-task 139.2.3.1:** Persist intent before effect, invalidate approval on every bound-field or provider-state change, prohibit blind retries, and re-read the exact provider event and attendee state after submission.
+  - [ ] **Sub-task 139.2.3.2:** Test UI revisions, changed labels, inaccessible or missing controls, overlays, redirects, popups, focus loss, stale captures, session expiry, reauthentication and second-factor prompts, cancellation, crash, timeout, partial effect, duplicate submission, provider outage, and malicious calendar or mail content.
+  - [ ] **Sub-task 139.2.3.3:** Report only verified effect, verified non-effect, or explicit unknown; reconcile unknown outcomes without duplicate events or invitations and remove every AgentMage-owned cache, cursor, worker, schedule, grant, and session reference without modifying the user's independent Proton profile.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 139.2.AC1:** Given a supported visible Proton Calendar surface and an exact approved event or invitation, when the operation executes, then account, calendar, event fields, attendees, notifications, provider state, and receipt match the preview and verified postcondition exactly.
+- [ ] **Story AC 139.2.AC2:** Given an email-first proposal, when the exact correlated recipient replies, then only a clear current affirmative response can prepare the event and every ambiguous, conditional, conflicting, stale, superseded, or identity-uncertain response requires user review.
+- [ ] **Story AC 139.2.AC3:** Given changed UI, focus, session, credentials, controls, event fields, attendee identity, policy, timeout, partial effect, or unknown result, when execution or recovery runs, then AgentMage stops or reconciles without guessing, credential exposure, blind retry, duplicate effect, or false completion.
+- [ ] **Story AC 139.2.AC4:** Given adapter disablement or removal, when cleanup completes, then no AgentMage-owned Proton credential reference, cache, cursor, worker, schedule, grant, or session authority remains and the user's independent Proton profile is unchanged.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 139.AC1:** `AT-PIM-001` passes across Microsoft, Google, CalDAV, CardDAV, and local task matrices.
 - [ ] **Sprint AC 139.AC2:** Time-zone, recurrence, invitation, contact-merge, assignment, conflict, and retry campaigns produce zero unintended effect.
 - [ ] **Sprint AC 139.AC3:** Unsupported operations are absent and every provider transformation is visible.
 - [ ] **Sprint AC 139.AC4:** Removal leaves zero credential, cursor, event, schedule, worker, socket, cache, or write authority.
+- [ ] **Sprint AC 139.AC5:** `AT-PCAL-001` passes across direct invitation, email-first confirmation, UI drift, credential isolation, ambiguous response, uncertain effect, postcondition, and removal fixtures with zero duplicate event or invitation.
 
-**Gate decision:** Sprint 139 is PASS only when Story 139.1, all criteria, `AM-PIM-001`, `AT-PIM-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 139 is PASS only when Stories 139.1 and 139.2, all criteria, `AM-PIM-001`, `AT-PIM-001`, `AM-PCAL-001`, `AT-PCAL-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
 ### [ ] Sprint 140 - Documents, Repositories, and Attachments
 
@@ -7721,7 +7754,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Compile user-authored productivity workflows into immutable, dry-runnable, budgeted, expiring graphs and close the complete communications and unified-work epic through hostile end-to-end testing.
 
-**Source coverage:** `AM-WFA-001`, `AT-WFA-001`, `SR-PRD-009`, `RV-31`, `RV-32`, `RV-35`; all Sprints 127-140.
+**Source coverage:** `AM-WFA-001`, `AT-WFA-001`, `AM-PCAL-001`, `AT-PCAL-001`, `SR-PRD-009`, `SR-PRD-012`, `RV-31`, `RV-32`, `RV-35`; all Sprints 127-140.
 
 **Dependencies:** Sprints 127-140.
 
@@ -7743,6 +7776,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 141.1.3.1:** Exercise meeting-to-agenda, meeting-to-commitment, inbox-to-draft, task-to-reminder, document-to-review, and approved communication workflows.
   - [ ] **Sub-task 141.1.3.2:** Inject hostile messages, documents, attachments, identities, events, branches, retries, provider outages, permission changes, crashes, cancellations, and resource exhaustion.
   - [ ] **Sub-task 141.1.3.3:** Disable and remove each pack independently and together, then rerun strict-local, accessibility, network, residue, and documentation gates.
+  - [ ] **Sub-task 141.1.3.4:** Exercise direct event invitations and email-first confirmation-to-calendar workflows across Microsoft, Google, and Proton paths; preserve exact proposal, thread, recipient, response, event, approval, and postcondition identity while ambiguous replies and uncertain effects remain blocked.
 
 ##### Story Acceptance Criteria
 
@@ -7757,6 +7791,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 141.AC3:** Productivity workflows produce zero self-edit, recursion escape, hidden branch, destination substitution, approval aggregation, or content-created authority.
 - [ ] **Sprint AC 141.AC4:** Every new pack can be removed independently and together with strict-local restoration and zero residue.
 - [ ] **Sprint AC 141.AC5:** The Epic 12 support matrix, evidence index, limitations, and documentation reconcile exactly.
+- [ ] **Sprint AC 141.AC6:** Direct-invitation and email-first confirmation workflows produce zero inferred consent, hidden recipient, duplicate message, duplicate event, duplicate invitation, stale approval, blind retry, or provider-path substitution.
 
 **Gate decision:** Sprint 141 and the Epic 12 productivity gate are PASS only when Story 141.1, all criteria, `AM-WFA-001`, `AT-WFA-001`, every applicable Sprint 127-140 acceptance test, `RV-31`, `RV-32`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
 

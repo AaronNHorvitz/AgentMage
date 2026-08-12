@@ -395,6 +395,7 @@ The normative implementation detail for this control family is
 | `SR-PRD-008` | Keep local mail-client interoperability out of private profile mutation. | Use provider APIs, capability-detected mail protocols, or explicit read-only mbox and Maildir import; prohibit direct profile-database writes. | Replace, lock, corrupt, symlink, race, or version-skew Outlook, Thunderbird, Evolution, and KMail profiles; require no private-profile write or credential extraction. |
 | `SR-PRD-009` | Protect attachments and document visibility. | Scan, classify, hash, size-bound, type-verify, preview, and bind every attachment and document permission to the effect grant. | Swap attachments, spoof types, use traversal archives, macros, external links, public-link changes, permission broadening, decompression bombs, and post-preview edits; require quarantine or denial. |
 | `SR-PRD-010` | Compile workflows into bounded deterministic operation graphs. | Bind trigger, connectors, accounts, filters, branches, operations, recipients, classifications, budgets, stop conditions, expiry, approvals, recovery, and receipts. | Attempt self-edit, recursive trigger, destination substitution, budget expansion, hidden branch, approval aggregation, message-triggered instruction, and cross-pack grant reuse; require denial. |
+| `SR-PRD-012` | Constrain Proton Calendar UI interaction to an exact confirmed calendar operation rather than generic browser authority. | Bind an allowlisted origin, visible user-authenticated profile, provider-surface version, structured document or accessibility controls, bounded visual fallback, calendar, event, attendees, notifications, preconditions, postconditions, fresh grant, and no-blind-retry reconciliation; keep credentials and profile state outside model context and evidence. | Mutate origin, profile, account, calendar, event fields, attendee, reply correlation, surface version, control identity, focus, screenshot, policy, session, and postcondition; inject ambiguous replies, redirects, overlays, reauthentication, second-factor prompts, timeout, partial effect, and duplicate submission; require no credential exposure, guessed action, inferred consent, blind retry, duplicate effect, or false completion. |
 | `SR-FIN-001` | Use exact financial arithmetic and explicit currency semantics. | Use fixed-point decimal values with currency, scale, sign, rounding, effective date, and conversion-source contracts. | Exercise boundary magnitudes, negative values, fractional currencies, rounding modes, exchange rates, splits, fees, and aggregate order; require exact deterministic results. |
 | `SR-FIN-002` | Preserve immutable financial source records and auditable corrections. | Hash imports, retain source identity and pending/posted state, deduplicate deterministically, and use adjustment or supersession records rather than silent rewrites. | Mutate imports, pending transactions, posting dates, identifiers, descriptions, splits, transfers, statement balances, and corrections; require preserved lineage and visible conflict. |
 | `SR-FIN-003` | Require deterministic statement and account reconciliation. | Bind account, period, opening and closing balances, included transactions, pending exclusions, corrections, tolerance, and reviewer disposition. | Inject missing, duplicate, reordered, cross-account, wrong-currency, pending, deleted, and changed transactions; require no false reconciliation. |
@@ -712,14 +713,18 @@ Pass: removal follows declared retention without harming user data or neighborin
 ### `RV-31` Autonomy, Recipient, and Communication Effects
 
 Exercise every autonomy level and narrowing dimension against Outlook and Exchange Online, Teams,
-Gmail, Slack, Proton Mail Bridge, generic mail, calendars, contacts, tasks, and document fixtures.
+Gmail, Slack, Proton Mail Bridge, the Proton Calendar confirmed-UI adapter, generic mail, calendars,
+contacts, tasks, and document fixtures.
 Mutate sender, account, recipients, destinations, channels, threads, mentions, visibility, content,
-attachments, schedules, budgets, expiry, and policy between preview and effect. Inject duplicate,
-partial, timed-out, reordered, and provider-transformed results.
+attachments, event fields, provider-surface versions, structured controls, bounded visual fallbacks,
+reply correlations, schedules, budgets, expiry, and policy between preview and effect. Inject
+ambiguous replies, focus loss, session expiry, duplicate, partial, timed-out, reordered, and
+provider-transformed results.
 
 Pass: effective autonomy is always the narrowest applicable ceiling; every effect matches one exact
 current preview and consumed grant; duplicate or uncertain delivery is reconciled; no inferred,
-changed, external, or hidden recipient receives content; emergency disablement blocks new writes.
+changed, external, or hidden recipient receives content; no ambiguous reply becomes consent; no
+UI drift produces a guessed or repeated calendar effect; emergency disablement blocks new writes.
 
 ### `RV-32` Identity, Synchronization, Unified Inbox, and Workflow Integrity
 

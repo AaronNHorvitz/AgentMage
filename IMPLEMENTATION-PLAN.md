@@ -3,7 +3,7 @@
 | Field | Planning baseline |
 |---|---|
 | Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
-| Version | 1.6 |
+| Version | 1.7 |
 | Date | 2026-08-12 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
@@ -38,7 +38,7 @@ Stabilization scope freeze: inactive.
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
 these current-state claims. This plan preserves the complete 17-epic,
-169-sprint, 227-requirement target sequence. Under
+169-sprint, 229-requirement target sequence. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), that
 sequence resumes at its first incomplete dependency gate. New capability
 families remain subject to explicit decisions and complete impact analysis.
@@ -60,6 +60,9 @@ peer authentication, package identity, MSIX, NTFS enforcement, restricted
 workers, DPAPI, native model execution, and clean Windows 11 lifecycle evidence
 remain open. Decision 0025 schedules real `RM-024` fuzz-engine execution for the
 final pre-release campaign without waiving any affected sprint or release gate.
+Decision 0026 appends a Proton Calendar confirmed-UI adapter and concrete
+direct-invitation and email-first confirmation workflows to the existing
+productivity family without changing the 169-gate sequence.
 
 ## 2. Document Authority and Change Control
 
@@ -481,15 +484,24 @@ authority, synchronization, receipt, and removal boundaries used by delivery ada
 3. Add separately registered read, draft, send, reply, forward, edit, delete, reaction, attachment,
    move, label, flag, archive, and synchronization operations.
 4. Add Microsoft, Google, CalDAV, and CardDAV calendar, contact, and task behavior.
-5. Add OneDrive, SharePoint, Google Drive, Confluence, and separately promoted document repositories
+5. Add the separately gated Proton Calendar confirmed-UI exception after confirmed computer use,
+   Proton Mail Bridge, communication-write safety, and shared calendar contracts pass. Require an
+   allowlisted visible user-authenticated session, structured controls before bounded visual
+   fallback, exact event and attendee grants, no credential extraction, no blind retry, and
+   postcondition re-reading.
+6. Add OneDrive, SharePoint, Google Drive, Confluence, and separately promoted document repositories
    with visibility, attachment, classification, and version controls.
-6. Compile user workflows into deterministic graphs with dry runs, approvals, budgets, stop
-   conditions, cancellation, reconciliation, and receipts.
-7. Run cross-recipient, cross-account, injection, attachment, cursor, duplicate-send, partial-effect,
-   accessibility, disablement, removal, and strict-local restoration suites.
+7. Compile user workflows into deterministic graphs with dry runs, approvals, budgets, stop
+   conditions, cancellation, reconciliation, and receipts, including direct event invitations and
+   email-first confirmation-to-calendar paths that return ambiguous responses to the user.
+8. Run cross-recipient, cross-account, injection, attachment, cursor, duplicate-send, partial-effect,
+   UI-drift, inferred-consent, accessibility, disablement, removal, and strict-local restoration
+   suites.
 
 **Boundary:** The Autonomy Center narrows policy but carries no grant. External content is untrusted
-and cannot select a recipient, authorize a send, widen autonomy, or trigger an operation.
+and cannot select a recipient, authorize a send, widen autonomy, or trigger an operation. A generic
+computer-use confirmation cannot authorize a Proton Calendar effect, and model interpretation alone
+cannot establish attendee consent.
 
 **Exit condition:** `G-PRODUCTIVITY` passes only when every promoted provider tuple and autonomy
 level has current positive, negative, recovery, removal, privacy, and accessibility evidence.
@@ -690,6 +702,7 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Secret or private-data persistence | Disclosure through logs, memory, exports, or diagnostics | Classify and minimize before persistence, use operating-system key storage, detect secrets, redact output, and fail closed without encryption. |
 | Network or connector expansion | Hidden egress or remote mutation | Strict-local baseline, explicit temporary network grants, destination scopes, sensitivity-labeled cache, read-only connector phase, and receipts. |
 | Provider semantic mismatch | A normalized operation hides provider-only behavior or changes the wrong object | Namespaced extensions, published capability matrices, conformance by object/operation/version, exact previews, and provider-specific negative fixtures. |
+| Proton Calendar UI drift or reply ambiguity | A changed control, stale capture, or misread response creates the wrong event, attendee, or duplicate invitation | Structured-provider preference, allowlisted visible authenticated session, versioned surface manifest, structured controls before bounded visual fallback, exact reply correlation, user review for ambiguity, persisted intent, no blind retry, postcondition re-reading, and explicit unknown state. |
 | Cross-tenant or credential confusion | One account, host, project, or environment receives another's credential or operation | Exact host/tenant/account binding, operation-scoped workers, secret-store references, redirect revalidation, canaries, and cross-domain attack suites. |
 | Partial remote effects | Retry duplicates a comment, build, release, deployment, or destructive change | Provider idempotency where available, deterministic operation fingerprints, reconciliation-before-retry, unknown-state blocking, and verified postconditions. |
 | Windows boundary complexity | Path aliasing, IPC impersonation, ambient access, or package lifecycle defects | Dedicated Windows architecture, AppContainer/restricted-token workers, named-pipe identity, handle-relative NTFS tests, DPAPI, clean x64 fixtures, and separate release evidence. |
@@ -721,6 +734,7 @@ Changes to the implementation sequence follow these rules:
 11. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, 165, and 166 without renumbering them or changing the Sprint 166 final gate.
 12. Decision 0012 froze new capability families and paused the original numbered roadmap during stabilization. Decision 0021 closes that pause and resumes the preserved roadmap; later capability-family additions still require explicit approval and a complete impact statement.
 13. Decision 0025 defers only real `RM-024` fuzz-engine execution to the final pre-release campaign. Every affected task and gate remains open, and all other verification continues with each bounded change.
+14. Decision 0026 appends `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2 inside the existing productivity family; it preserves dependency order, requires structured provider paths where available, and admits no Proton Calendar implementation or support claim before its confirmed-UI gate passes.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 

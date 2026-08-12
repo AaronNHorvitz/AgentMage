@@ -17,9 +17,9 @@ Command execution, public research, credential brokering, encrypted continuity, 
 management are governed separately by [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md). They may
 interoperate through kernel contracts but do not inherit a productivity pack's authority.
 
-These packs are required first-GA deliverables under Decision 0009, but they remain removable
-runtime components. A user can install and operate the strict-local delivery product without
-connecting any communications, finance, document, or cloud account.
+These packs are required first-GA deliverables under Decision 0009 and refined by Decision 0026,
+but they remain removable runtime components. A user can install and operate the strict-local
+delivery product without connecting any communications, finance, document, or cloud account.
 
 ## 2. Design Principles
 
@@ -158,6 +158,7 @@ freshness, coverage gaps, permission gaps, and synchronization health.
 | Gmail | Gmail API messages, threads, labels, drafts, sends, replies, attachments, history, and supported push or bounded polling behavior |
 | Slack | Workspaces, channels, direct and group messages, threads, replies, mentions, reactions, files, edits, deletions, and supported event behavior |
 | Proton Mail | Local Proton Mail Bridge through an authenticated loopback IMAP and SMTP profile; Bridge credentials never leave the operation worker |
+| Proton Calendar | Confirmed interaction with one exact visible, user-authenticated Proton Calendar interface only when no admitted structured write path exists; document or accessibility controls precede bounded visual fallback, and credentials never enter model context |
 | Generic mail | Capability-detected IMAP, SMTP, and JMAP with exact server identity, TLS policy, folder semantics, and unsupported-feature disclosure |
 | Linux mail clients | Thunderbird, Evolution, and KMail interoperability through their configured provider or standard protocol; optional read-only mbox and Maildir import |
 
@@ -198,6 +199,75 @@ Reference capabilities include:
 Calendar, contact, task, and document writes follow the Autonomy Center. Invitations, recipient
 changes, public links, permission changes, externally shared documents, and sensitive attachments
 require exact visibility and recipient previews.
+
+### 9.1 Proton Calendar Confirmed-UI Exception
+
+Google Calendar and Microsoft calendar operations use their admitted structured provider adapters.
+CalDAV is used only where the provider exposes a conforming read or write capability. Proton
+Calendar currently requires a narrower confirmed-UI adapter because its external calendar
+subscription path is read-only and cannot establish two-way write support.
+
+The Proton adapter:
+
+- Attaches only to an allowlisted Proton origin and one visible, foreground, user-authenticated
+  profile. The user establishes or restores authentication; AgentMage never receives a password,
+  second factor, recovery secret, cookie, or session token.
+- Publishes a versioned surface manifest for supported calendars, event fields, attendee and
+  invitation operations, document or accessibility controls, bounded visual fallbacks, expected
+  notifications, postconditions, and known limitations.
+- Uses structured document and accessibility state before screenshot or OCR interpretation. Visual
+  interpretation alone never proves identity, consent, authority, or successful completion.
+- Requires an operation-specific grant for each email, event, attendee invitation, update,
+  cancellation, or deletion. A generic browser or computer-use confirmation carries no standing
+  calendar authority.
+- Persists exact intent before effect, invalidates approval after any bound-field or surface-state
+  change, prohibits blind retry, and re-reads the exact event and attendee state after submission.
+- Reports verified effect, verified non-effect, or explicit unknown. Navigation drift, focus loss,
+  missing controls, session expiry, reauthentication, timeout, partial effect, or unreadable
+  postcondition fails closed.
+
+Two workflows are supported after their own gates pass:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Chat as VS Code Chat
+    participant Kernel
+    participant Mail as Mail adapter
+    participant Calendar as Calendar adapter
+    actor Attendee
+
+    alt Direct invitation
+        User->>Chat: Propose event and attendee
+        Chat->>Kernel: Request exact event preview
+        Kernel-->>User: Show account, event, attendee, and notifications
+        User->>Kernel: Approve exact effect
+        Kernel->>Calendar: Create event and invite attendee
+        Calendar-->>Kernel: Return provider state
+        Kernel->>Calendar: Re-read exact postcondition
+        Calendar-->>Attendee: Send provider invitation
+    else Email first
+        User->>Chat: Ask attendee before scheduling
+        Kernel-->>User: Show exact outgoing question
+        User->>Kernel: Approve exact email
+        Kernel->>Mail: Send and retain proposal identity
+        Mail-->>Attendee: Deliver question
+        Attendee-->>Mail: Reply
+        Mail->>Kernel: Correlate account, thread, proposal, and reply
+        alt Clear current affirmative response
+            Kernel-->>User: Present exact event action under current policy
+            User->>Kernel: Approve when required
+            Kernel->>Calendar: Create and verify event
+        else Ambiguous or changed response
+            Kernel-->>User: Request interpretation or revised proposal
+        end
+    end
+```
+
+An affirmative classification is advisory until deterministic correlation proves the exact sender,
+recipient, account, thread, proposal, and freshness. Conditional, tentative, conflicting,
+alternative-time, multi-proposal, stale, superseded, or identity-uncertain replies return to the
+user. Model interpretation alone never becomes attendee consent.
 
 ## 10. Synchronization and Workflow Automation
 
@@ -325,6 +395,9 @@ Every promoted adapter and cross-pack workflow must pass:
 - Complete adapter disablement, revocation, uninstall, residue scan, and strict-local restoration.
 - Accessibility and keyboard-only operation for autonomy, approval, synchronization health,
   unified inbox, financial reports, and emergency disablement.
+- Proton Calendar origin, authenticated-profile isolation, provider-surface version, structured
+  control, bounded visual fallback, focus, UI drift, direct invitation, email-first correlation,
+  ambiguous response, uncertain effect, postcondition, and removal tests.
 
 ## 15. Release and Support Contract
 

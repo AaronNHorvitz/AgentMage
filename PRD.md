@@ -38,11 +38,13 @@ This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json). The
-17 epics, 169 sprints, and 227 stable requirements remain accepted and
-unchanged. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
+17 epics, 169 sprints, and 229 stable requirements remain accepted and
+protected. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
 records the user's acceptance of the stabilization residuals and authorizes
 execution to resume at the first incomplete dependency gate. It does not close
-the remaining release, platform, security, or evidence blockers.
+the remaining release, platform, security, or evidence blockers. Decision 0026
+appends the Proton Calendar confirmed-UI requirement and Story 139.2 without
+renumbering the roadmap or changing current implementation truth.
 
 The accepted Phase 9 candidate under
 [`Decision 0018`](./docs/decisions/0018-linux-vscode-read-and-receipt.md)
@@ -541,7 +543,7 @@ Managed-device evaluation is optional and outside the personal development bound
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 epics and 169 sequential dependency gates, numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, and 0011 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 epics and 169 sequential dependency gates, numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, 0011, and 0026 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
 
 ```mermaid
 flowchart LR
@@ -619,7 +621,7 @@ Any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unrecon
 
 ## 27. Decision Supersession
 
-Sprints 101 and 102 retain their identifiers and historical scope, but their earlier final-product meaning is superseded. They are inherited-scope closure checkpoints. Sprint 126 retains its delivery-and-Windows closure scope, but Decision 0009 supersedes its final-product meaning. Sprint 156 retains its expanded productivity, communications, finance, and cloud-observer closure scope, but Decision 0010 supersedes its final-product meaning. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, and 165 without renumbering them. Final v1.0 product closure remains Sprint 166 and now requires both trusted-operations and whole-codebase audit evidence. Post-GA Experimental Model Lab Sprints 167-168 do not block v1.0 GA.
+Sprints 101 and 102 retain their identifiers and historical scope, but their earlier final-product meaning is superseded. They are inherited-scope closure checkpoints. Sprint 126 retains its delivery-and-Windows closure scope, but Decision 0009 supersedes its final-product meaning. Sprint 156 retains its expanded productivity, communications, finance, and cloud-observer closure scope, but Decision 0010 supersedes its final-product meaning. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, and 165 without renumbering them. Decision 0026 adds a separately gated Proton Calendar confirmed-UI story inside Sprint 139 and confirmation-to-calendar coverage in Sprint 141 without renumbering either sprint. Final v1.0 product closure remains Sprint 166 and now requires both trusted-operations and whole-codebase audit evidence. Post-GA Experimental Model Lab Sprints 167-168 do not block v1.0 GA.
 
 The Apple Silicon MacBook Pro M5 lane remains intact and testable after v1.0 GA. Its unavailable evidence cannot be fabricated or borrowed from Linux or Windows, but it is no longer a first-GA dependency.
 
@@ -641,6 +643,13 @@ Decision 0009 adds the removable capability packs defined in
 - Read, search, synchronize, draft, send, reply, forward, edit, delete, react, attach, move, label,
   flag, and archive operations only where the exact provider matrix supports them.
 - Microsoft and Google calendars, contacts, and tasks plus CalDAV and CardDAV interoperability.
+- A Proton Calendar confirmed-UI adapter, used only when no admitted structured write path exists,
+  bound to one visible user-authenticated session, exact event and attendees, structured document
+  or accessibility controls before bounded visual fallback, fresh effect approval, provider-state
+  re-reading, and no credential extraction or standing computer-use authority.
+- Direct-invitation and email-first confirmation-to-calendar workflows that preserve exact account,
+  recipient, thread, proposal, response, event, policy, and postcondition identity; ambiguous,
+  conditional, conflicting, stale, superseded, or identity-uncertain replies return to the user.
 - OneDrive, SharePoint, Google Drive, Confluence, and separately promoted document-repository
   adapters with attachment classification and visibility controls.
 - Event-driven and scheduled workflows compiled into inspectable deterministic graphs with dry
@@ -699,6 +708,8 @@ evidence requires:
   backfill, stale-cache, and incomplete-coverage evidence.
 - Zero unauthorized sends, recipients, mentions, attachments, document disclosures, calendar
   changes, contact changes, task changes, or cross-account effects.
+- Zero Proton credential exposure, inferred attendee consent, guessed UI action, stale event
+  approval, blind retry, duplicate event or invitation, or false calendar completion.
 - Exact financial precision, import, pending/posting, duplicate, transfer, statement,
   reconciliation, correction, budget, and anomaly-analysis evidence.
 - Zero money-movement and zero cloud-mutation capability at every tested interface and authority
