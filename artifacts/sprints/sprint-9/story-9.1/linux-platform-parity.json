@@ -2,11 +2,7 @@
   "artifact_id": "linux-fedora-ubuntu-adapter-parity",
   "blocking_gates": [
     {
-      "reason": "Independent control-disablement startup refusal and Ubuntu Secret Service closure are not yet complete.",
-      "task_id": "9.1.3.3"
-    },
-    {
-      "reason": "Native Ubuntu worker isolation and graphical Visual Studio Code execution on both Linux targets remain absent.",
+      "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution and graphical Visual Studio Code execution on both Linux targets remain absent.",
       "task_id": "9.1.3.4"
     },
     {
@@ -143,10 +139,10 @@
     },
     {
       "artifact_id": "linux-ipc-sandbox-control-verification",
-      "evidence_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
+      "evidence_revision": "1083a042f48a0792a14572a53c12b05734244041",
       "id": "linux-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "bbeed55c6bdc921e82c77d668ec9010b03db639935a207dea11b022d27cb9809",
+      "sha256": "ebbfd6ab44870dd7f81e9b8a1cda86e25c41f1db618ff015dabb6d1a279062ee",
       "status": "pass-fedora-only"
     },
     {
@@ -182,7 +178,7 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "f6fdcf299c0a97db0bc8567fb6525495e488a90b",
+  "source_revision": "e27572657a2ab7841025b6f58d82ab63e424fc92",
   "sources": [
     {
       "path": "package.json",
@@ -190,11 +186,11 @@
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",
-      "sha256": "c6c45772eaa9c077f3ba1b16e8da8420bbcb3f8c4e7dfdc3e975b8bc5a40c490"
+      "sha256": "9586bea6a7d945bb65afe4d982dfd38b2fdf1aa21b89b05ac408fd8f5b04237b"
     },
     {
       "path": "tests/test_linux_platform_parity_evidence.py",
-      "sha256": "34723984fced5e621a69274f8ebc15ba055a6dbaa3b9ab8f8172e90fd1a380cd"
+      "sha256": "21fa1c97b0b6befa369845a7a549464eecdea7bad13eb3f6ce505bc6721be899"
     }
   ],
   "status": "partial-parity-with-open-native-controls",
