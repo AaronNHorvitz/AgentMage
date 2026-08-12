@@ -3,8 +3,8 @@
 | Field | Planning baseline |
 |---|---|
 | Status | Pre-alpha scaffold; stabilization sequence closed and numbered roadmap resumed under Decision 0021 |
-| Version | 1.5 |
-| Date | 2026-08-11 |
+| Version | 1.6 |
+| Date | 2026-08-12 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
@@ -52,6 +52,14 @@ supported workflow. Decisions 0022 and 0023 add detached package signing and a
 package-verified authentication-only Linux bootstrap. Supervised extension
 launch now consumes that fixed bootstrap, but signed platform activation, clean
 installation, and release authority remain later dependencies.
+
+Decision 0024 adds the first native Windows process-identity observer and a
+commit-bound `windows-2022` evidence lane. It proves only the current-process
+token, session, elevation, and executable-identity source boundary. Named-pipe
+peer authentication, package identity, MSIX, NTFS enforcement, restricted
+workers, DPAPI, native model execution, and clean Windows 11 lifecycle evidence
+remain open. Decision 0025 schedules real `RM-024` fuzz-engine execution for the
+final pre-release campaign without waiving any affected sprint or release gate.
 
 ## 2. Document Authority and Change Control
 
@@ -274,6 +282,48 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 | 14 | Expanded v1.0 GA verification and release decision | 156 | `G-GA` |
 | 15 | Trusted operations, whole-codebase audit, and superseding v1.0 GA | 157-166 | `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` |
 | 16 | Post-GA Experimental Model Lab | 167-168 | `G-EXPERIMENTAL-MODELS` |
+
+### 6.1 Active Roadmap Execution Spine
+
+The canonical task order remains `TASKS.md`. The following execution spine is a
+high-level dependency view for resuming implementation after stabilization; it
+does not mark a sprint complete and does not permit later work to consume a
+missing earlier contract.
+
+| Stage | Bounded outcome | Current evidence | Next blocking evidence |
+|---|---|---|---|
+| A. Release trust mechanics | Deterministic detached signing and verification for package manifests | Decision 0022; local release-signing tests pass | Production signer approval, externally provisioned trust roots, RPM/DEB repository signatures, revocation, and reproducible clean-package evidence |
+| B. Linux package bootstrap | Verify an installed package before opening an owner-local authentication endpoint | Decision 0023; package mutation, peer, replay, and endpoint tests pass locally | Signed platform activation, clean Fedora and Ubuntu package lifecycles, rollback, uninstall, and independent native evidence |
+| C. Native Chat supervision | Launch only the fixed packaged host, authenticate the exact child, bound the frame, erase the launch secret, and fail inert | Decision 0023 implementation; extension and product suites pass locally | Model-enabled kernel activation, usable end-to-end Chat workflow, clean VSIX/package installation, accessibility, cancellation, and recovery evidence |
+| D. Windows native identity | Observe and redact current token user, session, elevation, and executable identity through a narrow Windows FFI boundary | Decision 0024; Windows cross-target check and lint pass | Genuine `windows-2022` run retained for the exact commit, then connecting-peer integrity/package identity and authenticated named-pipe work |
+| E. Windows first-GA boundary | Complete Sprints 121-122 package, IPC, path, worker, key, model, network, Chat, accessibility, and lifecycle controls | Contract and one partial identity source only | MSIX/Authenticode, hostile native tests, three clean standard-user lifecycles, removal, and independent Windows 11 evidence |
+| F. Capability roadmap | Execute Sprints 0-165 in dependency order across local evidence, knowledge, writes, coding, delivery, productivity, finance, cloud observation, trusted operations, and whole-codebase audit | Only individually recorded completed sub-tasks and decisions count | Each first authoritative unchecked task, its inherited tests, and its evidence gate |
+| G. Final security campaign | Freeze release surfaces and execute real fuzzing plus complete reviewer protocols | Harness, corpora, schemas, and synthetic/property evidence only | Decision 0025 `RM-024` campaign, sanitizer/coverage/crash disposition, impact reruns, and independent review |
+| H. Release closure | Rebuild and independently reproduce exact Fedora, Ubuntu, and Windows candidates | Not started | Sprint 166, `RV-01` through `RV-49`, signed evidence reconciliation, explicit user approval, and zero hidden blocker |
+
+Evidence states in this table are deliberately narrow. `Implemented` source is
+not native execution; native execution is not a clean lifecycle; a clean
+lifecycle is not platform support; and platform support is not final release.
+
+### 6.2 Immediate Dependency Order
+
+1. Retain the detached-signing, package-bootstrap, and extension-supervision
+   increments as partial mechanics; do not close Sprint 25 or Sprint 96 from
+   those mechanics alone.
+2. Obtain genuine Windows-runner evidence for Decision 0024 against the exact
+   source commit and retain its run and artifact identities.
+3. Complete the Windows bridge in reviewable increments: connecting-peer token
+   and integrity identity, exact current-user pipe ACL, challenge/response and
+   replay refusal, package/executable identity, then cancellation and resource
+   limits.
+4. Complete MSIX and Authenticode lifecycle work independently from IPC so
+   package and transport failures remain attributable.
+5. Continue the first authoritative dependency-ready task in `TASKS.md`; never
+   use this execution spine to skip a required contract or mark an epic pass.
+6. Freeze all promoted first-GA parser, IPC, path, model-output, and FFI targets
+   before the Decision 0025 manual fuzz campaign.
+7. Fix and rerun every affected boundary after the campaign, then enter Sprint
+   166 independent release reproduction.
 
 ## 7. Epic Implementation Milestones
 
@@ -631,7 +681,7 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 |---|---|---|
 | Scope expansion before foundation closure | Inconsistent contracts and untestable authority | Enforce numeric work order and all non-platform dependencies; Decision 0003 permits only explicitly independent work past retained `BLOCKED-MACOS` items and never closes an affected gate. |
 | Local-model quality or malformed tool calls | Unsupported answers or unsafe execution requests | Deterministic-first behavior, schema validation, evidence states, bounded retries, quality thresholds, and visible failure. |
-| Platform divergence | A passing Linux path masks an invalid Mac deployment or vice versa | Shared adapter contracts, identical fixtures, platform-specific evidence, and independent Mac testing. |
+| Platform divergence | A passing platform path masks an invalid Linux, Windows, or retained Mac implementation | Shared adapter contracts, identical fixtures, platform-specific evidence, genuine native runs, and no evidence substitution. |
 | Docker Model Runner privilege or endpoint exposure | A local compatibility path contradicts standard-user or exclusive-client claims | Native Linux security reference, immutable Docker identities, explicit prerequisite reporting, loopback and local-client probes, namespace/container isolation, profile-specific evidence, and fail-closed admission. |
 | macOS packaging and identity complexity | IPC impersonation, invalid entitlements, or unreleasable package | Freeze the release manifest, use an isolated Apple Silicon runner, and test signatures, notarization, XPC identities, bookmarks, and Keychain. |
 | Dependency, model, or supplier provenance gaps | License, security, or review rejection | Approved-artifact catalog, bills of materials, hashes, lineage, origin policy, due diligence, and fail-closed admission. |
@@ -669,7 +719,8 @@ Changes to the implementation sequence follow these rules:
 9. Decision 0008 supersedes the first-GA effect of Decision 0003: a missing Mac result does not prevent shared, Linux, Windows, delivery, or v1.0 GA work, but every affected Mac status remains blocked and no evidence is substituted.
 10. Decisions 0009 and 0010 preserve earlier sprint identities as checkpoints, append new requirements and work, and assign final v1.0 closure to Sprint 166 without rewriting completed history.
 11. Decision 0011 adds whole-codebase audit stories inside Sprints 157, 159, 161, 163, 165, and 166 without renumbering them or changing the Sprint 166 final gate.
-12. Decision 0012 freezes new capability families and pauses the original numbered roadmap during stabilization; an exception requires explicit approval and a complete impact statement.
+12. Decision 0012 froze new capability families and paused the original numbered roadmap during stabilization. Decision 0021 closes that pause and resumes the preserved roadmap; later capability-family additions still require explicit approval and a complete impact statement.
+13. Decision 0025 defers only real `RM-024` fuzz-engine execution to the final pre-release campaign. Every affected task and gate remains open, and all other verification continues with each bounded change.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
@@ -686,7 +737,7 @@ The first high-level sequence is:
 2. Validate the Apache-2.0, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
 3. Preserve the completed Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records; admit a usable model only through a new revision-bound artifact, runtime, quality, and activation decision.
 4. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
-5. Build the synthetic fixture, attack, fuzzing, test-result, and evidence framework before real user data is touched.
+5. Build the synthetic fixture, attack, fuzz-harness, test-result, and evidence framework before real user data is touched; execute the real fuzz engine in the final campaign required by Decision 0025.
 6. Freeze configuration, dependencies, build integrity, bills of materials, diagnostics, support, and signed manual patch procedures.
 7. Close `G-FOUNDATION` before beginning the v0.1 kernel and capability implementation.
 
@@ -698,6 +749,8 @@ and retain the required evidence. When an item is `BLOCKED-MACOS`, keep it
 unchecked and move only to the next numbered item that is technically independent
 under Decisions 0003, 0008, 0009, 0010, 0011, and 0012. Record affected Mac gates
 as `BLOCKED-MACOS`; never infer a Mac pass from downstream development progress.
+Real fuzz-engine work remains visibly open until the final campaign; that
+sequencing does not allow any affected sprint or release gate to pass early.
 
 ## 14. Completion Definition
 

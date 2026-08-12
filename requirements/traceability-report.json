@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "85fcca0aa65ca631c329f4cf0260b5a5018b4cd63545787dbffd36166ee7bd54"
+      "sha256": "44c3031ed7efef36aaa8b0a6c21a777bef863a20600be7c3cd165aba8545bd25"
     },
     {
       "document": "evidence/catalog.json",
@@ -75,7 +75,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 150 - QuickBooks Online and Xero Accounting",
-              "line": 8122
+              "line": 8123
             },
             "sprint": 150,
             "story_id": "150.1",
@@ -126,7 +126,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 144 - Actual Budget Reference Adapter",
-              "line": 7858
+              "line": 7859
             },
             "sprint": 144,
             "story_id": "144.1",
@@ -180,7 +180,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
-              "line": 5944
+              "line": 5945
             },
             "sprint": 103,
             "story_id": "103.1",
@@ -190,7 +190,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
-              "line": 6043
+              "line": 6044
             },
             "sprint": 105,
             "story_id": "105.1",
@@ -200,7 +200,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
-              "line": 6957
+              "line": 6958
             },
             "sprint": 124,
             "story_id": "124.1",
@@ -252,7 +252,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 110 - Artifact Registries and Immutable Promotion",
-              "line": 6282
+              "line": 6283
             },
             "sprint": 110,
             "story_id": "110.1",
@@ -305,7 +305,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -315,7 +315,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 128 - Kernel-Enforced Autonomy Center",
-              "line": 7151
+              "line": 7152
             },
             "sprint": 128,
             "story_id": "128.1",
@@ -368,7 +368,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -420,7 +420,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 5 - Capability Grants and Policy Engine",
-              "line": 650
+              "line": 651
             },
             "sprint": 5,
             "story_id": "5.1",
@@ -479,7 +479,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -530,7 +530,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -581,7 +581,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -633,7 +633,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 147 - Bills, Subscriptions, and Recurring Streams",
-              "line": 7990
+              "line": 7991
             },
             "sprint": 147,
             "story_id": "147.1",
@@ -684,7 +684,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 8714
+              "line": 8715
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -736,7 +736,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 145 - Read-Only Financial Data Adapters",
-              "line": 7902
+              "line": 7903
             },
             "sprint": 145,
             "story_id": "145.1",
@@ -787,7 +787,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 146 - Budgets, Cash Flow, Goals, and Scenarios",
-              "line": 7946
+              "line": 7947
             },
             "sprint": 146,
             "story_id": "146.1",
@@ -840,7 +840,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 119 - Service Catalog and Ownership Graph",
-              "line": 6714
+              "line": 6715
             },
             "sprint": 119,
             "story_id": "119.1",
@@ -891,7 +891,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 8486
+              "line": 8487
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -945,7 +945,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 162 - Client-Side-Encrypted Cloud Continuity",
-              "line": 8784
+              "line": 8785
             },
             "sprint": 162,
             "story_id": "162.1",
@@ -999,7 +999,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 154 - Cloud Cost and Delivery Correlation",
-              "line": 8335
+              "line": 8336
             },
             "sprint": 154,
             "story_id": "154.1",
@@ -1050,7 +1050,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -1101,7 +1101,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
-              "line": 487
+              "line": 488
             },
             "sprint": 3,
             "story_id": "3.1",
@@ -1154,7 +1154,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 109 - Multi-Provider CI Execution and Evidence",
-              "line": 6234
+              "line": 6235
             },
             "sprint": 109,
             "story_id": "109.1",
@@ -1206,7 +1206,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 8714
+              "line": 8715
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -1258,7 +1258,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -1312,7 +1312,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -1322,7 +1322,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 152 - Cloud Observer Common Read Contract",
-              "line": 8211
+              "line": 8212
             },
             "sprint": 152,
             "story_id": "152.1",
@@ -1376,7 +1376,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -1386,7 +1386,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 132 - Communications Contract and Outlook",
-              "line": 7327
+              "line": 7328
             },
             "sprint": 132,
             "story_id": "132.1",
@@ -1438,7 +1438,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 138 - Communication Write Safety and Reconciliation",
-              "line": 7591
+              "line": 7592
             },
             "sprint": 138,
             "story_id": "138.1",
@@ -1490,7 +1490,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 158 - Operating-System Credential Broker",
-              "line": 8556
+              "line": 8557
             },
             "sprint": 158,
             "story_id": "158.1",
@@ -1542,7 +1542,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 1001
+              "line": 1002
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -1618,7 +1618,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
-              "line": 5944
+              "line": 5945
             },
             "sprint": 103,
             "story_id": "103.1",
@@ -1671,7 +1671,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 112 - Kubernetes, Helm, and Kustomize Deployment Safety",
-              "line": 6378
+              "line": 6379
             },
             "sprint": 112,
             "story_id": "112.1",
@@ -1681,7 +1681,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 113 - Argo CD and Flux GitOps Control",
-              "line": 6426
+              "line": 6427
             },
             "sprint": 113,
             "story_id": "113.1",
@@ -1735,7 +1735,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1240
+              "line": 1241
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -1790,7 +1790,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -1800,7 +1800,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -1810,7 +1810,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -1870,7 +1870,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 140 - Documents, Repositories, and Attachments",
-              "line": 7679
+              "line": 7680
             },
             "sprint": 140,
             "story_id": "140.1",
@@ -1920,7 +1920,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 9084
+              "line": 9087
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -1930,7 +1930,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 9128
+              "line": 9131
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -1984,7 +1984,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -1994,7 +1994,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -2061,7 +2061,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -2071,7 +2071,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -2123,7 +2123,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 149 - Statistical Outlier and Potential-Fraud Indicators",
-              "line": 8078
+              "line": 8079
             },
             "sprint": 149,
             "story_id": "149.1",
@@ -2175,7 +2175,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 148 - Financial Documents and Matching",
-              "line": 8034
+              "line": 8035
             },
             "sprint": 148,
             "story_id": "148.1",
@@ -2226,7 +2226,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 143 - Financial Import and Reconciliation",
-              "line": 7814
+              "line": 7815
             },
             "sprint": 143,
             "story_id": "143.1",
@@ -2279,7 +2279,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -2289,7 +2289,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 142 - Exact Financial Domain and Arithmetic",
-              "line": 7770
+              "line": 7771
             },
             "sprint": 142,
             "story_id": "142.1",
@@ -2345,7 +2345,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 151 - Financial Privacy and No-Money-Movement Gate",
-              "line": 8166
+              "line": 8167
             },
             "sprint": 151,
             "story_id": "151.1",
@@ -2396,7 +2396,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
-              "line": 5944
+              "line": 5945
             },
             "sprint": 103,
             "story_id": "103.1",
@@ -2406,7 +2406,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 126 - Delivery and Windows Release-Candidate Checkpoint",
-              "line": 7056
+              "line": 7057
             },
             "sprint": 126,
             "story_id": "126.1",
@@ -2457,7 +2457,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 126 - Delivery and Windows Release-Candidate Checkpoint",
-              "line": 7056
+              "line": 7057
             },
             "sprint": 126,
             "story_id": "126.1",
@@ -2509,7 +2509,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 156 - Expanded First-GA Evidence Checkpoint",
-              "line": 8431
+              "line": 8432
             },
             "sprint": 156,
             "story_id": "156.1",
@@ -2561,7 +2561,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 9034
+              "line": 9035
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -2613,7 +2613,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 9034
+              "line": 9035
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -2664,7 +2664,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -2716,7 +2716,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance",
-              "line": 6092
+              "line": 6093
             },
             "sprint": 106,
             "story_id": "106.1",
@@ -2768,7 +2768,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -2819,7 +2819,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 134 - Gmail Adapter",
-              "line": 7415
+              "line": 7416
             },
             "sprint": 134,
             "story_id": "134.1",
@@ -2873,7 +2873,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -2883,7 +2883,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -2893,7 +2893,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -2970,7 +2970,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 114 - Terraform and OpenTofu Infrastructure Safety",
-              "line": 6473
+              "line": 6474
             },
             "sprint": 114,
             "story_id": "114.1",
@@ -3023,7 +3023,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 104 - Connected Identity, Credentials, and Capability Classes",
-              "line": 5994
+              "line": 5995
             },
             "sprint": 104,
             "story_id": "104.1",
@@ -3033,7 +3033,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
-              "line": 6043
+              "line": 6044
             },
             "sprint": 105,
             "story_id": "105.1",
@@ -3086,7 +3086,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 118 - Incidents, Bounded Notifications, and ChatOps",
-              "line": 6665
+              "line": 6666
             },
             "sprint": 118,
             "story_id": "118.1",
@@ -3139,7 +3139,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -3198,7 +3198,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 1 - Repository and Package Architecture",
-              "line": 349
+              "line": 350
             },
             "sprint": 1,
             "story_id": "1.1",
@@ -3208,7 +3208,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
-              "line": 592
+              "line": 593
             },
             "sprint": 4,
             "story_id": "4.1",
@@ -3218,7 +3218,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 1055
+              "line": 1056
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -3282,7 +3282,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 137 - Linux Mail-Client Interoperability",
-              "line": 7547
+              "line": 7548
             },
             "sprint": 137,
             "story_id": "137.1",
@@ -3333,7 +3333,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 132 - Communications Contract and Outlook",
-              "line": 7327
+              "line": 7328
             },
             "sprint": 132,
             "story_id": "132.1",
@@ -3384,7 +3384,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 135 - Standard Mail Protocols and Proton Bridge",
-              "line": 7459
+              "line": 7460
             },
             "sprint": 135,
             "story_id": "135.1",
@@ -3435,7 +3435,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -3487,7 +3487,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1109
+              "line": 1110
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -3569,7 +3569,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1240
+              "line": 1241
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -3629,7 +3629,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 14 - Separate Model Installer and Importer",
-              "line": 1186
+              "line": 1187
             },
             "sprint": 14,
             "story_id": "14.1",
@@ -3700,7 +3700,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 8898
+              "line": 8899
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -3752,7 +3752,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 120 - Markdown and LaTeX Mathematics",
-              "line": 6762
+              "line": 6763
             },
             "sprint": 120,
             "story_id": "120.1",
@@ -3804,7 +3804,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -3856,7 +3856,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 947
+              "line": 948
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -3916,7 +3916,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 116 - OpenTelemetry Correlation Foundation",
-              "line": 6569
+              "line": 6570
             },
             "sprint": 116,
             "story_id": "116.1",
@@ -3926,7 +3926,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 117 - Datadog and Multi-Vendor Observability",
-              "line": 6617
+              "line": 6618
             },
             "sprint": 117,
             "story_id": "117.1",
@@ -3980,7 +3980,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -3990,7 +3990,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 129 - Connected Identity and Work Graph",
-              "line": 7195
+              "line": 7196
             },
             "sprint": 129,
             "story_id": "129.1",
@@ -4043,7 +4043,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 139 - Calendars, Contacts, and Tasks",
-              "line": 7635
+              "line": 7636
             },
             "sprint": 139,
             "story_id": "139.1",
@@ -4095,7 +4095,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
-              "line": 761
+              "line": 762
             },
             "sprint": 7,
             "story_id": "7.1",
@@ -4173,7 +4173,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 1001
+              "line": 1002
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -4237,7 +4237,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 6 - Canonical Workspace Paths",
-              "line": 708
+              "line": 709
             },
             "sprint": 6,
             "story_id": "6.1",
@@ -4295,7 +4295,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -4348,7 +4348,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations",
-              "line": 6521
+              "line": 6522
             },
             "sprint": 115,
             "story_id": "115.1",
@@ -4403,7 +4403,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1426
+              "line": 1427
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -4413,7 +4413,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1476
+              "line": 1477
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -4472,7 +4472,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -4524,7 +4524,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 815
+              "line": 816
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -4534,7 +4534,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 869
+              "line": 870
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -4607,7 +4607,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 815
+              "line": 816
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -4617,7 +4617,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 869
+              "line": 870
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -4627,7 +4627,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1318
+              "line": 1319
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -4686,7 +4686,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
-              "line": 6329
+              "line": 6330
             },
             "sprint": 111,
             "story_id": "111.1",
@@ -4737,7 +4737,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -4791,7 +4791,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 1055
+              "line": 1056
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -4801,7 +4801,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1628
+              "line": 1629
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -4859,7 +4859,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 136 - Slack Adapter",
-              "line": 7503
+              "line": 7504
             },
             "sprint": 136,
             "story_id": "136.1",
@@ -4911,7 +4911,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 108 - Azure Repos and GitLab Source Adapters",
-              "line": 6187
+              "line": 6188
             },
             "sprint": 108,
             "story_id": "108.1",
@@ -4962,7 +4962,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -5014,7 +5014,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
-              "line": 6329
+              "line": 6330
             },
             "sprint": 111,
             "story_id": "111.1",
@@ -5067,7 +5067,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -5077,7 +5077,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 130 - Synchronization and Event Integrity",
-              "line": 7239
+              "line": 7240
             },
             "sprint": 130,
             "story_id": "130.1",
@@ -5128,7 +5128,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 133 - Microsoft Teams Adapter",
-              "line": 7371
+              "line": 7372
             },
             "sprint": 133,
             "story_id": "133.1",
@@ -5181,7 +5181,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1318
+              "line": 1319
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -5233,7 +5233,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 8486
+              "line": 8487
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -5308,7 +5308,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -5318,7 +5318,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -5328,7 +5328,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -5418,7 +5418,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -5428,7 +5428,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -5438,7 +5438,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -5510,7 +5510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 127 - Productivity-Pack Scope and Support Contract",
-              "line": 7107
+              "line": 7108
             },
             "sprint": 127,
             "story_id": "127.1",
@@ -5520,7 +5520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 131 - Unified Activity Inbox",
-              "line": 7283
+              "line": 7284
             },
             "sprint": 131,
             "story_id": "131.1",
@@ -5574,7 +5574,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -5584,7 +5584,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -5594,7 +5594,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -5656,7 +5656,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -5666,7 +5666,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -5676,7 +5676,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -5728,7 +5728,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 160 - Current Public Research and Citation Safety",
-              "line": 8670
+              "line": 8671
             },
             "sprint": 160,
             "story_id": "160.1",
@@ -5782,7 +5782,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 141 - Deterministic Productivity Workflows and Epic Gate",
-              "line": 7723
+              "line": 7724
             },
             "sprint": 141,
             "story_id": "141.1",
@@ -5836,7 +5836,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC",
-              "line": 6810
+              "line": 6811
             },
             "sprint": 121,
             "story_id": "121.1",
@@ -5846,7 +5846,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers",
-              "line": 6859
+              "line": 6860
             },
             "sprint": 122,
             "story_id": "122.1",
@@ -5856,7 +5856,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
-              "line": 7005
+              "line": 7006
             },
             "sprint": 125,
             "story_id": "125.1",
@@ -5908,7 +5908,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards",
-              "line": 6140
+              "line": 6141
             },
             "sprint": 107,
             "story_id": "107.1",
@@ -5963,7 +5963,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -6017,7 +6017,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 155 - Cross-Pack Extreme Verification and Removal",
-              "line": 8379
+              "line": 8380
             },
             "sprint": 155,
             "story_id": "155.1",
@@ -6083,7 +6083,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 123 - Provider Version Skew, Failure, and Resource Campaign",
-              "line": 6908
+              "line": 6909
             },
             "sprint": 123,
             "story_id": "123.1",
@@ -6093,7 +6093,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
-              "line": 6957
+              "line": 6958
             },
             "sprint": 124,
             "story_id": "124.1",
@@ -6103,7 +6103,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
-              "line": 7005
+              "line": 7006
             },
             "sprint": 125,
             "story_id": "125.1",
@@ -6150,7 +6150,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 150 - QuickBooks Online and Xero Accounting",
-              "line": 8122
+              "line": 8123
             },
             "sprint": 150,
             "story_id": "150.1",
@@ -6199,7 +6199,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 144 - Actual Budget Reference Adapter",
-              "line": 7858
+              "line": 7859
             },
             "sprint": 144,
             "story_id": "144.1",
@@ -6250,7 +6250,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
-              "line": 5944
+              "line": 5945
             },
             "sprint": 103,
             "story_id": "103.1",
@@ -6260,7 +6260,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
-              "line": 6043
+              "line": 6044
             },
             "sprint": 105,
             "story_id": "105.1",
@@ -6270,7 +6270,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
-              "line": 6957
+              "line": 6958
             },
             "sprint": 124,
             "story_id": "124.1",
@@ -6336,7 +6336,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 1 - Repository and Package Architecture",
-              "line": 349
+              "line": 350
             },
             "sprint": 1,
             "story_id": "1.1",
@@ -6346,7 +6346,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 4 - Kernel Contracts and Typed Boundaries",
-              "line": 592
+              "line": 593
             },
             "sprint": 4,
             "story_id": "4.1",
@@ -6356,7 +6356,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 12 - Agent Runtime, Planning, and Session Behavior",
-              "line": 1055
+              "line": 1056
             },
             "sprint": 12,
             "story_id": "12.1",
@@ -6405,7 +6405,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 110 - Artifact Registries and Immutable Promotion",
-              "line": 6282
+              "line": 6283
             },
             "sprint": 110,
             "story_id": "110.1",
@@ -6454,7 +6454,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -6503,7 +6503,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 128 - Kernel-Enforced Autonomy Center",
-              "line": 7151
+              "line": 7152
             },
             "sprint": 128,
             "story_id": "128.1",
@@ -6552,7 +6552,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -6616,7 +6616,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 5 - Capability Grants and Policy Engine",
-              "line": 650
+              "line": 651
             },
             "sprint": 5,
             "story_id": "5.1",
@@ -6666,7 +6666,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -6715,7 +6715,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -6764,7 +6764,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 147 - Bills, Subscriptions, and Recurring Streams",
-              "line": 7990
+              "line": 7991
             },
             "sprint": 147,
             "story_id": "147.1",
@@ -6813,7 +6813,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 8714
+              "line": 8715
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -6862,7 +6862,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 145 - Read-Only Financial Data Adapters",
-              "line": 7902
+              "line": 7903
             },
             "sprint": 145,
             "story_id": "145.1",
@@ -6911,7 +6911,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 146 - Budgets, Cash Flow, Goals, and Scenarios",
-              "line": 7946
+              "line": 7947
             },
             "sprint": 146,
             "story_id": "146.1",
@@ -6960,7 +6960,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 119 - Service Catalog and Ownership Graph",
-              "line": 6714
+              "line": 6715
             },
             "sprint": 119,
             "story_id": "119.1",
@@ -7009,7 +7009,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 8486
+              "line": 8487
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -7058,7 +7058,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 162 - Client-Side-Encrypted Cloud Continuity",
-              "line": 8784
+              "line": 8785
             },
             "sprint": 162,
             "story_id": "162.1",
@@ -7107,7 +7107,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 154 - Cloud Cost and Delivery Correlation",
-              "line": 8335
+              "line": 8336
             },
             "sprint": 154,
             "story_id": "154.1",
@@ -7156,7 +7156,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -7220,7 +7220,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 3 - Configuration, Versioning, and Build Integrity",
-              "line": 487
+              "line": 488
             },
             "sprint": 3,
             "story_id": "3.1",
@@ -7269,7 +7269,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 109 - Multi-Provider CI Execution and Evidence",
-              "line": 6234
+              "line": 6235
             },
             "sprint": 109,
             "story_id": "109.1",
@@ -7318,7 +7318,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 8714
+              "line": 8715
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -7367,7 +7367,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -7416,7 +7416,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 152 - Cloud Observer Common Read Contract",
-              "line": 8211
+              "line": 8212
             },
             "sprint": 152,
             "story_id": "152.1",
@@ -7465,7 +7465,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 132 - Communications Contract and Outlook",
-              "line": 7327
+              "line": 7328
             },
             "sprint": 132,
             "story_id": "132.1",
@@ -7514,7 +7514,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 138 - Communication Write Safety and Reconciliation",
-              "line": 7591
+              "line": 7592
             },
             "sprint": 138,
             "story_id": "138.1",
@@ -7563,7 +7563,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1628
+              "line": 1629
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -7614,7 +7614,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 158 - Operating-System Credential Broker",
-              "line": 8556
+              "line": 8557
             },
             "sprint": 158,
             "story_id": "158.1",
@@ -7663,7 +7663,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 1001
+              "line": 1002
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -7713,7 +7713,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 103 - Delivery Graph, Adapter SDK, and Support Matrix",
-              "line": 5944
+              "line": 5945
             },
             "sprint": 103,
             "story_id": "103.1",
@@ -7763,7 +7763,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 112 - Kubernetes, Helm, and Kustomize Deployment Safety",
-              "line": 6378
+              "line": 6379
             },
             "sprint": 112,
             "story_id": "112.1",
@@ -7773,7 +7773,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 113 - Argo CD and Flux GitOps Control",
-              "line": 6426
+              "line": 6427
             },
             "sprint": 113,
             "story_id": "113.1",
@@ -7822,7 +7822,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1240
+              "line": 1241
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -7874,7 +7874,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -7884,7 +7884,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -7894,7 +7894,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -7944,7 +7944,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 140 - Documents, Repositories, and Attachments",
-              "line": 7679
+              "line": 7680
             },
             "sprint": 140,
             "story_id": "140.1",
@@ -7994,7 +7994,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 9084
+              "line": 9087
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -8004,7 +8004,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 9128
+              "line": 9131
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -8054,7 +8054,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -8064,7 +8064,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -8116,7 +8116,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -8126,7 +8126,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -8178,7 +8178,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -8188,7 +8188,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -8238,7 +8238,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 149 - Statistical Outlier and Potential-Fraud Indicators",
-              "line": 8078
+              "line": 8079
             },
             "sprint": 149,
             "story_id": "149.1",
@@ -8287,7 +8287,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 148 - Financial Documents and Matching",
-              "line": 8034
+              "line": 8035
             },
             "sprint": 148,
             "story_id": "148.1",
@@ -8336,7 +8336,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 143 - Financial Import and Reconciliation",
-              "line": 7814
+              "line": 7815
             },
             "sprint": 143,
             "story_id": "143.1",
@@ -8385,7 +8385,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 142 - Exact Financial Domain and Arithmetic",
-              "line": 7770
+              "line": 7771
             },
             "sprint": 142,
             "story_id": "142.1",
@@ -8434,7 +8434,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 151 - Financial Privacy and No-Money-Movement Gate",
-              "line": 8166
+              "line": 8167
             },
             "sprint": 151,
             "story_id": "151.1",
@@ -8483,7 +8483,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 126 - Delivery and Windows Release-Candidate Checkpoint",
-              "line": 7056
+              "line": 7057
             },
             "sprint": 126,
             "story_id": "126.1",
@@ -8533,7 +8533,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 156 - Expanded First-GA Evidence Checkpoint",
-              "line": 8431
+              "line": 8432
             },
             "sprint": 156,
             "story_id": "156.1",
@@ -8582,7 +8582,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 9034
+              "line": 9035
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -8631,7 +8631,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 9034
+              "line": 9035
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -8680,7 +8680,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 8255
+              "line": 8256
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -8729,7 +8729,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance",
-              "line": 6092
+              "line": 6093
             },
             "sprint": 106,
             "story_id": "106.1",
@@ -8778,7 +8778,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -8828,7 +8828,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 134 - Gmail Adapter",
-              "line": 7415
+              "line": 7416
             },
             "sprint": 134,
             "story_id": "134.1",
@@ -8879,7 +8879,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -8889,7 +8889,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -8899,7 +8899,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -8949,7 +8949,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 114 - Terraform and OpenTofu Infrastructure Safety",
-              "line": 6473
+              "line": 6474
             },
             "sprint": 114,
             "story_id": "114.1",
@@ -8998,7 +8998,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 104 - Connected Identity, Credentials, and Capability Classes",
-              "line": 5994
+              "line": 5995
             },
             "sprint": 104,
             "story_id": "104.1",
@@ -9047,7 +9047,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 118 - Incidents, Bounded Notifications, and ChatOps",
-              "line": 6665
+              "line": 6666
             },
             "sprint": 118,
             "story_id": "118.1",
@@ -9096,7 +9096,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -9147,7 +9147,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -9197,7 +9197,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 137 - Linux Mail-Client Interoperability",
-              "line": 7547
+              "line": 7548
             },
             "sprint": 137,
             "story_id": "137.1",
@@ -9246,7 +9246,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 132 - Communications Contract and Outlook",
-              "line": 7327
+              "line": 7328
             },
             "sprint": 132,
             "story_id": "132.1",
@@ -9295,7 +9295,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 135 - Standard Mail Protocols and Proton Bridge",
-              "line": 7459
+              "line": 7460
             },
             "sprint": 135,
             "story_id": "135.1",
@@ -9344,7 +9344,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -9393,7 +9393,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 8898
+              "line": 8899
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -9442,7 +9442,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1109
+              "line": 1110
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -9492,7 +9492,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 14 - Separate Model Installer and Importer",
-              "line": 1186
+              "line": 1187
             },
             "sprint": 14,
             "story_id": "14.1",
@@ -9542,7 +9542,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 120 - Markdown and LaTeX Mathematics",
-              "line": 6762
+              "line": 6763
             },
             "sprint": 120,
             "story_id": "120.1",
@@ -9591,7 +9591,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -9640,7 +9640,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 947
+              "line": 948
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -9690,7 +9690,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 10 - Strict-Local Network and Data-Residency Boundary",
-              "line": 947
+              "line": 948
             },
             "sprint": 10,
             "story_id": "10.1",
@@ -9741,7 +9741,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 116 - OpenTelemetry Correlation Foundation",
-              "line": 6569
+              "line": 6570
             },
             "sprint": 116,
             "story_id": "116.1",
@@ -9751,7 +9751,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 117 - Datadog and Multi-Vendor Observability",
-              "line": 6617
+              "line": 6618
             },
             "sprint": 117,
             "story_id": "117.1",
@@ -9800,7 +9800,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 6 - Canonical Workspace Paths",
-              "line": 708
+              "line": 709
             },
             "sprint": 6,
             "story_id": "6.1",
@@ -9853,7 +9853,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -9863,7 +9863,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -9873,7 +9873,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -9922,7 +9922,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 129 - Connected Identity and Work Graph",
-              "line": 7195
+              "line": 7196
             },
             "sprint": 129,
             "story_id": "129.1",
@@ -9971,7 +9971,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 139 - Calendars, Contacts, and Tasks",
-              "line": 7635
+              "line": 7636
             },
             "sprint": 139,
             "story_id": "139.1",
@@ -10022,7 +10022,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 7 - Platform Adapter Contract and Release Manifests",
-              "line": 761
+              "line": 762
             },
             "sprint": 7,
             "story_id": "7.1",
@@ -10032,7 +10032,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 815
+              "line": 816
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -10042,7 +10042,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 869
+              "line": 870
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -10092,7 +10092,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 1001
+              "line": 1002
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -10142,7 +10142,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 11 - Encrypted Canonical Operational Store",
-              "line": 1001
+              "line": 1002
             },
             "sprint": 11,
             "story_id": "11.1",
@@ -10194,7 +10194,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -10204,7 +10204,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -10214,7 +10214,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -10263,7 +10263,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -10312,7 +10312,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations",
-              "line": 6521
+              "line": 6522
             },
             "sprint": 115,
             "story_id": "115.1",
@@ -10362,7 +10362,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1426
+              "line": 1427
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -10372,7 +10372,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1476
+              "line": 1477
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -10422,7 +10422,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 22 - Context Management and Crash-Safe Resume",
-              "line": 1628
+              "line": 1629
             },
             "sprint": 22,
             "story_id": "22.1",
@@ -10473,7 +10473,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 8600
+              "line": 8601
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -10522,7 +10522,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1240
+              "line": 1241
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -10574,7 +10574,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 815
+              "line": 816
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -10584,7 +10584,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 869
+              "line": 870
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -10594,7 +10594,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1318
+              "line": 1319
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -10645,7 +10645,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 8 - macOS Security Topology and Packaging",
-              "line": 815
+              "line": 816
             },
             "sprint": 8,
             "story_id": "8.1",
@@ -10655,7 +10655,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 9 - Fedora and Ubuntu Security Topology",
-              "line": 869
+              "line": 870
             },
             "sprint": 9,
             "story_id": "9.1",
@@ -10705,7 +10705,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
-              "line": 6329
+              "line": 6330
             },
             "sprint": 111,
             "story_id": "111.1",
@@ -10755,7 +10755,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -10804,7 +10804,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 136 - Slack Adapter",
-              "line": 7503
+              "line": 7504
             },
             "sprint": 136,
             "story_id": "136.1",
@@ -10855,7 +10855,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -10865,7 +10865,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -10875,7 +10875,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -10924,7 +10924,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 108 - Azure Repos and GitLab Source Adapters",
-              "line": 6187
+              "line": 6188
             },
             "sprint": 108,
             "story_id": "108.1",
@@ -10973,7 +10973,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 8828
+              "line": 8829
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -11022,7 +11022,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 111 - Supply-Chain Evidence and Security Findings",
-              "line": 6329
+              "line": 6330
             },
             "sprint": 111,
             "story_id": "111.1",
@@ -11072,7 +11072,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 130 - Synchronization and Event Integrity",
-              "line": 7239
+              "line": 7240
             },
             "sprint": 130,
             "story_id": "130.1",
@@ -11121,7 +11121,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 133 - Microsoft Teams Adapter",
-              "line": 7371
+              "line": 7372
             },
             "sprint": 133,
             "story_id": "133.1",
@@ -11170,7 +11170,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 16 - Sandboxed Read-Only Tool Protocol",
-              "line": 1318
+              "line": 1319
             },
             "sprint": 16,
             "story_id": "16.1",
@@ -11220,7 +11220,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 8486
+              "line": 8487
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -11269,7 +11269,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 131 - Unified Activity Inbox",
-              "line": 7283
+              "line": 7284
             },
             "sprint": 131,
             "story_id": "131.1",
@@ -11320,7 +11320,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -11330,7 +11330,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -11340,7 +11340,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -11392,7 +11392,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -11402,7 +11402,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -11412,7 +11412,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -11462,7 +11462,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 160 - Current Public Research and Citation Safety",
-              "line": 8670
+              "line": 8671
             },
             "sprint": 160,
             "story_id": "160.1",
@@ -11511,7 +11511,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 141 - Deterministic Productivity Workflows and Epic Gate",
-              "line": 7723
+              "line": 7724
             },
             "sprint": 141,
             "story_id": "141.1",
@@ -11562,7 +11562,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC",
-              "line": 6810
+              "line": 6811
             },
             "sprint": 121,
             "story_id": "121.1",
@@ -11572,7 +11572,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers",
-              "line": 6859
+              "line": 6860
             },
             "sprint": 122,
             "story_id": "122.1",
@@ -11582,7 +11582,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
-              "line": 7005
+              "line": 7006
             },
             "sprint": 125,
             "story_id": "125.1",
@@ -11632,7 +11632,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards",
-              "line": 6140
+              "line": 6141
             },
             "sprint": 107,
             "story_id": "107.1",
@@ -11681,7 +11681,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 8942
+              "line": 8943
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -11730,7 +11730,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 155 - Cross-Pack Extreme Verification and Removal",
-              "line": 8379
+              "line": 8380
             },
             "sprint": 155,
             "story_id": "155.1",
@@ -11782,7 +11782,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 105 - External Effects, Events, and Uncertain Results",
-              "line": 6043
+              "line": 6044
             },
             "sprint": 105,
             "story_id": "105.1",
@@ -11792,7 +11792,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 123 - Provider Version Skew, Failure, and Resource Campaign",
-              "line": 6908
+              "line": 6909
             },
             "sprint": 123,
             "story_id": "123.1",
@@ -11802,7 +11802,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 124 - Adapter Removal and Strict-Local Restoration",
-              "line": 6957
+              "line": 6958
             },
             "sprint": 124,
             "story_id": "124.1",
@@ -11812,7 +11812,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 125 - Cross-Provider Delivery and Windows Release Gates",
-              "line": 7005
+              "line": 7006
             },
             "sprint": 125,
             "story_id": "125.1",
@@ -11876,7 +11876,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control",
-              "line": 1240
+              "line": 1241
             },
             "sprint": 15,
             "story_id": "15.1",
@@ -11925,7 +11925,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 23 - Native Visual Studio Code Chat Experience",
-              "line": 1683
+              "line": 1684
             },
             "sprint": 23,
             "story_id": "23.1",
@@ -11935,7 +11935,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 24 - Manual Codex Handoff Boundary",
-              "line": 1757
+              "line": 1758
             },
             "sprint": 24,
             "story_id": "24.1",
@@ -11945,7 +11945,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 25 - v0.1 Cross-Platform Release",
-              "line": 1828
+              "line": 1829
             },
             "sprint": 25,
             "story_id": "25.1",
@@ -11993,7 +11993,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 20 - Evidence-State Assignment",
-              "line": 1527
+              "line": 1528
             },
             "sprint": 20,
             "story_id": "20.1",
@@ -12003,7 +12003,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
-              "line": 1577
+              "line": 1578
             },
             "sprint": 21,
             "story_id": "21.1",
@@ -12050,7 +12050,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 13 - Model Manifest and Runtime Contract",
-              "line": 1109
+              "line": 1110
             },
             "sprint": 13,
             "story_id": "13.1",
@@ -12098,7 +12098,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 18 - Pinned Repository Structure",
-              "line": 1426
+              "line": 1427
             },
             "sprint": 18,
             "story_id": "18.1",
@@ -12108,7 +12108,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 19 - Repository Map Coverage and Source Resolution",
-              "line": 1476
+              "line": 1477
             },
             "sprint": 19,
             "story_id": "19.1",
@@ -12155,7 +12155,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 17 - Read-Only Git and Untrusted Instructions",
-              "line": 1372
+              "line": 1373
             },
             "sprint": 17,
             "story_id": "17.1",
@@ -12202,7 +12202,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 30 - Optional Local Semantic Retrieval",
-              "line": 2116
+              "line": 2117
             },
             "sprint": 30,
             "story_id": "30.1",
@@ -12249,7 +12249,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 49 - Later Model Profiles and Measured Local Routing",
-              "line": 3150
+              "line": 3151
             },
             "sprint": 49,
             "story_id": "49.1",
@@ -12298,7 +12298,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 26 - Canonical Human Knowledge Domain",
-              "line": 1906
+              "line": 1907
             },
             "sprint": 26,
             "story_id": "26.1",
@@ -12308,7 +12308,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 32 - Conversation Search and Branching",
-              "line": 2226
+              "line": 2227
             },
             "sprint": 32,
             "story_id": "32.1",
@@ -12318,7 +12318,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 33 - Private Archives and Evidence Bundles",
-              "line": 2276
+              "line": 2277
             },
             "sprint": 33,
             "story_id": "33.1",
@@ -12367,7 +12367,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release",
-              "line": 2326
+              "line": 2327
             },
             "sprint": 34,
             "story_id": "34.1",
@@ -12377,7 +12377,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 78 - Capability Package Trust and Lifecycle",
-              "line": 4680
+              "line": 4681
             },
             "sprint": 78,
             "story_id": "78.1",
@@ -12387,7 +12387,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 79 - Hooks, Safe Mode, and Package Recovery",
-              "line": 4729
+              "line": 4730
             },
             "sprint": 79,
             "story_id": "79.1",
@@ -12434,7 +12434,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 46 - Trusted Test and Validation Runner",
-              "line": 2985
+              "line": 2986
             },
             "sprint": 46,
             "story_id": "46.1",
@@ -12481,7 +12481,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 42 - Git Worktrees and Remote Repository Safety",
-              "line": 2760
+              "line": 2761
             },
             "sprint": 42,
             "story_id": "42.1",
@@ -12529,7 +12529,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 35 - Exact-Preimage Write Approval",
-              "line": 2384
+              "line": 2385
             },
             "sprint": 35,
             "story_id": "35.1",
@@ -12539,7 +12539,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 36 - Atomic Write Application and Rollback",
-              "line": 2435
+              "line": 2436
             },
             "sprint": 36,
             "story_id": "36.1",
@@ -12586,7 +12586,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 48 - Complete Local CLI and Headless Contracts",
-              "line": 3095
+              "line": 3096
             },
             "sprint": 48,
             "story_id": "48.1",
@@ -12633,7 +12633,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 70 - Visible Network Capability and Connector Cache",
-              "line": 4248
+              "line": 4249
             },
             "sprint": 70,
             "story_id": "70.1",
@@ -12681,7 +12681,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 89 - Queue, Lease, and Retry Semantics",
-              "line": 5231
+              "line": 5232
             },
             "sprint": 89,
             "story_id": "89.1",
@@ -12691,7 +12691,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 90 - Read-Only Schedules, Notifications, and Receipts",
-              "line": 5281
+              "line": 5282
             },
             "sprint": 90,
             "story_id": "90.1",
@@ -12741,7 +12741,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 92 - Agent Definitions and Registry",
-              "line": 5387
+              "line": 5388
             },
             "sprint": 92,
             "story_id": "92.1",
@@ -12751,7 +12751,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 93 - Agent Validation, Dry Runs, and Enablement",
-              "line": 5436
+              "line": 5437
             },
             "sprint": 93,
             "story_id": "93.1",
@@ -12761,7 +12761,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 94 - Child Authority and Isolation",
-              "line": 5487
+              "line": 5488
             },
             "sprint": 94,
             "story_id": "94.1",
@@ -12771,7 +12771,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 95 - Agent Coordination, Review, and Direction",
-              "line": 5537
+              "line": 5538
             },
             "sprint": 95,
             "story_id": "95.1",
@@ -12819,7 +12819,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 80 - Read-Only MCP Identity and Manifests",
-              "line": 4780
+              "line": 4781
             },
             "sprint": 80,
             "story_id": "80.1",
@@ -12829,7 +12829,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 81 - MCP Request Mediation and Failure Isolation",
-              "line": 4829
+              "line": 4830
             },
             "sprint": 81,
             "story_id": "81.1",

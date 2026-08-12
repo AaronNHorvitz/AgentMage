@@ -541,7 +541,7 @@ Managed-device evaluation is optional and outside the personal development bound
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 15 epics and 157 sequential dependency gates. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, and 0009 record the additions-only evolution.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 epics and 169 sequential dependency gates, numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, and 0011 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
 
 ```mermaid
 flowchart LR

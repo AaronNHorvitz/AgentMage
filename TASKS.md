@@ -68,6 +68,7 @@ still requires an explicitly approved decision and complete impact statement.
 | Command authority, public research, credential brokering, continuity, approved-model management, and the isolated model lab expanded the product plan. | Accepted scope decision | Apply `docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md`: preserve all prior identities, append the trusted-operations work, and assign first-GA closure to Sprint 166. |
 | Whole-codebase audit became a first-GA capability without fitting an entire repository into model context. | Accepted scope decision | Apply `docs/decisions/0011-whole-codebase-audit.md`: preserve the Sprint 166 final gate and add census, structural index, evidence-ledger, reconciliation, read-only, checkpoint, and coverage work within the accepted sprint sequence. |
 | Current documentation and machine architecture conflated planned, scaffolded, tested, enabled, and shipped states. | Accepted stabilization decision | Apply `docs/decisions/0012-stabilization-truth-and-status-model.md`: use `architecture/status-model.json` for current truth, freeze new capability families, and pause the numbered roadmap until the final stabilization resumption gate passes. |
+| Real product-boundary fuzzing requires a separately supervised security session and would become stale while active boundaries continue to change. | Accepted sequencing decision | Apply `docs/decisions/0025-final-manual-fuzz-campaign.md`: keep `RM-024`, every affected `RV-15` result, and final `G-GA` open; run all non-fuzz verification during development and execute the bound real-fuzz campaign after first-GA surfaces freeze but before Sprint 166 closes. |
 
 ### Blocked Platform Lane
 
@@ -9051,6 +9052,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
   - [ ] **Sub-task 166.1.2.3:** Rerun `RV-01` through `RV-49`, accessibility, performance, recovery, incident tabletop, removal, strict-local restoration, and documentation gates.
   - [ ] **Sub-task 166.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, stale result, suppression, quarantine, flake, unavailable dependency, and reviewer finding.
   - [ ] **Sub-task 166.1.2.5:** Independently run comprehensive audits against each release-reference repository and known-answer corpus, then reconcile census, graphs, packets, cards, contradictions, checkpoints, findings, reports, read-only attestations, platform results, and removal evidence.
+  - [ ] **Sub-task 166.1.2.6:** Execute the Decision 0025 final `RM-024` real-fuzz campaign against every promoted parser, IPC decoder, path boundary, model-output decoder, and reviewed FFI target; bind exact source/toolchain/harness/corpus/seed/duration/sanitizer/coverage identities, minimize and disposition every crash or hang, add regression tests, and rerun every boundary made stale by a fix.
 - [ ] **Task 166.1.3 - Prove release blocking and sign decision**
   - [ ] **Sub-task 166.1.3.1:** Force each platform, provider, authority, credential, disclosure, backup, restore, model, audit-coverage, read-only, reconciliation, security, accessibility, recovery, support, removal, and evidence gate to fail independently.
   - [ ] **Sub-task 166.1.3.2:** Prove each failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocker prevents package publication and `G-GA` closure.
@@ -9070,6 +9072,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 166.AC3:** Every promoted provider, command, research, credential, continuity, model, audit, object, operation, scope, and autonomy tuple passes conformance and extreme tests; every unsupported family passes absence tests.
 - [ ] **Sprint AC 166.AC4:** Bills of materials, provenance, signatures, hashes, manifests, audit census, graphs, findings, coverage, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 166.AC5:** `G-GA` closes only after independent reproduction, explicit user approval, and zero hidden blocker.
+- [ ] **Sprint AC 166.AC6:** The real `RM-024` campaign has current reviewed sanitizer, coverage, crash, minimization, and rerun evidence for every promoted target; synthetic or property-test records do not substitute for this evidence.
 
 **Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-49`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
 
