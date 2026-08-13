@@ -52,7 +52,7 @@ impl fmt::Display for DockerTopologyCollectorError {
 impl std::error::Error for DockerTopologyCollectorError {}
 
 /// Complete closed collector input; every field is bounded metadata, never source content.
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct DockerCollectorInput {
     /// Exact collector protocol version.
@@ -87,112 +87,112 @@ pub struct DockerCollectorInput {
     pub egress: EgressInput,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BaselineInput {
-    daemon_executable_sha256: String,
-    daemon_socket_identity_sha256: String,
-    docker_socket_gid: u32,
-    runtime_uid: u32,
-    runtime_gid: u32,
-    guard_uid: u32,
-    private_namespace_sha256: String,
-    guard_executable_sha256: String,
-    guard_cgroup_sha256: String,
+    pub(crate) daemon_executable_sha256: String,
+    pub(crate) daemon_socket_identity_sha256: String,
+    pub(crate) docker_socket_gid: u32,
+    pub(crate) runtime_uid: u32,
+    pub(crate) runtime_gid: u32,
+    pub(crate) guard_uid: u32,
+    pub(crate) private_namespace_sha256: String,
+    pub(crate) guard_executable_sha256: String,
+    pub(crate) guard_cgroup_sha256: String,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct DaemonInput {
-    daemon_executable_sha256: String,
-    daemon_uid: u32,
-    rootless: bool,
-    runtime_uid: u32,
-    runtime_user_has_socket_group: bool,
-    socket_identity_sha256: String,
-    socket_is_unix_stream: bool,
-    socket_owner_uid: u32,
-    socket_group_gid: u32,
-    socket_mode: u32,
+    pub(crate) daemon_executable_sha256: String,
+    pub(crate) daemon_uid: u32,
+    pub(crate) rootless: bool,
+    pub(crate) runtime_uid: u32,
+    pub(crate) runtime_user_has_socket_group: bool,
+    pub(crate) socket_identity_sha256: String,
+    pub(crate) socket_is_unix_stream: bool,
+    pub(crate) socket_owner_uid: u32,
+    pub(crate) socket_group_gid: u32,
+    pub(crate) socket_mode: u32,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ApiInput {
-    private_namespace_sha256: String,
-    runner_bind_host: String,
-    guard_connect_host: String,
-    raw_port: u16,
-    namespace_active_interface_count: u8,
-    loopback_interface_up: bool,
-    namespace_non_local_route_count: u8,
-    raw_listener_count: u8,
-    host_listener_count: u8,
-    non_loopback_listener_count: u8,
-    management_listener_count: u8,
+    pub(crate) private_namespace_sha256: String,
+    pub(crate) runner_bind_host: String,
+    pub(crate) guard_connect_host: String,
+    pub(crate) raw_port: u16,
+    pub(crate) namespace_active_interface_count: u8,
+    pub(crate) loopback_interface_up: bool,
+    pub(crate) namespace_non_local_route_count: u8,
+    pub(crate) raw_listener_count: u8,
+    pub(crate) host_listener_count: u8,
+    pub(crate) non_loopback_listener_count: u8,
+    pub(crate) management_listener_count: u8,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ContainersInput {
-    runner_count: u8,
-    guard_count: u8,
-    runner_and_guard_share_namespace: bool,
-    guard_uid: u32,
-    guard_executable_sha256: String,
-    guard_cgroup_sha256: String,
-    kernel_socket_owner_uid: u32,
-    kernel_socket_group_gid: u32,
-    kernel_socket_parent_mode: u32,
-    kernel_socket_mode: u32,
-    kernel_socket_peer_authentication: bool,
-    host_route_count: u8,
-    bridge_route_count: u8,
-    foreign_reachable_peer_count: u8,
-    workspace_mount_count: u8,
-    credential_mount_count: u8,
-    host_root_mount_count: u8,
-    docker_socket_mount_count: u8,
-    private_runtime_tmpfs: bool,
-    model_content_store_writable: bool,
+    pub(crate) runner_count: u8,
+    pub(crate) guard_count: u8,
+    pub(crate) runner_and_guard_share_namespace: bool,
+    pub(crate) guard_uid: u32,
+    pub(crate) guard_executable_sha256: String,
+    pub(crate) guard_cgroup_sha256: String,
+    pub(crate) kernel_socket_owner_uid: u32,
+    pub(crate) kernel_socket_group_gid: u32,
+    pub(crate) kernel_socket_parent_mode: u32,
+    pub(crate) kernel_socket_mode: u32,
+    pub(crate) kernel_socket_peer_authentication: bool,
+    pub(crate) host_route_count: u8,
+    pub(crate) bridge_route_count: u8,
+    pub(crate) foreign_reachable_peer_count: u8,
+    pub(crate) workspace_mount_count: u8,
+    pub(crate) credential_mount_count: u8,
+    pub(crate) host_root_mount_count: u8,
+    pub(crate) docker_socket_mount_count: u8,
+    pub(crate) private_runtime_tmpfs: bool,
+    pub(crate) model_content_store_writable: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ImagesInput {
-    runner_manifest_digest: String,
-    model_manifest_digest: String,
-    mutable_tag_used_for_admission: bool,
-    image_repull_allowed: bool,
+    pub(crate) runner_manifest_digest: String,
+    pub(crate) model_manifest_digest: String,
+    pub(crate) mutable_tag_used_for_admission: bool,
+    pub(crate) image_repull_allowed: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ResourcesInput {
-    privileged: bool,
-    capabilities_added: u8,
-    no_new_privileges: bool,
-    read_only_root: bool,
-    memory_bytes: u64,
-    tasks: u32,
-    cpu_percent: u16,
-    runtime_seconds: u16,
-    output_bytes: u32,
-    swap_bytes: u64,
-    parallel_slots: u8,
+    pub(crate) privileged: bool,
+    pub(crate) capabilities_added: u8,
+    pub(crate) no_new_privileges: bool,
+    pub(crate) read_only_root: bool,
+    pub(crate) memory_bytes: u64,
+    pub(crate) tasks: u32,
+    pub(crate) cpu_percent: u16,
+    pub(crate) runtime_seconds: u16,
+    pub(crate) output_bytes: u32,
+    pub(crate) swap_bytes: u64,
+    pub(crate) parallel_slots: u8,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct EgressInput {
-    do_not_track: bool,
-    acquisition_allowed: bool,
-    registry_access: bool,
-    ambient_proxy: bool,
-    ambient_dns: bool,
-    firewall_default_deny: bool,
-    egress_interface_count: u8,
-    outbound_bytes: u64,
+    pub(crate) do_not_track: bool,
+    pub(crate) acquisition_allowed: bool,
+    pub(crate) registry_access: bool,
+    pub(crate) ambient_proxy: bool,
+    pub(crate) ambient_dns: bool,
+    pub(crate) firewall_default_deny: bool,
+    pub(crate) egress_interface_count: u8,
+    pub(crate) outbound_bytes: u64,
 }
 
 /// Content-free admission output emitted only after the complete preflight passes.
@@ -232,7 +232,7 @@ pub fn validate_topology_from_reader(
     validate_topology(input)
 }
 
-fn validate_topology(
+pub(crate) fn validate_topology(
     input: DockerCollectorInput,
 ) -> Result<DockerCollectorOutput, DockerTopologyCollectorError> {
     if input.protocol_version != DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION

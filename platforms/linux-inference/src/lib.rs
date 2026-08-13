@@ -11,6 +11,9 @@ use agentmage_kernel_contracts::{
 
 mod docker_guard;
 mod docker_guard_service;
+mod docker_http_observer;
+mod docker_linux_observer;
+mod docker_live_collector;
 mod docker_preflight;
 mod docker_runtime;
 mod docker_topology_collector;
@@ -25,6 +28,10 @@ pub use docker_guard_service::{
     DOCKER_GUARD_BOOTSTRAP_BYTES, DOCKER_GUARD_PROTOCOL_VERSION, DockerGuardBootstrap,
     DockerGuardService, DockerGuardServiceError, DockerGuardSessionCredentials,
 };
+pub use docker_live_collector::{
+    DOCKER_LIVE_OBSERVER_MAX_INPUT_BYTES, DockerLiveCollectorError, DockerLiveCollectorOutput,
+    observe_live_topology_from_reader,
+};
 pub use docker_preflight::{
     DOCKER_PREFLIGHT_CONTRACT_VERSION, DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION,
     DockerApiObservation, DockerContainerObservation, DockerDaemonObservation,
@@ -32,8 +39,9 @@ pub use docker_preflight::{
     DockerPreflightError, DockerResourceObservation, DockerTopologyObservation, admit_docker_mode,
 };
 pub use docker_runtime::{
-    DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_ARTIFACT_DIGEST_HEX, DOCKER_MODEL_PLUGIN_PACKAGE_ID,
-    DOCKER_MODEL_PLUGIN_VERSION, DOCKER_MODEL_RUNNER_BIND_HOST, DOCKER_MODEL_RUNNER_CONNECT_HOST,
+    DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_ARTIFACT_DIGEST_HEX, DOCKER_MODEL_GGUF_SHA256,
+    DOCKER_MODEL_PLUGIN_PACKAGE_ID, DOCKER_MODEL_PLUGIN_VERSION, DOCKER_MODEL_PROJECTOR_SHA256,
+    DOCKER_MODEL_RUNNER_BIND_HOST, DOCKER_MODEL_RUNNER_CONNECT_HOST,
     DOCKER_MODEL_RUNNER_IMAGE_DIGEST, DOCKER_MODEL_RUNNER_IMAGE_DIGEST_HEX,
     DOCKER_MODEL_RUNNER_PORT, DOCKER_RUNTIME_PROFILE_SHA256, DOCKER_RUNTIME_PROFILE_SHA256_HEX,
     DockerDaemonPrerequisites, DockerInferenceResourceEnvelope, DockerInferenceTopology,
