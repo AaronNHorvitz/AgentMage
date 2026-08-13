@@ -322,6 +322,8 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
     platforms = lifecycle.get("platforms")
     expected_formats = {"fedora-x86_64": "rpm", "ubuntu-x86_64": "deb"}
     expected_payload_shape = [
+        ("usr/libexec/agentmage/agentmage-docker-guard", 0o755),
+        ("usr/libexec/agentmage/agentmage-docker-topology-collector", 0o755),
         ("usr/libexec/agentmage/agentmage-host", 0o755),
         ("usr/libexec/agentmage/agentmage-native-inference", 0o755),
         ("usr/share/agentmage/agentmage.vsix", 0o644),
@@ -346,7 +348,7 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
             item.get("package_format") != expected_formats[platform_id]
             for platform_id, item in platform_map.items()
         )
-        or any(len(item.get("steps", [])) != 38 for item in platform_map.values())
+        or any(len(item.get("steps", [])) != 48 for item in platform_map.values())
         or any(
             not all(step.get("status") == "pass" for step in item.get("steps", []))
             for item in platform_map.values()
@@ -517,6 +519,8 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         "package-files",
         "native-host-launch",
         "inactive-inference-launch",
+        "inactive-docker-guard-launch",
+        "inactive-docker-collector-launch",
         "vscode-version",
         "extension-install",
         "extension-registration",
@@ -559,7 +563,7 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
                 "package_administrator": "0:0",
             }
             or [step.get("id") for step in item.get("steps", [])] != expected_steps
-            or not _all_pass(item.get("steps"), 19)
+            or not _all_pass(item.get("steps"), 21)
             or item.get("container_controls", {}).get("runtime")
             != "rootless-podman"
             or item.get("container_controls", {}).get("network") != "none"
