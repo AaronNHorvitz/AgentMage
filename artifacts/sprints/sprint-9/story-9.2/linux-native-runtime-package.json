@@ -438,12 +438,16 @@
     "authority_inputs": [],
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
+    "docker_compatibility_available": false,
+    "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "docker_runtime_profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
     "enabled_models": 0,
     "inference_available": false,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": false,
-    "process_boundary_version": 2
+    "process_boundary_version": 3
   },
   "profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
   "readelf": {
@@ -468,7 +472,7 @@
     "name": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
     "sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5"
   },
-  "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
+  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
   "sources": [
     {
       "bytes": 13033,
@@ -481,19 +485,19 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
-      "bytes": 35082,
+      "bytes": 35376,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "d7bdfdebe299081013fc674f9390842a560e7315b4406023f8023b4f5192fcb0"
+      "sha256": "82da6f0cddd4cfb38f1844af4e220f55c55f189f3502e5a9f848dfba9add9ae1"
     },
     {
-      "bytes": 4115,
+      "bytes": 4446,
       "path": "architecture/build-contract.json",
-      "sha256": "18874f1e5ff200a8a002752b712ea6e1f9ad46f9901b6a45220d1f290441ec80"
+      "sha256": "6849cee1d9b2f8e46425eeb0f737f583d31ae7be3236baae09f6d11a0ad044bb"
     },
     {
-      "bytes": 1979,
+      "bytes": 2087,
       "path": "architecture/component-inventory-policy.json",
-      "sha256": "15d17fff25d7437934c82c8086596609a3316e63081a9db172c0e8aa69600879"
+      "sha256": "906e8826b5162fe9df085d870ac6900420239440c095d671b5e726415424888f"
     },
     {
       "bytes": 4868,
@@ -506,14 +510,24 @@
       "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
     },
     {
+      "bytes": 6330,
+      "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
+      "sha256": "9c0c50d98933661884e58da3c00360438946537519e73057603ffeca7d4fdcbb"
+    },
+    {
+      "bytes": 3403,
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
+    },
+    {
       "bytes": 8057,
       "path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
       "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
     },
     {
-      "bytes": 19930,
+      "bytes": 20157,
       "path": "package.json",
-      "sha256": "7a252ade783d5f004a2d195648955b714f803d4b177cdbd4de52fac3d3904e6b"
+      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
     },
     {
       "bytes": 441,
@@ -521,19 +535,24 @@
       "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
     },
     {
-      "bytes": 1301,
+      "bytes": 1931,
       "path": "platforms/linux-inference/README.md",
-      "sha256": "5dd321f0f0b757182921d409c4db99da0e71f6d40da30c770c68df8838136e80"
+      "sha256": "5d78c1b779986c78cb691ca7b5c0d8e0e528d6ea400b8137ccdbad2f517c81ac"
     },
     {
-      "bytes": 5493,
+      "bytes": 6759,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "99577980a6d6c4ee7c72d7ac74befc26fa6c2827f8838db85009599a98ce03e6"
+      "sha256": "1ade3bae8140060f2c3855b7d0d71d46e786e8e2cf01be4fd170e9c968fd7f17"
     },
     {
       "bytes": 574,
       "path": "platforms/linux-inference/src/main.rs",
       "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+    },
+    {
+      "bytes": 24590,
+      "path": "platforms/linux-inference/src/docker_runtime.rs",
+      "sha256": "c8e132707a23201cc9f2be3a508cc429ef38d73b72bb0e4eb0a2555d3f6e9aa7"
     },
     {
       "bytes": 16731,
@@ -546,19 +565,19 @@
       "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
     },
     {
-      "bytes": 14060,
+      "bytes": 14094,
       "path": "scripts/build_contract.py",
-      "sha256": "2d595fda75316431894f6c899c7534409ceedd20e7a75e31e7b3c84d02aea539"
+      "sha256": "681626d86a97fe9e22476fbb068986b860643d787943883c680aa4e92dda9212"
     },
     {
-      "bytes": 22949,
+      "bytes": 24968,
       "path": "scripts/component_inventory.py",
-      "sha256": "87aa197a9e4e4234315bdc96b2b5362194e4e5f2ae41aa60c47d1ea9d7e3be50"
+      "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
     },
     {
-      "bytes": 20159,
+      "bytes": 20751,
       "path": "scripts/linux_native_runtime_evidence.py",
-      "sha256": "0971700d608e6815744875001f543ce58438bc4dffb89b0156cc518f744e3035"
+      "sha256": "02283559566aa19ef739ffebecfa186e0b047165e646dbd8275cf25e03a8a676"
     },
     {
       "bytes": 24644,
@@ -566,9 +585,9 @@
       "sha256": "b9881b73394e5c5e7e3bc39f31fa0c06817cdcc4274d66e2ab126c6d8c4ca58e"
     },
     {
-      "bytes": 4962,
+      "bytes": 5300,
       "path": "tests/test_component_inventory.py",
-      "sha256": "0a8deb0ae90b5e552e0a6421533369db1646ab5e9dd298567803d72f40cc033e"
+      "sha256": "dfb8905f5afb42553d55400cf166eadefa2a89cf9b7481224991e573185ad769"
     },
     {
       "bytes": 6027,
