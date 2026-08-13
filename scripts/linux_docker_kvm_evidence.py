@@ -15,7 +15,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
-from scripts import linux_native_ubuntu_control_evidence as vm_support
+try:
+    from scripts import linux_native_ubuntu_control_evidence as vm_support
+except ModuleNotFoundError:  # Direct execution places only scripts/ on sys.path.
+    import linux_native_ubuntu_control_evidence as vm_support
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
