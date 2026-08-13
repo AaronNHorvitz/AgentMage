@@ -28,7 +28,7 @@ use crate::policy::PolicyEngine;
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
 
-const SCHEMA_VERSION: i64 = 2;
+const SCHEMA_VERSION: i64 = 3;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MIGRATION_1_SCHEMA_SQL: &str = "CREATE TABLE schema_history (
@@ -94,6 +94,179 @@ CREATE TABLE checkpoints (
 ) STRICT;";
 const MIGRATION_2_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0002-domain-schema.sql");
+const MIGRATION_3_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0003-retention-lifecycle.sql");
+
+/// Closed record families governed by the canonical retention engine.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetentionRecordFamily {
+    /// Resumable sessions.
+    Sessions,
+    /// Session objectives.
+    Objectives,
+    /// Revisioned plans.
+    Plans,
+    /// Plan tasks.
+    Tasks,
+    /// Proposed or executed actions.
+    Actions,
+    /// Evidence records.
+    Evidence,
+    /// Recorded decisions.
+    Decisions,
+    /// Capability grants.
+    Grants,
+    /// Terminal receipts.
+    Receipts,
+    /// Atomic checkpoints.
+    Checkpoints,
+    /// Content-free file observations.
+    Files,
+}
+
+impl RetentionRecordFamily {
+    const fn code(self) -> &'static str {
+        match self {
+            Self::Sessions => "sessions",
+            Self::Objectives => "objectives",
+            Self::Plans => "plans",
+            Self::Tasks => "tasks",
+            Self::Actions => "actions",
+            Self::Evidence => "evidence",
+            Self::Decisions => "decisions",
+            Self::Grants => "grants",
+            Self::Receipts => "receipts",
+            Self::Checkpoints => "checkpoints",
+            Self::Files => "files",
+        }
+    }
+}
+
+/// Closed data-sensitivity values retained with lifecycle metadata.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetentionSensitivity {
+    /// Public data.
+    Public,
+    /// Internal operational data.
+    Internal,
+    /// Private user data.
+    Private,
+    /// Restricted data admitted by a separately reviewed policy.
+    Restricted,
+}
+
+impl RetentionSensitivity {
+    const fn code(self) -> &'static str {
+        match self {
+            Self::Public => "public",
+            Self::Internal => "internal",
+            Self::Private => "private",
+            Self::Restricted => "restricted",
+        }
+    }
+}
+
+/// Retention states that may be assigned before a hold or expiration.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetentionDisposition {
+    /// Memory-only data; retained only as content-free lifecycle metadata.
+    Ephemeral,
+    /// Data retained for a bounded session period.
+    Session,
+    /// Data explicitly retained until its bounded expiration.
+    Retained,
+}
+
+impl RetentionDisposition {
+    const fn code(self) -> &'static str {
+        match self {
+            Self::Ephemeral => "ephemeral",
+            Self::Session => "session",
+            Self::Retained => "retained",
+        }
+    }
+}
+
+/// A user or legal hold that pauses expiration without changing content.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetentionHoldKind {
+    /// A user-selected preservation hold.
+    User,
+    /// A legally directed preservation hold.
+    Legal,
+}
+
+impl RetentionHoldKind {
+    const fn code(self) -> &'static str {
+        match self {
+            Self::User => "user",
+            Self::Legal => "legal",
+        }
+    }
+
+    const fn event_code(self) -> &'static str {
+        match self {
+            Self::User => "user_hold_applied",
+            Self::Legal => "legal_hold_applied",
+        }
+    }
+}
+
+/// Validated initial lifecycle assignment for one canonical record.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RetentionAssignment {
+    retention_id: String,
+    record_family: RetentionRecordFamily,
+    record_id: String,
+    sensitivity: RetentionSensitivity,
+    disposition: RetentionDisposition,
+    expires_at_epoch_ms: Option<u64>,
+    policy_sha256: [u8; 32],
+}
+
+impl RetentionAssignment {
+    /// Creates one bounded assignment. Ephemeral records cannot receive expiration.
+    pub fn new(
+        retention_id: impl Into<String>,
+        record_family: RetentionRecordFamily,
+        record_id: impl Into<String>,
+        sensitivity: RetentionSensitivity,
+        disposition: RetentionDisposition,
+        expires_at_epoch_ms: Option<u64>,
+        policy_sha256: [u8; 32],
+    ) -> Result<Self, OperationalStoreError> {
+        let retention_id = retention_id.into();
+        let record_id = record_id.into();
+        if !valid_lifecycle_identifier(&retention_id)
+            || !valid_lifecycle_identifier(&record_id)
+            || (disposition == RetentionDisposition::Ephemeral && expires_at_epoch_ms.is_some())
+        {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        Ok(Self {
+            retention_id,
+            record_family,
+            record_id,
+            sensitivity,
+            disposition,
+            expires_at_epoch_ms,
+            policy_sha256,
+        })
+    }
+}
+
+/// Content-free result of one committed retention transition.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RetentionTransitionReceipt {
+    /// Opaque lifecycle identity, never record content.
+    pub retention_id: String,
+    /// Committed lifecycle revision.
+    pub revision: u64,
+    /// Closed transition name.
+    pub event: &'static str,
+    /// Hash-chain identity of the committed event.
+    pub event_sha256: String,
+}
 
 /// Stable key-broker failure that reveals no key or provider detail.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -128,6 +301,12 @@ pub enum OperationalStoreError {
     MigrationFailed,
     /// Canonical rows, constraints, hashes, or encrypted pages failed verification.
     IntegrityFailure,
+    /// A retention assignment or state transition was invalid or stale.
+    LifecycleRejected,
+    /// A verified backup could not be restored into a fresh candidate.
+    RestoreFailure,
+    /// The scoped encryption key could not be destroyed and verified absent.
+    KeyErasureFailure,
     /// Another writer owns the canonical store.
     ConcurrentWriter,
     /// An atomic state publication failed.
@@ -148,6 +327,9 @@ impl OperationalStoreError {
             Self::CipherUnavailable => "operational_store.cipher.unavailable",
             Self::MigrationFailed => "operational_store.migration.failed",
             Self::IntegrityFailure => "operational_store.integrity.failed",
+            Self::LifecycleRejected => "operational_store.lifecycle.rejected",
+            Self::RestoreFailure => "operational_store.restore.failed",
+            Self::KeyErasureFailure => "operational_store.key_erasure.failed",
             Self::ConcurrentWriter => "operational_store.writer.concurrent",
             Self::PersistenceFailure => "operational_store.persistence.failed",
             Self::Poisoned => "operational_store.poisoned",
@@ -238,6 +420,255 @@ impl OperationalStore {
             let _ = fs::remove_file(destination);
         }
         result
+    }
+
+    /// Registers one canonical record with a bounded retention policy.
+    pub fn assign_retention(
+        &mut self,
+        assignment: &RetentionAssignment,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<RetentionTransitionReceipt, OperationalStoreError> {
+        self.ensure_lifecycle_usable()?;
+        if assignment.disposition == RetentionDisposition::Ephemeral {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        let occurred_at = lifecycle_time(occurred_at_epoch_ms)?;
+        let expires_at = assignment
+            .expires_at_epoch_ms
+            .map(lifecycle_time)
+            .transpose()?;
+        if expires_at.is_some_and(|expires_at| expires_at < occurred_at) {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        if !retention_record_exists(
+            &transaction,
+            assignment.record_family,
+            &assignment.record_id,
+        )? {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        let policy_sha256 = hex_digest(&assignment.policy_sha256);
+        transaction
+            .execute(
+                "INSERT INTO retention(
+                    retention_id, record_family, record_id, sensitivity, disposition,
+                    expires_at_epoch_ms, legal_hold, policy_sha256, hold_kind,
+                    prior_disposition, revision, updated_at_epoch_ms, erased_at_epoch_ms
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, 'none', NULL, 1, ?8, NULL)",
+                params![
+                    &assignment.retention_id,
+                    assignment.record_family.code(),
+                    &assignment.record_id,
+                    assignment.sensitivity.code(),
+                    assignment.disposition.code(),
+                    expires_at,
+                    &policy_sha256,
+                    occurred_at,
+                ],
+            )
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        let receipt = append_retention_event(
+            &transaction,
+            &assignment.retention_id,
+            1,
+            "assigned",
+            occurred_at_epoch_ms,
+            ZERO_SHA256,
+        )?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        Ok(receipt)
+    }
+
+    /// Applies one exact user or legal hold using optimistic revision control.
+    pub fn apply_retention_hold(
+        &mut self,
+        retention_id: &str,
+        expected_revision: u64,
+        hold: RetentionHoldKind,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<RetentionTransitionReceipt, OperationalStoreError> {
+        self.ensure_lifecycle_usable()?;
+        validate_lifecycle_transition_input(retention_id, expected_revision)?;
+        let revision = expected_revision
+            .checked_add(1)
+            .ok_or(OperationalStoreError::LifecycleRejected)?;
+        let expected_revision_i64 = lifecycle_revision(expected_revision)?;
+        let revision_i64 = lifecycle_revision(revision)?;
+        let occurred_at = lifecycle_time(occurred_at_epoch_ms)?;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        let previous = retention_event_head(&transaction, retention_id, expected_revision)?;
+        let changed = transaction
+            .execute(
+                "UPDATE retention
+                 SET disposition = 'held', legal_hold = 1, hold_kind = ?1,
+                     prior_disposition = disposition, revision = ?2,
+                     updated_at_epoch_ms = ?3
+                 WHERE retention_id = ?4 AND revision = ?5 AND hold_kind = 'none'
+                   AND disposition IN ('session', 'retained')
+                   AND updated_at_epoch_ms <= ?3",
+                params![
+                    hold.code(),
+                    revision_i64,
+                    occurred_at,
+                    retention_id,
+                    expected_revision_i64,
+                ],
+            )
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        if changed != 1 {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        let receipt = append_retention_event(
+            &transaction,
+            retention_id,
+            revision,
+            hold.event_code(),
+            occurred_at_epoch_ms,
+            &previous,
+        )?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        Ok(receipt)
+    }
+
+    /// Releases the exact current hold and restores its pre-hold disposition.
+    pub fn release_retention_hold(
+        &mut self,
+        retention_id: &str,
+        expected_revision: u64,
+        hold: RetentionHoldKind,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<RetentionTransitionReceipt, OperationalStoreError> {
+        self.ensure_lifecycle_usable()?;
+        validate_lifecycle_transition_input(retention_id, expected_revision)?;
+        let revision = expected_revision
+            .checked_add(1)
+            .ok_or(OperationalStoreError::LifecycleRejected)?;
+        let expected_revision_i64 = lifecycle_revision(expected_revision)?;
+        let revision_i64 = lifecycle_revision(revision)?;
+        let occurred_at = lifecycle_time(occurred_at_epoch_ms)?;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        let previous = retention_event_head(&transaction, retention_id, expected_revision)?;
+        let changed = transaction
+            .execute(
+                "UPDATE retention
+                 SET disposition = prior_disposition, legal_hold = 0, hold_kind = 'none',
+                     prior_disposition = NULL, revision = ?1, updated_at_epoch_ms = ?2
+                 WHERE retention_id = ?3 AND revision = ?4 AND hold_kind = ?5
+                   AND disposition = 'held' AND prior_disposition IN ('session', 'retained')
+                   AND updated_at_epoch_ms <= ?2",
+                params![
+                    revision_i64,
+                    occurred_at,
+                    retention_id,
+                    expected_revision_i64,
+                    hold.code(),
+                ],
+            )
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        if changed != 1 {
+            return Err(OperationalStoreError::LifecycleRejected);
+        }
+        let receipt = append_retention_event(
+            &transaction,
+            retention_id,
+            revision,
+            "hold_released",
+            occurred_at_epoch_ms,
+            &previous,
+        )?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        Ok(receipt)
+    }
+
+    /// Expires every due, unheld record in one transaction and returns ordered receipts.
+    pub fn expire_due(
+        &mut self,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<Vec<RetentionTransitionReceipt>, OperationalStoreError> {
+        self.ensure_lifecycle_usable()?;
+        let occurred_at = lifecycle_time(occurred_at_epoch_ms)?;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        let due: Vec<(String, i64)> = transaction
+            .prepare(
+                "SELECT retention_id, revision FROM retention
+                 WHERE hold_kind = 'none' AND legal_hold = 0
+                   AND disposition IN ('session', 'retained')
+                   AND expires_at_epoch_ms IS NOT NULL AND expires_at_epoch_ms <= ?1
+                   AND updated_at_epoch_ms <= ?1
+                 ORDER BY retention_id",
+            )
+            .and_then(|mut statement| {
+                statement
+                    .query_map([occurred_at], |row| Ok((row.get(0)?, row.get(1)?)))?
+                    .collect()
+            })
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        let mut receipts = Vec::with_capacity(due.len());
+        for (retention_id, expected_revision_i64) in due {
+            let expected_revision = u64::try_from(expected_revision_i64)
+                .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+            let revision = expected_revision
+                .checked_add(1)
+                .ok_or(OperationalStoreError::LifecycleRejected)?;
+            let previous = retention_event_head(&transaction, &retention_id, expected_revision)?;
+            let changed = transaction
+                .execute(
+                    "UPDATE retention
+                     SET disposition = 'expired', revision = ?1, updated_at_epoch_ms = ?2
+                     WHERE retention_id = ?3 AND revision = ?4 AND hold_kind = 'none'
+                       AND legal_hold = 0 AND disposition IN ('session', 'retained')
+                       AND expires_at_epoch_ms IS NOT NULL AND expires_at_epoch_ms <= ?2",
+                    params![
+                        lifecycle_revision(revision)?,
+                        occurred_at,
+                        &retention_id,
+                        expected_revision_i64,
+                    ],
+                )
+                .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+            if changed != 1 {
+                return Err(OperationalStoreError::LifecycleRejected);
+            }
+            receipts.push(append_retention_event(
+                &transaction,
+                &retention_id,
+                revision,
+                "expired",
+                occurred_at_epoch_ms,
+                &previous,
+            )?);
+        }
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+        Ok(receipts)
+    }
+
+    fn ensure_lifecycle_usable(&self) -> Result<(), OperationalStoreError> {
+        if self.poisoned {
+            Err(OperationalStoreError::Poisoned)
+        } else {
+            Ok(())
+        }
     }
 
     fn load_authority(
@@ -703,6 +1134,39 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 2)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 2;
+    }
+    if version == 2 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_3_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        let migrated_retention_ids = transaction
+            .prepare("SELECT retention_id FROM retention ORDER BY retention_id")
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get::<_, String>(0))?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        for retention_id in migrated_retention_ids {
+            append_retention_event(&transaction, &retention_id, 1, "assigned", 0, ZERO_SHA256)
+                .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        }
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (3, ?1)",
+                [sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -725,6 +1189,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
         != [
             (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
             (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
+            (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -1368,6 +1833,309 @@ fn verify_integrity(connection: &Connection) -> Result<(), OperationalStoreError
     if foreign_keys.is_some() {
         return Err(OperationalStoreError::IntegrityFailure);
     }
+    verify_retention_lifecycle(connection)?;
+    Ok(())
+}
+
+fn valid_lifecycle_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':' | b'/')
+        })
+}
+
+fn validate_lifecycle_transition_input(
+    retention_id: &str,
+    expected_revision: u64,
+) -> Result<(), OperationalStoreError> {
+    if valid_lifecycle_identifier(retention_id) && expected_revision > 0 {
+        Ok(())
+    } else {
+        Err(OperationalStoreError::LifecycleRejected)
+    }
+}
+
+fn lifecycle_time(value: u64) -> Result<i64, OperationalStoreError> {
+    i64::try_from(value).map_err(|_| OperationalStoreError::LifecycleRejected)
+}
+
+fn lifecycle_revision(value: u64) -> Result<i64, OperationalStoreError> {
+    i64::try_from(value).map_err(|_| OperationalStoreError::LifecycleRejected)
+}
+
+fn retention_record_exists(
+    transaction: &Transaction<'_>,
+    family: RetentionRecordFamily,
+    record_id: &str,
+) -> Result<bool, OperationalStoreError> {
+    let query = match family {
+        RetentionRecordFamily::Sessions => "SELECT 1 FROM sessions WHERE session_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Objectives => {
+            "SELECT 1 FROM objectives WHERE objective_id = ?1 LIMIT 1"
+        }
+        RetentionRecordFamily::Plans => "SELECT 1 FROM plans WHERE plan_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Tasks => "SELECT 1 FROM tasks WHERE task_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Actions => "SELECT 1 FROM actions WHERE action_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Evidence => "SELECT 1 FROM evidence WHERE evidence_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Decisions => {
+            "SELECT 1 FROM decisions WHERE decision_id = ?1 LIMIT 1"
+        }
+        RetentionRecordFamily::Grants => {
+            "SELECT 1 FROM grant_identities WHERE grant_id = ?1 LIMIT 1"
+        }
+        RetentionRecordFamily::Receipts => "SELECT 1 FROM receipts WHERE receipt_id = ?1 LIMIT 1",
+        RetentionRecordFamily::Checkpoints => {
+            "SELECT 1 FROM checkpoints WHERE CAST(generation AS TEXT) = ?1 LIMIT 1"
+        }
+        RetentionRecordFamily::Files => "SELECT 1 FROM files WHERE file_id = ?1 LIMIT 1",
+    };
+    transaction
+        .query_row(query, [record_id], |_| Ok(()))
+        .optional()
+        .map(|value| value.is_some())
+        .map_err(|_| OperationalStoreError::LifecycleRejected)
+}
+
+struct RetentionStateRow {
+    record_family: String,
+    record_id: String,
+    sensitivity: String,
+    disposition: String,
+    expires_at_epoch_ms: Option<i64>,
+    legal_hold: i64,
+    policy_sha256: String,
+    hold_kind: String,
+    prior_disposition: Option<String>,
+    revision: i64,
+    updated_at_epoch_ms: i64,
+    erased_at_epoch_ms: Option<i64>,
+}
+
+fn retention_state_sha256(
+    connection: &Connection,
+    retention_id: &str,
+) -> Result<String, OperationalStoreError> {
+    let state = connection
+        .query_row(
+            "SELECT record_family, record_id, sensitivity, disposition,
+                    expires_at_epoch_ms, legal_hold, policy_sha256, hold_kind,
+                    prior_disposition, revision, updated_at_epoch_ms, erased_at_epoch_ms
+             FROM retention WHERE retention_id = ?1",
+            [retention_id],
+            |row| {
+                Ok(RetentionStateRow {
+                    record_family: row.get(0)?,
+                    record_id: row.get(1)?,
+                    sensitivity: row.get(2)?,
+                    disposition: row.get(3)?,
+                    expires_at_epoch_ms: row.get(4)?,
+                    legal_hold: row.get(5)?,
+                    policy_sha256: row.get(6)?,
+                    hold_kind: row.get(7)?,
+                    prior_disposition: row.get(8)?,
+                    revision: row.get(9)?,
+                    updated_at_epoch_ms: row.get(10)?,
+                    erased_at_epoch_ms: row.get(11)?,
+                })
+            },
+        )
+        .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+    let mut digest = Sha256::new();
+    for value in [
+        state.record_family,
+        state.record_id,
+        state.sensitivity,
+        state.disposition,
+        state
+            .expires_at_epoch_ms
+            .map_or_else(|| "none".to_owned(), |value| value.to_string()),
+        state.legal_hold.to_string(),
+        state.policy_sha256,
+        state.hold_kind,
+        state.prior_disposition.unwrap_or_else(|| "none".to_owned()),
+        state.revision.to_string(),
+        state.updated_at_epoch_ms.to_string(),
+        state
+            .erased_at_epoch_ms
+            .map_or_else(|| "none".to_owned(), |value| value.to_string()),
+    ] {
+        digest.update(value.as_bytes());
+        digest.update([0]);
+    }
+    Ok(hex_digest(&digest.finalize()))
+}
+
+fn retention_event_head(
+    transaction: &Transaction<'_>,
+    retention_id: &str,
+    expected_revision: u64,
+) -> Result<String, OperationalStoreError> {
+    transaction
+        .query_row(
+            "SELECT event_sha256 FROM retention_events
+             WHERE retention_id = ?1 AND revision = ?2",
+            params![retention_id, lifecycle_revision(expected_revision)?],
+            |row| row.get(0),
+        )
+        .map_err(|_| OperationalStoreError::LifecycleRejected)
+}
+
+fn retention_event_sha256(
+    retention_id: &str,
+    revision: u64,
+    event: &str,
+    occurred_at_epoch_ms: u64,
+    previous_event_sha256: &str,
+    state_sha256: &str,
+) -> String {
+    let mut digest = Sha256::new();
+    for value in [
+        retention_id.to_owned(),
+        revision.to_string(),
+        event.to_owned(),
+        occurred_at_epoch_ms.to_string(),
+        previous_event_sha256.to_owned(),
+        state_sha256.to_owned(),
+    ] {
+        digest.update(value.as_bytes());
+        digest.update([0]);
+    }
+    hex_digest(&digest.finalize())
+}
+
+fn append_retention_event(
+    transaction: &Transaction<'_>,
+    retention_id: &str,
+    revision: u64,
+    event: &'static str,
+    occurred_at_epoch_ms: u64,
+    previous_event_sha256: &str,
+) -> Result<RetentionTransitionReceipt, OperationalStoreError> {
+    let state_sha256 = retention_state_sha256(transaction, retention_id)?;
+    let event_sha256 = retention_event_sha256(
+        retention_id,
+        revision,
+        event,
+        occurred_at_epoch_ms,
+        previous_event_sha256,
+        &state_sha256,
+    );
+    transaction
+        .execute(
+            "INSERT INTO retention_events(
+                retention_id, revision, event_kind, occurred_at_epoch_ms,
+                previous_event_sha256, state_sha256, event_sha256
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                retention_id,
+                lifecycle_revision(revision)?,
+                event,
+                lifecycle_time(occurred_at_epoch_ms)?,
+                previous_event_sha256,
+                &state_sha256,
+                &event_sha256,
+            ],
+        )
+        .map_err(|_| OperationalStoreError::LifecycleRejected)?;
+    Ok(RetentionTransitionReceipt {
+        retention_id: retention_id.to_owned(),
+        revision,
+        event,
+        event_sha256,
+    })
+}
+
+fn verify_retention_lifecycle(connection: &Connection) -> Result<(), OperationalStoreError> {
+    let inconsistent: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM retention
+             WHERE (hold_kind = 'none' AND (legal_hold != 0 OR prior_disposition IS NOT NULL OR disposition = 'held'))
+                OR (hold_kind != 'none' AND (legal_hold != 1 OR prior_disposition NOT IN ('session', 'retained') OR disposition != 'held'))
+                OR (disposition = 'expired' AND (hold_kind != 'none' OR legal_hold != 0))
+                OR (disposition = 'deleted' AND erased_at_epoch_ms IS NULL)",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    if inconsistent != 0 {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
+
+    let mut statement = connection
+        .prepare(
+            "SELECT retention_id, revision, event_kind, occurred_at_epoch_ms,
+                    previous_event_sha256, state_sha256, event_sha256
+             FROM retention_events ORDER BY retention_id, revision",
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let events = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, i64>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let mut heads = BTreeMap::<String, (u64, String, String)>::new();
+    for (retention_id, revision, event, occurred_at, previous, state, retained_hash) in events {
+        let revision =
+            u64::try_from(revision).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let occurred_at =
+            u64::try_from(occurred_at).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let expected_previous = heads
+            .get(&retention_id)
+            .map_or(ZERO_SHA256, |head| head.1.as_str());
+        let expected_revision = heads.get(&retention_id).map_or(1, |head| head.0 + 1);
+        let expected_hash = retention_event_sha256(
+            &retention_id,
+            revision,
+            &event,
+            occurred_at,
+            &previous,
+            &state,
+        );
+        if revision != expected_revision
+            || previous != expected_previous
+            || retained_hash != expected_hash
+        {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+        heads.insert(retention_id, (revision, retained_hash, state));
+    }
+    let retention_rows = connection
+        .prepare("SELECT retention_id, revision FROM retention ORDER BY retention_id")
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+                })?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let retention_count = retention_rows.len();
+    for (retention_id, revision) in retention_rows {
+        let revision =
+            u64::try_from(revision).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let head = heads
+            .get(&retention_id)
+            .ok_or(OperationalStoreError::IntegrityFailure)?;
+        let current_state = retention_state_sha256(connection, &retention_id)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if head.0 != revision || head.2 != current_state {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+    }
+    if heads.len() != retention_count {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
     Ok(())
 }
 
@@ -1477,10 +2245,11 @@ mod tests {
     use rusqlite::params;
 
     use super::{
-        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError,
-        OperationalStoreKeyError, OperationalStoreKeyProvider, SCHEMA_VERSION,
-        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_hex,
-        verify_runtime_configuration,
+        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, OperationalStore,
+        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_hex, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -1763,7 +2532,7 @@ mod tests {
     }
 
     #[test]
-    fn version_two_schema_is_normalized_closed_and_relational() {
+    fn version_three_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -1796,6 +2565,7 @@ mod tests {
                 "plans",
                 "receipts",
                 "retention",
+                "retention_events",
                 "schema_history",
                 "sessions",
                 "store_metadata",
@@ -1911,7 +2681,10 @@ mod tests {
         store
             .connection
             .execute(
-                "INSERT INTO retention VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)",
+                "INSERT INTO retention(
+                    retention_id, record_family, record_id, sensitivity, disposition,
+                    expires_at_epoch_ms, legal_hold, policy_sha256
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)",
                 params![
                     "retention-1",
                     "sessions",
@@ -1965,7 +2738,10 @@ mod tests {
             store
                 .connection
                 .execute(
-                    "INSERT INTO retention VALUES ('bad-retention', 'unknown', 'x', 'private', 'retained', NULL, 0, ?1)",
+                    "INSERT INTO retention(
+                        retention_id, record_family, record_id, sensitivity, disposition,
+                        expires_at_epoch_ms, legal_hold, policy_sha256
+                     ) VALUES ('bad-retention', 'unknown', 'x', 'private', 'retained', NULL, 0, ?1)",
                     [&digest],
                 )
                 .is_err()
@@ -2009,6 +2785,7 @@ mod tests {
             [
                 (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
                 (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
+                (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -2104,6 +2881,141 @@ mod tests {
         drop(file);
         assert!(
             OperationalStore::open(&corrupt_path, &observation(), &mut TestKey([12; 32]),).is_err()
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn retention_holds_expiration_and_stale_revisions_are_atomic() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([21; 32]))
+            .expect("encrypted store");
+        let digest = "a".repeat(64);
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (?1, ?2, 'active', 1, 1, ?3, X'7B7D')",
+                params!["session-retained", "profile-1", &digest],
+            )
+            .expect("session fixture");
+        let assignment = RetentionAssignment::new(
+            "retention-session",
+            RetentionRecordFamily::Sessions,
+            "session-retained",
+            RetentionSensitivity::Private,
+            RetentionDisposition::Session,
+            Some(100),
+            [7; 32],
+        )
+        .expect("valid assignment");
+        let assigned = store
+            .assign_retention(&assignment, 10)
+            .expect("assignment commits");
+        assert_eq!((assigned.revision, assigned.event), (1, "assigned"));
+
+        let held = store
+            .apply_retention_hold("retention-session", 1, RetentionHoldKind::User, 20)
+            .expect("user hold commits");
+        assert_eq!((held.revision, held.event), (2, "user_hold_applied"));
+        assert!(store.expire_due(100).expect("held expiry scan").is_empty());
+        assert_eq!(
+            store
+                .release_retention_hold("retention-session", 2, RetentionHoldKind::Legal, 110,)
+                .expect_err("wrong hold kind must fail"),
+            OperationalStoreError::LifecycleRejected
+        );
+        let released = store
+            .release_retention_hold("retention-session", 2, RetentionHoldKind::User, 110)
+            .expect("matching release commits");
+        assert_eq!((released.revision, released.event), (3, "hold_released"));
+        assert_eq!(
+            store
+                .apply_retention_hold("retention-session", 2, RetentionHoldKind::Legal, 120)
+                .expect_err("stale revision must fail"),
+            OperationalStoreError::LifecycleRejected
+        );
+        let expired = store.expire_due(120).expect("due expiry commits");
+        assert_eq!(expired.len(), 1);
+        assert_eq!((expired[0].revision, expired[0].event), (4, "expired"));
+
+        let state: (String, String, i64, i64) = store
+            .connection
+            .query_row(
+                "SELECT disposition, hold_kind, legal_hold, revision
+                 FROM retention WHERE retention_id = 'retention-session'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("retention state");
+        assert_eq!(state, ("expired".to_owned(), "none".to_owned(), 0, 4));
+        drop(store);
+        drop(
+            OperationalStore::open(&path, &observation(), &mut TestKey([21; 32]))
+                .expect("valid event chain reopens"),
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn retention_assignment_and_event_tampering_fail_closed() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([22; 32]))
+            .expect("encrypted store");
+        let missing = RetentionAssignment::new(
+            "missing-retention",
+            RetentionRecordFamily::Sessions,
+            "missing-session",
+            RetentionSensitivity::Internal,
+            RetentionDisposition::Retained,
+            Some(200),
+            [8; 32],
+        )
+        .expect("shaped assignment");
+        assert_eq!(
+            store
+                .assign_retention(&missing, 1)
+                .expect_err("orphan retention must fail"),
+            OperationalStoreError::LifecycleRejected
+        );
+        let digest = "b".repeat(64);
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (?1, ?2, 'active', 1, 1, ?3, X'7B7D')",
+                params!["session-legal", "profile-1", &digest],
+            )
+            .expect("session fixture");
+        let assignment = RetentionAssignment::new(
+            "legal-retention",
+            RetentionRecordFamily::Sessions,
+            "session-legal",
+            RetentionSensitivity::Restricted,
+            RetentionDisposition::Retained,
+            Some(200),
+            [9; 32],
+        )
+        .expect("assignment");
+        store
+            .assign_retention(&assignment, 1)
+            .expect("assignment commits");
+        store
+            .apply_retention_hold("legal-retention", 1, RetentionHoldKind::Legal, 2)
+            .expect("legal hold commits");
+        store
+            .connection
+            .execute(
+                "UPDATE retention_events SET event_sha256 = ?1
+                 WHERE retention_id = 'legal-retention' AND revision = 2",
+                ["f".repeat(64)],
+            )
+            .expect("tamper fixture");
+        drop(store);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([22; 32]))
+                .expect_err("tampered event chain must fail"),
+            OperationalStoreError::IntegrityFailure
         );
         fs::remove_dir_all(directory).expect("cleanup");
     }
