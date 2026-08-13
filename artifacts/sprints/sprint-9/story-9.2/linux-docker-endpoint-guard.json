@@ -36,8 +36,11 @@
   "inference_started": false,
   "kernel_transport": {
     "authentication": "fresh-session-peer-credentials-and-challenge",
-    "mode": 384,
-    "owner": "invoking-standard-user",
+    "group": "invoking-standard-user-primary-group",
+    "group_membership_is_authentication": false,
+    "mode": 432,
+    "owner": "dedicated-non-root-agentmage-dmr-guard",
+    "parent_mode": 456,
     "raw_endpoint_fields_exposed": false,
     "transport": "authenticated-unix-socket"
   },
@@ -55,20 +58,25 @@
     "contains_credential": false,
     "serializable": false
   },
-  "profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+  "profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
   "raw_runtime_endpoint": {
     "container_bridge_routes": 0,
-    "host": "127.0.0.1",
+    "guard_connect_host": "127.0.0.1",
     "host_tcp_listeners": 0,
     "namespace": "private-runner-and-guard-only",
+    "namespace_active_interfaces": [
+      "lo"
+    ],
+    "namespace_non_local_routes": 0,
     "non_loopback_listeners": 0,
     "port": 12434,
+    "runner_bind_host": "0.0.0.0",
     "transport": "loopback-tcp"
   },
   "release_claim": "none",
   "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
   "schema_version": 1,
-  "source_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+  "source_revision": "f1c9792922913fa158131ddea38fcf75299d728b",
   "sources": [
     {
       "bytes": 13033,
@@ -81,9 +89,9 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
-      "bytes": 36759,
+      "bytes": 37380,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "73912d2b76d8e864806f3c372a61431cb02a417d5ef23b9143bc51b18fa45ebf"
+      "sha256": "f691c8b3c8518dc222f38a81a243261197e94959a51259b98d5dcff2ca2f331f"
     },
     {
       "bytes": 5005,
@@ -96,29 +104,34 @@
       "sha256": "e6aab7bf206f0920417ae3c8f340e2bcf81d55474f421709f2c0037f44bec807"
     },
     {
-      "bytes": 6348,
+      "bytes": 6714,
       "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
-      "sha256": "e2ee08928c64ce72af64a2d5c5646e3e188ce276df858bcb4f9a8d81905ef5a5"
+      "sha256": "e5e96c5198c5252b416a6c49ce82e16f8dc882eb3894806858a452646d971acd"
     },
     {
-      "bytes": 4985,
+      "bytes": 5463,
       "path": "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
-      "sha256": "9d68277889d3ded6ab371042ebe513866cbeab1b6952dfc6f46ac62618f42e88"
+      "sha256": "264540fc0ffce7ffbac597eb1a9e80dc30a948de87fea7ffc4b696b24139522a"
     },
     {
-      "bytes": 4844,
+      "bytes": 5269,
       "path": "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
-      "sha256": "d96d6234f31f29cdc3a3ce94d2ad4f71d590b66fe68b7b4dca5e1ae173583528"
+      "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
     },
     {
-      "bytes": 1690,
+      "bytes": 6373,
+      "path": "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
+      "sha256": "b1cc580488597b45b35246500673ce82d0198d07d92b480c0166675c4960d260"
+    },
+    {
+      "bytes": 2063,
       "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
-      "sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+      "sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
     },
     {
-      "bytes": 3386,
+      "bytes": 3575,
       "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
-      "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
+      "sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
     },
     {
       "bytes": 20611,
@@ -136,24 +149,24 @@
       "sha256": "0888a85ea12c726e795be68477660ede385b292affe6a50d16c7996ce00b924f"
     },
     {
-      "bytes": 16386,
+      "bytes": 19708,
       "path": "platforms/linux-inference/src/docker_guard.rs",
-      "sha256": "4304a5f27454299d6323ede6d7a51193312203569525e03862f32c6d7811bd3c"
+      "sha256": "190d5fd26a4ad2d29856f049d6cec473bce04dfe95022710018635947c345af3"
     },
     {
-      "bytes": 29809,
+      "bytes": 33694,
       "path": "platforms/linux-inference/src/docker_preflight.rs",
-      "sha256": "0f4fe4b824e39203a886a2cbbf817cf78878644d721b0fc3e1d7781738574024"
+      "sha256": "6be5c95c136d12577cc74afb08dff664d002e10f7ff0951fbc3d0bb02535c3d4"
     },
     {
-      "bytes": 24595,
+      "bytes": 27590,
       "path": "platforms/linux-inference/src/docker_runtime.rs",
-      "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
+      "sha256": "d82acd26b24d0ea7e2889786e1ce4f6515b2a5209e601dade6f97d173e9b6101"
     },
     {
-      "bytes": 7658,
+      "bytes": 7745,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "a0551bbff01729a430e2558269ace0d87985b2852d7d4981040229d1a80764e7"
+      "sha256": "07f8b761eff70dda130f3dc8115dc911b7ee161adebcccc792147bdd2e3a015c"
     },
     {
       "bytes": 14142,
@@ -163,22 +176,22 @@
     {
       "bytes": 26065,
       "path": "scripts/component_inventory.py",
-      "sha256": "44d1cafc04faa1a4cca9f41f36d88a806ab1c42c27c8c5684c5f95fd04ba45c3"
+      "sha256": "b88a6f3e71a8de40815b1c1895100032cc4bfad0d83c1bd62b5212b9f8f9431d"
     },
     {
-      "bytes": 15611,
+      "bytes": 15988,
       "path": "scripts/linux_docker_guard_evidence.py",
-      "sha256": "874d0efa8eb9abe47055c56244db5b4ff6c4d7969f93c3a6cd22879c42e68252"
+      "sha256": "1972b3984f11d50eca7b99e1df8b9c006dcdc1650e884570194b80109d7060a0"
     },
     {
       "bytes": 5442,
       "path": "tests/test_component_inventory.py",
-      "sha256": "3cb1b7555d161002ed986e8243552468588de4ef2e20e8a785c511b9e37f266c"
+      "sha256": "fe1339315d8a1934c42577f7c284e47bd44a22514c6b30262de48ebce859f4b5"
     },
     {
       "bytes": 3822,
       "path": "tests/test_linux_docker_guard_evidence.py",
-      "sha256": "50f6889e92f3b233ef6d73ca524167a595ce5bac417db3d13cd607a164aaa40e"
+      "sha256": "647aaaa2766c6cd826574d29810e0d97cf5e9da9aa47e86348b6d3a15a18c6fa"
     }
   ],
   "status": "pass-guard-contract-no-live-docker",
