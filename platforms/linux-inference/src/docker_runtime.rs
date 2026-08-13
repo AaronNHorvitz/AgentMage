@@ -33,16 +33,19 @@ pub const DOCKER_MODEL_ARTIFACT_DIGEST_HEX: &str =
 
 /// SHA-256 of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256: [u8; 32] = [
-    0xab, 0x8c, 0xde, 0x6b, 0xc1, 0x44, 0x0f, 0x8a, 0x00, 0x13, 0x39, 0x0a, 0xa2, 0xe2, 0x91, 0xa3,
-    0x15, 0xcd, 0xeb, 0xcf, 0xe4, 0x4a, 0xa1, 0xd3, 0x39, 0xf0, 0xaa, 0x0b, 0x1d, 0x70, 0x89, 0x9c,
+    0xee, 0xf3, 0xe9, 0x9d, 0xf6, 0xab, 0x41, 0x84, 0x12, 0xbc, 0xcc, 0x21, 0x9a, 0x3e, 0xa4, 0xcf,
+    0xff, 0xf1, 0x8a, 0xaa, 0x73, 0xe3, 0xee, 0x83, 0xe1, 0xef, 0x60, 0xa0, 0xd6, 0x15, 0xa9, 0x9a,
 ];
 
 /// Lowercase hexadecimal identity of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256_HEX: &str =
-    "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c";
+    "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a";
 
-/// Fixed Docker Engine loopback endpoint required by this compatibility profile.
-pub const DOCKER_MODEL_RUNNER_HOST: Ipv4Addr = Ipv4Addr::LOCALHOST;
+/// Immutable wildcard bind used by the pinned runner inside its private namespace.
+pub const DOCKER_MODEL_RUNNER_BIND_HOST: Ipv4Addr = Ipv4Addr::UNSPECIFIED;
+
+/// Fixed loopback target used only by the guard inside the private namespace.
+pub const DOCKER_MODEL_RUNNER_CONNECT_HOST: Ipv4Addr = Ipv4Addr::LOCALHOST;
 
 /// Fixed Docker Engine Model Runner port required by this compatibility profile.
 pub const DOCKER_MODEL_RUNNER_PORT: u16 = 12_434;
@@ -325,8 +328,12 @@ impl DockerOfflineNetworkPolicy {
     /// Verifies fixed loopback service state with every ambient network path disabled.
     #[allow(clippy::too_many_arguments)]
     pub fn verify(
-        host: Ipv4Addr,
+        runner_bind_host: Ipv4Addr,
+        guard_connect_host: Ipv4Addr,
         port: u16,
+        namespace_active_interface_count: u8,
+        loopback_interface_up: bool,
+        namespace_non_local_route_count: u8,
         do_not_track: bool,
         acquisition_allowed: bool,
         registry_access: bool,
@@ -334,8 +341,12 @@ impl DockerOfflineNetworkPolicy {
         ambient_dns: bool,
         outbound_bytes: u64,
     ) -> Result<Self, DockerRuntimeContractError> {
-        if host != DOCKER_MODEL_RUNNER_HOST
+        if runner_bind_host != DOCKER_MODEL_RUNNER_BIND_HOST
+            || guard_connect_host != DOCKER_MODEL_RUNNER_CONNECT_HOST
             || port != DOCKER_MODEL_RUNNER_PORT
+            || namespace_active_interface_count != 1
+            || !loopback_interface_up
+            || namespace_non_local_route_count != 0
             || !do_not_track
             || acquisition_allowed
             || registry_access
@@ -463,8 +474,12 @@ mod tests {
 
     fn network() -> DockerOfflineNetworkPolicy {
         DockerOfflineNetworkPolicy::verify(
+            Ipv4Addr::UNSPECIFIED,
             Ipv4Addr::LOCALHOST,
             12_434,
+            1,
+            true,
+            0,
             true,
             false,
             false,
@@ -641,11 +656,29 @@ mod tests {
     }
 
     #[test]
-    fn network_policy_accepts_only_fixed_offline_loopback() {
-        for values in [
-            (
+    fn network_policy_accepts_only_private_wildcard_with_loopback_guard() {
+        let invalid = [
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::LOCALHOST,
+                Ipv4Addr::LOCALHOST,
+                12_434,
+                1,
+                true,
+                0,
+                true,
+                false,
+                false,
+                false,
+                false,
+                0,
+            ),
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::UNSPECIFIED,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 false,
                 false,
@@ -653,9 +686,13 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_435,
+                1,
+                true,
+                0,
                 true,
                 false,
                 false,
@@ -663,9 +700,55 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                2,
+                true,
+                0,
+                true,
+                false,
+                false,
+                false,
+                false,
+                0,
+            ),
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
+                Ipv4Addr::LOCALHOST,
+                12_434,
+                1,
+                false,
+                0,
+                true,
+                false,
+                false,
+                false,
+                false,
+                0,
+            ),
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
+                Ipv4Addr::LOCALHOST,
+                12_434,
+                1,
+                true,
+                1,
+                true,
+                false,
+                false,
+                false,
+                false,
+                0,
+            ),
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
+                Ipv4Addr::LOCALHOST,
+                12_434,
+                1,
+                true,
+                0,
                 false,
                 false,
                 false,
@@ -673,9 +756,13 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 true,
                 false,
@@ -683,9 +770,13 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 false,
                 true,
@@ -693,9 +784,13 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 false,
                 false,
@@ -703,9 +798,13 @@ mod tests {
                 false,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 false,
                 false,
@@ -713,9 +812,13 @@ mod tests {
                 true,
                 0,
             ),
-            (
+            DockerOfflineNetworkPolicy::verify(
+                Ipv4Addr::UNSPECIFIED,
                 Ipv4Addr::LOCALHOST,
                 12_434,
+                1,
+                true,
+                0,
                 true,
                 false,
                 false,
@@ -723,13 +826,9 @@ mod tests {
                 false,
                 1,
             ),
-        ] {
-            assert_eq!(
-                DockerOfflineNetworkPolicy::verify(
-                    values.0, values.1, values.2, values.3, values.4, values.5, values.6, values.7,
-                ),
-                Err(DockerRuntimeContractError::NetworkPolicy)
-            );
+        ];
+        for result in invalid {
+            assert_eq!(result, Err(DockerRuntimeContractError::NetworkPolicy));
         }
     }
 

@@ -29,6 +29,7 @@ SOURCE_PATHS: Final = (
     "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
     "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
     "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
+    "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "package.json",
@@ -56,6 +57,8 @@ REFUSAL_CLASSES: Final = [
 MUTATION_DIMENSIONS: Final = {
     "observation_identity": [
         "collector-executable",
+        "collector-protocol-version",
+        "collector-uid",
         "session-identity",
         "completeness",
         "freshness",
@@ -77,8 +80,12 @@ MUTATION_DIMENSIONS: Final = {
     ],
     "api_binding": [
         "private-namespace",
-        "raw-host",
+        "runner-bind-host",
+        "guard-connect-host",
         "raw-port",
+        "namespace-active-interface-count",
+        "loopback-interface-up",
+        "namespace-non-local-route-count",
         "raw-listener-count",
         "host-listener-count",
         "non-loopback-listener-count",
@@ -91,6 +98,11 @@ MUTATION_DIMENSIONS: Final = {
         "guard-uid",
         "guard-executable",
         "guard-cgroup",
+        "kernel-socket-owner",
+        "kernel-socket-group",
+        "kernel-socket-parent-mode",
+        "kernel-socket-mode",
+        "kernel-socket-peer-authentication",
         "host-route-count",
         "bridge-route-count",
         "foreign-reachable-peer-count",
@@ -288,7 +300,7 @@ def build_report(source_revision: str) -> dict[str, Any]:
             "replay_allowed": False,
             "terminal_on_refusal": True,
         },
-        "contract_version": 1,
+        "contract_version": 2,
         "docker_engine_directly_tested": False,
         "host": host,
         "limitations": LIMITATIONS,
@@ -314,7 +326,7 @@ def validate_report(value: Any) -> list[str]:
         or value.get("artifact_id") != "linux-docker-drift-preflight"
         or value.get("task_ids") != ["9.2.1.4"]
         or value.get("status") != "pass-preflight-contract-no-live-docker"
-        or value.get("contract_version") != 1
+        or value.get("contract_version") != 2
         or REVISION.fullmatch(str(value.get("source_revision"))) is None
     ):
         failures.append("Linux Docker preflight report identity changed")

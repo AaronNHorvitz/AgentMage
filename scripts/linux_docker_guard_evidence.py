@@ -25,7 +25,7 @@ REPORT_PATH: Final = (
     ROOT / "artifacts/sprints/sprint-9/story-9.2/linux-docker-endpoint-guard.json"
 )
 PROFILE_SHA256: Final = (
-    "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+    "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
 )
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
@@ -39,6 +39,7 @@ SOURCE_PATHS: Final = (
     "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
     "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
     "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
+    "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "package.json",
@@ -208,11 +209,14 @@ def validate_profile(profile: Any) -> list[str]:
         failures.append("Docker guard caller matrix changed")
     if profile.get("raw_runtime_endpoint") != {
         "container_bridge_routes": 0,
-        "host": "127.0.0.1",
+        "guard_connect_host": "127.0.0.1",
         "host_tcp_listeners": 0,
+        "namespace_active_interfaces": ["lo"],
+        "namespace_non_local_routes": 0,
         "namespace": "private-runner-and-guard-only",
         "non_loopback_listeners": 0,
         "port": 12434,
+        "runner_bind_host": "0.0.0.0",
         "transport": "loopback-tcp",
     }:
         failures.append("Docker raw endpoint isolation changed")
@@ -227,8 +231,11 @@ def validate_profile(profile: Any) -> list[str]:
         failures.append("Docker guard process closure changed")
     if profile.get("kernel_transport") != {
         "authentication": "fresh-session-peer-credentials-and-challenge",
-        "mode": 0o600,
-        "owner": "invoking-standard-user",
+        "group": "invoking-standard-user-primary-group",
+        "group_membership_is_authentication": False,
+        "mode": 0o660,
+        "owner": "dedicated-non-root-agentmage-dmr-guard",
+        "parent_mode": 0o710,
         "raw_endpoint_fields_exposed": False,
         "transport": "authenticated-unix-socket",
     }:

@@ -12,7 +12,7 @@
 
 ## Context
 
-Docker Model Runner is an optional Linux compatibility runtime, not AgentMage's security reference. Docker documents that Docker Engine installs Model Runner through the `docker-model-plugin` package and exposes its API on `127.0.0.1:12434` by default. Loopback limits remote reachability but does not authenticate local callers. Docker Engine administration through its socket also carries host-equivalent authority, while Model Runner may perform registry `HEAD` requests unless egress is independently prevented.
+Docker Model Runner is an optional Linux compatibility runtime, not AgentMage's security reference. Docker documents that Docker Engine installs Model Runner through the `docker-model-plugin` package and ordinarily exposes its API through local port `12434`. Inspection of the pinned runner image shows an immutable wildcard bind rather than a supported host-bind option. Decision 0033 therefore admits it only inside a loopback-only, route-free private namespace. Local reachability does not authenticate callers. Docker Engine administration through its socket also carries host-equivalent authority, while Model Runner may perform registry `HEAD` requests unless egress is independently prevented.
 
 Earlier quarantined evaluation retained exact Docker Model Runner and Gemma 4 E4B OCI identities and ran the runner image under rootless Podman. That evidence was explicitly not a Docker Engine support claim, and the evaluated model failed required quality thresholds. This decision may reuse immutable identities but cannot promote the model, substitute Podman for Docker Engine, or borrow old execution as evidence for this topology.
 
@@ -25,9 +25,9 @@ Earlier quarantined evaluation retained exact Docker Model Runner and Gemma 4 E4
 5. The accepted Docker prerequisite is a separately administered rootful daemon owned by UID `0`, an exact observed daemon executable, and an exact observed Docker socket object. The non-root AgentMage launch user must not belong to the socket-owning group because that group conveys host-equivalent Docker authority. Rootless Docker is not silently treated as equivalent and requires a later explicit profile.
 6. Neither the AgentMage inference adapter nor the Model Runner container receives the Docker socket. The adapter receives no workspace, host-root, credential, tool, grant, shell, package-manager, or daemon-control handle.
 7. The mount closure is a private runtime tmpfs and Docker-managed access to the exact immutable OCI model artifact. Workspace, credential, host-root, and Docker-socket mounts are zero. Runtime writes to the model content store are prohibited.
-8. The only declared raw Model Runner endpoint is IPv4 `127.0.0.1:12434`, and only `/engines/llama.cpp/v1/chat/completions` is in the future inference contract. Model-management endpoints are prohibited. The extension and tool workers never receive this endpoint.
+8. The only declared raw Model Runner bind is IPv4 `0.0.0.0:12434` inside the exact private namespace, and the guard's only connection target is `127.0.0.1:12434` in that namespace. Only `/engines/llama.cpp/v1/chat/completions` is in the future inference contract. A wildcard host or bridged bind and every model-management endpoint are prohibited. The extension and tool workers never receive either endpoint.
 9. Runtime mode requires acquisition disabled, registry access disabled, `--do-not-track`, no ambient proxy or Domain Name System path, zero outbound bytes, one inference slot, zero swap, and explicit memory, task, CPU, lifetime, and output ceilings.
-10. The adapter remains self-check-only and reports Docker compatibility unavailable. Sub-task `9.2.1.3` owns enforceable raw-endpoint isolation; `9.2.1.4` owns live preflight and drift refusal; `9.2.2.1` owns clean native Docker Engine inspection on Fedora and Ubuntu.
+10. The adapter remains self-check-only and reports Docker compatibility unavailable. Sub-task `9.2.1.3` owns the guard contract; `9.2.1.4` owns preflight and drift-refusal semantics; `9.2.1.5` owns their production executables; `9.2.2.1` owns clean native Docker Engine inspection on Fedora and Ubuntu.
 
 ## Verification
 

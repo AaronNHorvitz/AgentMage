@@ -27,7 +27,7 @@ REPORT_PATH: Final = (
     / "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json"
 )
 PROFILE_SHA256: Final = (
-    "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
+    "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
 )
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
@@ -46,6 +46,7 @@ SOURCE_PATHS: Final = (
     "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
     "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
     "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
+    "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
     "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
@@ -72,17 +73,17 @@ EXPECTED_DESCRIPTOR: Final = {
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
     "docker_compatibility_available": False,
-    "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+    "docker_guard_profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
     "docker_model_artifact_digest": MODEL_DIGEST,
     "docker_model_runner_image_digest": RUNNER_DIGEST,
-    "docker_preflight_contract_version": 1,
+    "docker_preflight_contract_version": 2,
     "docker_runtime_profile_sha256": PROFILE_SHA256,
     "enabled_models": 0,
     "inference_available": False,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 5,
+    "process_boundary_version": 6,
 }
 LIMITATIONS: Final = [
     "Docker Engine and docker-model-plugin are absent on this Fedora host; no Docker daemon, socket, container, or API was started.",
@@ -284,7 +285,10 @@ def validate_profile(profile: Any) -> list[str]:
         failures.append("Docker offline network declaration changed")
     ipc = profile.get("ipc", {})
     if (
-        ipc.get("host") != "127.0.0.1"
+        ipc.get("runner_bind_host") != "0.0.0.0"
+        or ipc.get("guard_connect_host") != "127.0.0.1"
+        or ipc.get("namespace_active_interfaces") != ["lo"]
+        or ipc.get("namespace_non_local_routes") != 0
         or ipc.get("port") != 12434
         or ipc.get("transport") != "guarded-loopback-tcp"
         or ipc.get("management_endpoints_allowed") is not False

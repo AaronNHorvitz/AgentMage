@@ -19,7 +19,7 @@ class LinuxDockerPreflightEvidenceTests(unittest.TestCase):
                 "replay_allowed": False,
                 "terminal_on_refusal": True,
             },
-            "contract_version": 1,
+            "contract_version": 2,
             "docker_engine_directly_tested": False,
             "host": {
                 "architecture": "x86_64",

@@ -37,18 +37,22 @@
     "runtime_version": "b9879",
     "tag_observed": "v1.2.6-cuda"
   },
-  "ipc": {
-    "allowed_path": "/engines/llama.cpp/v1/chat/completions",
-    "client": "kernel-docker-inference-adapter",
-    "host": "127.0.0.1",
-    "listener": "docker-model-runner-only",
-    "management_endpoints_allowed": false,
-    "non_loopback_bind": false,
-    "port": 12434,
-    "raw_endpoint_exposed_to_extension": false,
-    "raw_endpoint_exposed_to_tool_worker": false,
-    "transport": "guarded-loopback-tcp"
-  },
+    "ipc": {
+        "allowed_path": "/engines/llama.cpp/v1/chat/completions",
+        "client": "kernel-docker-inference-adapter",
+        "guard_connect_host": "127.0.0.1",
+        "listener": "docker-model-runner-private-namespace-only",
+        "management_endpoints_allowed": false,
+        "namespace_active_interfaces": [
+            "lo"
+        ],
+        "namespace_non_local_routes": 0,
+        "port": 12434,
+        "raw_endpoint_exposed_to_extension": false,
+        "raw_endpoint_exposed_to_tool_worker": false,
+        "runner_bind_host": "0.0.0.0",
+        "transport": "guarded-loopback-tcp"
+    },
   "model_artifact": {
     "artifact_type": "application/vnd.cncf.model.manifest.v1+json",
     "config_digest": "sha256:034b7a797c86d734dfbc975cc1e1b8487268bf172bc19813b5bb8bc31de5bcc5",

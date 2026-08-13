@@ -388,7 +388,7 @@ def _runtime_candidates(
             "sha256": docker_digest.group(1),
             "profile_sha256": linux_docker_profile_sha256,
             "guard_profile_sha256": linux_docker_guard_profile_sha256,
-            "preflight_contract_version": 1,
+            "preflight_contract_version": 2,
             "model_manifest_sha256": model_digest.group(1),
             "docker_engine_directly_tested": False,
             "approval_status": "candidate-not-approved",

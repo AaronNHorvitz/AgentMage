@@ -5,17 +5,20 @@ use std::net::Ipv4Addr;
 
 use agentmage_kernel_contracts::{LocalEndpointIdentity, LocalTransport, NetworkComponent};
 
-use crate::{DOCKER_MODEL_RUNNER_HOST, DOCKER_MODEL_RUNNER_IMAGE_DIGEST, DOCKER_MODEL_RUNNER_PORT};
+use crate::{
+    DOCKER_MODEL_RUNNER_BIND_HOST, DOCKER_MODEL_RUNNER_CONNECT_HOST,
+    DOCKER_MODEL_RUNNER_IMAGE_DIGEST, DOCKER_MODEL_RUNNER_PORT,
+};
 
 /// SHA-256 of the checked Docker raw-endpoint guard profile.
 pub const DOCKER_GUARD_PROFILE_SHA256: [u8; 32] = [
-    0x88, 0xfb, 0x0d, 0x5a, 0x78, 0x82, 0x9c, 0xbd, 0xfc, 0x34, 0xaf, 0x5c, 0xbc, 0xbf, 0xe3, 0xca,
-    0x2a, 0x80, 0xf5, 0x50, 0x88, 0x99, 0x47, 0xe6, 0x47, 0x8f, 0xdb, 0x66, 0xbf, 0x7e, 0xdb, 0x2a,
+    0xa7, 0x44, 0xeb, 0x31, 0xf4, 0x94, 0x9e, 0xc7, 0xd9, 0x9d, 0xfa, 0xe8, 0xf6, 0x2e, 0xcc, 0xb5,
+    0x31, 0x26, 0x9c, 0x35, 0x49, 0xee, 0x51, 0xf3, 0x97, 0x7e, 0x0e, 0xa6, 0x2a, 0x8f, 0x88, 0xc8,
 ];
 
 /// Lowercase hexadecimal identity of the checked Docker guard profile.
 pub const DOCKER_GUARD_PROFILE_SHA256_HEX: &str =
-    "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a";
+    "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8";
 
 /// Stable caller classes evaluated at the private raw-endpoint boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -123,20 +126,27 @@ impl DockerEndpointGuard {
         profile_sha256: [u8; 32],
         runner_image_digest: [u8; 32],
         raw_endpoint: LocalEndpointIdentity,
-        raw_host: Ipv4Addr,
+        runner_bind_host: Ipv4Addr,
+        guard_connect_host: Ipv4Addr,
         raw_port: u16,
         private_namespace_sha256: [u8; 32],
+        namespace_active_interface_count: u8,
+        loopback_interface_up: bool,
+        namespace_non_local_route_count: u8,
         host_tcp_listener_count: u8,
         non_loopback_listener_count: u8,
         container_bridge_route_count: u8,
         guard_uid: u32,
         runtime_uid: u32,
+        runtime_gid: u32,
         guard_executable_sha256: [u8; 32],
         guard_cgroup_identity_sha256: [u8; 32],
         docker_socket_mount_count: u8,
         workspace_mount_count: u8,
         kernel_socket_identity_sha256: [u8; 32],
         kernel_socket_owner_uid: u32,
+        kernel_socket_group_gid: u32,
+        kernel_socket_parent_mode: u32,
         kernel_socket_mode: u32,
         kernel_socket_peer_authenticated: bool,
     ) -> Result<Self, DockerEndpointGuardError> {
@@ -147,9 +157,13 @@ impl DockerEndpointGuard {
         }
         if raw_endpoint.client() != NetworkComponent::KernelDockerInferenceAdapter
             || raw_endpoint.transport() != LocalTransport::GuardedLoopbackTcp
-            || raw_host != DOCKER_MODEL_RUNNER_HOST
+            || runner_bind_host != DOCKER_MODEL_RUNNER_BIND_HOST
+            || guard_connect_host != DOCKER_MODEL_RUNNER_CONNECT_HOST
             || raw_port != DOCKER_MODEL_RUNNER_PORT
             || private_namespace_sha256 == [0; 32]
+            || namespace_active_interface_count != 1
+            || !loopback_interface_up
+            || namespace_non_local_route_count != 0
             || host_tcp_listener_count != 0
             || non_loopback_listener_count != 0
             || container_bridge_route_count != 0
@@ -158,6 +172,7 @@ impl DockerEndpointGuard {
         }
         if guard_uid == 0
             || runtime_uid == 0
+            || runtime_gid == 0
             || guard_uid == runtime_uid
             || guard_executable_sha256 == [0; 32]
             || guard_cgroup_identity_sha256 == [0; 32]
@@ -167,8 +182,10 @@ impl DockerEndpointGuard {
             return Err(DockerEndpointGuardError::GuardProcessIdentity);
         }
         if kernel_socket_identity_sha256 == [0; 32]
-            || kernel_socket_owner_uid != runtime_uid
-            || kernel_socket_mode != 0o600
+            || kernel_socket_owner_uid != guard_uid
+            || kernel_socket_group_gid != runtime_gid
+            || kernel_socket_parent_mode != 0o710
+            || kernel_socket_mode != 0o660
             || !kernel_socket_peer_authenticated
         {
             return Err(DockerEndpointGuardError::KernelTransport);
@@ -258,6 +275,36 @@ mod tests {
 
     use super::*;
 
+    #[derive(Clone)]
+    struct GuardInput {
+        profile_sha256: [u8; 32],
+        runner_image_digest: [u8; 32],
+        endpoint: LocalEndpointIdentity,
+        runner_bind_host: Ipv4Addr,
+        guard_connect_host: Ipv4Addr,
+        raw_port: u16,
+        private_namespace_sha256: [u8; 32],
+        namespace_active_interface_count: u8,
+        loopback_interface_up: bool,
+        namespace_non_local_route_count: u8,
+        host_tcp_listener_count: u8,
+        non_loopback_listener_count: u8,
+        container_bridge_route_count: u8,
+        guard_uid: u32,
+        runtime_uid: u32,
+        runtime_gid: u32,
+        guard_executable_sha256: [u8; 32],
+        guard_cgroup_identity_sha256: [u8; 32],
+        docker_socket_mount_count: u8,
+        workspace_mount_count: u8,
+        kernel_socket_identity_sha256: [u8; 32],
+        kernel_socket_owner_uid: u32,
+        kernel_socket_group_gid: u32,
+        kernel_socket_parent_mode: u32,
+        kernel_socket_mode: u32,
+        kernel_socket_peer_authenticated: bool,
+    }
+
     fn endpoint() -> LocalEndpointIdentity {
         LocalEndpointIdentity::new(
             NetworkComponent::KernelDockerInferenceAdapter,
@@ -267,29 +314,70 @@ mod tests {
         .expect("guarded raw endpoint")
     }
 
-    fn guard() -> DockerEndpointGuard {
+    fn input() -> GuardInput {
+        GuardInput {
+            profile_sha256: DOCKER_GUARD_PROFILE_SHA256,
+            runner_image_digest: DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
+            endpoint: endpoint(),
+            runner_bind_host: Ipv4Addr::UNSPECIFIED,
+            guard_connect_host: Ipv4Addr::LOCALHOST,
+            raw_port: 12_434,
+            private_namespace_sha256: [1; 32],
+            namespace_active_interface_count: 1,
+            loopback_interface_up: true,
+            namespace_non_local_route_count: 0,
+            host_tcp_listener_count: 0,
+            non_loopback_listener_count: 0,
+            container_bridge_route_count: 0,
+            guard_uid: 991,
+            runtime_uid: 1000,
+            runtime_gid: 1000,
+            guard_executable_sha256: [2; 32],
+            guard_cgroup_identity_sha256: [3; 32],
+            docker_socket_mount_count: 0,
+            workspace_mount_count: 0,
+            kernel_socket_identity_sha256: [4; 32],
+            kernel_socket_owner_uid: 991,
+            kernel_socket_group_gid: 1000,
+            kernel_socket_parent_mode: 0o710,
+            kernel_socket_mode: 0o660,
+            kernel_socket_peer_authenticated: true,
+        }
+    }
+
+    fn verify(input: GuardInput) -> Result<DockerEndpointGuard, DockerEndpointGuardError> {
         DockerEndpointGuard::verify(
-            DOCKER_GUARD_PROFILE_SHA256,
-            DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
-            endpoint(),
-            Ipv4Addr::LOCALHOST,
-            12_434,
-            [1; 32],
-            0,
-            0,
-            0,
-            991,
-            1000,
-            [2; 32],
-            [3; 32],
-            0,
-            0,
-            [4; 32],
-            1000,
-            0o600,
-            true,
+            input.profile_sha256,
+            input.runner_image_digest,
+            input.endpoint,
+            input.runner_bind_host,
+            input.guard_connect_host,
+            input.raw_port,
+            input.private_namespace_sha256,
+            input.namespace_active_interface_count,
+            input.loopback_interface_up,
+            input.namespace_non_local_route_count,
+            input.host_tcp_listener_count,
+            input.non_loopback_listener_count,
+            input.container_bridge_route_count,
+            input.guard_uid,
+            input.runtime_uid,
+            input.runtime_gid,
+            input.guard_executable_sha256,
+            input.guard_cgroup_identity_sha256,
+            input.docker_socket_mount_count,
+            input.workspace_mount_count,
+            input.kernel_socket_identity_sha256,
+            input.kernel_socket_owner_uid,
+            input.kernel_socket_group_gid,
+            input.kernel_socket_parent_mode,
+            input.kernel_socket_mode,
+            input.kernel_socket_peer_authenticated,
         )
-        .expect("closed guard topology")
+    }
+
+    fn guard() -> DockerEndpointGuard {
+        verify(input()).expect("closed guard topology")
     }
 
     fn caller(class: DockerEndpointCallerClass) -> DockerEndpointCallerObservation {
@@ -370,107 +458,82 @@ mod tests {
             [8; 32],
         )
         .expect("native endpoint");
-        let mutations = [
-            (endpoint(), Ipv4Addr::UNSPECIFIED, 12_434, [1; 32], 0, 0, 0),
-            (endpoint(), Ipv4Addr::LOCALHOST, 12_435, [1; 32], 0, 0, 0),
-            (endpoint(), Ipv4Addr::LOCALHOST, 12_434, [0; 32], 0, 0, 0),
-            (endpoint(), Ipv4Addr::LOCALHOST, 12_434, [1; 32], 1, 0, 0),
-            (endpoint(), Ipv4Addr::LOCALHOST, 12_434, [1; 32], 0, 1, 0),
-            (endpoint(), Ipv4Addr::LOCALHOST, 12_434, [1; 32], 0, 0, 1),
-            (native, Ipv4Addr::LOCALHOST, 12_434, [1; 32], 0, 0, 0),
+        let mutations: &[fn(&mut GuardInput)] = &[
+            |value| value.runner_bind_host = Ipv4Addr::LOCALHOST,
+            |value| value.guard_connect_host = Ipv4Addr::UNSPECIFIED,
+            |value| value.raw_port = 12_435,
+            |value| value.private_namespace_sha256 = [0; 32],
+            |value| value.namespace_active_interface_count = 2,
+            |value| value.loopback_interface_up = false,
+            |value| value.namespace_non_local_route_count = 1,
+            |value| value.host_tcp_listener_count = 1,
+            |value| value.non_loopback_listener_count = 1,
+            |value| value.container_bridge_route_count = 1,
         ];
-        for values in mutations {
+        for mutate in mutations {
+            let mut changed = input();
+            mutate(&mut changed);
             assert_eq!(
-                DockerEndpointGuard::verify(
-                    DOCKER_GUARD_PROFILE_SHA256,
-                    DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
-                    values.0,
-                    values.1,
-                    values.2,
-                    values.3,
-                    values.4,
-                    values.5,
-                    values.6,
-                    991,
-                    1000,
-                    [2; 32],
-                    [3; 32],
-                    0,
-                    0,
-                    [4; 32],
-                    1000,
-                    0o600,
-                    true,
-                ),
+                verify(changed),
                 Err(DockerEndpointGuardError::RawEndpointExposure)
+            );
+        }
+        let mut changed = input();
+        changed.endpoint = native;
+        assert_eq!(
+            verify(changed),
+            Err(DockerEndpointGuardError::RawEndpointExposure)
+        );
+    }
+
+    #[test]
+    fn process_mount_and_kernel_transport_mutations_fail_closed() {
+        let process_mutations: &[fn(&mut GuardInput)] = &[
+            |value| value.guard_uid = 0,
+            |value| value.guard_uid = value.runtime_uid,
+            |value| value.runtime_gid = 0,
+            |value| value.guard_executable_sha256 = [0; 32],
+            |value| value.guard_cgroup_identity_sha256 = [0; 32],
+            |value| value.docker_socket_mount_count = 1,
+            |value| value.workspace_mount_count = 1,
+        ];
+        for mutate in process_mutations {
+            let mut changed = input();
+            mutate(&mut changed);
+            assert_eq!(
+                verify(changed),
+                Err(DockerEndpointGuardError::GuardProcessIdentity)
+            );
+        }
+        let transport_mutations: &[fn(&mut GuardInput)] = &[
+            |value| value.kernel_socket_identity_sha256 = [0; 32],
+            |value| value.kernel_socket_owner_uid = 1000,
+            |value| value.kernel_socket_group_gid = 1001,
+            |value| value.kernel_socket_parent_mode = 0o770,
+            |value| value.kernel_socket_mode = 0o600,
+            |value| value.kernel_socket_peer_authenticated = false,
+        ];
+        for mutate in transport_mutations {
+            let mut changed = input();
+            mutate(&mut changed);
+            assert_eq!(
+                verify(changed),
+                Err(DockerEndpointGuardError::KernelTransport)
             );
         }
     }
 
     #[test]
-    fn process_mount_and_kernel_transport_mutations_fail_closed() {
-        for values in [
-            (0, 1000, [2; 32], [3; 32], 0, 0),
-            (1000, 1000, [2; 32], [3; 32], 0, 0),
-            (991, 1000, [0; 32], [3; 32], 0, 0),
-            (991, 1000, [2; 32], [0; 32], 0, 0),
-            (991, 1000, [2; 32], [3; 32], 1, 0),
-            (991, 1000, [2; 32], [3; 32], 0, 1),
+    fn profile_identity_mutations_fail_before_topology() {
+        for mutate in [
+            |value: &mut GuardInput| value.profile_sha256 = [0; 32],
+            |value: &mut GuardInput| value.runner_image_digest = [0; 32],
         ] {
+            let mut changed = input();
+            mutate(&mut changed);
             assert_eq!(
-                DockerEndpointGuard::verify(
-                    DOCKER_GUARD_PROFILE_SHA256,
-                    DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
-                    endpoint(),
-                    Ipv4Addr::LOCALHOST,
-                    12_434,
-                    [1; 32],
-                    0,
-                    0,
-                    0,
-                    values.0,
-                    values.1,
-                    values.2,
-                    values.3,
-                    values.4,
-                    values.5,
-                    [4; 32],
-                    1000,
-                    0o600,
-                    true,
-                ),
-                Err(DockerEndpointGuardError::GuardProcessIdentity)
-            );
-        }
-        for values in [
-            ([0; 32], 1000, 0o600, true),
-            ([4; 32], 1001, 0o600, true),
-            ([4; 32], 1000, 0o660, true),
-            ([4; 32], 1000, 0o600, false),
-        ] {
-            assert_eq!(
-                DockerEndpointGuard::verify(
-                    DOCKER_GUARD_PROFILE_SHA256,
-                    DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
-                    endpoint(),
-                    Ipv4Addr::LOCALHOST,
-                    12_434,
-                    [1; 32],
-                    0,
-                    0,
-                    0,
-                    991,
-                    1000,
-                    [2; 32],
-                    [3; 32],
-                    0,
-                    0,
-                    values.0,
-                    values.1,
-                    values.2,
-                    values.3,
-                ),
-                Err(DockerEndpointGuardError::KernelTransport)
+                verify(changed),
+                Err(DockerEndpointGuardError::ProfileIdentity)
             );
         }
     }

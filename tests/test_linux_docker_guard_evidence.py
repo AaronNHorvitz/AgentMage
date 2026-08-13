@@ -60,7 +60,7 @@ class LinuxDockerGuardEvidenceTests(unittest.TestCase):
                 {"host_tcp_listeners": 1}
             ),
             lambda value: value["guard_process"].update({"docker_socket_mounts": 1}),
-            lambda value: value["kernel_transport"].update({"mode": 0o660}),
+            lambda value: value["kernel_transport"].update({"mode": 0o600}),
             lambda value: value["decision"].update({"enforcement_live_tested": True}),
         )
         for mutate in mutations:

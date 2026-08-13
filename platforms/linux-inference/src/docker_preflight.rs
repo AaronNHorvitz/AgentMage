@@ -4,8 +4,9 @@ use std::fmt;
 use std::net::Ipv4Addr;
 
 use crate::{
-    DOCKER_GUARD_PROFILE_SHA256, DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_RUNNER_HOST,
-    DOCKER_MODEL_RUNNER_IMAGE_DIGEST, DOCKER_MODEL_RUNNER_PORT, DOCKER_RUNTIME_PROFILE_SHA256,
+    DOCKER_GUARD_PROFILE_SHA256, DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_RUNNER_BIND_HOST,
+    DOCKER_MODEL_RUNNER_CONNECT_HOST, DOCKER_MODEL_RUNNER_IMAGE_DIGEST, DOCKER_MODEL_RUNNER_PORT,
+    DOCKER_RUNTIME_PROFILE_SHA256,
 };
 
 const DOCKER_SOCKET_MODE: u32 = 0o660;
@@ -16,7 +17,10 @@ const RUNTIME_SECONDS: u16 = 3600;
 const OUTPUT_BYTES: u32 = 16 * 1024 * 1024;
 
 /// Version of the exact Docker topology preflight contract.
-pub const DOCKER_PREFLIGHT_CONTRACT_VERSION: u16 = 1;
+pub const DOCKER_PREFLIGHT_CONTRACT_VERSION: u16 = 2;
+
+/// Version of the complete trusted collector observation protocol.
+pub const DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION: u16 = 1;
 
 /// Stable content-free reason that Docker mode was refused before activation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -75,6 +79,7 @@ pub struct DockerPreflightBaseline {
     daemon_socket_identity_sha256: [u8; 32],
     docker_socket_gid: u32,
     runtime_uid: u32,
+    runtime_gid: u32,
     guard_uid: u32,
     private_namespace_sha256: [u8; 32],
     guard_executable_sha256: [u8; 32],
@@ -92,6 +97,7 @@ impl DockerPreflightBaseline {
         daemon_socket_identity_sha256: [u8; 32],
         docker_socket_gid: u32,
         runtime_uid: u32,
+        runtime_gid: u32,
         guard_uid: u32,
         private_namespace_sha256: [u8; 32],
         guard_executable_sha256: [u8; 32],
@@ -107,6 +113,7 @@ impl DockerPreflightBaseline {
             || daemon_socket_identity_sha256 == [0; 32]
             || docker_socket_gid == 0
             || runtime_uid == 0
+            || runtime_gid == 0
             || guard_uid == 0
             || runtime_uid == guard_uid
             || private_namespace_sha256 == [0; 32]
@@ -121,6 +128,7 @@ impl DockerPreflightBaseline {
             daemon_socket_identity_sha256,
             docker_socket_gid,
             runtime_uid,
+            runtime_gid,
             guard_uid,
             private_namespace_sha256,
             guard_executable_sha256,
@@ -179,8 +187,12 @@ impl DockerDaemonObservation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DockerApiObservation {
     private_namespace_sha256: [u8; 32],
-    raw_host: Ipv4Addr,
+    runner_bind_host: Ipv4Addr,
+    guard_connect_host: Ipv4Addr,
     raw_port: u16,
+    namespace_active_interface_count: u8,
+    loopback_interface_up: bool,
+    namespace_non_local_route_count: u8,
     raw_listener_count: u8,
     host_listener_count: u8,
     non_loopback_listener_count: u8,
@@ -193,8 +205,12 @@ impl DockerApiObservation {
     #[must_use]
     pub const fn new(
         private_namespace_sha256: [u8; 32],
-        raw_host: Ipv4Addr,
+        runner_bind_host: Ipv4Addr,
+        guard_connect_host: Ipv4Addr,
         raw_port: u16,
+        namespace_active_interface_count: u8,
+        loopback_interface_up: bool,
+        namespace_non_local_route_count: u8,
         raw_listener_count: u8,
         host_listener_count: u8,
         non_loopback_listener_count: u8,
@@ -202,8 +218,12 @@ impl DockerApiObservation {
     ) -> Self {
         Self {
             private_namespace_sha256,
-            raw_host,
+            runner_bind_host,
+            guard_connect_host,
             raw_port,
+            namespace_active_interface_count,
+            loopback_interface_up,
+            namespace_non_local_route_count,
             raw_listener_count,
             host_listener_count,
             non_loopback_listener_count,
@@ -221,6 +241,11 @@ pub struct DockerContainerObservation {
     guard_uid: u32,
     guard_executable_sha256: [u8; 32],
     guard_cgroup_sha256: [u8; 32],
+    kernel_socket_owner_uid: u32,
+    kernel_socket_group_gid: u32,
+    kernel_socket_parent_mode: u32,
+    kernel_socket_mode: u32,
+    kernel_socket_peer_authentication: bool,
     host_route_count: u8,
     bridge_route_count: u8,
     foreign_reachable_peer_count: u8,
@@ -243,6 +268,11 @@ impl DockerContainerObservation {
         guard_uid: u32,
         guard_executable_sha256: [u8; 32],
         guard_cgroup_sha256: [u8; 32],
+        kernel_socket_owner_uid: u32,
+        kernel_socket_group_gid: u32,
+        kernel_socket_parent_mode: u32,
+        kernel_socket_mode: u32,
+        kernel_socket_peer_authentication: bool,
         host_route_count: u8,
         bridge_route_count: u8,
         foreign_reachable_peer_count: u8,
@@ -260,6 +290,11 @@ impl DockerContainerObservation {
             guard_uid,
             guard_executable_sha256,
             guard_cgroup_sha256,
+            kernel_socket_owner_uid,
+            kernel_socket_group_gid,
+            kernel_socket_parent_mode,
+            kernel_socket_mode,
+            kernel_socket_peer_authentication,
             host_route_count,
             bridge_route_count,
             foreign_reachable_peer_count,
@@ -393,6 +428,8 @@ impl DockerEgressObservation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DockerTopologyObservation {
     collector_executable_sha256: [u8; 32],
+    collector_protocol_version: u16,
+    collector_uid: u32,
     session_identity_sha256: [u8; 32],
     complete: bool,
     fresh: bool,
@@ -411,6 +448,8 @@ impl DockerTopologyObservation {
     #[must_use]
     pub const fn new(
         collector_executable_sha256: [u8; 32],
+        collector_protocol_version: u16,
+        collector_uid: u32,
         session_identity_sha256: [u8; 32],
         complete: bool,
         fresh: bool,
@@ -424,6 +463,8 @@ impl DockerTopologyObservation {
     ) -> Self {
         Self {
             collector_executable_sha256,
+            collector_protocol_version,
+            collector_uid,
             session_identity_sha256,
             complete,
             fresh,
@@ -472,6 +513,8 @@ pub fn admit_docker_mode(
     observed: DockerTopologyObservation,
 ) -> Result<DockerModeAdmission<'_>, DockerPreflightError> {
     if observed.collector_executable_sha256 != baseline.collector_executable_sha256
+        || observed.collector_protocol_version != DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION
+        || observed.collector_uid != 0
         || observed.session_identity_sha256 == [0; 32]
         || !observed.complete
         || !observed.fresh
@@ -496,8 +539,12 @@ pub fn admit_docker_mode(
         return Err(DockerPreflightError::SocketOwnership);
     }
     if observed.api.private_namespace_sha256 != baseline.private_namespace_sha256
-        || observed.api.raw_host != DOCKER_MODEL_RUNNER_HOST
+        || observed.api.runner_bind_host != DOCKER_MODEL_RUNNER_BIND_HOST
+        || observed.api.guard_connect_host != DOCKER_MODEL_RUNNER_CONNECT_HOST
         || observed.api.raw_port != DOCKER_MODEL_RUNNER_PORT
+        || observed.api.namespace_active_interface_count != 1
+        || !observed.api.loopback_interface_up
+        || observed.api.namespace_non_local_route_count != 0
         || observed.api.raw_listener_count != 1
         || observed.api.host_listener_count != 0
         || observed.api.non_loopback_listener_count != 0
@@ -511,6 +558,11 @@ pub fn admit_docker_mode(
         || observed.containers.guard_uid != baseline.guard_uid
         || observed.containers.guard_executable_sha256 != baseline.guard_executable_sha256
         || observed.containers.guard_cgroup_sha256 != baseline.guard_cgroup_sha256
+        || observed.containers.kernel_socket_owner_uid != baseline.guard_uid
+        || observed.containers.kernel_socket_group_gid != baseline.runtime_gid
+        || observed.containers.kernel_socket_parent_mode != 0o710
+        || observed.containers.kernel_socket_mode != 0o660
+        || !observed.containers.kernel_socket_peer_authentication
         || observed.containers.host_route_count != 0
         || observed.containers.bridge_route_count != 0
         || observed.containers.foreign_reachable_peer_count != 0
@@ -574,6 +626,7 @@ mod tests {
             [3; 32],
             971,
             1000,
+            1000,
             991,
             [4; 32],
             [5; 32],
@@ -585,6 +638,8 @@ mod tests {
     fn observation() -> DockerTopologyObservation {
         DockerTopologyObservation::new(
             [1; 32],
+            DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION,
+            0,
             [7; 32],
             true,
             true,
@@ -592,9 +647,22 @@ mod tests {
             DockerDaemonObservation::new(
                 [2; 32], 0, false, 1000, false, [3; 32], true, 0, 971, 0o660,
             ),
-            DockerApiObservation::new([4; 32], Ipv4Addr::LOCALHOST, 12_434, 1, 0, 0, 0),
+            DockerApiObservation::new(
+                [4; 32],
+                Ipv4Addr::UNSPECIFIED,
+                Ipv4Addr::LOCALHOST,
+                12_434,
+                1,
+                true,
+                0,
+                1,
+                0,
+                0,
+                0,
+            ),
             DockerContainerObservation::new(
-                1, 1, true, 991, [5; 32], [6; 32], 0, 0, 0, 0, 0, 0, 0, true, false,
+                1, 1, true, 991, [5; 32], [6; 32], 991, 1000, 0o710, 0o660, true, 0, 0, 0, 0, 0, 0,
+                0, true, false,
             ),
             DockerImageObservation::new(
                 DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
@@ -639,6 +707,7 @@ mod tests {
                 [3; 32],
                 971,
                 1000,
+                1000,
                 991,
                 [4; 32],
                 [5; 32],
@@ -649,6 +718,8 @@ mod tests {
         let baseline = baseline();
         for mutate in [
             |value: &mut DockerTopologyObservation| value.collector_executable_sha256 = [8; 32],
+            |value: &mut DockerTopologyObservation| value.collector_protocol_version = 2,
+            |value: &mut DockerTopologyObservation| value.collector_uid = 1000,
             |value: &mut DockerTopologyObservation| value.session_identity_sha256 = [0; 32],
             |value: &mut DockerTopologyObservation| value.complete = false,
             |value: &mut DockerTopologyObservation| value.fresh = false,
@@ -703,8 +774,16 @@ mod tests {
         let baseline = baseline();
         for mutate in [
             |value: &mut DockerTopologyObservation| value.api.private_namespace_sha256 = [8; 32],
-            |value: &mut DockerTopologyObservation| value.api.raw_host = Ipv4Addr::UNSPECIFIED,
+            |value: &mut DockerTopologyObservation| {
+                value.api.runner_bind_host = Ipv4Addr::LOCALHOST
+            },
+            |value: &mut DockerTopologyObservation| {
+                value.api.guard_connect_host = Ipv4Addr::UNSPECIFIED
+            },
             |value: &mut DockerTopologyObservation| value.api.raw_port = 12_435,
+            |value: &mut DockerTopologyObservation| value.api.namespace_active_interface_count = 2,
+            |value: &mut DockerTopologyObservation| value.api.loopback_interface_up = false,
+            |value: &mut DockerTopologyObservation| value.api.namespace_non_local_route_count = 1,
             |value: &mut DockerTopologyObservation| value.api.raw_listener_count = 0,
             |value: &mut DockerTopologyObservation| value.api.host_listener_count = 1,
             |value: &mut DockerTopologyObservation| value.api.non_loopback_listener_count = 1,
@@ -728,6 +807,15 @@ mod tests {
                 value.containers.guard_executable_sha256 = [8; 32]
             },
             |value: &mut DockerTopologyObservation| value.containers.guard_cgroup_sha256 = [8; 32],
+            |value: &mut DockerTopologyObservation| value.containers.kernel_socket_owner_uid = 1000,
+            |value: &mut DockerTopologyObservation| value.containers.kernel_socket_group_gid = 1001,
+            |value: &mut DockerTopologyObservation| {
+                value.containers.kernel_socket_parent_mode = 0o770
+            },
+            |value: &mut DockerTopologyObservation| value.containers.kernel_socket_mode = 0o600,
+            |value: &mut DockerTopologyObservation| {
+                value.containers.kernel_socket_peer_authentication = false
+            },
             |value: &mut DockerTopologyObservation| value.containers.host_route_count = 1,
             |value: &mut DockerTopologyObservation| {
                 value.containers.foreign_reachable_peer_count = 1
