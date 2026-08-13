@@ -3,8 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs::{self, OpenOptions};
+use std::io::Read as _;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
-use std::path::{Component, Path};
+use std::path::{Component, Path, PathBuf};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
@@ -284,6 +285,45 @@ pub trait OperationalStoreKeyProvider {
     ) -> Result<T, OperationalStoreKeyError>;
 }
 
+/// Fixed-scope platform key lifecycle used only for complete cryptographic erasure.
+pub trait OperationalStoreKeyLifecycle {
+    /// Destroys the exact scoped key and verifies that a subsequent lookup fails.
+    fn destroy_key_and_verify_absent(&mut self) -> Result<(), OperationalStoreKeyError>;
+}
+
+/// Content-free proof that one separately keyed encrypted backup was verified.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EncryptedBackupReceipt {
+    /// Store schema copied into the backup.
+    pub schema_version: u32,
+    /// Canonical generation copied into the backup.
+    pub generation: u64,
+    /// SHA-256 of the encrypted backup file, not plaintext records.
+    pub encrypted_file_sha256: String,
+}
+
+/// Content-free proof that a backup produced one verified fresh restore candidate.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RestoreCandidateReceipt {
+    /// Restored schema version.
+    pub schema_version: u32,
+    /// Restored canonical generation.
+    pub generation: u64,
+    /// SHA-256 of the separately encrypted candidate file.
+    pub encrypted_file_sha256: String,
+}
+
+/// Result of destroying one whole-store key scope.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CryptographicErasureReceipt {
+    /// The platform adapter destroyed and then failed to retrieve the scoped key.
+    pub key_destroyed_and_absent: bool,
+    /// Whether the encrypted database and known SQLite sidecars were removed.
+    pub encrypted_files_removed: bool,
+    /// Always false: SSD and copy-on-write media do not support this promise here.
+    pub physical_overwrite_claim: bool,
+}
+
 /// Stable, content-free encrypted-store failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OperationalStoreError {
@@ -348,6 +388,7 @@ impl std::error::Error for OperationalStoreError {}
 /// One exclusive SQLCipher connection to canonical authority state.
 pub struct OperationalStore {
     connection: Connection,
+    path: PathBuf,
     generation: u64,
     poisoned: bool,
 }
@@ -392,17 +433,21 @@ impl OperationalStore {
         destination: &Path,
         observation: &StrictLocalStorageObservation,
         provider: &mut P,
-    ) -> Result<(), OperationalStoreError> {
+    ) -> Result<EncryptedBackupReceipt, OperationalStoreError> {
         if self.poisoned {
             return Err(OperationalStoreError::Poisoned);
         }
         if evaluate_storage(observation) != StrictLocalStorageDecision::Eligible {
             return Err(OperationalStoreError::StorageRejected);
         }
+        let mut destination_created = false;
         let result = provider
             .with_key(|key| {
                 prepare_new_store_file(destination)?;
+                destination_created = true;
                 let mut destination_connection = open_connection(destination, key)?;
+                claim_exclusive_writer(&destination_connection)?;
+                verify_runtime_configuration(&destination_connection)?;
                 {
                     let backup = rusqlite::backup::Backup::new(
                         &self.connection,
@@ -413,13 +458,125 @@ impl OperationalStore {
                         .run_to_completion(64, Duration::from_millis(1), None)
                         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
                 }
-                verify_integrity(&destination_connection)
+                let mut candidate = OperationalStore {
+                    connection: destination_connection,
+                    path: destination.to_path_buf(),
+                    generation: 0,
+                    poisoned: false,
+                };
+                let _ = candidate.load_authority()?;
+                if candidate.generation != self.generation {
+                    return Err(OperationalStoreError::IntegrityFailure);
+                }
+                drop(candidate);
+                Ok(EncryptedBackupReceipt {
+                    schema_version: u32::try_from(SCHEMA_VERSION)
+                        .map_err(|_| OperationalStoreError::IntegrityFailure)?,
+                    generation: self.generation,
+                    encrypted_file_sha256: sha256_file(destination)?,
+                })
             })
             .map_err(|_| OperationalStoreError::KeyUnavailable)?;
-        if result.is_err() {
-            let _ = fs::remove_file(destination);
+        if result.is_err() && destination_created {
+            remove_sqlite_artifacts(destination);
         }
         result
+    }
+
+    /// Restores a verified encrypted backup into a new candidate without replacing live state.
+    pub fn restore_to_fresh_candidate<
+        SP: OperationalStoreKeyProvider,
+        DP: OperationalStoreKeyProvider,
+    >(
+        backup: &Path,
+        backup_observation: &StrictLocalStorageObservation,
+        backup_provider: &mut SP,
+        destination: &Path,
+        destination_observation: &StrictLocalStorageObservation,
+        destination_provider: &mut DP,
+    ) -> Result<RestoreCandidateReceipt, OperationalStoreError> {
+        if backup == destination {
+            return Err(OperationalStoreError::RestoreFailure);
+        }
+        if evaluate_storage(backup_observation) != StrictLocalStorageDecision::Eligible
+            || evaluate_storage(destination_observation) != StrictLocalStorageDecision::Eligible
+        {
+            return Err(OperationalStoreError::StorageRejected);
+        }
+        verify_store_file(backup).map_err(|_| OperationalStoreError::RestoreFailure)?;
+        let mut destination_created = false;
+        let result = backup_provider
+            .with_key(|backup_key| {
+                let source = open_current_keyed(backup, backup_key)
+                    .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                destination_provider
+                    .with_key(|destination_key| {
+                        prepare_new_store_file(destination)
+                            .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        destination_created = true;
+                        let mut destination_connection =
+                            open_connection(destination, destination_key)
+                                .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        claim_exclusive_writer(&destination_connection)
+                            .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        verify_runtime_configuration(&destination_connection)
+                            .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        {
+                            let copy = rusqlite::backup::Backup::new(
+                                &source.connection,
+                                &mut destination_connection,
+                            )
+                            .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                            copy.run_to_completion(64, Duration::from_millis(1), None)
+                                .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        }
+                        let mut candidate = OperationalStore {
+                            connection: destination_connection,
+                            path: destination.to_path_buf(),
+                            generation: 0,
+                            poisoned: false,
+                        };
+                        let _ = candidate
+                            .load_authority()
+                            .map_err(|_| OperationalStoreError::RestoreFailure)?;
+                        if candidate.generation != source.generation {
+                            return Err(OperationalStoreError::RestoreFailure);
+                        }
+                        let generation = candidate.generation;
+                        drop(candidate);
+                        Ok(RestoreCandidateReceipt {
+                            schema_version: u32::try_from(SCHEMA_VERSION)
+                                .map_err(|_| OperationalStoreError::RestoreFailure)?,
+                            generation,
+                            encrypted_file_sha256: sha256_file(destination)
+                                .map_err(|_| OperationalStoreError::RestoreFailure)?,
+                        })
+                    })
+                    .map_err(|_| OperationalStoreError::KeyUnavailable)?
+            })
+            .map_err(|_| OperationalStoreError::KeyUnavailable)?;
+        if result.is_err() && destination_created {
+            remove_sqlite_artifacts(destination);
+        }
+        result
+    }
+
+    /// Consumes the live store, destroys its whole-store key, and removes known ciphertext files.
+    pub fn cryptographic_erase<L: OperationalStoreKeyLifecycle>(
+        self,
+        lifecycle: &mut L,
+    ) -> Result<CryptographicErasureReceipt, OperationalStoreError> {
+        let path = self.path.clone();
+        drop(self);
+        lifecycle
+            .destroy_key_and_verify_absent()
+            .map_err(|_| OperationalStoreError::KeyErasureFailure)?;
+        remove_sqlite_artifacts(&path);
+        Ok(CryptographicErasureReceipt {
+            key_destroyed_and_absent: true,
+            encrypted_files_removed: !sqlite_artifacts_exist(&path),
+            physical_overwrite_claim: false,
+        })
     }
 
     /// Registers one canonical record with a bounded retention policy.
@@ -915,7 +1072,7 @@ impl DurableAuthorityRuntime {
         destination: &Path,
         observation: &StrictLocalStorageObservation,
         provider: &mut P,
-    ) -> Result<(), DurableAuthorityError> {
+    ) -> Result<EncryptedBackupReceipt, DurableAuthorityError> {
         self.ensure_usable()?;
         self.store
             .backup(destination, observation, provider)
@@ -966,6 +1123,28 @@ fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalSt
     migrate(&connection)?;
     let mut store = OperationalStore {
         connection,
+        path: path.to_path_buf(),
+        generation: 0,
+        poisoned: false,
+    };
+    let _ = store.load_authority()?;
+    Ok(store)
+}
+
+fn open_current_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
+    let connection = open_connection(path, key)?;
+    claim_exclusive_writer(&connection)?;
+    verify_runtime_configuration(&connection)?;
+    let version: i64 = connection
+        .pragma_query_value(None, "user_version", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    if version != SCHEMA_VERSION {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
+    verify_schema_history(&connection)?;
+    let mut store = OperationalStore {
+        connection,
+        path: path.to_path_buf(),
         generation: 0,
         poisoned: false,
     };
@@ -2187,6 +2366,54 @@ fn verify_store_file(path: &Path) -> Result<(), OperationalStoreError> {
     Ok(())
 }
 
+fn sha256_file(path: &Path) -> Result<String, OperationalStoreError> {
+    verify_store_file(path)?;
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open(path)
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if read == 0 {
+            break;
+        }
+        digest.update(&buffer[..read]);
+    }
+    Ok(hex_digest(&digest.finalize()))
+}
+
+fn sqlite_artifact_paths(path: &Path) -> [PathBuf; 3] {
+    let mut wal = path.as_os_str().to_os_string();
+    wal.push("-wal");
+    let mut shared_memory = path.as_os_str().to_os_string();
+    shared_memory.push("-shm");
+    [
+        path.to_path_buf(),
+        PathBuf::from(wal),
+        PathBuf::from(shared_memory),
+    ]
+}
+
+fn remove_sqlite_artifacts(path: &Path) {
+    for artifact in sqlite_artifact_paths(path) {
+        if fs::symlink_metadata(&artifact)
+            .is_ok_and(|metadata| metadata.is_file() && !metadata.file_type().is_symlink())
+        {
+            let _ = fs::remove_file(artifact);
+        }
+    }
+}
+
+fn sqlite_artifacts_exist(path: &Path) -> bool {
+    sqlite_artifact_paths(path)
+        .into_iter()
+        .any(|artifact| fs::symlink_metadata(artifact).is_ok())
+}
+
 fn classify_open_error(error: rusqlite::Error) -> OperationalStoreError {
     match error.sqlite_error_code() {
         Some(rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked) => {
@@ -2246,10 +2473,10 @@ mod tests {
 
     use super::{
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, OperationalStore,
-        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyProvider,
-        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
-        RetentionSensitivity, SCHEMA_VERSION, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_hex, verify_runtime_configuration,
+        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
+        OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
+        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_hex, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -2275,6 +2502,29 @@ mod tests {
             _operation: impl FnOnce(&[u8]) -> T,
         ) -> Result<T, OperationalStoreKeyError> {
             Err(OperationalStoreKeyError::Unavailable)
+        }
+    }
+
+    struct ErasableTestKey(Option<[u8; 32]>);
+
+    impl OperationalStoreKeyProvider for ErasableTestKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            self.0
+                .as_ref()
+                .map(|key| operation(key))
+                .ok_or(OperationalStoreKeyError::Unavailable)
+        }
+    }
+
+    impl OperationalStoreKeyLifecycle for ErasableTestKey {
+        fn destroy_key_and_verify_absent(&mut self) -> Result<(), OperationalStoreKeyError> {
+            self.0
+                .take()
+                .map(|_| ())
+                .ok_or(OperationalStoreKeyError::Unavailable)
         }
     }
 
@@ -2440,16 +2690,177 @@ mod tests {
                 .expect_err("second writer must fail"),
             OperationalStoreError::OpenFailed | OperationalStoreError::ConcurrentWriter
         ));
-        store
+        let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
+        assert_eq!(backup_receipt.schema_version, 3);
+        assert_eq!(backup_receipt.generation, 0);
+        assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
         let bytes = fs::read(&backup).expect("backup bytes");
         assert!(!bytes.starts_with(b"SQLite format 3\0"));
+        let occupied = directory.join("occupied.backup.db");
+        fs::write(&occupied, b"do-not-overwrite").expect("occupied backup fixture");
+        assert!(
+            store
+                .backup(&occupied, &observation(), &mut TestKey([9; 32]))
+                .is_err()
+        );
+        assert_eq!(
+            fs::read(&occupied).expect("occupied backup remains"),
+            b"do-not-overwrite"
+        );
         drop(store);
         let restored = OperationalStore::open(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("backup reopens");
         assert_eq!(restored.generation(), 0);
         drop(restored);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn encrypted_backup_restores_only_to_a_verified_fresh_candidate() {
+        let directory = temporary_directory();
+        let source = directory.join("authority.db");
+        let backup = directory.join("authority.backup.db");
+        let candidate = directory.join("authority.candidate.db");
+        let store = OperationalStore::open(&source, &observation(), &mut TestKey([30; 32]))
+            .expect("source store");
+        let backup_receipt = store
+            .backup(&backup, &observation(), &mut TestKey([31; 32]))
+            .expect("verified backup");
+        drop(store);
+
+        let restore_receipt = OperationalStore::restore_to_fresh_candidate(
+            &backup,
+            &observation(),
+            &mut TestKey([31; 32]),
+            &candidate,
+            &observation(),
+            &mut TestKey([32; 32]),
+        )
+        .expect("verified restore candidate");
+        assert_eq!(
+            (restore_receipt.schema_version, restore_receipt.generation),
+            (backup_receipt.schema_version, backup_receipt.generation)
+        );
+        assert_eq!(restore_receipt.encrypted_file_sha256.len(), 64);
+        assert_ne!(
+            restore_receipt.encrypted_file_sha256,
+            backup_receipt.encrypted_file_sha256
+        );
+        drop(
+            OperationalStore::open(&candidate, &observation(), &mut TestKey([32; 32]))
+                .expect("candidate opens under destination key"),
+        );
+
+        let occupied = directory.join("occupied.db");
+        fs::write(&occupied, b"do-not-overwrite").expect("occupied fixture");
+        assert_eq!(
+            OperationalStore::restore_to_fresh_candidate(
+                &backup,
+                &observation(),
+                &mut TestKey([31; 32]),
+                &occupied,
+                &observation(),
+                &mut TestKey([33; 32]),
+            )
+            .expect_err("occupied destination must fail"),
+            OperationalStoreError::RestoreFailure
+        );
+        assert_eq!(
+            fs::read(&occupied).expect("occupied remains"),
+            b"do-not-overwrite"
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn corrupted_or_wrongly_keyed_backup_leaves_no_restore_candidate() {
+        let directory = temporary_directory();
+        let source = directory.join("authority.db");
+        let backup = directory.join("authority.backup.db");
+        let wrong_key_candidate = directory.join("wrong-key.db");
+        let corrupt_candidate = directory.join("corrupt-candidate.db");
+        let store = OperationalStore::open(&source, &observation(), &mut TestKey([34; 32]))
+            .expect("source store");
+        store
+            .backup(&backup, &observation(), &mut TestKey([35; 32]))
+            .expect("verified backup");
+        drop(store);
+        assert!(
+            OperationalStore::restore_to_fresh_candidate(
+                &backup,
+                &observation(),
+                &mut TestKey([36; 32]),
+                &wrong_key_candidate,
+                &observation(),
+                &mut TestKey([37; 32]),
+            )
+            .is_err()
+        );
+        assert!(!wrong_key_candidate.exists());
+
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&backup)
+            .expect("backup fixture");
+        file.seek(SeekFrom::Start(128)).expect("seek backup page");
+        let mut byte = [0_u8; 1];
+        file.read_exact(&mut byte).expect("read backup byte");
+        byte[0] ^= 0xff;
+        file.seek(SeekFrom::Start(128))
+            .expect("seek backup page again");
+        file.write_all(&byte).expect("corrupt backup byte");
+        file.sync_all().expect("sync corruption");
+        drop(file);
+        assert!(
+            OperationalStore::restore_to_fresh_candidate(
+                &backup,
+                &observation(),
+                &mut TestKey([35; 32]),
+                &corrupt_candidate,
+                &observation(),
+                &mut TestKey([38; 32]),
+            )
+            .is_err()
+        );
+        assert!(!corrupt_candidate.exists());
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn whole_store_cryptographic_erasure_consumes_key_scope_without_overwrite_claim() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut provider = ErasableTestKey(Some([40; 32]));
+        let store =
+            OperationalStore::open(&path, &observation(), &mut provider).expect("encrypted store");
+        let receipt = store
+            .cryptographic_erase(&mut provider)
+            .expect("key erasure");
+        assert!(receipt.key_destroyed_and_absent);
+        assert!(receipt.encrypted_files_removed);
+        assert!(!receipt.physical_overwrite_claim);
+        assert!(!path.exists());
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut provider)
+                .expect_err("destroyed key cannot reopen"),
+            OperationalStoreError::KeyUnavailable
+        );
+        assert!(!path.exists());
+
+        let failed_path = directory.join("failed-erasure.db");
+        let failed_store =
+            OperationalStore::open(&failed_path, &observation(), &mut TestKey([41; 32]))
+                .expect("second encrypted store");
+        assert_eq!(
+            failed_store
+                .cryptographic_erase(&mut ErasableTestKey(None))
+                .expect_err("absent lifecycle authority must fail"),
+            OperationalStoreError::KeyErasureFailure
+        );
+        assert!(failed_path.exists());
         fs::remove_dir_all(directory).expect("cleanup");
     }
 

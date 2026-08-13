@@ -14,7 +14,7 @@ use agentmage_kernel_engine::authority_transaction::{
     EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
 };
 use agentmage_kernel_engine::operational_store::{
-    OperationalStoreKeyError, OperationalStoreKeyProvider,
+    OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{FileType, Mode, OFlags, fstat, open};
@@ -548,6 +548,22 @@ impl OperationalStoreKeyProvider for LinuxOperationalStoreKeyProvider {
             .lookup(&self.key)
             .map_err(|_| OperationalStoreKeyError::Unavailable)?;
         value.with_exposed(|encoded| with_decoded_operational_store_key(encoded, operation))
+    }
+}
+
+impl OperationalStoreKeyLifecycle for LinuxOperationalStoreKeyProvider {
+    fn destroy_key_and_verify_absent(&mut self) -> Result<(), OperationalStoreKeyError> {
+        self.service
+            .clear(&self.key)
+            .map_err(|_| OperationalStoreKeyError::Unavailable)?;
+        match self.service.lookup(&self.key) {
+            Err(error) if error.kind() == LinuxSecretServiceErrorKind::NotFound => Ok(()),
+            Ok((mut value, _)) => {
+                value.bytes.zeroize();
+                Err(OperationalStoreKeyError::Unavailable)
+            }
+            Err(_) => Err(OperationalStoreKeyError::Unavailable),
+        }
     }
 }
 
