@@ -391,6 +391,105 @@ mod tests {
     }
 
     #[test]
+    fn every_normal_component_is_denied_except_the_selected_guarded_adapter() {
+        let topologies = [
+            (
+                NetworkComponent::KernelNativeInferenceAdapter,
+                LocalTransport::AuthenticatedUnixSocket,
+                NetworkDestinationClass::AuthenticatedLocalSocket,
+            ),
+            (
+                NetworkComponent::KernelDockerInferenceAdapter,
+                LocalTransport::GuardedLoopbackTcp,
+                NetworkDestinationClass::Loopback,
+            ),
+        ];
+        let components = [
+            NetworkComponent::VisualStudioCodeExtension,
+            NetworkComponent::NativeBridge,
+            NetworkComponent::Kernel,
+            NetworkComponent::KernelNativeInferenceAdapter,
+            NetworkComponent::KernelDockerInferenceAdapter,
+            NetworkComponent::ToolWorker,
+            NetworkComponent::Converter,
+            NetworkComponent::Indexer,
+            NetworkComponent::ModelInstaller,
+            NetworkComponent::Undeclared,
+        ];
+        for (selected, transport, destination) in topologies {
+            let endpoint = LocalEndpointIdentity::new(selected, transport, [9; 32])
+                .expect("guarded endpoint");
+            let policy = StrictLocalNetworkPolicy::new(endpoint);
+            for component in components {
+                let decision = policy.evaluate(&NetworkObservation {
+                    component,
+                    destination,
+                    transport: Some(transport),
+                    endpoint_sha256: Some([9; 32]),
+                    peer_authenticated: true,
+                    attempted_bytes: 1,
+                });
+                if component == selected {
+                    assert_eq!(
+                        decision,
+                        StrictLocalNetworkDecision::Allow {
+                            reason: StrictLocalDecisionReason::ExactAuthenticatedInferenceEndpoint
+                        }
+                    );
+                } else {
+                    assert_eq!(
+                        decision,
+                        StrictLocalNetworkDecision::Block {
+                            reason: StrictLocalDecisionReason::ClientNotAuthorized
+                        }
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn native_and_docker_transports_cannot_substitute_for_each_other() {
+        let native = StrictLocalNetworkPolicy::new(
+            LocalEndpointIdentity::new(
+                NetworkComponent::KernelNativeInferenceAdapter,
+                LocalTransport::AuthenticatedUnixSocket,
+                [3; 32],
+            )
+            .expect("native endpoint"),
+        );
+        let docker_observation = NetworkObservation {
+            component: NetworkComponent::KernelDockerInferenceAdapter,
+            destination: NetworkDestinationClass::Loopback,
+            transport: Some(LocalTransport::GuardedLoopbackTcp),
+            endpoint_sha256: Some([3; 32]),
+            peer_authenticated: true,
+            attempted_bytes: 1,
+        };
+        assert_eq!(
+            native.evaluate(&docker_observation),
+            StrictLocalNetworkDecision::Block {
+                reason: StrictLocalDecisionReason::ClientNotAuthorized
+            }
+        );
+
+        let docker = StrictLocalNetworkPolicy::new(
+            LocalEndpointIdentity::new(
+                NetworkComponent::KernelDockerInferenceAdapter,
+                LocalTransport::GuardedLoopbackTcp,
+                [3; 32],
+            )
+            .expect("Docker endpoint"),
+        );
+        assert_eq!(
+            docker.evaluate(&exact_observation()),
+            StrictLocalNetworkDecision::Block {
+                reason: StrictLocalDecisionReason::ClientNotAuthorized
+            }
+        );
+    }
+
+    #[test]
     fn ledger_is_ordered_content_free_bounded_and_computes_its_own_decision() {
         let policy = StrictLocalNetworkPolicy::new(endpoint());
         let mut ledger = NetworkAttemptLedger::new();

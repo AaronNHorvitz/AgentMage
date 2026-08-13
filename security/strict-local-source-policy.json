@@ -5,6 +5,9 @@
     ],
     "kernel/engine/src/policy.rs": [
       "https://*.example.invalid"
+    ],
+    "platforms/linux-inference/src/docker_live_collector.rs": [
+      "http://example.invalid"
     ]
   },
   "denied_npm_runtime_packages": [
@@ -41,6 +44,7 @@
     "capabilities/read-only/src",
     "kernel/contracts/src",
     "kernel/engine/src",
+    "platforms/linux-inference/src",
     "platforms/linux/src",
     "platforms/windows/src",
     "shells/host/src",
@@ -51,6 +55,11 @@
     {
       "allowed_paths": [
         "kernel/contracts/src/network.rs",
+        "platforms/linux-inference/src/docker_guard.rs",
+        "platforms/linux-inference/src/docker_guard_service.rs",
+        "platforms/linux-inference/src/docker_preflight.rs",
+        "platforms/linux-inference/src/docker_runtime.rs",
+        "platforms/linux-inference/src/docker_topology_collector.rs",
         "platforms/linux/src/inventory.rs"
       ],
       "id": "rust-standard-internet-address-api",
@@ -58,6 +67,8 @@
     },
     {
       "allowed_paths": [
+        "platforms/linux-inference/src/docker_guard_service.rs",
+        "platforms/linux-inference/src/docker_http_observer.rs",
         "platforms/linux/src/ipc.rs"
       ],
       "id": "rustix-socket-api",
@@ -65,13 +76,17 @@
     },
     {
       "allowed_paths": [
+        "platforms/linux-inference/src/docker_guard_service.rs",
+        "platforms/linux-inference/src/docker_http_observer.rs",
         "platforms/linux/src/ipc.rs"
       ],
       "id": "unix-domain-ipc-api",
       "pattern": "std::os::unix::net::"
     },
     {
-      "allowed_paths": [],
+      "allowed_paths": [
+        "platforms/linux-inference/src/docker_guard_service.rs"
+      ],
       "id": "rust-network-client-api",
       "pattern": "(?:TcpStream|TcpListener|UdpSocket|ToSocketAddrs|reqwest::|hyper::|ureq::|curl::|tokio::net::|async_std::net::)"
     },
@@ -88,7 +103,9 @@
       "pattern": "(?:node:(?:http|https|tls|dns|dgram)|require\\([\\\"'](?:http|https|tls|dns|dgram)[\\\"']\\)|\\bfetch\\s*\\(|\\bWebSocket\\s*\\(|EventSource\\s*\\()"
     },
     {
-      "allowed_paths": [],
+      "allowed_paths": [
+        "platforms/linux-inference/src/docker_live_collector.rs"
+      ],
       "id": "ambient-proxy-or-dns-override",
       "pattern": "(?:HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|http_proxy|https_proxy|all_proxy|no_proxy|RES_OPTIONS|HOSTALIASES)"
     },

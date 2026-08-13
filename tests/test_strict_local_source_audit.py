@@ -33,6 +33,27 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
                 sources["shells/vscode/src/injected.ts"] = injected
                 self.assertTrue(audit.scan_sources(self.policy, sources))
 
+    def test_linux_inference_is_inside_the_closed_source_boundary(self) -> None:
+        self.assertIn(
+            "platforms/linux-inference/src/docker_guard_service.rs", self.sources
+        )
+        self.assertEqual(audit.scan_sources(self.policy, self.sources), [])
+
+        sources = dict(self.sources)
+        sources["platforms/linux-inference/src/native_runtime.rs"] = (
+            "fn hidden_remote() { let _ = std::net::TcpStream::connect(\"example.invalid:443\"); }\n"
+            + sources["platforms/linux-inference/src/native_runtime.rs"]
+        )
+        failures = audit.scan_sources(self.policy, sources)
+        self.assertIn(
+            "rust-standard-internet-address-api found outside its closed allowlist: platforms/linux-inference/src/native_runtime.rs",
+            failures,
+        )
+        self.assertIn(
+            "rust-network-client-api found outside its closed allowlist: platforms/linux-inference/src/native_runtime.rs",
+            failures,
+        )
+
     def test_internet_api_allowlist_cannot_move_or_expand(self) -> None:
         moved = dict(self.sources)
         moved["kernel/engine/src/injected.rs"] = "use std::net::IpAddr;"
