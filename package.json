@@ -148,6 +148,8 @@
     "evidence:story9.2-docker-kvm:check": "python3 scripts/linux_docker_kvm_evidence.py",
     "evidence:story9.2-docker-reachability:build": "python3 scripts/linux_docker_reachability_evidence.py --write --source-revision HEAD",
     "evidence:story9.2-docker-reachability:check": "python3 scripts/linux_docker_reachability_evidence.py",
+    "evidence:story9.2-docker-controls:build": "python3 scripts/linux_docker_control_disablement_evidence.py --write --source-revision HEAD",
+    "evidence:story9.2-docker-controls:check": "python3 scripts/linux_docker_control_disablement_evidence.py",
     "native-runtime:build": "python3 scripts/native_llama_runtime.py --archive \"$AGENTMAGE_LLAMA_CPP_ARCHIVE\"",
     "native-runtime:check": "python3 scripts/native_llama_runtime.py --verify-package release-output/agentmage-llama-cpp-b10333-cpu-linux-x86_64.tar.gz",
     "model:source-check": "python3 scripts/model_admission.py",
