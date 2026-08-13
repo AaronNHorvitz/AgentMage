@@ -99,6 +99,10 @@ selection, path resolution, configuration opening, authority-state opening, and
 initial key provisioning require a `VerifiedPlatformAdapter<LinuxPlatformAdapter>`.
 Workspace selection is the only production constructor for a Linux authorized
 workspace and opens the selected root without following symbolic links.
+Production authority-state opening additionally accepts only the concrete
+`LinuxOperationalStoreKeyProvider`, which is fixed to one profile's
+`operational-store-key-v1` Secret Service item. The generic key-provider path is
+available only behind the explicitly test-only composition boundary.
 
 ```mermaid
 flowchart TD

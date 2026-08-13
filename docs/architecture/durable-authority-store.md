@@ -39,6 +39,14 @@ opens the fixed database through the exact
 verification rejects symbolic links. Ordinary non-descriptor paths retain
 SQLite no-follow.
 
+The production `open_linux_authority` composition accepts that concrete
+fixed-purpose provider, not an arbitrary implementation of the kernel's
+testable key callback contract. Missing, malformed, locked, substituted, or
+otherwise unavailable Secret Service material fails before the database
+callback runs and before a primary or backup file is created. Test-only builds
+retain an explicitly named synthetic-provider constructor, which cannot enter a
+normal build.
+
 Initial key provisioning is a separate explicit operation that requires the
 verified aggregate, a current-user owner-only strict-local root, and a
 single-writer lifecycle lock. It refuses an existing key and refuses an

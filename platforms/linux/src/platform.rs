@@ -21,8 +21,8 @@ use sha2::{Digest, Sha256};
 use crate::security_controls::{LinuxSecurityControl, LinuxSecurityControls};
 use crate::{
     DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
-    LinuxIpcError, LinuxPathAdapter, LinuxStrictLocalRoot, LinuxStrictLocalRootInspector,
-    authorize_workspace_root,
+    LinuxIpcError, LinuxOperationalStoreKeyProvider, LinuxPathAdapter, LinuxStrictLocalRoot,
+    LinuxStrictLocalRootInspector, authorize_workspace_root,
 };
 
 const MAX_IDENTITY_FILE_BYTES: u64 = 256 * 1024 * 1024;
@@ -290,10 +290,10 @@ impl LinuxAuthorityRuntime {
 }
 
 /// Opens SQLCipher state through a verified adapter and continuously held private root.
-pub fn open_linux_authority<P: OperationalStoreKeyProvider>(
+pub fn open_linux_authority(
     verified: &VerifiedPlatformAdapter<LinuxPlatformAdapter>,
     state_root: &Path,
-    provider: &mut P,
+    provider: &mut LinuxOperationalStoreKeyProvider,
     recovery_epoch_ms: u64,
 ) -> Result<LinuxAuthorityRuntime, LinuxAuthorityOpenError> {
     if verified.adapter().family != verified.manifest_identity().target().family() {

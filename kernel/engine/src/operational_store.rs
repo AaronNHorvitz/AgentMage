@@ -217,9 +217,9 @@ impl OperationalStore {
         if evaluate_storage(observation) != StrictLocalStorageDecision::Eligible {
             return Err(OperationalStoreError::StorageRejected);
         }
-        prepare_new_store_file(destination)?;
         let result = provider
             .with_key(|key| {
+                prepare_new_store_file(destination)?;
                 let mut destination_connection = open_connection(destination, key)?;
                 {
                     let backup = rusqlite::backup::Backup::new(
@@ -1578,6 +1578,14 @@ mod tests {
         assert_eq!(store.generation(), 0);
         let bytes = fs::read(&path).expect("database bytes");
         assert!(!bytes.starts_with(b"SQLite format 3\0"));
+        let backup = directory.join("authority.backup.db");
+        assert_eq!(
+            store
+                .backup(&backup, &observation(), &mut MissingKey)
+                .expect_err("missing backup key must fail"),
+            OperationalStoreError::KeyUnavailable
+        );
+        assert!(!backup.exists());
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }

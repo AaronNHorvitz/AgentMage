@@ -547,11 +547,16 @@ impl OperationalStoreKeyProvider for LinuxOperationalStoreKeyProvider {
             .service
             .lookup(&self.key)
             .map_err(|_| OperationalStoreKeyError::Unavailable)?;
-        value.with_exposed(|encoded| {
-            let decoded = decode_operational_store_key(encoded)?;
-            Ok(operation(decoded.as_slice()))
-        })
+        value.with_exposed(|encoded| with_decoded_operational_store_key(encoded, operation))
     }
+}
+
+fn with_decoded_operational_store_key<T>(
+    encoded: &[u8],
+    operation: impl FnOnce(&[u8]) -> T,
+) -> Result<T, OperationalStoreKeyError> {
+    let decoded = decode_operational_store_key(encoded)?;
+    Ok(operation(decoded.as_slice()))
 }
 
 fn decode_operational_store_key(
@@ -973,6 +978,7 @@ mod tests {
         LinuxSecretServiceManifest, LinuxSecretValue, MAX_SECRET_BYTES,
         OPERATIONAL_STORE_KEY_PURPOSE, decode_operational_store_key, hex_digest,
         operational_store_key_exists, provision_operational_store_key, read_bounded,
+        with_decoded_operational_store_key,
     };
     use rustix::rand::{GetRandomFlags, getrandom};
     use sha2::Digest as _;
@@ -1038,6 +1044,23 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn invalid_operational_store_key_never_invokes_database_callback() {
+        let mut invoked = false;
+        let failure = with_decoded_operational_store_key(b"not-a-key", |_| invoked = true)
+            .expect_err("invalid encoded key must fail");
+        assert_eq!(
+            failure,
+            agentmage_kernel_engine::operational_store::OperationalStoreKeyError::Unavailable
+        );
+        assert!(!invoked);
+
+        let encoded = b"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+        with_decoded_operational_store_key(encoded, |_| invoked = true)
+            .expect("exact key invokes callback");
+        assert!(invoked);
     }
 
     #[test]
