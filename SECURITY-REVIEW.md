@@ -48,6 +48,16 @@ Recommended first-GA product-validation boundary:
 - Synthetic provider tenants, repositories, projects, pipelines, artifacts, environments, telemetry, and incidents for connected-capability conformance before user-controlled provider data.
 - No sensitive or regulated data until a separately tested profile explicitly supports it.
 
+Decision 0040 makes those first-GA environments disposable local KVM guests,
+not GitHub-hosted runners. Fedora, Ubuntu, and Windows 11 evidence must bind the
+exact source revision, immutable base-image identity, writable overlay,
+virtualization configuration, standard-user identity class, network phase,
+commands, raw results, and cleanup result. Routine product and documentation
+gates run locally. GitHub-hosted execution is limited to an explicitly
+dispatched, budget-confirmed Apple Silicon macOS source build and test; that
+preliminary result cannot satisfy MacBook Pro M5, signing, notarization,
+lifecycle, security, support, or release gates.
+
 The engineering target is a conservative, defense-in-depth desktop security posture with least privilege, deny-by-default authority, local data minimization, reproducible builds, transparent supply-chain records, adversarial testing, and independent verification.
 
 ## 3. Reviewer Quick Path
@@ -81,8 +91,9 @@ No reviewer should need internet access to run the product tests after the appro
 | Accessibility | Core workflows and generated guidance target WCAG 2.2 AA. | Review the Accessibility Conformance Report and independent test results. |
 | Cryptography | Platform-backed, reviewed cryptographic providers and precise claims are required. | Confirm the provider and operating environment are acceptable for the intended data. |
 | Managed-device compatibility | Optional and outside the personal development boundary. | Supply endpoint-management, monitoring, software-allowlist, and installation constraints before testing. |
+| Validation execution authority | Routine checks and first-GA native acceptance run locally; source hosting is not test authority. | Reproduce Fedora, Ubuntu, and Windows 11 in separate disposable local guests and verify exact image, overlay, revision, standard-user, network-phase, result, and cleanup evidence. |
 | Windows 11 x64 | Required for v1.0 GA. | Require the complete `WINDOWS-BOUNDARIES.md` package, IPC, sandbox, path, key, model, connected-worker, clean-install, accessibility, recovery, and removal evidence. |
-| Apple Silicon macOS | Retained post-GA and currently `BLOCKED-MACOS`. | Require genuine MacBook Pro M5 signing, notarization, App Sandbox, XPC, Keychain, Metal, clean-install, and release evidence before claiming support. |
+| Apple Silicon macOS | Retained post-GA and currently `BLOCKED-MACOS`; the manual hosted source lane is preliminary only. | Require genuine MacBook Pro M5 signing, notarization, App Sandbox, XPC, Keychain, Metal, clean-install, and release evidence before claiming support. |
 | Connected delivery | Required only for individually promoted provider/version/capability tuples. | Verify the support matrix, least-privilege credential, exact effect, conformance level, recovery, and removal evidence for each tuple. |
 
 ## 5. Public Product-Security Reference Baseline
@@ -1010,6 +1021,9 @@ review-evidence/
     ubuntu-profile.json
     windows-profile.json
     macos-post-ga-profile.json
+    execution-venue-policy.json
+    guest-image-manifests/
+    guest-cleanup-results/
     signatures-and-package-identities.txt
     platform-boundaries/
     baseline-before.json
@@ -1063,6 +1077,13 @@ Evidence rules:
 - The index and checksum file are signed.
 - Raw and summarized results agree mechanically.
 - Failures, skips, unavailable tests, and not-applicable decisions remain visible.
+- Every native result identifies its execution venue. Local guest evidence binds
+  the immutable base image, disposable overlay, source revision, virtual
+  hardware and firmware controls, standard-user identity class, network phase,
+  commands, result, cleanup, and evidence digest.
+- A GitHub-hosted macOS source result is labeled preliminary, identifies the
+  hosted image and observed architecture, contains no signing credential, and
+  cannot be promoted to MacBook Pro M5 or release evidence.
 - Evidence contains no credentials, private keys, raw sensitive prompts, unrelated user paths, or real customer content.
 - Re-running `agentmage-review validate-evidence` offline verifies the package without trusting AgentMage itself.
 
@@ -1098,7 +1119,7 @@ Integrate this security baseline into the project without turning it into a pape
 5. Generate human-readable and machine-readable control evidence from the same source records.
 6. Assign the first execution of every `RV-*` protocol to the earliest sprint that implements its boundary; release sprints rerun the complete applicable suite and assemble evidence rather than discovering controls for the first time.
 7. Make failed critical gates block signing and packaging.
-8. Test Linux core behavior continuously against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows against its native reference runtime; require independent M5/macOS evidence for every later Mac claim; and bind every result to an exact candidate-neutral profile and codec tuple.
+8. Test Linux core behavior locally against native `llama.cpp` and the separately gated Docker Model Runner compatibility adapter; test Windows in a disposable local Windows 11 guest against its native reference runtime; require independent M5/macOS evidence for every later Mac claim; and bind every result to an exact candidate-neutral profile and codec tuple. GitHub-hosted macOS execution is manual, budget-confirmed, source-only preliminary evidence and never substitutes for M5 qualification.
 9. Run `RV-23` through `RV-35` for every promoted delivery and productivity adapter and applicable first-GA release candidate.
 10. Keep all reviewer fixtures synthetic and public so the package can be shared without exposing organizational data.
 11. Have an independent reviewer reproduce the release assessment from the signed package and evidence bundle before publishing a release or requesting optional managed-device evaluation.
@@ -1112,7 +1133,7 @@ Recommended implementation gates:
 |---|---|
 | `SEC-G0` Scope | Approved threat model, use-case boundary, data inventory, shared responsibilities, and product risk baseline exist before implementation. |
 | `SEC-G1` Kernel | Grants, paths, storage policy, audit schema, fail-closed configuration, and fake platform tests pass. |
-| `SEC-G2` Platforms | Fedora/Ubuntu confinement and Windows MSIX/AppContainer/IPC/NTFS/DPAPI evidence pass independently; retained Apple Silicon signing, notarization, App Sandbox, XPC, bookmarks, Keychain, and Metal evidence remains separate. |
+| `SEC-G2` Platforms | Fedora/Ubuntu confinement and Windows MSIX/AppContainer/IPC/NTFS/DPAPI evidence pass independently in fresh disposable local guests with exact image, overlay, revision, standard-user, network-phase, and cleanup provenance; retained Apple Silicon signing, notarization, App Sandbox, XPC, bookmarks, Keychain, and Metal evidence remains separate. |
 | `SEC-G3` Model | Candidate-neutral runtime and closed-codec conformance, exact-profile provenance, installer separation, native/container contract parity, Docker API isolation, Muse-first and complete role-aware eligible-Gemma evidence, classifier non-authority, verifier-only completion, separate quality/repeatability reporting, injection resistance, context minimization, uncertainty, and resource gates pass. |
 | `SEC-G4` Supply chain | SBOM, CBOM, Model BOM, due diligence, vulnerability disposition, reproducibility/provenance, and support plans pass. |
 | `SEC-G5` Privacy and accessibility | Privacy, records, retention, sanitization, accessibility, and conformance evidence are complete. |

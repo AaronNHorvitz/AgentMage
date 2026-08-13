@@ -264,6 +264,17 @@ For the retained internal-v0.1 Mac-inclusive lane, Apple Silicon macOS on a MacB
 
 The retained internal-v0.1 validation lane is narrower: one personally controlled Apple Silicon Mac, one standard non-administrator user, one stable Visual Studio Code build, one workspace, and public, synthetic, or user-owned non-sensitive data, plus an independently evidenced Fedora workflow. Evidence from Fedora or Ubuntu never substitutes for a macOS claim, and macOS evidence never removes the requirement to pass the supported Linux workflow. Sections 23 through 26 define the separate v1.0 GA delivery-system, Fedora, Ubuntu, and Windows release boundary.
 
+Decision 0040 separates validation authority from source hosting. Routine
+format, lint, build, test, and documentation gates run through repository-owned
+local commands. First-GA native acceptance is assigned to fresh disposable
+local KVM guests for Fedora x86_64, Ubuntu x86_64, and properly licensed Windows
+11 x64. GitHub-hosted execution is reserved for a manually dispatched,
+budget-confirmed Apple Silicon macOS source compatibility lane. That hosted M1
+result is neither MacBook Pro M5 evidence nor signing, packaging, lifecycle, or
+support evidence. The local VM controller and complete image manifests remain
+open implementation work; no historical result is promoted by this execution
+decision.
+
 Across supported and retained platform lanes, AgentMage uses authenticated local inter-process communication, encrypted SQLite for operational state, the same capability contracts, and the same acceptance fixtures. On macOS, a minimal signed arm64 bridge bundled with the Visual Studio Code extension reaches the sandboxed host through a mode `0600` Unix socket in the registered App Group container. The peers validate audit-token and designated code-signing identities and authenticate each launch with a fresh in-memory challenge. Linux uses a mode `0600` Unix socket, peer-credential validation, and an equally short-lived authenticated session. Windows uses a per-user named pipe, explicit access control, process-token and package-identity validation, and a fresh authenticated session under `WINDOWS-BOUNDARIES.md`.
 
 ```mermaid
@@ -293,6 +304,10 @@ On macOS, the kernel, tool worker, secret store, and inference boxes map to the 
 
 ### 7.1 macOS Reference Runtime
 
+- A manual, budget-confirmed GitHub-hosted Apple Silicon source build/test may
+  provide preliminary compatibility feedback before M5 hardware is available;
+  it receives no release credential and cannot close any native M5, signing,
+  notarization, sandbox, lifecycle, performance, or support gate.
 - A Developer ID-signed, notarized, stapled arm64 AgentMage host with Hardened Runtime and App Sandbox.
 - An isolated Apple Silicon release runner and Apple Developer Program identity for signing and notarization. These are maintainer release requirements, not end-user dependencies; their credentials remain outside the repository, logs, model context, and distributed package.
 - A native workspace picker that creates a read-only app-scoped security-scoped bookmark; no ambient home-directory access.

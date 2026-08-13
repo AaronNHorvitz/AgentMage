@@ -60,6 +60,12 @@ peer authentication, package identity, MSIX, NTFS enforcement, restricted
 workers, DPAPI, native model execution, and clean Windows 11 lifecycle evidence
 remain open. Decision 0025 schedules real `RM-024` fuzz-engine execution for the
 final pre-release campaign without waiving any affected sprint or release gate.
+Decision 0040 preserves the hosted Windows result as historical evidence while
+moving future Fedora, Ubuntu, and genuine Windows 11 acceptance to fresh local
+KVM guests. Routine product and documentation checks are local; ordinary pushes
+allocate no hosted runner. A separate manual, budget-confirmed Apple Silicon
+macOS source check is the only enabled GitHub-hosted lane and cannot close M5 or
+release gates.
 Decision 0026 appends a Proton Calendar confirmed-UI adapter and concrete
 direct-invitation and email-first confirmation workflows to the existing
 productivity family without changing the 169-gate sequence. Decision 0027
@@ -178,6 +184,14 @@ The kernel contracts are frozen before feature code. They define tasks, work pac
 Platform adapters are implemented and tested before tools depend on them. The adapters own local inference, workspace authorization, secure path resolution, process confinement, operating-system secret storage, resource limits, installation, and updates. `RUNTIME-BOUNDARIES.md` defines their shared process, privilege, socket, lifecycle, and classified data-flow contract; `WINDOWS-BOUNDARIES.md` defines the Windows specialization.
 
 Fedora is the Linux development and performance reference. Ubuntu must pass the same supported workflow. Windows 11 x64 is the first-GA Windows reference. Native `llama.cpp` is the Linux and Windows security reference, while Docker Model Runner supplies a separately gated Linux compatibility path matching Docker-based development. The Apple Silicon MacBook Pro M5 requirements remain retained post-GA. Platform-specific mechanisms may differ, but no platform or runtime may weaken the common contract.
+
+Platform validation is local-first under Decision 0040. Fresh disposable KVM
+guests own Fedora, Ubuntu, and Windows 11 acceptance once their image,
+orchestration, standard-user, network-phase, evidence, and cleanup tasks are
+implemented. GitHub source hosting is not the test authority. Its only enabled
+hosted execution is an explicit manual Apple Silicon macOS source compatibility
+check after a maintainer confirms budget availability. The hosted result does
+not substitute for the retained MacBook Pro M5 lane.
 
 ### 4.3 Candidate-Neutral Models and Deterministic Agent State
 
@@ -328,7 +342,7 @@ missing earlier contract.
 | A. Release trust mechanics | Deterministic detached signing and verification for package manifests | Decision 0022; local release-signing tests pass | Production signer approval, externally provisioned trust roots, RPM/DEB repository signatures, revocation, and reproducible clean-package evidence |
 | B. Linux package bootstrap | Verify an installed package before opening an owner-local authentication endpoint | Decisions 0023 and 0028; package mutation, peer, replay, endpoint, and inactive inference-adapter package tests pass locally with zero enabled models | Signed platform activation, clean Fedora and Ubuntu package lifecycles, rollback, uninstall, independent native evidence, and the Sprint 13 model-runtime contract |
 | C. Native Chat supervision | Launch only the fixed packaged host, authenticate the exact child, bound the frame, erase the launch secret, and fail inert | Decision 0023 implementation; extension and product suites pass locally | Model-enabled kernel activation, usable end-to-end Chat workflow, clean VSIX/package installation, accessibility, cancellation, and recovery evidence |
-| D. Windows native identity | Observe and redact current token user, session, elevation, and executable identity through a narrow Windows FFI boundary | Decision 0024; Windows cross-target check and lint pass | Genuine `windows-2022` run retained for the exact commit, then connecting-peer integrity/package identity and authenticated named-pipe work |
+| D. Windows native identity | Observe and redact current token user, session, elevation, and executable identity through a narrow Windows FFI boundary | Decision 0024; historical commit-bound `windows-2022` result plus current cross-target check and lint | Reproduce the identity boundary in a clean local Windows 11 x64 KVM guest, then add connecting-peer integrity/package identity and authenticated named-pipe work |
 | E. Windows first-GA boundary | Complete Sprints 121-122 package, IPC, path, worker, key, model, network, Chat, accessibility, and lifecycle controls | Contract and one partial identity source only | MSIX/Authenticode, hostile native tests, three clean standard-user lifecycles, removal, and independent Windows 11 evidence |
 | F. Capability roadmap | Execute Sprints 0-165 in dependency order across local evidence, knowledge, writes, coding, delivery, productivity, finance, cloud observation, trusted operations, and whole-codebase audit | Only individually recorded completed sub-tasks and decisions count | Each first authoritative unchecked task, its inherited tests, and its evidence gate |
 | G. Final security campaign | Freeze release surfaces and execute real fuzzing plus complete reviewer protocols | Harness, corpora, schemas, and synthetic/property evidence only | Decision 0025 `RM-024` campaign, sanitizer/coverage/crash disposition, impact reruns, and independent review |
@@ -702,6 +716,14 @@ Every implementation sub-task inherits five issue-local cases where applicable:
 Every sprint must produce its declared code or documentation, artifacts, tests, raw evidence, environment identity, hashes, summaries, limitations, security mappings, assigned reviewer-protocol results, and reviewer dispositions. Each `RV-*` protocol has one first-execution owner; the release sprint re-runs current suites instead of discovering the control for the first time. Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/`.
 
 Raw evidence is authoritative over a summary. Failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking checks cannot be represented as passing. Linux, Windows, and Apple Silicon evidence are independent and never substitute for one another.
+
+Routine product and documentation gates execute locally. Native platform
+evidence records the exact source revision, immutable guest image, overlay,
+virtualization controls, standard-user identity class, dependency-acquisition
+and offline phases, commands, results, cleanup, and evidence digest. Fedora,
+Ubuntu, and Windows 11 use separate disposable local guests. The GitHub-hosted
+macOS lane is manual, budget-confirmed, source-only, and preliminary; it never
+contains signing credentials and never satisfies M5 or release qualification.
 
 ## 10. Release Engineering Strategy
 

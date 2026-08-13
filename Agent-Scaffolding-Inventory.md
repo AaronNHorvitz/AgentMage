@@ -35,6 +35,13 @@ adds the candidate-neutral model runtime, Muse-first evaluation, complete
 eligible first-party Gemma inventory, classifier-authority, deterministic agent
 state, and admitted-profile discovery requirements without enabling a model or
 changing current implementation truth.
+[Decision 0040](docs/decisions/0040-local-platform-validation-and-manual-macos.md)
+makes routine validation local-first and assigns future native acceptance to
+separate disposable local Fedora, Ubuntu, and Windows 11 KVM guests. Ordinary
+pushes allocate no hosted runner. The sole enabled hosted lane is an explicitly
+dispatched, budget-confirmed Apple Silicon macOS source build and test; its
+result is preliminary and cannot satisfy the retained MacBook Pro M5, signing,
+notarization, lifecycle, support, or release gates.
 
 The context that makes this project worth building is simple: frontier models are extraordinary but expensive, token-limited, cloud-bound, and unavailable for content that must never leave the machine — while most of a working day's actual load is not frontier work at all. Reading notes, tracking tasks, cleaning meeting records, converting documents, inspecting repositories, assembling briefings, and preserving continuity are often mechanical jobs with checkable answers. AgentMage's long-term direction is to use the least powerful measured tier that satisfies explicit acceptance checks. v0.1 is intentionally simpler: deterministic operations run first when applicable, the user selects the local model explicitly, no automatic model switch occurs, and no frontier transfer exists.
 
@@ -92,7 +99,7 @@ These rules define the safety and evidence boundaries for the inventory. They ke
 - Build AgentMage as its own bounded local assistant and make only capability claims supported by acceptance tests.
 - Keep every capability local, bounded, testable, and approval-gated according to its risk.
 - Keep v0.1 fully local after model installation: no cloud-hosted model, external API, external web service, remote database, telemetry, crash reporting, or cloud storage.
-- Treat Apple Silicon macOS, Fedora, and Ubuntu as first-class v0.1 targets. Platform adapters may implement isolation differently but may never weaken the shared path, authority, privacy, evidence, or offline contracts.
+- Treat Fedora, Ubuntu, and Windows 11 x64 as the first-GA targets and retain Apple Silicon MacBook Pro M5 as a post-GA lane. Platform adapters may implement isolation differently but may never weaken the shared path, authority, privacy, evidence, or offline contracts.
 - Treat Codex as a separate user-controlled Visual Studio Code surface, never as an AgentMage model, tool, fallback, router destination, or authority. AgentMage may prepare a local handoff packet, but only the user may switch tabs and submit selected content.
 - Permit only local in-process calls, local command-line programs, Unix domain sockets, or explicitly approved loopback connections that never bind to a non-loopback address.
 - Store durable state only in a user-selected encrypted local data root outside cloud-synchronized folders.
@@ -476,7 +483,7 @@ These controls determine what AgentMage may read, write, execute, or publish. Th
 
 The protected assets are user files, conversations, operational state, credentials, grants, receipts, and computing resources. The expected threats are malicious workspace text, prompt injection, an incorrect or compromised model response, path traversal, symlink races, hostile archives, unauthorized network egress, plugin misuse, grant replay, crashes, and tampering with local records. AgentMage does not claim to protect against a compromised operating-system account, hostile root access, a compromised kernel, or physical attacks on an unlocked workstation.
 
-The v0.1 process topology is fixed by a shared contract with platform-specific enforcement:
+The shared process topology is fixed by a common contract with platform-specific enforcement. The macOS column below is retained post-GA design scope; it is not current first-GA support:
 
 | Component | Apple Silicon macOS | Fedora and Ubuntu | Shared authority and network rule |
 |---|---|---|---|
@@ -487,6 +494,15 @@ The v0.1 process topology is fixed by a shared contract with platform-specific e
 | Model installer/importer | Separate signed component with temporary download authority or user-selected artifact access; no workspace, session, or inference authority | Separate installation command with the same staging and verification contract | Shows the license, verifies the manifest and hashes in staging, installs atomically, then exits before offline operation |
 | Secret store | macOS Keychain item restricted to the signed AgentMage identity | Linux Secret Service item restricted to the AgentMage user session | Encryption key only; never model, tool, configuration, log, export, or backup content |
 | SQLite operational store | App-group or application-support data root protected by encryption and macOS permissions | User-selected encrypted local data root | Canonical operational state; no network |
+
+Validation execution is independent of source hosting. Routine product and
+documentation commands run locally. Native Fedora, Ubuntu, and Windows 11
+acceptance uses separate disposable local KVM guests with immutable base images,
+writable overlays, standard-user execution, explicit dependency-acquisition and
+offline phases, exact source binding, retained raw results, and verified cleanup.
+The only enabled GitHub-hosted lane is a manually dispatched,
+budget-confirmed Apple Silicon macOS source build and test. It has no signing
+credentials and cannot qualify the retained MacBook Pro M5 platform.
 
 - [ ] `CAPABILITY GATE` Package the macOS kernel host, inference service, and tool helper as arm64 code signed with Developer ID, notarized, stapled, and verified by Gatekeeper; enable Hardened Runtime and minimal App Sandbox entitlements.
 - [ ] `CAPABILITY GATE` Freeze a macOS release manifest before implementation that records the minimum and tested macOS builds, arm64 architecture, Apple SDK and Swift toolchain, Team ID, bundle identifiers, App Group identifier, designated requirements, entitlements, helper hashes, and package digest; refuse an unsupported architecture or operating-system build before starting the kernel.
@@ -516,8 +532,10 @@ The v0.1 process topology is fixed by a shared contract with platform-specific e
 This section makes "local" an enforceable technical rule rather than a promise in a prompt. It exists so a model, plugin, desktop screen, command-line command, vault reader, or background process cannot quietly send content away from the computer or place private files in a cloud-synchronized folder.
 
 - [ ] `CAPABILITY GATE` Deny outbound network traffic for the Visual Studio Code extension, AgentMage kernel, tool workers, converters, indexers, and shells after model installation, except the kernel's verified local inference connection.
+- [ ] `CAPABILITY GATE` Treat Docker Model Runner's unauthenticated HTTP interface as an untrusted local service: loopback binding is necessary but not sufficient. Place it behind the kernel's guarded adapter path, prevent access from unrelated same-user processes, tool containers, separate namespaces, and non-loopback interfaces, and give the model runtime no tool, file, grant, or credential authority.
 - [ ] `CAPABILITY GATE` Treat Docker Model Runner's unauthenticated HTTP interface as an untrusted local service. On Linux, admit its immutable wildcard listener only inside an exact loopback-only, route-free private namespace, connect through a dedicated guard's loopback target, and expose only authenticated local IPC to the kernel. Prevent access from unrelated same-user processes, tool containers, separate namespaces, host interfaces, and non-loopback interfaces, and give the model runtime no tool, file, grant, or credential authority.
 - [ ] `CAPABILITY GATE` Place an AgentMage-owned mode `0600` Unix-socket service between Visual Studio Code and the kernel; the extension must never connect directly to Docker Model Runner.
+- [ ] `CAPABILITY GATE` Refuse startup if Docker Model Runner or any required service is bound to `0.0.0.0`, a local-area-network address, an undeclared container-accessible address, or any non-loopback interface, or if an undeclared local peer can reach the service despite loopback binding.
 - [ ] `CAPABILITY GATE` Refuse startup if Docker Model Runner's wildcard listener exists outside the exact loopback-only, route-free private namespace; if any required service is bound to a host, local-area-network, undeclared container-accessible, or non-loopback interface; or if an undeclared local peer can reach the raw service or authenticated guard path.
 - [ ] `CAPABILITY GATE` Verify from a separate container and network namespace that the inference port and kernel socket are unreachable outside their intended boundary.
 - [ ] `CAPABILITY GATE` Keep conversations, memory, indexes, logs, checkpoints, temporary files, generated files, and backups in one user-selected local data root outside cloud-synchronized folders.

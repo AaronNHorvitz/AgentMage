@@ -2124,6 +2124,17 @@
       "statement": "an independent verification pass that receives the task, evidence, proposed result, and acceptance checks but does not inherit the first pass's unsupported conclusions."
     },
     {
+      "id": "CL-27013E53943AFE91399D",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "5B. Strict Local-Only Operation and Data Residency",
+        "line": 539,
+        "semantic_sha256": "27013e53943afe91399dda69c59d35fe10f2ed3b23c77712770603003a4774fe"
+      },
+      "statement": "Refuse startup if Docker Model Runner's wildcard listener exists outside the exact loopback-only, route-free private namespace; if any required service is bound to a host, local-area-network, undeclared container-accessible, or non-loopback interface; or if an undeclared local peer can reach the raw service or authenticated guard path."
+    },
+    {
       "id": "CL-2732209D26E7A2E8E14A",
       "label": "BUILD",
       "source": {
@@ -8977,6 +8988,17 @@
       "statement": "generated `CURRENT.md`, task, decision, handoff, and JSON Lines exports only as labeled, reproducible views; user edits require an explicit import and validation operation before they affect canonical state."
     },
     {
+      "id": "CL-9AC7BBC9E247268DD813",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "5B. Strict Local-Only Operation and Data Residency",
+        "line": 536,
+        "semantic_sha256": "9ac7bbc9e247268dd81354835d38cc95f75350bc355515a4218f85c378bb417d"
+      },
+      "statement": "Treat Docker Model Runner's unauthenticated HTTP interface as an untrusted local service. On Linux, admit its immutable wildcard listener only inside an exact loopback-only, route-free private namespace, connect through a dedicated guard's loopback target, and expose only authenticated local IPC to the kernel. Prevent access from unrelated same-user processes, tool containers, separate namespaces, host interfaces, and non-loopback interfaces, and give the model runtime no tool, file, grant, or credential authority."
+    },
+    {
       "id": "CL-9AE7F45FB1A92C849D2D",
       "label": "CAPABILITY GATE",
       "source": {
@@ -14247,7 +14269,7 @@
     }
   ],
   "counts": {
-    "checklist": 1295,
+    "checklist": 1297,
     "requirements": 241
   },
   "policy": {

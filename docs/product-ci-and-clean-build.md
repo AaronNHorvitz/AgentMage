@@ -1,56 +1,79 @@
 # Product CI and Clean-Build Evidence
 
-## Current Product CI Contract
+## Current Product Validation Contract
 
-The machine-readable product CI contract is
+Decision 0040 makes routine product and documentation validation local-first.
+The machine-readable contract is
 [`architecture/product-ci-policy.json`](../architecture/product-ci-policy.json).
 [`scripts/product_ci.py`](../scripts/product_ci.py) validates that contract,
-checks the declared toolchain versions, executes bounded lanes, and emits
-sanitized deterministic failure summaries. The GitHub workflow is
-[`product.yml`](../.github/workflows/product.yml).
+checks the declared toolchain versions, executes bounded local lanes, and emits
+sanitized deterministic failure summaries.
 
-The product workflow has independent required jobs for:
+The local product lanes remain independent commands for:
 
-- CI-contract validation;
 - Rust and TypeScript formatting;
-- Rust, TypeScript, and strict-local-source linting;
+- Rust, TypeScript, strict-local-source, and hostile-network linting;
 - Rust and TypeScript compilation;
 - default Rust unit and contract tests;
 - Visual Studio Code shell tests; and
-- inventory of tests that require native Linux execution.
+- inventory of tests requiring native Linux execution.
 
-The separate [`documentation.yml`](../.github/workflows/documentation.yml)
-workflow remains the documentation gate. A documentation failure cannot be
-represented as a product failure, and a product failure cannot be hidden by a
-green documentation result.
-
-The native Linux status job verifies the exact inventory of eleven ignored
-tests. Its successful completion means only that the pending inventory is
-complete and unchanged. It does not execute those tests and does not constitute
-native evidence.
-
-Recommended branch-protection checks are:
-
-- `Documentation / validate`;
-- `Product / Product CI Contract`;
-- `Product / Product Format`;
-- `Product / Product Lint`;
-- `Product / Product Build`;
-- `Product / Rust Unit and Contract Tests`;
-- `Product / VS Code Shell Tests`; and
-- `Product / Native Linux Evidence (Pending Execution)`.
-
-Branch protection is hosted-repository configuration and is not claimed as
-configured by this repository. Release qualification separately requires the
-native tests to execute on an admitted native runner.
-
-Run the local equivalents with:
+Run them with:
 
 ```bash
 npm run product-ci:check
 npm run product:check
 python3 scripts/product_ci.py --inventory-native
 ```
+
+The native inventory currently contains 19 tests. A successful inventory check
+means only that the declared pending set is complete and unchanged. It does not
+execute those tests and does not constitute Fedora or Ubuntu evidence.
+
+The documentation gate remains independently executable through:
+
+```bash
+npm run docs:clean-check
+```
+
+### GitHub-hosted execution
+
+[`product.yml`](../.github/workflows/product.yml) and
+[`documentation.yml`](../.github/workflows/documentation.yml) are retained
+no-runner sentinels. They have only a manual trigger and their sole jobs are
+unconditionally skipped before runner allocation. Ordinary pushes, pull
+requests, schedules, and workflow chaining cannot use them.
+
+[`macos.yml`](../.github/workflows/macos.yml) is the only workflow allowed to
+allocate a GitHub-hosted runner. It:
+
+- runs only through `workflow_dispatch`;
+- requires the maintainer to confirm that Actions budget is available;
+- uses the standard Apple Silicon `macos-15` runner;
+- has read-only repository permissions;
+- receives no signing, notarization, or other secret;
+- builds and tests only `platforms/macos`; and
+- cannot establish MacBook Pro M5, signing, packaging, lifecycle, or support
+  evidence.
+
+No disabled sentinel status should be configured as a required branch check.
+The absence of a hosted check is not a pass. Local result bundles and later
+native-platform evidence must identify the exact source revision and execution
+venue.
+
+### Local platform execution
+
+First-GA native acceptance is assigned to fresh local KVM guests for Fedora
+x86_64, Ubuntu x86_64, and properly licensed Windows 11 x64. The future
+controller must admit immutable base-image identities, create one isolated
+overlay per run, use a standard user, separate dependency-acquisition and
+offline phases, record allowlisted environment facts and exact commands,
+export content-free evidence, and destroy transient state.
+
+That controller and its complete image manifests are not implemented by
+Decision 0040. Existing Fedora, Ubuntu, container, KVM, and historical
+`windows-2022` artifacts retain their exact scopes. None is relabeled as the
+new complete local-VM or Windows 11 result.
 
 ## Clean-Build Source Identity
 

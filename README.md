@@ -91,6 +91,14 @@ lane. Windows remains blocked because named-pipe, NTFS, worker, DPAPI, model,
 MSIX, lifecycle, removal, hostile-matrix, and standard-user evidence do not
 exist.
 
+Decision 0040 makes routine product and documentation validation local-first.
+Fedora, Ubuntu, and genuine Windows 11 native acceptance is assigned to fresh
+local KVM guests in the owning platform tasks; that complete VM controller is
+not yet implemented. Ordinary pushes allocate no GitHub-hosted runner. The sole
+enabled hosted lane is a manually dispatched, budget-confirmed Apple Silicon
+macOS source build/test, which remains preliminary post-GA compatibility
+evidence and cannot satisfy MacBook Pro M5 or release gates.
+
 AgentMage uses a strict division of responsibility: deterministic code performs checkable work, an approved local model proposes explanations and synthesis, the kernel verifies evidence and enforces authority, and the user decides anything that requires judgment or expanded access.
 
 ## Document Authority
@@ -344,13 +352,13 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Whole-Codebase Audit Architecture](./CODEBASE-AUDIT.md) - exhaustive repository census, deterministic structure, bounded semantic review, reconciliation, read-only verification, checkpoints, findings, and coverage truth.
 - [Windows 11 Boundaries](./WINDOWS-BOUNDARIES.md) - package, process, IPC, path, sandbox, key, runtime, network, and verification requirements for first GA.
 - [Machine-Readable Requirement Registry](./requirements/README.md) - deterministic inventory and field contract for every canonical `AM-*`, `AT-*`, and `CR-*` identifier.
-- [Product CI and Clean-Build Evidence](./docs/product-ci-and-clean-build.md) - independent product gates, native-test truth, exact source binding, network isolation, and branch-protection guidance.
+- [Product Validation and Clean-Build Evidence](./docs/product-ci-and-clean-build.md) - local product gates, disposable platform execution, manual hosted macOS, native-test truth, exact source binding, and network isolation.
 - [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.
 - [Apache License 2.0](./LICENSE) - permissions and conditions for use, modification, and distribution.
 
 ## Documentation Validation
 
-From a clean checkout, one command installs the lockfile-pinned documentation tools with package lifecycle scripts disabled and runs the same blocking gate used by continuous integration:
+From a clean checkout, one command installs the lockfile-pinned documentation tools with package lifecycle scripts disabled and runs the local blocking documentation gate:
 
 ```bash
 npm run docs:clean-check
@@ -374,7 +382,7 @@ That command intentionally invokes old source-currentness assertions and may
 report retained records as stale against a later tree. It is not the current CI
 gate and its failures must not be relabeled as passes.
 
-Product compilation and tests run through a separate contract and workflow:
+Product compilation and tests run through a separate local contract:
 
 ```bash
 npm run product-ci:check
@@ -382,9 +390,11 @@ npm run product:check
 python3 scripts/product_ci.py --inventory-native
 ```
 
-A successful native-inventory command records eleven tests as pending native
+A successful native-inventory command records 19 tests as pending native
 execution; it does not claim that those tests ran. Clean-build evidence uses the
 complete committed Git tree and disables container networking after dependency
-bootstrap. See
+bootstrap. The GitHub product and documentation workflows are no-runner
+sentinels; only the manual budget-confirmed macOS workflow may allocate hosted
+compute under Decision 0040. See
 [`docs/product-ci-and-clean-build.md`](./docs/product-ci-and-clean-build.md) for
 the exact status and evidence semantics.
