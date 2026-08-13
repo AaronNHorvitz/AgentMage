@@ -1,0 +1,109 @@
+{
+  "artifact_id": "classification-retention-decision-table",
+  "claims": {
+    "classification_rows_closed": 8,
+    "current_and_target_behavior_distinguished": true,
+    "export_backup_restore_erasure_rows_closed": 5,
+    "external_network_used": false,
+    "kernel_and_table_fragments_bound": true,
+    "lifecycle_transition_rows_closed": 6,
+    "limitations_preserved": true,
+    "release_support": false,
+    "retention_assignment_rows_closed": 5
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The table describes implemented kernel boundaries but does not make the application host, adapters, or normalized domain writes complete.",
+    "Restricted persistence and application wiring of the PRD retention defaults remain unavailable.",
+    "Per-record cryptographic erasure is not claimed, separately keyed backups require separate erasure, and physical overwrite is not claimed.",
+    "The JSON Lines derivative is a content-free audit view and is neither startup authority nor a full portability archive.",
+    "Secret-canary, crash-point, live key-service, cross-platform, packaging, and release campaigns remain later work."
+  ],
+  "private_user_data_used": false,
+  "row_count": 24,
+  "row_ids": [
+    "DC-01",
+    "DC-02",
+    "DC-03",
+    "DC-04",
+    "DC-05",
+    "DC-06",
+    "DC-07",
+    "DC-08",
+    "RT-01",
+    "RT-02",
+    "RT-03",
+    "RT-04",
+    "RT-05",
+    "LC-01",
+    "LC-02",
+    "LC-03",
+    "LC-04",
+    "LC-05",
+    "LC-06",
+    "DE-01",
+    "BK-01",
+    "RS-01",
+    "ER-01",
+    "ER-02"
+  ],
+  "schema_version": 1,
+  "source_revision": "71a1ee110c007d19a8f723bf7cec25d65836159d",
+  "sources": [
+    {
+      "bytes": 6888,
+      "path": "docs/architecture/data-classification-retention-table.md",
+      "sha256": "2566c1dc42904421b653e2bed4d17c081add7d3816f147d20afc42fa3d1ec038"
+    },
+    {
+      "bytes": 41038,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "080e416e2976e337b8c2c6423d8434217d37d79034f42ff6fdd7f7e54ec5ffea"
+    },
+    {
+      "bytes": 154064,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "b10e0acdeb74086840c05943553acd101649e13483d3529b76297ccde2836255"
+    },
+    {
+      "bytes": 10317,
+      "path": "scripts/classification_retention_table.py",
+      "sha256": "3a0d4fa554a94af841e8a16a1bdb1a1a7b1efdea9dd74321754e7cfd6371ac8c"
+    },
+    {
+      "bytes": 3575,
+      "path": "tests/test_classification_retention_table.py",
+      "sha256": "c1439dfb23b9004180cf2e376cafc2c36f9567346cd6bd8396c7612f9fd149dc"
+    }
+  ],
+  "status": "pass-current-kernel-decision-table",
+  "task_ids": [
+    "11.1.2.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "88b48934a682e88aa071c4279f8f4f73f1d73419d49742353868df19b585ad8f",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "16e5cb0ead4fd8705d532bcebee4278dab3e7b51b1efdc12729595697cc400a0",
+      "exit_code": 0,
+      "expected_marker_sha256": "98b1fad6cf91177a26a993f542f7b32f31490adfc59e0b9fba2d3d1158f72179",
+      "status": "pass"
+    },
+    {
+      "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
+      "exit_code": 0,
+      "expected_marker_sha256": "98b1fad6cf91177a26a993f542f7b32f31490adfc59e0b9fba2d3d1158f72179",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
