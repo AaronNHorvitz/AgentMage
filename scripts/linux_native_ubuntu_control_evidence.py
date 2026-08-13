@@ -43,6 +43,7 @@ OFFICIAL_IMAGE_URL = (
 OFFICIAL_IMAGE_SHA256 = (
     "9dc7c5363c0146a08ba0c9aa834d82c2c6dfbb1c471ad9a2f0aba1189e21be05"
 )
+PREPARED_VIRTUAL_SIZE_BYTES = 12 * 1024 * 1024 * 1024
 UBUNTU_BUILD_IMAGE = "localhost/agentmage-clean-build:ubuntu-x86_64"
 TEST_UID = 10001
 TEST_GID = 10001
@@ -733,6 +734,8 @@ def load_prepared_metadata() -> dict[str, Any]:
         or metadata.get("image_url") != OFFICIAL_IMAGE_URL
         or metadata.get("official_image_sha256") != OFFICIAL_IMAGE_SHA256
         or SHA256.fullmatch(str(metadata.get("prepared_image_sha256"))) is None
+        or metadata.get("prepared_virtual_size_bytes")
+        != PREPARED_VIRTUAL_SIZE_BYTES
         or expected_packages != list(BOOTSTRAP_PACKAGES)
         or any(not item.get("version") for item in metadata.get("packages", []))
         or metadata.get("bootstrap_network") != "qemu-user-network-bootstrap-only"
@@ -743,6 +746,11 @@ def load_prepared_metadata() -> dict[str, Any]:
         raise NativeUbuntuEvidenceError("prepared Ubuntu metadata changed")
     if not PREPARED_IMAGE_PATH.is_file():
         raise NativeUbuntuEvidenceError("prepared Ubuntu image is unavailable")
+    if (
+        not OFFICIAL_IMAGE_PATH.is_file()
+        or sha256_file(OFFICIAL_IMAGE_PATH) != OFFICIAL_IMAGE_SHA256
+    ):
+        raise NativeUbuntuEvidenceError("official Ubuntu backing image is unavailable")
     if sha256_file(PREPARED_IMAGE_PATH) != metadata["prepared_image_sha256"]:
         raise NativeUbuntuEvidenceError("prepared Ubuntu image digest changed")
     return metadata
@@ -764,6 +772,16 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
         seed = create_seed(tools, temporary, public_key, bootstrap=True)
         building = temporary / "prepared.qcow2"
         create_overlay(tools, OFFICIAL_IMAGE_PATH, building)
+        checked(
+            [
+                *tools.qemu_img,
+                "resize",
+                "-q",
+                str(building),
+                str(PREPARED_VIRTUAL_SIZE_BYTES),
+            ],
+            timeout=60,
+        )
         vm = start_vm(
             tools,
             building,
@@ -813,6 +831,23 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
         if not all(shutdown.values()):
             raise NativeUbuntuEvidenceError("Ubuntu bootstrap guest cleanup failed")
         checked([*tools.qemu_img, "check", "-q", str(building)], timeout=120)
+        try:
+            image_info = json.loads(
+                checked(
+                    [*tools.qemu_img, "info", "--output=json", str(building)],
+                    timeout=60,
+                )
+            )
+        except json.JSONDecodeError as error:
+            raise NativeUbuntuEvidenceError(
+                "prepared Ubuntu image metadata is invalid"
+            ) from error
+        if (
+            not isinstance(image_info, dict)
+            or image_info.get("format") != "qcow2"
+            or image_info.get("virtual-size") != PREPARED_VIRTUAL_SIZE_BYTES
+        ):
+            raise NativeUbuntuEvidenceError("prepared Ubuntu virtual disk size changed")
         prepared_sha = sha256_file(building)
         building.chmod(0o600)
         os.replace(building, PREPARED_IMAGE_PATH)
@@ -821,6 +856,7 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
             "image_url": OFFICIAL_IMAGE_URL,
             "official_image_sha256": OFFICIAL_IMAGE_SHA256,
             "prepared_image_sha256": prepared_sha,
+            "prepared_virtual_size_bytes": PREPARED_VIRTUAL_SIZE_BYTES,
             "packages": packages,
             "bootstrap_network": "qemu-user-network-bootstrap-only",
             "cloud_init_cleaned": True,
@@ -1434,6 +1470,8 @@ def validate_report(value: Any) -> list[str]:
         or bootstrap.get("image_url") != OFFICIAL_IMAGE_URL
         or bootstrap.get("official_image_sha256") != OFFICIAL_IMAGE_SHA256
         or SHA256.fullmatch(str(bootstrap.get("prepared_image_sha256"))) is None
+        or bootstrap.get("prepared_virtual_size_bytes")
+        != PREPARED_VIRTUAL_SIZE_BYTES
         or package_ids != list(BOOTSTRAP_PACKAGES)
         or any(not item.get("version") for item in bootstrap.get("packages", []))
         or bootstrap.get("bootstrap_network")

@@ -15,7 +15,10 @@ The process has two intentionally separate stages:
 1. **Bootstrap:** Download the official Ubuntu 26.04 cloud image over HTTPS,
    verify its fixed SHA-256 digest, install the closed package list, remove the
    bootstrap SSH authorization, clean cloud-init state, and retain a local
-   digest-bound prepared image under `~/.cache/agentmage/ubuntu-vm/`.
+   digest-bound prepared image under `~/.cache/agentmage/ubuntu-vm/`. The
+   bootstrap overlay has a fixed sparse 12 GiB virtual capacity so package
+   installation cannot exhaust the cloud image's intentionally small root
+   filesystem; only written blocks consume host storage.
 2. **Acceptance:** Build test binaries from one committed revision in the
    pinned Ubuntu build image with networking disabled, start a disposable KVM
    overlay with QEMU `restrict=on` and one loopback-only SSH forward, prove an

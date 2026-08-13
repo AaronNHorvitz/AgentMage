@@ -36,6 +36,8 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
                 "image_url": evidence.OFFICIAL_IMAGE_URL,
                 "official_image_sha256": evidence.OFFICIAL_IMAGE_SHA256,
                 "prepared_image_sha256": prepared_sha,
+                "prepared_virtual_size_bytes":
+                evidence.PREPARED_VIRTUAL_SIZE_BYTES,
                 "packages": [
                     {"id": name, "version": "test-version"}
                     for name in evidence.BOOTSTRAP_PACKAGES
