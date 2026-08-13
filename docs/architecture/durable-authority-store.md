@@ -312,9 +312,24 @@ canonical state and matching generation before returning. It never overwrites
 or swaps the live canonical store. Atomic continuity selection, rollback points,
 and clean-device restore remain assigned to Sprint 161.
 
-No plaintext database or SQL export exists. JSON Lines remains a separately
-derived, export-only format assigned to Sub-task 11.1.1.7 and cannot become
-startup authority.
+No plaintext database or SQL export exists. The JSON Lines path is a separately
+derived, content-free audit/export view. Its first line is a versioned,
+non-executable header bound to canonical schema, generation, state hash, record
+count, content mode, and `startup_authority: false`. Remaining lines contain
+only a closed family, hashed record identity, revision, and already-retained
+record/event hash. Raw identifiers, canonical JSON bodies, file content, and
+record values are not emitted.
+
+Rows are sorted deterministically and the complete bytes are bounded to 100,000
+records and 64 MiB. Publication writes and syncs a mode-`0600` temporary file,
+uses a same-directory hard link as an atomic create-without-overwrite operation,
+verifies object identity, syncs the directory, and removes the temporary name.
+Occupied, raced, linked, synchronized, remote, oversized, malformed-hash, or
+ambiguous destinations fail without changing the canonical store or another
+file. Repeated export of unchanged canonical state is byte-identical. Deleting
+or modifying the derivative has no effect on SQLite, and the encrypted-store
+startup path rejects JSON Lines. No JSON Lines parser or import authority is
+implemented; any future import requires a separate explicit validated contract.
 
 Cryptographic erasure is implemented only at the complete SQLCipher key scope.
 The live store is consumed and closed before the platform adapter destroys the
