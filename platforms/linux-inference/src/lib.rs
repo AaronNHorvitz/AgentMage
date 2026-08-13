@@ -10,6 +10,7 @@ use agentmage_kernel_contracts::{
 };
 
 mod docker_guard;
+mod docker_guard_service;
 mod docker_preflight;
 mod docker_runtime;
 mod native_runtime;
@@ -18,6 +19,10 @@ pub use docker_guard::{
     DOCKER_GUARD_PROFILE_SHA256, DOCKER_GUARD_PROFILE_SHA256_HEX, DockerEndpointCallerClass,
     DockerEndpointCallerObservation, DockerEndpointGuard, DockerEndpointGuardError,
     DockerRawEndpointPermit,
+};
+pub use docker_guard_service::{
+    DOCKER_GUARD_BOOTSTRAP_BYTES, DOCKER_GUARD_PROTOCOL_VERSION, DockerGuardBootstrap,
+    DockerGuardService, DockerGuardServiceError, DockerGuardSessionCredentials,
 };
 pub use docker_preflight::{
     DOCKER_PREFLIGHT_CONTRACT_VERSION, DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION,
