@@ -1,0 +1,481 @@
+{
+  "artifact_id": "linux-native-ubuntu-control-verification",
+  "bootstrap": {
+    "bootstrap_network": "qemu-user-network-bootstrap-only",
+    "bootstrap_ssh_key_retained": false,
+    "cloud_init_cleaned": true,
+    "image_url": "https://cloud-images.ubuntu.com/releases/resolute/release/ubuntu-26.04-server-cloudimg-amd64.img",
+    "official_image_sha256": "9dc7c5363c0146a08ba0c9aa834d82c2c6dfbb1c471ad9a2f0aba1189e21be05",
+    "packages": [
+      {
+        "id": "apparmor-utils",
+        "version": "5.0.2-0ubuntu1~26.04.1"
+      },
+      {
+        "id": "bubblewrap",
+        "version": "0.11.1-1ubuntu0.1"
+      },
+      {
+        "id": "ca-certificates",
+        "version": "20260601~26.04.1"
+      },
+      {
+        "id": "coreutils",
+        "version": "9.5-1ubuntu2+0.0.0~ubuntu25"
+      },
+      {
+        "id": "dbus-user-session",
+        "version": "1.16.2-2ubuntu4"
+      },
+      {
+        "id": "gnome-keyring",
+        "version": "50.0-1"
+      },
+      {
+        "id": "iproute2",
+        "version": "6.19.0-1ubuntu1.1"
+      },
+      {
+        "id": "libsecret-tools",
+        "version": "0.21.7-2build1"
+      },
+      {
+        "id": "openssh-server",
+        "version": "1:10.2p1-2ubuntu3.5"
+      },
+      {
+        "id": "procps",
+        "version": "2:4.0.4-9ubuntu1"
+      },
+      {
+        "id": "strace",
+        "version": "6.19+ds-0ubuntu5"
+      },
+      {
+        "id": "sudo",
+        "version": "1.9.17p2-1ubuntu3"
+      },
+      {
+        "id": "util-linux",
+        "version": "2.41.3-3ubuntu2"
+      }
+    ],
+    "prepared_image_sha256": "c2a61e789c47e40cf70388c481085d347c70a39671778f83191eb2955ba44a09",
+    "prepared_virtual_size_bytes": 12884901888,
+    "private_user_data_used": false,
+    "qemu_launcher_class": "fedora-toolbox",
+    "qemu_sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "qemu_version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+    "schema_version": 1
+  },
+  "execution": {
+    "attack_results": [
+      {
+        "attack": "ambient_home",
+        "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "device",
+        "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "environment",
+        "test": "worker_receives_only_the_fixed_environment_and_no_network",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "network",
+        "test": "worker_receives_only_the_fixed_environment_and_no_network",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "process",
+        "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "secret_store",
+        "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "ungranted_root",
+        "test": "worker_has_no_ambient_host_paths_devices_or_processes",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      },
+      {
+        "attack": "workspace_write",
+        "test": "worker_cannot_write_the_read_only_workspace",
+        "ubuntu": "pass-zero-escape-native-kernel"
+      }
+    ],
+    "build": {
+      "binaries": [
+        {
+          "id": "platform-tests",
+          "sha256": "4f1d57a30f03406675dc3fa3e3eb7df9a7a52da854c46a277c483d66ddf9301f"
+        },
+        {
+          "id": "kernel-engine-tests",
+          "sha256": "5ddb717c739412bd3e5ef066e1ddec2def7f6715aafd740db0de52e9afdcff1c"
+        }
+      ],
+      "container_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57",
+      "network_used": false,
+      "source_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+      "toolchains": {
+        "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+        "rustc": "rustc 1.95.0 (59807616e 2026-04-14)"
+      }
+    },
+    "cleanup": {
+      "disposable_overlay_removed": true,
+      "ephemeral_ssh_key_removed": true,
+      "loopback_ssh_listener_absent": true,
+      "qemu_process_absent": true,
+      "test_binaries_removed_with_temporary_tree": true
+    },
+    "hypervisor": {
+      "acceleration": "kvm",
+      "launcher_class": "fedora-toolbox",
+      "qemu_sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+      "qemu_version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+    },
+    "network": {
+      "external_connection_denied": true,
+      "host_forward": "loopback-ssh-only",
+      "qemu_restrict_mode": true
+    },
+    "platform": {
+      "architecture": "x86_64",
+      "cgroup_filesystem": "cgroup2",
+      "distribution": "ubuntu",
+      "gid": 10001,
+      "kernel_release": "7.0.0-28-generic",
+      "uid": 10001,
+      "version": "26.04",
+      "virtualization": "kvm"
+    },
+    "prepared_image_sha256": "c2a61e789c47e40cf70388c481085d347c70a39671778f83191eb2955ba44a09",
+    "resource_trace": {
+      "cgroup_filesystem": "cgroup2",
+      "observation_test": "transient_service_terminates_an_unbounded_worker",
+      "properties": [
+        "CPUQuota",
+        "MemoryMax",
+        "MemorySwapMax=0",
+        "RuntimeMaxSec",
+        "TasksMax"
+      ],
+      "runtime_limit_enforced": true
+    },
+    "secret_service_lifecycle": {
+      "agentmage_items_absent": true,
+      "fresh_synthetic_keyring": true,
+      "host_keyring_touched": false,
+      "live_round_trip_count": 3,
+      "synthetic_keyring_files_absent": true
+    },
+    "startup_controls": {
+      "control_ids": [
+        "bubblewrap",
+        "user-namespaces",
+        "seccomp",
+        "cgroups-v2",
+        "secret-service",
+        "descriptor-safe-paths",
+        "network-isolation"
+      ],
+      "mutation_statuses": [
+        "unavailable",
+        "invalid"
+      ],
+      "no_degraded_fallback": true
+    },
+    "syscall_trace": {
+      "no_new_privileges": 1,
+      "observation_test": "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
+      "policy_id": "agentmage.linux.worker.deny.v1",
+      "seccomp_mode": 2
+    },
+    "tests": {
+      "ipc": [
+        {
+          "status": "pass",
+          "test": "authenticated_endpoint_exposes_only_bounded_product_frames"
+        },
+        {
+          "status": "pass",
+          "test": "every_peer_and_frame_mutation_fails_without_consuming_valid_request"
+        },
+        {
+          "status": "pass",
+          "test": "exact_peer_authenticates_once_and_replay_fails"
+        },
+        {
+          "status": "pass",
+          "test": "generated_launch_material_is_fresh_and_redacted"
+        },
+        {
+          "status": "pass",
+          "test": "listener_drop_removes_only_its_unchanged_socket_identity"
+        },
+        {
+          "status": "pass",
+          "test": "private_socket_uses_kernel_peer_credentials_and_exact_frame"
+        },
+        {
+          "status": "pass",
+          "test": "process_start_parser_handles_parentheses_and_rejects_malformed_records"
+        },
+        {
+          "status": "pass",
+          "test": "unsafe_parent_existing_socket_and_short_frame_fail_closed"
+        }
+      ],
+      "kernel_startup_refusal": [
+        {
+          "status": "pass",
+          "test": "every_missing_invalid_or_substituted_mechanism_refuses"
+        }
+      ],
+      "sandbox_live": [
+        {
+          "status": "pass",
+          "test": "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "directory_worker_receives_only_the_bounded_exclusion_safe_projection"
+        },
+        {
+          "status": "pass",
+          "test": "foreign_workspace_identity_never_starts_a_worker"
+        },
+        {
+          "status": "pass",
+          "test": "fresh_worker_reads_only_the_canonical_workspace_file"
+        },
+        {
+          "status": "pass",
+          "test": "transient_service_terminates_an_unbounded_worker"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content"
+        },
+        {
+          "status": "pass",
+          "test": "worker_cannot_write_the_read_only_workspace"
+        },
+        {
+          "status": "pass",
+          "test": "worker_has_no_ambient_host_paths_devices_or_processes"
+        },
+        {
+          "status": "pass",
+          "test": "worker_kernel_status_confirms_no_new_privileges_and_seccomp"
+        },
+        {
+          "status": "pass",
+          "test": "worker_output_is_drained_but_never_retained_past_the_bound"
+        },
+        {
+          "status": "pass",
+          "test": "worker_receives_only_the_fixed_environment_and_no_network"
+        }
+      ],
+      "secret_service_live": [
+        {
+          "status": "pass",
+          "test": "live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned"
+        },
+        {
+          "status": "pass",
+          "test": "live_service_probe_returns_only_a_content_free_receipt"
+        },
+        {
+          "status": "pass",
+          "test": "live_service_round_trip_is_exact_and_cleanup_is_verified"
+        }
+      ],
+      "secret_service_static": [
+        {
+          "status": "pass",
+          "test": "key_debug_and_errors_never_disclose_candidate_content"
+        },
+        {
+          "status": "pass",
+          "test": "keys_values_and_manifests_are_bounded_and_redacted"
+        },
+        {
+          "status": "pass",
+          "test": "operational_store_key_decode_is_exact_and_bounded"
+        },
+        {
+          "status": "pass",
+          "test": "sensitive_output_is_bounded_without_a_content_digest"
+        }
+      ],
+      "startup_live": [
+        {
+          "status": "pass",
+          "test": "live_required_control_preflight_verifies_without_workspace_authority"
+        }
+      ],
+      "startup_mapping": [
+        {
+          "status": "pass",
+          "test": "control_identities_are_nonzero_distinct_and_status_independent"
+        },
+        {
+          "status": "pass",
+          "test": "every_linux_control_disablement_maps_to_fail_closed_startup_capabilities"
+        }
+      ]
+    },
+    "trusted_tools": [
+      {
+        "bootstrap_package": "bubblewrap",
+        "canonical_path": "/usr/bin/bwrap",
+        "declared_path": "/usr/bin/bwrap",
+        "group_or_world_writable": false,
+        "id": "bubblewrap",
+        "owner_uid": 0,
+        "owning_package": "bubblewrap",
+        "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+        "version": "0.11.1-1ubuntu0.1"
+      },
+      {
+        "bootstrap_package": "coreutils",
+        "canonical_path": "/usr/lib/cargo/bin/coreutils/env",
+        "declared_path": "/usr/bin/env",
+        "group_or_world_writable": false,
+        "id": "path-executor",
+        "owner_uid": 0,
+        "owning_package": "rust-coreutils",
+        "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+        "version": "0.8.0-0ubuntu3"
+      },
+      {
+        "bootstrap_package": "libsecret-tools",
+        "canonical_path": "/usr/bin/secret-tool",
+        "declared_path": "/usr/bin/secret-tool",
+        "group_or_world_writable": false,
+        "id": "secret-tool",
+        "owner_uid": 0,
+        "owning_package": "libsecret-tools",
+        "sha256": "949b1223e548aa2a2b33e63493b2ee174ff3da986cc38c2d8ac4328d578e99c3",
+        "version": "0.21.7-2build1"
+      },
+      {
+        "bootstrap_package": "systemd",
+        "canonical_path": "/usr/bin/systemd-run",
+        "declared_path": "/usr/bin/systemd-run",
+        "group_or_world_writable": false,
+        "id": "systemd-run",
+        "owner_uid": 0,
+        "owning_package": "systemd",
+        "sha256": "6cb217524b113f56c7d514b10eb914b365aad787b4b3d3fdf9b8cc7ae675d8a9",
+        "version": "259.5-0ubuntu3"
+      }
+    ]
+  },
+  "limitations": [
+    "The Ubuntu controls execute under an Ubuntu 26.04 kernel in a hardware-accelerated KVM guest; this is native-kernel virtual-machine evidence, not physical-host certification.",
+    "Network access is permitted only while preparing the reusable guest from the digest-pinned official image; the acceptance guest uses QEMU restrict mode with one loopback SSH forward and proves external connection denial.",
+    "The test binaries are unsigned development candidates compiled from the exact committed revision in the pinned Ubuntu build toolchain image; no supported-release claim is made.",
+    "No model artifact is installed, no inference is performed, and no private workspace or credential is introduced.",
+    "macOS evidence is outside this artifact and is not substituted."
+  ],
+  "macos_evidence_substituted": false,
+  "private_values_present": false,
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "path": "architecture/clean-build-policy.json",
+      "sha256": "8852a4fe4527cf327eabe3695d273d34fb64da1be8b066e944d333b5d090a466"
+    },
+    {
+      "path": "docs/architecture/linux-worker-isolation.md",
+      "sha256": "18cbcfafb56be752a7d3cd03101d776b4ae8f9ff0e1bf59e6cd895351809584a"
+    },
+    {
+      "path": "docs/support/linux-native-ubuntu-control-evidence.md",
+      "sha256": "905c4b8c5729b824c2f5b92b125e9a469fcb83e5108f035a05102498f1250744"
+    },
+    {
+      "path": "kernel/engine/src/platform_startup.rs",
+      "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
+    },
+    {
+      "path": "package.json",
+      "sha256": "d0d4014b4b30fe827e4e793700514677fcc1acbc7ce4477ae2379e5b26dc43c5"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5"
+    },
+    {
+      "path": "platforms/linux/src/ipc.rs",
+      "sha256": "b74c2d424365aa0faa267cc042214a86e99c97c99be854ac3daed4deabc89c21"
+    },
+    {
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
+    },
+    {
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "cc5e64975df7369a763349e43aadd9212a37c799f115c167e3b72d4195ab772f"
+    },
+    {
+      "path": "platforms/linux/src/security_controls.rs",
+      "sha256": "f354c6d689e7e48d2628d6c1183daa7be553e6f52c941f93a5f84173d23977e8"
+    },
+    {
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "52915f5c42d0fe9b07a3da56d3e5a87b11cf1b6f437e159be7aa2e8ebc35e120"
+    },
+    {
+      "path": "scripts/linux_native_ubuntu_control_evidence.py",
+      "sha256": "35f81938fe4557c38ff7c7afac362208b10656ee8cae1481dd82a7ec191ce5a3"
+    },
+    {
+      "path": "tests/test_linux_native_ubuntu_control_evidence.py",
+      "sha256": "517a3b2013c1aace843381809d3f5684e33a1e178346569f6a68f8f339a32da3"
+    }
+  ],
+  "status": "pass-native-ubuntu-kernel-controls",
+  "summary": {
+    "attack_class_count": 8,
+    "cleanup_complete": true,
+    "native_ubuntu_kernel_controls_verified": true,
+    "parity_dimensions_unblocked": 3,
+    "physical_host_certification": false,
+    "test_count": 30
+  },
+  "task_ids": [
+    "9.1.2.2",
+    "9.1.2.4",
+    "9.1.3.2",
+    "9.1.3.3",
+    "9.1.3.5"
+  ],
+  "test_ids": [
+    "S-009-UT01",
+    "S-009-ST01",
+    "S-009-UT02"
+  ]
+}
