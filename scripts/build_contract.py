@@ -66,7 +66,14 @@ EXPECTED_CARGO_PACKAGES = {
     ),
     "platforms/linux-inference": (
         "agentmage-platform-linux-inference",
-        {"agentmage-kernel-contracts"},
+        {
+            "agentmage-kernel-contracts",
+            "rustix",
+            "serde",
+            "serde_json",
+            "sha2",
+            "zeroize",
+        },
     ),
     "platforms/windows": (
         "agentmage-platform-windows",
