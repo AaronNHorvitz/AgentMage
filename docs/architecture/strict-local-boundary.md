@@ -96,6 +96,28 @@ installer currently supplies these observations. Live acquisition lifecycle
 wiring, firewall-rule inspection, syscall/DNS/socket tracing, packet capture,
 and supported-platform acceptance remain separate Sprint 10 work.
 
+## Isolated Firewall and Capture Harness
+
+The Linux acceptance harness creates a disposable user and network namespace
+from a standard-user process. Namespace-scoped capabilities bring up only
+loopback and one synthetic `TEST-NET` dummy interface; no host interface is
+joined and no default route exists. An exact nftables output policy defaults to
+drop, admits IPv4 and IPv6 loopback, counts every final denial, and is verified
+through structured nftables JSON before traffic runs.
+
+Two in-memory `AF_PACKET` captures prove both sides of the fixture. A bounded
+local TCP exchange must produce loopback frames. A synthetic DNS datagram to
+the documentation-only interface must be refused, increment the firewall drop
+counter, and produce zero captured egress frames and bytes. Packet bytes are
+counted and immediately discarded; no packet payload or pcap is retained. The
+entire firewall, interfaces, routes, sockets, and captures disappear when the
+namespace process exits, without changing the host firewall.
+
+This proves that the acceptance harness can observe permitted local traffic
+and detect a blocked synthetic egress attempt. It does not exercise an
+AgentMage product session, continuous confinement, a model runtime, a physical
+network, every workflow, or the required 60-minute acceptance duration.
+
 ## Linux Session Inventory
 
 The Linux adapter can snapshot an explicit, bounded PID set. It reads process
