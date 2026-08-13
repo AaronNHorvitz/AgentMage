@@ -31,18 +31,18 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "4878b5e2ca8a47982245aaf87e41e929412b5ab67c672fe21da119c64e9bb827",
+      "manifest_sha256": "3d33f2823220573306f800c86a92fc0657d4231e464e597527359a000bc1e535",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
-          "size": 548168
+          "sha256": "2032aecfbf51745becd84bdeeeff68c213ce56a050a0446210e41bf809468d5e",
+          "size": 546008
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+          "sha256": "d2a64a75750443060e6cc91b0aa86115fa4607eb21132b49266245d25aab1f57",
           "size": 1023944
         },
         {
@@ -101,18 +101,18 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "4878b5e2ca8a47982245aaf87e41e929412b5ab67c672fe21da119c64e9bb827",
+      "manifest_sha256": "3d33f2823220573306f800c86a92fc0657d4231e464e597527359a000bc1e535",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
-          "size": 548168
+          "sha256": "2032aecfbf51745becd84bdeeeff68c213ce56a050a0446210e41bf809468d5e",
+          "size": 546008
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+          "sha256": "d2a64a75750443060e6cc91b0aa86115fa4607eb21132b49266245d25aab1f57",
           "size": 1023944
         },
         {
@@ -185,14 +185,14 @@
   },
   "packages": {
     "deb": {
-      "bytes": 1262292,
+      "bytes": 1261540,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "a6bc37b629edc36014d5112b5d2614e585b7110da64fb2d608b83311cf7b016e"
+      "sha256": "a37d392118b9d7e2b3cc845dedc1b5c426ac6a2e6a0190ecaacdca5552427112"
     },
     "rpm": {
-      "bytes": 642502,
+      "bytes": 641924,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "fbee9626236757a781ad28d6f6b1f553b99b3f9eaa274d03be706197c27757d5"
+      "sha256": "ca8ea2e799659b4c07eb893f3eeadfff74a75e4ff7cfb1cb86fdbe2c06a62bb3"
     },
     "vsix": {
       "bytes": 15193,
@@ -203,7 +203,7 @@
   "release_claim": "none",
   "reproducible_package_rebuild": true,
   "schema_version": 1,
-  "source_revision": "b11b287dc637d214a02437c425698a8ea90f6bef",
+  "source_revision": "79ce99a3b8a1a909afdd154eb07c1403a52451ba",
   "sources": [
     {
       "bytes": 13090,
@@ -236,6 +236,11 @@
       "sha256": "b3b0cc7c66be55082629ee65e276d5476e84bb01cbc9eb7fe50f5ea2d0325b79"
     },
     {
+      "bytes": 2196,
+      "path": "docs/decisions/0038-bind-cross-uid-guard-peer-through-challenge.md",
+      "sha256": "f03c45e869ff76ac4f1dee823dd96c09bc0bce013d839f28473432fde0f4c7c5"
+    },
+    {
       "bytes": 2069,
       "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
       "sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
@@ -251,9 +256,9 @@
       "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
     },
     {
-      "bytes": 21182,
+      "bytes": 21429,
       "path": "package.json",
-      "sha256": "1f784973a8d54b368ffbe48f43186b0a550efd48438de954bdde0b693f1ae37e"
+      "sha256": "200fd3309144249eec59149f9002998cda82d97bb949f56856aefadc240a7a73"
     },
     {
       "bytes": 1232,
@@ -281,9 +286,9 @@
       "sha256": "3706bd5edacf518244c6a6f7814058eebb6d1490341835e97f0bef1924acb0e2"
     },
     {
-      "bytes": 28133,
+      "bytes": 28669,
       "path": "platforms/linux-inference/src/docker_guard_service.rs",
-      "sha256": "a7728237f3e18f7abe11dceebaa76add75f675dbafe24bd8f32c04a2ea405964"
+      "sha256": "a485a12aaab737d946e8f8dafa415f6901248eabd08dc6a2d1dc193fc39c4c37"
     },
     {
       "bytes": 14109,
@@ -346,9 +351,9 @@
       "sha256": "6ff3335f20845587fe8613a7a4445308b565d85a28e6a8b46d6c78e46c327715"
     },
     {
-      "bytes": 18078,
+      "bytes": 18152,
       "path": "scripts/linux_docker_prerequisite_evidence.py",
-      "sha256": "278612ce9f2c40b6a230a4c17cf26e9b60619204542fb68a3f9e5ca30d2e94e7"
+      "sha256": "12c5669df12bb82142b7da8163497327816f3c9ee99459b80e79f434776c19bc"
     },
     {
       "bytes": 20425,
