@@ -1,0 +1,793 @@
+{
+  "artifact_id": "linux-docker-kvm-topology",
+  "claims": {
+    "docker_engine_directly_tested": true,
+    "docker_inference_performed": false,
+    "live_topology_inspected": true,
+    "model_quality_evaluated": false,
+    "native_adapter_live_inference": false,
+    "release_support": false
+  },
+  "limitations": [
+    "The Fedora and Ubuntu observations run under native distribution kernels in hardware-accelerated disposable KVM guests, not on physical reference hosts.",
+    "The held runtime peer proves exact process, cgroup, socket, and guard topology only; the product kernel-to-guard inference path remains unimplemented.",
+    "The native adapter is packaged and self-checked but inactive; native llama.cpp execution and all model inference remain assigned to Sprint 13.",
+    "No inference, model quality evaluation, private workspace, credential, supported-release claim, or macOS substitution is included."
+  ],
+  "schema_version": 1,
+  "source_revision": "abd6103f80de60f99aeb98a8e3079be76754631b",
+  "sources": [
+    {
+      "bytes": 1767,
+      "path": "docs/decisions/0036-observe-network-namespace-through-procfs.md",
+      "sha256": "55bb2dfeebadf1efc58053b616ae6d4cb052a3eeb6df354b7dcffdd97ed5c624"
+    },
+    {
+      "bytes": 1767,
+      "path": "docs/decisions/0037-admit-canonical-runner-digest-reference.md",
+      "sha256": "b3b0cc7c66be55082629ee65e276d5476e84bb01cbc9eb7fe50f5ea2d0325b79"
+    },
+    {
+      "bytes": 2726,
+      "path": "docs/support/linux-docker-kvm-evidence.md",
+      "sha256": "3cc4d47250041d355b9852b5877bd61fdecb2608a458d9e59da24c253bd8c1f6"
+    },
+    {
+      "bytes": 21182,
+      "path": "package.json",
+      "sha256": "1f784973a8d54b368ffbe48f43186b0a550efd48438de954bdde0b693f1ae37e"
+    },
+    {
+      "bytes": 44044,
+      "path": "platforms/linux-inference/src/docker_live_collector.rs",
+      "sha256": "79f324c172d02d312bcb176b5c820aa377c3f1b33b3aad167b77ecc0321bd976"
+    },
+    {
+      "bytes": 24171,
+      "path": "platforms/linux-inference/src/docker_linux_observer.rs",
+      "sha256": "7fd69525018cabf1bc1b0a5ec84102c65f2731e89c53d8f04a374997e0e68699"
+    },
+    {
+      "bytes": 35944,
+      "path": "scripts/linux_docker_kvm_evidence.py",
+      "sha256": "e24a594082383f6b70212dcf4bee1e655d5637df31b19fc2a6c093bb734ef9b3"
+    },
+    {
+      "bytes": 26065,
+      "path": "scripts/linux_docker_kvm_guest.py",
+      "sha256": "fcd71e9b70ae29827c4b323ea1f10e1d1a7a7b7453b0b795436567d9697b3cbb"
+    },
+    {
+      "bytes": 18113,
+      "path": "scripts/package_candidate.py",
+      "sha256": "a08521967ef53a1eef8748aaf15eb482fe26ac0cc7d67bcb2ec77514bbb8e3c9"
+    },
+    {
+      "bytes": 6834,
+      "path": "tests/test_linux_docker_kvm_evidence.py",
+      "sha256": "203ea3e6c197f888efc00c0c9d005448cb780d1b8967a3abc77be02890abc627"
+    }
+  ],
+  "status": "pass-live-topology-no-inference",
+  "targets": [
+    {
+      "acceptance_package": {
+        "bytes": 642502,
+        "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
+        "sha256": "fbee9626236757a781ad28d6f6b1f553b99b3f9eaa274d03be706197c27757d5"
+      },
+      "host_cleanup": {
+        "disposable_overlay_absent": true,
+        "loopback_ssh_listener_absent": true,
+        "qemu_process_absent": true
+      },
+      "hypervisor": {
+        "acceleration": "kvm",
+        "cpu_count": 32,
+        "launcher_class": "fedora-toolbox",
+        "memory_mib": 8192,
+        "qemu_sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+        "qemu_version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+      },
+      "network": {
+        "external_connection_denied": true,
+        "host_forward": "loopback-ssh-only",
+        "qemu_restrict_mode": true
+      },
+      "observation": {
+        "cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "runner_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "docker": {
+          "collector": {
+            "admission": {
+              "preflight_contract_version": 3,
+              "protocol_version": 2,
+              "record_type": "agentmage_docker_topology_admission",
+              "session_identity_sha256": "c42606ecce82098741c961a1326a2b714c3c1060de55a72f5c56860d6c836ffb",
+              "status": "admitted"
+            },
+            "collector_executable_sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+            "observation": {
+              "api": {
+                "guard_connect_host": "127.0.0.1",
+                "host_listener_count": 0,
+                "loopback_interface_up": true,
+                "management_listener_count": 0,
+                "namespace_active_interface_count": 1,
+                "namespace_non_local_route_count": 0,
+                "non_loopback_listener_count": 0,
+                "private_namespace_sha256": "61f4df0d18453aaa9b2d71453a29d3f3ba8c5117986542df9062267e15fbc482",
+                "raw_listener_count": 1,
+                "raw_port": 12434,
+                "runner_bind_host": "::"
+              },
+              "baseline": {
+                "daemon_executable_sha256": "82e93803b129188a49f2da3f457bf927b26b71ca85cb481ceaa4b890eb2a07c3",
+                "daemon_socket_identity_sha256": "6dea3110f0d5c00945061fdfa781c60fd177708ee660c3b26782ebb3750921d1",
+                "docker_socket_gid": 991,
+                "guard_cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+                "guard_executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+                "guard_uid": 10002,
+                "private_namespace_sha256": "61f4df0d18453aaa9b2d71453a29d3f3ba8c5117986542df9062267e15fbc482",
+                "runtime_cgroup_sha256": "32d5ca00cb7d4526defa867f12bdd9cb6bd9bc37205e2094ad068c0d2055f8e6",
+                "runtime_executable_sha256": "5ff9706b2074fb7f9c188ff2d61a2932de61395249097269e6f223873b7b6e7f",
+                "runtime_gid": 10001,
+                "runtime_uid": 10001
+              },
+              "collector_executable_sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+              "collector_uid": 0,
+              "complete": true,
+              "containers": {
+                "bridge_route_count": 0,
+                "credential_mount_count": 0,
+                "docker_socket_mount_count": 0,
+                "foreign_reachable_peer_count": 0,
+                "guard_cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+                "guard_count": 1,
+                "guard_executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+                "guard_uid": 10002,
+                "host_root_mount_count": 0,
+                "host_route_count": 0,
+                "kernel_socket_group_gid": 10001,
+                "kernel_socket_mode": 432,
+                "kernel_socket_owner_uid": 10002,
+                "kernel_socket_parent_mode": 456,
+                "kernel_socket_peer_authentication": true,
+                "model_content_store_writable": false,
+                "private_runtime_tmpfs": true,
+                "runner_and_guard_share_namespace": true,
+                "runner_count": 1,
+                "workspace_mount_count": 0
+              },
+              "daemon": {
+                "daemon_executable_sha256": "82e93803b129188a49f2da3f457bf927b26b71ca85cb481ceaa4b890eb2a07c3",
+                "daemon_uid": 0,
+                "rootless": false,
+                "runtime_uid": 10001,
+                "runtime_user_has_socket_group": false,
+                "socket_group_gid": 991,
+                "socket_identity_sha256": "6dea3110f0d5c00945061fdfa781c60fd177708ee660c3b26782ebb3750921d1",
+                "socket_is_unix_stream": true,
+                "socket_mode": 432,
+                "socket_owner_uid": 0
+              },
+              "egress": {
+                "acquisition_allowed": false,
+                "ambient_dns": false,
+                "ambient_proxy": false,
+                "do_not_track": true,
+                "egress_interface_count": 0,
+                "firewall_default_deny": true,
+                "outbound_bytes": 0,
+                "registry_access": false
+              },
+              "fresh": true,
+              "images": {
+                "image_repull_allowed": false,
+                "model_manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+                "mutable_tag_used_for_admission": false,
+                "runner_manifest_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
+              },
+              "preflight_contract_version": 3,
+              "protocol_version": 2,
+              "replayed": false,
+              "resources": {
+                "capabilities_added": 0,
+                "cpu_percent": 3200,
+                "memory_bytes": 68719476736,
+                "no_new_privileges": true,
+                "output_bytes": 16777216,
+                "parallel_slots": 1,
+                "privileged": false,
+                "read_only_root": true,
+                "runtime_seconds": 3600,
+                "swap_bytes": 0,
+                "tasks": 64
+              },
+              "session_identity_sha256": "c42606ecce82098741c961a1326a2b714c3c1060de55a72f5c56860d6c836ffb"
+            },
+            "observation_started_unix_seconds": 1786640939,
+            "os_release_sha256": "4986cfe8c38bcb51c27536f0113b2bd46832327ad4ac944dab74beccebfe171b",
+            "preflight_contract_version": 3,
+            "protocol_version": 2,
+            "record_type": "agentmage_docker_live_topology_observation",
+            "source_revision": "abd6103f80de60f99aeb98a8e3079be76754631b"
+          },
+          "container_id": "6661843334ab5c376ee1c4f7f0daea5625e3140af70d0cece9dbb35a81de0202",
+          "daemon_configuration": {
+            "listener": "direct-unix-socket",
+            "service_unit_sha256": "7fdeceb0c4a438e82ae70c7b7e8a9478137034f88021cfd0704c016b0fa88bf5",
+            "socket_activation_active": false
+          },
+          "engine_version": "29.6.2",
+          "model_manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+          "precollector_checks": [
+            "daemon-peer-pid",
+            "daemon-peer-root",
+            "docker-socket-group-nonzero",
+            "runtime-identity",
+            "guard-identity",
+            "guard-no-capabilities",
+            "guard-no-new-privileges",
+            "shared-private-network-namespace",
+            "distinct-guard-mount-namespace",
+            "guard-parent-owner",
+            "guard-parent-group",
+            "guard-parent-mode",
+            "private-interface-count",
+            "private-loopback-up",
+            "private-route-count",
+            "private-raw-listener-count",
+            "private-ipv4-wildcard-count",
+            "private-ipv6-wildcard-count",
+            "private-non-loopback-listener-count",
+            "private-management-listener-count",
+            "host-raw-listener-count",
+            "runner-container-running",
+            "runner-container-count",
+            "runner-config-reference",
+            "runner-repository-digest",
+            "model-file-identity"
+          ],
+          "private_tcp_listeners": [
+            "LISTEN 0      4096   *:12434 *:*"
+          ],
+          "processes": {
+            "daemon": {
+              "cgroup_sha256": "ed20db2d5805c79b5dc229b8069124451e6fd1a1a884b9c87192e6d6f70a7569",
+              "effective_capabilities": 2199023255551,
+              "executable_sha256": "82e93803b129188a49f2da3f457bf927b26b71ca85cb481ceaa4b890eb2a07c3",
+              "gid": 0,
+              "groups": [],
+              "mount_namespace_sha256": "3c1384175260a093026e88f61f070486e8f4836b59d5ac603693317a4be202e1",
+              "network_namespace_sha256": "f92fc437dc58fe463d6b5b71bba4f4cf55f5645c3f1916c62e9f4674bd98bec1",
+              "no_new_privileges": false,
+              "pid": 2159,
+              "start_time_ticks": 1212,
+              "uid": 0
+            },
+            "guard": {
+              "cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+              "effective_capabilities": 0,
+              "executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+              "gid": 10001,
+              "groups": [
+                10001
+              ],
+              "mount_namespace_sha256": "f3be67e9aad09722f2bb5212254ccba88ed00d701d0d7003863c02faf72508bc",
+              "network_namespace_sha256": "61f4df0d18453aaa9b2d71453a29d3f3ba8c5117986542df9062267e15fbc482",
+              "no_new_privileges": true,
+              "pid": 2472,
+              "start_time_ticks": 1347,
+              "uid": 10002
+            },
+            "runner": {
+              "cgroup_sha256": "fafd90a2fb3e602383fc33cfd7d3a2b48b9b097d17af80c274bfcf70632d3d25",
+              "effective_capabilities": 0,
+              "executable_sha256": "e99a82825baa4fe5a029ccdc992eabd44c6aeb18f80da4227afe50e99e8fe9ea",
+              "gid": 995,
+              "groups": [
+                44,
+                995
+              ],
+              "mount_namespace_sha256": "49ce2650f6d411432af00e48f2eb727bcea8ba33a73031a8b830ed27cc2b857b",
+              "network_namespace_sha256": "61f4df0d18453aaa9b2d71453a29d3f3ba8c5117986542df9062267e15fbc482",
+              "no_new_privileges": true,
+              "pid": 2421,
+              "start_time_ticks": 1314,
+              "uid": 995
+            },
+            "runtime_acceptance_peer": {
+              "cgroup_sha256": "32d5ca00cb7d4526defa867f12bdd9cb6bd9bc37205e2094ad068c0d2055f8e6",
+              "effective_capabilities": 0,
+              "executable_sha256": "5ff9706b2074fb7f9c188ff2d61a2932de61395249097269e6f223873b7b6e7f",
+              "gid": 10001,
+              "groups": [
+                10,
+                10001
+              ],
+              "mount_namespace_sha256": "22fd2f9f2e1bc128ccec836e0c08c03b45b6b4b92c69feac2eab2702d6959f4e",
+              "network_namespace_sha256": "f92fc437dc58fe463d6b5b71bba4f4cf55f5645c3f1916c62e9f4674bd98bec1",
+              "no_new_privileges": true,
+              "pid": 2370,
+              "start_time_ticks": 1266,
+              "uid": 10001
+            }
+          },
+          "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+          "socket": {
+            "group_gid": 991,
+            "identity_sha256": "6dea3110f0d5c00945061fdfa781c60fd177708ee660c3b26782ebb3750921d1",
+            "mode": 432,
+            "owner_uid": 0
+          }
+        },
+        "native": {
+          "descriptor": {
+            "accepted_operation": "self-check-only",
+            "authority_inputs": [],
+            "component_id": "platform-linux-native-inference",
+            "contract": "authenticated-local-endpoint-v1",
+            "docker_compatibility_available": false,
+            "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
+            "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+            "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+            "docker_preflight_contract_version": 3,
+            "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
+            "enabled_models": 0,
+            "inference_available": false,
+            "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+            "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+            "network_listener": false,
+            "process_boundary_version": 7
+          },
+          "host_listener_count_after": 0,
+          "host_listener_count_before": 0,
+          "inference_performed": false,
+          "mode": "packaged-inactive-self-check-only"
+        },
+        "package": {
+          "format": "rpm",
+          "payload": [
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-native-inference",
+              "sha256": "056f8a23eb45ecc2d2bc52187e8653eaddcc07580d696c4c745a229afbf237f9"
+            },
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-docker-guard",
+              "sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27"
+            },
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+              "sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3"
+            }
+          ],
+          "version": "0.0.0-1.fc44"
+        },
+        "platform": {
+          "architecture": "x86_64",
+          "cgroup_filesystem": "cgroup2",
+          "distribution": "fedora",
+          "kernel_release": "6.19.10-300.fc44.x86_64",
+          "virtualization": "kvm"
+        }
+      },
+      "prepared_image": {
+        "official_sha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f",
+        "packages": [
+          {
+            "id": "ca-certificates",
+            "version": "0:2025.2.80_v9.0.304-6.fc44"
+          },
+          {
+            "id": "docker-cli",
+            "version": "0:29.6.2-1.fc44"
+          },
+          {
+            "id": "iproute",
+            "version": "0:6.17.0-2.fc44"
+          },
+          {
+            "id": "jq",
+            "version": "0:1.8.1-3.fc44"
+          },
+          {
+            "id": "moby-engine",
+            "version": "0:29.6.2-1.fc44"
+          },
+          {
+            "id": "openssh-server",
+            "version": "0:10.2p1-7.fc44"
+          },
+          {
+            "id": "procps-ng",
+            "version": "0:4.0.6-1.fc44"
+          },
+          {
+            "id": "python3",
+            "version": "0:3.14.3-2.fc44"
+          },
+          {
+            "id": "shadow-utils",
+            "version": "2:4.19.0-6.fc44"
+          },
+          {
+            "id": "sudo",
+            "version": "0:1.9.17-7.p2.fc44"
+          },
+          {
+            "id": "util-linux",
+            "version": "0:2.41.3-12.fc44"
+          }
+        ],
+        "prepared_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938"
+      },
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "acceptance_package": {
+        "bytes": 1262292,
+        "filename": "agentmage_0.0.0_amd64.deb",
+        "sha256": "a6bc37b629edc36014d5112b5d2614e585b7110da64fb2d608b83311cf7b016e"
+      },
+      "host_cleanup": {
+        "disposable_overlay_absent": true,
+        "loopback_ssh_listener_absent": true,
+        "qemu_process_absent": true
+      },
+      "hypervisor": {
+        "acceleration": "kvm",
+        "cpu_count": 32,
+        "launcher_class": "fedora-toolbox",
+        "memory_mib": 8192,
+        "qemu_sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+        "qemu_version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+      },
+      "network": {
+        "external_connection_denied": true,
+        "host_forward": "loopback-ssh-only",
+        "qemu_restrict_mode": true
+      },
+      "observation": {
+        "cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "runner_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "docker": {
+          "collector": {
+            "admission": {
+              "preflight_contract_version": 3,
+              "protocol_version": 2,
+              "record_type": "agentmage_docker_topology_admission",
+              "session_identity_sha256": "db52928751871e029d09aaa18fde916fea784c496462218ef88273c8eb0f40ba",
+              "status": "admitted"
+            },
+            "collector_executable_sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+            "observation": {
+              "api": {
+                "guard_connect_host": "127.0.0.1",
+                "host_listener_count": 0,
+                "loopback_interface_up": true,
+                "management_listener_count": 0,
+                "namespace_active_interface_count": 1,
+                "namespace_non_local_route_count": 0,
+                "non_loopback_listener_count": 0,
+                "private_namespace_sha256": "af95f4955e1b49a4056f869f0f697a6f191c4911a534746ebdea9627d419a735",
+                "raw_listener_count": 1,
+                "raw_port": 12434,
+                "runner_bind_host": "::"
+              },
+              "baseline": {
+                "daemon_executable_sha256": "8f1c19d27e182ce6c82ddfd900d596195b0fd9d6740a9ff1ccac584e04355cb0",
+                "daemon_socket_identity_sha256": "159ec6c575b2b4e543ade2ec51aa7f56ffeddf4aff48151b8a083f10c833044e",
+                "docker_socket_gid": 109,
+                "guard_cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+                "guard_executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+                "guard_uid": 10002,
+                "private_namespace_sha256": "af95f4955e1b49a4056f869f0f697a6f191c4911a534746ebdea9627d419a735",
+                "runtime_cgroup_sha256": "32d5ca00cb7d4526defa867f12bdd9cb6bd9bc37205e2094ad068c0d2055f8e6",
+                "runtime_executable_sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+                "runtime_gid": 10001,
+                "runtime_uid": 10001
+              },
+              "collector_executable_sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3",
+              "collector_uid": 0,
+              "complete": true,
+              "containers": {
+                "bridge_route_count": 0,
+                "credential_mount_count": 0,
+                "docker_socket_mount_count": 0,
+                "foreign_reachable_peer_count": 0,
+                "guard_cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+                "guard_count": 1,
+                "guard_executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+                "guard_uid": 10002,
+                "host_root_mount_count": 0,
+                "host_route_count": 0,
+                "kernel_socket_group_gid": 10001,
+                "kernel_socket_mode": 432,
+                "kernel_socket_owner_uid": 10002,
+                "kernel_socket_parent_mode": 456,
+                "kernel_socket_peer_authentication": true,
+                "model_content_store_writable": false,
+                "private_runtime_tmpfs": true,
+                "runner_and_guard_share_namespace": true,
+                "runner_count": 1,
+                "workspace_mount_count": 0
+              },
+              "daemon": {
+                "daemon_executable_sha256": "8f1c19d27e182ce6c82ddfd900d596195b0fd9d6740a9ff1ccac584e04355cb0",
+                "daemon_uid": 0,
+                "rootless": false,
+                "runtime_uid": 10001,
+                "runtime_user_has_socket_group": false,
+                "socket_group_gid": 109,
+                "socket_identity_sha256": "159ec6c575b2b4e543ade2ec51aa7f56ffeddf4aff48151b8a083f10c833044e",
+                "socket_is_unix_stream": true,
+                "socket_mode": 432,
+                "socket_owner_uid": 0
+              },
+              "egress": {
+                "acquisition_allowed": false,
+                "ambient_dns": false,
+                "ambient_proxy": false,
+                "do_not_track": true,
+                "egress_interface_count": 0,
+                "firewall_default_deny": true,
+                "outbound_bytes": 0,
+                "registry_access": false
+              },
+              "fresh": true,
+              "images": {
+                "image_repull_allowed": false,
+                "model_manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+                "mutable_tag_used_for_admission": false,
+                "runner_manifest_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
+              },
+              "preflight_contract_version": 3,
+              "protocol_version": 2,
+              "replayed": false,
+              "resources": {
+                "capabilities_added": 0,
+                "cpu_percent": 3200,
+                "memory_bytes": 68719476736,
+                "no_new_privileges": true,
+                "output_bytes": 16777216,
+                "parallel_slots": 1,
+                "privileged": false,
+                "read_only_root": true,
+                "runtime_seconds": 3600,
+                "swap_bytes": 0,
+                "tasks": 64
+              },
+              "session_identity_sha256": "db52928751871e029d09aaa18fde916fea784c496462218ef88273c8eb0f40ba"
+            },
+            "observation_started_unix_seconds": 1786641104,
+            "os_release_sha256": "de1a366db70de1ae4b6612a1696f9c1f37948028fab733508a3d5cf49836faac",
+            "preflight_contract_version": 3,
+            "protocol_version": 2,
+            "record_type": "agentmage_docker_live_topology_observation",
+            "source_revision": "abd6103f80de60f99aeb98a8e3079be76754631b"
+          },
+          "container_id": "eb2a6b833d2d9cca7551a9dc26ce2b2573d36de9c675da76c63be34d400e1cad",
+          "daemon_configuration": {
+            "listener": "direct-unix-socket",
+            "service_unit_sha256": "8ac3a672c9496a0f644c462b6e8f797133ecb9831a2272248148bf8250a853cf",
+            "socket_activation_active": false
+          },
+          "engine_version": "29.1.3",
+          "model_manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+          "precollector_checks": [
+            "daemon-peer-pid",
+            "daemon-peer-root",
+            "docker-socket-group-nonzero",
+            "runtime-identity",
+            "guard-identity",
+            "guard-no-capabilities",
+            "guard-no-new-privileges",
+            "shared-private-network-namespace",
+            "distinct-guard-mount-namespace",
+            "guard-parent-owner",
+            "guard-parent-group",
+            "guard-parent-mode",
+            "private-interface-count",
+            "private-loopback-up",
+            "private-route-count",
+            "private-raw-listener-count",
+            "private-ipv4-wildcard-count",
+            "private-ipv6-wildcard-count",
+            "private-non-loopback-listener-count",
+            "private-management-listener-count",
+            "host-raw-listener-count",
+            "runner-container-running",
+            "runner-container-count",
+            "runner-config-reference",
+            "runner-repository-digest",
+            "model-file-identity"
+          ],
+          "private_tcp_listeners": [
+            "LISTEN 0      4096   *:12434 *:*"
+          ],
+          "processes": {
+            "daemon": {
+              "cgroup_sha256": "ed20db2d5805c79b5dc229b8069124451e6fd1a1a884b9c87192e6d6f70a7569",
+              "effective_capabilities": 2199023255551,
+              "executable_sha256": "8f1c19d27e182ce6c82ddfd900d596195b0fd9d6740a9ff1ccac584e04355cb0",
+              "gid": 0,
+              "groups": [],
+              "mount_namespace_sha256": "ab9d4fd2eb990c207702741011f8d1286d335b6c919551faf421afdb13ad354d",
+              "network_namespace_sha256": "aa5da23c45582884208cf8510c5aaf029233de8c83cb09eb19c6a780f876e325",
+              "no_new_privileges": false,
+              "pid": 3235,
+              "start_time_ticks": 13458,
+              "uid": 0
+            },
+            "guard": {
+              "cgroup_sha256": "8c7008e3823a81947f62643e112e97585b2674a97d8a17169121d1e1c275138c",
+              "effective_capabilities": 0,
+              "executable_sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27",
+              "gid": 10001,
+              "groups": [
+                10001
+              ],
+              "mount_namespace_sha256": "16f690e6330d85142a27824ffcc149888a2f8ba74c2cae7cbeb13a436292d6dc",
+              "network_namespace_sha256": "af95f4955e1b49a4056f869f0f697a6f191c4911a534746ebdea9627d419a735",
+              "no_new_privileges": true,
+              "pid": 3547,
+              "start_time_ticks": 13579,
+              "uid": 10002
+            },
+            "runner": {
+              "cgroup_sha256": "21d08e1b6762224899cf763895bffb48caa620825a82ade55f5069922d800a20",
+              "effective_capabilities": 0,
+              "executable_sha256": "e99a82825baa4fe5a029ccdc992eabd44c6aeb18f80da4227afe50e99e8fe9ea",
+              "gid": 995,
+              "groups": [
+                44,
+                995
+              ],
+              "mount_namespace_sha256": "cfc78f84b6d3d81b10a757b924a4cc7f700b9f1434d3a3a274033fb322b6f706",
+              "network_namespace_sha256": "af95f4955e1b49a4056f869f0f697a6f191c4911a534746ebdea9627d419a735",
+              "no_new_privileges": true,
+              "pid": 3495,
+              "start_time_ticks": 13548,
+              "uid": 995
+            },
+            "runtime_acceptance_peer": {
+              "cgroup_sha256": "32d5ca00cb7d4526defa867f12bdd9cb6bd9bc37205e2094ad068c0d2055f8e6",
+              "effective_capabilities": 0,
+              "executable_sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+              "gid": 10001,
+              "groups": [
+                27,
+                10001
+              ],
+              "mount_namespace_sha256": "0a152872c477ea169e3cd81d57d6529bd7af0bf2d3beebb2d9b5ab7eb2fdb5ef",
+              "network_namespace_sha256": "aa5da23c45582884208cf8510c5aaf029233de8c83cb09eb19c6a780f876e325",
+              "no_new_privileges": true,
+              "pid": 3446,
+              "start_time_ticks": 13508,
+              "uid": 10001
+            }
+          },
+          "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+          "socket": {
+            "group_gid": 109,
+            "identity_sha256": "159ec6c575b2b4e543ade2ec51aa7f56ffeddf4aff48151b8a083f10c833044e",
+            "mode": 432,
+            "owner_uid": 0
+          }
+        },
+        "native": {
+          "descriptor": {
+            "accepted_operation": "self-check-only",
+            "authority_inputs": [],
+            "component_id": "platform-linux-native-inference",
+            "contract": "authenticated-local-endpoint-v1",
+            "docker_compatibility_available": false,
+            "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
+            "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+            "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+            "docker_preflight_contract_version": 3,
+            "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
+            "enabled_models": 0,
+            "inference_available": false,
+            "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+            "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+            "network_listener": false,
+            "process_boundary_version": 7
+          },
+          "host_listener_count_after": 0,
+          "host_listener_count_before": 0,
+          "inference_performed": false,
+          "mode": "packaged-inactive-self-check-only"
+        },
+        "package": {
+          "format": "deb",
+          "payload": [
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-native-inference",
+              "sha256": "056f8a23eb45ecc2d2bc52187e8653eaddcc07580d696c4c745a229afbf237f9"
+            },
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-docker-guard",
+              "sha256": "e2b8e7d80f143d18a67c29548bf2b0f9fae8f3c33b80f05cd628ab4d80c7af27"
+            },
+            {
+              "mode": 493,
+              "path": "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+              "sha256": "a264bb75eba53e13c1c8da97507f9ed5455f49493d2752f0ba9a899fa2eb7cf3"
+            }
+          ],
+          "version": "0.0.0"
+        },
+        "platform": {
+          "architecture": "x86_64",
+          "cgroup_filesystem": "cgroup2",
+          "distribution": "ubuntu",
+          "kernel_release": "7.0.0-28-generic",
+          "virtualization": "kvm"
+        }
+      },
+      "prepared_image": {
+        "official_sha256": "9dc7c5363c0146a08ba0c9aa834d82c2c6dfbb1c471ad9a2f0aba1189e21be05",
+        "packages": [
+          {
+            "id": "ca-certificates",
+            "version": "20260601~26.04.1"
+          },
+          {
+            "id": "docker.io",
+            "version": "29.1.3-0ubuntu4.1"
+          },
+          {
+            "id": "iproute2",
+            "version": "6.19.0-1ubuntu1.1"
+          },
+          {
+            "id": "jq",
+            "version": "1.8.1-4ubuntu2"
+          },
+          {
+            "id": "openssh-server",
+            "version": "1:10.2p1-2ubuntu3.5"
+          },
+          {
+            "id": "procps",
+            "version": "2:4.0.4-9ubuntu1"
+          },
+          {
+            "id": "python3",
+            "version": "3.14.3-0ubuntu2"
+          },
+          {
+            "id": "sudo",
+            "version": "1.9.17p2-1ubuntu3"
+          },
+          {
+            "id": "util-linux",
+            "version": "2.41.3-3ubuntu2"
+          }
+        ],
+        "prepared_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154"
+      },
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_ids": [
+    "9.2.2.1"
+  ]
+}
