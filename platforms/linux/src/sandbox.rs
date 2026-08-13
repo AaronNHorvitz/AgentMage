@@ -1578,6 +1578,7 @@ mod tests {
         let status = String::from_utf8(result.stdout().to_vec()).expect("status UTF-8");
         assert!(status.lines().any(|line| line == "NoNewPrivs:\t1"));
         assert!(status.lines().any(|line| line == "Seccomp:\t2"));
+        println!("agentmage-kernel-control no-new-privileges=1 seccomp=2");
         fs::remove_dir_all(root).expect("cleanup");
     }
 
@@ -1597,6 +1598,7 @@ mod tests {
 
         assert!(!result.success());
         assert!(started.elapsed() < Duration::from_secs(5));
+        println!("agentmage-resource-control runtime-limit=enforced");
         fs::remove_dir_all(root).expect("cleanup");
     }
 }
