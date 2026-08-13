@@ -21,9 +21,12 @@ repository, `docker.io/docker/model-runner@`. A tag, alternate repository,
 partial digest, case change, or any other spelling remains mutable or unknown
 and is refused.
 
-The independent image inventory check is tightened at the same time: the image
-must expose the canonical repository-at-digest value, not merely any repository
-whose final digest text happens to match.
+The independent image inventory check is tightened at the same time. Docker
+Engine normalizes the corresponding `RepoDigests` entry to
+`docker/model-runner@sha256:<digest>`; the image must expose that exact
+Engine-normalized repository-at-digest value, not merely any repository whose
+final digest text happens to match. The configured launch reference and stored
+inventory spelling are separate closed fields and are not interchangeable.
 
 ## Consequences
 

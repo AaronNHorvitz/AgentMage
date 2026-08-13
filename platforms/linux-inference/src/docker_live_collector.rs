@@ -41,6 +41,7 @@ const OUTPUT_BYTES: u32 = 16 * 1024 * 1024;
 const PARALLEL_SLOTS: u8 = 1;
 const MAX_MODEL_PAYLOAD_BYTES: u64 = 32 * 1024 * 1024 * 1024;
 const RUNNER_REPOSITORY: &str = "docker.io/docker/model-runner";
+const RUNNER_REPO_DIGEST_REPOSITORY: &str = "docker/model-runner";
 
 /// Stable content-free refusal from the production live collector.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -561,7 +562,7 @@ fn verify_model_store(runner_pid: i32) -> Result<(), DockerLiveCollectorError> {
 }
 
 fn image_digest_absent(repo_digests: &[String], expected: &str) -> bool {
-    let canonical = format!("{RUNNER_REPOSITORY}@{expected}");
+    let canonical = format!("{RUNNER_REPO_DIGEST_REPOSITORY}@{expected}");
     !repo_digests.iter().any(|value| value == &canonical)
 }
 
@@ -791,7 +792,7 @@ mod tests {
                     id: request.runner_container_id.clone(),
                     image_id: image_id.clone(),
                 }],
-                repo_digests: vec![format!("docker.io/docker/model-runner@{runner_digest}")],
+                repo_digests: vec![format!("{RUNNER_REPO_DIGEST_REPOSITORY}@{runner_digest}")],
                 runtime_groups: vec![1000],
                 guard: process(991, 1000, [8; 32], [9; 32], [7; 32], [10; 32]),
                 runner: process(1001, 1001, [11; 32], [12; 32], [7; 32], [13; 32]),
