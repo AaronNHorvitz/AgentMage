@@ -1264,6 +1264,31 @@ mod tests {
     }
 
     #[test]
+    fn policy_denies_every_worker_socket_and_connection_syscall() {
+        for syscall in [
+            "accept",
+            "accept4",
+            "bind",
+            "connect",
+            "listen",
+            "recvfrom",
+            "recvmmsg",
+            "recvmsg",
+            "sendmmsg",
+            "sendmsg",
+            "sendto",
+            "shutdown",
+            "socket",
+            "socketpair",
+        ] {
+            assert!(
+                super::DENIED_SYSCALLS.contains(&syscall),
+                "worker syscall policy admitted {syscall}"
+            );
+        }
+    }
+
+    #[test]
     fn limits_and_manifests_fail_closed() {
         assert_eq!(
             LinuxSandboxLimits::new(1, 1, 1, 1, 1)
@@ -1538,6 +1563,27 @@ mod tests {
             ],
         )
         .expect("network denial result");
+        assert!(network.success());
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux systemd user session and Bubblewrap runtime"]
+    fn tool_worker_cannot_connect_to_raw_inference_loopback() {
+        let root = temp_directory("raw-inference-connect");
+        fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let bash = runner_for("/usr/bin/bash", LinuxSandboxLimits::default());
+        let network = run_held_arguments(
+            &bash,
+            &held,
+            &[
+                "-c".into(),
+                "if exec 9<>/dev/tcp/127.0.0.1/12434; then exit 1; else exit 0; fi".into(),
+            ],
+        )
+        .expect("raw inference connection denial");
         assert!(network.success());
         fs::remove_dir_all(root).expect("cleanup");
     }

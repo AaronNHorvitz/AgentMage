@@ -40,6 +40,44 @@
     "tungstenite",
     "ureq"
   ],
+  "exact_source_fragments": [
+    {
+      "count": 1,
+      "fragment": "new AuthenticatedLinuxHostBridge(credentials)",
+      "id": "vscode-bootstrap-constructs-one-host-bridge",
+      "path": "shells/vscode/src/host_bootstrap.ts"
+    },
+    {
+      "count": 1,
+      "fragment": "const credentials = parseBootstrapFrame(frame, process.getuid());",
+      "id": "vscode-bootstrap-parses-one-host-frame",
+      "path": "shells/vscode/src/host_bootstrap.ts"
+    },
+    {
+      "count": 1,
+      "fragment": "createConnection(",
+      "id": "vscode-host-bridge-one-connection-call",
+      "path": "shells/vscode/src/host_bridge.ts"
+    },
+    {
+      "count": 1,
+      "fragment": "import { createConnection, type Socket } from \"node:net\";",
+      "id": "vscode-host-bridge-one-net-import",
+      "path": "shells/vscode/src/host_bridge.ts"
+    },
+    {
+      "count": 1,
+      "fragment": "this.endpoint = credentials.endpoint;",
+      "id": "vscode-host-bridge-package-endpoint-only",
+      "path": "shells/vscode/src/host_bridge.ts"
+    },
+    {
+      "count": 1,
+      "fragment": "createConnection({ path: this.endpoint })",
+      "id": "vscode-host-bridge-unix-path-only",
+      "path": "shells/vscode/src/host_bridge.ts"
+    }
+  ],
   "scan_roots": [
     "capabilities/read-only/src",
     "kernel/contracts/src",

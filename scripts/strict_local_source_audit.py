@@ -19,6 +19,7 @@ TOP_LEVEL_KEYS = {
     "allowed_external_uris",
     "denied_npm_runtime_packages",
     "denied_rust_packages",
+    "exact_source_fragments",
     "scan_roots",
     "schema_version",
     "symbol_rules",
@@ -75,6 +76,33 @@ def load_policy(path: Path = POLICY_PATH) -> dict[str, Any]:
                 "strict-local symbol rule expression is invalid"
             ) from failure
         observed_ids.add(identifier)
+    fragments = policy.get("exact_source_fragments")
+    if not isinstance(fragments, list) or not fragments:
+        raise StrictLocalSourceAuditError("strict-local exact source fragments are absent")
+    fragment_ids: set[str] = set()
+    for rule in fragments:
+        if not isinstance(rule, dict) or set(rule) != {"count", "fragment", "id", "path"}:
+            raise StrictLocalSourceAuditError("strict-local exact source fragment fields are invalid")
+        identifier = rule.get("id")
+        path = rule.get("path")
+        fragment = rule.get("fragment")
+        count = rule.get("count")
+        if (
+            not isinstance(identifier, str)
+            or not identifier
+            or identifier in fragment_ids
+            or not isinstance(path, str)
+            or not path
+            or not isinstance(fragment, str)
+            or not fragment
+            or not isinstance(count, int)
+            or isinstance(count, bool)
+            or count < 1
+        ):
+            raise StrictLocalSourceAuditError("strict-local exact source fragment value is invalid")
+        fragment_ids.add(identifier)
+    if [rule["id"] for rule in fragments] != sorted(fragment_ids):
+        raise StrictLocalSourceAuditError("strict-local exact source fragments are not sorted")
     allowed_uris = policy.get("allowed_external_uris")
     if not isinstance(allowed_uris, dict):
         raise StrictLocalSourceAuditError("strict-local URI allowances are invalid")
@@ -142,6 +170,12 @@ def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
             failures.append(f"URI allowance path is outside the source closure: {path}")
         elif observed_allowed[path] != set(expected):
             failures.append(f"URI allowance is stale or incomplete: {path}")
+    for rule in policy["exact_source_fragments"]:
+        content = sources.get(rule["path"])
+        if content is None:
+            failures.append(f"exact source fragment path is outside the source closure: {rule['id']}")
+        elif content.count(rule["fragment"]) != rule["count"]:
+            failures.append(f"exact source fragment count changed: {rule['id']}")
     return sorted(set(failures))
 
 

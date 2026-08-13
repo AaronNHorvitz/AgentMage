@@ -68,6 +68,39 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             audit.scan_sources(self.policy, expanded),
         )
 
+        added = dict(self.sources)
+        added["shells/vscode/src/host_bridge.ts"] += (
+            '\ncreateConnection({ host: "127.0.0.1", port: 12434 });\n'
+        )
+        self.assertIn(
+            "exact source fragment count changed: vscode-host-bridge-one-connection-call",
+            audit.scan_sources(self.policy, added),
+        )
+
+        substituted = dict(self.sources)
+        substituted["shells/vscode/src/host_bridge.ts"] = substituted[
+            "shells/vscode/src/host_bridge.ts"
+        ].replace(
+            "createConnection({ path: this.endpoint })",
+            'createConnection({ host: "127.0.0.1", port: 12434 })',
+        )
+        self.assertIn(
+            "exact source fragment count changed: vscode-host-bridge-unix-path-only",
+            audit.scan_sources(self.policy, substituted),
+        )
+
+        changed = dict(self.sources)
+        changed["shells/vscode/src/host_bridge.ts"] = changed[
+            "shells/vscode/src/host_bridge.ts"
+        ].replace(
+            "this.endpoint = credentials.endpoint;",
+            "this.endpoint = process.env.AGENTMAGE_ENDPOINT ?? credentials.endpoint;",
+        )
+        self.assertIn(
+            "exact source fragment count changed: vscode-host-bridge-package-endpoint-only",
+            audit.scan_sources(self.policy, changed),
+        )
+
     def test_terminal_rust_unit_tests_are_not_product_source(self) -> None:
         test_only = dict(self.sources)
         test_only["shells/host/src/test_fixture.rs"] = (
