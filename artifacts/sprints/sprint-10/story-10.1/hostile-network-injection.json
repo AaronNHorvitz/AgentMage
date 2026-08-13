@@ -1,0 +1,185 @@
+{
+  "artifact_id": "strict-local-hostile-network-injection",
+  "claims": {
+    "all_declared_hostile_surface_families_blocked": true,
+    "build_or_test_gate_failed_before_injected_execution": true,
+    "external_network_used": false,
+    "hostile_dependency_installed": false,
+    "inference_performed": false,
+    "injected_code_executed": false,
+    "packet_capture_performed": false,
+    "production_source_and_package_policy_exercised": true,
+    "release_support": false,
+    "runtime_startup_behavior_proven": false
+  },
+  "external_network_used": false,
+  "fixture_sha256": "dc9cf306f5fa46fc239af733f29cf09ffdd2b9ebc8eda722d8e9c33e6403b446",
+  "gate_result": {
+    "baseline_status": "pass",
+    "case_count": 8,
+    "external_network_used": false,
+    "injected_code_executed": false,
+    "results": [
+      {
+        "detector_count": 1,
+        "id": "telemetry-upload",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 1,
+        "id": "crash-upload",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 2,
+        "id": "remote-font-or-asset",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 2,
+        "id": "marketplace-contact",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 1,
+        "id": "update-download",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 1,
+        "id": "ambient-proxy",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 1,
+        "id": "hostile-loopback-client",
+        "status": "blocked-before-execution"
+      },
+      {
+        "detector_count": 3,
+        "id": "hostile-loopback-runtime-dependency",
+        "status": "blocked-before-execution"
+      }
+    ],
+    "schema_version": 1,
+    "status": "pass-all-hostile-surfaces-blocked-before-execution"
+  },
+  "limitations": [
+    "The corpus is applied in memory to the production source and package policy; no injected implementation is compiled, started, installed, imported, or permitted to contact a destination.",
+    "This proves deterministic pre-execution rejection for the eight declared mutation families, not the semantic behavior of every possible third-party package or obfuscated implementation.",
+    "Runtime syscall, DNS, socket, process, and packet observation remain assigned to the dependency-blocked 60-minute product workflow in Sub-task 10.1.3.2.",
+    "No model inference, physical-network execution, cross-platform certification, or release acceptance is claimed."
+  ],
+  "mutation_profile": {
+    "case_count": 8,
+    "disposition": "blocked-before-execution",
+    "evaluation": "in-memory-production-source-and-package-audit",
+    "families": [
+      "telemetry-upload",
+      "crash-upload",
+      "remote-font-or-asset",
+      "marketplace-contact",
+      "update-download",
+      "ambient-proxy",
+      "hostile-loopback-client",
+      "hostile-loopback-runtime-dependency"
+    ],
+    "schema_version": 1
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "eae7103d7dda3e8a2b32cd7ddf1b02dc9001bf07",
+  "sources": [
+    {
+      "bytes": 13115,
+      "path": "Cargo.lock",
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
+    },
+    {
+      "bytes": 3007,
+      "path": "fixtures/strict-local-hostile-surfaces/v1/mutations.json",
+      "sha256": "dc9cf306f5fa46fc239af733f29cf09ffdd2b9ebc8eda722d8e9c33e6403b446"
+    },
+    {
+      "bytes": 182235,
+      "path": "package-lock.json",
+      "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+    },
+    {
+      "bytes": 22008,
+      "path": "package.json",
+      "sha256": "02c096f2869e939d3f8b7114072ebe8d35ab43c4ff84faf6f1ba48c991a4b6cf"
+    },
+    {
+      "bytes": 11296,
+      "path": "scripts/hostile_network_injection_evidence.py",
+      "sha256": "2a78a3f1cf47f2fddffeb5c54538874ede854fee9383aae6d3c5218a4a024ac0"
+    },
+    {
+      "bytes": 6397,
+      "path": "scripts/hostile_network_injection_gate.py",
+      "sha256": "2437a87078c9b7ce064de7fd120c3cc3fc0dff4562987d241156a6fca078f4ee"
+    },
+    {
+      "bytes": 18500,
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "f776429aed3928064319f18f2a38dca657dc610afcd3e23baa6141f756b3003e"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "c58099babd8af205816529fa7890b44e84cb5417195031a2e01e646d79bee456"
+    },
+    {
+      "bytes": 1151,
+      "path": "shells/vscode/package.json",
+      "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
+    },
+    {
+      "bytes": 3901,
+      "path": "tests/test_hostile_network_injection_evidence.py",
+      "sha256": "c1319354bab54920471ba853cce17723df5a90d4c1dc0538cc44fdd5e3cca7f5"
+    },
+    {
+      "bytes": 2798,
+      "path": "tests/test_hostile_network_injection_gate.py",
+      "sha256": "a4dbf39286a698992022be091e023d59f86feeb90c921c4c23646f916a170b24"
+    },
+    {
+      "bytes": 9643,
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "3f205a0eec2584d9d1f145289e319b2d5b21ce030a148e523c5f31471d3d3541"
+    }
+  ],
+  "status": "pass-hostile-surfaces-blocked-before-execution",
+  "task_ids": [
+    "10.1.3.3",
+    "S-010-ST02"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "972ac4f06d7e746b23b40e075626fe21a7ba3fa9a1d6aec98ce7688e067fbc9f",
+      "exit_code": 0,
+      "expected_marker_sha256": "7b328535b9adde3093fcd5ac8a83fea0d7781d4c2ad792691fc78f92487b387d",
+      "status": "pass"
+    },
+    {
+      "command_id": "523113cdf6e42aa6cacd2e8a08e9711c1b1c290234d29b71820616c1e2a4f167",
+      "exit_code": 0,
+      "expected_marker_sha256": "d47d90667d485e4f1a366880703c809b4b3ee3fe575954982dfcd5bbd9bb5505",
+      "status": "pass"
+    },
+    {
+      "command_id": "df9ed87d24893fcd6e956ef69c929fa381d70daca97fb59ee346dce61f706885",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
