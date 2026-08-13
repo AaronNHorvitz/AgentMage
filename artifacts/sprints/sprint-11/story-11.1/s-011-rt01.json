@@ -1,0 +1,107 @@
+{
+  "artifact_id": "s-011-rt01-seeded-crash-recovery-results",
+  "boundaries": [
+    "transaction",
+    "checkpoint",
+    "migration",
+    "key-retrieval",
+    "backup",
+    "restore",
+    "expiry",
+    "deletion"
+  ],
+  "claims": {
+    "abrupt_subprocess_stop_count": 128,
+    "authority_recovery_or_replay_launches": 0,
+    "boundary_family_count": 8,
+    "boundary_position_pair_count": 16,
+    "external_network_used": false,
+    "hard_exit_without_unwinding": true,
+    "kernel_sigkill_or_power_loss_tested": false,
+    "live_secret_service_interruption_tested": false,
+    "manual_fuzzing_executed": false,
+    "position_count": 2,
+    "release_support": false,
+    "repeated_completed_durable_transitions": 0,
+    "runs_per_boundary_position_pair": 8,
+    "seed_count": 128
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The deterministic child exits with status 86 without unwinding; kernel SIGKILL, host power loss, torn sectors, storage-controller failure, and filesystem corruption are not claimed.",
+    "Deletion uses a synthetic file-backed test key so key absence is observable across processes; live Linux Secret Service interruption remains S-011-IT01.",
+    "Backup and restore cover fresh immutable candidates, not live-store swap, clean-device continuity, or remote backup providers.",
+    "Execution is current-host Linux evidence only; clean distribution, macOS, Windows, packaging, release, support, and manually deferred fuzzing remain separate gates."
+  ],
+  "positions": [
+    "before",
+    "after"
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "dec780ba306f2e4f940ab3785a7af224e90b6125",
+  "sources": [
+    {
+      "bytes": 4328,
+      "path": "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
+      "sha256": "471d46a450054af5567ffe37d8846f523babbb6e62c2d3fc40bcc4f64f17569d"
+    },
+    {
+      "bytes": 81328,
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "dffa4f7c807796a17312d7445c8452251361709756ad4512a5b4003ed95fafa1"
+    },
+    {
+      "bytes": 180555,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "6108fd7925d8da6803ff87d0a0bef9fe84beef3d4d7e5b3cfb868f8dcf16f86e"
+    },
+    {
+      "bytes": 10063,
+      "path": "scripts/seeded_crash_recovery_evidence.py",
+      "sha256": "ec2eda7f953b9c9a9471992663b458b568b1a6a7202223f07a6b09442eca4aa1"
+    },
+    {
+      "bytes": 3166,
+      "path": "tests/test_seeded_crash_recovery_evidence.py",
+      "sha256": "3549c31679ad860085bce5b5e108f8c8f07eced34a2e3740b27941aaaea51e2d"
+    }
+  ],
+  "status": "pass-current-encrypted-operational-store-boundary",
+  "task_ids": [
+    "11.1.3.3",
+    "S-011-RT01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "79292e6e36e0ee069c232d406e34abf9f9c9c3e55cef44d60053f3429e3244b8",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "0ff4d90221736b6801fcc896715dcdbe5549b89aed74494e3a1c7d3f7a050442",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "7099da13f678557bdef9d9b4a9748ca56e65a63186bd499d52b45245305977ad",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
