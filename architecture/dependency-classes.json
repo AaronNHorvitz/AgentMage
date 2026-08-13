@@ -41,7 +41,9 @@
       "typescript-eslint"
     ],
     "cargo_packages": [
-      "agentmage-platform-linux[test-support]"
+      "agentmage-platform-linux[test-support]",
+      "serde",
+      "serde_json"
     ]
   },
   "platform_packaging": {

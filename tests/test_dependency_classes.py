@@ -62,6 +62,19 @@ class DependencyClassTests(unittest.TestCase):
             failures = validate_classes(self.record, root)
         self.assertTrue(any("Cargo development dependencies" in item for item in failures))
 
+    def test_linux_fixture_dependency_cannot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_inputs(root)
+            path = root / "platforms/linux/Cargo.toml"
+            manifest = path.read_text(encoding="utf-8").replace(
+                "serde_json.workspace = true",
+                'serde_json.workspace = true\nrand = "0.9"',
+            )
+            path.write_text(manifest, encoding="utf-8")
+            failures = validate_classes(self.record, root)
+        self.assertTrue(any("do not match the test fixtures" in item for item in failures))
+
     def test_swift_external_package_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -55,7 +55,11 @@ EXPECTED_VSCODE_DEV = {
     "typescript",
     "typescript-eslint",
 }
-EXPECTED_CARGO_DEV = {"agentmage-platform-linux[test-support]"}
+EXPECTED_CARGO_DEV = {
+    "agentmage-platform-linux[test-support]",
+    "serde",
+    "serde_json",
+}
 
 
 def read_json(path: Path) -> Any:
@@ -188,6 +192,13 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
                 )
             else:
                 cargo_development.add("agentmage-platform-linux[test-support]")
+        elif relative == "platforms/linux/Cargo.toml":
+            if development_dependencies != {"serde", "serde_json"}:
+                failures.append(
+                    f"{relative} development dependencies do not match the test fixtures"
+                )
+            else:
+                cargo_development.update(development_dependencies)
         elif development_dependencies:
             failures.append(f"{relative} contains undeclared Cargo development dependencies")
         if build_dependencies:

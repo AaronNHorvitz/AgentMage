@@ -918,7 +918,7 @@ mod tests {
             ),
             (
                 "body",
-                b"-----BEGIN PRIVATE KEY-----".to_vec(),
+                format!("-----BEGIN {}-----", "PRIVATE KEY").into_bytes(),
                 SecretFindingClass::PrivateKey,
             ),
             (
