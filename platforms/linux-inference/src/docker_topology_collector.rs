@@ -95,6 +95,8 @@ pub struct BaselineInput {
     pub(crate) docker_socket_gid: u32,
     pub(crate) runtime_uid: u32,
     pub(crate) runtime_gid: u32,
+    pub(crate) runtime_executable_sha256: String,
+    pub(crate) runtime_cgroup_sha256: String,
     pub(crate) guard_uid: u32,
     pub(crate) private_namespace_sha256: String,
     pub(crate) guard_executable_sha256: String,
@@ -404,10 +406,10 @@ mod tests {
         let hash = "01".repeat(32);
         format!(
             r#"{{
-              "protocol_version":1,"preflight_contract_version":3,"collector_uid":0,
+              "protocol_version":2,"preflight_contract_version":3,"collector_uid":0,
               "collector_executable_sha256":"{hash}","session_identity_sha256":"{session}",
               "complete":true,"fresh":true,"replayed":false,
-              "baseline":{{"daemon_executable_sha256":"{daemon}","daemon_socket_identity_sha256":"{socket}","docker_socket_gid":971,"runtime_uid":1000,"runtime_gid":1000,"guard_uid":991,"private_namespace_sha256":"{namespace}","guard_executable_sha256":"{guard}","guard_cgroup_sha256":"{cgroup}"}},
+              "baseline":{{"daemon_executable_sha256":"{daemon}","daemon_socket_identity_sha256":"{socket}","docker_socket_gid":971,"runtime_uid":1000,"runtime_gid":1000,"runtime_executable_sha256":"{runtime_executable}","runtime_cgroup_sha256":"{runtime_cgroup}","guard_uid":991,"private_namespace_sha256":"{namespace}","guard_executable_sha256":"{guard}","guard_cgroup_sha256":"{cgroup}"}},
               "daemon":{{"daemon_executable_sha256":"{daemon}","daemon_uid":0,"rootless":false,"runtime_uid":1000,"runtime_user_has_socket_group":false,"socket_identity_sha256":"{socket}","socket_is_unix_stream":true,"socket_owner_uid":0,"socket_group_gid":971,"socket_mode":432}},
               "api":{{"private_namespace_sha256":"{namespace}","runner_bind_host":"::","guard_connect_host":"127.0.0.1","raw_port":12434,"namespace_active_interface_count":1,"loopback_interface_up":true,"namespace_non_local_route_count":0,"raw_listener_count":1,"host_listener_count":0,"non_loopback_listener_count":0,"management_listener_count":0}},
               "containers":{{"runner_count":1,"guard_count":1,"runner_and_guard_share_namespace":true,"guard_uid":991,"guard_executable_sha256":"{guard}","guard_cgroup_sha256":"{cgroup}","kernel_socket_owner_uid":991,"kernel_socket_group_gid":1000,"kernel_socket_parent_mode":456,"kernel_socket_mode":432,"kernel_socket_peer_authentication":true,"host_route_count":0,"bridge_route_count":0,"foreign_reachable_peer_count":0,"workspace_mount_count":0,"credential_mount_count":0,"host_root_mount_count":0,"docker_socket_mount_count":0,"private_runtime_tmpfs":true,"model_content_store_writable":false}},
@@ -421,6 +423,8 @@ mod tests {
             namespace = "04".repeat(32),
             guard = "05".repeat(32),
             cgroup = "06".repeat(32),
+            runtime_executable = "08".repeat(32),
+            runtime_cgroup = "09".repeat(32),
             runner = hex(&DOCKER_MODEL_RUNNER_IMAGE_DIGEST),
             model = hex(&DOCKER_MODEL_ARTIFACT_DIGEST),
         )
@@ -452,7 +456,7 @@ mod tests {
                 .replace("\"replayed\":false", "\"replayed\":true")
                 .into_bytes(),
             exact_json()
-                .replace("\"protocol_version\":1", "\"protocol_version\":2")
+                .replace("\"protocol_version\":2", "\"protocol_version\":3")
                 .into_bytes(),
             exact_json()
                 .replace("\n            }", ",\"unknown\":true\n            }")

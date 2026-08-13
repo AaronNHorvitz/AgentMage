@@ -212,11 +212,17 @@ fn observe_live_topology(
     let namespace_identity = parse_sha256(&request.baseline.private_namespace_sha256)?;
     let guard_executable = parse_sha256(&request.baseline.guard_executable_sha256)?;
     let guard_cgroup = parse_sha256(&request.baseline.guard_cgroup_sha256)?;
+    let runtime_executable = parse_sha256(&request.baseline.runtime_executable_sha256)?;
+    let runtime_cgroup = parse_sha256(&request.baseline.runtime_cgroup_sha256)?;
 
     if daemon.daemon().executable_sha256 != daemon_executable
         || daemon.socket().identity_sha256 != daemon_socket_identity
-        || runtime.uid != request.baseline.runtime_uid
-        || runtime.gid != request.baseline.runtime_gid
+        || !runtime_matches_baseline(
+            &runtime,
+            &request.baseline,
+            runtime_executable,
+            runtime_cgroup,
+        )
         || guard.uid != request.baseline.guard_uid
         || guard.gid != request.baseline.runtime_gid
         || guard.executable_sha256 != guard_executable
@@ -267,6 +273,18 @@ fn observe_live_topology(
         observation,
         admission,
     })
+}
+
+fn runtime_matches_baseline(
+    runtime: &crate::docker_linux_observer::ProcessObservation,
+    baseline: &BaselineInput,
+    executable_sha256: [u8; 32],
+    cgroup_sha256: [u8; 32],
+) -> bool {
+    runtime.uid == baseline.runtime_uid
+        && runtime.gid == baseline.runtime_gid
+        && runtime.executable_sha256 == executable_sha256
+        && runtime.cgroup_sha256 == cgroup_sha256
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -654,7 +672,7 @@ mod tests {
 
     fn request(now: u64) -> DockerLiveCollectorRequest {
         DockerLiveCollectorRequest {
-            protocol_version: 1,
+            protocol_version: DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION,
             preflight_contract_version: DOCKER_PREFLIGHT_CONTRACT_VERSION,
             source_revision: "a".repeat(40),
             os_release_sha256: "01".repeat(32),
@@ -672,6 +690,8 @@ mod tests {
                 docker_socket_gid: 971,
                 runtime_uid: 1000,
                 runtime_gid: 1000,
+                runtime_executable_sha256: "0b".repeat(32),
+                runtime_cgroup_sha256: "0c".repeat(32),
                 guard_uid: 991,
                 private_namespace_sha256: "07".repeat(32),
                 guard_executable_sha256: "08".repeat(32),
@@ -921,6 +941,34 @@ mod tests {
                 .code(),
             "docker-preflight.image.identity"
         );
+
+        let mut runtime_substitution = DerivedFixture::exact();
+        runtime_substitution
+            .request
+            .baseline
+            .runtime_executable_sha256 = "0d".repeat(32);
+        assert!(!runtime_matches_baseline(
+            &runtime_substitution.runner,
+            &runtime_substitution.request.baseline,
+            parse_sha256(
+                &runtime_substitution
+                    .request
+                    .baseline
+                    .runtime_executable_sha256,
+            )
+            .expect("mutated runtime executable digest"),
+            [12; 32],
+        ));
+
+        let mut cgroup_substitution = DerivedFixture::exact();
+        cgroup_substitution.request.baseline.runtime_cgroup_sha256 = "0d".repeat(32);
+        assert!(!runtime_matches_baseline(
+            &cgroup_substitution.runner,
+            &cgroup_substitution.request.baseline,
+            [11; 32],
+            parse_sha256(&cgroup_substitution.request.baseline.runtime_cgroup_sha256)
+                .expect("mutated runtime cgroup digest"),
+        ));
 
         let mut proxy = DerivedFixture::exact();
         proxy

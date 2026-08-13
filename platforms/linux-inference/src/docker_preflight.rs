@@ -20,7 +20,7 @@ const OUTPUT_BYTES: u32 = 16 * 1024 * 1024;
 pub const DOCKER_PREFLIGHT_CONTRACT_VERSION: u16 = 3;
 
 /// Version of the complete trusted collector observation protocol.
-pub const DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION: u16 = 1;
+pub const DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION: u16 = 2;
 
 /// Stable content-free reason that Docker mode was refused before activation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -778,7 +778,7 @@ mod tests {
         let baseline = baseline();
         for mutate in [
             |value: &mut DockerTopologyObservation| value.collector_executable_sha256 = [8; 32],
-            |value: &mut DockerTopologyObservation| value.collector_protocol_version = 2,
+            |value: &mut DockerTopologyObservation| value.collector_protocol_version = 3,
             |value: &mut DockerTopologyObservation| value.collector_uid = 1000,
             |value: &mut DockerTopologyObservation| value.session_identity_sha256 = [0; 32],
             |value: &mut DockerTopologyObservation| value.complete = false,

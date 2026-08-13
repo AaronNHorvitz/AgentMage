@@ -87,8 +87,8 @@ EXPECTED_COLLECTOR_DESCRIPTOR: Final = {
     "docker_mutation": False,
     "enabled": False,
     "network_egress": False,
-    "preflight_contract_version": 2,
-    "protocol_version": 1,
+    "preflight_contract_version": 3,
+    "protocol_version": 2,
 }
 MUTATION_COVERAGE: Final = {
     "guard": [

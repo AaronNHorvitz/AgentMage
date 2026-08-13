@@ -83,6 +83,7 @@
     "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
     "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
     "docs/decisions/0034-pin-observed-model-runner-ipv6-wildcard.md",
+    "docs/decisions/0035-bind-docker-runtime-peer-identity.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",

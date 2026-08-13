@@ -5,7 +5,7 @@ use std::process::{Command, Stdio};
 use agentmage_platform_linux_inference::BOUNDARY_DESCRIPTION;
 
 const DOCKER_GUARD_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"serve-one-session\",\"self-check\"],\"authority\":\"guarded-inference-transport-only\",\"component_id\":\"agentmage-docker-guard\",\"docker_control\":false,\"enabled\":false,\"network_egress\":false,\"protocol_version\":1,\"raw_target\":\"private-namespace-loopback-only\",\"sessions\":1}\n";
-const DOCKER_COLLECTOR_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"observe\",\"self-check\",\"validate-observation-stdin\"],\"authority\":\"docker-topology-observation-only\",\"component_id\":\"agentmage-docker-topology-collector\",\"docker_mutation\":false,\"enabled\":false,\"network_egress\":false,\"preflight_contract_version\":2,\"protocol_version\":1}\n";
+const DOCKER_COLLECTOR_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"observe\",\"self-check\",\"validate-observation-stdin\"],\"authority\":\"docker-topology-observation-only\",\"component_id\":\"agentmage-docker-topology-collector\",\"docker_mutation\":false,\"enabled\":false,\"network_egress\":false,\"preflight_contract_version\":3,\"protocol_version\":2}\n";
 
 #[test]
 fn packaged_process_self_check_is_exact_and_inactive() {
