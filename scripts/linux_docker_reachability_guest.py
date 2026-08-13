@@ -133,11 +133,26 @@ def start_peer(secret: bytes) -> tuple[int, dict[str, Any]]:
         ]
     )
     topology.wait_for(lambda: (PEER_ROOT / "ready").is_file(), "guard peer readiness")
-    pid = topology.unit_pid(topology.RUNTIME_UNIT)
-    topology.wait_for(
-        lambda: topology.process_record(pid)["uid"] == topology.RUNTIME_UID,
-        "guard peer final identity",
-    )
+    pid = 0
+
+    def peer_ready() -> bool:
+        nonlocal pid
+        try:
+            candidate = topology.unit_pid(topology.RUNTIME_UNIT)
+            record = topology.process_record(candidate)
+            executable = os.readlink(f"/proc/{candidate}/exe")
+        except (OSError, ValueError, topology.GuestEvidenceError):
+            return False
+        if (
+            record["uid"] != topology.RUNTIME_UID
+            or record["gid"] != topology.RUNTIME_GID
+            or executable != os.path.realpath("/usr/bin/python3")
+        ):
+            return False
+        pid = candidate
+        return True
+
+    topology.wait_for(peer_ready, "guard peer final identity")
     return pid, topology.process_record(pid) | {"pid": pid}
 
 
