@@ -710,6 +710,7 @@ def package_versions(vm: VmHandle) -> list[dict[str, str]]:
         vm,
         "set -eu\n"
         f"dpkg-query -W -f='${{binary:Package}}\\t${{Version}}\\n' {names}\n",
+        stage="bootstrap-package-versions",
     )
     observed: dict[str, str] = {}
     for line in output.splitlines():
@@ -998,6 +999,7 @@ def guest_test(
         "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10001/bus\n"
         f"{command}\n",
         timeout=360,
+        stage=f"test-{filter_name}",
     )
     return parse_test_output(output, expected), output
 
@@ -1025,6 +1027,7 @@ def guest_identity(vm: VmHandle) -> dict[str, Any]:
         "  'gid': os.getgid(),\n"
         "}, sort_keys=True))\n"
         "PY\n",
+        stage="guest-platform-identity",
     )
     try:
         value = json.loads(output)
@@ -1085,6 +1088,7 @@ def guest_tools(vm: VmHandle) -> list[dict[str, Any]]:
         "    })\n"
         "print(json.dumps(records, sort_keys=True))\n"
         "PY\n",
+        stage="guest-trusted-tool-identities",
     )
     try:
         records = json.loads(output)
@@ -1121,6 +1125,7 @@ def initialize_synthetic_keyring(vm: VmHandle) -> None:
         "unlink /tmp/agentmage-keyring-env /tmp/agentmage-keyring-start\n"
         "busctl --user --no-pager status org.freedesktop.secrets >/dev/null\n",
         timeout=60,
+        stage="synthetic-keyring-initialization",
     )
 
 
@@ -1139,6 +1144,7 @@ def cleanup_synthetic_keyring(vm: VmHandle) -> dict[str, bool]:
         "fi\n"
         "test -z \"$(find \"$HOME/.local/share/keyrings\" -mindepth 1 -print -quit)\"\n"
         "printf 'agentmage_items_absent=true\\nkeyring_files_absent=true\\n'\n",
+        stage="synthetic-keyring-cleanup",
     )
     return {
         "agentmage_items_absent": "agentmage_items_absent=true" in output,
@@ -1158,6 +1164,7 @@ def external_network_denied(vm: VmHandle) -> bool:
         "print('denied' if result != 0 else 'connected')\n"
         "PY\n",
         timeout=15,
+        stage="external-network-denial",
     ).strip()
     return output == "denied"
 
@@ -1192,14 +1199,30 @@ def run_native_acceptance(
             wait_for_ssh(vm)
             ssh_script(
                 vm,
-                "set -eu\n"
-                "cloud-init status --wait >/dev/null\n"
-                "test -f /var/lib/agentmage-cloud-init-complete\n"
-                "test \"$(wc -l < \"$HOME/.ssh/authorized_keys\")\" = 1\n"
-                f"test \"$(id -u)\" = {TEST_UID}\n"
-                f"test \"$(id -g)\" = {TEST_GID}\n"
-                "systemctl --user is-system-running --wait >/dev/null\n",
+                "cloud-init status --wait >/dev/null\n",
                 timeout=300,
+                stage="acceptance-cloud-init",
+            )
+            ssh_script(
+                vm,
+                "test -f /var/lib/agentmage-cloud-init-complete\n",
+                stage="acceptance-completion-marker",
+            )
+            ssh_script(
+                vm,
+                "test \"$(wc -l < \"$HOME/.ssh/authorized_keys\")\" = 1\n",
+                stage="acceptance-ephemeral-authorization",
+            )
+            ssh_script(
+                vm,
+                f"test \"$(id -u)\" = {TEST_UID}\n"
+                f"test \"$(id -g)\" = {TEST_GID}\n",
+                stage="acceptance-user-identity",
+            )
+            ssh_script(
+                vm,
+                "systemctl --user is-system-running --wait >/dev/null\n",
+                stage="acceptance-user-manager",
             )
             identity = guest_identity(vm)
             if not external_network_denied(vm):
@@ -1211,6 +1234,7 @@ def run_native_acceptance(
                 vm,
                 "chmod 0500 /home/agentmage/acceptance/platform-tests "
                 "/home/agentmage/acceptance/kernel-engine-tests\n",
+                stage="acceptance-test-binary-mode",
             )
             initialize_synthetic_keyring(vm)
             sandbox_tests, sandbox_output = guest_test(
@@ -1268,6 +1292,7 @@ def run_native_acceptance(
                 "-name 'agentmage*' -print -quit 2>/dev/null)\"\n"
                 "unlink /home/agentmage/acceptance/platform-tests\n"
                 "unlink /home/agentmage/acceptance/kernel-engine-tests\n",
+                stage="acceptance-runtime-residue-cleanup",
             )
             result = {
                 "build": {
