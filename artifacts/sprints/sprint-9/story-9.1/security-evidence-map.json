@@ -1,0 +1,404 @@
+{
+  "artifacts": [
+    {
+      "bytes": 134858,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "a9e7dd8855db2e625f00371ef6834caaf293fad434ba6ec2b3837f9c24d0bdee"
+    },
+    {
+      "bytes": 4256,
+      "path": "architecture/clean-build-policy.json",
+      "sha256": "8852a4fe4527cf327eabe3695d273d34fb64da1be8b066e944d333b5d090a466"
+    },
+    {
+      "bytes": 6766,
+      "path": "docs/architecture/linux-platform-lifecycle.md",
+      "sha256": "43990c7ad0baa8a9bdd307d286f671459cb3a7e21b5d53a59d4baa6d1d5fbbac"
+    },
+    {
+      "bytes": 7951,
+      "path": "docs/architecture/linux-worker-isolation.md",
+      "sha256": "18cbcfafb56be752a7d3cd03101d776b4ae8f9ff0e1bf59e6cd895351809584a"
+    },
+    {
+      "bytes": 7346,
+      "path": "docs/architecture/platform-adapter-contract.md",
+      "sha256": "3abf23ba5a92fdcc563f704b8984d3175cb799a78a59302747d7c2ab6fd49e8b"
+    },
+    {
+      "bytes": 3110,
+      "path": "docs/support/linux-clean-image-acceptance.md",
+      "sha256": "69e39960b521b4f45750ac0ef7c96b8d80cb9a8d7edaa42c4edd15a467f6e597"
+    },
+    {
+      "bytes": 4373,
+      "path": "docs/support/linux-native-ubuntu-control-evidence.md",
+      "sha256": "905c4b8c5729b824c2f5b92b125e9a469fcb83e5108f035a05102498f1250744"
+    },
+    {
+      "bytes": 24626,
+      "path": "kernel/engine/src/platform_startup.rs",
+      "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
+    },
+    {
+      "bytes": 37082,
+      "path": "platforms/linux/src/ipc.rs",
+      "sha256": "b74c2d424365aa0faa267cc042214a86e99c97c99be854ac3daed4deabc89c21"
+    },
+    {
+      "bytes": 29243,
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
+    },
+    {
+      "bytes": 59796,
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "cc5e64975df7369a763349e43aadd9212a37c799f115c167e3b72d4195ab772f"
+    },
+    {
+      "bytes": 12352,
+      "path": "platforms/linux/src/security_controls.rs",
+      "sha256": "f354c6d689e7e48d2628d6c1183daa7be553e6f52c941f93a5f84173d23977e8"
+    },
+    {
+      "bytes": 40155,
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "52915f5c42d0fe9b07a3da56d3e5a87b11cf1b6f437e159be7aa2e8ebc35e120"
+    },
+    {
+      "bytes": 397017,
+      "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+      "sha256": "edf15b283de55469fbbebcb6323c4d47eee16a12d5db31cc0ed0104e90bf1083"
+    },
+    {
+      "bytes": 2310,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627"
+    },
+    {
+      "bytes": 3096,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521"
+    },
+    {
+      "bytes": 2891,
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "sha256": "f922d89ae24715a19096b43b206e323646e90edb93b54c405d1477b4ce0ce583"
+    },
+    {
+      "bytes": 43147,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+      "sha256": "90244d25691fd988d59e3c193bd2eb2b2235eca6271122a18a4e6b84a3e824fb"
+    },
+    {
+      "bytes": 10841,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+      "sha256": "884a535af0050bd48be6a454f1be3f79411484e9933a376b3712af4c615ead92"
+    },
+    {
+      "bytes": 9821,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
+      "sha256": "c28d48d006034be679431e85dc001906f9a054daea69def522d3fe5529bede9e"
+    },
+    {
+      "bytes": 8980,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
+      "sha256": "fc01f8fa659114e5b291aca1067276c7a655501a542ba153391481d03fabac8f"
+    },
+    {
+      "bytes": 38958,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
+      "sha256": "119b33cbfba26a6d1b5352e3ac1acc7f8e6593a332a0ab6ed49010283824613e"
+    },
+    {
+      "bytes": 15682,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+      "sha256": "f553de617303a74e88b5c698cd2631a60fccc13f00570e7bb21896861ee8bce5"
+    },
+    {
+      "bytes": 8161,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
+      "sha256": "35df8975cea9d450ac0303e06097644cdf135a84adc3f6dbb2e9992da9150ab2"
+    },
+    {
+      "bytes": 47139,
+      "path": "scripts/linux_clean_image_acceptance.py",
+      "sha256": "c990ad4d912f7bcd6aef3b9f21b260ad0ff41a8c6e485038db7291199316fca4"
+    },
+    {
+      "bytes": 66293,
+      "path": "scripts/linux_native_ubuntu_control_evidence.py",
+      "sha256": "35f81938fe4557c38ff7c7afac362208b10656ee8cae1481dd82a7ec191ce5a3"
+    },
+    {
+      "bytes": 31555,
+      "path": "scripts/linux_platform_parity_evidence.py",
+      "sha256": "1cb8a551db0eeb9465e625c470d298a3c1f0d98a8048c68bdbd29ce7e1c42c16"
+    },
+    {
+      "bytes": 21700,
+      "path": "scripts/linux_sandbox_evidence.py",
+      "sha256": "481844f8e35e2081cd7564bb5830c8756e447ac5ed09c08b43fcd1dade3f6c8e"
+    },
+    {
+      "bytes": 25362,
+      "path": "scripts/story_9_1_security_evidence.py",
+      "sha256": "f71ab8460b43def29a4702097101a5ab6c31040ffaed476e2f34f5cb608c3ca9"
+    },
+    {
+      "bytes": 9464,
+      "path": "tests/test_linux_clean_image_acceptance.py",
+      "sha256": "7128a7df1d9daf407f2ee446a2fa70c77c1414f4126445842c0cb4a72e0c001d"
+    },
+    {
+      "bytes": 12085,
+      "path": "tests/test_linux_native_ubuntu_control_evidence.py",
+      "sha256": "517a3b2013c1aace843381809d3f5684e33a1e178346569f6a68f8f339a32da3"
+    },
+    {
+      "bytes": 6169,
+      "path": "tests/test_linux_platform_parity_evidence.py",
+      "sha256": "ac0bbcca1169767f33eb6339c404916eb65e211bf048be573ef29add3f53d4ae"
+    },
+    {
+      "bytes": 8068,
+      "path": "tests/test_linux_sandbox_evidence.py",
+      "sha256": "263026726a2b4c743e2315288723082cae3584ff8a409c4ed460e326be23a46d"
+    },
+    {
+      "bytes": 6268,
+      "path": "tests/test_story_9_1_security_evidence.py",
+      "sha256": "12edff8f8e033f12b0d669c47df0f2916b4979bb88fee5834400492da0a654f3"
+    }
+  ],
+  "external_independent_review_status": "required-not-performed",
+  "gate_blocker": "G-DOD-12 independent critical-boundary review",
+  "input_evidence": [
+    {
+      "artifact_id": "linux-clean-package-lifecycle",
+      "evidence_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
+      "id": "package-lifecycle",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+      "sha256": "90244d25691fd988d59e3c193bd2eb2b2235eca6271122a18a4e6b84a3e824fb",
+      "status": "pass-linux-clean-package-lifecycle"
+    },
+    {
+      "artifact_id": "linux-ipc-sandbox-control-verification",
+      "evidence_revision": "9a807bbdb30be9151657fee62a1136ea021041c3",
+      "id": "fedora-controls",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+      "sha256": "884a535af0050bd48be6a454f1be3f79411484e9933a376b3712af4c615ead92",
+      "status": "pass-fedora-only"
+    },
+    {
+      "artifact_id": "linux-cross-distribution-sandbox-attacks",
+      "evidence_revision": "29d15d1934683b3356a1b6b3640912c94118a4af",
+      "id": "sandbox-attacks",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
+      "sha256": "c28d48d006034be679431e85dc001906f9a054daea69def522d3fe5529bede9e",
+      "status": "pass-bounded-cross-distribution"
+    },
+    {
+      "artifact_id": "linux-native-inference-package-boundary",
+      "evidence_revision": "af03bf4636902d41921f4a1b1369a55e9d79a17e",
+      "id": "inactive-inference",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
+      "sha256": "fc01f8fa659114e5b291aca1067276c7a655501a542ba153391481d03fabac8f",
+      "status": "pass-fedora-package-boundary"
+    },
+    {
+      "artifact_id": "linux-clean-image-graphical-acceptance",
+      "evidence_revision": "2ceaa93913de99495ea464abe91670cba18caf24",
+      "id": "clean-image-acceptance",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
+      "sha256": "119b33cbfba26a6d1b5352e3ac1acc7f8e6593a332a0ab6ed49010283824613e",
+      "status": "pass-clean-fedora-ubuntu-images"
+    },
+    {
+      "artifact_id": "linux-native-ubuntu-control-verification",
+      "evidence_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+      "id": "native-ubuntu-controls",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+      "sha256": "f553de617303a74e88b5c698cd2631a60fccc13f00570e7bb21896861ee8bce5",
+      "status": "pass-native-ubuntu-kernel-controls"
+    },
+    {
+      "artifact_id": "linux-fedora-ubuntu-adapter-parity",
+      "evidence_revision": "b07cf090853913227e4bc6888d766d92144e36b1",
+      "id": "linux-parity",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
+      "sha256": "35df8975cea9d450ac0303e06097644cdf135a84adc3f6dbb2e9992da9150ab2",
+      "status": "pass-declared-fedora-ubuntu-parity"
+    },
+    {
+      "artifact_id": "canonicalization-display-link-path-corpus",
+      "evidence_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
+      "id": "path-corpus",
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627",
+      "status": "pass-shared-fedora-parser-scope"
+    },
+    {
+      "artifact_id": "linux-file-identity-race-harness",
+      "evidence_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
+      "id": "path-race",
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521",
+      "status": "pass-fedora-unprivileged-scope"
+    },
+    {
+      "artifact_id": "shared-logical-path-platform-conformance",
+      "evidence_revision": "8a2a0430e39bbfb4657c260210ecdca518c7660c",
+      "id": "path-conformance",
+      "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+      "sha256": "f922d89ae24715a19096b43b206e323646e90edb93b54c405d1477b4ce0ce583",
+      "status": "pass-all-available-non-macos-platforms"
+    }
+  ],
+  "macos_evidence_substituted": false,
+  "network_used_while_mapping": false,
+  "physical_host_certification_claim": "none",
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "Candidate RPM and DEB installation uses package-administrator authority only for package-manager steps; host, inactive inference adapter, Visual Studio Code, provider exercise, and residue inspection run as UID/GID 10001 on clean Fedora and Ubuntu images.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Three independent first-GA installs per supported platform, signed release packages, macOS, Windows, and integrated runtime workflows remain later release gates.",
+      "requirement_id": "SR-PLT-001",
+      "story_contribution": "demonstrated-linux-standard-user-runtime"
+    },
+    {
+      "demonstrated": "Eight exact IPC tests pass on Fedora and under the Ubuntu kernel for owner-only Unix sockets, peer credentials, executable identity, protocol bounds, fresh challenge/HMAC authentication, one-time consumption, replay denial, and malformed peers.",
+      "evidence": [
+        "platforms/linux/src/ipc.rs",
+        "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "macOS code-signing/App-Group IPC and Windows named-pipe identity evidence remain platform-specific later work; Sprint 25 must rerun integrated release IPC.",
+      "requirement_id": "SR-PLT-006",
+      "story_contribution": "demonstrated-linux-ipc-boundary"
+    },
+    {
+      "demonstrated": "The packaged Linux inference process is separate, authority-empty, network-listener-free, and limited to an exact inactive self-check; package tests show zero bundled models and zero inference.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Enabled native llama.cpp and optional Docker runtime topology, prompt/response transport, model data, resource controls, and hostile-runtime access tests remain in Stories 9.2 and Sprint 13.",
+      "requirement_id": "SR-PLT-007",
+      "story_contribution": "partial-inactive-inference-boundary"
+    },
+    {
+      "demonstrated": "Fedora 44 and Ubuntu 26.04 x86-64 candidate evidence binds source revisions, immutable container or official cloud-image digests, toolchains, packages, trusted executables, QEMU, kernel/OS identity, and component hashes.",
+      "evidence": [
+        "architecture/clean-build-policy.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Actual signed release identities, complete runtime/model artifacts, native physical-host samples, macOS, Windows, and every later adapter tuple remain open.",
+      "requirement_id": "SR-PLT-010",
+      "story_contribution": "partial-linux-candidate-platform-freeze"
+    },
+    {
+      "demonstrated": "Fedora native-host, Ubuntu native-kernel KVM, bounded Ubuntu userspace-container, and clean-image graphical evidence remain separately labeled and hash-bound; the parity report consumes rather than substitutes them.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Every later package, runtime, model, hardware, Windows, and macOS result must preserve the same non-substitution rule.",
+      "requirement_id": "SR-PLT-012",
+      "story_contribution": "demonstrated-linux-evidence-separation"
+    },
+    {
+      "demonstrated": "Fedora and Ubuntu workers enforce bounded output, runtime termination, TasksMax, CPUQuota, MemoryMax, MemorySwapMax=0, private scratch, cgroup v2, no-new-privileges, and seccomp mode 2.",
+      "evidence": [
+        "platforms/linux/src/sandbox.rs",
+        "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Enabled model GPU/CPU, disk, context, concurrency, integrated cancellation/audit, and whole-product responsiveness thresholds remain in later runtime and integrated verification sprints.",
+      "requirement_id": "SR-TST-006",
+      "story_contribution": "partial-linux-worker-resource-governance"
+    },
+    {
+      "demonstrated": "Pinned clean Fedora and Ubuntu images complete candidate install, launch, graphical provider exercise, corrupt-upgrade refusal, upgrade, rollback, recovery, uninstall, and residue scans through published procedures.",
+      "evidence": [
+        "docs/support/linux-clean-image-acceptance.md",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The protocol requires three independent first-GA runs per supported platform and signed integrated release packages; physical-host, macOS, and Windows lanes remain open.",
+      "requirement_id": "SR-TST-007",
+      "story_contribution": "partial-single-run-candidate-lifecycle"
+    },
+    {
+      "demonstrated": "Required Linux controls remain active under Fedora and Ubuntu execution, and every unavailable or invalid mandatory control maps to startup refusal without an insecure fallback.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "A selected endpoint-hardening baseline, before/after assessment, managed-like host evidence, and all supported-platform compatibility runs have not been performed.",
+      "requirement_id": "SR-TST-008",
+      "story_contribution": "partial-control-preservation-no-endpoint-baseline"
+    },
+    {
+      "demonstrated": "Committed evidence independently validates candidate source revision, build inputs, package payload hashes, four-file component manifests, mutation refusal, clean lifecycle results, and cross-artifact parity.",
+      "evidence": [
+        "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
+        "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Offline verification of signed GA packages, signatures, timestamps/notarization where applicable, release SBOM/provenance, and final component closure remains Sprint 25 work.",
+      "requirement_id": "SR-TST-009",
+      "story_contribution": "partial-candidate-integrity-no-release-signatures"
+    }
+  ],
+  "reviewer_protocols": [
+    {
+      "protocol_id": "RV-02",
+      "status": "partial-one-clean-candidate-run-per-linux-image"
+    },
+    {
+      "protocol_id": "RV-03",
+      "status": "partial-linux-worker-boundary"
+    },
+    {
+      "protocol_id": "RV-04",
+      "status": "partial-fedora-native-ubuntu-policy"
+    },
+    {
+      "protocol_id": "RV-05",
+      "status": "pass-linux-native-kernel-scope"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "7d006ca776416809d1093ac9198e49efbc482937",
+  "status": "pass-linux-security-mapping-review-open",
+  "story_id": "9.1",
+  "summary": {
+    "declared_linux_parity_dimensions": 10,
+    "demonstrated_linux_scope_count": 3,
+    "mapped_requirement_count": 9,
+    "partial_scope_count": 6,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 34,
+    "story_gate_complete": false,
+    "technical_tasks_complete": true
+  },
+  "task_id": "9.1.3.5"
+}
