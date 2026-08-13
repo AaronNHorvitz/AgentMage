@@ -1,0 +1,212 @@
+{
+  "artifact_id": "linux-docker-hostile-reachability",
+  "inference_performed": false,
+  "release_support": false,
+  "schema_version": 1,
+  "source_revision": "37cce172a7e7778b2981ac59b48d11d004c10ae6",
+  "sources": [
+    {
+      "bytes": 2196,
+      "path": "docs/decisions/0038-bind-cross-uid-guard-peer-through-challenge.md",
+      "sha256": "f03c45e869ff76ac4f1dee823dd96c09bc0bce013d839f28473432fde0f4c7c5"
+    },
+    {
+      "bytes": 1279,
+      "path": "docs/support/linux-docker-reachability-evidence.md",
+      "sha256": "957473a7478295b12075e450117fd5eeb4757ff8b3c90a60d88142c180b2e723"
+    },
+    {
+      "bytes": 21429,
+      "path": "package.json",
+      "sha256": "200fd3309144249eec59149f9002998cda82d97bb949f56856aefadc240a7a73"
+    },
+    {
+      "bytes": 28669,
+      "path": "platforms/linux-inference/src/docker_guard_service.rs",
+      "sha256": "a485a12aaab737d946e8f8dafa415f6901248eabd08dc6a2d1dc193fc39c4c37"
+    },
+    {
+      "bytes": 3317,
+      "path": "scripts/linux_docker_guard_peer.py",
+      "sha256": "334e67e688432effc03356f379792b9ad37beb6c886567f1cd49e685f434fe8e"
+    },
+    {
+      "bytes": 26192,
+      "path": "scripts/linux_docker_kvm_guest.py",
+      "sha256": "ce38d1accb5725a745a08f62e46f9c95d7aa3f76b516762335f6d6815930dd1c"
+    },
+    {
+      "bytes": 9501,
+      "path": "scripts/linux_docker_reachability_evidence.py",
+      "sha256": "f288903a78233bb5c3e3369848f6bbaa94e2e6da343b664679d8337cad233c92"
+    },
+    {
+      "bytes": 10238,
+      "path": "scripts/linux_docker_reachability_guest.py",
+      "sha256": "0a6ae917a7e25c6b4b062555cea4e2c00520724790059013fea2f42742670c41"
+    },
+    {
+      "bytes": 1051,
+      "path": "tests/test_linux_docker_reachability_evidence.py",
+      "sha256": "dc60a430eb5191e7def584aed28e1ed52e6d0252ae852e9d015b8d613da75d84"
+    }
+  ],
+  "status": "pass-hostile-denial-authenticated-guard-control-no-inference",
+  "targets": [
+    {
+      "host_cleanup": {
+        "loopback_ssh_listener_absent": true,
+        "overlay_absent": true,
+        "qemu_process_absent": true
+      },
+      "observation": {
+        "cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "peer_material_absent": true,
+          "runner_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "daemon_configuration": {
+          "listener": "direct-unix-socket",
+          "service_unit_sha256": "7fdeceb0c4a438e82ae70c7b7e8a9478137034f88021cfd0704c016b0fa88bf5",
+          "socket_activation_active": false
+        },
+        "distribution": "fedora",
+        "inference_performed": false,
+        "positive_control": {
+          "challenge_authenticated": true,
+          "guard_pid": 2690,
+          "inference_request_sent": false,
+          "path": "authenticated-runtime-peer-to-production-guard",
+          "peer_pid": 2684,
+          "raw_endpoint_forwarded": false,
+          "terminal_guard_status": "docker-guard.service.request-policy"
+        },
+        "probes": [
+          {
+            "position": "host",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "same-user",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "vscode-extension",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "tool-worker",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "separate-namespace",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "lan",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "ordinary-container",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          }
+        ],
+        "raw_endpoint": "private-namespace-only",
+        "runner_container_id": "04c498bc3a37f7bb92231df9a6cf3270a804bb0ebb604842727d2125c0c5d338",
+        "source_revision": "37cce172a7e7778b2981ac59b48d11d004c10ae6"
+      },
+      "package_sha256": "ca8ea2e799659b4c07eb893f3eeadfff74a75e4ff7cfb1cb86fdbe2c06a62bb3",
+      "prepared_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "host_cleanup": {
+        "loopback_ssh_listener_absent": true,
+        "overlay_absent": true,
+        "qemu_process_absent": true
+      },
+      "observation": {
+        "cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "peer_material_absent": true,
+          "runner_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "daemon_configuration": {
+          "listener": "direct-unix-socket",
+          "service_unit_sha256": "8ac3a672c9496a0f644c462b6e8f797133ecb9831a2272248148bf8250a853cf",
+          "socket_activation_active": false
+        },
+        "distribution": "ubuntu",
+        "inference_performed": false,
+        "positive_control": {
+          "challenge_authenticated": true,
+          "guard_pid": 3858,
+          "inference_request_sent": false,
+          "path": "authenticated-runtime-peer-to-production-guard",
+          "peer_pid": 3848,
+          "raw_endpoint_forwarded": false,
+          "terminal_guard_status": "docker-guard.service.request-policy"
+        },
+        "probes": [
+          {
+            "position": "host",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "same-user",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "vscode-extension",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "tool-worker",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "separate-namespace",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "lan",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          },
+          {
+            "position": "ordinary-container",
+            "raw_tcp_connected": false,
+            "status": "denied"
+          }
+        ],
+        "raw_endpoint": "private-namespace-only",
+        "runner_container_id": "ded75297f504bf0ac3182ca7d2db9a55807a901615c8b42cab74b1ecbc28e9d1",
+        "source_revision": "37cce172a7e7778b2981ac59b48d11d004c10ae6"
+      },
+      "package_sha256": "a37d392118b9d7e2b3cc845dedc1b5c426ac6a2e6a0190ecaacdca5552427112",
+      "prepared_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_ids": [
+    "9.2.2.2"
+  ]
+}
