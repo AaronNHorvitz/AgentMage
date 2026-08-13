@@ -168,6 +168,7 @@ pub(crate) struct DockerHostConfig {
     pub(crate) nano_cpus: u64,
     pub(crate) pids_limit: Option<i64>,
     pub(crate) port_bindings: Option<serde_json::Value>,
+    pub(crate) tmpfs: Option<std::collections::BTreeMap<String, String>>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
@@ -389,7 +390,7 @@ mod tests {
         let fixture = r#"{
           "Id":"a","Image":"sha256:b","State":{"Running":true,"Pid":42},
           "Config":{"Image":"sha256:c","User":"modelrunner","Env":[],"Labels":{}},
-          "HostConfig":{"NetworkMode":"none","Privileged":false,"ReadonlyRootfs":true,"CapAdd":null,"SecurityOpt":["no-new-privileges"],"Memory":1,"MemorySwap":1,"NanoCpus":1,"PidsLimit":1,"PortBindings":null},
+          "HostConfig":{"NetworkMode":"none","Privileged":false,"ReadonlyRootfs":true,"CapAdd":null,"SecurityOpt":["no-new-privileges"],"Memory":1,"MemorySwap":1,"NanoCpus":1,"PidsLimit":1,"PortBindings":null,"Tmpfs":{"/run":"rw,nosuid,nodev,noexec,size=64m"}},
           "Mounts":[]
         }"#;
         assert!(serde_json::from_str::<DockerContainerInspect>(fixture).is_ok());

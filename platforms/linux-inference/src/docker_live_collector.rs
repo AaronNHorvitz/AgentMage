@@ -318,7 +318,7 @@ fn build_observation(
         .labels
         .get("io.agentmage.image-repull")
         .is_none_or(|value| value != "false");
-    let mount_state = classify_mounts(&container.mounts);
+    let mount_state = classify_mounts(&container.mounts, container.host_config.tmpfs.as_ref());
     let rootless = security_options
         .iter()
         .any(|value| value.to_ascii_lowercase().contains("rootless"));
@@ -481,14 +481,15 @@ struct MountState {
     forbidden: u8,
 }
 
-fn classify_mounts(mounts: &[DockerMount]) -> MountState {
+fn classify_mounts(
+    mounts: &[DockerMount],
+    tmpfs: Option<&std::collections::BTreeMap<String, String>>,
+) -> MountState {
     let mut state = MountState::default();
     for mount in mounts {
-        if mount.destination == "/run" && mount.kind == "tmpfs" {
-            state.private_runtime_tmpfs = true;
-        } else if mount.destination == "/models" && mount.kind == "volume" {
+        if mount.destination == "/models" && mount.kind == "volume" {
             state.model_content_store_present = true;
-            state.model_content_store_writable = mount.read_write || mount.mode != "ro";
+            state.model_content_store_writable = mount.read_write;
         } else if mount.destination == "/run/docker.sock"
             || mount.source == "/run/docker.sock"
             || mount.source == "/var/run/docker.sock"
@@ -498,7 +499,23 @@ fn classify_mounts(mounts: &[DockerMount]) -> MountState {
             state.forbidden = state.forbidden.saturating_add(1);
         }
     }
+    if let Some(tmpfs) = tmpfs {
+        for (destination, options) in tmpfs {
+            if destination == "/run" && exact_private_runtime_tmpfs(options) {
+                state.private_runtime_tmpfs = true;
+            } else {
+                state.forbidden = state.forbidden.saturating_add(1);
+            }
+        }
+    }
     state
+}
+
+fn exact_private_runtime_tmpfs(options: &str) -> bool {
+    let tokens = options
+        .split(',')
+        .collect::<std::collections::BTreeSet<_>>();
+    tokens == std::collections::BTreeSet::from(["rw", "nosuid", "nodev", "noexec", "size=64m"])
 }
 
 fn verify_model_store(runner_pid: i32) -> Result<(), DockerLiveCollectorError> {
@@ -732,23 +749,18 @@ mod tests {
                         nano_cpus: 32_000_000_000,
                         pids_limit: Some(64),
                         port_bindings: Some(serde_json::json!({})),
+                        tmpfs: Some(std::collections::BTreeMap::from([(
+                            "/run".into(),
+                            "rw,nosuid,nodev,noexec,size=64m".into(),
+                        )])),
                     },
-                    mounts: vec![
-                        DockerMount {
-                            kind: "tmpfs".into(),
-                            source: String::new(),
-                            destination: "/run".into(),
-                            mode: "rw".into(),
-                            read_write: true,
-                        },
-                        DockerMount {
-                            kind: "volume".into(),
-                            source: "docker-managed".into(),
-                            destination: "/models".into(),
-                            mode: "ro".into(),
-                            read_write: false,
-                        },
-                    ],
+                    mounts: vec![DockerMount {
+                        kind: "volume".into(),
+                        source: "docker-managed".into(),
+                        destination: "/models".into(),
+                        mode: "z".into(),
+                        read_write: false,
+                    }],
                 },
                 running: vec![DockerContainerSummary {
                     id: request.runner_container_id.clone(),
@@ -854,24 +866,19 @@ mod tests {
 
     #[test]
     fn mount_classifier_has_only_two_declared_mounts() {
-        let accepted = [
-            DockerMount {
-                kind: "tmpfs".into(),
-                source: String::new(),
-                destination: "/run".into(),
-                mode: "rw".into(),
-                read_write: true,
-            },
-            DockerMount {
-                kind: "volume".into(),
-                source: "docker-managed".into(),
-                destination: "/models".into(),
-                mode: "ro".into(),
-                read_write: false,
-            },
-        ];
+        let accepted = [DockerMount {
+            kind: "volume".into(),
+            source: "docker-managed".into(),
+            destination: "/models".into(),
+            mode: "z".into(),
+            read_write: false,
+        }];
+        let tmpfs = std::collections::BTreeMap::from([(
+            "/run".into(),
+            "rw,nosuid,nodev,noexec,size=64m".into(),
+        )]);
         assert_eq!(
-            classify_mounts(&accepted),
+            classify_mounts(&accepted, Some(&tmpfs)),
             MountState {
                 private_runtime_tmpfs: true,
                 model_content_store_present: true,
@@ -886,7 +893,15 @@ mod tests {
             mode: "rw".into(),
             read_write: true,
         });
-        assert_eq!(classify_mounts(&forbidden).docker_socket, 1);
+        assert_eq!(classify_mounts(&forbidden, Some(&tmpfs)).docker_socket, 1);
+        assert!(!classify_mounts(&accepted, None).private_runtime_tmpfs);
+        let weakened = std::collections::BTreeMap::from([("/run".into(), "rw,size=64m".into())]);
+        assert_eq!(classify_mounts(&accepted, Some(&weakened)).forbidden, 1);
+        let extra = std::collections::BTreeMap::from([
+            ("/run".into(), "rw,nosuid,nodev,noexec,size=64m".into()),
+            ("/tmp".into(), "rw,nosuid,nodev,noexec,size=64m".into()),
+        ]);
+        assert_eq!(classify_mounts(&accepted, Some(&extra)).forbidden, 1);
     }
 
     #[test]
