@@ -270,8 +270,10 @@ def create_guard_user() -> None:
         )
 
 
-def write_bootstrap(runtime: dict[str, Any], path: Path) -> None:
-    secret = os.urandom(32)
+def write_bootstrap(
+    runtime: dict[str, Any], path: Path, secret: bytes | None = None
+) -> bytes:
+    secret = os.urandom(32) if secret is None else secret
     frame = b"".join(
         [
             b"AMDG0001",
@@ -290,9 +292,12 @@ def write_bootstrap(runtime: dict[str, Any], path: Path) -> None:
     path.write_bytes(frame)
     os.chown(path, GUARD_UID, RUNTIME_GID)
     path.chmod(0o400)
+    return secret
 
 
-def start_guard(runner_pid: int, runtime: dict[str, Any]) -> int:
+def start_guard(
+    runner_pid: int, runtime: dict[str, Any], secret: bytes | None = None
+) -> int:
     create_guard_user()
     parent = Path("/run/agentmage-dmr")
     parent.mkdir(mode=0o710)
@@ -303,7 +308,7 @@ def start_guard(runner_pid: int, runtime: dict[str, Any]) -> int:
     os.chown(replay, 0, 0)
     replay.chmod(0o700)
     bootstrap = parent / "bootstrap.bin"
-    write_bootstrap(runtime, bootstrap)
+    write_bootstrap(runtime, bootstrap, secret)
     run(
         [
             "systemd-run",
