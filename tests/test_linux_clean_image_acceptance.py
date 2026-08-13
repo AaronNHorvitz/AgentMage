@@ -25,7 +25,7 @@ class LinuxCleanImageAcceptanceTests(unittest.TestCase):
         )
         self.assertEqual(
             acceptance.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            5,
+            6,
         )
         self.assertFalse(
             acceptance.EXPECTED_INFERENCE_DESCRIPTOR[
@@ -100,14 +100,21 @@ class LinuxCleanImageAcceptanceTests(unittest.TestCase):
                     "Xvfb": 1,
                     "agentmage-host": 0,
                     "agentmage-native-inference": 0,
+                    "agentmage-docke": 0,
                     "at-spi-bus-launcher": 1,
                     "code": 5,
                     "dbus-daemon": 1,
                 },
             },
-            "package_file_count": 8,
+            "package_file_count": 10 if target.package_format == "rpm" else 14,
             "inference_descriptor": copy.deepcopy(
                 acceptance.EXPECTED_INFERENCE_DESCRIPTOR
+            ),
+            "docker_guard_descriptor": copy.deepcopy(
+                acceptance.EXPECTED_DOCKER_GUARD_DESCRIPTOR
+            ),
+            "docker_collector_descriptor": copy.deepcopy(
+                acceptance.EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR
             ),
             "residue": {
                 "active_extension_registration": False,

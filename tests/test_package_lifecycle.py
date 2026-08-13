@@ -24,7 +24,7 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            5,
+            6,
         )
         self.assertFalse(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
@@ -39,7 +39,7 @@ class PackageLifecycleTests(unittest.TestCase):
             "docker_preflight_contract_version",
         ):
             if key == "docker_preflight_contract_version":
-                self.assertEqual(lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key], 1)
+                self.assertEqual(lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key], 2)
             else:
                 self.assertRegex(
                     lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key],
@@ -177,8 +177,8 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(set(lifecycle.INSTALLED_FILES) - set(deb), set())
         self.assertNotIn("/", deb)
-        self.assertEqual(len(rpm), 8)
-        self.assertEqual(len(deb), 12)
+        self.assertEqual(len(rpm), 10)
+        self.assertEqual(len(deb), 14)
 
     def test_expected_lifecycle_is_valid(self) -> None:
         self.assertEqual(lifecycle.validate_container_lifecycle(self.valid_lifecycle()), [])

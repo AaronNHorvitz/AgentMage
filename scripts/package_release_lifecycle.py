@@ -75,8 +75,7 @@ def main() -> int:
             "--release",
             "-p",
             "agentmage-platform-linux-inference",
-            "--bin",
-            "agentmage-native-inference",
+            "--bins",
             "--locked",
         ]
     )

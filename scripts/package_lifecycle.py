@@ -57,6 +57,27 @@ EXPECTED_INFERENCE_DESCRIPTOR: Final = {
     "network_listener": False,
     "process_boundary_version": 6,
 }
+EXPECTED_DOCKER_GUARD_DESCRIPTOR: Final = {
+    "accepted_operations": ["serve-one-session", "self-check"],
+    "authority": "guarded-inference-transport-only",
+    "component_id": "agentmage-docker-guard",
+    "docker_control": False,
+    "enabled": False,
+    "network_egress": False,
+    "protocol_version": 1,
+    "raw_target": "private-namespace-loopback-only",
+    "sessions": 1,
+}
+EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR: Final = {
+    "accepted_operations": ["observe", "self-check", "validate-observation-stdin"],
+    "authority": "docker-topology-observation-only",
+    "component_id": "agentmage-docker-topology-collector",
+    "docker_mutation": False,
+    "enabled": False,
+    "network_egress": False,
+    "preflight_contract_version": 2,
+    "protocol_version": 1,
+}
 INSTALLED_FILES: Final = tuple(f"/{path.as_posix()}" for path in PAYLOAD_FILES) + (
     f"/{MANIFEST_PATH.as_posix()}",
 )
@@ -66,7 +87,7 @@ INSTALLED_DIRECTORIES: Final = (
     "/usr/share/licenses/agentmage",
 )
 EXPECTED_MODES: Final = {
-    f"/{path.as_posix()}": ("755" if index < 2 else "644")
+    f"/{path.as_posix()}": ("755" if index < 4 else "644")
     for index, path in enumerate(PAYLOAD_FILES)
 } | {f"/{MANIFEST_PATH.as_posix()}": "644"}
 VERIFY_STATE_SUFFIXES: Final = (
@@ -75,6 +96,8 @@ VERIFY_STATE_SUFFIXES: Final = (
     "file-authority",
     "host-launch",
     "inference-boundary-launch",
+    "docker-guard-boundary-launch",
+    "docker-collector-boundary-launch",
 )
 EXPECTED_STEP_IDS: Final = (
     "platform-identity",
@@ -499,6 +522,32 @@ def _verify_installed_state(
     if descriptor != EXPECTED_INFERENCE_DESCRIPTOR:
         raise PackageLifecycleError("package.lifecycle.inference_descriptor")
     records.append(adapter_record)
+    for component, expected in (
+        ("docker-guard", EXPECTED_DOCKER_GUARD_DESCRIPTOR),
+        ("docker-collector", EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR),
+    ):
+        executable = (
+            "/usr/libexec/agentmage/agentmage-docker-guard"
+            if component == "docker-guard"
+            else "/usr/libexec/agentmage/agentmage-docker-topology-collector"
+        )
+        record, output = _step_record(
+            container_id,
+            LifecycleStep(
+                f"{phase}-{component}-boundary-launch",
+                "standard-user",
+                (executable, "--self-check"),
+            ),
+        )
+        try:
+            descriptor = json.loads(output)
+        except json.JSONDecodeError as error:
+            raise PackageLifecycleError(
+                f"package.lifecycle.{component}_descriptor"
+            ) from error
+        if descriptor != expected:
+            raise PackageLifecycleError(f"package.lifecycle.{component}_descriptor")
+        records.append(record)
     return records
 
 
@@ -943,8 +992,7 @@ def main(argv: list[str] | None = None) -> int:
                 "build",
                 "-p",
                 "agentmage-platform-linux-inference",
-                "--bin",
-                "agentmage-native-inference",
+                "--bins",
                 "--release",
                 "--locked",
             ],

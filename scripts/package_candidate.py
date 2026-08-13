@@ -26,6 +26,8 @@ MANIFEST_PATH: Final = PurePosixPath("usr/share/agentmage/package-manifest.json"
 PAYLOAD_FILES: Final = (
     PurePosixPath("usr/libexec/agentmage/agentmage-host"),
     PurePosixPath("usr/libexec/agentmage/agentmage-native-inference"),
+    PurePosixPath("usr/libexec/agentmage/agentmage-docker-guard"),
+    PurePosixPath("usr/libexec/agentmage/agentmage-docker-topology-collector"),
     PurePosixPath("usr/share/agentmage/agentmage.vsix"),
     PurePosixPath("usr/share/licenses/agentmage/LICENSE"),
 )
@@ -138,6 +140,8 @@ def build_vsix(
 def build_payload(
     host: Path,
     inference_adapter: Path,
+    docker_guard: Path,
+    docker_collector: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -146,6 +150,8 @@ def build_payload(
     return build_payload_class(
         host,
         inference_adapter,
+        docker_guard,
+        docker_collector,
         vsix,
         license_path,
         root,
@@ -158,6 +164,8 @@ def build_payload(
 def build_release_payload(
     host: Path,
     inference_adapter: Path,
+    docker_guard: Path,
+    docker_collector: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -169,6 +177,8 @@ def build_release_payload(
     return build_payload_class(
         host,
         inference_adapter,
+        docker_guard,
+        docker_collector,
         vsix,
         license_path,
         root,
@@ -181,6 +191,8 @@ def build_release_payload(
 def build_payload_class(
     host: Path,
     inference_adapter: Path,
+    docker_guard: Path,
+    docker_collector: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -189,20 +201,29 @@ def build_payload_class(
     status: str,
     release_sequence: int | None,
 ) -> dict[str, Any]:
-    for path in (host, inference_adapter, vsix, license_path):
+    for path in (
+        host,
+        inference_adapter,
+        docker_guard,
+        docker_collector,
+        vsix,
+        license_path,
+    ):
         require_regular(path)
     destinations = {
         PAYLOAD_FILES[0]: host,
         PAYLOAD_FILES[1]: inference_adapter,
-        PAYLOAD_FILES[2]: vsix,
-        PAYLOAD_FILES[3]: license_path,
+        PAYLOAD_FILES[2]: docker_guard,
+        PAYLOAD_FILES[3]: docker_collector,
+        PAYLOAD_FILES[4]: vsix,
+        PAYLOAD_FILES[5]: license_path,
     }
     records = []
     for relative, source in destinations.items():
         destination = root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
-        mode = 0o755 if relative in PAYLOAD_FILES[:2] else 0o644
+        mode = 0o755 if relative in PAYLOAD_FILES[:4] else 0o644
         destination.chmod(mode)
         records.append(
             {
@@ -361,7 +382,9 @@ def verify_payload(
     ):
         raise PackageCandidateError("package.manifest_identity")
     paths = [record.get("path") for record in manifest["files"]]
-    if paths != sorted(set(paths)) or paths != [path.as_posix() for path in PAYLOAD_FILES]:
+    if paths != sorted(set(paths)) or paths != [
+        path.as_posix() for path in sorted(PAYLOAD_FILES)
+    ]:
         raise PackageCandidateError("package.manifest_file_set")
     for record in manifest["files"]:
         path = root / PurePosixPath(record["path"])
@@ -380,6 +403,8 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
         raise PackageCandidateError("package.version_invalid")
     host = ROOT / "target/release/agentmage-host"
     inference_adapter = ROOT / "target/release/agentmage-native-inference"
+    docker_guard = ROOT / "target/release/agentmage-docker-guard"
+    docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
     extension = ROOT / "shells/vscode"
     license_path = ROOT / "LICENSE"
     output.mkdir(parents=True, exist_ok=True)
@@ -387,7 +412,16 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
     build_vsix(extension, license_path, vsix, version)
     with tempfile.TemporaryDirectory(prefix="agentmage-payload-") as directory:
         payload_root = Path(directory)
-        build_payload(host, inference_adapter, vsix, license_path, payload_root, version)
+        build_payload(
+            host,
+            inference_adapter,
+            docker_guard,
+            docker_collector,
+            vsix,
+            license_path,
+            payload_root,
+            version,
+        )
         verify_payload(payload_root, version=version)
         deb = output / f"agentmage_{version}_amd64.deb"
         build_deb(payload_root, ROOT / "packaging/linux/debian-control.in", deb, version)
@@ -406,6 +440,8 @@ def build_release_bundle(
         raise PackageCandidateError("package.release_identity_invalid")
     host = ROOT / "target/release/agentmage-host"
     inference_adapter = ROOT / "target/release/agentmage-native-inference"
+    docker_guard = ROOT / "target/release/agentmage-docker-guard"
+    docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
     extension = ROOT / "shells/vscode"
     license_path = ROOT / "LICENSE"
     output.mkdir(parents=True, exist_ok=True)
@@ -416,6 +452,8 @@ def build_release_bundle(
         build_release_payload(
             host,
             inference_adapter,
+            docker_guard,
+            docker_collector,
             vsix,
             license_path,
             payload_root,

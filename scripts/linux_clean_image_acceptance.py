@@ -76,6 +76,27 @@ EXPECTED_INFERENCE_DESCRIPTOR: Final = {
     "network_listener": False,
     "process_boundary_version": 6,
 }
+EXPECTED_DOCKER_GUARD_DESCRIPTOR: Final = {
+    "accepted_operations": ["serve-one-session", "self-check"],
+    "authority": "guarded-inference-transport-only",
+    "component_id": "agentmage-docker-guard",
+    "docker_control": False,
+    "enabled": False,
+    "network_egress": False,
+    "protocol_version": 1,
+    "raw_target": "private-namespace-loopback-only",
+    "sessions": 1,
+}
+EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR: Final = {
+    "accepted_operations": ["observe", "self-check", "validate-observation-stdin"],
+    "authority": "docker-topology-observation-only",
+    "component_id": "agentmage-docker-topology-collector",
+    "docker_mutation": False,
+    "enabled": False,
+    "network_egress": False,
+    "preflight_contract_version": 2,
+    "protocol_version": 1,
+}
 CONTAINER_CONTROLS: Final = {
     "runtime": "rootless-podman",
     "network": "none",
@@ -112,6 +133,8 @@ STEP_IDS: Final = (
     "package-files",
     "native-host-launch",
     "inactive-inference-launch",
+    "inactive-docker-guard-launch",
+    "inactive-docker-collector-launch",
     "vscode-version",
     "extension-install",
     "extension-registration",
@@ -684,6 +707,7 @@ def process_snapshot(container: str) -> dict[str, Any]:
         "code",
         "agentmage-host",
         "agentmage-native-inference",
+        "agentmage-docke",
         "at-spi-bus-launcher",
         "Xvfb",
         "dbus-daemon",
@@ -721,7 +745,7 @@ def stop_vscode(container: str) -> None:
         raise CleanImageAcceptanceError("Visual Studio Code launcher identity is invalid")
     container_exec(container, "standard-user", ("kill", "-TERM", pid))
     watched = re.compile(
-        r"^(?:code|Xvfb|dbus-daemon|at-spi-bus-laun|agentmage-host|agentmage-nativ.*)$"
+        r"^(?:code|Xvfb|dbus-daemon|at-spi-bus-laun|agentmage-host|agentmage-nativ.*|agentmage-docke.*)$"
     )
     deadline = time.monotonic() + 15.0
     while time.monotonic() < deadline:
@@ -815,6 +839,8 @@ def run_target(target: Target, package: Path, package_root: Path) -> dict[str, A
                 for path in (
                     "/usr/libexec/agentmage/agentmage-host",
                     "/usr/libexec/agentmage/agentmage-native-inference",
+                    "/usr/libexec/agentmage/agentmage-docker-guard",
+                    "/usr/libexec/agentmage/agentmage-docker-topology-collector",
                     "/usr/share/agentmage/agentmage.vsix",
                     "/usr/share/agentmage/package-manifest.json",
                 )
@@ -839,6 +865,25 @@ def run_target(target: Target, package: Path, package_root: Path) -> dict[str, A
             "standard-user",
             ("/usr/libexec/agentmage/agentmage-native-inference", "--self-check"),
             lambda value: json.loads(value) == EXPECTED_INFERENCE_DESCRIPTOR,
+        )
+        steps.append(step)
+        step, docker_guard = record_step(
+            container,
+            "inactive-docker-guard-launch",
+            "standard-user",
+            ("/usr/libexec/agentmage/agentmage-docker-guard", "--self-check"),
+            lambda value: json.loads(value) == EXPECTED_DOCKER_GUARD_DESCRIPTOR,
+        )
+        steps.append(step)
+        step, docker_collector = record_step(
+            container,
+            "inactive-docker-collector-launch",
+            "standard-user",
+            (
+                "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+                "--self-check",
+            ),
+            lambda value: json.loads(value) == EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR,
         )
         steps.append(step)
         step, vscode = record_step(
@@ -943,7 +988,7 @@ for path in \
   test ! -L "$path"
 done
 if ps -eo comm= | grep -Eq \
-  '^(code|Xvfb|dbus-daemon|at-spi-bus-laun|agentmage-host|agentmage-nativ.*)$'; then
+  '^(code|Xvfb|dbus-daemon|at-spi-bus-laun|agentmage-host|agentmage-nativ.*|agentmage-docke.*)$'; then
   exit 1
 fi
 printf 'agentmage-runtime-and-profile-residue-absent\n'
@@ -989,6 +1034,8 @@ printf 'agentmage-runtime-and-profile-residue-absent\n'
             "process_boundary": processes,
             "package_file_count": len(set(package_paths.splitlines())),
             "inference_descriptor": json.loads(adapter),
+            "docker_guard_descriptor": json.loads(docker_guard),
+            "docker_collector_descriptor": json.loads(docker_collector),
             "residue": {
                 "active_extension_registration": False,
                 "package_record": False,
@@ -1036,8 +1083,7 @@ def build_report(revision: str) -> dict[str, Any]:
             "build",
             "-p",
             "agentmage-platform-linux-inference",
-            "--bin",
-            "agentmage-native-inference",
+            "--bins",
             "--release",
             "--locked",
         ]
@@ -1162,8 +1208,11 @@ def validate_platform(value: Any, target: Target) -> list[str]:
         failures.append(f"standard-user process boundary changed: {target.platform_id}")
     if (
         value.get("inference_descriptor") != EXPECTED_INFERENCE_DESCRIPTOR
+        or value.get("docker_guard_descriptor") != EXPECTED_DOCKER_GUARD_DESCRIPTOR
+        or value.get("docker_collector_descriptor")
+        != EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR
         or not isinstance(value.get("package_file_count"), int)
-        or value.get("package_file_count", 0) < 7
+        or value.get("package_file_count", 0) < 10
     ):
         failures.append(f"package execution closure changed: {target.platform_id}")
     if value.get("residue") != {

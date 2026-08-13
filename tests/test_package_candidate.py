@@ -41,6 +41,12 @@ class PackageCandidateTests(unittest.TestCase):
         self.inference_adapter = self.root / "agentmage-native-inference"
         self.inference_adapter.write_bytes(b"synthetic-inference-adapter")
         self.inference_adapter.chmod(0o755)
+        self.docker_guard = self.root / "agentmage-docker-guard"
+        self.docker_guard.write_bytes(b"synthetic-docker-guard")
+        self.docker_guard.chmod(0o755)
+        self.docker_collector = self.root / "agentmage-docker-topology-collector"
+        self.docker_collector.write_bytes(b"synthetic-docker-collector")
+        self.docker_collector.chmod(0o755)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -66,7 +72,15 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
+        build_payload(
+            self.host,
+            self.inference_adapter,
+            self.docker_guard,
+            self.docker_collector,
+            vsix,
+            self.license,
+            payload,
+        )
         verify_payload(payload)
 
         installed_host = payload / "usr/libexec/agentmage/agentmage-host"
@@ -90,7 +104,15 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
+        build_payload(
+            self.host,
+            self.inference_adapter,
+            self.docker_guard,
+            self.docker_collector,
+            vsix,
+            self.license,
+            payload,
+        )
         control = self.root / "control.in"
         control.write_text(
             "Package: agentmage\nVersion: @VERSION@\nArchitecture: amd64\n"
@@ -108,9 +130,32 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
-        build_payload(self.host, self.inference_adapter, vsix, self.license, payload)
+        build_payload(
+            self.host,
+            self.inference_adapter,
+            self.docker_guard,
+            self.docker_collector,
+            vsix,
+            self.license,
+            payload,
+        )
         self.assertEqual(
             stat.S_IMODE((payload / "usr/libexec/agentmage/agentmage-host").stat().st_mode),
+            0o755,
+        )
+        self.assertEqual(
+            stat.S_IMODE(
+                (payload / "usr/libexec/agentmage/agentmage-docker-guard").stat().st_mode
+            ),
+            0o755,
+        )
+        self.assertEqual(
+            stat.S_IMODE(
+                (
+                    payload
+                    / "usr/libexec/agentmage/agentmage-docker-topology-collector"
+                ).stat().st_mode
+            ),
             0o755,
         )
         self.assertEqual(
@@ -130,6 +175,8 @@ class PackageCandidateTests(unittest.TestCase):
         build_release_payload(
             self.host,
             self.inference_adapter,
+            self.docker_guard,
+            self.docker_collector,
             vsix,
             self.license,
             payload,
@@ -150,6 +197,8 @@ class PackageCandidateTests(unittest.TestCase):
             build_release_payload(
                 self.host,
                 self.inference_adapter,
+                self.docker_guard,
+                self.docker_collector,
                 vsix,
                 self.license,
                 self.root / "invalid-release",
@@ -167,6 +216,8 @@ class PackageCandidateTests(unittest.TestCase):
         manifest = build_payload(
             self.host,
             self.inference_adapter,
+            self.docker_guard,
+            self.docker_collector,
             vsix,
             self.license,
             payload,

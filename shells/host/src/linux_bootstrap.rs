@@ -400,6 +400,16 @@ mod tests {
         let root = temp_root();
         let payloads = [
             (
+                "usr/libexec/agentmage/agentmage-docker-guard",
+                b"docker-guard".as_slice(),
+                0o755,
+            ),
+            (
+                "usr/libexec/agentmage/agentmage-docker-topology-collector",
+                b"docker-collector".as_slice(),
+                0o755,
+            ),
+            (
                 "usr/libexec/agentmage/agentmage-host",
                 b"host".as_slice(),
                 0o755,

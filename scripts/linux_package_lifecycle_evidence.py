@@ -314,8 +314,7 @@ def build_report(revision: str) -> dict[str, Any]:
             "build",
             "-p",
             "agentmage-platform-linux-inference",
-            "--bin",
-            "agentmage-native-inference",
+            "--bins",
             "--release",
             "--locked",
         ]
@@ -429,7 +428,7 @@ def validate_report(value: Any) -> list[str]:
         failures.append("package artifact closure is invalid")
     manifests = value.get("component_manifests")
     expected_paths = [path.as_posix() for path in PAYLOAD_FILES]
-    expected_modes = [0o755, 0o755, 0o644, 0o644]
+    expected_modes = [0o755, 0o755, 0o755, 0o755, 0o644, 0o644]
     if (
         not isinstance(manifests, list)
         or any(

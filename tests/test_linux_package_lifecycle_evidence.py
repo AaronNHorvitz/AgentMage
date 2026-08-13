@@ -28,7 +28,7 @@ class LinuxPackageLifecycleEvidenceTests(unittest.TestCase):
                                 "path": path.as_posix(),
                                 "sha256": "e" * 64,
                                 "size": 1,
-                                "mode": 0o755 if index < 2 else 0o644,
+                                "mode": 0o755 if index < 4 else 0o644,
                             }
                             for index, path in enumerate(evidence.PAYLOAD_FILES)
                         ],
