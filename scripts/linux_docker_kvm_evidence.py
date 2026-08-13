@@ -56,6 +56,20 @@ HOST_CLEANUP_KEYS: Final = {
     "loopback_ssh_listener_absent",
     "qemu_process_absent",
 }
+PRECOLLECTOR_CHECKS: Final = [
+    "daemon-peer-pid",
+    "daemon-peer-root",
+    "docker-socket-group-nonzero",
+    "runtime-identity",
+    "guard-identity",
+    "guard-no-capabilities",
+    "guard-no-new-privileges",
+    "shared-private-network-namespace",
+    "distinct-guard-mount-namespace",
+    "guard-parent-owner",
+    "guard-parent-group",
+    "guard-parent-mode",
+]
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
 )
@@ -772,6 +786,7 @@ def validate_report(value: Any) -> list[str]:
                     str(docker.get("daemon_configuration", {}).get("service_unit_sha256"))
                 )
                 is None
+                or docker.get("precollector_checks") != PRECOLLECTOR_CHECKS
                 or collector.get("record_type") != "agentmage_docker_live_topology_observation"
                 or collector.get("admission", {}).get("status") != "admitted"
                 or collector.get("source_revision") != value.get("source_revision")

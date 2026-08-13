@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import re
+import socket
 import stat
 import struct
 import subprocess
@@ -390,6 +391,51 @@ def host_listener_count() -> int:
     return sum(1 for line in output.splitlines() if line.split()[3].endswith(":12434"))
 
 
+def docker_peer_record() -> dict[str, Any]:
+    connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        connection.connect("/run/docker.sock")
+        credentials = connection.getsockopt(
+            socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i")
+        )
+    finally:
+        connection.close()
+    pid, uid, gid = struct.unpack("3i", credentials)
+    return {"pid": pid, "uid": uid, "gid": gid}
+
+
+def verify_precollector_topology(
+    runtime: dict[str, Any],
+    guard: dict[str, Any],
+    runner: dict[str, Any],
+    daemon: dict[str, Any],
+    socket_metadata: os.stat_result,
+) -> list[str]:
+    parent = Path("/run/agentmage-dmr").stat()
+    peer = docker_peer_record()
+    checks = {
+        "daemon-peer-pid": peer["pid"] == daemon["pid"],
+        "daemon-peer-root": peer["uid"] == 0 and daemon["uid"] == 0,
+        "docker-socket-group-nonzero": socket_metadata.st_gid != 0,
+        "runtime-identity": runtime["uid"] == RUNTIME_UID
+        and runtime["gid"] == RUNTIME_GID,
+        "guard-identity": guard["uid"] == GUARD_UID and guard["gid"] == RUNTIME_GID,
+        "guard-no-capabilities": guard["effective_capabilities"] == 0,
+        "guard-no-new-privileges": guard["no_new_privileges"],
+        "shared-private-network-namespace": guard["network_namespace_sha256"]
+        == runner["network_namespace_sha256"],
+        "distinct-guard-mount-namespace": guard["mount_namespace_sha256"]
+        != runner["mount_namespace_sha256"],
+        "guard-parent-owner": parent.st_uid == GUARD_UID,
+        "guard-parent-group": parent.st_gid == RUNTIME_GID,
+        "guard-parent-mode": stat.S_IMODE(parent.st_mode) == 0o710,
+    }
+    failed = [name for name, passed in checks.items() if not passed]
+    if failed:
+        raise GuestEvidenceError(f"precollector topology refused: {failed[0]}")
+    return list(checks)
+
+
 def collect(revision: str) -> dict[str, Any]:
     daemon_configuration = configure_direct_daemon()
     if daemon_configuration["socket_activation_active"]:
@@ -406,6 +452,9 @@ def collect(revision: str) -> dict[str, Any]:
     daemon = process_record(daemon_pid) | {"pid": daemon_pid}
     socket_path = Path("/run/docker.sock")
     socket_metadata = socket_path.stat()
+    precollector_checks = verify_precollector_topology(
+        runtime, guard, runner, daemon, socket_metadata
+    )
     collector_digest = sha256_file(COLLECTOR_PATH)
     request = {
         "protocol_version": 2,
@@ -478,6 +527,7 @@ def collect(revision: str) -> dict[str, Any]:
                 "mode": stat.S_IMODE(socket_metadata.st_mode),
             },
             "private_tcp_listeners": private_sockets,
+            "precollector_checks": precollector_checks,
             "collector": observation,
         },
     }
