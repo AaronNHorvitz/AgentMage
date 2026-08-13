@@ -222,9 +222,19 @@ back its history row, `user_version`, and every table created by that
 migration; reopening never treats a partial schema as current. The v2 domain
 tables use closed status values, fixed SHA-256 shapes, unique per-parent
 ordinals or revisions, and foreign keys that reject orphaned or cross-task
-records. Retention uses a closed record-family, sensitivity, disposition, hold,
-and expiration shape, but lifecycle transitions and cryptographic erasure are
-later tasks.
+records.
+
+Migration v3 adds the retention lifecycle without rewriting either earlier
+migration. It distinguishes `none`, `user`, and `legal` holds, preserves the
+pre-hold disposition, adds optimistic revisions and trusted transition times,
+and records an append-only event chain bound to the complete current retention
+state. Existing v2 retention rows receive one deterministic migration event.
+Assignments require an existing canonical record. Hold application and release
+require the exact current revision and hold kind. Due expiration selects only
+unheld `session` or `retained` rows and commits all selected transitions in one
+immediate transaction. Startup recomputes every event and current-state digest;
+a gap, stale head, changed event, inconsistent hold, or state mismatch refuses
+the store.
 
 ## Pre-Persistence Gate
 
@@ -286,6 +296,35 @@ open or explicit lock acquisition, but it cannot read, migrate, or publish
 state. Publication uses an immediate transaction; metadata generation update
 and checkpoint insertion either commit together or both roll back.
 
+## Backup, Restore, Export, and Erasure
+
+The implemented backup boundary produces only a separately keyed SQLCipher
+database. It verifies runtime configuration, page/cipher integrity, foreign
+keys, schema history, canonical authority state, retention event chains, and
+generation before returning a content-free receipt with the encrypted-file
+digest. A failed backup removes only files created by that invocation; an
+already occupied or raced destination is preserved.
+
+Restore accepts an existing encrypted backup, rejects wrong keys, corruption,
+schema drift, and ineligible storage, and copies into a newly created candidate
+under a separate destination key. It verifies the candidate's complete
+canonical state and matching generation before returning. It never overwrites
+or swaps the live canonical store. Atomic continuity selection, rollback points,
+and clean-device restore remain assigned to Sprint 161.
+
+No plaintext database or SQL export exists. JSON Lines remains a separately
+derived, export-only format assigned to Sub-task 11.1.1.7 and cannot become
+startup authority.
+
+Cryptographic erasure is implemented only at the complete SQLCipher key scope.
+The live store is consumed and closed before the platform adapter destroys the
+exact operational-store key and verifies that lookup returns absent. Known
+database, WAL, and shared-memory ciphertext files are then removed. A failed
+key-destruction attempt preserves ciphertext. This operation does not erase a
+separately keyed backup, does not claim per-record cryptographic erasure inside
+the shared-key database, and makes no physical-overwrite promise for SSD or
+copy-on-write storage.
+
 ## Recovery Invariants
 
 1. A consumed nonce, grant, or attempt remains non-replayable after restart.
@@ -293,9 +332,14 @@ and checkpoint insertion either commit together or both roll back.
 3. A possible effect without a verified result becomes `uncertain`.
 4. A complete verified result without a receipt produces exactly one receipt.
 5. Terminal recovery is idempotent.
-6. Missing key, wrong key, future schema, record conflict, page corruption,
+6. Missing key, wrong key, future schema, record conflict, retention-chain
+   mismatch, page corruption,
    foreign-key failure, concurrent writer, or state-digest mismatch fails
    closed with a content-free error.
+7. A hold cannot be replaced, released under the wrong kind, or bypassed by
+   expiration; stale revisions change no lifecycle row or event.
+8. Restore never changes the live canonical store and never deletes a
+   pre-existing destination after a failed exclusive create.
 
 ## Evidence Boundary
 
@@ -306,6 +350,10 @@ writer; migrate a real encrypted v1 database to v2; reject a partial v2 schema;
 exercise normalized relationship constraints; and restart from every authority
 transition. Linux tests additionally
 exercise private-root owner/mode drift, unsafe authority-state objects, and
-exclusive lifecycle locking. Live Secret Service tests remain explicitly
-environment-dependent. Retained historical story artifacts are not regenerated
-or represented as current Phase 8 evidence.
+exclusive lifecycle locking. Current lifecycle tests cover both hold kinds,
+stale revisions, held expiration, release, expiry, event tampering, encrypted
+backup receipts, wrong-key and corrupted restore refusal, occupied-destination
+preservation, fresh-candidate restore, successful whole-key erasure, and failed
+key-destruction ciphertext preservation. Live Secret Service tests remain
+explicitly environment-dependent. Retained historical story artifacts are not
+regenerated or represented as current Phase 8 evidence.
