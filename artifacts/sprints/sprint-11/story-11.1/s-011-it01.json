@@ -1,0 +1,124 @@
+{
+  "artifact_id": "s-011-it01-provider-substitution-results",
+  "case_ids": [
+    "IT-01",
+    "IT-02",
+    "IT-03",
+    "IT-04",
+    "IT-05",
+    "IT-06",
+    "IT-07",
+    "IT-08"
+  ],
+  "claims": {
+    "bundled_sqlcipher_is_pinned": true,
+    "cipher_version_is_mandatory": true,
+    "ephemeral_storage_selection_count": 0,
+    "external_network_used": false,
+    "integration_case_count": 8,
+    "live_secret_service_operations_executed": false,
+    "malicious_toolchain_substitution_tested": false,
+    "manual_fuzzing_executed": false,
+    "missing_or_malformed_key_callback_count": 0,
+    "plaintext_fallback_accepted_count": 0,
+    "production_linux_provider_is_concrete": true,
+    "release_support": false,
+    "secret_argument_or_environment_occurrences": 0,
+    "substituted_secret_client_launch_count": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "No real user credential is read, written, listed, changed, or removed; live Secret Service operations remain environment-dependent ignored tests.",
+    "The client-digest substitution test uses the installed root-owned /usr/bin/secret-tool identity and refuses before D-Bus contact.",
+    "Pinned bundled SQLCipher, mandatory runtime cipher presence, and plaintext-file refusal do not prove resistance to a malicious compiler, linker, operating system, or hardware.",
+    "macOS Keychain, Windows Credential Manager, packaging, release acceptance, support, and manually deferred fuzzing remain separate gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "522d3e5205de7e4a294f631ec254ea0d18927c1d",
+  "sources": [
+    {
+      "bytes": 1452,
+      "path": "Cargo.toml",
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+    },
+    {
+      "bytes": 4734,
+      "path": "docs/verification/s-011-it01-provider-substitution-results.md",
+      "sha256": "fb5655154e3457786fcb8737a1c7f014ba43de4e47a9436e7bc19854b94e2997"
+    },
+    {
+      "bytes": 181401,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211"
+    },
+    {
+      "bytes": 45281,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "400b9e71f568a10093b9a0811ffe372a4b84a555027b392113f33c815b395f7e"
+    },
+    {
+      "bytes": 30510,
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "db383150be5ce3111b36fd18c55a8390e181c62fce43d1de810e7e2aa1eeec59"
+    },
+    {
+      "bytes": 44067,
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "8752c509fcea69735ade5ebe2a6031b83c755327fe91f27dce86546af1925cd2"
+    },
+    {
+      "bytes": 10701,
+      "path": "scripts/provider_substitution_evidence.py",
+      "sha256": "23a39470458e290fa352352def92ae4c2f698aad9ffd2c20d9a8940188852f6c"
+    },
+    {
+      "bytes": 3113,
+      "path": "tests/test_provider_substitution_evidence.py",
+      "sha256": "6ef51969de1b0023fe3a37477e3aadfe43f4863d033a4e96313b42563389fe77"
+    }
+  ],
+  "status": "pass-current-linux-provider-boundary",
+  "task_ids": [
+    "11.1.3.4",
+    "S-011-IT01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "b1fafeb608b6bde208dfd447856f6f1f60958f1c66857745344625445c91bd0d",
+      "exit_code": 0,
+      "expected_marker_sha256": "77528fd60033e7b90c6b3977994fa1974fa378b0cf07a0c80a27ddc78f592db3",
+      "status": "pass"
+    },
+    {
+      "command_id": "ccaf6e23860cbe50dd5bd523004a176a87cbec467f2b9614ddd9839d27ca59c7",
+      "exit_code": 0,
+      "expected_marker_sha256": "17528d3a833e41ac0bbb20533d97dab87d81726260cabc37f2da1f077a54ff36",
+      "status": "pass"
+    },
+    {
+      "command_id": "6ca45fac1c9d3f2768d3b7ea60e659c6b2e47b83f3bf9dbde610665edd4a165e",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "b07bd1392a6d3d97c5ba08214fb6d101404dbaf3ec603ef02d7a36ff9b654fe9",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "39cb5cb56dca4bd9ddf0876540ef7a2e8bf725d1e2d2b583fae2e715fbce5794",
+      "exit_code": 0,
+      "expected_marker_sha256": "041eb7e303c3fbbc682783f7ec5a933d398494a6b81dc194b0f0f42f1a25ff49",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
