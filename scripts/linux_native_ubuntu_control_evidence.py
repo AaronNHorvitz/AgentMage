@@ -1122,7 +1122,8 @@ def initialize_synthetic_keyring(vm: VmHandle) -> None:
         "gnome-keyring-daemon --start --components=secrets "
         ">/tmp/agentmage-keyring-start\n"
         "unset keyring_password\n"
-        "unlink /tmp/agentmage-keyring-env /tmp/agentmage-keyring-start\n"
+        "unlink /tmp/agentmage-keyring-env\n"
+        "unlink /tmp/agentmage-keyring-start\n"
         "busctl --user --no-pager status org.freedesktop.secrets >/dev/null\n",
         timeout=60,
         stage="synthetic-keyring-initialization",

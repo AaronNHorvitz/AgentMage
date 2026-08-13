@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import unittest
 
 from scripts import linux_native_ubuntu_control_evidence as evidence
@@ -239,6 +240,15 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
         self.assertIn(
             "native Ubuntu bootstrap evidence is incomplete",
             evidence.validate_report(bootstrap),
+        )
+
+    def test_keyring_cleanup_uses_portable_single_path_unlink(self) -> None:
+        source = inspect.getsource(evidence.initialize_synthetic_keyring)
+        self.assertIn('"unlink /tmp/agentmage-keyring-env\\n"', source)
+        self.assertIn('"unlink /tmp/agentmage-keyring-start\\n"', source)
+        self.assertNotIn(
+            "unlink /tmp/agentmage-keyring-env /tmp/agentmage-keyring-start",
+            source,
         )
 
 
