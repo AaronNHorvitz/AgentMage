@@ -37,7 +37,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "8aa271caf781ca31f38dd991a21b18633f3ab02b82bccca2798bf64a30307870"
+          "content": "ca24c22e4ae2db03fb34a1b62c527ae8b61c0999dd5ff7876839ee4998ebbb03"
         }
       ],
       "licenses": [
@@ -130,7 +130,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a6fc958c4ed327ae8628920129ee6150098d6c58c09eb9cd8b409378307a131a"
+          "content": "3f2a383bc07cec6537edca9e4ce3852d095cb5c2aa4af18dc023e2ea22fb9594"
         }
       ],
       "licenses": [
@@ -1803,7 +1803,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "18837d332245c63eaa371eaffbd4cd9cf201855ac1ac08bde25a609f78da4840"
+          "content": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
         }
       ],
       "licenses": [
@@ -13370,7 +13370,12 @@
     },
     {
       "dependsOn": [
-        "cargo:agentmage-kernel-contracts@0.0.0"
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0",
+        "cargo:zeroize@1.9.0"
       ],
       "ref": "cargo:agentmage-platform-linux-inference@0.0.0"
     },
@@ -16035,7 +16040,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:43f8d298-af19-5601-9549-4c84f9a5697d",
+  "serialNumber": "urn:uuid:71da0ef1-67b1-5311-81b1-c30c0d6df054",
   "specVersion": "1.6",
   "version": 1
 }

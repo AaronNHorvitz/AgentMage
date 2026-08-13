@@ -27,7 +27,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "8aa271caf781ca31f38dd991a21b18633f3ab02b82bccca2798bf64a30307870"
+          "content": "ca24c22e4ae2db03fb34a1b62c527ae8b61c0999dd5ff7876839ee4998ebbb03"
         }
       ],
       "integrity": null,
@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a6fc958c4ed327ae8628920129ee6150098d6c58c09eb9cd8b409378307a131a"
+          "content": "3f2a383bc07cec6537edca9e4ce3852d095cb5c2aa4af18dc023e2ea22fb9594"
         }
       ],
       "integrity": null,
@@ -1227,7 +1227,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "18837d332245c63eaa371eaffbd4cd9cf201855ac1ac08bde25a609f78da4840"
+          "content": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
         }
       ],
       "integrity": null,
@@ -8706,7 +8706,12 @@
     {
       "component_id": "cargo:agentmage-platform-linux-inference@0.0.0",
       "depends_on": [
-        "cargo:agentmage-kernel-contracts@0.0.0"
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0",
+        "cargo:zeroize@1.9.0"
       ]
     },
     {
@@ -11351,10 +11356,10 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd",
-    "Cargo.toml": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b",
+    "Cargo.lock": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665",
+    "Cargo.toml": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "18837d332245c63eaa371eaffbd4cd9cf201855ac1ac08bde25a609f78da4840",
+    "package.json": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",

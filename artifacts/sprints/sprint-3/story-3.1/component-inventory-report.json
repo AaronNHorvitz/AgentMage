@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "1373d6d4864c5d6c95be35238d36e6d8d569f6438a1b84cc8efd5f14365255ff",
+        "sha256": "fb7f4199ff530a6363a6ce48e4e3832f606f9279251bca98af7a98a31dcb6584",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "6bb6cef9b11a64f5e16ef320815327f69db303c390050c1b0678b2a907f05774",
+        "sha256": "8556ead43fd12012e32cf5d397acabda47d6dfd0e800db018599c94e547a7801",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -147,7 +147,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "c7d32881ddcdedae0f09a1711016373826db46535207fdff7a97e6dd0032040a",
+      "identity_set_sha256": "9f44da0ad3a056db5c8ca22fa50b242ebacae42d300689e876258bd47b515c2e",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -301,12 +301,12 @@
         "approval_status": "candidate-not-approved",
         "component_id": "linux-docker-model-runner-b9879",
         "docker_engine_directly_tested": false,
-        "guard_profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
+        "guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
         "model_manifest_sha256": "08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "package_id": "docker-model-plugin",
         "platform": "linux-x86_64",
-        "preflight_contract_version": 2,
-        "profile_sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a",
+        "preflight_contract_version": 3,
+        "profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
         "sha256": "bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
         "source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
         "version": "b9879"
@@ -340,11 +340,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "f74cea99344a1dd2fc150336c2ac71b108c8e51cf2b8ccd1f403fa28f5a72d99"
+      "sha256": "631a332e980b2f595f1ef9d703b412500d904d39d06ffbbdf26d1fa7ec64cfbd"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "ddc5f928e29c3cbd9782b53bfaeb7aafb2d4f24046c9893d6af9eed96629c48e"
+      "sha256": "46295f03094a6c0b30c8f1a86d7078f369bf00f6ed8942209ad1001da335f3e1"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -360,11 +360,11 @@
     },
     {
       "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
-      "sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
+      "sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd"
     },
     {
       "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
-      "sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
+      "sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
     },
     {
       "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
@@ -380,15 +380,15 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "bfe03a7ed6d8e4964379788e08d0b8df39b97f1d6afc7fdd994c6f41511fe924"
+      "sha256": "343e0b65684642c31e9e3388f67667c7cd08935c767be1117d807762591711d7"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "0ee0e2c773fbfeccfa11e3fb1358c479750717d2ca2648b8720a7f93930ac656"
+      "sha256": "b42851869e186f77603c7d6acb0dea72ceb900733656b753dc43e3a2c2f19b98"
     },
     {
       "path": "scripts/component_inventory.py",
-      "sha256": "b88a6f3e71a8de40815b1c1895100032cc4bfad0d83c1bd62b5212b9f8f9431d"
+      "sha256": "063028bb833385c0fb00e45446399b4614a77098c4cb87b3a8b429f36b5f6ab1"
     },
     {
       "path": "tests/test_component_inventory.py",

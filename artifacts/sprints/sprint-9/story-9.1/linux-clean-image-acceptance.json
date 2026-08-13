@@ -14,14 +14,14 @@
   ],
   "packages": {
     "deb": {
-      "bytes": 616882,
+      "bytes": 1262382,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "2d12e31df3f426f11aebbbc16bb9538e201e4b48299a18b89c731d2b44f38c1e"
+      "sha256": "ce45515da84d023c0cb57294470efe8c31fae4503fec527d0020ee2d0d764e37"
     },
     "rpm": {
-      "bytes": 425043,
+      "bytes": 642202,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "b7bc98a2d94114f821c3c07c4494e08ca6ba8f08c4f52a3d86f8386107c1605b"
+      "sha256": "12ac5cdb53cd41e5d4c4eab9ee176beeea99d69a494e9344fc4a7efb55c47a85"
     },
     "vsix": {
       "bytes": 15193,
@@ -77,30 +77,59 @@
       },
       "container_removed": true,
       "distribution": "fedora",
+      "docker_collector_descriptor": {
+        "accepted_operations": [
+          "observe",
+          "self-check",
+          "validate-observation-stdin"
+        ],
+        "authority": "docker-topology-observation-only",
+        "component_id": "agentmage-docker-topology-collector",
+        "docker_mutation": false,
+        "enabled": false,
+        "network_egress": false,
+        "preflight_contract_version": 3,
+        "protocol_version": 2
+      },
+      "docker_guard_descriptor": {
+        "accepted_operations": [
+          "serve-one-session",
+          "self-check"
+        ],
+        "authority": "guarded-inference-transport-only",
+        "component_id": "agentmage-docker-guard",
+        "docker_control": false,
+        "enabled": false,
+        "network_egress": false,
+        "protocol_version": 1,
+        "raw_target": "private-namespace-loopback-only",
+        "sessions": 1
+      },
       "inference_descriptor": {
         "accepted_operation": "self-check-only",
         "authority_inputs": [],
         "component_id": "platform-linux-native-inference",
         "contract": "authenticated-local-endpoint-v1",
         "docker_compatibility_available": false,
-        "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+        "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
         "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-        "docker_preflight_contract_version": 1,
-        "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
+        "docker_preflight_contract_version": 3,
+        "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
         "enabled_models": 0,
         "inference_available": false,
         "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
         "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
         "network_listener": false,
-        "process_boundary_version": 5
+        "process_boundary_version": 7
       },
-      "package_file_count": 8,
+      "package_file_count": 10,
       "package_format": "rpm",
       "platform_id": "fedora-x86_64",
       "process_boundary": {
         "process_counts": {
           "Xvfb": 1,
+          "agentmage-docke": 0,
           "agentmage-host": 0,
           "agentmage-native-inference": 0,
           "at-spi-bus-launcher": 1,
@@ -170,6 +199,22 @@
           "actor": "standard-user",
           "expected_exit": "zero",
           "id": "inactive-inference-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-docker-guard-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-docker-collector-launch",
           "observed_exit": "zero",
           "status": "pass",
           "uid_gid": "10001:10001"
@@ -277,7 +322,7 @@
         "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
         "chromium_sandbox": "disabled-inside-outer-test-container-only",
         "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
-        "extension_host_log_sha256": "08806695b65853aa5ee4a0dc9d181a15b6ad1a9e3de9274b1f959f79c43b8c8c",
+        "extension_host_log_sha256": "99c2f4f2940450f8a8b220d7728e40b7441f1ff37cd31a209a75bc4d59d1afa9",
         "extension_id": "agentmage-project.agentmage-vscode-shell",
         "extension_version": "0.0.0",
         "provider_probe": {
@@ -341,30 +386,59 @@
       },
       "container_removed": true,
       "distribution": "ubuntu",
+      "docker_collector_descriptor": {
+        "accepted_operations": [
+          "observe",
+          "self-check",
+          "validate-observation-stdin"
+        ],
+        "authority": "docker-topology-observation-only",
+        "component_id": "agentmage-docker-topology-collector",
+        "docker_mutation": false,
+        "enabled": false,
+        "network_egress": false,
+        "preflight_contract_version": 3,
+        "protocol_version": 2
+      },
+      "docker_guard_descriptor": {
+        "accepted_operations": [
+          "serve-one-session",
+          "self-check"
+        ],
+        "authority": "guarded-inference-transport-only",
+        "component_id": "agentmage-docker-guard",
+        "docker_control": false,
+        "enabled": false,
+        "network_egress": false,
+        "protocol_version": 1,
+        "raw_target": "private-namespace-loopback-only",
+        "sessions": 1
+      },
       "inference_descriptor": {
         "accepted_operation": "self-check-only",
         "authority_inputs": [],
         "component_id": "platform-linux-native-inference",
         "contract": "authenticated-local-endpoint-v1",
         "docker_compatibility_available": false,
-        "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+        "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
         "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-        "docker_preflight_contract_version": 1,
-        "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
+        "docker_preflight_contract_version": 3,
+        "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
         "enabled_models": 0,
         "inference_available": false,
         "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
         "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
         "network_listener": false,
-        "process_boundary_version": 5
+        "process_boundary_version": 7
       },
-      "package_file_count": 12,
+      "package_file_count": 14,
       "package_format": "deb",
       "platform_id": "ubuntu-x86_64",
       "process_boundary": {
         "process_counts": {
           "Xvfb": 1,
+          "agentmage-docke": 0,
           "agentmage-host": 0,
           "agentmage-native-inference": 0,
           "at-spi-bus-launcher": 0,
@@ -434,6 +508,22 @@
           "actor": "standard-user",
           "expected_exit": "zero",
           "id": "inactive-inference-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-docker-guard-launch",
+          "observed_exit": "zero",
+          "status": "pass",
+          "uid_gid": "10001:10001"
+        },
+        {
+          "actor": "standard-user",
+          "expected_exit": "zero",
+          "id": "inactive-docker-collector-launch",
           "observed_exit": "zero",
           "status": "pass",
           "uid_gid": "10001:10001"
@@ -541,7 +631,7 @@
         "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
         "chromium_sandbox": "disabled-inside-outer-test-container-only",
         "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
-        "extension_host_log_sha256": "196b99e89503fd0643a7b1b784f0c839976e97b238b63f5e6006dbaefe2a2b60",
+        "extension_host_log_sha256": "ce66f82fbc112dd73c66618f3865b807805be0e17d86ba06212f6d7910cad2fa",
         "extension_id": "agentmage-project.agentmage-vscode-shell",
         "extension_version": "0.0.0",
         "provider_probe": {
@@ -581,14 +671,14 @@
         "sha256": "b0cb6c9adc5542ecbbb938f54607fa18043cde4dd37b575ec577be6558d0fbb2"
       },
       {
-        "bytes": 13033,
+        "bytes": 13090,
         "path": "Cargo.lock",
-        "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+        "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
       },
       {
-        "bytes": 1442,
+        "bytes": 1452,
         "path": "Cargo.toml",
-        "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+        "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
       },
       {
         "bytes": 11357,
@@ -881,9 +971,9 @@
         "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
       },
       {
-        "bytes": 20611,
+        "bytes": 20858,
         "path": "package.json",
-        "sha256": "18837d332245c63eaa371eaffbd4cd9cf201855ac1ac08bde25a609f78da4840"
+        "sha256": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
       },
       {
         "bytes": 3169,
@@ -891,14 +981,14 @@
         "sha256": "28ff11ed1234becb45e34623f3b848160eb5b76f02fb637e9c0fab93b170f36c"
       },
       {
-        "bytes": 1127,
+        "bytes": 1232,
         "path": "packaging/linux/agentmage-release.spec.in",
-        "sha256": "c43ad10c2465f0a80f6c0d30fa6bf744453e3f49968583074c1786ef0e849476"
+        "sha256": "7fab5e0148bc2eac1890cd2a03939029906f98ae15d6d8bead799b3fc2ab19d2"
       },
       {
-        "bytes": 1111,
+        "bytes": 1216,
         "path": "packaging/linux/agentmage.spec.in",
-        "sha256": "f15801395997418e4a37a209cee19f461ac7ba547e085ede9e54542e4e9dcd25"
+        "sha256": "54233ffee4661e910b99121841cd1a9b6a5384b649e71dddac8f1c6486913e16"
       },
       {
         "bytes": 397,
@@ -911,9 +1001,9 @@
         "sha256": "547d9da0e428801eb1f7adb3f9f26ee4c06eb6086d24d4695a4c156440fe0cdb"
       },
       {
-        "bytes": 441,
+        "bytes": 739,
         "path": "platforms/linux-inference/Cargo.toml",
-        "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+        "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
       },
       {
         "bytes": 3081,
@@ -921,24 +1011,59 @@
         "sha256": "0888a85ea12c726e795be68477660ede385b292affe6a50d16c7996ce00b924f"
       },
       {
-        "bytes": 16386,
+        "bytes": 19736,
         "path": "platforms/linux-inference/src/docker_guard.rs",
-        "sha256": "4304a5f27454299d6323ede6d7a51193312203569525e03862f32c6d7811bd3c"
+        "sha256": "9c864ccd39c65dd4346d91dcc9e558dde4697cd3dd5e17e4d0e8531d8b288d86"
       },
       {
-        "bytes": 29809,
+        "bytes": 1727,
+        "path": "platforms/linux-inference/src/docker_guard_main.rs",
+        "sha256": "3706bd5edacf518244c6a6f7814058eebb6d1490341835e97f0bef1924acb0e2"
+      },
+      {
+        "bytes": 28133,
+        "path": "platforms/linux-inference/src/docker_guard_service.rs",
+        "sha256": "a7728237f3e18f7abe11dceebaa76add75f675dbafe24bd8f32c04a2ea405964"
+      },
+      {
+        "bytes": 14109,
+        "path": "platforms/linux-inference/src/docker_http_observer.rs",
+        "sha256": "5c3350c59cd515612d19077649975d75aa6999a7c91d11f78fad071231bd5e0c"
+      },
+      {
+        "bytes": 23226,
+        "path": "platforms/linux-inference/src/docker_linux_observer.rs",
+        "sha256": "8c8f3db58607fbaec618d9d9afdcc57981c52737d8c9c6015abac46ddb605096"
+      },
+      {
+        "bytes": 43237,
+        "path": "platforms/linux-inference/src/docker_live_collector.rs",
+        "sha256": "b08ad8921c9493a24da7bbe40de7f229238f96cd4d809293fb20a9e52492c4d8"
+      },
+      {
+        "bytes": 35377,
         "path": "platforms/linux-inference/src/docker_preflight.rs",
-        "sha256": "0f4fe4b824e39203a886a2cbbf817cf78878644d721b0fc3e1d7781738574024"
+        "sha256": "f43b7f8888c4b02ec2588bc0a3fe902c1cc307cce52a6411190d4f89f16844eb"
       },
       {
-        "bytes": 24595,
+        "bytes": 28369,
         "path": "platforms/linux-inference/src/docker_runtime.rs",
-        "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
+        "sha256": "f9a01163089c12943b303e275b4105d04e2e46c745202b647dfabf67240421aa"
       },
       {
-        "bytes": 7658,
+        "bytes": 22322,
+        "path": "platforms/linux-inference/src/docker_topology_collector.rs",
+        "sha256": "d5fd7d70d5e8cf6ce790125dff01b35c06cce13a58b0e2a618a310933b010154"
+      },
+      {
+        "bytes": 2025,
+        "path": "platforms/linux-inference/src/docker_topology_collector_main.rs",
+        "sha256": "a58568d2d00cfccb1518ba4a2e24cbaaef13f44f35a56547c9c7b42423a124eb"
+      },
+      {
+        "bytes": 8503,
         "path": "platforms/linux-inference/src/lib.rs",
-        "sha256": "a0551bbff01729a430e2558269ace0d87985b2852d7d4981040229d1a80764e7"
+        "sha256": "cd9b74efbacd1083c0178cf4308b6258945c5dfa736f4c5bf0dc11c30a3ac283"
       },
       {
         "bytes": 574,
@@ -951,9 +1076,9 @@
         "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
       },
       {
-        "bytes": 1192,
+        "bytes": 4843,
         "path": "platforms/linux-inference/tests/process_boundary.rs",
-        "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
+        "sha256": "891b06ea3c3fe8a6d228405d5a4bfccbeb9d7222f18d73fe43981f8ee9eeddfc"
       },
       {
         "bytes": 520,
@@ -1036,14 +1161,14 @@
         "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
       },
       {
-        "bytes": 47844,
+        "bytes": 49937,
         "path": "scripts/linux_clean_image_acceptance.py",
-        "sha256": "12aa0ded1bb0a73b542b5265e3525884e7073bf7fae41b86eaf7636b09b10d90"
+        "sha256": "6ff3335f20845587fe8613a7a4445308b565d85a28e6a8b46d6c78e46c327715"
       },
       {
-        "bytes": 17028,
+        "bytes": 18113,
         "path": "scripts/package_candidate.py",
-        "sha256": "0d2cb4fc43f8e49e47857ed953a74ce2c966a8d24e0b8ded6cea64ab6d0f670f"
+        "sha256": "a08521967ef53a1eef8748aaf15eb482fe26ac0cc7d67bcb2ec77514bbb8e3c9"
       },
       {
         "bytes": 739,
@@ -1061,9 +1186,9 @@
         "sha256": "7ea77d17a427a0c2cf3967f42c02e90b399abee1b57346c3f12babff117f8af8"
       },
       {
-        "bytes": 18132,
+        "bytes": 18469,
         "path": "shells/host/src/linux_bootstrap.rs",
-        "sha256": "dd8ae69988d5cafb1b10bea1fef8dfa87469c2cf90629bf044ecce1083052673"
+        "sha256": "5c0fc8279b024fdd56b102407f839a5ba7b1d92d1f888d0a00ceed00124745f6"
       },
       {
         "bytes": 43199,
@@ -1076,9 +1201,9 @@
         "sha256": "dee10c3a3217905c4bf67224ba8587c169acee01b093dfa0de654fc6dc18ea46"
       },
       {
-        "bytes": 22546,
+        "bytes": 23000,
         "path": "shells/host/src/package_verify.rs",
-        "sha256": "9b03ca0a81a81296f19b5c8e02c799bd6150f26387e3d84560faf8b167c5cc5f"
+        "sha256": "c5fb92c9d38eafbaf29ace545260121de0efb1bcda5a5a7a0d8ee4abeb9ecbb5"
       },
       {
         "bytes": 11688,
@@ -1151,13 +1276,13 @@
         "sha256": "0611c22d779c7a8c8638847a8023f5642439a5b8770e723d8315c20956bacc00"
       },
       {
-        "bytes": 10243,
+        "bytes": 10594,
         "path": "tests/test_linux_clean_image_acceptance.py",
-        "sha256": "758d159cb69a9453c0a09c64d8782193da2a8aa842e4283a1ac8359714f109f6"
+        "sha256": "b482855924cff031c21a34d73ebb92d502ceb43b6726ed1ad3f5f0a6d3e803b8"
       }
     ],
-    "revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
-    "tree": "04a82d1557d55a6c7fe4dd05019f015d3377701e"
+    "revision": "36e2d4d29f88d31855013fa9cfddc3fae4d55b63",
+    "tree": "c532b07a1a75156fdd7e4f71f2b8083ec3e5a382"
   },
   "status": "pass-clean-fedora-ubuntu-images",
   "task_ids": [

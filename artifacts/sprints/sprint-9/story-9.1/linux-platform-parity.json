@@ -101,10 +101,10 @@
   "input_evidence": [
     {
       "artifact_id": "clean-linux-source-build",
-      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+      "evidence_revision": "36e2d4d29f88d31855013fa9cfddc3fae4d55b63",
       "id": "clean-build",
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "5eca9afd44c077eb8a5969077daae10d8ed46fbeae415d0cf2d2ab258489c95b",
+      "sha256": "631a332e980b2f595f1ef9d703b412500d904d39d06ffbbdf26d1fa7ec64cfbd",
       "status": "pass-linux"
     },
     {
@@ -125,10 +125,10 @@
     },
     {
       "artifact_id": "linux-clean-package-lifecycle",
-      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+      "evidence_revision": "36e2d4d29f88d31855013fa9cfddc3fae4d55b63",
       "id": "package-lifecycle",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
-      "sha256": "de98d4f2afad32f9f8a71f19ebf3cc478b3ab535ee736dcef1b217f93d043e27",
+      "sha256": "bb1d05d2ef8b890a550bc05ca341f156c83cf094babf965f4449af0274b060db",
       "status": "pass-linux-clean-package-lifecycle"
     },
     {
@@ -157,18 +157,18 @@
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
-      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+      "evidence_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
       "id": "inactive-inference",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
-      "sha256": "1837def088fa81867c5c7746897d454a005add0ae94377d7de085ca746d972ee",
+      "sha256": "f5c97f5aac5d3c2921b40aad76e0150080a3089d2a3512ea362568554123814d",
       "status": "pass-fedora-package-boundary"
     },
     {
       "artifact_id": "linux-clean-image-graphical-acceptance",
-      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+      "evidence_revision": "36e2d4d29f88d31855013fa9cfddc3fae4d55b63",
       "id": "clean-image-acceptance",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
-      "sha256": "b0f745822a4e3c96243cd8bf8b5f3aa96915e0dbad3e45b50ae491a2b202ee5d",
+      "sha256": "dafbc7f8d21a2edef0e8343a4055c5add891f08ea0ec6b2620aacf56ee0578e0",
       "status": "pass-clean-fedora-ubuntu-images"
     }
   ],
@@ -188,15 +188,15 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+  "source_revision": "25a6fbfaaf29f7fd00bf4c9734fe8f42c6e9826f",
   "sources": [
     {
       "path": "package.json",
-      "sha256": "18837d332245c63eaa371eaffbd4cd9cf201855ac1ac08bde25a609f78da4840"
+      "sha256": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",
-      "sha256": "1cb8a551db0eeb9465e625c470d298a3c1f0d98a8048c68bdbd29ce7e1c42c16"
+      "sha256": "c26df3c4e3fe3cf679d027c97ca25945f6b472c4a7c947641b6a2567e24c53d5"
     },
     {
       "path": "tests/test_linux_platform_parity_evidence.py",
