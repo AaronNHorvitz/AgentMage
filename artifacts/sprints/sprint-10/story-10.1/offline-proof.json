@@ -1,0 +1,110 @@
+{
+  "artifact_id": "strict-local-offline-proof",
+  "claims": {
+    "inference_performed": false,
+    "kernel_content_free_ledger_implemented": true,
+    "kernel_one_way_offline_proof_implemented": true,
+    "live_firewall_observation_performed": false,
+    "live_packet_capture_performed": false,
+    "production_model_acquisition_wired": false,
+    "release_support": false
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This artifact verifies the deterministic kernel ledger and offline-proof state machine; it does not claim that a production model installer supplies the observations.",
+    "The workflow is non-cloneable and issues one proof per instance; the future acquisition orchestrator must enforce unique construction for each acquisition epoch.",
+    "Live acquisition lifecycle wiring, firewall inspection, syscall, DNS, and socket tracing, packet capture, and all-workflow offline acceptance remain separate Sprint 10 tasks.",
+    "This evidence performs no inference and establishes no macOS, Windows, physical-host cross-distribution, or release acceptance."
+  ],
+  "policy_profile": {
+    "ledger_identity_fields": [
+      "sequence",
+      "observation-time",
+      "executable-sha256",
+      "component",
+      "destination-class",
+      "local-transport-class",
+      "endpoint-sha256",
+      "attempted-byte-count",
+      "kernel-decision"
+    ],
+    "ledger_record_limit": 4096,
+    "proofs_per_workflow_instance": 1,
+    "required_boundary_identities": [
+      "session-boundary-sha256",
+      "firewall-policy-sha256"
+    ],
+    "required_zero_observations": [
+      "acquisition-process-count",
+      "acquisition-socket-count",
+      "external-network-rule-count",
+      "observed-outbound-bytes",
+      "observed-dns-attempts"
+    ],
+    "terminal_artifact_mapping": {
+      "cancelled": "removed",
+      "completed": "activated-verified",
+      "corrupt": "quarantined"
+    }
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "030d1cf02e8f96e766363bdb8ece9b25ec359568",
+  "sources": [
+    {
+      "bytes": 14773,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "1a4583af1fb7a283e168301cd28343be344f3980b20f2f9c973718fec7410983"
+    },
+    {
+      "bytes": 54272,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
+    },
+    {
+      "bytes": 9938,
+      "path": "scripts/offline_proof_evidence.py",
+      "sha256": "2caea4c71936ba62a04368994157d352abb459c1624a69897bc260b6631cf630"
+    },
+    {
+      "bytes": 3752,
+      "path": "tests/test_offline_proof_evidence.py",
+      "sha256": "11250fc38edce23875a7e4804b5754c831a7464a6fdc4d541f3a808072030d07"
+    }
+  ],
+  "status": "pass-kernel-ledger-and-offline-proof-contract",
+  "task_ids": [
+    "10.1.1.7"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "7ffc774b1efeefa3b99d67593e9f59236f299b637067fb8876e216b0cd5f7e80",
+      "exit_code": 0,
+      "expected_marker_sha256": "e81f875182628d01a4507cf20e7aaa85374f6349198581f48fa573abd49aa642",
+      "status": "pass"
+    },
+    {
+      "command_id": "4aa6b96dc7e97adba23a7116c2fd6db95deefb2ba549d7bbcd12e58574a311e7",
+      "exit_code": 0,
+      "expected_marker_sha256": "b1c449edd05803bbd7288857d0b7b076e44cf29a49efb0273ffdfc23e74b0956",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "7804f7a79a9eee323b6e89d3f8287c7d36076f4d76291646295f435b0dec736e",
+      "status": "pass"
+    }
+  ],
+  "verification_results": {
+    "active_process_socket_or_rule_fails_closed": true,
+    "artifact_mismatch_matrix_fails_closed": true,
+    "exact_terminal_outcomes_accepted": 3,
+    "invalid_ledger_range_order_time_or_identity_fails_closed": true,
+    "ledger_and_proof_hashes_are_deterministic_and_fact_bound": true,
+    "lifecycle_and_replay_fail_closed": true,
+    "missing_boundary_identity_fails_closed": true,
+    "outbound_bytes_or_dns_fails_closed": true,
+    "stale_preflight_fails_closed": true
+  }
+}
