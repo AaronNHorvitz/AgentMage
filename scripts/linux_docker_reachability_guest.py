@@ -163,7 +163,24 @@ def authenticated_guard_control(runner_pid: int) -> dict[str, Any]:
     go = PEER_ROOT / "go"
     go.write_text("go\n", encoding="ascii")
     os.chown(go, topology.RUNTIME_UID, topology.RUNTIME_GID)
-    topology.wait_for(lambda: (PEER_ROOT / "result.json").is_file(), "guard peer result")
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline and not (PEER_ROOT / "result.json").is_file():
+        peer_state = topology.text(
+            ["systemctl", "show", "--property=ActiveState", "--value", topology.RUNTIME_UNIT]
+        )
+        guard_state = topology.text(
+            ["systemctl", "show", "--property=ActiveState", "--value", topology.GUARD_UNIT]
+        )
+        if peer_state in {"failed", "inactive"} or guard_state == "failed":
+            unit = topology.RUNTIME_UNIT if peer_state in {"failed", "inactive"} else topology.GUARD_UNIT
+            lines = topology.text(
+                ["journalctl", "--unit", unit, "--output=cat", "--no-pager", "--lines=20"]
+            ).splitlines()
+            detail = lines[-1] if lines else "transient unit exited"
+            raise topology.GuestEvidenceError(f"guard control unit failed: {detail}")
+        time.sleep(0.1)
+    if not (PEER_ROOT / "result.json").is_file():
+        raise topology.GuestEvidenceError("guard control result timed out")
     topology.wait_for(
         lambda: topology.run(
             ["systemctl", "is-active", topology.GUARD_UNIT], check=False
