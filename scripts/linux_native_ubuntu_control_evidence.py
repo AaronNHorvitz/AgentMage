@@ -777,13 +777,20 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
             wait_for_ssh(vm)
             ssh_script(
                 vm,
-                "set -eu\n"
-                "cloud-init status --wait >/dev/null\n"
-                "test -f /var/lib/agentmage-cloud-init-complete\n"
+                "cloud-init status --wait >/dev/null\n",
+                timeout=1800,
+                stage="bootstrap-cloud-init",
+            )
+            ssh_script(
+                vm,
+                "test -f /var/lib/agentmage-cloud-init-complete\n",
+                stage="bootstrap-completion-marker",
+            )
+            ssh_script(
+                vm,
                 f"test \"$(id -u)\" = {TEST_UID}\n"
                 f"test \"$(id -g)\" = {TEST_GID}\n",
-                timeout=1800,
-                stage="bootstrap-cloud-init-and-identity",
+                stage="bootstrap-user-identity",
             )
             packages = package_versions(vm)
             ssh_script(
