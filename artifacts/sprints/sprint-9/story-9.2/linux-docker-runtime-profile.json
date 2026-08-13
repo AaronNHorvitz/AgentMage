@@ -16,10 +16,10 @@
     "docker_engine_required": true,
     "docker_socket_exposed_to_adapter": false,
     "docker_socket_exposed_to_runner": false,
+    "docker_socket_group_risk": "host-equivalent-docker-daemon-authority",
     "exact_daemon_binary_identity_required": true,
     "launch_user": "invoking-standard-user",
-    "required_supplementary_group": "docker-socket-owner-group",
-    "required_supplementary_group_risk": "host-equivalent-docker-daemon-authority",
+    "launch_user_docker_socket_group_membership": false,
     "rootless_engine_accepted": false
   },
   "enabled_models": 0,
@@ -84,7 +84,7 @@
     "docker_compatibility_available": false,
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-    "docker_runtime_profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+    "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
     "enabled_models": 0,
     "inference_available": false,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
@@ -92,7 +92,7 @@
     "network_listener": false,
     "process_boundary_version": 3
   },
-  "profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+  "profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
   "release_claim": "none",
   "resource_ceiling": {
     "cpu_percent": 3200,
@@ -111,7 +111,7 @@
     "tag_observed": "v1.2.6-cuda"
   },
   "schema_version": 1,
-  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+  "source_revision": "77fbf8d2cc94ba565a61f0561a4382e0a9a0b254",
   "sources": [
     {
       "bytes": 13033,
@@ -124,9 +124,9 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
-      "bytes": 35376,
+      "bytes": 35442,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "82da6f0cddd4cfb38f1844af4e220f55c55f189f3502e5a9f848dfba9add9ae1"
+      "sha256": "b6dbdf8bfe9ac586a723a84959d2a8744795b3a31f52ea6e593842f4fe89b386"
     },
     {
       "bytes": 4446,
@@ -149,9 +149,9 @@
       "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
     },
     {
-      "bytes": 6330,
+      "bytes": 6348,
       "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
-      "sha256": "9c0c50d98933661884e58da3c00360438946537519e73057603ffeca7d4fdcbb"
+      "sha256": "e2ee08928c64ce72af64a2d5c5646e3e188ce276df858bcb4f9a8d81905ef5a5"
     },
     {
       "bytes": 6213,
@@ -159,9 +159,9 @@
       "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1"
     },
     {
-      "bytes": 3403,
+      "bytes": 3386,
       "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
-      "sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
+      "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
     },
     {
       "bytes": 20157,
@@ -174,19 +174,19 @@
       "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
     },
     {
-      "bytes": 1931,
+      "bytes": 1940,
       "path": "platforms/linux-inference/README.md",
-      "sha256": "5d78c1b779986c78cb691ca7b5c0d8e0e528d6ea400b8137ccdbad2f517c81ac"
+      "sha256": "6864107b83902637fcc326a15ef98d1b56bcb93643862dd14ee53ace22abeec7"
     },
     {
-      "bytes": 24590,
+      "bytes": 24595,
       "path": "platforms/linux-inference/src/docker_runtime.rs",
-      "sha256": "c8e132707a23201cc9f2be3a508cc429ef38d73b72bb0e4eb0a2555d3f6e9aa7"
+      "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
     },
     {
       "bytes": 6759,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "1ade3bae8140060f2c3855b7d0d71d46e786e8e2cf01be4fd170e9c968fd7f17"
+      "sha256": "f5d2260f03a799d58c0d546fca9df3706d7bccba7242ecff7a2096cff77dfb17"
     },
     {
       "bytes": 574,
@@ -209,9 +209,9 @@
       "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
     },
     {
-      "bytes": 19089,
+      "bytes": 19161,
       "path": "scripts/linux_docker_runtime_evidence.py",
-      "sha256": "f3d06747c153fe3b2705c48bfb089cb1421ee433511d979acffafb4a47b97d16"
+      "sha256": "ef48f055d2699da2e45ca087a8f5cad57681747406aa222767b0257bab8df043"
     },
     {
       "bytes": 5300,
