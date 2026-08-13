@@ -1,0 +1,206 @@
+{
+  "artifact_id": "strict-local-policy-profile",
+  "claims": {
+    "cross_platform_release_support": false,
+    "inference_performed": false,
+    "kernel_and_linux_policy_matrices_passed": true,
+    "live_packet_capture_performed": false,
+    "model_enabled": false,
+    "product_profile_registered": false,
+    "production_startup_composed": false,
+    "reviewable_policy_profile_produced": true
+  },
+  "configuration_sha256": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3",
+  "dependency_evidence": [
+    {
+      "bytes": 2529,
+      "path": "artifacts/sprints/sprint-3/story-3.1/profile-catalog-report.json",
+      "sha256": "a38215d15d252960de73f507f30c88d67434a574d6f1aa4ff2e6314d9ae19074"
+    },
+    {
+      "bytes": 7982,
+      "path": "artifacts/sprints/sprint-10/story-10.1/strict-local-network-policy.json",
+      "sha256": "54567cbb532dc43172f66edf28ebd3809362749dc7fc63b2b14f5409bdc61062"
+    },
+    {
+      "bytes": 6297,
+      "path": "artifacts/sprints/sprint-10/story-10.1/inference-client-isolation.json",
+      "sha256": "4d5aed4948095c8cb752e03c4c0789a448f3a8fc2b6e7ed2eaf2f323e033b9aa"
+    },
+    {
+      "bytes": 6219,
+      "path": "artifacts/sprints/sprint-10/story-10.1/listener-boundary.json",
+      "sha256": "2fc36d89031075e52159b125e7ce9feacc19d6e8764b8f3305eddb557ec53bd4"
+    },
+    {
+      "bytes": 4656,
+      "path": "artifacts/sprints/sprint-10/story-10.1/state-root-policy.json",
+      "sha256": "cf0c391e7f8b367804909f93588f282fb42628ff66e46bc06be189f4a404f478"
+    },
+    {
+      "bytes": 4990,
+      "path": "artifacts/sprints/sprint-10/story-10.1/session-boundary.json",
+      "sha256": "dee5783e7139a923c0cc14e2831e16c5c3ecc766dbcdf3fca07fd98029c4cf06"
+    },
+    {
+      "bytes": 6194,
+      "path": "artifacts/sprints/sprint-10/story-10.1/hidden-network-surfaces.json",
+      "sha256": "b27159cb792e5b300bfdc77b63807cce2c7727011c5fa72f518330f6c99549d8"
+    },
+    {
+      "bytes": 4133,
+      "path": "artifacts/sprints/sprint-10/story-10.1/offline-proof.json",
+      "sha256": "41474d0b987df2b1bc4812a35b0f216bdce0f9db479bc9fdcc8002880b2de80a"
+    }
+  ],
+  "external_network_used": false,
+  "limitations": [
+    "This is the reviewable current-foundation profile and its policy closure; the application host does not yet register or compose it into a complete product startup.",
+    "The checked configuration has zero enabled models and zero registered tools, so the guarded local inference policy is present but inactive.",
+    "The configuration carries a Fedora platform identity; Ubuntu equivalence and every other supported-platform claim require their separately assigned execution evidence.",
+    "Live acquisition wiring, continuous process confinement, firewall observation, packet capture, all-workflow offline acceptance, inference, and release support remain open."
+  ],
+  "policy_profile": {
+    "authority": {
+      "default_effect": "deny",
+      "direct_command_execution": false,
+      "grant_scope": "exact-single-use-expiring-nontransferable",
+      "model_authority": "none",
+      "model_to_tool_channel": "prohibited",
+      "workspace_access": "one-explicit-read-only-root"
+    },
+    "configuration": {
+      "activation_status": "inactive-no-product-registration",
+      "effective_capabilities": [
+        "workspace.read"
+      ],
+      "enabled_model_count": 0,
+      "inheritance_mode": "restrict-only",
+      "profile_id": "strict-local-read-only",
+      "registered_tool_count": 0,
+      "schema_version": 2,
+      "startup_failure_policy": "fail-closed",
+      "strict_local": true
+    },
+    "network": {
+      "configuration_endpoint_count": 0,
+      "content_free_attempt_limit": 4096,
+      "docker_client": "kernel-docker-inference-adapter",
+      "docker_transport": "guarded-loopback-tcp",
+      "native_client": "kernel-native-inference-adapter",
+      "native_transport": "authenticated-unix-socket",
+      "normal_operation": "deny-all-except-selected-guarded-local-inference-path",
+      "undeclared_listener_policy": "reject"
+    },
+    "offline_return": {
+      "requires_exact_terminal_artifact_state": true,
+      "requires_session_and_firewall_identities": true,
+      "requires_zero_processes_sockets_rules_outbound_bytes_and_dns": true,
+      "workflow": "non-cloneable-one-way-per-instance"
+    },
+    "privacy": {
+      "credentials": "redact",
+      "private_paths": "redact",
+      "record_environment_values": false,
+      "record_prompts": false,
+      "record_tool_arguments": false
+    },
+    "storage": {
+      "cloud_synchronized": "reject",
+      "fuse_filesystem": "reject",
+      "remote_filesystem": "reject",
+      "strict_local_state_root": "local-known-filesystem-only",
+      "unknown_filesystem": "reject"
+    }
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "7bef4d66ff1ca17ca7013a16059118c504f0f257",
+  "sources": [
+    {
+      "bytes": 4043,
+      "path": "configuration/profiles/strict-local-read-only.json",
+      "sha256": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3"
+    },
+    {
+      "bytes": 5496,
+      "path": "configuration/profiles/catalog.json",
+      "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
+    },
+    {
+      "bytes": 14773,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "1a4583af1fb7a283e168301cd28343be344f3980b20f2f9c973718fec7410983"
+    },
+    {
+      "bytes": 131642,
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "c5e788b1cd4c84faab640213c1c8e07fe23f437a67498aff68bb9cf3132cd21f"
+    },
+    {
+      "bytes": 38894,
+      "path": "kernel/engine/src/policy.rs",
+      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+    },
+    {
+      "bytes": 54272,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
+    },
+    {
+      "bytes": 105100,
+      "path": "platforms/linux/src/inventory.rs",
+      "sha256": "0b747a6ef47b54dcde97922f4142dfb40c43489b082f63f6efb0096ea4848b25"
+    },
+    {
+      "bytes": 27972,
+      "path": "platforms/linux/src/strict_local.rs",
+      "sha256": "d0087b25eab783642c6e7db448acf5f990fa3077d57e5c175db606939b9ba559"
+    },
+    {
+      "bytes": 15664,
+      "path": "scripts/strict_local_policy_profile.py",
+      "sha256": "74b25e6804ec7944b3308b19619fb55ed08002a377c2f0f1d67a54f0c46b7006"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "77c544f69e5f1c3d08b73048150da2bdea4db3fade50c3604619b975649bc8c9"
+    },
+    {
+      "bytes": 4220,
+      "path": "tests/test_strict_local_policy_profile.py",
+      "sha256": "57a2b6fa58c7d409d81084fbffdea63af8bdc4f4afecf1c52f57785f17dba83c"
+    }
+  ],
+  "status": "pass-reviewable-current-foundation-profile",
+  "task_ids": [
+    "10.1.2.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "f1a20c32e165bd382d2757d7f544aee182825b482942ad6b4c2f93af933e602f",
+      "exit_code": 0,
+      "expected_marker_sha256": "eee88b1f219a688abc20dbc304f77529722e68468dc18f55bf98117d41b39f11",
+      "status": "pass"
+    },
+    {
+      "command_id": "1a817f8bdcfb363ebd2f712caa4828b10c337733ac1ce8b49455e8267e35cb7a",
+      "exit_code": 0,
+      "expected_marker_sha256": "62b7332573e8d22139994edd12cf4b041790995ea56d0e52ac7b352416666b7a",
+      "status": "pass"
+    },
+    {
+      "command_id": "f8399a3a0d1121f20b0125062886f31f04ef47bac36761aca4940f2f79deca81",
+      "exit_code": 0,
+      "expected_marker_sha256": "d3dc87a427580a00ebedaca98ffbb409a76a5d60ceb83377db529675010db01f",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "72a010a8fe7c50307b2afcac0af114c25beeaead9d58f2261306748dc3fc5c3e",
+      "status": "pass"
+    }
+  ]
+}
