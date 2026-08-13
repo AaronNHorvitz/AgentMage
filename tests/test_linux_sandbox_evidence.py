@@ -31,6 +31,10 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
         self.assertEqual(len(evidence.KERNEL_STARTUP_TESTS), 1)
         self.assertEqual(len(evidence.STARTUP_LIVE_TESTS), 1)
         self.assertEqual(len(evidence.ATTACKS), 16)
+        self.assertEqual(
+            tuple(evidence.TOOLS),
+            ("bubblewrap", "path-executor", "secret-tool", "systemd-run"),
+        )
 
     def valid_report(self) -> dict:
         return {

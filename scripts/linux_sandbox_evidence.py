@@ -113,6 +113,7 @@ STARTUP_LIVE_TESTS = (
 )
 TOOLS = {
     "bubblewrap": Path("/usr/bin/bwrap"),
+    "path-executor": Path("/usr/bin/env"),
     "secret-tool": Path("/usr/bin/secret-tool"),
     "systemd-run": Path("/usr/bin/systemd-run"),
 }
@@ -124,7 +125,7 @@ CONTROLS = {
     "workspace": "single-authorized-root-read-only",
     "scratch": "private-tmpfs-16777216-bytes",
     "environment": ["LANG=C", "PATH=/app", "PWD=/workspace"],
-    "privileges": "no-new-privileges-private-devices-cap-drop-all",
+    "privileges": "bubblewrap-no-new-privileges-private-devices-cap-drop-all",
     "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
     "cgroup": [
         "CPUQuota",
@@ -156,12 +157,12 @@ ATTACKS = (
 )
 PLATFORM_STATUS = {
     "fedora_44_x86_64": "verified-local",
-    "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately",
+    "ubuntu_26_04_x86_64": "verified-native-kernel-evidence-recorded-separately",
     "macos": "blocked-macos",
 }
 LIMITATIONS = [
-    "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
-    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; native Ubuntu preflight execution remains pending.",
+    "This artifact is the native Fedora control run; native Ubuntu-kernel isolation, IPC, Secret Service, startup, syscall, resource, and cleanup evidence is retained separately in linux-native-ubuntu-control-verification.json.",
+    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; the separate native Ubuntu artifact executes the same preflight under the Ubuntu kernel.",
     "The inactive inference package boundary is verified separately; enabled inference runtime remains pending.",
     "macOS implementation and execution remain blocked and are not substituted.",
 ]
