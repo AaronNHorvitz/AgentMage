@@ -1,0 +1,36 @@
+{
+  "ip_cases": [
+    {"address": "0.0.0.0", "expected": "unspecified", "id": "ipv4-unspecified"},
+    {"address": "127.0.0.1", "expected": "loopback", "id": "ipv4-loopback"},
+    {"address": "169.254.1.1", "expected": "link_local", "id": "ipv4-link-local"},
+    {"address": "10.1.2.3", "expected": "private_lan", "id": "ipv4-private"},
+    {"address": "100.64.0.1", "expected": "private_lan", "id": "ipv4-shared"},
+    {"address": "224.0.0.1", "expected": "multicast", "id": "ipv4-multicast"},
+    {"address": "192.0.2.1", "expected": "external", "id": "ipv4-external"},
+    {"address": "::", "expected": "unspecified", "id": "ipv6-unspecified"},
+    {"address": "::1", "expected": "loopback", "id": "ipv6-loopback"},
+    {"address": "fe80::1", "expected": "link_local", "id": "ipv6-link-local"},
+    {"address": "fd00::1", "expected": "private_lan", "id": "ipv6-private"},
+    {"address": "ff02::1", "expected": "multicast", "id": "ipv6-multicast"},
+    {"address": "2001:db8::1", "expected": "external", "id": "ipv6-external"}
+  ],
+  "policy_cases": [
+    {"component": "kernel_native_inference_adapter", "destination": "authenticated_local_socket", "endpoint": "match", "expected": "allow", "id": "native-exact", "peer_authenticated": true, "topology": "native", "transport": "authenticated_unix_socket"},
+    {"component": "kernel_docker_inference_adapter", "destination": "loopback", "endpoint": "match", "expected": "allow", "id": "docker-exact", "peer_authenticated": true, "topology": "docker", "transport": "guarded_loopback_tcp"},
+    {"component": "visual_studio_code_extension", "destination": "authenticated_local_socket", "endpoint": "match", "expected": "block", "id": "vscode-direct", "peer_authenticated": true, "topology": "native", "transport": "authenticated_unix_socket"},
+    {"component": "tool_worker", "destination": "loopback", "endpoint": "match", "expected": "block", "id": "tool-direct", "peer_authenticated": true, "topology": "docker", "transport": "guarded_loopback_tcp"},
+    {"component": "kernel_native_inference_adapter", "destination": "local_socket", "endpoint": "match", "expected": "block", "id": "unauthenticated-unix", "peer_authenticated": false, "topology": "native", "transport": "authenticated_unix_socket"},
+    {"component": "kernel_native_inference_adapter", "destination": "unspecified", "endpoint": "none", "expected": "block", "id": "unspecified", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "link_local", "endpoint": "none", "expected": "block", "id": "link-local", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "private_lan", "endpoint": "none", "expected": "block", "id": "lan", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "multicast", "endpoint": "none", "expected": "block", "id": "multicast", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "container_network", "endpoint": "none", "expected": "block", "id": "container", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "proxy", "endpoint": "none", "expected": "block", "id": "proxy", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "dns", "endpoint": "none", "expected": "block", "id": "dns-override", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "external", "endpoint": "none", "expected": "block", "id": "external", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "unknown", "endpoint": "none", "expected": "block", "id": "unknown", "peer_authenticated": false, "topology": "native", "transport": null},
+    {"component": "kernel_native_inference_adapter", "destination": "authenticated_local_socket", "endpoint": "mismatch", "expected": "block", "id": "endpoint-substitution", "peer_authenticated": true, "topology": "native", "transport": "authenticated_unix_socket"}
+  ],
+  "schema_version": 1,
+  "storage_fixture": "fixtures/strict-local-storage/v1/detection-fixtures.json"
+}
