@@ -1,0 +1,177 @@
+{
+  "artifact_id": "strict-local-hidden-network-surfaces",
+  "claims": {
+    "all_third_party_code_semantically_audited": false,
+    "inference_performed": false,
+    "packet_capture_performed": false,
+    "release_support": false,
+    "runtime_attempt_absence_proven": false,
+    "standard_product_lint_integration_tested": true,
+    "static_source_and_package_gate_implemented": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The gate detects reviewed source, compiled JavaScript, manifest, script, feature, package, and known network-API changes; it is not a semantic proof that every third-party implementation is benign.",
+    "Runtime syscall tracing, DNS and socket observation, packet capture, and hostile dependency startup tests remain separate Sprint 10 tasks.",
+    "This evidence performs no inference and does not establish macOS, Windows, physical-host cross-distribution, or release acceptance."
+  ],
+  "mutation_results": {
+    "cargo_manifest_or_feature_change_rejected": true,
+    "cargo_package_addition_rejected": true,
+    "compiled_artifact_telemetry_rejected": true,
+    "extension_dependency_rejected": true,
+    "extra_contribution_surface_rejected": true,
+    "first_party_build_script_rejected": true,
+    "install_script_rejected": true,
+    "npm_runtime_lock_drift_rejected": true,
+    "source_features_rejected": [
+      "ambient-proxy",
+      "child-process-download",
+      "crash-upload",
+      "marketplace-socket",
+      "remote-font-or-asset",
+      "telemetry-upload",
+      "update-download",
+      "vscode-external-open"
+    ],
+    "uri_activation_rejected": true
+  },
+  "policy_profile": {
+    "approved_first_party_build_script_count": 0,
+    "approved_vscode_runtime_package_count": 0,
+    "compiled_vscode_source_included": true,
+    "exact_bridge_fragment_count": 12,
+    "exact_external_uri_fixture_count": 3,
+    "network_symbol_rule_count": 10,
+    "reviewed_cargo_package_identity_count": 60,
+    "sha256_bound_cargo_manifest_count": 9,
+    "source_root_count": 9,
+    "vscode_manifest_boundary": [
+      "exact-top-level-keys",
+      "exact-startup-event",
+      "ui-process-only",
+      "exact-compiled-entry-point",
+      "exact-package-scripts",
+      "single-chat-provider-contribution",
+      "runtime-manifest-lock-agreement"
+    ]
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "6ce7fd9c87bc911b6f5b0ac4319601d49dd8d55b",
+  "sources": [
+    {
+      "bytes": 13090,
+      "path": "Cargo.lock",
+      "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
+    },
+    {
+      "bytes": 1452,
+      "path": "Cargo.toml",
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+    },
+    {
+      "bytes": 354,
+      "path": "capabilities/read-only/Cargo.toml",
+      "sha256": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a"
+    },
+    {
+      "bytes": 12437,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "c08e2782c011d28144a3700bd776cbf63fe2f3861a1244552fc5b58c495fa0a5"
+    },
+    {
+      "bytes": 471,
+      "path": "kernel/contracts/Cargo.toml",
+      "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088"
+    },
+    {
+      "bytes": 498,
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
+    },
+    {
+      "bytes": 182235,
+      "path": "package-lock.json",
+      "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+    },
+    {
+      "bytes": 21893,
+      "path": "package.json",
+      "sha256": "581b848bfc87dad43f0094adca61890fbb0a601229aec3b78fb73a1142b5ca21"
+    },
+    {
+      "bytes": 739,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
+    },
+    {
+      "bytes": 520,
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5"
+    },
+    {
+      "bytes": 685,
+      "path": "platforms/windows/Cargo.toml",
+      "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
+    },
+    {
+      "bytes": 380,
+      "path": "release/xtask/Cargo.toml",
+      "sha256": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40"
+    },
+    {
+      "bytes": 10057,
+      "path": "scripts/hidden_network_surface_evidence.py",
+      "sha256": "1c7c821645bae64b463ecd4a369e123515cdd1ee5d584be473456f88975e65c9"
+    },
+    {
+      "bytes": 17857,
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "55a73d14021b03371cec99cc90f45d2cc71e752e0284e1b2b9e6d616526f029c"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "77c544f69e5f1c3d08b73048150da2bdea4db3fade50c3604619b975649bc8c9"
+    },
+    {
+      "bytes": 739,
+      "path": "shells/host/Cargo.toml",
+      "sha256": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
+    },
+    {
+      "bytes": 1151,
+      "path": "shells/vscode/package.json",
+      "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
+    },
+    {
+      "bytes": 3497,
+      "path": "tests/test_hidden_network_surface_evidence.py",
+      "sha256": "d45fed7805b8f478a3eec09d026b445858d3080896e69dd94d6211975fb78424"
+    },
+    {
+      "bytes": 9643,
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "3f205a0eec2584d9d1f145289e319b2d5b21ce030a148e523c5f31471d3d3541"
+    }
+  ],
+  "status": "pass-static-source-artifact-manifest-and-dependency-gate",
+  "task_ids": [
+    "10.1.1.6"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "074426c25a155eec1ea17a897be243f3a9862955fb576533bdd1d9eb8df24c00",
+      "exit_code": 0,
+      "expected_marker_sha256": "a9b13771aa4ddd1d4afe558ea01cbf4503f0d2e7c362aeecad353ab5675f9b9e",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
