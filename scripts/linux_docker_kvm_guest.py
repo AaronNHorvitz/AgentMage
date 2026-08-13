@@ -196,11 +196,18 @@ def start_runner() -> tuple[str, int]:
     runner_pid = int(text(["docker", "inspect", "--format={{.State.Pid}}", container_id]))
 
     def listener_ready() -> bool:
-        observed = run(
-            ["nsenter", "--target", str(runner_pid), "--net", "ss", "-lnt"],
-            check=False,
+        try:
+            records = Path(f"/proc/{runner_pid}/net/tcp6").read_text(
+                encoding="ascii"
+            )
+        except OSError:
+            return False
+        return any(
+            fields[1] == "00000000000000000000000000000000:3092"
+            and fields[3] == "0A"
+            for line in records.splitlines()[1:]
+            if len(fields := line.split()) >= 4
         )
-        return observed.returncode == 0 and b"[::]:12434" in observed.stdout
 
     wait_for(listener_ready, "private Model Runner listener", timeout=120)
     return container_id, runner_pid
