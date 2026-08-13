@@ -143,6 +143,7 @@
       "models/**",
       "node_modules/**",
       "review-evidence/**",
+      "release-output/**",
       "shells/vscode/dist/**",
       "target/**"
     ]
