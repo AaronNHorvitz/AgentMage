@@ -3,7 +3,7 @@
     "bytes": 454448,
     "mode": 493,
     "path_class": "package-owned-libexec",
-    "sha256": "69634d28848f89be686251db91656faae009e995049246cb2214fae7271c7170"
+    "sha256": "2ff08612729bb224cd71f9b8d5c6e85d16d10c27188b67991dc3d22689c15ece"
   },
   "artifact_id": "linux-native-inference-package-boundary",
   "compile_boundary": {
@@ -37,14 +37,14 @@
   },
   "packages": [
     {
-      "bytes": 425043,
+      "bytes": 425077,
       "format": "rpm",
-      "sha256": "b7bc98a2d94114f821c3c07c4494e08ca6ba8f08c4f52a3d86f8386107c1605b"
+      "sha256": "f6858d473a98eabe3e18a7eee78e2354c6d630e9ed9e336f9cfa93aae967cfcd"
     },
     {
-      "bytes": 616882,
+      "bytes": 616886,
       "format": "deb",
-      "sha256": "2d12e31df3f426f11aebbbc16bb9538e201e4b48299a18b89c731d2b44f38c1e"
+      "sha256": "093abaef12005eefb79bc0641cfd54f036ac602b6ffe5564e25941324f25e834"
     },
     {
       "bytes": 15193,
@@ -64,21 +64,21 @@
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
     "docker_compatibility_available": false,
-    "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+    "docker_guard_profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-    "docker_preflight_contract_version": 1,
-    "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
+    "docker_preflight_contract_version": 2,
+    "docker_runtime_profile_sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a",
     "enabled_models": 0,
     "inference_available": false,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": false,
-    "process_boundary_version": 5
+    "process_boundary_version": 6
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
+  "source_revision": "d04f59713746a48c0c4d2ba511c1e332b2c13bcf",
   "sources": [
     {
       "bytes": 13033,
@@ -136,19 +136,19 @@
       "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
     },
     {
-      "bytes": 6348,
+      "bytes": 6714,
       "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
-      "sha256": "e2ee08928c64ce72af64a2d5c5646e3e188ce276df858bcb4f9a8d81905ef5a5"
+      "sha256": "e5e96c5198c5252b416a6c49ce82e16f8dc882eb3894806858a452646d971acd"
     },
     {
-      "bytes": 4985,
+      "bytes": 5463,
       "path": "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
-      "sha256": "9d68277889d3ded6ab371042ebe513866cbeab1b6952dfc6f46ac62618f42e88"
+      "sha256": "264540fc0ffce7ffbac597eb1a9e80dc30a948de87fea7ffc4b696b24139522a"
     },
     {
-      "bytes": 4844,
+      "bytes": 5269,
       "path": "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
-      "sha256": "d96d6234f31f29cdc3a3ce94d2ad4f71d590b66fe68b7b4dca5e1ae173583528"
+      "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
     },
     {
       "bytes": 79839,
@@ -181,14 +181,14 @@
       "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
     },
     {
-      "bytes": 3386,
+      "bytes": 3575,
       "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
-      "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
+      "sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
     },
     {
-      "bytes": 1690,
+      "bytes": 2063,
       "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
-      "sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+      "sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
     },
     {
       "bytes": 441,
@@ -201,9 +201,9 @@
       "sha256": "0888a85ea12c726e795be68477660ede385b292affe6a50d16c7996ce00b924f"
     },
     {
-      "bytes": 7658,
+      "bytes": 7745,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "a0551bbff01729a430e2558269ace0d87985b2852d7d4981040229d1a80764e7"
+      "sha256": "07f8b761eff70dda130f3dc8115dc911b7ee161adebcccc792147bdd2e3a015c"
     },
     {
       "bytes": 574,
@@ -211,19 +211,19 @@
       "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
     },
     {
-      "bytes": 24595,
+      "bytes": 27590,
       "path": "platforms/linux-inference/src/docker_runtime.rs",
-      "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
+      "sha256": "d82acd26b24d0ea7e2889786e1ce4f6515b2a5209e601dade6f97d173e9b6101"
     },
     {
-      "bytes": 16386,
+      "bytes": 19708,
       "path": "platforms/linux-inference/src/docker_guard.rs",
-      "sha256": "4304a5f27454299d6323ede6d7a51193312203569525e03862f32c6d7811bd3c"
+      "sha256": "190d5fd26a4ad2d29856f049d6cec473bce04dfe95022710018635947c345af3"
     },
     {
-      "bytes": 29809,
+      "bytes": 33694,
       "path": "platforms/linux-inference/src/docker_preflight.rs",
-      "sha256": "0f4fe4b824e39203a886a2cbbf817cf78878644d721b0fc3e1d7781738574024"
+      "sha256": "6be5c95c136d12577cc74afb08dff664d002e10f7ff0951fbc3d0bb02535c3d4"
     },
     {
       "bytes": 16731,
@@ -268,7 +268,7 @@
     {
       "bytes": 19896,
       "path": "scripts/linux_inference_boundary_evidence.py",
-      "sha256": "3d8898db131b3a7e662c96a3f9694ac88e1c2633376fe0d343ab25c138890748"
+      "sha256": "358070c85c76d116fccd991eeeda10703f7eef83248a513ded1883e5f3dae309"
     },
     {
       "bytes": 6529,
@@ -283,7 +283,7 @@
     {
       "bytes": 36590,
       "path": "scripts/package_lifecycle.py",
-      "sha256": "6f8691e9ab27f7b114afeddfca3f678a066a7ac20fc3a8953434edf9029b9ea0"
+      "sha256": "043d29a08288e0df7636b8bfad61b2eed2b2be4441395e75f9b0a4fb17306532"
     },
     {
       "bytes": 6123,
