@@ -15,7 +15,7 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
             "schema_version": 1,
             "artifact_id": "linux-fedora-ubuntu-adapter-parity",
             "task_ids": ["9.1.2.4"],
-            "status": "partial-parity-with-open-native-controls",
+            "status": "pass-declared-fedora-ubuntu-parity",
             "source_revision": "a" * 40,
             "sources": [
                 {"path": path, "sha256": "b" * 64} for path in evidence.SOURCE_PATHS
@@ -25,9 +25,9 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
             "dimensions": copy.deepcopy(list(evidence.DIMENSIONS)),
             "summary": {
                 "dimension_count": 10,
-                "verified_parity_dimensions": 7,
-                "blocked_parity_dimensions": 3,
-                "full_fedora_ubuntu_parity": False,
+                "verified_parity_dimensions": 10,
+                "blocked_parity_dimensions": 0,
+                "full_fedora_ubuntu_parity": True,
             },
             "blocking_gates": copy.deepcopy(list(evidence.BLOCKERS)),
             "private_values_present": False,
@@ -40,7 +40,7 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_input_evidence(evidence.load_inputs()), [])
         self.assertEqual(evidence.validate_report(self.valid_report()), [])
 
-    def test_missing_or_promoted_dimension_fails(self) -> None:
+    def test_missing_or_changed_dimension_fails(self) -> None:
         missing = self.valid_report()
         missing["dimensions"].pop()
         self.assertIn(
@@ -48,22 +48,23 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
             evidence.validate_report(missing),
         )
         promoted = self.valid_report()
-        promoted["dimensions"][6]["ubuntu"] = "verified-live"
-        promoted["dimensions"][6]["parity"] = "verified"
+        promoted["dimensions"][6]["ubuntu"] = "verified-without-evidence"
         self.assertIn(
             "Linux platform parity dimensions changed",
             evidence.validate_report(promoted),
         )
 
-    def test_full_parity_or_removed_blocker_fails(self) -> None:
+    def test_parity_demotion_or_added_blocker_fails(self) -> None:
         full = self.valid_report()
-        full["summary"]["full_fedora_ubuntu_parity"] = True
+        full["summary"]["full_fedora_ubuntu_parity"] = False
         self.assertIn(
             "Linux platform parity summary overclaimed or changed",
             evidence.validate_report(full),
         )
         missing = self.valid_report()
-        missing["blocking_gates"].pop()
+        missing["blocking_gates"].append(
+            {"task_id": "9.1.3.5", "reason": "stale blocker"}
+        )
         self.assertIn(
             "Linux platform parity blockers changed",
             evidence.validate_report(missing),
@@ -122,6 +123,14 @@ class LinuxPlatformParityEvidenceTests(unittest.TestCase):
         ] = True
         mutations.append(
             (attacks, "bounded cross-distribution sandbox input is incomplete")
+        )
+
+        native = copy.deepcopy(evidence.load_inputs())
+        native["ubuntu-native-controls"]["execution"]["syscall_trace"][
+            "seccomp_mode"
+        ] = 0
+        mutations.append(
+            (native, "native Ubuntu control parity input is incomplete")
         )
 
         inference = copy.deepcopy(evidence.load_inputs())

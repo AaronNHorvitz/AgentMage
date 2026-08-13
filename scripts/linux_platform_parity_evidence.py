@@ -67,6 +67,12 @@ INPUTS = (
         "pass-bounded-cross-distribution",
     ),
     (
+        "ubuntu-native-controls",
+        "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+        "linux-native-ubuntu-control-verification",
+        "pass-native-ubuntu-kernel-controls",
+    ),
+    (
         "inactive-inference",
         "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
         "linux-native-inference-package-boundary",
@@ -125,23 +131,27 @@ DIMENSIONS = (
     {
         "id": "bubblewrap-seccomp-cgroup",
         "fedora": "verified-live",
-        "ubuntu": "verified-live-userspace-envelope-native-open",
-        "parity": "blocked",
-        "evidence": ["linux-controls", "sandbox-attacks"],
+        "ubuntu": "verified-live-native-kernel-kvm",
+        "parity": "verified",
+        "evidence": [
+            "linux-controls",
+            "sandbox-attacks",
+            "ubuntu-native-controls",
+        ],
     },
     {
         "id": "authenticated-ipc",
         "fedora": "verified-live",
-        "ubuntu": "blocked-live-execution",
-        "parity": "blocked",
-        "evidence": ["linux-controls"],
+        "ubuntu": "verified-live-native-kernel-kvm",
+        "parity": "verified",
+        "evidence": ["linux-controls", "ubuntu-native-controls"],
     },
     {
         "id": "secret-service",
         "fedora": "verified-live-synthetic-items",
-        "ubuntu": "blocked-live-execution",
-        "parity": "blocked",
-        "evidence": ["linux-controls"],
+        "ubuntu": "verified-live-native-kernel-kvm-synthetic-items",
+        "parity": "verified",
+        "evidence": ["linux-controls", "ubuntu-native-controls"],
     },
     {
         "id": "graphical-vscode-workflow",
@@ -151,15 +161,10 @@ DIMENSIONS = (
         "evidence": ["clean-image-acceptance"],
     },
 )
-BLOCKERS = (
-    {
-        "task_id": "9.1.3.5",
-        "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution plus aggregate product-security mapping and review remain open.",
-    },
-)
+BLOCKERS: tuple[dict[str, str], ...] = ()
 LIMITATIONS = (
-    "This report proves seven complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks three dimensions; it is not a full platform-parity claim.",
-    "Ubuntu Bubblewrap, seccomp, and cgroup attacks pass in a rootless privileged test envelope; native Ubuntu isolation, live Secret Service closure, and complete native IPC integration remain pending.",
+    "This report proves all ten declared Fedora/Ubuntu parity dimensions; it does not extend the dimension set or claim physical-host certification.",
+    "Fedora controls execute on the local Fedora 44 host; Ubuntu isolation, IPC, Secret Service, startup, syscall, and resource controls execute under an Ubuntu 26.04 kernel in a KVM guest, while the older rootless-container attack artifact remains bounded historical corroboration.",
     "The graphical Visual Studio Code workflow passes in clean rootless Fedora and Ubuntu container images, not on native physical hosts; Chromium's nested sandbox is disabled only inside the outer capability-free, no-new-privileges, networkless acceptance container.",
     "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
     "All packages are unsigned candidates and make no supported-release claim.",
@@ -376,7 +381,7 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or controls.get("platform_status")
         != {
             "fedora_44_x86_64": "verified-local",
-            "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately",
+            "ubuntu_26_04_x86_64": "verified-native-kernel-evidence-recorded-separately",
             "macos": "blocked-macos",
         }
         or not _all_pass(controls.get("sandbox_tests"), 17)
@@ -441,6 +446,43 @@ def validate_input_evidence(values: dict[str, dict[str, Any]]) -> list[str]:
         or attacks.get("private_values_present") is not False
     ):
         failures.append("bounded cross-distribution sandbox input is incomplete")
+
+    native = values["ubuntu-native-controls"]
+    native_execution = native.get("execution", {})
+    native_platform = native_execution.get("platform", {})
+    native_tests = native_execution.get("tests", {})
+    if (
+        native.get("status") != "pass-native-ubuntu-kernel-controls"
+        or native_platform.get("distribution") != "ubuntu"
+        or native_platform.get("version") != "26.04"
+        or native_platform.get("architecture") != "x86_64"
+        or native_platform.get("virtualization") != "kvm"
+        or native_platform.get("cgroup_filesystem") != "cgroup2"
+        or native_platform.get("uid") != 10001
+        or native_platform.get("gid") != 10001
+        or native_execution.get("network", {}).get("qemu_restrict_mode") is not True
+        or native_execution.get("network", {}).get("external_connection_denied")
+        is not True
+        or not _all_pass(native_tests.get("sandbox_live"), 11)
+        or not _all_pass(native_tests.get("ipc"), 8)
+        or not _all_pass(native_tests.get("secret_service_static"), 4)
+        or not _all_pass(native_tests.get("secret_service_live"), 3)
+        or not _all_pass(native_tests.get("startup_mapping"), 2)
+        or not _all_pass(native_tests.get("startup_live"), 1)
+        or not _all_pass(native_tests.get("kernel_startup_refusal"), 1)
+        or native_execution.get("syscall_trace", {}).get("no_new_privileges") != 1
+        or native_execution.get("syscall_trace", {}).get("seccomp_mode") != 2
+        or native_execution.get("resource_trace", {}).get("runtime_limit_enforced")
+        is not True
+        or set(native_execution.get("cleanup", {}).values()) != {True}
+        or native.get("summary", {}).get("native_ubuntu_kernel_controls_verified")
+        is not True
+        or native.get("summary", {}).get("physical_host_certification") is not False
+        or native.get("summary", {}).get("test_count") != 30
+        or native.get("release_claim") != "none"
+        or native.get("private_values_present") is not False
+    ):
+        failures.append("native Ubuntu control parity input is incomplete")
 
     inference = values["inactive-inference"]
     process = inference.get("process_boundary", {})
@@ -597,7 +639,7 @@ def build_report(revision: str) -> dict[str, Any]:
         "schema_version": 1,
         "artifact_id": "linux-fedora-ubuntu-adapter-parity",
         "task_ids": ["9.1.2.4"],
-        "status": "partial-parity-with-open-native-controls",
+        "status": "pass-declared-fedora-ubuntu-parity",
         "source_revision": revision,
         "sources": source_records(revision),
         "platform_scope": ["fedora-44-x86_64", "ubuntu-26.04-x86_64"],
@@ -605,9 +647,9 @@ def build_report(revision: str) -> dict[str, Any]:
         "dimensions": list(DIMENSIONS),
         "summary": {
             "dimension_count": 10,
-            "verified_parity_dimensions": 7,
-            "blocked_parity_dimensions": 3,
-            "full_fedora_ubuntu_parity": False,
+            "verified_parity_dimensions": 10,
+            "blocked_parity_dimensions": 0,
+            "full_fedora_ubuntu_parity": True,
         },
         "blocking_gates": list(BLOCKERS),
         "private_values_present": False,
@@ -625,7 +667,7 @@ def validate_report(value: Any) -> list[str]:
         value.get("schema_version") != 1
         or value.get("artifact_id") != "linux-fedora-ubuntu-adapter-parity"
         or value.get("task_ids") != ["9.1.2.4"]
-        or value.get("status") != "partial-parity-with-open-native-controls"
+        or value.get("status") != "pass-declared-fedora-ubuntu-parity"
         or REVISION.fullmatch(str(value.get("source_revision"))) is None
     ):
         failures.append("Linux platform parity report identity changed")
@@ -651,9 +693,9 @@ def validate_report(value: Any) -> list[str]:
         failures.append("Linux platform parity dimensions changed")
     if value.get("summary") != {
         "dimension_count": 10,
-        "verified_parity_dimensions": 7,
-        "blocked_parity_dimensions": 3,
-        "full_fedora_ubuntu_parity": False,
+        "verified_parity_dimensions": 10,
+        "blocked_parity_dimensions": 0,
+        "full_fedora_ubuntu_parity": True,
     }:
         failures.append("Linux platform parity summary overclaimed or changed")
     if value.get("blocking_gates") != list(BLOCKERS):
@@ -705,7 +747,7 @@ def main() -> int:
     except (OSError, UnicodeError, LinuxPlatformParityError, subprocess.SubprocessError) as error:
         print(f"Linux platform parity evidence failed: {error}", file=sys.stderr)
         return 1
-    print("Fedora/Ubuntu parity matrix validated with one explicit open gate")
+    print("All ten declared Fedora/Ubuntu parity dimensions validated")
     return 0
 
 
