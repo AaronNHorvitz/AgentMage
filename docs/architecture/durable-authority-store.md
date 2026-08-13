@@ -226,6 +226,27 @@ records. Retention uses a closed record-family, sensitivity, disposition, hold,
 and expiration shape, but lifecycle transitions and cryptographic erasure are
 later tasks.
 
+## Pre-Persistence Gate
+
+The kernel classifies every candidate into one closed record family,
+sensitivity, and retention intent before it can produce a sealed
+`PreparedPersistence`. Each bounded, uniquely named field must declare
+`persist`, `digest_only`, or `ephemeral` handling. Persisted values must be
+UTF-8; digest-only values retain only byte count and SHA-256; ephemeral values
+retain neither content nor digest. Known credential field names, private-key
+envelopes, bearer values, provider-token prefixes, cloud access-key identities,
+and URI user information are detected deterministically. A finding in a
+persist-marked field denies the record; a finding in an omitted field removes
+both value and digest.
+
+Every valid candidate produces a content-free, policy-bound receipt. Only an
+admitted receipt selects the SQLCipher operational store and carries a bounded
+expiration assignment. Ephemeral candidates select no storage. Restricted
+persistence fails closed until a separately reviewed restricted-data policy is
+implemented. The detector covers declared signatures and is not represented as
+a complete secret-discovery system; later canary and integration gates remain
+required before the story closes.
+
 ## Publication Boundaries
 
 | Boundary | Atomic publication before continuing | Recovery result |
