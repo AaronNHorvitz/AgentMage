@@ -417,8 +417,8 @@ mod tests {
             NetworkComponent::Undeclared,
         ];
         for (selected, transport, destination) in topologies {
-            let endpoint = LocalEndpointIdentity::new(selected, transport, [9; 32])
-                .expect("guarded endpoint");
+            let endpoint =
+                LocalEndpointIdentity::new(selected, transport, [9; 32]).expect("guarded endpoint");
             let policy = StrictLocalNetworkPolicy::new(endpoint);
             for component in components {
                 let decision = policy.evaluate(&NetworkObservation {
