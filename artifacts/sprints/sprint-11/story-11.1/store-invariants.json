@@ -1,0 +1,109 @@
+{
+  "artifact_id": "encrypted-operational-store-invariants",
+  "claims": {
+    "atomic_generation_and_checkpoint_rollback_executed": true,
+    "cross_process_stress_campaign_complete": false,
+    "exclusive_writer_precedes_migration": true,
+    "external_network_used": false,
+    "foreign_keys_enforced": true,
+    "migration_rollback_executed": true,
+    "public_domain_write_api_implemented": false,
+    "release_support": false,
+    "required_runtime_configuration_verified": true,
+    "second_writer_denied": true,
+    "wal_and_full_synchronization_enforced": true
+  },
+  "external_network_used": false,
+  "invariant_profile": {
+    "checkpoint_commit": "same-transaction-as-state",
+    "migration_history": "sha256-bound",
+    "migration_transaction": "one-transaction-per-version",
+    "publication_generation": "compare-and-swap",
+    "publication_transaction": "immediate",
+    "required_pragmas": {
+      "busy_timeout": 0,
+      "foreign_keys": 1,
+      "journal_mode": "wal",
+      "locking_mode": "exclusive",
+      "secure_delete": 1,
+      "synchronous": 2,
+      "temp_store": 2,
+      "trusted_schema": 0,
+      "wal_autocheckpoint": 1
+    },
+    "writer_lock_order": [
+      "open-keyed-sqlcipher",
+      "claim-exclusive-writer",
+      "verify-runtime-configuration",
+      "migrate",
+      "load-authority"
+    ]
+  },
+  "limitations": [
+    "The second-writer fixture uses two independent SQLCipher connections in one process; multi-process contention and crash campaigns remain later verification tasks.",
+    "The publication rollback fixture injects failure at checkpoint insertion after the metadata update and verifies transaction rollback; exhaustive crash points remain Sub-task 11.1.3.3.",
+    "This invariant gate does not implement typed domain writes, classification, retention transitions, export, erasure, or application-host composition.",
+    "No cross-platform certification or release acceptance is claimed."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "ef68da57763a412f342d2d15537da10e284ef5fa",
+  "sources": [
+    {
+      "bytes": 10683,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "8c04c010eb540e038bc238289a6db57a6679356b3370dc48453c79805df76dcb"
+    },
+    {
+      "bytes": 5474,
+      "path": "kernel/engine/migrations/operational-store/0002-domain-schema.sql",
+      "sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2"
+    },
+    {
+      "bytes": 80251,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "d639a001773b78b86223f96ffec83db91cc4608b3f29b1ebf5d0d530a61c7898"
+    },
+    {
+      "bytes": 11574,
+      "path": "scripts/operational_store_invariants_evidence.py",
+      "sha256": "d323b4becc8ea9de1dd3ca2948f8116d4492fed52d04d11dc1e193422974b109"
+    },
+    {
+      "bytes": 4162,
+      "path": "tests/test_operational_store_invariants_evidence.py",
+      "sha256": "bf447f2c4233cadc6938126e5e5ad6c358682e6a6fffc563ef0fd6895c72ad96"
+    }
+  ],
+  "status": "pass-writer-transaction-wal-checkpoint-migration-invariants",
+  "store_source_sha256": "d639a001773b78b86223f96ffec83db91cc4608b3f29b1ebf5d0d530a61c7898",
+  "task_ids": [
+    "11.1.1.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "a41190dff99e6a8df112a146711da3cfe6320acb2d12e39b9c20bd278df8e71e",
+      "exit_code": 0,
+      "expected_marker_sha256": "04ad9982d145ef859bb81dce7d670a8e05174b05e91f5358a9f0d12aa35264bc",
+      "status": "pass"
+    },
+    {
+      "command_id": "1f6db0672af336c5764092c42782b0d455697fd7e56805c1c49e8c8dcfdfd753",
+      "exit_code": 0,
+      "expected_marker_sha256": "c9f025701ba94f1afc2ce3b29f573ae3ac0abe9ba15636d4bd13349cfae7cc06",
+      "status": "pass"
+    },
+    {
+      "command_id": "a5a8c23f7ad7b8fc2563e2534af5217c7ce7c342a6776aa7970f884031a1ec42",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
