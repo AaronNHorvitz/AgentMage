@@ -141,6 +141,8 @@
     "evidence:story9.2-docker-guard:check": "python3 scripts/linux_docker_guard_evidence.py",
     "evidence:story9.2-docker-preflight:build": "python3 scripts/linux_docker_preflight_evidence.py --write --source-revision HEAD",
     "evidence:story9.2-docker-preflight:check": "python3 scripts/linux_docker_preflight_evidence.py",
+    "evidence:story9.2-docker-prerequisite:build": "python3 scripts/linux_docker_prerequisite_evidence.py --write --source-revision HEAD",
+    "evidence:story9.2-docker-prerequisite:check": "python3 scripts/linux_docker_prerequisite_evidence.py",
     "native-runtime:build": "python3 scripts/native_llama_runtime.py --archive \"$AGENTMAGE_LLAMA_CPP_ARCHIVE\"",
     "native-runtime:check": "python3 scripts/native_llama_runtime.py --verify-package release-output/agentmage-llama-cpp-b10333-cpu-linux-x86_64.tar.gz",
     "model:source-check": "python3 scripts/model_admission.py",
