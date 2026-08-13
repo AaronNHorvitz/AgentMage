@@ -81,22 +81,68 @@ pub enum PersistenceFieldHandling {
     Ephemeral,
 }
 
+/// Raw content class that is structurally ineligible for durable storage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EphemeralContentClass {
+    /// Original attachment bytes.
+    RawAttachment,
+    /// Complete unminimized tool output.
+    FullToolOutput,
+    /// Environment-variable name or value material.
+    EnvironmentVariable,
+    /// Complete user or assembled prompt content.
+    Prompt,
+    /// Complete unminimized model response.
+    ModelResponse,
+}
+
 /// One bounded field submitted to the gate.
 pub struct PersistenceField<'a> {
     name: &'a str,
     value: &'a [u8],
     handling: PersistenceFieldHandling,
+    ephemeral_class: Option<EphemeralContentClass>,
 }
 
 impl<'a> PersistenceField<'a> {
-    /// Creates a field validated when its candidate is evaluated.
+    #[cfg(test)]
+    const fn new(name: &'a str, value: &'a [u8], handling: PersistenceFieldHandling) -> Self {
+        Self::operational_metadata(name, value, handling)
+    }
+
+    /// Creates bounded operational metadata validated during evaluation.
     #[must_use]
-    pub const fn new(name: &'a str, value: &'a [u8], handling: PersistenceFieldHandling) -> Self {
+    pub const fn operational_metadata(
+        name: &'a str,
+        value: &'a [u8],
+        handling: PersistenceFieldHandling,
+    ) -> Self {
         Self {
             name,
             value,
             handling,
+            ephemeral_class: None,
         }
+    }
+
+    /// Creates raw content that can only remain ephemeral.
+    #[must_use]
+    pub const fn ephemeral_content(
+        name: &'a str,
+        value: &'a [u8],
+        class: EphemeralContentClass,
+    ) -> Self {
+        Self {
+            name,
+            value,
+            handling: PersistenceFieldHandling::Ephemeral,
+            ephemeral_class: Some(class),
+        }
+    }
+
+    const fn is_structurally_ephemeral(&self) -> bool {
+        self.ephemeral_class.is_some()
     }
 }
 
@@ -106,6 +152,7 @@ impl fmt::Debug for PersistenceField<'_> {
             .field("name_bytes", &self.name.len())
             .field("value_bytes", &self.value.len())
             .field("handling", &self.handling)
+            .field("ephemeral_class", &self.ephemeral_class)
             .finish_non_exhaustive()
     }
 }
@@ -371,11 +418,17 @@ impl PersistencePolicy {
         validate_candidate(candidate)?;
         let scan = scan(candidate);
         let shape = shape_sha256(candidate, &scan)?;
+        let only_structurally_ephemeral = candidate
+            .fields
+            .iter()
+            .all(PersistenceField::is_structurally_ephemeral);
         let denied = if candidate.sensitivity == PersistenceSensitivity::Restricted {
             Some(PersistenceOutcome::DeniedRestricted)
         } else if scan.persisted_secret {
             Some(PersistenceOutcome::DeniedSecret)
-        } else if candidate.retention == PersistenceRetentionIntent::Ephemeral {
+        } else if candidate.retention == PersistenceRetentionIntent::Ephemeral
+            || only_structurally_ephemeral
+        {
             Some(PersistenceOutcome::Ephemeral)
         } else {
             None
@@ -551,6 +604,11 @@ fn validate_candidate(candidate: &PersistenceCandidate<'_>) -> Result<(), Persis
         {
             return Err(PersistenceError::InvalidCandidate);
         }
+        if field.is_structurally_ephemeral()
+            && field.handling != PersistenceFieldHandling::Ephemeral
+        {
+            return Err(PersistenceError::InvalidCandidate);
+        }
     }
     Ok(())
 }
@@ -581,7 +639,10 @@ fn minimize(
     let mut output = Vec::new();
     let mut counts = Counts::default();
     for (index, field) in candidate.fields.iter().enumerate() {
-        if secret_fields.contains(&index) || field.handling == PersistenceFieldHandling::Ephemeral {
+        if secret_fields.contains(&index)
+            || field.is_structurally_ephemeral()
+            || field.handling == PersistenceFieldHandling::Ephemeral
+        {
             counts.omitted += 1;
             continue;
         }
@@ -629,6 +690,7 @@ fn shape_sha256(
                 field.name,
                 field.value.len(),
                 field.handling,
+                field.ephemeral_class,
                 scan.secret_fields.contains(&index),
             )
         })
@@ -904,6 +966,124 @@ mod tests {
             assert_eq!(decision.receipt().encryption(), PersistenceEncryption::None);
             assert!(decision.prepared().is_none());
         }
+    }
+
+    #[test]
+    fn every_raw_content_class_is_ephemeral_without_value_or_digest_receipt() {
+        for class in [
+            EphemeralContentClass::RawAttachment,
+            EphemeralContentClass::FullToolOutput,
+            EphemeralContentClass::EnvironmentVariable,
+            EphemeralContentClass::Prompt,
+            EphemeralContentClass::ModelResponse,
+        ] {
+            let first = [PersistenceField::ephemeral_content(
+                "raw_content",
+                b"alpha",
+                class,
+            )];
+            let second = [PersistenceField::ephemeral_content(
+                "raw_content",
+                b"bravo",
+                class,
+            )];
+            let first_decision = policy()
+                .evaluate(&candidate(
+                    &first,
+                    PersistenceSensitivity::Private,
+                    PersistenceRetentionIntent::Retained,
+                ))
+                .expect("first decision");
+            let second_decision = policy()
+                .evaluate(&candidate(
+                    &second,
+                    PersistenceSensitivity::Private,
+                    PersistenceRetentionIntent::Retained,
+                ))
+                .expect("second decision");
+
+            assert_eq!(
+                first_decision.receipt().outcome(),
+                PersistenceOutcome::Ephemeral
+            );
+            assert_eq!(
+                first_decision.receipt().encryption(),
+                PersistenceEncryption::None
+            );
+            assert!(first_decision.prepared().is_none());
+            assert_eq!(
+                first_decision.receipt().receipt_sha256(),
+                second_decision.receipt().receipt_sha256()
+            );
+            let receipt =
+                String::from_utf8(first_decision.receipt().to_json().expect("json")).expect("utf8");
+            for raw in [b"alpha".as_slice(), b"bravo"] {
+                assert!(!receipt.contains(std::str::from_utf8(raw).expect("ascii")));
+                assert!(!receipt.contains(&sha256_hex(raw)));
+            }
+        }
+    }
+
+    #[test]
+    fn raw_content_is_omitted_when_minimized_metadata_is_admitted() {
+        for class in [
+            EphemeralContentClass::RawAttachment,
+            EphemeralContentClass::FullToolOutput,
+            EphemeralContentClass::EnvironmentVariable,
+            EphemeralContentClass::Prompt,
+            EphemeralContentClass::ModelResponse,
+        ] {
+            let raw = format!("private-raw-{class:?}");
+            let fields = [
+                PersistenceField::operational_metadata(
+                    "summary",
+                    b"bounded",
+                    PersistenceFieldHandling::Persist,
+                ),
+                PersistenceField::ephemeral_content("raw_content", raw.as_bytes(), class),
+            ];
+            let decision = policy()
+                .evaluate(&candidate(
+                    &fields,
+                    PersistenceSensitivity::Private,
+                    PersistenceRetentionIntent::Session,
+                ))
+                .expect("decision");
+            assert_eq!(decision.receipt().outcome(), PersistenceOutcome::Admitted);
+            decision
+                .prepared()
+                .expect("prepared metadata")
+                .with_record_json(|record| {
+                    let record = String::from_utf8_lossy(record);
+                    assert!(record.contains("bounded"));
+                    assert!(!record.contains(&raw));
+                    assert!(!record.contains(&sha256_hex(raw.as_bytes())));
+                });
+            let receipt =
+                String::from_utf8(decision.receipt().to_json().expect("json")).expect("utf8");
+            assert!(!receipt.contains(&raw));
+            assert!(!receipt.contains(&sha256_hex(raw.as_bytes())));
+        }
+    }
+
+    #[test]
+    fn forged_raw_content_handling_fails_before_policy_decision() {
+        let fields = [PersistenceField {
+            name: "raw_content",
+            value: b"must-remain-ephemeral",
+            handling: PersistenceFieldHandling::Persist,
+            ephemeral_class: Some(EphemeralContentClass::Prompt),
+        }];
+        assert_eq!(
+            policy()
+                .evaluate(&candidate(
+                    &fields,
+                    PersistenceSensitivity::Private,
+                    PersistenceRetentionIntent::Retained,
+                ))
+                .expect_err("forged handling must fail"),
+            PersistenceError::InvalidCandidate
+        );
     }
 
     #[test]
