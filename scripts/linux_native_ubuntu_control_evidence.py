@@ -646,6 +646,14 @@ def _same_qemu_process(vm: VmHandle) -> bool:
     return b"qemu-system-x86_64" in command and os.fsencode(vm.image) in command
 
 
+def loopback_listener_absent(port: int) -> bool:
+    """Check that no process accepts TCP connections on one loopback port."""
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.settimeout(0.5)
+        return probe.connect_ex(("127.0.0.1", port)) != 0
+
+
 def stop_vm(vm: VmHandle) -> dict[str, bool]:
     if Path(f"/proc/{vm.pid}").exists():
         ssh_script(vm, "sudo systemctl poweroff\n", timeout=15, check=False)
@@ -658,15 +666,9 @@ def stop_vm(vm: VmHandle) -> dict[str, bool]:
         wait_for_vm_exit(vm.pid, 5)
     process_absent = not Path(f"/proc/{vm.pid}").exists()
     vm.pid_file.unlink(missing_ok=True)
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
-            listener.bind(("127.0.0.1", vm.port))
-        port_released = True
-    except OSError:
-        port_released = False
     return {
         "qemu_process_absent": process_absent,
-        "loopback_ssh_port_released": port_released,
+        "loopback_ssh_listener_absent": loopback_listener_absent(vm.port),
     }
 
 
@@ -791,7 +793,10 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
             temporary,
             restricted_network=False,
         )
-        shutdown = {"qemu_process_absent": False, "loopback_ssh_port_released": False}
+        shutdown = {
+            "qemu_process_absent": False,
+            "loopback_ssh_listener_absent": False,
+        }
         try:
             wait_for_ssh(vm)
             ssh_script(
@@ -1232,7 +1237,10 @@ def run_native_acceptance(
             temporary,
             restricted_network=True,
         )
-        vm_cleanup = {"qemu_process_absent": False, "loopback_ssh_port_released": False}
+        vm_cleanup = {
+            "qemu_process_absent": False,
+            "loopback_ssh_listener_absent": False,
+        }
         try:
             wait_for_ssh(vm)
             ssh_script(
@@ -1423,8 +1431,13 @@ def run_native_acceptance(
             "test_binaries_removed_with_temporary_tree": not temporary.exists(),
         }
     )
-    if result is None or not all(cleanup.values()):
-        raise NativeUbuntuEvidenceError("native Ubuntu acceptance cleanup failed")
+    if result is None:
+        raise NativeUbuntuEvidenceError("native Ubuntu acceptance produced no result")
+    failed_cleanup = sorted(key for key, passed in cleanup.items() if not passed)
+    if failed_cleanup:
+        raise NativeUbuntuEvidenceError(
+            "native Ubuntu acceptance cleanup failed: " + ", ".join(failed_cleanup)
+        )
     result["cleanup"] = cleanup
     return result
 
@@ -1664,7 +1677,7 @@ def validate_report(value: Any) -> list[str]:
             or execution.get("cleanup")
             != {
                 "qemu_process_absent": True,
-                "loopback_ssh_port_released": True,
+                "loopback_ssh_listener_absent": True,
                 "disposable_overlay_removed": True,
                 "ephemeral_ssh_key_removed": True,
                 "test_binaries_removed_with_temporary_tree": True,

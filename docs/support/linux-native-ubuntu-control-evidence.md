@@ -88,7 +88,7 @@ inference, or macOS claim.
 ## Cleanup Check
 
 The harness refuses to publish evidence unless the QEMU process is gone, the
-loopback SSH port is released, the disposable overlay and test binaries are
+loopback SSH listener is absent, the disposable overlay and test binaries are
 removed, and both halves of the ephemeral SSH key are absent. The prepared
 network-bootstrap image remains cached by design and is verified by digest
 before each acceptance run.

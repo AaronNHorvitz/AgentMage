@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import inspect
+import socket
 import unittest
 
 from scripts import linux_native_ubuntu_control_evidence as evidence
@@ -141,7 +142,7 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
                 "prepared_image_sha256": prepared_sha,
                 "cleanup": {
                     "qemu_process_absent": True,
-                    "loopback_ssh_port_released": True,
+                    "loopback_ssh_listener_absent": True,
                     "disposable_overlay_removed": True,
                     "ephemeral_ssh_key_removed": True,
                     "test_binaries_removed_with_temporary_tree": True,
@@ -267,6 +268,14 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
             "unlink /tmp/agentmage-keyring-env /tmp/agentmage-keyring-start",
             source,
         )
+
+    def test_loopback_listener_probe_observes_present_and_absent_states(self) -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+            listener.bind(("127.0.0.1", 0))
+            listener.listen(1)
+            port = listener.getsockname()[1]
+            self.assertFalse(evidence.loopback_listener_absent(port))
+        self.assertTrue(evidence.loopback_listener_absent(port))
 
 
 if __name__ == "__main__":
