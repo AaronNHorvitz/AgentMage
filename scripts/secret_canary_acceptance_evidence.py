@@ -12,7 +12,10 @@ import subprocess
 from pathlib import Path
 from typing import Any, Final
 
-from scripts.evidence_core import atomic_write, canonical_json_bytes
+try:
+    from scripts.evidence_core import atomic_write, canonical_json_bytes
+except ModuleNotFoundError:
+    from evidence_core import atomic_write, canonical_json_bytes
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 REPORT_PATH: Final = ROOT / "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
