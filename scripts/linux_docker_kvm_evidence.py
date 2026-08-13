@@ -769,7 +769,7 @@ def validate_report(value: Any) -> list[str]:
                 or docker.get("daemon_configuration", {}).get("socket_activation_active")
                 is not False
                 or SHA256.fullmatch(
-                    str(docker.get("daemon_configuration", {}).get("override_sha256"))
+                    str(docker.get("daemon_configuration", {}).get("service_unit_sha256"))
                 )
                 is None
                 or collector.get("record_type") != "agentmage_docker_live_topology_observation"

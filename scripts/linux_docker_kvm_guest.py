@@ -341,16 +341,28 @@ def configure_direct_daemon() -> dict[str, Any]:
                 "--init-path=/usr/bin/tini-static",
             ]
         )
-    override = Path("/etc/systemd/system/docker.service.d/agentmage-evidence.conf")
-    override.parent.mkdir(parents=True, exist_ok=True)
-    override.write_text(
-        "[Unit]\nRequires=\nRequires=containerd.service\n"
-        "[Service]\nExecStart=\nExecStart="
+    service_unit = Path("/etc/systemd/system/docker.service")
+    service_unit.write_text(
+        "[Unit]\n"
+        "Description=AgentMage Docker topology acceptance daemon\n"
+        "Requires=containerd.service\n"
+        "After=containerd.service network-online.target\n"
+        "[Service]\n"
+        "Type=notify\n"
+        "ExecStart="
         + " ".join(arguments)
-        + "\n",
+        + "\n"
+        "Restart=on-failure\n"
+        "RestartSec=2\n"
+        "Delegate=yes\n"
+        "KillMode=process\n"
+        "LimitNOFILE=infinity\n"
+        "LimitNPROC=infinity\n"
+        "LimitCORE=infinity\n"
+        "TasksMax=infinity\n",
         encoding="ascii",
     )
-    override.chmod(0o644)
+    service_unit.chmod(0o644)
     run(["systemctl", "stop", "docker.service", "docker.socket"])
     run(["systemctl", "mask", "docker.socket"])
     run(["systemctl", "daemon-reload"])
@@ -369,7 +381,7 @@ def configure_direct_daemon() -> dict[str, Any]:
             ["systemctl", "show", "--property=ActiveState", "--value", "docker.socket"]
         )
         == "active",
-        "override_sha256": sha256_file(override),
+        "service_unit_sha256": sha256_file(service_unit),
     }
 
 

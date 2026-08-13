@@ -18,8 +18,9 @@ activate AgentMage Docker inference or make a release-support claim.
   and one host-loopback SSH forward.
 - The exact six-file package is installed, the inactive native adapter is
   self-checked, and the production collector inspects the live Docker topology.
-- The disposable guest replaces package-default `fd://` socket activation with
-  a recorded direct `/run/docker.sock` daemon listener. This preserves the
+- The disposable guest replaces the package-default service and `fd://` socket
+  activation with a minimal hash-recorded unit that requires `containerd` and
+  starts a direct `/run/docker.sock` daemon listener. This preserves the
   collector's exact daemon peer-identity check and is an explicit Docker-mode
   prerequisite rather than an ambient host assumption.
 - A held ordinary-user acceptance peer and dedicated non-root guard expose only
