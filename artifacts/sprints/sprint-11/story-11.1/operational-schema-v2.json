@@ -1,0 +1,118 @@
+{
+  "artifact_id": "encrypted-operational-schema-v2",
+  "claims": {
+    "domain_state_in_authority_digest": false,
+    "external_network_used": false,
+    "foreign_key_and_closed_value_constraints_executed": true,
+    "migration_history_hash_bound": true,
+    "normalized_domain_schema_implemented": true,
+    "public_domain_write_api_implemented": false,
+    "release_support": false,
+    "retention_lifecycle_implemented": false,
+    "version_one_upgrade_executed": true,
+    "version_two_failure_rollback_executed": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Schema v2 adds structural domain tables only; public typed domain records, transactional write APIs, and restart reconstruction remain later Sprint 11 work.",
+    "Domain rows are not yet part of the authority-state digest because no production boundary can write them; the existing grant, transaction, receipt, and checkpoint digest remains unchanged.",
+    "The retention table constrains policy shape but does not implement expiry, hold transitions, erasure, export, backup policy, or restore reconciliation.",
+    "This evidence uses local encrypted SQLCipher fixtures and claims no application-host composition, cross-platform certification, or release support."
+  ],
+  "migration_sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2",
+  "private_user_data_used": false,
+  "schema_profile": {
+    "added_domain_table_count": 9,
+    "added_index_count": 9,
+    "domain_indexes": [
+      "actions_task_idx",
+      "actions_transaction_idx",
+      "decisions_task_idx",
+      "evidence_task_idx",
+      "files_session_idx",
+      "objectives_session_idx",
+      "plans_objective_idx",
+      "retention_disposition_idx",
+      "tasks_plan_idx"
+    ],
+    "domain_tables": [
+      "actions",
+      "decisions",
+      "evidence",
+      "files",
+      "objectives",
+      "plans",
+      "retention",
+      "sessions",
+      "tasks"
+    ],
+    "existing_authority_table_count": 10,
+    "history_versions": [
+      1,
+      2
+    ],
+    "migration_1_bytes_preserved": true,
+    "schema_version": 2,
+    "total_table_count": 19,
+    "upgrade_path": "encrypted-v1-to-v2-additive-transaction"
+  },
+  "schema_version": 1,
+  "source_revision": "6230e1049db46a43f38110b04f426d58eeb0c240",
+  "sources": [
+    {
+      "bytes": 10070,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "ec4d2ace93a6312778d00c61960c1a37ea5e8035e4788dca7505544f0cae3bf1"
+    },
+    {
+      "bytes": 5474,
+      "path": "kernel/engine/migrations/operational-store/0002-domain-schema.sql",
+      "sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2"
+    },
+    {
+      "bytes": 77123,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "4d5f1793b819409e25b5e3fde2d94779cca34887d98af63a6b83f60bfe4b88d7"
+    },
+    {
+      "bytes": 12231,
+      "path": "scripts/operational_schema_evidence.py",
+      "sha256": "be340a60962f5a05933e7211cdefd842a76e79506013a943814eba18e251ce9b"
+    },
+    {
+      "bytes": 4007,
+      "path": "tests/test_operational_schema_evidence.py",
+      "sha256": "6759c9e090a23a6d496169a66a856a886c1b7c442f1b52b8e308dc94a0792e62"
+    }
+  ],
+  "status": "pass-normalized-schema-and-migration-boundary",
+  "task_ids": [
+    "11.1.1.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "a41190dff99e6a8df112a146711da3cfe6320acb2d12e39b9c20bd278df8e71e",
+      "exit_code": 0,
+      "expected_marker_sha256": "4e7aded8b5cd8514fb2419134be19936b35008681ccd0cdeead7d9125ffa0867",
+      "status": "pass"
+    },
+    {
+      "command_id": "07d0a37c0791ff4441c11ce7477b481c59c213dc28e2e7c51bb502f85e49033a",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
