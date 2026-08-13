@@ -1,0 +1,114 @@
+{
+  "artifact_id": "s-011-st01-secret-canary-results",
+  "claims": {
+    "active_model_workflow_tested": false,
+    "ephemeral_content_classes_exercised": 5,
+    "external_network_used": false,
+    "field_handling_modes_exercised": 3,
+    "logs_closed_by_structural_absence": true,
+    "manual_fuzzing_executed": false,
+    "model_context_closed_by_structural_absence": true,
+    "physical_remanence_claim": false,
+    "plaintext_fallback_paths_observed": 0,
+    "raw_canary_values_retained_in_evidence": 0,
+    "reachable_surfaces_closed": 12,
+    "record_families_exercised": 11,
+    "release_support": false,
+    "secret_finding_classes_exercised": 6,
+    "typed_domain_writers_complete": false,
+    "unauthorized_model_context_paths_observed": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The public pre-persistence contract is fully matrix-tested, but typed production writers for all 11 normalized tables do not yet exist; encrypted artifact scanning directly seeds the current sessions table.",
+    "Logs and model context are closed by structural absence because no persistence logger or active model bridge exists; future activation invalidates this result until the matrix is extended.",
+    "Byte scanning is not forensic proof of SSD, filesystem snapshot, swap, or external host instrumentation remanence.",
+    "The at-least-100-seed crash campaign, live Secret Service, cross-platform, packaging, release acceptance, and manually deferred fuzzing remain separate gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "b6d3b737eacc0ea65b29935d5d4e717333fc4808",
+  "sources": [
+    {
+      "bytes": 5612,
+      "path": "docs/verification/s-011-st01-secret-canary-results.md",
+      "sha256": "a35c5898054278693c8bdc93f029a20ce95940e2c3716e0b29bad1da43173ef0"
+    },
+    {
+      "bytes": 45281,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "400b9e71f568a10093b9a0811ffe372a4b84a555027b392113f33c815b395f7e"
+    },
+    {
+      "bytes": 156876,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "53bccacb06ca363bc86c8c26119d6bb8b81c3c980c2a4216ee33b828c36ec3ae"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "c58099babd8af205816529fa7890b44e84cb5417195031a2e01e646d79bee456"
+    },
+    {
+      "bytes": 10145,
+      "path": "scripts/secret_canary_acceptance_evidence.py",
+      "sha256": "a51a84223481d9d28dedf523435e3255e3eb5656ffa1d17630f0489005162ec6"
+    },
+    {
+      "bytes": 3064,
+      "path": "tests/test_secret_canary_acceptance_evidence.py",
+      "sha256": "d4e768f03cffa7bf4e7b31e94d2f5575704ba3a4d8000ad1894a61c23dd92bad"
+    }
+  ],
+  "status": "pass-current-representable-input-and-surface-closure",
+  "surface_ids": [
+    "SC-01",
+    "SC-02",
+    "SC-03",
+    "SC-04",
+    "SC-05",
+    "SC-06",
+    "SC-07",
+    "SC-08",
+    "SC-09",
+    "SC-10",
+    "SC-11",
+    "SC-12"
+  ],
+  "task_ids": [
+    "11.1.3.2",
+    "S-011-ST01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "16e5cb0ead4fd8705d532bcebee4278dab3e7b51b1efdc12729595697cc400a0",
+      "exit_code": 0,
+      "expected_marker_sha256": "305d8c5561a75230151b6248c4d5731fdfe7537cbb97d53b5819fc73920c18a9",
+      "status": "pass"
+    },
+    {
+      "command_id": "5fbe6e731d82aae04538bfc2046f8e2250d2721e27c1fb3e18e100c25759a6d4",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "041eb7e303c3fbbc682783f7ec5a933d398494a6b81dc194b0f0f42f1a25ff49",
+      "status": "pass"
+    },
+    {
+      "command_id": "b898b7be097d6afa05186931f4ed62778bc07931fabfe1bc4390589527865297",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
