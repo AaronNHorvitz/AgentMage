@@ -12,6 +12,18 @@ from scripts import linux_clean_image_acceptance as acceptance
 
 
 class LinuxCleanImageAcceptanceTests(unittest.TestCase):
+    def test_inference_descriptor_binds_the_inactive_runtime_profile(self) -> None:
+        self.assertEqual(
+            acceptance.EXPECTED_INFERENCE_DESCRIPTOR["native_runtime_package"],
+            "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+        )
+        self.assertEqual(
+            acceptance.EXPECTED_INFERENCE_DESCRIPTOR[
+                "native_runtime_profile_sha256"
+            ],
+            "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+        )
+
     def valid_platform(self, target: acceptance.Target) -> dict:
         steps = []
         for step_id in acceptance.STEP_IDS:

@@ -11,6 +11,22 @@ from scripts import package_lifecycle as lifecycle
 
 
 class PackageLifecycleTests(unittest.TestCase):
+    def test_inference_descriptor_binds_the_inactive_runtime_profile(self) -> None:
+        self.assertEqual(
+            lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["native_runtime_package"],
+            "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+        )
+        self.assertRegex(
+            lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
+                "native_runtime_profile_sha256"
+            ],
+            r"^[0-9a-f]{64}$",
+        )
+        self.assertEqual(
+            lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
+            2,
+        )
+
     def valid_lifecycle(self) -> dict:
         checks = {
             "clean_install": True,

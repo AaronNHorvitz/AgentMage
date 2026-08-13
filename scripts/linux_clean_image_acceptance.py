@@ -65,8 +65,10 @@ EXPECTED_INFERENCE_DESCRIPTOR: Final = {
     "contract": "authenticated-local-endpoint-v1",
     "enabled_models": 0,
     "inference_available": False,
+    "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 1,
+    "process_boundary_version": 2,
 }
 CONTAINER_CONTROLS: Final = {
     "runtime": "rootless-podman",
