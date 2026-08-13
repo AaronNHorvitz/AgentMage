@@ -221,6 +221,23 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
         with self.assertRaises(evidence.NativeUbuntuEvidenceError):
             evidence.parse_test_output(output.rsplit("\n", 1)[0], expected)
 
+    def test_observation_parser_requires_marker_and_one_passing_test(self) -> None:
+        output = (
+            f"test name ... {evidence.KERNEL_MARKER}\n"
+            "ok\n\n"
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; "
+            "68 filtered out; finished in 0.01s\n"
+        )
+        self.assertTrue(
+            evidence.observation_test_passed(output, evidence.KERNEL_MARKER)
+        )
+        self.assertFalse(evidence.observation_test_passed(output, "wrong-marker"))
+        self.assertFalse(
+            evidence.observation_test_passed(
+                output.replace("1 passed", "0 passed"), evidence.KERNEL_MARKER
+            )
+        )
+
     def test_cloud_init_retains_only_ephemeral_public_key(self) -> None:
         rendered = evidence.render_user_data("ssh-ed25519 synthetic-public", bootstrap=True)
         self.assertIn("ssh-ed25519 synthetic-public", rendered)

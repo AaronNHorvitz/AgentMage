@@ -976,6 +976,16 @@ def parse_test_output(
     return [{"test": name, "status": "pass"} for name in expected]
 
 
+def observation_test_passed(output: str, marker: str) -> bool:
+    """Require one passing test and one exact non-sensitive observation marker."""
+
+    return marker in output and re.search(
+        r"test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; "
+        r"[0-9]+ filtered out; finished in [0-9.]+s",
+        output,
+    ) is not None
+
+
 def guest_test(
     vm: VmHandle,
     binary: str,
@@ -1001,7 +1011,34 @@ def guest_test(
         timeout=360,
         stage=f"test-{filter_name}",
     )
-    return parse_test_output(output, expected), output
+    try:
+        records = parse_test_output(output, expected)
+    except NativeUbuntuEvidenceError as error:
+        raise NativeUbuntuEvidenceError(
+            f"Ubuntu test closure is incomplete: {filter_name}"
+        ) from error
+    return records, output
+
+
+def guest_observation_test(
+    vm: VmHandle,
+    filter_name: str,
+    marker: str,
+) -> None:
+    output = ssh_script(
+        vm,
+        "set -eu\n"
+        "export XDG_RUNTIME_DIR=/run/user/10001\n"
+        "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10001/bus\n"
+        f"/home/agentmage/acceptance/platform-tests {filter_name} "
+        "--ignored --nocapture --test-threads=1\n",
+        timeout=360,
+        stage=f"observation-{filter_name}",
+    )
+    if not observation_test_passed(output, marker):
+        raise NativeUbuntuEvidenceError(
+            f"Ubuntu control observation is incomplete: {filter_name}"
+        )
 
 
 def guest_identity(vm: VmHandle) -> dict[str, Any]:
@@ -1238,16 +1275,23 @@ def run_native_acceptance(
                 stage="acceptance-test-binary-mode",
             )
             initialize_synthetic_keyring(vm)
-            sandbox_tests, sandbox_output = guest_test(
+            sandbox_tests, _ = guest_test(
                 vm,
                 "platform-tests",
                 "sandbox::tests",
                 LIVE_SANDBOX_TESTS,
                 ignored=True,
-                nocapture=True,
             )
-            if KERNEL_MARKER not in sandbox_output or RESOURCE_MARKER not in sandbox_output:
-                raise NativeUbuntuEvidenceError("Ubuntu kernel or resource trace is absent")
+            guest_observation_test(
+                vm,
+                "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
+                KERNEL_MARKER,
+            )
+            guest_observation_test(
+                vm,
+                "transient_service_terminates_an_unbounded_worker",
+                RESOURCE_MARKER,
+            )
             ipc_tests, _ = guest_test(
                 vm, "platform-tests", "ipc::tests", IPC_TESTS
             )
