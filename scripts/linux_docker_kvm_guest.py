@@ -424,6 +424,52 @@ def docker_peer_record() -> dict[str, Any]:
     return {"pid": pid, "uid": uid, "gid": gid}
 
 
+def network_record(pid: int) -> dict[str, Any]:
+    interfaces = json.loads(
+        text(["nsenter", "--target", str(pid), "--net", "ip", "-json", "link"])
+    )
+    active = [item for item in interfaces if "UP" in item.get("flags", [])]
+    routes = Path(f"/proc/{pid}/net/route").read_text(encoding="ascii").splitlines()[1:]
+    raw = 0
+    wildcard_v4 = 0
+    wildcard_v6 = 0
+    non_loopback = 0
+    management = 0
+    for family, wildcard, loopback in (
+        ("tcp", "00000000", "0100007F"),
+        ("tcp6", "0" * 32, "00000000000000000000000001000000"),
+    ):
+        records = Path(f"/proc/{pid}/net/{family}").read_text(encoding="ascii")
+        for line in records.splitlines()[1:]:
+            fields = line.split()
+            if len(fields) < 4 or fields[3] != "0A":
+                continue
+            address, port_text = fields[1].split(":", 1)
+            if int(port_text, 16) != 12434:
+                management += 1
+            else:
+                raw += 1
+                if address == wildcard:
+                    if family == "tcp":
+                        wildcard_v4 += 1
+                    else:
+                        wildcard_v6 += 1
+                elif address != loopback:
+                    non_loopback += 1
+    return {
+        "active_interface_count": len(active),
+        "loopback_up": any(item.get("ifname") == "lo" for item in active),
+        "non_local_route_count": sum(
+            1 for line in routes if line.split() and line.split()[0] != "lo"
+        ),
+        "raw_listener_count": raw,
+        "raw_wildcard_v4_listener_count": wildcard_v4,
+        "raw_wildcard_v6_listener_count": wildcard_v6,
+        "non_loopback_listener_count": non_loopback,
+        "management_listener_count": management,
+    }
+
+
 def verify_precollector_topology(
     runtime: dict[str, Any],
     guard: dict[str, Any],
@@ -433,6 +479,8 @@ def verify_precollector_topology(
 ) -> list[str]:
     parent = Path("/run/agentmage-dmr").stat()
     peer = docker_peer_record()
+    private_network = network_record(runner["pid"])
+    host_network = network_record(os.getpid())
     checks = {
         "daemon-peer-pid": peer["pid"] == daemon["pid"],
         "daemon-peer-root": peer["uid"] == 0 and daemon["uid"] == 0,
@@ -449,6 +497,27 @@ def verify_precollector_topology(
         "guard-parent-owner": parent.st_uid == GUARD_UID,
         "guard-parent-group": parent.st_gid == RUNTIME_GID,
         "guard-parent-mode": stat.S_IMODE(parent.st_mode) == 0o710,
+        "private-interface-count": private_network["active_interface_count"] == 1,
+        "private-loopback-up": private_network["loopback_up"],
+        "private-route-count": private_network["non_local_route_count"] == 0,
+        "private-raw-listener-count": private_network["raw_listener_count"] == 1,
+        "private-ipv4-wildcard-count": private_network[
+            "raw_wildcard_v4_listener_count"
+        ]
+        == 0,
+        "private-ipv6-wildcard-count": private_network[
+            "raw_wildcard_v6_listener_count"
+        ]
+        == 1,
+        "private-non-loopback-listener-count": private_network[
+            "non_loopback_listener_count"
+        ]
+        == 0,
+        "private-management-listener-count": private_network[
+            "management_listener_count"
+        ]
+        == 0,
+        "host-raw-listener-count": host_network["raw_listener_count"] == 0,
     }
     failed = [name for name, passed in checks.items() if not passed]
     if failed:

@@ -69,6 +69,15 @@ PRECOLLECTOR_CHECKS: Final = [
     "guard-parent-owner",
     "guard-parent-group",
     "guard-parent-mode",
+    "private-interface-count",
+    "private-loopback-up",
+    "private-route-count",
+    "private-raw-listener-count",
+    "private-ipv4-wildcard-count",
+    "private-ipv6-wildcard-count",
+    "private-non-loopback-listener-count",
+    "private-management-listener-count",
+    "host-raw-listener-count",
 ]
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
