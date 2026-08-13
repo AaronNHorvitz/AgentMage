@@ -63,10 +63,10 @@ pub use native_runtime::{
 pub const COMPONENT_ID: &str = "platform-linux-native-inference";
 
 /// Version of the package/process boundary including mandatory Docker drift preflight.
-pub const PROCESS_BOUNDARY_VERSION: u16 = 6;
+pub const PROCESS_BOUNDARY_VERSION: u16 = 7;
 
 /// Exact content-free descriptor emitted by the inactive packaged adapter.
-pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"docker_compatibility_available\":false,\"docker_guard_profile_sha256\":\"a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8\",\"docker_model_artifact_digest\":\"sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444\",\"docker_model_runner_image_digest\":\"sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9\",\"docker_preflight_contract_version\":2,\"docker_runtime_profile_sha256\":\"eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a\",\"enabled_models\":0,\"inference_available\":false,\"native_runtime_package\":\"agentmage-llama-cpp-b10333-cpu-linux-x86_64\",\"native_runtime_profile_sha256\":\"21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea\",\"network_listener\":false,\"process_boundary_version\":6}\n";
+pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"docker_compatibility_available\":false,\"docker_guard_profile_sha256\":\"86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82\",\"docker_model_artifact_digest\":\"sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444\",\"docker_model_runner_image_digest\":\"sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9\",\"docker_preflight_contract_version\":3,\"docker_runtime_profile_sha256\":\"b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd\",\"enabled_models\":0,\"inference_available\":false,\"native_runtime_package\":\"agentmage-llama-cpp-b10333-cpu-linux-x86_64\",\"native_runtime_profile_sha256\":\"21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea\",\"network_listener\":false,\"process_boundary_version\":7}\n";
 
 /// Stable refusal from the pre-runtime adapter process.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -184,7 +184,7 @@ mod tests {
             DOCKER_MODEL_ARTIFACT_DIGEST_HEX,
             DOCKER_RUNTIME_PROFILE_SHA256_HEX,
             DOCKER_GUARD_PROFILE_SHA256_HEX,
-            "\"docker_preflight_contract_version\":2",
+            "\"docker_preflight_contract_version\":3",
             "\"network_listener\":false",
         ] {
             assert!(text.contains(required));

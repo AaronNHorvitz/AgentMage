@@ -1,7 +1,7 @@
 //! Private Docker Model Runner raw-endpoint guard contract.
 
 use std::fmt;
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr};
 
 use agentmage_kernel_contracts::{LocalEndpointIdentity, LocalTransport, NetworkComponent};
 
@@ -12,13 +12,13 @@ use crate::{
 
 /// SHA-256 of the checked Docker raw-endpoint guard profile.
 pub const DOCKER_GUARD_PROFILE_SHA256: [u8; 32] = [
-    0xa7, 0x44, 0xeb, 0x31, 0xf4, 0x94, 0x9e, 0xc7, 0xd9, 0x9d, 0xfa, 0xe8, 0xf6, 0x2e, 0xcc, 0xb5,
-    0x31, 0x26, 0x9c, 0x35, 0x49, 0xee, 0x51, 0xf3, 0x97, 0x7e, 0x0e, 0xa6, 0x2a, 0x8f, 0x88, 0xc8,
+    0x86, 0xd5, 0xcd, 0x68, 0x60, 0xd7, 0xe1, 0xef, 0xe7, 0xe4, 0x63, 0x01, 0x97, 0x91, 0x2f, 0x2b,
+    0x2d, 0x40, 0xc7, 0xa8, 0x69, 0x4f, 0x90, 0x32, 0xc6, 0xc6, 0x7a, 0xb9, 0xe6, 0xff, 0x4a, 0x82,
 ];
 
 /// Lowercase hexadecimal identity of the checked Docker guard profile.
 pub const DOCKER_GUARD_PROFILE_SHA256_HEX: &str =
-    "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8";
+    "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82";
 
 /// Stable caller classes evaluated at the private raw-endpoint boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -126,7 +126,7 @@ impl DockerEndpointGuard {
         profile_sha256: [u8; 32],
         runner_image_digest: [u8; 32],
         raw_endpoint: LocalEndpointIdentity,
-        runner_bind_host: Ipv4Addr,
+        runner_bind_host: IpAddr,
         guard_connect_host: Ipv4Addr,
         raw_port: u16,
         private_namespace_sha256: [u8; 32],
@@ -280,7 +280,7 @@ mod tests {
         profile_sha256: [u8; 32],
         runner_image_digest: [u8; 32],
         endpoint: LocalEndpointIdentity,
-        runner_bind_host: Ipv4Addr,
+        runner_bind_host: IpAddr,
         guard_connect_host: Ipv4Addr,
         raw_port: u16,
         private_namespace_sha256: [u8; 32],
@@ -319,7 +319,7 @@ mod tests {
             profile_sha256: DOCKER_GUARD_PROFILE_SHA256,
             runner_image_digest: DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
             endpoint: endpoint(),
-            runner_bind_host: Ipv4Addr::UNSPECIFIED,
+            runner_bind_host: DOCKER_MODEL_RUNNER_BIND_HOST,
             guard_connect_host: Ipv4Addr::LOCALHOST,
             raw_port: 12_434,
             private_namespace_sha256: [1; 32],
@@ -459,7 +459,7 @@ mod tests {
         )
         .expect("native endpoint");
         let mutations: &[fn(&mut GuardInput)] = &[
-            |value| value.runner_bind_host = Ipv4Addr::LOCALHOST,
+            |value| value.runner_bind_host = IpAddr::V4(Ipv4Addr::UNSPECIFIED),
             |value| value.guard_connect_host = Ipv4Addr::UNSPECIFIED,
             |value| value.raw_port = 12_435,
             |value| value.private_namespace_sha256 = [0; 32],

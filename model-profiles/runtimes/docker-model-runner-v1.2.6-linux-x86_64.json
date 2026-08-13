@@ -50,8 +50,8 @@
         "port": 12434,
         "raw_endpoint_exposed_to_extension": false,
         "raw_endpoint_exposed_to_tool_worker": false,
-        "runner_bind_host": "0.0.0.0",
-        "transport": "guarded-loopback-tcp"
+        "runner_bind_host": "::",
+        "transport": "guarded-dual-stack-loopback-tcp"
     },
   "model_artifact": {
     "artifact_type": "application/vnd.cncf.model.manifest.v1+json",

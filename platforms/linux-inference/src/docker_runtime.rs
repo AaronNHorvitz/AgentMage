@@ -1,7 +1,7 @@
 //! Exact Docker Model Runner compatibility identity and authority-free topology.
 
 use std::fmt;
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use agentmage_kernel_contracts::{LocalEndpointIdentity, LocalTransport, NetworkComponent};
 
@@ -45,16 +45,16 @@ pub const DOCKER_MODEL_PROJECTOR_SHA256: [u8; 32] = [
 
 /// SHA-256 of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256: [u8; 32] = [
-    0xee, 0xf3, 0xe9, 0x9d, 0xf6, 0xab, 0x41, 0x84, 0x12, 0xbc, 0xcc, 0x21, 0x9a, 0x3e, 0xa4, 0xcf,
-    0xff, 0xf1, 0x8a, 0xaa, 0x73, 0xe3, 0xee, 0x83, 0xe1, 0xef, 0x60, 0xa0, 0xd6, 0x15, 0xa9, 0x9a,
+    0xb7, 0x54, 0xcd, 0x50, 0xd0, 0xbc, 0x27, 0x8e, 0x45, 0x13, 0xc8, 0x1f, 0x04, 0x5d, 0xea, 0x2a,
+    0x36, 0xcd, 0x6f, 0xe7, 0x34, 0x95, 0x51, 0x9b, 0xa6, 0x42, 0xdb, 0x1d, 0xeb, 0xc1, 0xed, 0xbd,
 ];
 
 /// Lowercase hexadecimal identity of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256_HEX: &str =
-    "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a";
+    "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd";
 
 /// Immutable wildcard bind used by the pinned runner inside its private namespace.
-pub const DOCKER_MODEL_RUNNER_BIND_HOST: Ipv4Addr = Ipv4Addr::UNSPECIFIED;
+pub const DOCKER_MODEL_RUNNER_BIND_HOST: IpAddr = IpAddr::V6(Ipv6Addr::UNSPECIFIED);
 
 /// Fixed loopback target used only by the guard inside the private namespace.
 pub const DOCKER_MODEL_RUNNER_CONNECT_HOST: Ipv4Addr = Ipv4Addr::LOCALHOST;
@@ -340,7 +340,7 @@ impl DockerOfflineNetworkPolicy {
     /// Verifies fixed loopback service state with every ambient network path disabled.
     #[allow(clippy::too_many_arguments)]
     pub fn verify(
-        runner_bind_host: Ipv4Addr,
+        runner_bind_host: IpAddr,
         guard_connect_host: Ipv4Addr,
         port: u16,
         namespace_active_interface_count: u8,
@@ -486,7 +486,7 @@ mod tests {
 
     fn network() -> DockerOfflineNetworkPolicy {
         DockerOfflineNetworkPolicy::verify(
-            Ipv4Addr::UNSPECIFIED,
+            DOCKER_MODEL_RUNNER_BIND_HOST,
             Ipv4Addr::LOCALHOST,
             12_434,
             1,
@@ -671,7 +671,7 @@ mod tests {
     fn network_policy_accepts_only_private_wildcard_with_loopback_guard() {
         let invalid = [
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::LOCALHOST,
+                IpAddr::V4(Ipv4Addr::LOCALHOST),
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -685,7 +685,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::UNSPECIFIED,
                 12_434,
                 1,
@@ -699,7 +699,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_435,
                 1,
@@ -713,7 +713,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 2,
@@ -727,7 +727,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -741,7 +741,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -755,7 +755,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -769,7 +769,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -783,7 +783,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -797,7 +797,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -811,7 +811,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -825,7 +825,7 @@ mod tests {
                 0,
             ),
             DockerOfflineNetworkPolicy::verify(
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,

@@ -1,7 +1,7 @@
 //! Fail-closed Docker Model Runner topology and drift preflight contract.
 
 use std::fmt;
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr};
 
 use crate::{
     DOCKER_GUARD_PROFILE_SHA256, DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_RUNNER_BIND_HOST,
@@ -17,7 +17,7 @@ const RUNTIME_SECONDS: u16 = 3600;
 const OUTPUT_BYTES: u32 = 16 * 1024 * 1024;
 
 /// Version of the exact Docker topology preflight contract.
-pub const DOCKER_PREFLIGHT_CONTRACT_VERSION: u16 = 2;
+pub const DOCKER_PREFLIGHT_CONTRACT_VERSION: u16 = 3;
 
 /// Version of the complete trusted collector observation protocol.
 pub const DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION: u16 = 1;
@@ -247,7 +247,7 @@ impl DockerDaemonObservation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DockerApiObservation {
     private_namespace_sha256: [u8; 32],
-    runner_bind_host: Ipv4Addr,
+    runner_bind_host: IpAddr,
     guard_connect_host: Ipv4Addr,
     raw_port: u16,
     namespace_active_interface_count: u8,
@@ -265,7 +265,7 @@ impl DockerApiObservation {
     #[must_use]
     pub const fn new(
         private_namespace_sha256: [u8; 32],
-        runner_bind_host: Ipv4Addr,
+        runner_bind_host: IpAddr,
         guard_connect_host: Ipv4Addr,
         raw_port: u16,
         namespace_active_interface_count: u8,
@@ -709,7 +709,7 @@ mod tests {
             ),
             DockerApiObservation::new(
                 [4; 32],
-                Ipv4Addr::UNSPECIFIED,
+                DOCKER_MODEL_RUNNER_BIND_HOST,
                 Ipv4Addr::LOCALHOST,
                 12_434,
                 1,
@@ -835,7 +835,7 @@ mod tests {
         for mutate in [
             |value: &mut DockerTopologyObservation| value.api.private_namespace_sha256 = [8; 32],
             |value: &mut DockerTopologyObservation| {
-                value.api.runner_bind_host = Ipv4Addr::LOCALHOST
+                value.api.runner_bind_host = IpAddr::V4(Ipv4Addr::UNSPECIFIED)
             },
             |value: &mut DockerTopologyObservation| {
                 value.api.guard_connect_host = Ipv4Addr::UNSPECIFIED

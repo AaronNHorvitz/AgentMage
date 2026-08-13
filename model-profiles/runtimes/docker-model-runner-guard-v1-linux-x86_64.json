@@ -58,8 +58,8 @@
         "namespace": "private-runner-and-guard-only",
         "non_loopback_listeners": 0,
         "port": 12434,
-        "runner_bind_host": "0.0.0.0",
-        "transport": "loopback-tcp"
+        "runner_bind_host": "::",
+        "transport": "dual-stack-loopback-tcp"
     },
   "record_type": "linux_docker_model_runner_guard_profile",
   "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",

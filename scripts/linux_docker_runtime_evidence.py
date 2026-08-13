@@ -27,7 +27,7 @@ REPORT_PATH: Final = (
     / "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json"
 )
 PROFILE_SHA256: Final = (
-    "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
+    "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd"
 )
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
@@ -73,17 +73,17 @@ EXPECTED_DESCRIPTOR: Final = {
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
     "docker_compatibility_available": False,
-    "docker_guard_profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
+    "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
     "docker_model_artifact_digest": MODEL_DIGEST,
     "docker_model_runner_image_digest": RUNNER_DIGEST,
-    "docker_preflight_contract_version": 2,
+    "docker_preflight_contract_version": 3,
     "docker_runtime_profile_sha256": PROFILE_SHA256,
     "enabled_models": 0,
     "inference_available": False,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 6,
+    "process_boundary_version": 7,
 }
 LIMITATIONS: Final = [
     "Docker Engine and docker-model-plugin are absent on this Fedora host; no Docker daemon, socket, container, or API was started.",
@@ -285,12 +285,12 @@ def validate_profile(profile: Any) -> list[str]:
         failures.append("Docker offline network declaration changed")
     ipc = profile.get("ipc", {})
     if (
-        ipc.get("runner_bind_host") != "0.0.0.0"
+        ipc.get("runner_bind_host") != "::"
         or ipc.get("guard_connect_host") != "127.0.0.1"
         or ipc.get("namespace_active_interfaces") != ["lo"]
         or ipc.get("namespace_non_local_routes") != 0
         or ipc.get("port") != 12434
-        or ipc.get("transport") != "guarded-loopback-tcp"
+        or ipc.get("transport") != "guarded-dual-stack-loopback-tcp"
         or ipc.get("management_endpoints_allowed") is not False
         or ipc.get("raw_endpoint_exposed_to_extension") is not False
         or ipc.get("raw_endpoint_exposed_to_tool_worker") is not False

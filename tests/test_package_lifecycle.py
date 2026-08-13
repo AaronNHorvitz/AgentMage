@@ -24,7 +24,7 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            6,
+            7,
         )
         self.assertFalse(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
@@ -39,7 +39,7 @@ class PackageLifecycleTests(unittest.TestCase):
             "docker_preflight_contract_version",
         ):
             if key == "docker_preflight_contract_version":
-                self.assertEqual(lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key], 2)
+                self.assertEqual(lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key], 3)
             else:
                 self.assertRegex(
                     lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key],

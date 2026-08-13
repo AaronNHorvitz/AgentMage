@@ -373,12 +373,13 @@ fn build_observation(
         .pids_limit
         .and_then(|value| u32::try_from(value).ok())
         .unwrap_or(0);
-    let runner_bind_host = if private_network.raw_wildcard_v4_listener_count == 1
+    let runner_bind_host = if private_network.raw_wildcard_v6_listener_count == 1
+        && private_network.raw_wildcard_v4_listener_count == 0
         && private_network.raw_listener_count == 1
     {
-        "0.0.0.0"
+        "::"
     } else {
-        "255.255.255.255"
+        "::1"
     };
     Ok(DockerCollectorInput {
         protocol_version: DOCKER_TOPOLOGY_COLLECTOR_PROTOCOL_VERSION,
@@ -654,7 +655,7 @@ mod tests {
     fn request(now: u64) -> DockerLiveCollectorRequest {
         DockerLiveCollectorRequest {
             protocol_version: 1,
-            preflight_contract_version: 2,
+            preflight_contract_version: DOCKER_PREFLIGHT_CONTRACT_VERSION,
             source_revision: "a".repeat(40),
             os_release_sha256: "01".repeat(32),
             observation_started_unix_seconds: now,
@@ -785,6 +786,7 @@ mod tests {
                     non_local_route_count: 1,
                     raw_listener_count: 0,
                     raw_wildcard_v4_listener_count: 0,
+                    raw_wildcard_v6_listener_count: 0,
                     non_loopback_listener_count: 0,
                     management_listener_count: 0,
                     outbound_bytes: 0,
@@ -795,7 +797,8 @@ mod tests {
                     non_loopback_interface_count: 0,
                     non_local_route_count: 0,
                     raw_listener_count: 1,
-                    raw_wildcard_v4_listener_count: 1,
+                    raw_wildcard_v4_listener_count: 0,
+                    raw_wildcard_v6_listener_count: 1,
                     non_loopback_listener_count: 0,
                     management_listener_count: 0,
                     outbound_bytes: 0,
@@ -950,6 +953,24 @@ mod tests {
             validate_topology(exposed.observation().expect("network observation"))
                 .unwrap_err()
                 .code(),
+            "docker-preflight.api.binding"
+        );
+
+        let mut ipv4_substitution = DerivedFixture::exact();
+        ipv4_substitution
+            .private_network
+            .raw_wildcard_v4_listener_count = 1;
+        ipv4_substitution
+            .private_network
+            .raw_wildcard_v6_listener_count = 0;
+        assert_eq!(
+            validate_topology(
+                ipv4_substitution
+                    .observation()
+                    .expect("IPv4 substitution observation")
+            )
+            .unwrap_err()
+            .code(),
             "docker-preflight.api.binding"
         );
 

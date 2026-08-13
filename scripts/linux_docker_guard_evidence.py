@@ -25,7 +25,7 @@ REPORT_PATH: Final = (
     ROOT / "artifacts/sprints/sprint-9/story-9.2/linux-docker-endpoint-guard.json"
 )
 PROFILE_SHA256: Final = (
-    "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
+    "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
 )
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
@@ -216,8 +216,8 @@ def validate_profile(profile: Any) -> list[str]:
         "namespace": "private-runner-and-guard-only",
         "non_loopback_listeners": 0,
         "port": 12434,
-        "runner_bind_host": "0.0.0.0",
-        "transport": "loopback-tcp",
+        "runner_bind_host": "::",
+        "transport": "dual-stack-loopback-tcp",
     }:
         failures.append("Docker raw endpoint isolation changed")
     if profile.get("guard_process") != {

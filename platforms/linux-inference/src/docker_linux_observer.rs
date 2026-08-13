@@ -82,6 +82,7 @@ pub(crate) struct NetworkObservation {
     pub(crate) non_local_route_count: u8,
     pub(crate) raw_listener_count: u8,
     pub(crate) raw_wildcard_v4_listener_count: u8,
+    pub(crate) raw_wildcard_v6_listener_count: u8,
     pub(crate) non_loopback_listener_count: u8,
     pub(crate) management_listener_count: u8,
     pub(crate) outbound_bytes: u64,
@@ -286,6 +287,7 @@ pub(crate) fn observe_current_network(
             .checked_add(v6.raw)
             .ok_or(LinuxObserverError::NetworkRecord)?,
         raw_wildcard_v4_listener_count: v4.wildcard,
+        raw_wildcard_v6_listener_count: v6.wildcard,
         non_loopback_listener_count: v4
             .specific_non_loopback
             .checked_add(v6.specific_non_loopback)
@@ -585,6 +587,16 @@ mod tests {
                 wildcard: 1,
                 specific_non_loopback: 0,
                 management: 1,
+            })
+        );
+        let tcp6 = b"sl local_address rem_address st\n0: 00000000000000000000000000000000:3092 00000000000000000000000000000000:0000 0A\n1: 00000000000000000000000001000000:3092 00000000000000000000000000000000:0000 0A\n";
+        assert_eq!(
+            parse_tcp_listeners(tcp6, 12_434, true),
+            Ok(ParsedListeners {
+                raw: 2,
+                wildcard: 1,
+                specific_non_loopback: 0,
+                management: 0,
             })
         );
         let routes = b"Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT\nlo 0000007F 00000000 0001 0 0 0 000000FF 0 0 0\neth0 00000000 0100000A 0003 0 0 0 00000000 0 0 0\n";

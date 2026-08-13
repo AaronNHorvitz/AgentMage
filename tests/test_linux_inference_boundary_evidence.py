@@ -27,7 +27,7 @@ class LinuxInferenceBoundaryEvidenceTests(unittest.TestCase):
                 "architecture": "x86_64",
             },
             "compile_boundary": {
-                "allowed_dependencies": ["agentmage-kernel-contracts"],
+                "allowed_dependencies": sorted(evidence.EXPECTED_DEPENDENCIES),
                 "kernel_engine": False,
                 "workspace_authority": False,
                 "tool_authority": False,

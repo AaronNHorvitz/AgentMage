@@ -2,7 +2,7 @@
 
 use std::fmt;
 use std::io::Read;
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr};
 
 use serde::{Deserialize, Serialize};
 
@@ -283,7 +283,7 @@ pub(crate) fn validate_topology(
         ),
         DockerApiObservation::new(
             parse_sha256(&input.api.private_namespace_sha256)?,
-            parse_ipv4(&input.api.runner_bind_host)?,
+            parse_ip(&input.api.runner_bind_host)?,
             parse_ipv4(&input.api.guard_connect_host)?,
             input.api.raw_port,
             input.api.namespace_active_interface_count,
@@ -385,6 +385,12 @@ fn parse_ipv4(value: &str) -> Result<Ipv4Addr, DockerTopologyCollectorError> {
         .map_err(|_| DockerTopologyCollectorError::Input)
 }
 
+fn parse_ip(value: &str) -> Result<IpAddr, DockerTopologyCollectorError> {
+    value
+        .parse()
+        .map_err(|_| DockerTopologyCollectorError::Input)
+}
+
 fn hex(value: &[u8; 32]) -> String {
     value.iter().map(|byte| format!("{byte:02x}")).collect()
 }
@@ -398,12 +404,12 @@ mod tests {
         let hash = "01".repeat(32);
         format!(
             r#"{{
-              "protocol_version":1,"preflight_contract_version":2,"collector_uid":0,
+              "protocol_version":1,"preflight_contract_version":3,"collector_uid":0,
               "collector_executable_sha256":"{hash}","session_identity_sha256":"{session}",
               "complete":true,"fresh":true,"replayed":false,
               "baseline":{{"daemon_executable_sha256":"{daemon}","daemon_socket_identity_sha256":"{socket}","docker_socket_gid":971,"runtime_uid":1000,"runtime_gid":1000,"guard_uid":991,"private_namespace_sha256":"{namespace}","guard_executable_sha256":"{guard}","guard_cgroup_sha256":"{cgroup}"}},
               "daemon":{{"daemon_executable_sha256":"{daemon}","daemon_uid":0,"rootless":false,"runtime_uid":1000,"runtime_user_has_socket_group":false,"socket_identity_sha256":"{socket}","socket_is_unix_stream":true,"socket_owner_uid":0,"socket_group_gid":971,"socket_mode":432}},
-              "api":{{"private_namespace_sha256":"{namespace}","runner_bind_host":"0.0.0.0","guard_connect_host":"127.0.0.1","raw_port":12434,"namespace_active_interface_count":1,"loopback_interface_up":true,"namespace_non_local_route_count":0,"raw_listener_count":1,"host_listener_count":0,"non_loopback_listener_count":0,"management_listener_count":0}},
+              "api":{{"private_namespace_sha256":"{namespace}","runner_bind_host":"::","guard_connect_host":"127.0.0.1","raw_port":12434,"namespace_active_interface_count":1,"loopback_interface_up":true,"namespace_non_local_route_count":0,"raw_listener_count":1,"host_listener_count":0,"non_loopback_listener_count":0,"management_listener_count":0}},
               "containers":{{"runner_count":1,"guard_count":1,"runner_and_guard_share_namespace":true,"guard_uid":991,"guard_executable_sha256":"{guard}","guard_cgroup_sha256":"{cgroup}","kernel_socket_owner_uid":991,"kernel_socket_group_gid":1000,"kernel_socket_parent_mode":456,"kernel_socket_mode":432,"kernel_socket_peer_authentication":true,"host_route_count":0,"bridge_route_count":0,"foreign_reachable_peer_count":0,"workspace_mount_count":0,"credential_mount_count":0,"host_root_mount_count":0,"docker_socket_mount_count":0,"private_runtime_tmpfs":true,"model_content_store_writable":false}},
               "images":{{"runner_manifest_digest":"sha256:{runner}","model_manifest_digest":"sha256:{model}","mutable_tag_used_for_admission":false,"image_repull_allowed":false}},
               "resources":{{"privileged":false,"capabilities_added":0,"no_new_privileges":true,"read_only_root":true,"memory_bytes":68719476736,"tasks":64,"cpu_percent":3200,"runtime_seconds":3600,"output_bytes":16777216,"swap_bytes":0,"parallel_slots":1}},

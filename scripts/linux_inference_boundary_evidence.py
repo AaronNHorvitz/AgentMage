@@ -93,19 +93,34 @@ EXPECTED_DESCRIPTOR = {
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
     "docker_compatibility_available": False,
-    "docker_guard_profile_sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8",
+    "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-    "docker_preflight_contract_version": 2,
-    "docker_runtime_profile_sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a",
+    "docker_preflight_contract_version": 3,
+    "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
     "enabled_models": 0,
     "inference_available": False,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 6,
+    "process_boundary_version": 7,
 }
-EXPECTED_DEPENDENCIES = {"agentmage-kernel-contracts"}
+EXPECTED_DEPENDENCIES = {
+    "agentmage-kernel-contracts",
+    "rustix",
+    "serde",
+    "serde_json",
+    "sha2",
+    "zeroize",
+}
+EXPECTED_BINARIES = [
+    {"name": "agentmage-docker-guard", "path": "src/docker_guard_main.rs"},
+    {
+        "name": "agentmage-docker-topology-collector",
+        "path": "src/docker_topology_collector_main.rs",
+    },
+    {"name": "agentmage-native-inference", "path": "src/main.rs"},
+]
 FORBIDDEN_COMPILE_REFERENCES = (
     "agentmage_capability_read_only",
     "agentmage_kernel_engine",
@@ -238,7 +253,7 @@ def validate_adapter_manifest(manifest: Any) -> list[str]:
     if manifest.get("dev-dependencies") or manifest.get("build-dependencies"):
         failures.append("adapter gained a development or build dependency")
     binaries = manifest.get("bin")
-    if binaries != [{"name": "agentmage-native-inference", "path": "src/main.rs"}]:
+    if binaries != EXPECTED_BINARIES:
         failures.append("adapter executable identity changed")
     return failures
 
