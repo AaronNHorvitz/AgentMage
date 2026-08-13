@@ -2,10 +2,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions};
 use std::io::Read as _;
+use std::io::Write as _;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
@@ -15,6 +17,7 @@ use agentmage_kernel_contracts::{
 use rusqlite::{
     Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior, params,
 };
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 use zeroize::Zeroizing;
 
@@ -32,6 +35,9 @@ use crate::tooling::ToolRegistry;
 const SCHEMA_VERSION: i64 = 3;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
+const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
+const MAX_DERIVED_EXPORT_BYTES: usize = 64 * 1024 * 1024;
+static NEXT_EXPORT_TEMPORARY: AtomicU64 = AtomicU64::new(1);
 const MIGRATION_1_SCHEMA_SQL: &str = "CREATE TABLE schema_history (
     version INTEGER PRIMARY KEY,
     migration_sha256 TEXT NOT NULL CHECK(length(migration_sha256) = 64)
@@ -324,6 +330,40 @@ pub struct CryptographicErasureReceipt {
     pub physical_overwrite_claim: bool,
 }
 
+/// Content-free receipt for one explicit derived JSON Lines export.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DerivedJsonLinesExportReceipt {
+    /// Canonical generation observed before export construction.
+    pub canonical_generation: u64,
+    /// Number of derived metadata rows after the one-line header.
+    pub record_count: usize,
+    /// SHA-256 of the complete JSON Lines bytes.
+    pub export_sha256: String,
+}
+
+#[derive(Serialize)]
+struct DerivedExportHeader<'a> {
+    record_type: &'static str,
+    schema_version: u32,
+    canonical_schema_version: u32,
+    canonical_generation: u64,
+    canonical_state_sha256: &'a str,
+    record_count: usize,
+    content_mode: &'static str,
+    executable: bool,
+    startup_authority: bool,
+}
+
+#[derive(Serialize)]
+struct DerivedExportRow {
+    record_type: &'static str,
+    schema_version: u32,
+    family: &'static str,
+    record_identity_sha256: String,
+    revision: u64,
+    retained_sha256: String,
+}
+
 /// Stable, content-free encrypted-store failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OperationalStoreError {
@@ -347,6 +387,8 @@ pub enum OperationalStoreError {
     RestoreFailure,
     /// The scoped encryption key could not be destroyed and verified absent.
     KeyErasureFailure,
+    /// A derived export request was unsafe, oversized, or could not publish atomically.
+    ExportRejected,
     /// Another writer owns the canonical store.
     ConcurrentWriter,
     /// An atomic state publication failed.
@@ -370,6 +412,7 @@ impl OperationalStoreError {
             Self::LifecycleRejected => "operational_store.lifecycle.rejected",
             Self::RestoreFailure => "operational_store.restore.failed",
             Self::KeyErasureFailure => "operational_store.key_erasure.failed",
+            Self::ExportRejected => "operational_store.export.rejected",
             Self::ConcurrentWriter => "operational_store.writer.concurrent",
             Self::PersistenceFailure => "operational_store.persistence.failed",
             Self::Poisoned => "operational_store.poisoned",
@@ -576,6 +619,60 @@ impl OperationalStore {
             key_destroyed_and_absent: true,
             encrypted_files_removed: !sqlite_artifacts_exist(&path),
             physical_overwrite_claim: false,
+        })
+    }
+
+    /// Writes a versioned content-free JSON Lines derivative with no import authority.
+    pub fn export_json_lines(
+        &self,
+        destination: &Path,
+        observation: &StrictLocalStorageObservation,
+    ) -> Result<DerivedJsonLinesExportReceipt, OperationalStoreError> {
+        if self.poisoned {
+            return Err(OperationalStoreError::Poisoned);
+        }
+        if evaluate_storage(observation) != StrictLocalStorageDecision::Eligible {
+            return Err(OperationalStoreError::StorageRejected);
+        }
+        verify_integrity(&self.connection)?;
+        let canonical_state_sha256: String = self
+            .connection
+            .query_row(
+                "SELECT state_sha256 FROM store_metadata WHERE singleton = 1",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let rows = derived_export_rows(&self.connection)?;
+        if rows.len() > MAX_DERIVED_EXPORT_RECORDS {
+            return Err(OperationalStoreError::ExportRejected);
+        }
+        let header = DerivedExportHeader {
+            record_type: "agentmage.derived_export.header",
+            schema_version: 1,
+            canonical_schema_version: u32::try_from(SCHEMA_VERSION)
+                .map_err(|_| OperationalStoreError::ExportRejected)?,
+            canonical_generation: self.generation,
+            canonical_state_sha256: &canonical_state_sha256,
+            record_count: rows.len(),
+            content_mode: "identity-and-retained-hashes-only",
+            executable: false,
+            startup_authority: false,
+        };
+        let mut bytes = json_line(&header)?;
+        for row in &rows {
+            let line = json_line(row)?;
+            if bytes.len().saturating_add(line.len()) > MAX_DERIVED_EXPORT_BYTES {
+                return Err(OperationalStoreError::ExportRejected);
+            }
+            bytes.extend_from_slice(&line);
+        }
+        let export_sha256 = sha256_hex(&bytes);
+        write_derived_export(destination, &bytes)?;
+        Ok(DerivedJsonLinesExportReceipt {
+            canonical_generation: self.generation,
+            record_count: rows.len(),
+            export_sha256,
         })
     }
 
@@ -2318,6 +2415,204 @@ fn verify_retention_lifecycle(connection: &Connection) -> Result<(), Operational
     Ok(())
 }
 
+struct DerivedExportQuery {
+    family: &'static str,
+    sql: &'static str,
+}
+
+const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
+    DerivedExportQuery {
+        family: "actions",
+        sql: "SELECT action_id, 0, record_sha256 FROM actions",
+    },
+    DerivedExportQuery {
+        family: "checkpoints",
+        sql: "SELECT CAST(generation AS TEXT), generation, state_sha256 FROM checkpoints",
+    },
+    DerivedExportQuery {
+        family: "decisions",
+        sql: "SELECT decision_id, 0, record_sha256 FROM decisions",
+    },
+    DerivedExportQuery {
+        family: "evidence",
+        sql: "SELECT evidence_id, 0, record_sha256 FROM evidence",
+    },
+    DerivedExportQuery {
+        family: "files",
+        sql: "SELECT file_id, 0, record_sha256 FROM files",
+    },
+    DerivedExportQuery {
+        family: "grants",
+        sql: "SELECT grant_id, revision, record_sha256 FROM grant_revisions",
+    },
+    DerivedExportQuery {
+        family: "objectives",
+        sql: "SELECT objective_id, 0, record_sha256 FROM objectives",
+    },
+    DerivedExportQuery {
+        family: "plans",
+        sql: "SELECT plan_id, revision, record_sha256 FROM plans",
+    },
+    DerivedExportQuery {
+        family: "receipts",
+        sql: "SELECT receipt_id, sequence, receipt_sha256 FROM receipts",
+    },
+    DerivedExportQuery {
+        family: "retention_events",
+        sql: "SELECT retention_id, revision, event_sha256 FROM retention_events",
+    },
+    DerivedExportQuery {
+        family: "sessions",
+        sql: "SELECT session_id, 0, record_sha256 FROM sessions",
+    },
+    DerivedExportQuery {
+        family: "tasks",
+        sql: "SELECT task_id, 0, record_sha256 FROM tasks",
+    },
+    DerivedExportQuery {
+        family: "transactions",
+        sql: "SELECT transaction_id, revision, record_sha256 FROM transaction_revisions",
+    },
+];
+
+fn derived_export_rows(
+    connection: &Connection,
+) -> Result<Vec<DerivedExportRow>, OperationalStoreError> {
+    let mut rows = Vec::new();
+    for query in DERIVED_EXPORT_QUERIES {
+        let records = connection
+            .prepare(query.sql)
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, i64>(1)?,
+                            row.get::<_, String>(2)?,
+                        ))
+                    })?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .map_err(|_| OperationalStoreError::ExportRejected)?;
+        for (identity, revision, retained_sha256) in records {
+            if !valid_sha256_text(&retained_sha256) {
+                return Err(OperationalStoreError::ExportRejected);
+            }
+            let revision =
+                u64::try_from(revision).map_err(|_| OperationalStoreError::ExportRejected)?;
+            let mut identity_digest = Sha256::new();
+            identity_digest.update(query.family.as_bytes());
+            identity_digest.update([0]);
+            identity_digest.update(identity.as_bytes());
+            rows.push(DerivedExportRow {
+                record_type: "agentmage.derived_export.record",
+                schema_version: 1,
+                family: query.family,
+                record_identity_sha256: hex_digest(&identity_digest.finalize()),
+                revision,
+                retained_sha256,
+            });
+            if rows.len() > MAX_DERIVED_EXPORT_RECORDS {
+                return Err(OperationalStoreError::ExportRejected);
+            }
+        }
+    }
+    rows.sort_by(|left, right| {
+        (left.family, &left.record_identity_sha256, left.revision).cmp(&(
+            right.family,
+            &right.record_identity_sha256,
+            right.revision,
+        ))
+    });
+    Ok(rows)
+}
+
+fn valid_sha256_text(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+fn json_line<T: Serialize>(value: &T) -> Result<Vec<u8>, OperationalStoreError> {
+    let mut bytes = serde_json::to_vec(value).map_err(|_| OperationalStoreError::ExportRejected)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn write_derived_export(destination: &Path, bytes: &[u8]) -> Result<(), OperationalStoreError> {
+    let parent = destination
+        .parent()
+        .ok_or(OperationalStoreError::ExportRejected)?;
+    let metadata =
+        fs::symlink_metadata(parent).map_err(|_| OperationalStoreError::ExportRejected)?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() || destination.exists() {
+        return Err(OperationalStoreError::ExportRejected);
+    }
+    let mut temporary = None;
+    let mut file = None;
+    for _ in 0..16 {
+        let sequence = NEXT_EXPORT_TEMPORARY.fetch_add(1, Ordering::Relaxed);
+        let candidate = parent.join(format!(
+            ".agentmage-derived-export-{}-{sequence}.tmp",
+            std::process::id()
+        ));
+        match OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&candidate)
+        {
+            Ok(created) => {
+                temporary = Some(candidate);
+                file = Some(created);
+                break;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(_) => return Err(OperationalStoreError::ExportRejected),
+        }
+    }
+    let temporary = temporary.ok_or(OperationalStoreError::ExportRejected)?;
+    let mut file = file.ok_or(OperationalStoreError::ExportRejected)?;
+    let mut published_identity = None;
+    let result = (|| {
+        file.write_all(bytes)
+            .map_err(|_| OperationalStoreError::ExportRejected)?;
+        file.sync_all()
+            .map_err(|_| OperationalStoreError::ExportRejected)?;
+        fs::hard_link(&temporary, destination)
+            .map_err(|_| OperationalStoreError::ExportRejected)?;
+        let source_metadata =
+            fs::symlink_metadata(&temporary).map_err(|_| OperationalStoreError::ExportRejected)?;
+        let destination_metadata =
+            fs::symlink_metadata(destination).map_err(|_| OperationalStoreError::ExportRejected)?;
+        if !destination_metadata.is_file()
+            || destination_metadata.file_type().is_symlink()
+            || destination_metadata.mode() & 0o077 != 0
+            || source_metadata.dev() != destination_metadata.dev()
+            || source_metadata.ino() != destination_metadata.ino()
+        {
+            return Err(OperationalStoreError::ExportRejected);
+        }
+        published_identity = Some((destination_metadata.dev(), destination_metadata.ino()));
+        fs::remove_file(&temporary).map_err(|_| OperationalStoreError::ExportRejected)?;
+        File::open(parent)
+            .and_then(|directory| directory.sync_all())
+            .map_err(|_| OperationalStoreError::ExportRejected)
+    })();
+    drop(file);
+    let _ = fs::remove_file(&temporary);
+    if result.is_err()
+        && published_identity.is_some_and(|(device, inode)| {
+            fs::symlink_metadata(destination)
+                .is_ok_and(|current| current.dev() == device && current.ino() == inode)
+        })
+    {
+        let _ = fs::remove_file(destination);
+    }
+    result
+}
+
 fn prepare_store_file(path: &Path) -> Result<(), OperationalStoreError> {
     let parent = path.parent().ok_or(OperationalStoreError::OpenFailed)?;
     let metadata = fs::symlink_metadata(parent).map_err(|_| OperationalStoreError::OpenFailed)?;
@@ -2463,6 +2758,7 @@ mod tests {
     use std::fs::{self, File, OpenOptions};
     use std::io::{Read as _, Seek as _, SeekFrom, Write as _};
     use std::os::fd::AsRawFd;
+    use std::os::unix::fs::PermissionsExt as _;
     use std::path::Path;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -2470,6 +2766,7 @@ mod tests {
         CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
     };
     use rusqlite::params;
+    use serde_json::Value;
 
     use super::{
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, OperationalStore,
@@ -2861,6 +3158,139 @@ mod tests {
             OperationalStoreError::KeyErasureFailure
         );
         assert!(failed_path.exists());
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn json_lines_export_is_deterministic_content_free_and_export_only() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let first_export = directory.join("first.jsonl");
+        let second_export = directory.join("second.jsonl");
+        let startup_candidate = directory.join("export-as-authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([50; 32]))
+            .expect("encrypted store");
+        let digest = "c".repeat(64);
+        let raw_identifier = "private-session-identifier";
+        let raw_record = br#"{"private":"must-not-export"}"#;
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (?1, 'profile-1', 'active', 1, 1, ?2, ?3)",
+                params![raw_identifier, &digest, raw_record.as_slice()],
+            )
+            .expect("session fixture");
+        let before_generation = store.generation();
+        let before_state: String = store
+            .connection
+            .query_row(
+                "SELECT state_sha256 FROM store_metadata WHERE singleton = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("state identity");
+
+        let first_receipt = store
+            .export_json_lines(&first_export, &observation())
+            .expect("first derived export");
+        let first_bytes = fs::read(&first_export).expect("first export bytes");
+        assert!(
+            !first_bytes
+                .windows(raw_identifier.len())
+                .any(|window| window == raw_identifier.as_bytes())
+        );
+        assert!(
+            !first_bytes
+                .windows("must-not-export".len())
+                .any(|window| window == b"must-not-export")
+        );
+        let lines: Vec<Value> = first_bytes
+            .split(|byte| *byte == b'\n')
+            .filter(|line| !line.is_empty())
+            .map(|line| serde_json::from_slice(line).expect("valid JSON line"))
+            .collect();
+        assert_eq!(lines.len(), first_receipt.record_count + 1);
+        assert_eq!(lines[0]["record_type"], "agentmage.derived_export.header");
+        assert_eq!(lines[0]["executable"], false);
+        assert_eq!(lines[0]["startup_authority"], false);
+        assert_eq!(
+            lines[0]["content_mode"],
+            "identity-and-retained-hashes-only"
+        );
+        for row in &lines[1..] {
+            assert_eq!(row["record_type"], "agentmage.derived_export.record");
+            assert!(row.get("record_id").is_none());
+            assert!(row.get("record_json").is_none());
+        }
+
+        let second_receipt = store
+            .export_json_lines(&second_export, &observation())
+            .expect("second derived export");
+        assert_eq!(first_receipt, second_receipt);
+        assert_eq!(first_bytes, fs::read(&second_export).expect("second bytes"));
+        assert_eq!(store.generation(), before_generation);
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT state_sha256 FROM store_metadata WHERE singleton = 1",
+                    [],
+                    |row| row.get::<_, String>(0),
+                )
+                .expect("unchanged state"),
+            before_state
+        );
+
+        fs::write(&first_export, b"hostile derived replacement\n").expect("mutate derivative");
+        fs::remove_file(&second_export).expect("delete derivative");
+        fs::write(&startup_candidate, &first_bytes).expect("startup candidate bytes");
+        fs::set_permissions(&startup_candidate, fs::Permissions::from_mode(0o600))
+            .expect("private startup candidate");
+        drop(store);
+        assert!(
+            OperationalStore::open(&startup_candidate, &observation(), &mut TestKey([50; 32]),)
+                .is_err()
+        );
+        let reopened = OperationalStore::open(&path, &observation(), &mut TestKey([50; 32]))
+            .expect("canonical store ignores derivatives");
+        assert_eq!(reopened.generation(), before_generation);
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn json_lines_export_rejects_occupied_or_ineligible_destinations_without_change() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let occupied = directory.join("occupied.jsonl");
+        let remote_export = directory.join("remote.jsonl");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([51; 32]))
+            .expect("encrypted store");
+        fs::write(&occupied, b"do-not-overwrite").expect("occupied fixture");
+        assert_eq!(
+            store
+                .export_json_lines(&occupied, &observation())
+                .expect_err("occupied export must fail"),
+            OperationalStoreError::ExportRejected
+        );
+        assert_eq!(
+            fs::read(&occupied).expect("occupied remains"),
+            b"do-not-overwrite"
+        );
+        let remote = StrictLocalStorageObservation {
+            filesystem: StorageFilesystemClass::Remote,
+            synchronization_marker: None,
+            root_identity_sha256: [7; 32],
+            symlink_free: true,
+        };
+        assert_eq!(
+            store
+                .export_json_lines(&remote_export, &remote)
+                .expect_err("remote export must fail"),
+            OperationalStoreError::StorageRejected
+        );
+        assert!(!remote_export.exists());
+        drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
