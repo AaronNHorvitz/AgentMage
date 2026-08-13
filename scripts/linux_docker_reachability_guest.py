@@ -176,7 +176,10 @@ def authenticated_guard_control(runner_pid: int) -> dict[str, Any]:
             lines = topology.text(
                 ["journalctl", "--unit", unit, "--output=cat", "--no-pager", "--lines=20"]
             ).splitlines()
-            detail = lines[-1] if lines else "transient unit exited"
+            detail = next(
+                (line for line in reversed(lines) if "Error" in line or "refused" in line),
+                lines[-1] if lines else "transient unit exited",
+            )
             raise topology.GuestEvidenceError(f"guard control unit failed: {detail}")
         time.sleep(0.1)
     if not (PEER_ROOT / "result.json").is_file():
