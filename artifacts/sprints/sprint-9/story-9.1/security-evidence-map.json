@@ -66,9 +66,9 @@
       "sha256": "52915f5c42d0fe9b07a3da56d3e5a87b11cf1b6f437e159be7aa2e8ebc35e120"
     },
     {
-      "bytes": 400067,
+      "bytes": 400943,
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "7403197414b255ec522454742ba1ccc92c2cb17976121cd645bf1ead367aa4bf"
+      "sha256": "5eca9afd44c077eb8a5969077daae10d8ed46fbeae415d0cf2d2ab258489c95b"
     },
     {
       "bytes": 2310,
@@ -86,44 +86,44 @@
       "sha256": "f922d89ae24715a19096b43b206e323646e90edb93b54c405d1477b4ce0ce583"
     },
     {
-      "bytes": 43735,
+      "bytes": 43886,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
-      "sha256": "8b200ff806b569bcd365fa7fb4b1146a7f5c2890df67bf9955bb6088f962592a"
+      "sha256": "de98d4f2afad32f9f8a71f19ebf3cc478b3ab535ee736dcef1b217f93d043e27"
     },
     {
       "bytes": 10841,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "01a41de84a1905be338cbcd0e6bec0a9d3cbcb41ec4623147c8bd3d565f1f720"
+      "sha256": "70a4e0bbe8248f48a71ff6d3d0dd0efc56d3a3788c6f5974670d73b2262d3904"
     },
     {
       "bytes": 9821,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
-      "sha256": "f76c05fcb40b1d3d137b4d9699de836531318305e32126fcb02148612d16e1f9"
+      "sha256": "2dcbcd842e1214f25d723247f7daa3aa875284b524e66861f293a6a9294771b8"
     },
     {
-      "bytes": 11478,
+      "bytes": 11902,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
-      "sha256": "256b53d78a077814fbbb8d1f1851af1a5e17cd2dce2c64ec6a4c36df6d4ab589"
+      "sha256": "1837def088fa81867c5c7746897d454a005add0ae94377d7de085ca746d972ee"
     },
     {
-      "bytes": 40915,
+      "bytes": 41206,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
-      "sha256": "b06b1c4c30d692aabeee10c30d46076c81986cb521f78b41880001b468adb889"
+      "sha256": "b0f745822a4e3c96243cd8bf8b5f3aa96915e0dbad3e45b50ae491a2b202ee5d"
     },
     {
       "bytes": 15682,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
-      "sha256": "1c32af78b3b567a57dba532e0dec4de1c3a3611d362ca406943ac3072af6f360"
+      "sha256": "e21a9cbfd4208e50bdec98851b6d708dac30dac00f9d1cb07d6f4f242a2eb829"
     },
     {
       "bytes": 8161,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
-      "sha256": "861a20c8016bc2d0ef370c6b88627fb159a2283f6c94db76f237cf77734633b7"
+      "sha256": "a0376c529e4c51a4796f725155e93830dfd9d7c1e07672ccaf8c53642a5973f6"
     },
     {
-      "bytes": 47800,
+      "bytes": 47844,
       "path": "scripts/linux_clean_image_acceptance.py",
-      "sha256": "dfd82751d46056ecad866578db5195485e402f5abeb93c55c413119ca71bc839"
+      "sha256": "12aa0ded1bb0a73b542b5265e3525884e7073bf7fae41b86eaf7636b09b10d90"
     },
     {
       "bytes": 66293,
@@ -148,7 +148,7 @@
     {
       "bytes": 10243,
       "path": "tests/test_linux_clean_image_acceptance.py",
-      "sha256": "ea1fa1fc7febc3e8c802a9d953d409af04e1f7b1371ecd360314978ae76ef0a4"
+      "sha256": "758d159cb69a9453c0a09c64d8782193da2a8aa842e4283a1ac8359714f109f6"
     },
     {
       "bytes": 12085,
@@ -176,58 +176,58 @@
   "input_evidence": [
     {
       "artifact_id": "linux-clean-package-lifecycle",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "package-lifecycle",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
-      "sha256": "8b200ff806b569bcd365fa7fb4b1146a7f5c2890df67bf9955bb6088f962592a",
+      "sha256": "de98d4f2afad32f9f8a71f19ebf3cc478b3ab535ee736dcef1b217f93d043e27",
       "status": "pass-linux-clean-package-lifecycle"
     },
     {
       "artifact_id": "linux-ipc-sandbox-control-verification",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "fedora-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "01a41de84a1905be338cbcd0e6bec0a9d3cbcb41ec4623147c8bd3d565f1f720",
+      "sha256": "70a4e0bbe8248f48a71ff6d3d0dd0efc56d3a3788c6f5974670d73b2262d3904",
       "status": "pass-fedora-only"
     },
     {
       "artifact_id": "linux-cross-distribution-sandbox-attacks",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "sandbox-attacks",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
-      "sha256": "f76c05fcb40b1d3d137b4d9699de836531318305e32126fcb02148612d16e1f9",
+      "sha256": "2dcbcd842e1214f25d723247f7daa3aa875284b524e66861f293a6a9294771b8",
       "status": "pass-bounded-cross-distribution"
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "inactive-inference",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
-      "sha256": "256b53d78a077814fbbb8d1f1851af1a5e17cd2dce2c64ec6a4c36df6d4ab589",
+      "sha256": "1837def088fa81867c5c7746897d454a005add0ae94377d7de085ca746d972ee",
       "status": "pass-fedora-package-boundary"
     },
     {
       "artifact_id": "linux-clean-image-graphical-acceptance",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "clean-image-acceptance",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
-      "sha256": "b06b1c4c30d692aabeee10c30d46076c81986cb521f78b41880001b468adb889",
+      "sha256": "b0f745822a4e3c96243cd8bf8b5f3aa96915e0dbad3e45b50ae491a2b202ee5d",
       "status": "pass-clean-fedora-ubuntu-images"
     },
     {
       "artifact_id": "linux-native-ubuntu-control-verification",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "native-ubuntu-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
-      "sha256": "1c32af78b3b567a57dba532e0dec4de1c3a3611d362ca406943ac3072af6f360",
+      "sha256": "e21a9cbfd4208e50bdec98851b6d708dac30dac00f9d1cb07d6f4f242a2eb829",
       "status": "pass-native-ubuntu-kernel-controls"
     },
     {
       "artifact_id": "linux-fedora-ubuntu-adapter-parity",
-      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+      "evidence_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
       "id": "linux-parity",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
-      "sha256": "861a20c8016bc2d0ef370c6b88627fb159a2283f6c94db76f237cf77734633b7",
+      "sha256": "a0376c529e4c51a4796f725155e93830dfd9d7c1e07672ccaf8c53642a5973f6",
       "status": "pass-declared-fedora-ubuntu-parity"
     },
     {
@@ -387,7 +387,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+  "source_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
   "status": "pass-linux-security-mapping-review-open",
   "story_id": "9.1",
   "summary": {

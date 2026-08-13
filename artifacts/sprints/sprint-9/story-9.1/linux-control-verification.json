@@ -205,7 +205,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+  "source_revision": "e9be3a588ad278527809733d41d67a5fe4a57d86",
   "sources": [
     {
       "path": "Cargo.lock",
