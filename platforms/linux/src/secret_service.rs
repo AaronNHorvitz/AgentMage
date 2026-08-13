@@ -385,21 +385,7 @@ impl LinuxSecretService {
         if verify_client(&self.manifest.client_path)? != self.manifest.client_sha256 {
             return Err(error(LinuxSecretServiceErrorKind::InvalidManifest));
         }
-        let runtime_directory = format!("/run/user/{}", getuid().as_raw());
-        let session_bus = format!("unix:path={runtime_directory}/bus");
-        let mut command = Command::new(&self.manifest.client_path);
-        command
-            .env_clear()
-            .env("XDG_RUNTIME_DIR", runtime_directory)
-            .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-            .args(arguments)
-            .stdin(if input.is_some() {
-                Stdio::piped()
-            } else {
-                Stdio::null()
-            })
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+        let mut command = self.command(arguments, input.is_some());
         let mut child = command
             .spawn()
             .map_err(|_| error(LinuxSecretServiceErrorKind::ServiceUnavailable))?;
@@ -459,6 +445,25 @@ impl LinuxSecretService {
             stderr_sha256: stderr.sha256,
             stderr_bytes: stderr.total,
         })
+    }
+
+    fn command(&self, arguments: &[OsString], input_expected: bool) -> Command {
+        let runtime_directory = format!("/run/user/{}", getuid().as_raw());
+        let session_bus = format!("unix:path={runtime_directory}/bus");
+        let mut command = Command::new(&self.manifest.client_path);
+        command
+            .env_clear()
+            .env("XDG_RUNTIME_DIR", runtime_directory)
+            .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
+            .args(arguments)
+            .stdin(if input_expected {
+                Stdio::piped()
+            } else {
+                Stdio::null()
+            })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        command
     }
 }
 
@@ -989,10 +994,13 @@ const fn error(kind: LinuxSecretServiceErrorKind) -> LinuxSecretServiceError {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+    use std::ffi::{OsStr, OsString};
+
     use super::{
-        LinuxSecretKey, LinuxSecretOperation, LinuxSecretService, LinuxSecretServiceErrorKind,
-        LinuxSecretServiceManifest, LinuxSecretValue, MAX_SECRET_BYTES,
-        OPERATIONAL_STORE_KEY_PURPOSE, decode_operational_store_key, hex_digest,
+        FIXED_LABEL, LinuxSecretKey, LinuxSecretOperation, LinuxSecretService,
+        LinuxSecretServiceErrorKind, LinuxSecretServiceManifest, LinuxSecretValue,
+        MAX_SECRET_BYTES, OPERATIONAL_STORE_KEY_PURPOSE, decode_operational_store_key, hex_digest,
         operational_store_key_exists, provision_operational_store_key, read_bounded,
         with_decoded_operational_store_key,
     };
@@ -1077,6 +1085,61 @@ mod tests {
         with_decoded_operational_store_key(encoded, |_| invoked = true)
             .expect("exact key invokes callback");
         assert!(invoked);
+    }
+
+    #[test]
+    fn secret_bytes_never_enter_process_arguments_or_environment() {
+        let service = LinuxSecretService::new(
+            LinuxSecretServiceManifest::verify("/usr/bin/secret-tool").expect("manifest"),
+        );
+        let key = LinuxSecretKey::new("profile-1", OPERATIONAL_STORE_KEY_PURPOSE).expect("key");
+        let secret = "synthetic-secret-metadata-canary";
+        let mut arguments = vec![
+            OsString::from("store"),
+            OsString::from(format!("--label={FIXED_LABEL}")),
+        ];
+        arguments.extend(key.attributes());
+        let command = service.command(&arguments, true);
+
+        assert_eq!(command.get_program(), OsStr::new("/usr/bin/secret-tool"));
+        let argument_text = command
+            .get_args()
+            .map(|value| value.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join("\0");
+        assert!(!argument_text.contains(secret));
+        let environment = command
+            .get_envs()
+            .map(|(key, value)| (key.to_os_string(), value.map(OsStr::to_os_string)))
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(
+            environment.keys().collect::<Vec<_>>(),
+            [
+                &OsString::from("DBUS_SESSION_BUS_ADDRESS"),
+                &OsString::from("XDG_RUNTIME_DIR"),
+            ]
+        );
+        assert!(
+            environment
+                .values()
+                .flatten()
+                .all(|value| !value.to_string_lossy().contains(secret))
+        );
+    }
+
+    #[test]
+    fn substituted_secret_client_digest_fails_before_service_contact() {
+        let manifest =
+            LinuxSecretServiceManifest::verify("/usr/bin/secret-tool").expect("manifest");
+        let mut service = LinuxSecretService::new(manifest);
+        service.manifest.client_sha256[0] ^= 0xff;
+        assert_eq!(
+            service
+                .probe()
+                .expect_err("substituted client identity must fail")
+                .kind(),
+            LinuxSecretServiceErrorKind::InvalidManifest
+        );
     }
 
     #[test]

@@ -3117,6 +3117,23 @@ mod tests {
     }
 
     #[test]
+    fn plaintext_sqlite_substitution_never_becomes_operational_authority() {
+        let directory = temporary_directory();
+        let path = directory.join("plaintext-substitution.db");
+        let mut plaintext = b"SQLite format 3\0".to_vec();
+        plaintext.resize(4096, 0);
+        fs::write(&path, &plaintext).expect("plaintext substitution fixture");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+            .expect("private fixture mode");
+
+        assert!(OperationalStore::open(&path, &observation(), &mut TestKey([6; 32])).is_err());
+        assert_eq!(fs::read(&path).expect("unchanged substitution"), plaintext);
+        assert!(!path.with_extension("db-wal").exists());
+        assert!(!path.with_extension("db-shm").exists());
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn exclusive_writer_and_encrypted_backup_are_verified() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
