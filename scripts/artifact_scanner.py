@@ -40,6 +40,7 @@ EXPECTED_PRODUCTION_LICENSES = (
     "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
     "BSD-3-Clause",
     "MIT",
+    "MIT AND BSD-3-Clause",
     "MIT OR Apache-2.0 OR BSD-1-Clause",
     "MIT OR Apache-2.0 OR Zlib",
     "MIT OR Apache-2.0",

@@ -49,8 +49,8 @@ class ComponentInventoryTests(unittest.TestCase):
 
     def test_package_inventory_binds_all_locked_components(self) -> None:
         packages = build_report()["approved_inventory"]["packages"]
-        self.assertEqual(packages["component_count"], 421)
-        self.assertEqual(packages["classifications"], {"development": 371, "production": 50})
+        self.assertEqual(packages["component_count"], 433)
+        self.assertEqual(packages["classifications"], {"development": 371, "production": 62})
         self.assertRegex(packages["identity_set_sha256"], r"^[0-9a-f]{64}$")
 
     def test_runtime_candidates_and_presence_only_components_are_not_approved(self) -> None:
@@ -71,6 +71,22 @@ class ComponentInventoryTests(unittest.TestCase):
             all(
                 item["approval_status"] == "candidate-not-approved"
                 for item in non_approved["runtime_candidates"]
+            )
+        )
+        native = non_approved["runtime_candidates"][0]
+        self.assertEqual(native["backend"], "cpu-library-only")
+        self.assertEqual(
+            native["package_id"],
+            "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+        )
+        self.assertRegex(native["profile_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(native["upstream_entrypoints_included"], [])
+        self.assertEqual(len(native["critical_sha256"]), 17)
+        self.assertFalse(
+            any(
+                term in name.lower()
+                for name in native["critical_sha256"]
+                for term in ("server", "rpc", "cli", "vulkan", "download")
             )
         )
         self.assertTrue(

@@ -9,14 +9,22 @@ use agentmage_kernel_contracts::{
     LocalEndpointIdentity, LocalTransport, NetworkComponent, NetworkEndpointError,
 };
 
+mod native_runtime;
+
+pub use native_runtime::{
+    NATIVE_RUNTIME_PACKAGE_ID, NATIVE_RUNTIME_PROFILE_SHA256, NATIVE_RUNTIME_PROFILE_SHA256_HEX,
+    NATIVE_RUNTIME_SOURCE_ARCHIVE_SHA256, NativeInferenceResourceEnvelope, NativeInferenceTopology,
+    NativeRuntimeContractError, PinnedNativeRuntimeIdentity, RestrictedModelStoreIdentity,
+};
+
 /// Stable component identity included in package and process inventories.
 pub const COMPONENT_ID: &str = "platform-linux-native-inference";
 
 /// Version of the package/process boundary implemented before model-runtime work.
-pub const PROCESS_BOUNDARY_VERSION: u16 = 1;
+pub const PROCESS_BOUNDARY_VERSION: u16 = 2;
 
 /// Exact content-free descriptor emitted by the inactive packaged adapter.
-pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"enabled_models\":0,\"inference_available\":false,\"network_listener\":false,\"process_boundary_version\":1}\n";
+pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"enabled_models\":0,\"inference_available\":false,\"native_runtime_package\":\"agentmage-llama-cpp-b10333-cpu-linux-x86_64\",\"native_runtime_profile_sha256\":\"21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea\",\"network_listener\":false,\"process_boundary_version\":2}\n";
 
 /// Stable refusal from the pre-runtime adapter process.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,8 +85,8 @@ mod tests {
     use agentmage_kernel_contracts::{LocalTransport, NetworkComponent, NetworkEndpointError};
 
     use super::{
-        BOUNDARY_DESCRIPTION, LinuxInferenceBoundaryError, authenticated_endpoint_identity,
-        evaluate_arguments,
+        BOUNDARY_DESCRIPTION, LinuxInferenceBoundaryError, NATIVE_RUNTIME_PACKAGE_ID,
+        NATIVE_RUNTIME_PROFILE_SHA256_HEX, authenticated_endpoint_identity, evaluate_arguments,
     };
 
     #[test]
@@ -125,6 +133,8 @@ mod tests {
             "\"authority_inputs\":[]",
             "\"enabled_models\":0",
             "\"inference_available\":false",
+            NATIVE_RUNTIME_PACKAGE_ID,
+            NATIVE_RUNTIME_PROFILE_SHA256_HEX,
             "\"network_listener\":false",
         ] {
             assert!(text.contains(required));

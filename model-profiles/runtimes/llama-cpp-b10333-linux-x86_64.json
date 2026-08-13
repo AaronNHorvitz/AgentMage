@@ -1,0 +1,254 @@
+{
+  "architecture": "x86_64",
+  "authority": {
+    "credential": false,
+    "grant": false,
+    "network": false,
+    "tool": false,
+    "workspace": false
+  },
+  "backend": "cpu",
+  "decision": {
+    "enabled_models": 0,
+    "inference_implemented": false,
+    "release_approval": false,
+    "status": "PACKAGE_INPUT_PINNED_NOT_ACTIVATED"
+  },
+  "ipc": {
+    "client": "kernel-native-inference-adapter",
+    "listener": "agentmage-native-inference-only",
+    "non_local_bind": false,
+    "transport": "authenticated-unix-socket"
+  },
+  "model_store": {
+    "directory_enumeration": false,
+    "directory_mode": 448,
+    "input": "kernel-held-read-only-model-descriptors",
+    "path_input": false,
+    "replacement": "refuse-existing-or-drifted-identity",
+    "required_owner": "invoking-standard-user",
+    "runtime_write": false
+  },
+  "package": {
+    "file_mode": 292,
+    "format": "deterministic-tar-gzip",
+    "license_destination": "LICENSE.llama.cpp",
+    "manifest_destination": "runtime-manifest.json",
+    "package_id": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "relative_install_root": "runtimes/llama-cpp-b10333-cpu-linux-x86_64",
+    "replacement": "no-overwrite",
+    "symlink_mode": 511
+  },
+  "platform": "linux",
+  "project": "ggml-org/llama.cpp",
+  "record_type": "linux_native_runtime_package_profile",
+  "release": "b10333",
+  "resource_ceiling": {
+    "cpu_percent": 3200,
+    "memory_bytes": 68719476736,
+    "output_bytes": 16777216,
+    "parallel_slots": 1,
+    "runtime_seconds": 3600,
+    "swap_bytes": 0,
+    "tasks": 64
+  },
+  "schema_version": 1,
+  "source_archive": {
+    "download_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10333/llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
+    "format": "tar-gzip",
+    "name": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
+    "root": "llama-b10333",
+    "sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5",
+    "size_bytes": 32521550
+  },
+  "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+  "source_files": [
+    {
+      "destination": "LICENSE.llama.cpp",
+      "mode": 292,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "size_bytes": 1078,
+      "source": "llama-b10333/LICENSE",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-base.so",
+      "mode": 511,
+      "source": "llama-b10333/libggml-base.so",
+      "target": "libggml-base.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml-base.so.0",
+      "mode": 511,
+      "source": "llama-b10333/libggml-base.so.0",
+      "target": "libggml-base.so.0.19.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml-base.so.0.19.0",
+      "mode": 292,
+      "sha256": "70fb27338be2ed53614ec518abebfc43bf3c0965887b7c865011f23db3a4ed69",
+      "size_bytes": 910784,
+      "source": "llama-b10333/libggml-base.so.0.19.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-alderlake.so",
+      "mode": 292,
+      "sha256": "066906c06e12fa6c8a72a3b87d7be76137dd8ff687e559fc45713c108c367613",
+      "size_bytes": 1141184,
+      "source": "llama-b10333/libggml-cpu-alderlake.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-cannonlake.so",
+      "mode": 292,
+      "sha256": "1cff542b64e417fcf1f71ed7177e12eb4e7c1022fa959525d340d212cbca0cbf",
+      "size_bytes": 1286176,
+      "source": "llama-b10333/libggml-cpu-cannonlake.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-cascadelake.so",
+      "mode": 292,
+      "sha256": "a742e3b1576a6d9c16c50fcb4e045af880fb49634356fff1c4c1053433162fa5",
+      "size_bytes": 1282080,
+      "source": "llama-b10333/libggml-cpu-cascadelake.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-cooperlake.so",
+      "mode": 292,
+      "sha256": "4ed30298f402d1b3f2cf3c6995c34c2f0b90ead9834294f151a93b032e004d87",
+      "size_bytes": 1282144,
+      "source": "llama-b10333/libggml-cpu-cooperlake.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-haswell.so",
+      "mode": 292,
+      "sha256": "155eb9bbd263822346f33d1f0612dc69b3269ee2fa18e9b4dbf637e1ab240dae",
+      "size_bytes": 1141184,
+      "source": "llama-b10333/libggml-cpu-haswell.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-icelake.so",
+      "mode": 292,
+      "sha256": "282a2f11091e9aacd7efda3cd33e0cc92e53ddf5e0e90d15b2393b6196d039d6",
+      "size_bytes": 1282080,
+      "source": "llama-b10333/libggml-cpu-icelake.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-ivybridge.so",
+      "mode": 292,
+      "sha256": "abd957ac6f41d0ba22682602e063deea3861d28088934135097f0043a2ae1e08",
+      "size_bytes": 1094656,
+      "source": "llama-b10333/libggml-cpu-ivybridge.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-piledriver.so",
+      "mode": 292,
+      "sha256": "6b4e6f00f936791a0b5e66b7c8a8a0fb2a6cd3b0150acfb14dc5dc11757407e1",
+      "size_bytes": 1090560,
+      "source": "llama-b10333/libggml-cpu-piledriver.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-sandybridge.so",
+      "mode": 292,
+      "sha256": "fd8d67a1ea8f2e37ccd3a1308731af903d698d6069980711e3483909f14aa7f1",
+      "size_bytes": 1081248,
+      "source": "llama-b10333/libggml-cpu-sandybridge.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-sapphirerapids.so",
+      "mode": 292,
+      "sha256": "d9092412e44f9d2ec07432c0a9110065863ac8d01d972df6c0e9a06d3963021f",
+      "size_bytes": 1548480,
+      "source": "llama-b10333/libggml-cpu-sapphirerapids.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-skylakex.so",
+      "mode": 292,
+      "sha256": "d5256e9738827e0c1d4f13107e2d284950e117e303cbb598649abd399a30415d",
+      "size_bytes": 1286176,
+      "source": "llama-b10333/libggml-cpu-skylakex.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-sse42.so",
+      "mode": 292,
+      "sha256": "cdbca7612d26f574ecc696a142701b9d13b7c947834e7785df5eee34c1511630",
+      "size_bytes": 882048,
+      "source": "llama-b10333/libggml-cpu-sse42.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-x64.so",
+      "mode": 292,
+      "sha256": "e0027ee90105a950198866d9704dc2e8d5e63b4fb52deaf1bced671b8996700b",
+      "size_bytes": 878128,
+      "source": "llama-b10333/libggml-cpu-x64.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-zen4.so",
+      "mode": 292,
+      "sha256": "ce81e04328400f170dc973304a996bfe49e1eef09a7d516d327c822e6acdbf99",
+      "size_bytes": 1282144,
+      "source": "llama-b10333/libggml-cpu-zen4.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml.so",
+      "mode": 511,
+      "source": "llama-b10333/libggml.so",
+      "target": "libggml.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml.so.0",
+      "mode": 511,
+      "source": "llama-b10333/libggml.so.0",
+      "target": "libggml.so.0.19.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml.so.0.19.0",
+      "mode": 292,
+      "sha256": "ffd6a736ad58e2d9407ed427252520ffbd4bca8dd5de467ecb2bd446a7a3d75b",
+      "size_bytes": 54936,
+      "source": "llama-b10333/libggml.so.0.19.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libllama.so",
+      "mode": 511,
+      "source": "llama-b10333/libllama.so",
+      "target": "libllama.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama.so.0",
+      "mode": 511,
+      "source": "llama-b10333/libllama.so.0",
+      "target": "libllama.so.0.0.10333",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama.so.0.0.10333",
+      "mode": 292,
+      "sha256": "22c4f9c4e36bcdb75d134f703cb2b5968c40b6a6a0a7c0f59a455b721027db02",
+      "size_bytes": 4165728,
+      "source": "llama-b10333/libllama.so.0.0.10333",
+      "type": "file"
+    }
+  ],
+  "upstream_license": "MIT"
+}

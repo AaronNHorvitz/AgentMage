@@ -12,6 +12,10 @@ verification command and cannot satisfy signed-release verification. Generated
 packages live under ignored `release-output/` and are never source artifacts.
 The packaged adapter has zero enabled models and no inference operation until
 the candidate-neutral runtime gate is implemented and independently admitted.
+The separately generated b10333 CPU-library runtime bundle is not embedded in
+the RPM, DEB, VSIX, or signable release bundle. It remains an ignored,
+identity-pinned, inactive input until later installer, runtime, model, and
+release gates admit it.
 
 Current lifecycle coverage includes install, candidate verification, upgrade,
 corrupt-upgrade refusal, rollback, uninstall, and residue checks in disposable

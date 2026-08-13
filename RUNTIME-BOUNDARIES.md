@@ -127,6 +127,11 @@ Every shipped process, helper, executable, interpreter, container, image, listen
 - The native reference package installs and operates in user-owned locations as a standard user.
 - Tool workers use fresh Bubblewrap isolation, read-only binds, seccomp, and user cgroup limits. Startup records whether user namespaces and the required confinement mechanisms are available; an unavailable mandatory control blocks the profile.
 - Native `llama.cpp` is the security-reference inference adapter.
+- The initial Linux native runtime package is a deterministic CPU-library-only
+  b10333 bundle. It includes the upstream MIT notice, `libllama`, core `ggml`,
+  and exact CPU backends; it excludes every upstream executable, server, RPC,
+  downloader, utility implementation library, Vulkan backend, and model. The
+  inactive AgentMage adapter remains the only product entry point.
 - Docker Model Runner is a supported compatibility adapter only after its package, Docker Engine or rootless mode, container, socket, namespace, graphics, and local-API gates pass.
 - Installing Docker Engine, Docker Model Runner, graphics drivers, or operating-system packages is an external platform prerequisite and is never hidden inside AgentMage's installer. Diagnostics state whether that prerequisite required elevated administration.
 - Linux Secret Service stores the encrypted-store key.

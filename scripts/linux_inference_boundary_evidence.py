@@ -47,15 +47,18 @@ SOURCE_PATHS = (
     "docs/decisions/0022-detached-package-signing-boundary.md",
     "docs/decisions/0023-package-verified-linux-bootstrap-transport.md",
     "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
+    "docs/decisions/0029-closed-linux-native-llama-runtime-package.md",
     "IMPLEMENTATION-PLAN.md",
     "package.json",
     "packaging/linux/README.md",
     "packaging/linux/agentmage-release.spec.in",
     "packaging/linux/agentmage.spec.in",
+    "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "platforms/linux-inference/Cargo.toml",
     "platforms/linux-inference/README.md",
     "platforms/linux-inference/src/lib.rs",
     "platforms/linux-inference/src/main.rs",
+    "platforms/linux-inference/src/native_runtime.rs",
     "platforms/linux-inference/tests/process_boundary.rs",
     "platforms/linux/README.md",
     "platforms/linux/src/platform.rs",
@@ -83,8 +86,10 @@ EXPECTED_DESCRIPTOR = {
     "contract": "authenticated-local-endpoint-v1",
     "enabled_models": 0,
     "inference_available": False,
+    "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 1,
+    "process_boundary_version": 2,
 }
 EXPECTED_DEPENDENCIES = {"agentmage-kernel-contracts"}
 FORBIDDEN_COMPILE_REFERENCES = (
@@ -95,7 +100,7 @@ FORBIDDEN_COMPILE_REFERENCES = (
 )
 LIMITATIONS = [
     "The candidate-neutral LocalModelRuntime, model-family codecs, profiles, streaming, cancellation, and resource protocol remain assigned to Sprint 13.",
-    "No llama.cpp binary or model artifact is included in this package increment.",
+    "No llama.cpp runtime library or model artifact is included in the core RPM/DEB package increment; the separate Sprint 9.2 runtime input remains inactive.",
     "This boundary report builds and extracts the DEB on Fedora; clean Ubuntu installation and execution are recorded separately under Sub-task 9.1.1.7.",
     "No supported package, enabled model, inference result, macOS result, or release claim is made.",
 ]
@@ -232,6 +237,7 @@ def validate_source_boundary(root: Path = ROOT) -> list[str]:
             for relative in (
                 "platforms/linux-inference/src/lib.rs",
                 "platforms/linux-inference/src/main.rs",
+                "platforms/linux-inference/src/native_runtime.rs",
             )
         )
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:

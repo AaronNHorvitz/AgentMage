@@ -178,9 +178,14 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         failures.append("schema_version must equal 1")
     if contract.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
-    if contract.get("amendment_decision_ids") != ["ADR-0022", "ADR-0024", "ADR-0028"]:
+    if contract.get("amendment_decision_ids") != [
+        "ADR-0022",
+        "ADR-0024",
+        "ADR-0028",
+        "ADR-0029",
+    ]:
         failures.append(
-            "build contract must record the signing, Windows, and inference-package amendments"
+            "build contract must record the signing, Windows, process, and native-runtime package amendments"
         )
     if contract.get("status") != "configured":
         failures.append("build contract status must be configured")

@@ -6,6 +6,8 @@ import unittest
 from scripts.artifact_scanner import (
     EXPECTED_SEEDS,
     build_report,
+    load_policy,
+    scan_sbom,
     scan_text,
     validate_report,
 )
@@ -34,6 +36,24 @@ class ArtifactScannerTests(unittest.TestCase):
         ]
         self.assertTrue(findings)
         self.assertTrue(all(item["severity"] == "open-review" for item in findings))
+
+    def test_approved_conjunctive_license_is_not_blocked(self) -> None:
+        bom = {
+            "components": [
+                {
+                    "bom-ref": "cargo:synthetic@1.0.0",
+                    "licenses": [{"expression": "MIT AND BSD-3-Clause"}],
+                    "properties": [
+                        {
+                            "name": "agentmage:dependency-class",
+                            "value": "production",
+                        }
+                    ],
+                }
+            ]
+        }
+        policy = load_policy()
+        self.assertEqual(scan_sbom(bom, policy)["findings"], [])
 
     def test_every_seeded_violation_is_detected(self) -> None:
         self.assertEqual(

@@ -8,6 +8,9 @@ The current `xtask` can build deterministic unsigned RPM, DEB, and VSIX
 candidates and a separate deterministic signable Linux release bundle. The
 Linux payload binds the host, inactive isolated native-inference adapter, VSIX,
 and license as four exact files. Adapter presence enables no model or inference.
+The separately generated native `llama.cpp` CPU-library bundle is not one of
+those four files and is not a release artifact; its current profile and evidence
+establish only an exact inactive package input.
 The signer accepts exactly one raw Ed25519 private seed through standard input,
 checks it against an external public key, and emits a new detached signature.
 It does not accept a private-key path, generate an identity, overwrite a

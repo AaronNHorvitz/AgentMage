@@ -122,9 +122,11 @@ contents are not retained in inventory diagnostics.
   authentication-only bootstrap primitive are present. Decision 0028 also
   packages a separate inactive native-inference process that depends only on
   shared contracts, accepts only an exact self-check, opens no listener, and
-  reports zero enabled models. No production signer, approved trust-root
-  provisioning, signed platform release, installer, updater, model runtime,
-  model artifact, or inference operation is present.
+  reports zero enabled models. Decision 0029 defines a distinct, deterministic,
+  CPU-library-only native runtime input but does not embed it in the core
+  RPM/DEB or activate it. No production signer, approved trust-root provisioning,
+  signed platform release, installer, updater, model runtime, model artifact, or
+  inference operation is present.
 - Unknown stale-socket recovery is not automated; startup fails closed and
   retains the object.
 - Operational-key deletion, state deletion, uninstall orchestration, and key

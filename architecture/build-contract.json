@@ -4,7 +4,8 @@
   "amendment_decision_ids": [
     "ADR-0022",
     "ADR-0024",
-    "ADR-0028"
+    "ADR-0028",
+    "ADR-0029"
   ],
   "status": "configured",
   "toolchains": {
@@ -41,6 +42,7 @@
     "platforms/linux-inference/Cargo.toml",
     "platforms/linux-inference/src/lib.rs",
     "platforms/linux-inference/src/main.rs",
+    "platforms/linux-inference/src/native_runtime.rs",
     "platforms/linux-inference/tests/process_boundary.rs",
     "platforms/windows/Cargo.toml",
     "platforms/windows/src/bin/native_evidence.rs",
@@ -55,8 +57,12 @@
     "scripts/package_release.py",
     "scripts/package_release_lifecycle.py",
     "scripts/linux_inference_boundary_evidence.py",
+    "scripts/linux_native_runtime_evidence.py",
     "scripts/linux_package_lifecycle_evidence.py",
+    "scripts/native_llama_runtime.py",
     "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
+    "docs/decisions/0029-closed-linux-native-llama-runtime-package.md",
+    "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "rust-toolchain.toml",
     "rustfmt.toml",
     "shells/host/Cargo.toml",
@@ -66,7 +72,9 @@
     "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
     "tests/test_linux_inference_boundary_evidence.py",
+    "tests/test_linux_native_runtime_evidence.py",
     "tests/test_linux_package_lifecycle_evidence.py",
+    "tests/test_native_llama_runtime.py",
     "tests/test_package_lifecycle.py",
     "shells/vscode/eslint.config.mjs",
     "shells/vscode/package.json",

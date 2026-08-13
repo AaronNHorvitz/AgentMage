@@ -73,6 +73,7 @@ EXPECTED_SOURCES = {
     "dependency_provenance": "supply-chain/dependency-provenance.json",
     "dependency_classes": "architecture/dependency-classes.json",
     "optional_components": "architecture/optional-component-inventory.json",
+    "linux_native_runtime_package": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
     "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json",
@@ -240,20 +241,72 @@ def _build_environments(clean_report: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _runtime_candidates(
-    primary: dict[str, Any], fallback: dict[str, Any], macos: dict[str, Any]
+    linux_native: dict[str, Any],
+    linux_native_profile_sha256: str,
+    primary: dict[str, Any],
+    fallback: dict[str, Any],
+    macos: dict[str, Any],
 ) -> list[dict[str, Any]]:
     for admission in (primary, fallback):
         if admission.get("decision", {}).get("release_approval") is not False:
             raise ValueError("Linux runtime candidate was promoted without its owning gate")
     if macos.get("decision", {}).get("release_approval") is not False:
         raise ValueError("macOS runtime candidate was promoted without its owning gate")
+    if linux_native.get("decision") != {
+        "enabled_models": 0,
+        "inference_implemented": False,
+        "release_approval": False,
+        "status": "PACKAGE_INPUT_PINNED_NOT_ACTIVATED",
+    }:
+        raise ValueError("Linux native runtime package was promoted without its owning gate")
+    if (
+        HASH.fullmatch(linux_native_profile_sha256) is None
+        or linux_native.get("package", {}).get("package_id")
+        != "agentmage-llama-cpp-b10333-cpu-linux-x86_64"
+    ):
+        raise ValueError("Linux native runtime package profile identity is invalid")
     primary_native = primary["native_runtime"]
     fallback_native = fallback["native_runtime"]
     primary_docker = primary["docker_engine"]
     fallback_docker = fallback["docker_engine"]
-    for key in ("release", "source_commit", "asset_sha256", "llama_server_sha256"):
+    for key in ("release", "source_commit", "asset_sha256"):
         if primary_native.get(key) != fallback_native.get(key):
             raise ValueError(f"fallback native runtime identity differs: {key}")
+    profile_archive = linux_native.get("source_archive", {})
+    if (
+        linux_native.get("release") != primary_native.get("release")
+        or linux_native.get("source_commit") != primary_native.get("source_commit")
+        or profile_archive.get("sha256") != primary_native.get("asset_sha256")
+        or linux_native.get("backend") != "cpu"
+        or linux_native.get("authority")
+        != {
+            "credential": False,
+            "grant": False,
+            "network": False,
+            "tool": False,
+            "workspace": False,
+        }
+    ):
+        raise ValueError("Linux native runtime package identity differs from retained evidence")
+    retained_files = linux_native.get("source_files")
+    if not isinstance(retained_files, list) or any(
+        not isinstance(item, dict) for item in retained_files
+    ):
+        raise ValueError("Linux native runtime retained file closure is invalid")
+    retained_libraries = {
+        item["destination"]: item["sha256"]
+        for item in retained_files
+        if item.get("type") == "file" and str(item.get("destination", "")).startswith("lib/")
+    }
+    if (
+        not retained_libraries
+        or any(
+            term in str(item.get("destination", "")).lower()
+            for item in retained_files
+            for term in ("server", "rpc", "cli", "vulkan", "download")
+        )
+    ):
+        raise ValueError("Linux native runtime package retained a prohibited surface")
     for key in ("digest", "runtime_source_revision", "runtime_version"):
         if primary_docker.get(key) != fallback_docker.get(key):
             raise ValueError(f"fallback Docker runtime identity differs: {key}")
@@ -263,15 +316,15 @@ def _runtime_candidates(
     candidates = [
         {
             "component_id": EXPECTED_RUNTIME_CANDIDATES[0],
+            "package_id": linux_native["package"]["package_id"],
             "platform": "linux-x86_64",
+            "profile_sha256": linux_native_profile_sha256,
             "version": primary_native["release"],
             "source_revision": primary_native["source_commit"],
-            "sha256": primary_native["asset_sha256"],
-            "critical_sha256": {
-                "llama-cli": primary_native["llama_cli_sha256"],
-                "llama-server": primary_native["llama_server_sha256"],
-                "vulkan-library": primary_native["vulkan_library_sha256"],
-            },
+            "sha256": profile_archive["sha256"],
+            "backend": "cpu-library-only",
+            "critical_sha256": dict(sorted(retained_libraries.items())),
+            "upstream_entrypoints_included": [],
             "approval_status": "candidate-not-approved",
         },
         {
@@ -319,6 +372,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     optional = sources[policy["sources"]["optional_components"]]
     primary = sources[policy["sources"]["linux_primary_runtime_candidate"]]
     fallback = sources[policy["sources"]["linux_fallback_runtime_candidate"]]
+    linux_native = sources[policy["sources"]["linux_native_runtime_package"]]
     macos = sources[policy["sources"]["macos_runtime_candidate"]]
     source_failures = [
         *validate_clean_build_report(clean, root),
@@ -344,7 +398,13 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     executables = _approved_executables(clean)
     environments = _build_environments(clean)
     packages = _package_summary(provenance)
-    candidates = _runtime_candidates(primary, fallback, macos)
+    candidates = _runtime_candidates(
+        linux_native,
+        sha256_file(root / policy["sources"]["linux_native_runtime_package"]),
+        primary,
+        fallback,
+        macos,
+    )
     unapproved = [
         {
             "component_id": item["id"],

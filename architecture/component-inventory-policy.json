@@ -7,6 +7,7 @@
     "dependency_provenance": "supply-chain/dependency-provenance.json",
     "dependency_classes": "architecture/dependency-classes.json",
     "optional_components": "architecture/optional-component-inventory.json",
+    "linux_native_runtime_package": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
     "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json"
