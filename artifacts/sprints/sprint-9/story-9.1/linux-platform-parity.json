@@ -1,11 +1,6 @@
 {
   "artifact_id": "linux-fedora-ubuntu-adapter-parity",
-  "blocking_gates": [
-    {
-      "reason": "Native Ubuntu control, IPC, worker, and Secret Service execution plus aggregate product-security mapping and review remain open.",
-      "task_id": "9.1.3.5"
-    }
-  ],
+  "blocking_gates": [],
   "dimensions": [
     {
       "evidence": [
@@ -65,30 +60,33 @@
     {
       "evidence": [
         "linux-controls",
-        "sandbox-attacks"
+        "sandbox-attacks",
+        "ubuntu-native-controls"
       ],
       "fedora": "verified-live",
       "id": "bubblewrap-seccomp-cgroup",
-      "parity": "blocked",
-      "ubuntu": "verified-live-userspace-envelope-native-open"
+      "parity": "verified",
+      "ubuntu": "verified-live-native-kernel-kvm"
     },
     {
       "evidence": [
-        "linux-controls"
+        "linux-controls",
+        "ubuntu-native-controls"
       ],
       "fedora": "verified-live",
       "id": "authenticated-ipc",
-      "parity": "blocked",
-      "ubuntu": "blocked-live-execution"
+      "parity": "verified",
+      "ubuntu": "verified-live-native-kernel-kvm"
     },
     {
       "evidence": [
-        "linux-controls"
+        "linux-controls",
+        "ubuntu-native-controls"
       ],
       "fedora": "verified-live-synthetic-items",
       "id": "secret-service",
-      "parity": "blocked",
-      "ubuntu": "blocked-live-execution"
+      "parity": "verified",
+      "ubuntu": "verified-live-native-kernel-kvm-synthetic-items"
     },
     {
       "evidence": [
@@ -135,10 +133,10 @@
     },
     {
       "artifact_id": "linux-ipc-sandbox-control-verification",
-      "evidence_revision": "1083a042f48a0792a14572a53c12b05734244041",
+      "evidence_revision": "9a807bbdb30be9151657fee62a1136ea021041c3",
       "id": "linux-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "ebbfd6ab44870dd7f81e9b8a1cda86e25c41f1db618ff015dabb6d1a279062ee",
+      "sha256": "884a535af0050bd48be6a454f1be3f79411484e9933a376b3712af4c615ead92",
       "status": "pass-fedora-only"
     },
     {
@@ -148,6 +146,14 @@
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
       "sha256": "c28d48d006034be679431e85dc001906f9a054daea69def522d3fe5529bede9e",
       "status": "pass-bounded-cross-distribution"
+    },
+    {
+      "artifact_id": "linux-native-ubuntu-control-verification",
+      "evidence_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+      "id": "ubuntu-native-controls",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
+      "sha256": "f553de617303a74e88b5c698cd2631a60fccc13f00570e7bb21896861ee8bce5",
+      "status": "pass-native-ubuntu-kernel-controls"
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
@@ -167,8 +173,8 @@
     }
   ],
   "limitations": [
-    "This report proves seven complete Fedora/Ubuntu parity dimensions, records bounded Ubuntu userspace worker behavior, and explicitly blocks three dimensions; it is not a full platform-parity claim.",
-    "Ubuntu Bubblewrap, seccomp, and cgroup attacks pass in a rootless privileged test envelope; native Ubuntu isolation, live Secret Service closure, and complete native IPC integration remain pending.",
+    "This report proves all ten declared Fedora/Ubuntu parity dimensions; it does not extend the dimension set or claim physical-host certification.",
+    "Fedora controls execute on the local Fedora 44 host; Ubuntu isolation, IPC, Secret Service, startup, syscall, and resource controls execute under an Ubuntu 26.04 kernel in a KVM guest, while the older rootless-container attack artifact remains bounded historical corroboration.",
     "The graphical Visual Studio Code workflow passes in clean rootless Fedora and Ubuntu container images, not on native physical hosts; Chromium's nested sandbox is disabled only inside the outer capability-free, no-new-privileges, networkless acceptance container.",
     "The packaged inference process is inactive: no model is packaged or enabled and no inference is performed.",
     "All packages are unsigned candidates and make no supported-release claim.",
@@ -182,27 +188,27 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "b49230a1a3283ea8436311f00c2c12879af7cb8a",
+  "source_revision": "b07cf090853913227e4bc6888d766d92144e36b1",
   "sources": [
     {
       "path": "package.json",
-      "sha256": "d01321049e70758cadb13835cb90547836aa9d9b9395772c800492b8dcfdfa93"
+      "sha256": "d0d4014b4b30fe827e4e793700514677fcc1acbc7ce4477ae2379e5b26dc43c5"
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",
-      "sha256": "6d13838875bf13726718788c27ed38b47787a549802820fe546d176ede85e822"
+      "sha256": "1cb8a551db0eeb9465e625c470d298a3c1f0d98a8048c68bdbd29ce7e1c42c16"
     },
     {
       "path": "tests/test_linux_platform_parity_evidence.py",
-      "sha256": "461b4a912f85056712c8a3c79185854064c1a1c0e4730b1b903c213146d89564"
+      "sha256": "ac0bbcca1169767f33eb6339c404916eb65e211bf048be573ef29add3f53d4ae"
     }
   ],
-  "status": "partial-parity-with-open-native-controls",
+  "status": "pass-declared-fedora-ubuntu-parity",
   "summary": {
-    "blocked_parity_dimensions": 3,
+    "blocked_parity_dimensions": 0,
     "dimension_count": 10,
-    "full_fedora_ubuntu_parity": false,
-    "verified_parity_dimensions": 7
+    "full_fedora_ubuntu_parity": true,
+    "verified_parity_dimensions": 10
   },
   "task_ids": [
     "9.1.2.4"
