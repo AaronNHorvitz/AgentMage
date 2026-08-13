@@ -160,6 +160,17 @@ def authenticated_guard_control(runner_pid: int) -> dict[str, Any]:
     secret = os.urandom(32)
     peer_pid, peer = start_peer(secret)
     guard_pid = topology.start_guard(runner_pid, peer, secret)
+    current_peer = topology.process_record(peer_pid) | {"pid": peer_pid}
+    for field in (
+        "pid",
+        "uid",
+        "gid",
+        "start_time_ticks",
+        "executable_sha256",
+        "cgroup_sha256",
+    ):
+        if current_peer[field] != peer[field]:
+            raise topology.GuestEvidenceError(f"guard peer pre-connect drift: {field}")
     go = PEER_ROOT / "go"
     go.write_text("go\n", encoding="ascii")
     os.chown(go, topology.RUNTIME_UID, topology.RUNTIME_GID)
@@ -167,7 +178,23 @@ def authenticated_guard_control(runner_pid: int) -> dict[str, Any]:
     while time.monotonic() < deadline and not (PEER_ROOT / "result.json").is_file():
         if (PEER_ROOT / "error.txt").is_file():
             error_class = (PEER_ROOT / "error.txt").read_text(encoding="ascii").strip()
-            raise topology.GuestEvidenceError(f"guard peer exception: {error_class}")
+            guard_lines = topology.text(
+                [
+                    "journalctl",
+                    "--unit",
+                    topology.GUARD_UNIT,
+                    "--output=cat",
+                    "--no-pager",
+                    "--lines=20",
+                ]
+            ).splitlines()
+            guard_code = next(
+                (line for line in reversed(guard_lines) if line.startswith("docker-guard.")),
+                "guard-code-unavailable",
+            )
+            raise topology.GuestEvidenceError(
+                f"guard peer exception: {error_class} {guard_code}"
+            )
         peer_state = topology.text(
             ["systemctl", "show", "--property=ActiveState", "--value", topology.RUNTIME_UNIT]
         )
