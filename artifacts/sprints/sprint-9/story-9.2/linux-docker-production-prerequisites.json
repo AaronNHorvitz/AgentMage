@@ -1,0 +1,403 @@
+{
+  "artifact_id": "linux-docker-production-prerequisites",
+  "components": [
+    {
+      "collector_descriptor": {
+        "accepted_operations": [
+          "observe",
+          "self-check",
+          "validate-observation-stdin"
+        ],
+        "authority": "docker-topology-observation-only",
+        "component_id": "agentmage-docker-topology-collector",
+        "docker_mutation": false,
+        "enabled": false,
+        "network_egress": false,
+        "preflight_contract_version": 2,
+        "protocol_version": 1
+      },
+      "format": "rpm",
+      "guard_descriptor": {
+        "accepted_operations": [
+          "serve-one-session",
+          "self-check"
+        ],
+        "authority": "guarded-inference-transport-only",
+        "component_id": "agentmage-docker-guard",
+        "docker_control": false,
+        "enabled": false,
+        "network_egress": false,
+        "protocol_version": 1,
+        "raw_target": "private-namespace-loopback-only",
+        "sessions": 1
+      },
+      "manifest_sha256": "7071462289a30653db74f1c215e96538b9bf90849a06c5e545352014f95d2a95",
+      "payload": [
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-docker-guard",
+          "sha256": "d488c18ef029a8eeadbec32098f8985b53e9deca631dd39754c84febfb9c4254",
+          "size": 547488
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
+          "sha256": "3ef9fcba9da36fddf425c828d807da42c6f5e2e0471654e62bfe14ef09f13973",
+          "size": 996128
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-host",
+          "sha256": "9c1ab2810167556c233e094d684a4dea315271af61a6d5cf33af375529eaaafa",
+          "size": 902128
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-native-inference",
+          "sha256": "7a52fb26826373ce764b5ecdfdb8bd2098e961c79808ea791f2689ee9c236afc",
+          "size": 454448
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/agentmage/agentmage.vsix",
+          "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392",
+          "size": 15193
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/licenses/agentmage/LICENSE",
+          "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+          "size": 11357
+        }
+      ]
+    },
+    {
+      "collector_descriptor": {
+        "accepted_operations": [
+          "observe",
+          "self-check",
+          "validate-observation-stdin"
+        ],
+        "authority": "docker-topology-observation-only",
+        "component_id": "agentmage-docker-topology-collector",
+        "docker_mutation": false,
+        "enabled": false,
+        "network_egress": false,
+        "preflight_contract_version": 2,
+        "protocol_version": 1
+      },
+      "format": "deb",
+      "guard_descriptor": {
+        "accepted_operations": [
+          "serve-one-session",
+          "self-check"
+        ],
+        "authority": "guarded-inference-transport-only",
+        "component_id": "agentmage-docker-guard",
+        "docker_control": false,
+        "enabled": false,
+        "network_egress": false,
+        "protocol_version": 1,
+        "raw_target": "private-namespace-loopback-only",
+        "sessions": 1
+      },
+      "manifest_sha256": "7071462289a30653db74f1c215e96538b9bf90849a06c5e545352014f95d2a95",
+      "payload": [
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-docker-guard",
+          "sha256": "d488c18ef029a8eeadbec32098f8985b53e9deca631dd39754c84febfb9c4254",
+          "size": 547488
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
+          "sha256": "3ef9fcba9da36fddf425c828d807da42c6f5e2e0471654e62bfe14ef09f13973",
+          "size": 996128
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-host",
+          "sha256": "9c1ab2810167556c233e094d684a4dea315271af61a6d5cf33af375529eaaafa",
+          "size": 902128
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-native-inference",
+          "sha256": "7a52fb26826373ce764b5ecdfdb8bd2098e961c79808ea791f2689ee9c236afc",
+          "size": 454448
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/agentmage/agentmage.vsix",
+          "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392",
+          "size": 15193
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/licenses/agentmage/LICENSE",
+          "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+          "size": 11357
+        }
+      ]
+    }
+  ],
+  "docker_engine_directly_tested": false,
+  "host": {
+    "architecture": "x86_64",
+    "distribution": "fedora",
+    "docker_cli_available": false,
+    "live_collector_executed": false,
+    "version": "44"
+  },
+  "limitations": [
+    "The production guard and topology collector are packaged and executable, but only their inactive self-check operations were run for this artifact.",
+    "Docker Engine and the Docker CLI are absent on this Fedora host; no daemon, socket, container, namespace, firewall, image, model, or packet path was inspected live.",
+    "The administrator-only collector observation operation was not executed and no synthetic observation is represented as live evidence.",
+    "Clean Fedora and Ubuntu Docker execution, hostile reachability, independent control disablement, inference, model admission, and release support remain later Story 9.2 gates."
+  ],
+  "live_topology_inspected": false,
+  "mutation_coverage": {
+    "collector": [
+      "administrator-before-input",
+      "docker-read-route-allowlist-and-response-bounds",
+      "explicit-process-and-source-identity",
+      "freshness-replay-and-private-marker",
+      "interface-route-listener-and-mount-parsing",
+      "malformed-partial-unknown-and-oversized-input",
+      "production-tag-proxy-mount-listener-and-duplicate-guard-drift"
+    ],
+    "guard": [
+      "bootstrap-identity-and-bounds",
+      "caller-class-uid-process-cgroup-session",
+      "challenge-secret-and-peer-authentication",
+      "frame-and-request-path-bounds",
+      "namespace-listener-route-and-socket-topology",
+      "profile-process-mount-and-executable-identity",
+      "replay-upstream-failure-and-teardown"
+    ],
+    "package": [
+      "exact-six-file-manifest",
+      "executable-mode-hash-and-presence",
+      "rpm-deb-cross-format-equivalence",
+      "signed-and-unsigned-package-boundary"
+    ]
+  },
+  "packages": {
+    "deb": {
+      "bytes": 1250154,
+      "filename": "agentmage_0.0.0_amd64.deb",
+      "sha256": "c086b36202c0e771d7fefe21779d14454d356cc60322f8dd3a4d9111b787ed5d"
+    },
+    "rpm": {
+      "bytes": 631600,
+      "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
+      "sha256": "79774812fe934145bf4aa55b61c29f2040b6a772ab2df693aecadb47d7a29b37"
+    },
+    "vsix": {
+      "bytes": 15193,
+      "filename": "agentmage-vscode-0.0.0.vsix",
+      "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392"
+    }
+  },
+  "release_claim": "none",
+  "reproducible_package_rebuild": true,
+  "schema_version": 1,
+  "source_revision": "98861951723c75977aba877d3d716b048f4be8de",
+  "sources": [
+    {
+      "bytes": 13090,
+      "path": "Cargo.lock",
+      "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
+    },
+    {
+      "bytes": 1452,
+      "path": "Cargo.toml",
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+    },
+    {
+      "bytes": 11357,
+      "path": "LICENSE",
+      "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+    },
+    {
+      "bytes": 6373,
+      "path": "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
+      "sha256": "b1cc580488597b45b35246500673ce82d0198d07d92b480c0166675c4960d260"
+    },
+    {
+      "bytes": 2063,
+      "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
+      "sha256": "a744eb31f4949ec7d99dfae8f62eccb531269c3549ee51f3977e0ea62a8f88c8"
+    },
+    {
+      "bytes": 3575,
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "eef3e99df6ab418412bccc219a3ea4cffff18aaa73e3ee83e1ef60a0d615a99a"
+    },
+    {
+      "bytes": 182235,
+      "path": "package-lock.json",
+      "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
+    },
+    {
+      "bytes": 20858,
+      "path": "package.json",
+      "sha256": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
+    },
+    {
+      "bytes": 1232,
+      "path": "packaging/linux/agentmage-release.spec.in",
+      "sha256": "7fab5e0148bc2eac1890cd2a03939029906f98ae15d6d8bead799b3fc2ab19d2"
+    },
+    {
+      "bytes": 1216,
+      "path": "packaging/linux/agentmage.spec.in",
+      "sha256": "54233ffee4661e910b99121841cd1a9b6a5384b649e71dddac8f1c6486913e16"
+    },
+    {
+      "bytes": 739,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
+    },
+    {
+      "bytes": 19708,
+      "path": "platforms/linux-inference/src/docker_guard.rs",
+      "sha256": "190d5fd26a4ad2d29856f049d6cec473bce04dfe95022710018635947c345af3"
+    },
+    {
+      "bytes": 1727,
+      "path": "platforms/linux-inference/src/docker_guard_main.rs",
+      "sha256": "3706bd5edacf518244c6a6f7814058eebb6d1490341835e97f0bef1924acb0e2"
+    },
+    {
+      "bytes": 28133,
+      "path": "platforms/linux-inference/src/docker_guard_service.rs",
+      "sha256": "a7728237f3e18f7abe11dceebaa76add75f675dbafe24bd8f32c04a2ea405964"
+    },
+    {
+      "bytes": 13984,
+      "path": "platforms/linux-inference/src/docker_http_observer.rs",
+      "sha256": "f29e022aff337f84f49fc1e35cbb12a61836c7d176ce05d28fc349a1811768a7"
+    },
+    {
+      "bytes": 22641,
+      "path": "platforms/linux-inference/src/docker_linux_observer.rs",
+      "sha256": "53a713e735e3426c9241b9cb726e98f388c9be5c1c074a7c4f2875c258f1bfab"
+    },
+    {
+      "bytes": 39828,
+      "path": "platforms/linux-inference/src/docker_live_collector.rs",
+      "sha256": "3a4d953ce805c4852cd8e68c16cbdffeabc4e54f1dfa0042fa837c5d1065848a"
+    },
+    {
+      "bytes": 35349,
+      "path": "platforms/linux-inference/src/docker_preflight.rs",
+      "sha256": "d1421c3e891321dde1635852ee8a16e02cdb36dd06c15beab69a3c78a0f103e8"
+    },
+    {
+      "bytes": 28233,
+      "path": "platforms/linux-inference/src/docker_runtime.rs",
+      "sha256": "f9ed5b6b1f9e7476c5cdc492a75cf405b2aacac9a9fc1307b1006a8507d7f40b"
+    },
+    {
+      "bytes": 21870,
+      "path": "platforms/linux-inference/src/docker_topology_collector.rs",
+      "sha256": "42f28acc39d2c2e31cdd8609e6f19e3c66433f4d5f1e504316f8da08f777b216"
+    },
+    {
+      "bytes": 2025,
+      "path": "platforms/linux-inference/src/docker_topology_collector_main.rs",
+      "sha256": "5c6bb57153dbc26c637973373d6765de41d8171917e1548fd50bc5cb522798b4"
+    },
+    {
+      "bytes": 8503,
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "771f9d6dec87d27f4f112b24570e0f4dd0aa35a43f5f36da86b373043db00a2f"
+    },
+    {
+      "bytes": 574,
+      "path": "platforms/linux-inference/src/main.rs",
+      "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+    },
+    {
+      "bytes": 4843,
+      "path": "platforms/linux-inference/tests/process_boundary.rs",
+      "sha256": "94655c9da96fd0622a3a48339ecff48a0c1e660acf1f8db0974ca768614f4704"
+    },
+    {
+      "bytes": 86,
+      "path": "rust-toolchain.toml",
+      "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
+    },
+    {
+      "bytes": 49937,
+      "path": "scripts/linux_clean_image_acceptance.py",
+      "sha256": "66ae0e249a21b1d7258a4e199becf7c9910012c0818b1a3512f6b43c334dcf0f"
+    },
+    {
+      "bytes": 17937,
+      "path": "scripts/linux_docker_prerequisite_evidence.py",
+      "sha256": "d7c85b5a9e92f4f21ba3591d15550c259e1f33d70c5bd3014d82d1d9fe99fa0c"
+    },
+    {
+      "bytes": 20425,
+      "path": "scripts/linux_package_lifecycle_evidence.py",
+      "sha256": "a1d6d51994e62448c4fad6f323be3279c913f6543113a1a8087c2e3eb2b342e4"
+    },
+    {
+      "bytes": 18113,
+      "path": "scripts/package_candidate.py",
+      "sha256": "a08521967ef53a1eef8748aaf15eb482fe26ac0cc7d67bcb2ec77514bbb8e3c9"
+    },
+    {
+      "bytes": 38414,
+      "path": "scripts/package_lifecycle.py",
+      "sha256": "e2f78cf88ece6c68cc8c53cc72b6c4f3d4601443b1e20a505b75973f64d86b7d"
+    },
+    {
+      "bytes": 6082,
+      "path": "scripts/package_release_lifecycle.py",
+      "sha256": "88962ea92149b1974eccb09b614f0d8c17f7ffed3eaa585e6a28a4c79c273328"
+    },
+    {
+      "bytes": 18469,
+      "path": "shells/host/src/linux_bootstrap.rs",
+      "sha256": "5c0fc8279b024fdd56b102407f839a5ba7b1d92d1f888d0a00ceed00124745f6"
+    },
+    {
+      "bytes": 23000,
+      "path": "shells/host/src/package_verify.rs",
+      "sha256": "c5fb92c9d38eafbaf29ace545260121de0efb1bcda5a5a7a0d8ee4abeb9ecbb5"
+    },
+    {
+      "bytes": 10594,
+      "path": "tests/test_linux_clean_image_acceptance.py",
+      "sha256": "ea9cae99979f89bfd41223065e7a3f8d7e5497c231b81c6319d73593454adb67"
+    },
+    {
+      "bytes": 4358,
+      "path": "tests/test_linux_docker_prerequisite_evidence.py",
+      "sha256": "3aee9c400bee7dd3b0bda16a67fba429c1a2d5bff058fdc0830c763f03d05e3f"
+    },
+    {
+      "bytes": 6254,
+      "path": "tests/test_linux_package_lifecycle_evidence.py",
+      "sha256": "aa0fa8423e954bcacb27519916427cd67a9fd6d53cfad83587cd7451cd0f88b7"
+    },
+    {
+      "bytes": 9076,
+      "path": "tests/test_package_candidate.py",
+      "sha256": "46a1f708bcea3f0af13b65e954feba96a917491a5c03c838597decea0865d00f"
+    },
+    {
+      "bytes": 9144,
+      "path": "tests/test_package_lifecycle.py",
+      "sha256": "6e5a6d4d2183df4c339277412b0ab561868a09ebd9229fb048d0419acfdd54b4"
+    }
+  ],
+  "status": "pass-packaged-prerequisites-no-live-docker",
+  "task_ids": [
+    "9.2.1.5"
+  ]
+}
