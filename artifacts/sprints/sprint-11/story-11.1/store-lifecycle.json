@@ -1,0 +1,93 @@
+{
+  "artifact_id": "encrypted-store-lifecycle",
+  "claims": {
+    "backup_separately_keyed_and_fully_verified": true,
+    "external_network_used": false,
+    "held_records_not_expired": true,
+    "json_lines_export_implemented": false,
+    "occupied_destination_preserved": true,
+    "physical_overwrite_claim": false,
+    "plaintext_or_sql_export_implemented": false,
+    "release_support": false,
+    "restore_writes_only_fresh_candidate": true,
+    "retention_events_hash_chained_to_state": true,
+    "schema_v3_additive": true,
+    "stale_transition_rejected_atomically": true,
+    "user_and_legal_holds_distinct": true,
+    "whole_store_key_destroyed_and_absence_verified": true,
+    "wrong_key_or_corruption_leaves_no_candidate": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Cryptographic erasure is complete-store key destruction; it is not per-record erasure inside the shared-key database and does not erase separately keyed backups.",
+    "No physical-overwrite guarantee is made for SSD, copy-on-write, snapshot, or remapped storage.",
+    "Restore creates and verifies a fresh candidate but does not perform Sprint 161 atomic live-store swap, rollback-point, or clean-device continuity orchestration.",
+    "JSON Lines derivation, export-only authority denial, and deletion/regeneration behavior remain assigned to Sub-task 11.1.1.7.",
+    "Live Secret Service key destruction is environment-dependent; macOS, Windows, packaging, crash campaign, canary campaign, and release evidence remain later work."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "a3ac627b56b05481cb414bfc78d32d75205f3e6a",
+  "sources": [
+    {
+      "bytes": 1431,
+      "path": "kernel/engine/migrations/operational-store/0003-retention-lifecycle.sql",
+      "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
+    },
+    {
+      "bytes": 132232,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "f8b627e4d868a449b81b72d92eeb5a1d313c15db555c2151b6a358145f65830c"
+    },
+    {
+      "bytes": 41743,
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "4c96fa505564e60291b1e66e4107a3befbebf544cccd2bbe1cd454bac5ee008a"
+    },
+    {
+      "bytes": 15280,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "8b491934e1596419439b614bdb50a4023fd07deb4a5f7f4f39d0bf43c5e2fc52"
+    },
+    {
+      "bytes": 9610,
+      "path": "scripts/store_lifecycle_evidence.py",
+      "sha256": "b78f1a9a01edcbf6c252f0d5ff360bb180c2ec0b283da6bcbd984916196fecb7"
+    },
+    {
+      "bytes": 2949,
+      "path": "tests/test_store_lifecycle_evidence.py",
+      "sha256": "93374addebbd42bfaed39261be531e2ddb02d7bcd5f69d3bfa265e545021716d"
+    }
+  ],
+  "status": "pass-bounded-store-lifecycle",
+  "task_ids": [
+    "11.1.1.6"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
+      "exit_code": 0,
+      "expected_marker_sha256": "0b9ce8908181c2ce07eb9374718f473a37deb056b20f82afc92dbb59703f460e",
+      "status": "pass"
+    },
+    {
+      "command_id": "2d88233a889999229ee6322c65611ca067b4576dd25c8fc7aeb1e8c67b378817",
+      "exit_code": 0,
+      "expected_marker_sha256": "47ae159e4b814d82f0d2611e4868c3b6d825349fb6498cef1544ec6ccb5f369e",
+      "status": "pass"
+    },
+    {
+      "command_id": "341e312c0532aa0e4f137a3f94aeabe37c46a8bbe85b57fa8e25dbf3ab2888c8",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "c9997d3ce9e77096ae0996412ce409c73d9e3c97df6a5b1266386746b5bb7544",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    }
+  ]
+}
