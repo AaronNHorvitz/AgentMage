@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import copy
+import json
 import unittest
+from unittest import mock
 
 from scripts import strict_local_source_audit as audit
 
@@ -52,6 +55,87 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
         self.assertIn(
             "rust-network-client-api found outside its closed allowlist: platforms/linux-inference/src/native_runtime.rs",
             failures,
+        )
+
+    def test_compiled_vscode_artifact_is_inside_the_closed_source_boundary(self) -> None:
+        self.assertIn("shells/vscode/dist/src/host_bridge.js", self.sources)
+        sources = dict(self.sources)
+        sources["shells/vscode/dist/src/host_bridge.js"] += (
+            '\nfetch("https://telemetry.example.invalid");\n'
+        )
+        failures = audit.scan_sources(self.policy, sources)
+        self.assertIn(
+            "undeclared external URI in product source: shells/vscode/dist/src/host_bridge.js",
+            failures,
+        )
+        self.assertIn(
+            "javascript-network-api found outside its closed allowlist: shells/vscode/dist/src/host_bridge.js",
+            failures,
+        )
+
+    def test_vscode_manifest_network_surfaces_are_closed(self) -> None:
+        manifest = json.loads(
+            (audit.ROOT / "shells/vscode/package.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(audit.audit_vscode_manifest(self.policy, manifest, set()), [])
+
+        extension_dependency = copy.deepcopy(manifest)
+        extension_dependency["extensionDependencies"] = ["publisher.remote-helper"]
+        self.assertIn(
+            "VS Code manifest surface changed",
+            audit.audit_vscode_manifest(self.policy, extension_dependency, set()),
+        )
+        activation = copy.deepcopy(manifest)
+        activation["activationEvents"] = ["onUri"]
+        self.assertIn(
+            "VS Code activation events changed",
+            audit.audit_vscode_manifest(self.policy, activation, set()),
+        )
+        install_script = copy.deepcopy(manifest)
+        install_script["scripts"]["postinstall"] = "node download-runtime.mjs"
+        self.assertIn(
+            "VS Code package scripts changed",
+            audit.audit_vscode_manifest(self.policy, install_script, set()),
+        )
+        contribution = copy.deepcopy(manifest)
+        contribution["contributes"]["commands"] = [{"command": "agentmage.update"}]
+        self.assertIn(
+            "VS Code contribution surface changed",
+            audit.audit_vscode_manifest(self.policy, contribution, set()),
+        )
+        self.assertIn(
+            "VS Code runtime package closure changed",
+            audit.audit_vscode_manifest(self.policy, manifest, {"hidden-runtime"}),
+        )
+
+    def test_cargo_package_closure_requires_explicit_review(self) -> None:
+        changed = set(self.policy["approved_cargo_packages"])
+        changed.add("hidden-network-package@1.0.0")
+        with mock.patch.object(audit, "cargo_runtime_packages", return_value=changed):
+            failures = audit.audit(self.policy, self.sources)
+        self.assertIn("reviewed Cargo package closure changed", failures)
+
+    def test_cargo_manifest_features_and_build_scripts_require_review(self) -> None:
+        changed = {
+            "platforms/linux/Cargo.toml": (
+                audit.ROOT / "platforms/linux/Cargo.toml"
+            ).read_bytes()
+            + b'\nnetwork-client = "1"\n'
+        }
+        self.assertIn(
+            "reviewed Cargo manifest changed: platforms/linux/Cargo.toml",
+            audit.audit_cargo_manifests(
+                self.policy,
+                content_overrides=changed,
+                observed_build_scripts=[],
+            ),
+        )
+        self.assertIn(
+            "first-party Cargo build-script surface changed",
+            audit.audit_cargo_manifests(
+                self.policy,
+                observed_build_scripts=["platforms/linux/build.rs"],
+            ),
         )
 
     def test_internet_api_allowlist_cannot_move_or_expand(self) -> None:

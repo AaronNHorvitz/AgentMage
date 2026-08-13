@@ -129,6 +129,25 @@ requirements.
 
 The checked strict-local source policy closes the first-party normal-operation source roots, external-URI test allowances, network API locations, and prohibited network-client dependencies. It runs during the standard product lint gate. Mutation tests inject telemetry upload, crash upload, remote fonts/assets, marketplace sockets, update downloads, ambient proxy use, VS Code external opening, and child-process downloads; each injection must fail the gate.
 
+The closure includes the compiled Visual Studio Code `dist/src` output that is
+shipped, not only its TypeScript input. The compiled authenticated bridge must
+retain the same sole Unix-socket connection, package-supplied endpoint, parsed
+bootstrap frame, and bridge construction counts as the source implementation.
+An injected compiled telemetry call or external URI fails independently.
+
+The extension manifest is closed to its exact top-level keys, startup event,
+UI execution location, compiled entry point, scripts, contribution family, and
+single chat-provider shape. Extension dependencies, URI activation, install or
+download scripts, new contribution families, runtime npm dependencies, and npm
+lock disagreement fail the gate. There are no approved runtime npm packages.
+
+The Cargo boundary admits exactly 60 reviewed package name/version identities.
+All nine workspace Cargo manifests are SHA-256 bound, so changing an existing
+dependency feature or source declaration requires explicit review even when
+the lockfile package set remains unchanged. No first-party `build.rs` is
+approved. A new package, version, manifest change, or first-party build script
+fails the gate before product build acceptance.
+
 The two network-related Rust API allowances are narrow: shared contracts and Linux inventory may classify IP addresses, while the Linux IPC module may use Unix-domain sockets and kernel peer credentials. The allowlist does not authorize a connection. Runtime namespace, seccomp, process, socket, and packet evidence remain mandatory even when the static source gate passes.
 
 ## Linux Data-Root Inspection

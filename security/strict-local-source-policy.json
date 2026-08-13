@@ -10,6 +10,80 @@
       "http://example.invalid"
     ]
   },
+  "allowed_first_party_build_scripts": [],
+  "approved_cargo_manifests": {
+    "Cargo.toml": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86",
+    "capabilities/read-only/Cargo.toml": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a",
+    "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
+    "kernel/engine/Cargo.toml": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2",
+    "platforms/linux-inference/Cargo.toml": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63",
+    "platforms/linux/Cargo.toml": "7a10d9d883d1cf05b207b68ab01455745a662db16e716b5b732a89b5be6649d5",
+    "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
+    "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
+    "shells/host/Cargo.toml": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
+  },
+  "approved_cargo_packages": [
+    "agentmage-capability-read-only@0.0.0",
+    "agentmage-host@0.0.0",
+    "agentmage-kernel-contracts@0.0.0",
+    "agentmage-kernel-engine@0.0.0",
+    "agentmage-platform-linux-inference@0.0.0",
+    "agentmage-platform-linux@0.0.0",
+    "agentmage-platform-windows@0.0.0",
+    "agentmage-xtask@0.0.0",
+    "bitflags@2.13.1",
+    "block-buffer@0.12.1",
+    "cc@1.4.2",
+    "cfg-if@1.0.4",
+    "const-oid@0.10.2",
+    "cpufeatures@0.3.0",
+    "crypto-common@0.2.2",
+    "curve25519-dalek-derive@0.1.1",
+    "curve25519-dalek@5.0.0",
+    "digest@0.11.3",
+    "ed25519-dalek@3.0.0",
+    "ed25519@3.0.0",
+    "errno@0.3.14",
+    "fallible-iterator@0.3.0",
+    "fallible-streaming-iterator@0.1.9",
+    "fiat-crypto@0.3.0",
+    "find-msvc-tools@0.1.10",
+    "hybrid-array@0.4.14",
+    "itoa@1.0.18",
+    "libc@0.2.189",
+    "libsqlite3-sys@0.38.2",
+    "linux-raw-sys@0.12.1",
+    "memchr@2.8.3",
+    "pkg-config@0.3.33",
+    "proc-macro2@1.0.107",
+    "quote@1.0.47",
+    "rusqlite@0.40.2",
+    "rustc_version@0.4.1",
+    "rustix@1.1.4",
+    "seccompiler@0.5.0",
+    "semver@1.0.28",
+    "serde@1.0.229",
+    "serde_core@1.0.229",
+    "serde_derive@1.0.229",
+    "serde_json@1.0.151",
+    "sha2@0.11.0",
+    "shlex@2.0.1",
+    "signature@3.0.0",
+    "smallvec@1.15.2",
+    "subtle@2.6.1",
+    "syn@2.0.119",
+    "syn@3.0.3",
+    "tinyvec@1.10.0",
+    "tinyvec_macros@0.1.1",
+    "typenum@1.20.1",
+    "unicode-ident@1.0.24",
+    "unicode-normalization@0.1.25",
+    "vcpkg@0.2.15",
+    "windows-link@0.2.1",
+    "windows-sys@0.61.2",
+    "zeroize@1.9.0",
+    "zmij@1.0.23"
+  ],
   "denied_npm_runtime_packages": [
     "@sentry/node",
     "@sentry/vscode-extension",
@@ -41,6 +115,42 @@
     "ureq"
   ],
   "exact_source_fragments": [
+    {
+      "count": 1,
+      "fragment": "new AuthenticatedLinuxHostBridge(credentials)",
+      "id": "vscode-artifact-bootstrap-constructs-one-host-bridge",
+      "path": "shells/vscode/dist/src/host_bootstrap.js"
+    },
+    {
+      "count": 1,
+      "fragment": "const credentials = parseBootstrapFrame(frame, process.getuid());",
+      "id": "vscode-artifact-bootstrap-parses-one-host-frame",
+      "path": "shells/vscode/dist/src/host_bootstrap.js"
+    },
+    {
+      "count": 1,
+      "fragment": "createConnection(",
+      "id": "vscode-artifact-host-bridge-one-connection-call",
+      "path": "shells/vscode/dist/src/host_bridge.js"
+    },
+    {
+      "count": 1,
+      "fragment": "import { createConnection } from \"node:net\";",
+      "id": "vscode-artifact-host-bridge-one-net-import",
+      "path": "shells/vscode/dist/src/host_bridge.js"
+    },
+    {
+      "count": 1,
+      "fragment": "this.endpoint = credentials.endpoint;",
+      "id": "vscode-artifact-host-bridge-package-endpoint-only",
+      "path": "shells/vscode/dist/src/host_bridge.js"
+    },
+    {
+      "count": 1,
+      "fragment": "createConnection({ path: this.endpoint })",
+      "id": "vscode-artifact-host-bridge-unix-path-only",
+      "path": "shells/vscode/dist/src/host_bridge.js"
+    },
     {
       "count": 1,
       "fragment": "new AuthenticatedLinuxHostBridge(credentials)",
@@ -86,6 +196,7 @@
     "platforms/linux/src",
     "platforms/windows/src",
     "shells/host/src",
+    "shells/vscode/dist/src",
     "shells/vscode/src"
   ],
   "schema_version": 1,
@@ -130,6 +241,7 @@
     },
     {
       "allowed_paths": [
+        "shells/vscode/dist/src/host_bridge.js",
         "shells/vscode/src/host_bridge.ts"
       ],
       "id": "javascript-local-ipc-api",
@@ -162,5 +274,46 @@
       "id": "vscode-external-network-surface",
       "pattern": "(?:env\\.openExternal|vscode\\.open|workbench\\.extensions\\.(?:action|install)|downloadAndInstallExtension)"
     }
-  ]
+  ],
+  "vscode_manifest_profile": {
+    "activation_events": [
+      "onStartupFinished"
+    ],
+    "allowed_top_level_keys": [
+      "activationEvents",
+      "contributes",
+      "description",
+      "devDependencies",
+      "displayName",
+      "engines",
+      "extensionKind",
+      "license",
+      "main",
+      "name",
+      "private",
+      "publisher",
+      "scripts",
+      "type",
+      "version"
+    ],
+    "chat_provider_keys": [
+      "displayName",
+      "vendor"
+    ],
+    "contribution_keys": [
+      "languageModelChatProviders"
+    ],
+    "extension_kind": [
+      "ui"
+    ],
+    "main": "./dist/src/extension.js",
+    "runtime_packages": [],
+    "scripts": {
+      "build": "tsc --project tsconfig.json",
+      "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.mjs\"",
+      "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.mjs\"",
+      "lint": "eslint src test",
+      "test": "npm run build && node --test \"dist/test/*.test.js\""
+    }
+  }
 }
