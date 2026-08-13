@@ -1,0 +1,439 @@
+{
+  "artifact_id": "linux-docker-independent-control-disablement",
+  "fallback_selected": false,
+  "inference_performed": false,
+  "release_support": false,
+  "schema_version": 1,
+  "source_revision": "c923c43b180c020245f77d79d3e5c3e79e0a2b63",
+  "sources": [
+    {
+      "bytes": 1881,
+      "path": "docs/decisions/0039-verify-independent-docker-control-disablement.md",
+      "sha256": "e060f014da369cb096386b7f8a68e1573d2613ec0f7a60c884569786d6c57cbf"
+    },
+    {
+      "bytes": 1159,
+      "path": "docs/support/linux-docker-control-disablement-evidence.md",
+      "sha256": "4a313334ae72f0b09dd849c2b7e5568bc61d41b3b679b2abb404fed3c7190d1d"
+    },
+    {
+      "bytes": 21682,
+      "path": "package.json",
+      "sha256": "035e3e319be95c157b1d7dfe9669f509f44cb780a0b2c683726147cb30e79f52"
+    },
+    {
+      "bytes": 44044,
+      "path": "platforms/linux-inference/src/docker_live_collector.rs",
+      "sha256": "79f324c172d02d312bcb176b5c820aa377c3f1b33b3aad167b77ecc0321bd976"
+    },
+    {
+      "bytes": 35377,
+      "path": "platforms/linux-inference/src/docker_preflight.rs",
+      "sha256": "f43b7f8888c4b02ec2588bc0a3fe902c1cc307cce52a6411190d4f89f16844eb"
+    },
+    {
+      "bytes": 12086,
+      "path": "scripts/linux_docker_control_disablement_evidence.py",
+      "sha256": "1fde3e8ab75fdef8c019ffe42cbea869517aec969c4e71463dcd4edfdd977504"
+    },
+    {
+      "bytes": 12097,
+      "path": "scripts/linux_docker_control_disablement_guest.py",
+      "sha256": "96e148a65461af2693812a797ee6e6e749a2e4ed02b4afe1a9ba6f760db9fbe2"
+    },
+    {
+      "bytes": 26192,
+      "path": "scripts/linux_docker_kvm_guest.py",
+      "sha256": "ce38d1accb5725a745a08f62e46f9c95d7aa3f76b516762335f6d6815930dd1c"
+    },
+    {
+      "bytes": 3077,
+      "path": "tests/test_linux_docker_control_disablement_evidence.py",
+      "sha256": "fa4888e7d8f956128cea4dd40b6180ef414b4113c769624f35725d8fc8577436"
+    }
+  ],
+  "status": "pass-independent-refusal-no-fallback-no-inference",
+  "targets": [
+    {
+      "host_cleanup": {
+        "loopback_ssh_listener_absent": true,
+        "overlay_absent": true,
+        "qemu_process_absent": true
+      },
+      "observation": {
+        "baseline": {
+          "cleanup": {
+            "bootstrap_secret_absent": true,
+            "guard_process_absent": true,
+            "host_raw_listener_absent": true,
+            "management_probe_absent": true,
+            "runner_absent": true,
+            "runtime_docker_group_absent": true,
+            "runtime_unit_inactive": true
+          },
+          "inference_performed": false,
+          "status": "admitted"
+        },
+        "cases": [
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "daemon-privilege",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.daemon.privilege",
+            "inference_performed": false,
+            "mutation": "runtime-user-in-docker-group",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.daemon.privilege"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "socket-ownership",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.socket.ownership",
+            "inference_performed": false,
+            "mutation": "docker-socket-world-writable",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.socket.ownership"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "api-binding",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.api.binding",
+            "inference_performed": false,
+            "mutation": "private-management-listener",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.api.binding"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "container-reachability",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.container.reachability",
+            "inference_performed": false,
+            "mutation": "guard-socket-world-writable",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.container.reachability"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "image-identity",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.image.identity",
+            "inference_performed": false,
+            "mutation": "model-manifest-substitution",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.image.identity"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "resource-limits",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.resources.invalid",
+            "inference_performed": false,
+            "mutation": "runner-memory-limit-drift",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.resources.invalid"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "zero-egress",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.egress.nonzero",
+            "inference_performed": false,
+            "mutation": "ambient-proxy-injection",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.egress.nonzero"
+          }
+        ],
+        "daemon_configuration": {
+          "listener": "direct-unix-socket",
+          "service_unit_sha256": "7fdeceb0c4a438e82ae70c7b7e8a9478137034f88021cfd0704c016b0fa88bf5",
+          "socket_activation_active": false
+        },
+        "distribution": "fedora",
+        "fallback_selected": false,
+        "final_cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "management_probe_absent": true,
+          "runner_absent": true,
+          "runtime_docker_group_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "inference_performed": false,
+        "native_descriptor": {
+          "accepted_operation": "self-check-only",
+          "authority_inputs": [],
+          "component_id": "platform-linux-native-inference",
+          "contract": "authenticated-local-endpoint-v1",
+          "docker_compatibility_available": false,
+          "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
+          "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+          "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+          "docker_preflight_contract_version": 3,
+          "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
+          "enabled_models": 0,
+          "inference_available": false,
+          "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+          "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+          "network_listener": false,
+          "process_boundary_version": 7
+        },
+        "source_revision": "c923c43b180c020245f77d79d3e5c3e79e0a2b63"
+      },
+      "package_sha256": "ca8ea2e799659b4c07eb893f3eeadfff74a75e4ff7cfb1cb86fdbe2c06a62bb3",
+      "prepared_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "host_cleanup": {
+        "loopback_ssh_listener_absent": true,
+        "overlay_absent": true,
+        "qemu_process_absent": true
+      },
+      "observation": {
+        "baseline": {
+          "cleanup": {
+            "bootstrap_secret_absent": true,
+            "guard_process_absent": true,
+            "host_raw_listener_absent": true,
+            "management_probe_absent": true,
+            "runner_absent": true,
+            "runtime_docker_group_absent": true,
+            "runtime_unit_inactive": true
+          },
+          "inference_performed": false,
+          "status": "admitted"
+        },
+        "cases": [
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "daemon-privilege",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.daemon.privilege",
+            "inference_performed": false,
+            "mutation": "runtime-user-in-docker-group",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.daemon.privilege"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "socket-ownership",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.socket.ownership",
+            "inference_performed": false,
+            "mutation": "docker-socket-world-writable",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.socket.ownership"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "api-binding",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.api.binding",
+            "inference_performed": false,
+            "mutation": "private-management-listener",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.api.binding"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "container-reachability",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.container.reachability",
+            "inference_performed": false,
+            "mutation": "guard-socket-world-writable",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.container.reachability"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "image-identity",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.image.identity",
+            "inference_performed": false,
+            "mutation": "model-manifest-substitution",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.image.identity"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "resource-limits",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.resources.invalid",
+            "inference_performed": false,
+            "mutation": "runner-memory-limit-drift",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.resources.invalid"
+          },
+          {
+            "cleanup": {
+              "bootstrap_secret_absent": true,
+              "guard_process_absent": true,
+              "host_raw_listener_absent": true,
+              "management_probe_absent": true,
+              "runner_absent": true,
+              "runtime_docker_group_absent": true,
+              "runtime_unit_inactive": true
+            },
+            "control": "zero-egress",
+            "docker_admitted": false,
+            "expected_refusal": "docker-preflight.egress.nonzero",
+            "inference_performed": false,
+            "mutation": "ambient-proxy-injection",
+            "native_fallback_selected": false,
+            "observed_refusal": "docker-preflight.egress.nonzero"
+          }
+        ],
+        "daemon_configuration": {
+          "listener": "direct-unix-socket",
+          "service_unit_sha256": "8ac3a672c9496a0f644c462b6e8f797133ecb9831a2272248148bf8250a853cf",
+          "socket_activation_active": false
+        },
+        "distribution": "ubuntu",
+        "fallback_selected": false,
+        "final_cleanup": {
+          "bootstrap_secret_absent": true,
+          "guard_process_absent": true,
+          "host_raw_listener_absent": true,
+          "management_probe_absent": true,
+          "runner_absent": true,
+          "runtime_docker_group_absent": true,
+          "runtime_unit_inactive": true
+        },
+        "inference_performed": false,
+        "native_descriptor": {
+          "accepted_operation": "self-check-only",
+          "authority_inputs": [],
+          "component_id": "platform-linux-native-inference",
+          "contract": "authenticated-local-endpoint-v1",
+          "docker_compatibility_available": false,
+          "docker_guard_profile_sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82",
+          "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+          "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+          "docker_preflight_contract_version": 3,
+          "docker_runtime_profile_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
+          "enabled_models": 0,
+          "inference_available": false,
+          "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+          "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+          "network_listener": false,
+          "process_boundary_version": 7
+        },
+        "source_revision": "c923c43b180c020245f77d79d3e5c3e79e0a2b63"
+      },
+      "package_sha256": "a37d392118b9d7e2b3cc845dedc1b5c426ac6a2e6a0190ecaacdca5552427112",
+      "prepared_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_ids": [
+    "9.2.2.3"
+  ]
+}
