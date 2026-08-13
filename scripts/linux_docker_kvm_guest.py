@@ -511,6 +511,16 @@ def verify_precollector_topology(
         model_checks[name] = (
             path.is_file() and path.stat().st_size == size and sha256_file(path) == digest
         )
+    repo_digests = image.get("RepoDigests", [])
+    expected_repo_digest = f"docker.io/docker/model-runner@{RUNNER_DIGEST}"
+    repository_digest_closed = (
+        expected_repo_digest in repo_digests
+        and all(
+            re.fullmatch(r"docker[.]io/docker/model-runner@sha256:[0-9a-f]{64}", value)
+            is not None
+            for value in repo_digests
+        )
+    )
     checks = {
         "daemon-peer-pid": peer["pid"] == daemon["pid"],
         "daemon-peer-root": peer["uid"] == 0 and daemon["uid"] == 0,
@@ -552,8 +562,7 @@ def verify_precollector_topology(
         "runner-container-count": matching_runners == 1,
         "runner-config-reference": container["Config"]["Image"]
         == f"docker.io/docker/model-runner@{RUNNER_DIGEST}",
-        "runner-repository-digest": image.get("RepoDigests")
-        == [f"docker.io/docker/model-runner@{RUNNER_DIGEST}"],
+        "runner-repository-digest": repository_digest_closed,
         "model-file-identity": all(model_checks.values()),
     }
     failed = [name for name, passed in checks.items() if not passed]
