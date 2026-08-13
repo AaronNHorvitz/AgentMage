@@ -102,5 +102,8 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except BaseException as error:
-        (ROOT / "error.txt").write_text(type(error).__name__ + "\n", encoding="ascii")
+        error_class = type(error).__name__
+        if isinstance(error, SystemExit) and isinstance(error.code, int):
+            error_class += f"-{error.code}"
+        (ROOT / "error.txt").write_text(error_class + "\n", encoding="ascii")
         raise
