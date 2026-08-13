@@ -133,6 +133,8 @@
     "evidence:story9.1-linux-ubuntu-native:check": "python3 scripts/linux_native_ubuntu_control_evidence.py",
     "evidence:story9.1-linux-parity:build": "python3 scripts/linux_platform_parity_evidence.py --write --source-revision HEAD",
     "evidence:story9.1-linux-parity:check": "python3 scripts/linux_platform_parity_evidence.py",
+    "evidence:story9.1-security:build": "python3 scripts/story_9_1_security_evidence.py --write --source-revision HEAD",
+    "evidence:story9.1-security:check": "python3 scripts/story_9_1_security_evidence.py",
     "model:source-check": "python3 scripts/model_admission.py",
     "model:corpus-check": "python3 scripts/model_corpus.py",
     "model:disposition-check": "python3 scripts/model_disposition.py",
