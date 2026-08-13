@@ -40,6 +40,7 @@ const RUNTIME_SECONDS: u16 = 3600;
 const OUTPUT_BYTES: u32 = 16 * 1024 * 1024;
 const PARALLEL_SLOTS: u8 = 1;
 const MAX_MODEL_PAYLOAD_BYTES: u64 = 32 * 1024 * 1024 * 1024;
+const RUNNER_REPOSITORY: &str = "docker.io/docker/model-runner";
 
 /// Stable content-free refusal from the production live collector.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -462,7 +463,10 @@ fn build_observation(
         images: ImagesInput {
             runner_manifest_digest: runner_digest.clone(),
             model_manifest_digest: model_label,
-            mutable_tag_used_for_admission: container.config.image != runner_digest,
+            mutable_tag_used_for_admission: !exact_immutable_runner_reference(
+                &container.config.image,
+                &runner_digest,
+            ),
             image_repull_allowed,
         },
         resources: ResourcesInput {
@@ -557,12 +561,12 @@ fn verify_model_store(runner_pid: i32) -> Result<(), DockerLiveCollectorError> {
 }
 
 fn image_digest_absent(repo_digests: &[String], expected: &str) -> bool {
-    !repo_digests.iter().any(|value| {
-        value == expected
-            || value
-                .rsplit_once('@')
-                .is_some_and(|(_, digest)| digest == expected)
-    })
+    let canonical = format!("{RUNNER_REPOSITORY}@{expected}");
+    !repo_digests.iter().any(|value| value == &canonical)
+}
+
+fn exact_immutable_runner_reference(value: &str, digest: &str) -> bool {
+    value == digest || value == format!("{RUNNER_REPOSITORY}@{digest}")
 }
 
 fn label_number(labels: &std::collections::BTreeMap<String, String>, name: &str) -> u64 {
@@ -754,7 +758,7 @@ mod tests {
                         pid: 12,
                     },
                     config: DockerContainerConfig {
-                        image: runner_digest.clone(),
+                        image: format!("{RUNNER_REPOSITORY}@{runner_digest}"),
                         user: "modelrunner".into(),
                         env: vec!["DO_NOT_TRACK=1".into()],
                         labels,
@@ -932,6 +936,19 @@ mod tests {
         let fixture = DerivedFixture::exact();
         let observation = fixture.observation().expect("complete observation");
         assert!(validate_topology(observation).is_ok());
+        let digest = format!("sha256:{}", "1".repeat(64));
+        assert!(exact_immutable_runner_reference(
+            &format!("{RUNNER_REPOSITORY}@{digest}"),
+            &digest
+        ));
+        assert!(!exact_immutable_runner_reference(
+            &format!("example.invalid/model-runner@{digest}"),
+            &digest
+        ));
+        assert!(image_digest_absent(
+            &[format!("example.invalid/model-runner@{digest}")],
+            &digest
+        ));
 
         let mut tag = DerivedFixture::exact();
         tag.container.config.image = "docker.io/docker/model-runner:latest".into();

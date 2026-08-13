@@ -35,6 +35,7 @@ SOURCE_PATHS: Final = (
     "LICENSE",
     "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
     "docs/decisions/0036-observe-network-namespace-through-procfs.md",
+    "docs/decisions/0037-admit-canonical-runner-digest-reference.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "package-lock.json",

@@ -86,6 +86,7 @@
     "docs/decisions/0034-pin-observed-model-runner-ipv6-wildcard.md",
     "docs/decisions/0035-bind-docker-runtime-peer-identity.md",
     "docs/decisions/0036-observe-network-namespace-through-procfs.md",
+    "docs/decisions/0037-admit-canonical-runner-digest-reference.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
