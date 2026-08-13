@@ -1,0 +1,448 @@
+{
+  "artifacts": [
+    {
+      "bytes": 135048,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "000627e0561aa688171c9aaa4c9af0a9ea9179e891a0d9af157dc42082d161bf"
+    },
+    {
+      "bytes": 37719,
+      "path": "RUNTIME-BOUNDARIES.md",
+      "sha256": "5cfc656282d85dbda58d16d2b170d6e0c1ce297af27f0d0aa588a63ec45fd6be"
+    },
+    {
+      "bytes": 2738,
+      "path": "docs/architecture/linux-docker-runtime-topology.md",
+      "sha256": "9bd78bceafa25966cc09389b94f1f2b12d32d1148b1f5dd54f51e430ab08db9b"
+    },
+    {
+      "bytes": 8093,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "b06ca04f58f5fa5bf74c83ce85b513c73ca3c2958ee9424436b57d8bed21e902"
+    },
+    {
+      "bytes": 5428,
+      "path": "docs/decisions/0029-closed-linux-native-llama-runtime-package.md",
+      "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
+    },
+    {
+      "bytes": 6714,
+      "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
+      "sha256": "e5e96c5198c5252b416a6c49ce82e16f8dc882eb3894806858a452646d971acd"
+    },
+    {
+      "bytes": 5463,
+      "path": "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
+      "sha256": "264540fc0ffce7ffbac597eb1a9e80dc30a948de87fea7ffc4b696b24139522a"
+    },
+    {
+      "bytes": 5269,
+      "path": "docs/decisions/0032-fail-closed-docker-topology-preflight.md",
+      "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
+    },
+    {
+      "bytes": 6373,
+      "path": "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
+      "sha256": "b1cc580488597b45b35246500673ce82d0198d07d92b480c0166675c4960d260"
+    },
+    {
+      "bytes": 3137,
+      "path": "docs/decisions/0034-pin-observed-model-runner-ipv6-wildcard.md",
+      "sha256": "4cc851a97727a918f5017b337b89f767434fc86cb29e0209571e86d5bd3dac8a"
+    },
+    {
+      "bytes": 2406,
+      "path": "docs/decisions/0035-bind-docker-runtime-peer-identity.md",
+      "sha256": "642bde13f8d60b89fb742508950bc956288587bb05968645cab311c922ccc622"
+    },
+    {
+      "bytes": 1767,
+      "path": "docs/decisions/0036-observe-network-namespace-through-procfs.md",
+      "sha256": "55bb2dfeebadf1efc58053b616ae6d4cb052a3eeb6df354b7dcffdd97ed5c624"
+    },
+    {
+      "bytes": 1767,
+      "path": "docs/decisions/0037-admit-canonical-runner-digest-reference.md",
+      "sha256": "b3b0cc7c66be55082629ee65e276d5476e84bb01cbc9eb7fe50f5ea2d0325b79"
+    },
+    {
+      "bytes": 2196,
+      "path": "docs/decisions/0038-bind-cross-uid-guard-peer-through-challenge.md",
+      "sha256": "f03c45e869ff76ac4f1dee823dd96c09bc0bce013d839f28473432fde0f4c7c5"
+    },
+    {
+      "bytes": 1881,
+      "path": "docs/decisions/0039-verify-independent-docker-control-disablement.md",
+      "sha256": "e060f014da369cb096386b7f8a68e1573d2613ec0f7a60c884569786d6c57cbf"
+    },
+    {
+      "bytes": 2069,
+      "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
+      "sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
+    },
+    {
+      "bytes": 3581,
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd"
+    },
+    {
+      "bytes": 8057,
+      "path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
+      "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
+    },
+    {
+      "bytes": 28669,
+      "path": "platforms/linux-inference/src/docker_guard_service.rs",
+      "sha256": "a485a12aaab737d946e8f8dafa415f6901248eabd08dc6a2d1dc193fc39c4c37"
+    },
+    {
+      "bytes": 44044,
+      "path": "platforms/linux-inference/src/docker_live_collector.rs",
+      "sha256": "79f324c172d02d312bcb176b5c820aa377c3f1b33b3aad167b77ecc0321bd976"
+    },
+    {
+      "bytes": 35377,
+      "path": "platforms/linux-inference/src/docker_preflight.rs",
+      "sha256": "f43b7f8888c4b02ec2588bc0a3fe902c1cc307cce52a6411190d4f89f16844eb"
+    },
+    {
+      "bytes": 28369,
+      "path": "platforms/linux-inference/src/docker_runtime.rs",
+      "sha256": "f9a01163089c12943b303e275b4105d04e2e46c745202b647dfabf67240421aa"
+    },
+    {
+      "bytes": 16731,
+      "path": "platforms/linux-inference/src/native_runtime.rs",
+      "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
+    },
+    {
+      "bytes": 8161,
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
+      "sha256": "0f70d7e35ea1561fbf1f273e9633dd87b9f152f3fc854c265db3ec6e8d521c13"
+    },
+    {
+      "bytes": 19749,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb"
+    },
+    {
+      "bytes": 10131,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json",
+      "sha256": "bc018d78225c701246fd1ef85778f31da06ac1f9dfc3c63dfef83981e49b590f"
+    },
+    {
+      "bytes": 6986,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-endpoint-guard.json",
+      "sha256": "512190fa45d6fd57c4105bb709716cce7b600a4d8f091f57851053d1cb127710"
+    },
+    {
+      "bytes": 7402,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-drift-preflight.json",
+      "sha256": "dc7e41c20947cb380e1f58740a9284eb665b640d93cacd30e9701a4663c34fec"
+    },
+    {
+      "bytes": 14808,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
+      "sha256": "6b925c29d2f08af9902b4d0ea6c88b29566d9b1b42ddad6c05dc26d26cb229e5"
+    },
+    {
+      "bytes": 34168,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json",
+      "sha256": "b059b66ec36cb10ae1ed1c3b14a888852561f24101b5263c030e705c4d2ada1c"
+    },
+    {
+      "bytes": 7073,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json",
+      "sha256": "5bc772323fca61961849b68468fa3607455f596d97207067c8f51cfe4f6306f4"
+    },
+    {
+      "bytes": 17985,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-control-disablement.json",
+      "sha256": "c7910c13891babe80f2961f322db54bea0a22bdcae49b719d7c5b6cd1b18a692"
+    },
+    {
+      "bytes": 35944,
+      "path": "scripts/linux_docker_kvm_evidence.py",
+      "sha256": "e24a594082383f6b70212dcf4bee1e655d5637df31b19fc2a6c093bb734ef9b3"
+    },
+    {
+      "bytes": 9501,
+      "path": "scripts/linux_docker_reachability_evidence.py",
+      "sha256": "f288903a78233bb5c3e3369848f6bbaa94e2e6da343b664679d8337cad233c92"
+    },
+    {
+      "bytes": 12086,
+      "path": "scripts/linux_docker_control_disablement_evidence.py",
+      "sha256": "1fde3e8ab75fdef8c019ffe42cbea869517aec969c4e71463dcd4edfdd977504"
+    },
+    {
+      "bytes": 28762,
+      "path": "scripts/story_9_2_security_evidence.py",
+      "sha256": "c2b72df10942d1fa278af3f0fffee6a47244f2a0c0f3b2512cc248b0c30e44c5"
+    },
+    {
+      "bytes": 6834,
+      "path": "tests/test_linux_docker_kvm_evidence.py",
+      "sha256": "203ea3e6c197f888efc00c0c9d005448cb780d1b8967a3abc77be02890abc627"
+    },
+    {
+      "bytes": 1051,
+      "path": "tests/test_linux_docker_reachability_evidence.py",
+      "sha256": "dc60a430eb5191e7def584aed28e1ed52e6d0252ae852e9d015b8d613da75d84"
+    },
+    {
+      "bytes": 3077,
+      "path": "tests/test_linux_docker_control_disablement_evidence.py",
+      "sha256": "fa4888e7d8f956128cea4dd40b6180ef414b4113c769624f35725d8fc8577436"
+    },
+    {
+      "bytes": 4233,
+      "path": "tests/test_story_9_2_security_evidence.py",
+      "sha256": "a63656575c4fa7bf760e7816dc00c459831a8f764144760b64a4a71a9f115022"
+    }
+  ],
+  "external_independent_review_status": "required-not-performed",
+  "gate_blocker": "G-DOD-12 independent critical-boundary review",
+  "inference_claim": "none",
+  "input_evidence": [
+    {
+      "artifact_id": "linux-native-llama-runtime-package",
+      "evidence_revision": "b1bc089aa9418e99cfb542da651e048358f8e68a",
+      "id": "native-runtime",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb",
+      "status": "pass-fedora-native-package-boundary"
+    },
+    {
+      "artifact_id": "linux-docker-model-runner-compatibility-profile",
+      "evidence_revision": "b6a916d9d8a23fbad2d230e524617e0d9f23d7f1",
+      "id": "docker-runtime",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json",
+      "sha256": "bc018d78225c701246fd1ef85778f31da06ac1f9dfc3c63dfef83981e49b590f",
+      "status": "pass-pinned-contract-docker-not-installed"
+    },
+    {
+      "artifact_id": "linux-docker-model-runner-endpoint-guard",
+      "evidence_revision": "b6a916d9d8a23fbad2d230e524617e0d9f23d7f1",
+      "id": "docker-guard",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-endpoint-guard.json",
+      "sha256": "512190fa45d6fd57c4105bb709716cce7b600a4d8f091f57851053d1cb127710",
+      "status": "pass-guard-contract-no-live-docker"
+    },
+    {
+      "artifact_id": "linux-docker-drift-preflight",
+      "evidence_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
+      "id": "docker-preflight",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-drift-preflight.json",
+      "sha256": "dc7e41c20947cb380e1f58740a9284eb665b640d93cacd30e9701a4663c34fec",
+      "status": "pass-preflight-contract-no-live-docker"
+    },
+    {
+      "artifact_id": "linux-docker-production-prerequisites",
+      "evidence_revision": "c14fc166fba896a0fb52636139f18d6b0c4ad0d0",
+      "id": "docker-prerequisites",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
+      "sha256": "6b925c29d2f08af9902b4d0ea6c88b29566d9b1b42ddad6c05dc26d26cb229e5",
+      "status": "pass-packaged-prerequisites-no-live-docker"
+    },
+    {
+      "artifact_id": "linux-docker-kvm-topology",
+      "evidence_revision": "abd6103f80de60f99aeb98a8e3079be76754631b",
+      "id": "docker-topology",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json",
+      "sha256": "b059b66ec36cb10ae1ed1c3b14a888852561f24101b5263c030e705c4d2ada1c",
+      "status": "pass-live-topology-no-inference"
+    },
+    {
+      "artifact_id": "linux-docker-hostile-reachability",
+      "evidence_revision": "37cce172a7e7778b2981ac59b48d11d004c10ae6",
+      "id": "docker-reachability",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json",
+      "sha256": "5bc772323fca61961849b68468fa3607455f596d97207067c8f51cfe4f6306f4",
+      "status": "pass-hostile-denial-authenticated-guard-control-no-inference"
+    },
+    {
+      "artifact_id": "linux-docker-independent-control-disablement",
+      "evidence_revision": "c923c43b180c020245f77d79d3e5c3e79e0a2b63",
+      "id": "docker-controls",
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-control-disablement.json",
+      "sha256": "c7910c13891babe80f2961f322db54bea0a22bdcae49b719d7c5b6cd1b18a692",
+      "status": "pass-independent-refusal-no-fallback-no-inference"
+    },
+    {
+      "artifact_id": "linux-fedora-ubuntu-adapter-parity",
+      "evidence_revision": "25a6fbfaaf29f7fd00bf4c9734fe8f42c6e9826f",
+      "id": "linux-parity",
+      "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
+      "sha256": "0f70d7e35ea1561fbf1f273e9633dd87b9f152f3fc854c265db3ec6e8d521c13",
+      "status": "pass-declared-fedora-ubuntu-parity"
+    }
+  ],
+  "known_blockers": [
+    "Docker collector requires effective UID 0 and does not yet satisfy SR-PLT-001",
+    "real model inference and runtime-originated authority attacks remain Sprint 13 work",
+    "physical-host, signed-release, macOS, and Windows evidence is absent",
+    "G-DOD-12 independent critical-boundary review is required"
+  ],
+  "macos_evidence_substituted": false,
+  "network_used_while_mapping": false,
+  "parity_report": {
+    "blocked_dimension_count": 0,
+    "dimensions": [
+      {
+        "dimension": "target-set",
+        "status": "verified"
+      },
+      {
+        "dimension": "admitted-baseline",
+        "status": "verified"
+      },
+      {
+        "dimension": "daemon-topology",
+        "status": "verified"
+      },
+      {
+        "dimension": "hostile-position-denial",
+        "status": "verified"
+      },
+      {
+        "dimension": "authenticated-guard-control",
+        "status": "verified"
+      },
+      {
+        "dimension": "independent-control-refusal",
+        "status": "verified"
+      },
+      {
+        "dimension": "no-fallback-or-inference",
+        "status": "verified"
+      },
+      {
+        "dimension": "complete-cleanup",
+        "status": "verified"
+      }
+    ],
+    "full_declared_kvm_parity": true,
+    "physical_host_parity_claim": "none",
+    "scope": "fedora-44-and-ubuntu-26.04-native-kernel-kvm",
+    "verified_dimension_count": 8
+  },
+  "physical_host_certification_claim": "none",
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "requirements": [
+    {
+      "demonstrated": "The native adapter and held runtime peer run as the ordinary user, while the Docker guard runs as a distinct capability-free non-root user and the runner has no added capabilities.",
+      "evidence": [
+        "docs/architecture/linux-docker-runtime-topology.md",
+        "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The optional Docker topology collector currently requires effective UID 0 for each fresh admission. Until an independently reviewed standard-user-compatible observation design exists, Docker compatibility cannot satisfy the no-administrator-after-installation product requirement. Signed integrated packages and three independent first-GA installs per supported platform also remain open.",
+      "requirement_id": "SR-PLT-001",
+      "story_contribution": "partial-standard-user-runtime-root-collector-gap"
+    },
+    {
+      "demonstrated": "The Linux Docker guard binds kernel peer credentials, UID, PID, process start, cgroup, challenge-bound executable identity, protocol, and a fresh one-use challenge. A live authenticated control reaches the production request-policy refusal while hostile raw positions remain disconnected.",
+      "evidence": [
+        "platforms/linux-inference/src/docker_guard_service.rs",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-endpoint-guard.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The integrated product kernel-to-guard request path, cancellation, rapid reconnect and resource-exhaustion campaigns, complete audit events, and macOS and Windows IPC identities remain later gates.",
+      "requirement_id": "SR-PLT-006",
+      "story_contribution": "partial-linux-docker-ipc-authentication"
+    },
+    {
+      "demonstrated": "The packaged native and Docker runtime profiles expose no workspace, tool, grant, credential, Docker-socket, host-root, package-manager, or acquisition authority; live Docker inspection confirms exact mounts, capabilities, namespaces, resources, and zero-egress topology.",
+      "evidence": [
+        "docs/architecture/linux-docker-runtime-topology.md",
+        "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "No inference request was performed. Runtime-originated attempts against files, environment, credentials, sockets, tools, grants, and peer processes during real model inference remain mandatory in Sprint 13 and integrated security testing.",
+      "requirement_id": "SR-PLT-007",
+      "story_contribution": "partial-authority-free-runtime-topology"
+    },
+    {
+      "demonstrated": "The Fedora 44 and Ubuntu 26.04 KVM records bind kernels, Docker Engine versions, immutable runtime and model digests, package hashes, process identities, runtime profiles, prepared images, and source revisions.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-control-disablement.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Physical-host identities, signed release packages, graphics and driver tuples, complete VS Code integration, macOS, Windows, and the final supported platform matrix remain open.",
+      "requirement_id": "SR-PLT-010",
+      "story_contribution": "partial-linux-runtime-platform-freeze"
+    },
+    {
+      "demonstrated": "Native package, contract-only Docker, packaged prerequisite, Fedora native-kernel KVM, Ubuntu native-kernel KVM, reachability, and control-disablement evidence remain separately identified and hash-bound. The map compares but never substitutes these classes.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-control-disablement.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Later physical-host, inference, model-quality, accelerator, macOS, Windows, signed-release, and integrated-product results must preserve the same non-substitution rule.",
+      "requirement_id": "SR-PLT-012",
+      "story_contribution": "demonstrated-story-evidence-separation"
+    },
+    {
+      "demonstrated": "Fedora and Ubuntu place the immutable wildcard Model Runner listener only inside the route-free private namespace, expose no host listener, and deny host, LAN, same-user, extension, tool-worker, separate-namespace, and ordinary-container connections. The authenticated Unix guard path is the sole positive control.",
+      "evidence": [
+        "docs/architecture/linux-docker-runtime-topology.md",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "The real kernel inference request path, long-duration packet capture, physical-host firewall behavior, and complete normal-operation process attribution remain later strict-local and integration gates.",
+      "requirement_id": "SR-NET-003",
+      "story_contribution": "demonstrated-kvm-private-docker-reachability"
+    },
+    {
+      "demonstrated": "The preflight pins local runtime identities and rejects ambient proxy injection, management-listener drift, route or interface broadening, image substitution, mutable references, and nonzero egress state without fallback.",
+      "evidence": [
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-drift-preflight.json",
+        "artifacts/sprints/sprint-9/story-9.2/linux-docker-control-disablement.json"
+      ],
+      "product_requirement_status": "not-complete",
+      "remaining": "Independent DNS override, hostile loopback service, container alias, proxy case-variant, resolver race, and integrated runtime confusion campaigns remain in Sprint 10 and later network acceptance work.",
+      "requirement_id": "SR-NET-006",
+      "story_contribution": "partial-runtime-confusion-refusal"
+    }
+  ],
+  "reviewer_protocols": [
+    {
+      "protocol_id": "RV-02",
+      "status": "partial-linux-candidate-install-and-topology"
+    },
+    {
+      "protocol_id": "RV-03",
+      "status": "partial-linux-runtime-boundary"
+    },
+    {
+      "protocol_id": "RV-05",
+      "status": "partial-linux-docker-guard-identity"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "28e620dcb297767689c221ed551dd5ab17192c61",
+  "status": "pass-linux-security-mapping-review-open",
+  "story_id": "9.2",
+  "summary": {
+    "declared_kvm_parity_dimensions": 8,
+    "demonstrated_story_scope_count": 2,
+    "mapped_requirement_count": 7,
+    "partial_scope_count": 5,
+    "product_requirements_complete": 0,
+    "retained_artifact_count": 40,
+    "story_gate_complete": false,
+    "technical_tasks_complete": true
+  },
+  "task_id": "9.2.2.4"
+}
