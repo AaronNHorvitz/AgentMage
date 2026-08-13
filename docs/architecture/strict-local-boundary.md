@@ -2,7 +2,10 @@
 
 ## Status
 
-This document describes the implemented shared strict-local policy contracts and the Fedora/Ubuntu data-root inspector. It does not claim that normal-operation process confinement, runtime socket mediation, packet-capture acceptance, or macOS support is complete.
+This document describes the implemented shared strict-local policy contracts,
+the content-free offline-proof state machine, and the Fedora/Ubuntu data-root
+inspector. It does not claim that normal-operation process confinement, runtime
+socket mediation, packet-capture acceptance, or macOS support is complete.
 
 ## Normal-Operation Rule
 
@@ -40,12 +43,58 @@ later product session boundary.
 The kernel ledger is append-only and bounded to 4,096 records per in-memory instance. It stores only:
 
 - monotonic sequence and caller-supplied monotonic time;
-- attributed component and closed destination class;
+- attributed executable SHA-256 identity, component, and closed destination
+  class;
 - optional local transport and endpoint identity digest;
 - attempted byte count; and
 - the kernel-computed allow or block decision.
 
-It stores no hostname, IP address, Unix-socket path, payload, prompt, repository content, credential, or environment value. Capacity exhaustion, sequence overflow, and backward time are explicit errors. A production enforcement boundary must treat inability to record an attempted connection as a blocking failure.
+It stores no hostname, IP address, Unix-socket path, payload, prompt, repository content, credential, or environment value. A zero executable identity, capacity exhaustion, sequence overflow, and backward time are explicit errors. A production enforcement boundary must treat inability to record an attempted connection as a blocking failure. The ledger has a deterministic identity that binds every retained fact and the kernel-computed decision.
+
+## Post-Acquisition Offline Proof
+
+The kernel owns a one-way state machine for each separately authorized model
+acquisition epoch: `Acquiring` becomes one exact `Exited` disposition and then
+becomes `Proven`. A second exit, proof before exit, stale preflight, or replayed
+proof on the same non-cloneable workflow instance is refused. The acquisition
+orchestrator remains responsible for creating exactly one workflow instance per
+epoch. The terminal disposition must agree with the observed staged artifact
+state:
+
+| Acquisition disposition | Required artifact state |
+| --- | --- |
+| Completed | Verified artifact activated atomically |
+| Cancelled | Staging removed |
+| Corrupt | Rejected bytes quarantined |
+
+A proof is issued only when a newer content-free platform observation reports
+zero acquisition processes, acquisition sockets, external network rules,
+outbound bytes, and DNS attempts. It also requires nonzero identities for the
+complete session-boundary report and active offline firewall policy. The
+covered network-attempt ledger range must have exact sequence order, fall
+between acquisition start and preflight, and attribute every record to a
+nonzero executable digest.
+
+The resulting receipt binds the acquisition epoch, start, exit, disposition,
+preflight time, covered ledger range and identity, allowed and blocked counts,
+blocked-egress count, session-boundary identity, and firewall-policy identity.
+It contains no model bytes, staged path, hostname, address, payload, prompt,
+credential, or repository content.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Acquiring
+    Acquiring --> Exited: completed, cancelled, or corrupt
+    Exited --> Proven: fresh closed-boundary observation
+    Acquiring --> Refused: proof before exit
+    Exited --> Refused: stale, active authority, activity, or mismatch
+    Proven --> Refused: replay
+```
+
+This is the deterministic kernel contract, not a claim that a production model
+installer currently supplies these observations. Live acquisition lifecycle
+wiring, firewall-rule inspection, syscall/DNS/socket tracing, packet capture,
+and supported-platform acceptance remain separate Sprint 10 work.
 
 ## Linux Session Inventory
 
@@ -194,7 +243,7 @@ is presentation input only; it does not become storage authority.
 ## Remaining Closure Work
 
 Sprint 10 remains open until the product adds normal-process continuous
-confinement, dependency/static checks for hidden network features, firewall and
-packet-capture acceptance, a complete offline workflow, and equivalent
-supported-platform evidence. macOS implementation and evidence are
-deliberately deferred and must not be inferred from the shared contracts.
+confinement, platform acquisition and offline-observation wiring, firewall and
+packet-capture acceptance, and equivalent supported-platform evidence. macOS
+implementation and evidence are deliberately deferred and must not be inferred
+from the shared contracts.
