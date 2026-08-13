@@ -827,6 +827,24 @@ mod tests {
     }
 
     #[test]
+    fn strict_local_state_root_configuration_load_rejects_sync_before_read() {
+        let root = TestRoot::new("synchronized", STRICT);
+        fs::create_dir(root.path().join(".stfolder")).expect("sync marker creates");
+        let before = fs::read(root.path().join(TARGET_NAME)).expect("target preimage reads");
+        assert_eq!(
+            root.store()
+                .load()
+                .expect_err("synchronized configuration root rejects")
+                .kind(),
+            LinuxConfigurationErrorKind::UnsafeRoot
+        );
+        assert_eq!(
+            fs::read(root.path().join(TARGET_NAME)).expect("target remains readable"),
+            before
+        );
+    }
+
+    #[test]
     fn apply_retains_immutable_backup_and_rollback_restores_it() {
         let root = TestRoot::new("apply", STRICT);
         let store = root.store();

@@ -7,6 +7,9 @@ use std::path::{Component, Path, PathBuf};
 use agentmage_kernel_contracts::{
     CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
 };
+use agentmage_kernel_engine::strict_local::{
+    StrictLocalStorageDecision, StrictLocalStorageDenial, evaluate_storage,
+};
 use rustix::fd::OwnedFd;
 use rustix::fs::{
     AtFlags, FileType, Mode, OFlags, StatxFlags, fstat, fstatfs, open, openat, statx,
@@ -70,6 +73,14 @@ pub enum LinuxStrictLocalRootErrorKind {
     UnsafeMode,
     /// The held root identity or filesystem changed.
     IdentityChanged,
+    /// A known cloud-synchronization marker was observed.
+    CloudSynchronized,
+    /// The root resides on a network or remote filesystem.
+    RemoteFilesystem,
+    /// The root resides on a conservatively rejected userspace filesystem.
+    FuseFilesystem,
+    /// The root filesystem could not be admitted safely.
+    UnknownFilesystem,
 }
 
 /// Content-free Linux strict-local root inspection failure.
@@ -111,6 +122,16 @@ impl fmt::Display for LinuxStrictLocalRootError {
             LinuxStrictLocalRootErrorKind::ForeignOwner => "strict_local_root.foreign_owner",
             LinuxStrictLocalRootErrorKind::UnsafeMode => "strict_local_root.unsafe_mode",
             LinuxStrictLocalRootErrorKind::IdentityChanged => "strict_local_root.identity_changed",
+            LinuxStrictLocalRootErrorKind::CloudSynchronized => {
+                "strict_local_root.cloud_synchronized"
+            }
+            LinuxStrictLocalRootErrorKind::RemoteFilesystem => {
+                "strict_local_root.remote_filesystem"
+            }
+            LinuxStrictLocalRootErrorKind::FuseFilesystem => "strict_local_root.fuse_filesystem",
+            LinuxStrictLocalRootErrorKind::UnknownFilesystem => {
+                "strict_local_root.unknown_filesystem"
+            }
         })
     }
 }
@@ -226,8 +247,16 @@ impl LinuxStrictLocalRoot {
         let current = root_metadata(&self.descriptor)?;
         if current != self.metadata
             || root_identity_digest(&current) != self.observation.root_identity_sha256
-            || detect_root_sentinel(&self.descriptor)? != self.observation.synchronization_marker
         {
+            return Err(error(LinuxStrictLocalRootErrorKind::IdentityChanged, None));
+        }
+        match evaluate_storage(&self.observation) {
+            StrictLocalStorageDecision::Eligible => {}
+            StrictLocalStorageDecision::Reject { reason } => {
+                return Err(error(storage_denial_kind(reason), None));
+            }
+        }
+        if detect_root_sentinel(&self.descriptor)? != self.observation.synchronization_marker {
             return Err(error(LinuxStrictLocalRootErrorKind::IdentityChanged, None));
         }
         Ok(())
@@ -381,15 +410,53 @@ fn synchronization_marker_for_component(name: &str) -> Option<CloudSynchronizati
         .filter(char::is_ascii_alphanumeric)
         .map(|character| character.to_ascii_lowercase())
         .collect();
-    match canonical.as_str() {
-        "dropbox" | "dropboxcache" => Some(CloudSynchronizationMarker::Dropbox),
-        "onedrive" => Some(CloudSynchronizationMarker::OneDrive),
-        "googledrive" | "googledrivefs" => Some(CloudSynchronizationMarker::GoogleDrive),
-        "nextcloud" => Some(CloudSynchronizationMarker::Nextcloud),
-        "owncloud" => Some(CloudSynchronizationMarker::OwnCloud),
-        "iclouddrive" | "mobiledocuments" => Some(CloudSynchronizationMarker::ICloudDrive),
-        "syncthing" => Some(CloudSynchronizationMarker::Syncthing),
-        _ => None,
+    if canonical.starts_with("dropbox") {
+        Some(CloudSynchronizationMarker::Dropbox)
+    } else if canonical.starts_with("onedrive") {
+        Some(CloudSynchronizationMarker::OneDrive)
+    } else if canonical.starts_with("googledrive") {
+        Some(CloudSynchronizationMarker::GoogleDrive)
+    } else if canonical.starts_with("nextcloud") {
+        Some(CloudSynchronizationMarker::Nextcloud)
+    } else if canonical.starts_with("owncloud") {
+        Some(CloudSynchronizationMarker::OwnCloud)
+    } else if canonical.starts_with("iclouddrive") || canonical == "mobiledocuments" {
+        Some(CloudSynchronizationMarker::ICloudDrive)
+    } else if canonical.starts_with("syncthing") {
+        Some(CloudSynchronizationMarker::Syncthing)
+    } else if matches!(
+        canonical.as_str(),
+        "box"
+            | "boxdrive"
+            | "boxsync"
+            | "mega"
+            | "megasync"
+            | "pcloud"
+            | "pclouddrive"
+            | "protondrive"
+            | "tresorit"
+    ) {
+        Some(CloudSynchronizationMarker::OtherKnownMarker)
+    } else {
+        None
+    }
+}
+
+const fn storage_denial_kind(denial: StrictLocalStorageDenial) -> LinuxStrictLocalRootErrorKind {
+    match denial {
+        StrictLocalStorageDenial::InvalidRootIdentity | StrictLocalStorageDenial::SymbolicLink => {
+            LinuxStrictLocalRootErrorKind::IdentityChanged
+        }
+        StrictLocalStorageDenial::CloudSynchronized => {
+            LinuxStrictLocalRootErrorKind::CloudSynchronized
+        }
+        StrictLocalStorageDenial::RemoteFilesystem => {
+            LinuxStrictLocalRootErrorKind::RemoteFilesystem
+        }
+        StrictLocalStorageDenial::FuseFilesystem => LinuxStrictLocalRootErrorKind::FuseFilesystem,
+        StrictLocalStorageDenial::UnknownFilesystem => {
+            LinuxStrictLocalRootErrorKind::UnknownFilesystem
+        }
     }
 }
 
@@ -438,12 +505,13 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{CloudSynchronizationMarker, StorageFilesystemClass};
+    use agentmage_kernel_engine::strict_local::StrictLocalStorageDenial;
 
     use super::{
         AFS_MAGIC, BTRFS_MAGIC, CEPH_MAGIC, CIFS_MAGIC, CODA_MAGIC, EXFAT_MAGIC, EXT_FAMILY_MAGIC,
         F2FS_MAGIC, FUSE_MAGIC, LinuxStrictLocalRootErrorKind, LinuxStrictLocalRootInspector,
         MSDOS_MAGIC, NCP_MAGIC, NFS_MAGIC, NINE_P_MAGIC, NTFS3_MAGIC, RAMFS_MAGIC, TMPFS_MAGIC,
-        XFS_MAGIC, ZFS_MAGIC, classify_linux_filesystem_magic,
+        XFS_MAGIC, ZFS_MAGIC, classify_linux_filesystem_magic, storage_denial_kind,
         synchronization_marker_for_component,
     };
 
@@ -472,7 +540,7 @@ mod tests {
     }
 
     #[test]
-    fn filesystem_magic_matrix_is_closed_and_conservative() {
+    fn strict_local_state_root_filesystem_magic_matrix_is_closed_and_conservative() {
         for magic in [
             EXT_FAMILY_MAGIC,
             XFS_MAGIC,
@@ -515,11 +583,27 @@ mod tests {
     }
 
     #[test]
-    fn provider_names_and_root_sentinels_are_detected_without_path_retention() {
+    fn strict_local_state_root_provider_names_and_sentinels_are_rejected() {
         assert_eq!(
             synchronization_marker_for_component("Google Drive"),
             Some(CloudSynchronizationMarker::GoogleDrive)
         );
+        assert_eq!(
+            synchronization_marker_for_component("OneDrive - Example Organization"),
+            Some(CloudSynchronizationMarker::OneDrive)
+        );
+        for name in [
+            "Box Drive",
+            "MEGAsync",
+            "pCloud Drive",
+            "Proton Drive",
+            "Tresorit",
+        ] {
+            assert_eq!(
+                synchronization_marker_for_component(name),
+                Some(CloudSynchronizationMarker::OtherKnownMarker)
+            );
+        }
         assert_eq!(
             synchronization_marker_for_component("ordinary-project"),
             None
@@ -533,6 +617,56 @@ mod tests {
             Some(CloudSynchronizationMarker::Syncthing)
         );
         assert!(!format!("{held:?}").contains(test.0.to_string_lossy().as_ref()));
+        assert_eq!(
+            held.revalidate()
+                .expect_err("synchronized root rejects")
+                .kind(),
+            LinuxStrictLocalRootErrorKind::CloudSynchronized
+        );
+
+        let provider = TestDirectory::new("provider-parent");
+        let synchronized = provider.0.join("Google Drive");
+        fs::create_dir(&synchronized).expect("provider directory creates");
+        fs::set_permissions(&synchronized, fs::Permissions::from_mode(0o700))
+            .expect("provider directory private");
+        let held =
+            LinuxStrictLocalRootInspector::inspect(&synchronized).expect("provider root observes");
+        assert_eq!(
+            held.revalidate().expect_err("provider root rejects").kind(),
+            LinuxStrictLocalRootErrorKind::CloudSynchronized
+        );
+    }
+
+    #[test]
+    fn strict_local_state_root_kernel_denials_map_to_exact_platform_refusals() {
+        for (denial, expected) in [
+            (
+                StrictLocalStorageDenial::InvalidRootIdentity,
+                LinuxStrictLocalRootErrorKind::IdentityChanged,
+            ),
+            (
+                StrictLocalStorageDenial::SymbolicLink,
+                LinuxStrictLocalRootErrorKind::IdentityChanged,
+            ),
+            (
+                StrictLocalStorageDenial::CloudSynchronized,
+                LinuxStrictLocalRootErrorKind::CloudSynchronized,
+            ),
+            (
+                StrictLocalStorageDenial::RemoteFilesystem,
+                LinuxStrictLocalRootErrorKind::RemoteFilesystem,
+            ),
+            (
+                StrictLocalStorageDenial::FuseFilesystem,
+                LinuxStrictLocalRootErrorKind::FuseFilesystem,
+            ),
+            (
+                StrictLocalStorageDenial::UnknownFilesystem,
+                LinuxStrictLocalRootErrorKind::UnknownFilesystem,
+            ),
+        ] {
+            assert_eq!(storage_denial_kind(denial), expected);
+        }
     }
 
     #[test]
@@ -544,7 +678,14 @@ mod tests {
             StorageFilesystemClass::Local | StorageFilesystemClass::Unknown
         ));
         assert_ne!(held.observation().root_identity_sha256, [0; 32]);
-        held.revalidate().expect("held root revalidates");
+        match held.observation().filesystem {
+            StorageFilesystemClass::Local => held.revalidate().expect("held root revalidates"),
+            StorageFilesystemClass::Unknown => assert_eq!(
+                held.revalidate().expect_err("unknown root rejects").kind(),
+                LinuxStrictLocalRootErrorKind::UnknownFilesystem
+            ),
+            _ => panic!("temporary test root unexpectedly used a non-local filesystem"),
+        }
         let duplicate = held.duplicate_descriptor().expect("descriptor duplicates");
         assert!(duplicate.as_raw_fd() >= 3);
     }
@@ -595,7 +736,7 @@ mod tests {
     }
 
     #[test]
-    fn adding_a_sync_sentinel_invalidates_the_held_root() {
+    fn strict_local_state_root_adding_a_sync_sentinel_invalidates_the_held_root() {
         let test = TestDirectory::new("mutation");
         let held = LinuxStrictLocalRootInspector::inspect(&test.0).expect("root inspects");
         fs::create_dir(test.0.join(".stfolder")).expect("sentinel creates");

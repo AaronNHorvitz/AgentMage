@@ -96,7 +96,12 @@ The inspector classifies the final descriptor using Linux filesystem magic value
 - FUSE is conservatively classified separately and rejected; and
 - every unrecognized filesystem is unknown and rejected.
 
-Known provider-named ancestry components and root sentinels for Dropbox, OneDrive, Google Drive, Nextcloud, ownCloud, iCloud Drive, and Syncthing produce a synchronized-folder marker. Detection is intentionally conservative and is not a claim that every third-party synchronization client can be recognized by a folder name alone.
+Known provider-named ancestry components and root sentinels for Dropbox,
+OneDrive, Google Drive, Nextcloud, ownCloud, iCloud Drive, Syncthing, Box, MEGA,
+pCloud, Proton Drive, and Tresorit produce a synchronized-folder marker.
+Organization-suffixed OneDrive names are included. Detection is intentionally
+conservative and is not a claim that every third-party synchronization client
+can be recognized by a folder name alone.
 
 The resulting observation contains only filesystem class, synchronization-marker class, a SHA-256 digest of the held device/inode/mount/filesystem identity, and the symlink-free result. Kernel policy rejects zero identity, any symbolic link, any synchronization marker, remote storage, FUSE, and unknown filesystems.
 
@@ -113,7 +118,13 @@ flowchart TD
     K -->|eligible| H[Keep descriptor held for later store boundary]
 ```
 
-Before later storage use, the platform adapter revalidates the held object, mount, filesystem, identity digest, and root-level synchronization sentinel state. The absolute path is presentation input only; it does not become storage authority.
+Before any configuration, key-lifecycle, or authority-store use, the platform
+adapter revalidates the held object, mount, filesystem, identity digest, and
+root-level synchronization sentinel state and applies the kernel storage
+decision. A known synchronization marker, remote filesystem, FUSE filesystem,
+or unknown filesystem produces an exact content-free refusal before state I/O.
+Adding a sentinel after inspection invalidates the held root. The absolute path
+is presentation input only; it does not become storage authority.
 
 ## Remaining Closure Work
 

@@ -630,13 +630,14 @@ mod tests {
     };
 
     use super::{
-        BinaryObservation, LinuxMechanismObservations, LinuxPlatformAdapter, combine_status,
-        linux_capability_observations, open_linux_authority_in_root, parse_distribution,
+        BinaryObservation, LinuxAuthorityOpenError, LinuxMechanismObservations,
+        LinuxPlatformAdapter, combine_status, linux_capability_observations,
+        open_linux_authority_in_root, parse_distribution,
     };
-    use crate::LinuxStrictLocalRootInspector;
     use crate::security_controls::{
         LinuxSecurityControl, LinuxSecurityControls, REQUIRED_LINUX_SECURITY_CONTROLS,
     };
+    use crate::{LinuxStrictLocalRootErrorKind, LinuxStrictLocalRootInspector};
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -740,6 +741,29 @@ mod tests {
         let _authority = runtime.authority();
         runtime.revalidate_root().expect("root remains stable");
         drop(runtime);
+        std::fs::remove_dir_all(directory).expect("fixture removes");
+    }
+
+    #[test]
+    fn strict_local_state_root_authority_open_rejects_sync_before_store_io() {
+        let directory = std::env::temp_dir().join(format!(
+            "agentmage-linux-authority-sync-{}-{}",
+            std::process::id(),
+            TEMP_ID.fetch_add(1, Ordering::SeqCst)
+        ));
+        std::fs::create_dir(&directory).expect("state root creates");
+        std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700))
+            .expect("state root private");
+        std::fs::create_dir(directory.join(".stfolder")).expect("sync marker creates");
+        let root = LinuxStrictLocalRootInspector::inspect(&directory).expect("root observes");
+        let error = open_linux_authority_in_root(root, &mut TestKey([62; 32]), 1)
+            .expect_err("synchronized root rejects before store open");
+        assert!(matches!(
+            error,
+            LinuxAuthorityOpenError::Root(root_error)
+                if root_error.kind() == LinuxStrictLocalRootErrorKind::CloudSynchronized
+        ));
+        assert!(!directory.join("authority.db").exists());
         std::fs::remove_dir_all(directory).expect("fixture removes");
     }
 
