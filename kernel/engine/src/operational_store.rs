@@ -2755,11 +2755,14 @@ fn hex_digest(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+    use std::env;
     use std::fs::{self, File, OpenOptions};
     use std::io::{Read as _, Seek as _, SeekFrom, Write as _};
     use std::os::fd::AsRawFd;
     use std::os::unix::fs::PermissionsExt as _;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
@@ -2825,6 +2828,106 @@ mod tests {
                 .ok_or(OperationalStoreKeyError::Unavailable)
         }
     }
+
+    struct FileBackedTestKey {
+        path: PathBuf,
+    }
+
+    impl OperationalStoreKeyProvider for FileBackedTestKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            let key = fs::read(&self.path).map_err(|_| OperationalStoreKeyError::Unavailable)?;
+            if key.len() != 32 {
+                return Err(OperationalStoreKeyError::Unavailable);
+            }
+            Ok(operation(&key))
+        }
+    }
+
+    impl OperationalStoreKeyLifecycle for FileBackedTestKey {
+        fn destroy_key_and_verify_absent(&mut self) -> Result<(), OperationalStoreKeyError> {
+            fs::remove_file(&self.path).map_err(|_| OperationalStoreKeyError::Unavailable)?;
+            if self.path.exists() {
+                Err(OperationalStoreKeyError::Unavailable)
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    enum SeededCrashBoundary {
+        Transaction,
+        Checkpoint,
+        Migration,
+        KeyRetrieval,
+        Backup,
+        Restore,
+        Expiry,
+        Deletion,
+    }
+
+    impl SeededCrashBoundary {
+        const ALL: [Self; 8] = [
+            Self::Transaction,
+            Self::Checkpoint,
+            Self::Migration,
+            Self::KeyRetrieval,
+            Self::Backup,
+            Self::Restore,
+            Self::Expiry,
+            Self::Deletion,
+        ];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Transaction => "transaction",
+                Self::Checkpoint => "checkpoint",
+                Self::Migration => "migration",
+                Self::KeyRetrieval => "key-retrieval",
+                Self::Backup => "backup",
+                Self::Restore => "restore",
+                Self::Expiry => "expiry",
+                Self::Deletion => "deletion",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|boundary| boundary.code() == code)
+                .expect("declared crash boundary")
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    enum SeededCrashPosition {
+        Before,
+        After,
+    }
+
+    impl SeededCrashPosition {
+        const ALL: [Self; 2] = [Self::Before, Self::After];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Before => "before",
+                Self::After => "after",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|position| position.code() == code)
+                .expect("declared crash position")
+        }
+    }
+
+    const SEEDED_CRASH_CHILD_EXIT: i32 = 86;
+    const SEEDED_CRASH_RUNS: u64 = 128;
 
     fn observation() -> StrictLocalStorageObservation {
         StrictLocalStorageObservation {
@@ -4042,5 +4145,479 @@ mod tests {
             OperationalStoreError::IntegrityFailure
         );
         fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    fn seeded_key(seed: u64) -> [u8; 32] {
+        [u8::try_from(seed % 251 + 1).expect("bounded seed byte"); 32]
+    }
+
+    fn seeded_crash_stop() -> ! {
+        std::process::exit(SEEDED_CRASH_CHILD_EXIT)
+    }
+
+    fn seed_retention_fixture(path: &Path, key: [u8; 32]) {
+        let mut store = OperationalStore::open(path, &observation(), &mut TestKey(key))
+            .expect("retention crash fixture");
+        let digest = "a".repeat(64);
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (
+                    'seeded-expiry-session', 'seeded-profile', 'active', 1, 1, ?1, X'7B7D'
+                 )",
+                [&digest],
+            )
+            .expect("seeded expiry session");
+        let assignment = RetentionAssignment::new(
+            "seeded-expiry-retention",
+            RetentionRecordFamily::Sessions,
+            "seeded-expiry-session",
+            RetentionSensitivity::Private,
+            RetentionDisposition::Retained,
+            Some(100),
+            [17; 32],
+        )
+        .expect("seeded expiry assignment");
+        store
+            .assign_retention(&assignment, 10)
+            .expect("seeded retention assignment commits");
+    }
+
+    fn prepare_seeded_crash_fixture(
+        boundary: SeededCrashBoundary,
+        directory: &Path,
+        key: [u8; 32],
+    ) {
+        let store_path = directory.join("authority.db");
+        match boundary {
+            SeededCrashBoundary::Migration => create_version_two_store(&store_path, &key),
+            SeededCrashBoundary::KeyRetrieval => {}
+            SeededCrashBoundary::Restore => {
+                let backup_path = directory.join("authority.backup.db");
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("restore source fixture");
+                store
+                    .backup(&backup_path, &observation(), &mut TestKey([91; 32]))
+                    .expect("restore backup fixture");
+            }
+            SeededCrashBoundary::Expiry => seed_retention_fixture(&store_path, key),
+            SeededCrashBoundary::Deletion => {
+                let key_path = directory.join("synthetic-key");
+                fs::write(&key_path, key).expect("synthetic erasure key fixture");
+                drop(
+                    OperationalStore::open(
+                        &store_path,
+                        &observation(),
+                        &mut FileBackedTestKey { path: key_path },
+                    )
+                    .expect("erasure store fixture"),
+                );
+            }
+            SeededCrashBoundary::Transaction
+            | SeededCrashBoundary::Checkpoint
+            | SeededCrashBoundary::Backup => {
+                drop(
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("seeded store fixture"),
+                );
+            }
+        }
+    }
+
+    fn run_seeded_crash_child(
+        boundary: SeededCrashBoundary,
+        position: SeededCrashPosition,
+        directory: &Path,
+        key: [u8; 32],
+    ) -> ! {
+        let store_path = directory.join("authority.db");
+        let backup_path = directory.join("authority.backup.db");
+        let restore_path = directory.join("restored.db");
+        match boundary {
+            SeededCrashBoundary::Transaction => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("transaction child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                store
+                    .connection
+                    .execute(
+                        "INSERT INTO sessions VALUES (
+                            'seeded-transaction', 'seeded-profile', 'active', 1, 1, ?1, X'7B7D'
+                         )",
+                        ["b".repeat(64)],
+                    )
+                    .expect("transaction child commits");
+            }
+            SeededCrashBoundary::Checkpoint => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("checkpoint child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                store
+                    .persist_authority(&GrantIssuer::new(), &AuthorityTransactionCoordinator::new())
+                    .expect("checkpoint child commits");
+            }
+            SeededCrashBoundary::Migration => {
+                if position == SeededCrashPosition::Before {
+                    let connection = open_connection(&store_path, &key)
+                        .expect("pre-migration child opens encrypted fixture");
+                    let version: i64 = connection
+                        .pragma_query_value(None, "user_version", |row| row.get(0))
+                        .expect("pre-migration version");
+                    assert_eq!(version, 2);
+                    seeded_crash_stop();
+                }
+                drop(
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("migration child commits"),
+                );
+            }
+            SeededCrashBoundary::KeyRetrieval => {
+                struct AbruptKeyProvider {
+                    key: [u8; 32],
+                    position: SeededCrashPosition,
+                }
+
+                impl OperationalStoreKeyProvider for AbruptKeyProvider {
+                    fn with_key<T>(
+                        &mut self,
+                        operation: impl FnOnce(&[u8]) -> T,
+                    ) -> Result<T, OperationalStoreKeyError> {
+                        if self.position == SeededCrashPosition::Before {
+                            seeded_crash_stop();
+                        }
+                        let _result = operation(&self.key);
+                        seeded_crash_stop();
+                    }
+                }
+
+                let _ = OperationalStore::open(
+                    &store_path,
+                    &observation(),
+                    &mut AbruptKeyProvider { key, position },
+                );
+                unreachable!("abrupt key provider always stops")
+            }
+            SeededCrashBoundary::Backup => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("backup child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                store
+                    .backup(&backup_path, &observation(), &mut TestKey([92; 32]))
+                    .expect("backup child commits");
+            }
+            SeededCrashBoundary::Restore => {
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                OperationalStore::restore_to_fresh_candidate(
+                    &backup_path,
+                    &observation(),
+                    &mut TestKey([91; 32]),
+                    &restore_path,
+                    &observation(),
+                    &mut TestKey([93; 32]),
+                )
+                .expect("restore child commits");
+            }
+            SeededCrashBoundary::Expiry => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("expiry child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                assert_eq!(
+                    store.expire_due(100).expect("expiry child commits").len(),
+                    1
+                );
+            }
+            SeededCrashBoundary::Deletion => {
+                let key_path = directory.join("synthetic-key");
+                let mut provider = FileBackedTestKey { path: key_path };
+                let store = OperationalStore::open(&store_path, &observation(), &mut provider)
+                    .expect("deletion child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                store
+                    .cryptographic_erase(&mut provider)
+                    .expect("deletion child commits");
+            }
+        }
+        seeded_crash_stop()
+    }
+
+    fn recover_seeded_crash_fixture(
+        boundary: SeededCrashBoundary,
+        directory: &Path,
+        key: [u8; 32],
+    ) {
+        let store_path = directory.join("authority.db");
+        let backup_path = directory.join("authority.backup.db");
+        let restore_path = directory.join("restored.db");
+        match boundary {
+            SeededCrashBoundary::Transaction => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("transaction recovery opens");
+                let count: i64 = store
+                    .connection
+                    .query_row(
+                        "SELECT COUNT(*) FROM sessions WHERE session_id = 'seeded-transaction'",
+                        [],
+                        |row| row.get(0),
+                    )
+                    .expect("transaction result count");
+                if count == 0 {
+                    store
+                        .connection
+                        .execute(
+                            "INSERT INTO sessions VALUES (
+                                'seeded-transaction', 'seeded-profile', 'active', 1, 1, ?1, X'7B7D'
+                             )",
+                            ["b".repeat(64)],
+                        )
+                        .expect("transaction recovery commits once");
+                } else {
+                    assert_eq!(count, 1);
+                }
+                assert!(
+                    store
+                        .connection
+                        .execute(
+                            "INSERT INTO sessions VALUES (
+                                'seeded-transaction', 'seeded-profile', 'active', 1, 1, ?1, X'7B7D'
+                             )",
+                            ["b".repeat(64)],
+                        )
+                        .is_err()
+                );
+                let final_count: i64 = store
+                    .connection
+                    .query_row(
+                        "SELECT COUNT(*) FROM sessions WHERE session_id = 'seeded-transaction'",
+                        [],
+                        |row| row.get(0),
+                    )
+                    .expect("final transaction result count");
+                assert_eq!(final_count, 1);
+            }
+            SeededCrashBoundary::Checkpoint => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("checkpoint recovery opens");
+                match store.generation() {
+                    0 => store
+                        .persist_authority(
+                            &GrantIssuer::new(),
+                            &AuthorityTransactionCoordinator::new(),
+                        )
+                        .expect("checkpoint recovery commits once"),
+                    1 => {}
+                    generation => panic!("unexpected recovered generation {generation}"),
+                }
+                let checkpoints: i64 = store
+                    .connection
+                    .query_row("SELECT COUNT(*) FROM checkpoints", [], |row| row.get(0))
+                    .expect("checkpoint count");
+                assert_eq!((store.generation(), checkpoints), (1, 2));
+            }
+            SeededCrashBoundary::Migration => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("migration recovery opens");
+                let version: i64 = store
+                    .connection
+                    .pragma_query_value(None, "user_version", |row| row.get(0))
+                    .expect("recovered schema version");
+                let history: i64 = store
+                    .connection
+                    .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
+                    .expect("migration history count");
+                assert_eq!((version, history), (SCHEMA_VERSION, 3));
+            }
+            SeededCrashBoundary::KeyRetrieval => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("key retrieval recovery opens");
+                assert_eq!(store.generation(), 0);
+            }
+            SeededCrashBoundary::Backup => {
+                let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                    .expect("backup recovery source opens");
+                if !backup_path.exists() {
+                    store
+                        .backup(&backup_path, &observation(), &mut TestKey([92; 32]))
+                        .expect("backup recovery commits once");
+                }
+                let before = sha256_file(&backup_path).expect("backup identity");
+                assert!(
+                    store
+                        .backup(&backup_path, &observation(), &mut TestKey([92; 32]))
+                        .is_err()
+                );
+                assert_eq!(
+                    sha256_file(&backup_path).expect("preserved backup identity"),
+                    before
+                );
+                drop(store);
+                let restored =
+                    OperationalStore::open(&backup_path, &observation(), &mut TestKey([92; 32]))
+                        .expect("backup recovery validates");
+                assert_eq!(restored.generation(), 0);
+            }
+            SeededCrashBoundary::Restore => {
+                if !restore_path.exists() {
+                    OperationalStore::restore_to_fresh_candidate(
+                        &backup_path,
+                        &observation(),
+                        &mut TestKey([91; 32]),
+                        &restore_path,
+                        &observation(),
+                        &mut TestKey([93; 32]),
+                    )
+                    .expect("restore recovery commits once");
+                }
+                let before = sha256_file(&restore_path).expect("restore identity");
+                assert!(
+                    OperationalStore::restore_to_fresh_candidate(
+                        &backup_path,
+                        &observation(),
+                        &mut TestKey([91; 32]),
+                        &restore_path,
+                        &observation(),
+                        &mut TestKey([93; 32]),
+                    )
+                    .is_err()
+                );
+                assert_eq!(
+                    sha256_file(&restore_path).expect("preserved restore identity"),
+                    before
+                );
+                let restored =
+                    OperationalStore::open(&restore_path, &observation(), &mut TestKey([93; 32]))
+                        .expect("restored candidate validates");
+                assert_eq!(restored.generation(), 0);
+            }
+            SeededCrashBoundary::Expiry => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("expiry recovery opens");
+                assert!(store.expire_due(100).expect("expiry recovery").len() <= 1);
+                assert!(
+                    store
+                        .expire_due(100)
+                        .expect("expiry idempotency")
+                        .is_empty()
+                );
+                let state: (String, i64) = store
+                    .connection
+                    .query_row(
+                        "SELECT disposition, revision FROM retention
+                         WHERE retention_id = 'seeded-expiry-retention'",
+                        [],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    )
+                    .expect("expiry state");
+                let events: i64 = store
+                    .connection
+                    .query_row(
+                        "SELECT COUNT(*) FROM retention_events
+                         WHERE retention_id = 'seeded-expiry-retention'",
+                        [],
+                        |row| row.get(0),
+                    )
+                    .expect("expiry event count");
+                assert_eq!(state, ("expired".to_owned(), 2));
+                assert_eq!(events, 2);
+            }
+            SeededCrashBoundary::Deletion => {
+                let key_path = directory.join("synthetic-key");
+                if key_path.exists() {
+                    let mut provider = FileBackedTestKey {
+                        path: key_path.clone(),
+                    };
+                    let store = OperationalStore::open(&store_path, &observation(), &mut provider)
+                        .expect("deletion recovery opens");
+                    store
+                        .cryptographic_erase(&mut provider)
+                        .expect("deletion recovery commits once");
+                }
+                assert!(!key_path.exists());
+                assert!(!super::sqlite_artifacts_exist(&store_path));
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "subprocess crash target; invoked only by seeded_crash_recovery_campaign"]
+    fn seeded_crash_recovery_child() {
+        if env::var_os("AGENTMAGE_SEEDED_CRASH_CHILD").is_none() {
+            return;
+        }
+        let boundary = SeededCrashBoundary::from_code(
+            &env::var("AGENTMAGE_SEEDED_CRASH_BOUNDARY").expect("child boundary"),
+        );
+        let position = SeededCrashPosition::from_code(
+            &env::var("AGENTMAGE_SEEDED_CRASH_POSITION").expect("child position"),
+        );
+        let directory = PathBuf::from(
+            env::var_os("AGENTMAGE_SEEDED_CRASH_DIRECTORY").expect("child directory"),
+        );
+        let seed = env::var("AGENTMAGE_SEEDED_CRASH_SEED")
+            .expect("child seed")
+            .parse::<u64>()
+            .expect("numeric child seed");
+        run_seeded_crash_child(boundary, position, &directory, seeded_key(seed));
+    }
+
+    #[test]
+    fn seeded_crash_recovery_campaign_never_repeats_a_completed_transition() {
+        let mut coverage = BTreeMap::new();
+        for seed in 0..SEEDED_CRASH_RUNS {
+            let boundary = SeededCrashBoundary::ALL
+                [usize::try_from(seed % 8).expect("bounded boundary index")];
+            let position = SeededCrashPosition::ALL
+                [usize::try_from((seed / 8) % 2).expect("bounded position index")];
+            let directory = temporary_directory();
+            let key = seeded_key(seed);
+            prepare_seeded_crash_fixture(boundary, &directory, key);
+
+            let output = Command::new(env::current_exe().expect("current test executable"))
+                .args([
+                    "--exact",
+                    "operational_store::tests::seeded_crash_recovery_child",
+                    "--ignored",
+                    "--nocapture",
+                ])
+                .env("AGENTMAGE_SEEDED_CRASH_CHILD", "1")
+                .env("AGENTMAGE_SEEDED_CRASH_BOUNDARY", boundary.code())
+                .env("AGENTMAGE_SEEDED_CRASH_POSITION", position.code())
+                .env("AGENTMAGE_SEEDED_CRASH_DIRECTORY", &directory)
+                .env("AGENTMAGE_SEEDED_CRASH_SEED", seed.to_string())
+                .output()
+                .expect("seeded crash child launches");
+            assert_eq!(
+                output.status.code(),
+                Some(SEEDED_CRASH_CHILD_EXIT),
+                "seed {seed} {boundary:?} {position:?}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+
+            recover_seeded_crash_fixture(boundary, &directory, key);
+            *coverage.entry((boundary, position)).or_insert(0_u64) += 1;
+            fs::remove_dir_all(directory).expect("seeded crash cleanup");
+        }
+
+        assert_eq!(coverage.len(), 16);
+        for boundary in SeededCrashBoundary::ALL {
+            for position in SeededCrashPosition::ALL {
+                assert_eq!(coverage.get(&(boundary, position)), Some(&8));
+            }
+        }
     }
 }
