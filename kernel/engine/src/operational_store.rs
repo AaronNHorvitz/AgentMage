@@ -2773,8 +2773,8 @@ mod tests {
         OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
         OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
         RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
-        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_hex,
-        verify_runtime_configuration,
+        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_file,
+        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -3015,6 +3015,15 @@ mod tests {
         assert_eq!(backup_receipt.schema_version, 3);
         assert_eq!(backup_receipt.generation, 0);
         assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
+        assert_eq!(
+            backup_receipt.encrypted_file_sha256,
+            sha256_file(&backup).expect("closed backup digest")
+        );
+        assert!(
+            sqlite_artifact_paths(&backup)[1..]
+                .iter()
+                .all(|sidecar| !sidecar.exists())
+        );
         let bytes = fs::read(&backup).expect("backup bytes");
         assert!(!bytes.starts_with(b"SQLite format 3\0"));
         let occupied = directory.join("occupied.backup.db");
