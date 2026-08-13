@@ -1226,6 +1226,109 @@ mod tests {
     }
 
     #[test]
+    fn synthetic_canary_campaign_covers_every_family_and_field_boundary() {
+        const CANARY: &[u8] = b"AM_SYNTHETIC_SECRET_S011_EVERY_INPUT_BOUNDARY";
+        let families = [
+            PersistenceRecordFamily::Sessions,
+            PersistenceRecordFamily::Objectives,
+            PersistenceRecordFamily::Plans,
+            PersistenceRecordFamily::Tasks,
+            PersistenceRecordFamily::Actions,
+            PersistenceRecordFamily::Evidence,
+            PersistenceRecordFamily::Decisions,
+            PersistenceRecordFamily::Grants,
+            PersistenceRecordFamily::Receipts,
+            PersistenceRecordFamily::Checkpoints,
+            PersistenceRecordFamily::Files,
+        ];
+        let fields = [
+            PersistenceField::operational_metadata(
+                "persisted_value",
+                CANARY,
+                PersistenceFieldHandling::Persist,
+            ),
+            PersistenceField::operational_metadata(
+                "digested_value",
+                CANARY,
+                PersistenceFieldHandling::DigestOnly,
+            ),
+            PersistenceField::operational_metadata(
+                "ephemeral_value",
+                CANARY,
+                PersistenceFieldHandling::Ephemeral,
+            ),
+            PersistenceField::ephemeral_content(
+                "raw_attachment",
+                CANARY,
+                EphemeralContentClass::RawAttachment,
+            ),
+            PersistenceField::ephemeral_content(
+                "full_tool_output",
+                CANARY,
+                EphemeralContentClass::FullToolOutput,
+            ),
+            PersistenceField::ephemeral_content(
+                "environment_variable",
+                CANARY,
+                EphemeralContentClass::EnvironmentVariable,
+            ),
+            PersistenceField::ephemeral_content("prompt", CANARY, EphemeralContentClass::Prompt),
+            PersistenceField::ephemeral_content(
+                "model_response",
+                CANARY,
+                EphemeralContentClass::ModelResponse,
+            ),
+        ];
+        let canary = std::str::from_utf8(CANARY).expect("ASCII canary");
+        let canary_sha256 = sha256_hex(CANARY);
+
+        for family in families {
+            let candidate = PersistenceCandidate {
+                family,
+                record_id: canary,
+                sensitivity: PersistenceSensitivity::Private,
+                retention: PersistenceRetentionIntent::Retained,
+                occurred_at_epoch_ms: 1_000,
+                fields: &fields,
+            };
+            let decision = policy().evaluate(&candidate).expect("campaign decision");
+            assert_eq!(decision.receipt().outcome(), PersistenceOutcome::Admitted);
+            decision
+                .prepared()
+                .expect("one policy-authorized encrypted record")
+                .with_record_json(|record| {
+                    let record = std::str::from_utf8(record).expect("canonical JSON");
+                    assert_eq!(record.matches(canary).count(), 2);
+                    assert_eq!(record.matches(&canary_sha256).count(), 1);
+                });
+            let receipt = String::from_utf8(decision.receipt().to_json().expect("receipt JSON"))
+                .expect("UTF-8 receipt");
+            assert!(!receipt.contains(canary));
+            assert!(!format!("{candidate:?}{decision:?}").contains(canary));
+
+            let denied_field = [PersistenceField::operational_metadata(
+                "api_key",
+                CANARY,
+                PersistenceFieldHandling::Persist,
+            )];
+            let denied_candidate = PersistenceCandidate {
+                fields: &denied_field,
+                ..candidate
+            };
+            let denied = policy()
+                .evaluate(&denied_candidate)
+                .expect("content-free denial");
+            assert_eq!(denied.receipt().outcome(), PersistenceOutcome::DeniedSecret);
+            assert!(denied.prepared().is_none());
+            assert!(
+                !String::from_utf8(denied.receipt().to_json().expect("denial JSON"))
+                    .expect("UTF-8 denial")
+                    .contains(canary)
+            );
+        }
+    }
+
+    #[test]
     fn debug_surfaces_exclude_values_and_record_identity() {
         let fields = [PersistenceField::new(
             "title",
