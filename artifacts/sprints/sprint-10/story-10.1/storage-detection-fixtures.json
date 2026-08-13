@@ -1,0 +1,112 @@
+{
+  "artifact_id": "strict-local-storage-detection-fixtures",
+  "claims": {
+    "all_known_filesystem_magic_values_covered": true,
+    "all_sync_clients_detected": false,
+    "external_network_used": false,
+    "live_remote_mount_tested": false,
+    "provider_and_sentinel_directories_tested": true,
+    "release_support": false,
+    "rust_executes_checked_fixture_corpus": true,
+    "versioned_fixture_corpus_implemented": true
+  },
+  "external_network_used": false,
+  "fixture_profile": {
+    "filesystem_magic_count": 22,
+    "fuse_count": 1,
+    "known_local_count": 11,
+    "known_remote_count": 7,
+    "ordinary_component_count": 6,
+    "provider_and_sentinel_directories_created": true,
+    "provider_component_count": 18,
+    "root_sentinel_count": 3,
+    "schema_version": 1,
+    "unknown_boundary_count": 3
+  },
+  "fixture_sha256": "bcc11724377fde4691164de57eb6dd7df95e70826fd28c885d68400216415726",
+  "limitations": [
+    "Filesystem magic cases are deterministic classifier fixtures; no live NFS, CIFS, 9P, AFS, Ceph, NCP, Coda, or FUSE mount is claimed.",
+    "Provider and sentinel cases use disposable owner-only local directories and do not claim detection of every synchronization client or a deliberately disguised synchronizer.",
+    "Live remote-mount classification remains part of Sub-task 10.1.3.1, and no macOS, Windows, cross-platform, or release acceptance is claimed."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "a98a1d33d60c4d4133a350b9328dde8fd4d451c3",
+  "sources": [
+    {
+      "bytes": 13105,
+      "path": "Cargo.lock",
+      "sha256": "39fb73de641cf10feba7302aa1832d0bfbce780bce66866ee880f5d6fef25d77"
+    },
+    {
+      "bytes": 16738,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "191d42622c4d9bc1b5fb8edffc793b8568ec728546d99d7366266eb25fc0cf0c"
+    },
+    {
+      "bytes": 2960,
+      "path": "fixtures/strict-local-storage/v1/detection-fixtures.json",
+      "sha256": "bcc11724377fde4691164de57eb6dd7df95e70826fd28c885d68400216415726"
+    },
+    {
+      "bytes": 54272,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
+    },
+    {
+      "bytes": 568,
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "861ad77c20a65c12306d98e538e37360546337997dbc5f47c81f0af1d5838e1d"
+    },
+    {
+      "bytes": 33278,
+      "path": "platforms/linux/src/strict_local.rs",
+      "sha256": "1287998a261f58bf1f54401e5eddfbe3a8551a7a7c0890a95490c12be14fd76a"
+    },
+    {
+      "bytes": 13043,
+      "path": "scripts/storage_detection_fixture_evidence.py",
+      "sha256": "95f46df9cf7b38cd955cd4ba1bc05e5e19d2bd7af3b75fad12e5b290ea145380"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "0df4751b09ce1e705871d68b01f5e4721f32924f57b6c2577b20a6639c727c19"
+    },
+    {
+      "bytes": 3696,
+      "path": "tests/test_storage_detection_fixture_evidence.py",
+      "sha256": "cdf042bfa8f3435f20d62ca2520ea482566b6d1c700aae30e57517bf7dbbcbca"
+    }
+  ],
+  "status": "pass-versioned-storage-detection-fixture-corpus",
+  "task_ids": [
+    "10.1.2.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "7ca84418f805a225ac062b9f6d5eb5379a6dba39d0551f0c5decae09ba20bfd4",
+      "exit_code": 0,
+      "expected_marker_sha256": "793c6f1c56d7ce3ccd4d4657652c05554aabb02db01c24608c32057ecec43d82",
+      "status": "pass"
+    },
+    {
+      "command_id": "fa4db6335984d60379c721d98db64d10c6a6c9ba286bf3b6388e8551809f211f",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "00493c2b981a5a317e5d0c4ee80cd8e862e31450761f9c7418280f088133e6e1",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
