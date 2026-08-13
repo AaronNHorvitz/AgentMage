@@ -1,8 +1,8 @@
 # Linux Docker KVM Evidence
 
-This procedure prepares reusable Fedora 44 and Ubuntu 26.04 KVM guests for the
-live Docker topology work in Sprint 9 Task `9.2.2`. It does not itself activate
-AgentMage Docker mode or make a release-support claim.
+This procedure prepares reusable Fedora 44 and Ubuntu 26.04 KVM guests and runs
+the live Docker topology work in Sprint 9 Sub-task `9.2.2.1`. It does not
+activate AgentMage Docker inference or make a release-support claim.
 
 ## Boundary
 
@@ -16,6 +16,15 @@ AgentMage Docker mode or make a release-support claim.
   prepared image is retained.
 - Later acceptance guests use disposable overlays, QEMU restricted networking,
   and one host-loopback SSH forward.
+- The exact six-file package is installed, the inactive native adapter is
+  self-checked, and the production collector inspects the live Docker topology.
+- A held ordinary-user acceptance peer and dedicated non-root guard expose only
+  bounded identity metadata; no inference request is sent.
+- Process, group, capability, namespace, socket, mount, cgroup, image, model
+  file, resource, route, and egress metadata must all pass the packaged
+  preflight in one fresh replay-protected observation.
+- The one-session guard secret is deleted inside the guest and is never written
+  to the evidence report.
 - Prepared images and metadata remain under `~/.cache/agentmage/docker-kvm/` and
   are ignored reproducible test inputs, not repository artifacts.
 
@@ -23,10 +32,16 @@ AgentMage Docker mode or make a release-support claim.
 
 ```bash
 npm run evidence:story9.2-docker-kvm:bootstrap
+npm run evidence:story9.2-docker-kvm:build
 npm run evidence:story9.2-docker-kvm:check
 ```
 
 Use `--force-bootstrap` only together with `--bootstrap-images` when an existing
 prepared image has already failed exact metadata or digest validation. The
-acceptance and hostile-reachability commands will be added only after their
-source and mutation validators are committed.
+acceptance build is a separate offline operation and writes bounded evidence to
+`artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json`.
+
+The acceptance peer proves the exact topology, not a product inference path.
+Native llama.cpp execution, the real kernel-to-guard inference path, model
+quality, hostile-position reachability, independent primitive disablement,
+release support, and physical-host evidence remain separate gates.

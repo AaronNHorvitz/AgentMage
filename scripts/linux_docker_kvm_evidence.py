@@ -23,6 +23,36 @@ except ModuleNotFoundError:  # Direct execution places only scripts/ on sys.path
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 CACHE_ROOT: Final = Path.home() / ".cache/agentmage/docker-kvm"
+REPORT_PATH: Final = (
+    ROOT
+    / "artifacts/sprints/sprint-9/story-9.2/linux-docker-kvm-topology.json"
+)
+GUEST_PROBE_PATH: Final = ROOT / "scripts/linux_docker_kvm_guest.py"
+SOURCE_PATHS: Final = (
+    "docs/support/linux-docker-kvm-evidence.md",
+    "package.json",
+    "scripts/linux_docker_kvm_evidence.py",
+    "scripts/linux_docker_kvm_guest.py",
+    "tests/test_linux_docker_kvm_evidence.py",
+)
+LIMITATIONS: Final = [
+    "The Fedora and Ubuntu observations run under native distribution kernels in hardware-accelerated disposable KVM guests, not on physical reference hosts.",
+    "The held runtime peer proves exact process, cgroup, socket, and guard topology only; the product kernel-to-guard inference path remains unimplemented.",
+    "The native adapter is packaged and self-checked but inactive; native llama.cpp execution and all model inference remain assigned to Sprint 13.",
+    "No inference, model quality evaluation, private workspace, credential, supported-release claim, or macOS substitution is included.",
+]
+GUEST_CLEANUP_KEYS: Final = {
+    "bootstrap_secret_absent",
+    "guard_process_absent",
+    "host_raw_listener_absent",
+    "runner_absent",
+    "runtime_unit_inactive",
+}
+HOST_CLEANUP_KEYS: Final = {
+    "disposable_overlay_absent",
+    "loopback_ssh_listener_absent",
+    "qemu_process_absent",
+}
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
 )
@@ -51,6 +81,7 @@ VIRTUAL_SIZE_BYTES: Final = 32 * 1024 * 1024 * 1024
 TEST_UID: Final = 10001
 TEST_GID: Final = 10001
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+REVISION = re.compile(r"^[0-9a-f]{40}$")
 
 
 class DockerKvmEvidenceError(ValueError):
@@ -157,6 +188,57 @@ def checked(argv: list[str], *, timeout: int = 1800) -> str:
     if completed.returncode != 0:
         raise DockerKvmEvidenceError(f"host command failed: {Path(argv[0]).name}")
     return completed.stdout
+
+
+def git_bytes(revision: str, path: str) -> bytes:
+    completed = subprocess.run(
+        ["git", "show", f"{revision}:{path}"],
+        cwd=ROOT,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=60,
+        check=False,
+    )
+    if completed.returncode != 0 or not completed.stdout:
+        raise DockerKvmEvidenceError("committed evidence source is unavailable")
+    return completed.stdout
+
+
+def git_revision(value: str) -> str:
+    revision = checked(["git", "rev-parse", "--verify", f"{value}^{{commit}}"], timeout=60).strip()
+    if REVISION.fullmatch(revision) is None:
+        raise DockerKvmEvidenceError("source revision is invalid")
+    for path in SOURCE_PATHS:
+        git_bytes(revision, path)
+    return revision
+
+
+def source_records(revision: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "path": path,
+            "bytes": len(content := git_bytes(revision, path)),
+            "sha256": hashlib.sha256(content).hexdigest(),
+        }
+        for path in SOURCE_PATHS
+    ]
+
+
+def write_atomic(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, name = tempfile.mkstemp(prefix=".agentmage-docker-kvm-", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.chmod(0o644)
+        os.replace(temporary, path)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
 
 
 def validate_model_source() -> list[dict[str, Any]]:
@@ -448,15 +530,301 @@ def validate_prepared(target: Target) -> dict[str, Any]:
     return value
 
 
+def release_package(target: Target) -> Path:
+    directory = ROOT / "release-output/sprint-9-story-9.1"
+    pattern = "agentmage-0.0.0-1.fc44.x86_64.rpm" if target is FEDORA else "agentmage_0.0.0_amd64.deb"
+    path = directory / pattern
+    if not path.is_file() or path.stat().st_size <= 0:
+        raise DockerKvmEvidenceError("Linux acceptance package is unavailable")
+    return path
+
+
+def external_network_denied(guest: vm_support.VmHandle) -> bool:
+    output = vm_support.ssh_script(
+        guest,
+        "python3 - <<'PY'\n"
+        "import socket\n"
+        "connection = socket.socket()\n"
+        "connection.settimeout(3)\n"
+        "result = connection.connect_ex(('1.1.1.1', 443))\n"
+        "connection.close()\n"
+        "print('denied' if result != 0 else 'connected')\n"
+        "PY\n",
+        timeout=15,
+        stage="docker-kvm-external-network-denial",
+    )
+    return output.strip() == "denied"
+
+
+def run_target_acceptance(
+    tools: vm_support.HostTools,
+    target: Target,
+    revision: str,
+) -> dict[str, Any]:
+    prepared = validate_prepared(target)
+    package = release_package(target)
+    result: dict[str, Any] | None = None
+    with tempfile.TemporaryDirectory(
+        prefix=f"agentmage-{target.distribution}-docker-acceptance-", dir=CACHE_ROOT
+    ) as name:
+        temporary = Path(name)
+        temporary.chmod(0o700)
+        private_key, public_key = vm_support.generate_ssh_key(temporary)
+        seed = create_seed(tools, target, temporary, public_key, bootstrap=False)
+        overlay = temporary / "acceptance.qcow2"
+        vm_support.create_overlay(tools, target.prepared_path, overlay)
+        guest = vm_support.start_vm(
+            tools,
+            overlay,
+            seed,
+            private_key,
+            temporary,
+            restricted_network=True,
+            cpu_count=32,
+            memory_mib=8192,
+        )
+        vm_cleanup = {"qemu_process_absent": False, "loopback_ssh_listener_absent": False}
+        try:
+            vm_support.wait_for_ssh(guest, timeout=300)
+            vm_support.ssh_script(
+                guest,
+                "cloud-init status --wait >/dev/null\n"
+                "test -f /var/lib/agentmage-docker-cloud-init-complete\n"
+                "sudo systemctl is-active --quiet docker.service\n"
+                "test \"$(id -u)\" = 10001\n"
+                "test \"$(id -g)\" = 10001\n",
+                timeout=300,
+                stage="docker-kvm-acceptance-startup",
+            )
+            if not external_network_denied(guest):
+                raise DockerKvmEvidenceError("restricted acceptance guest reached the Internet")
+            vm_support.scp_to_guest(guest, package, f"/home/agentmage/{package.name}")
+            vm_support.scp_to_guest(
+                guest, GUEST_PROBE_PATH, "/home/agentmage/linux_docker_kvm_guest.py"
+            )
+            install = (
+                f"sudo rpm -Uvh --replacepkgs --nodeps /home/agentmage/{package.name} >/dev/null"
+                if target is FEDORA
+                else f"sudo dpkg -i /home/agentmage/{package.name} >/dev/null"
+            )
+            output = vm_support.ssh_script(
+                guest,
+                "set -eu\n"
+                f"{install}\n"
+                "sudo chmod 0500 /home/agentmage/linux_docker_kvm_guest.py\n"
+                f"sudo python3 /home/agentmage/linux_docker_kvm_guest.py {revision}\n",
+                timeout=900,
+                stage="docker-kvm-live-topology",
+            )
+            try:
+                result = json.loads(output)
+            except json.JSONDecodeError as error:
+                raise DockerKvmEvidenceError("guest topology output is invalid") from error
+            vm_support.ssh_script(
+                guest,
+                "set -eu\n"
+                f"sudo rm -f /home/agentmage/{package.name} "
+                "/home/agentmage/linux_docker_kvm_guest.py\n"
+                "sudo systemctl poweroff\n",
+                timeout=30,
+                check=False,
+                stage="docker-kvm-acceptance-shutdown",
+            )
+            vm_support.wait_for_vm_exit(guest.pid, 120)
+        finally:
+            vm_cleanup = vm_support.stop_vm(guest)
+        if result is None or not all(vm_cleanup.values()):
+            raise DockerKvmEvidenceError("Docker KVM acceptance cleanup failed")
+    if overlay.exists():
+        raise DockerKvmEvidenceError("disposable acceptance overlay was retained")
+    return {
+        "target_id": target.target_id,
+        "prepared_image": {
+            "official_sha256": prepared["official_sha256"],
+            "prepared_sha256": prepared["prepared_sha256"],
+            "packages": prepared["packages"],
+        },
+        "acceptance_package": {
+            "filename": package.name,
+            "bytes": package.stat().st_size,
+            "sha256": sha256_file(package),
+        },
+        "hypervisor": {
+            "acceleration": "kvm",
+            "cpu_count": 32,
+            "memory_mib": 8192,
+            "launcher_class": tools.launcher_class,
+            "qemu_version": tools.qemu_version,
+            "qemu_sha256": tools.qemu_sha256,
+        },
+        "network": {
+            "qemu_restrict_mode": True,
+            "host_forward": "loopback-ssh-only",
+            "external_connection_denied": True,
+        },
+        "observation": result,
+        "host_cleanup": vm_cleanup | {"disposable_overlay_absent": True},
+    }
+
+
+def build_report(tools: vm_support.HostTools, revision: str) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "artifact_id": "linux-docker-kvm-topology",
+        "source_revision": revision,
+        "task_ids": ["9.2.2.1"],
+        "status": "pass-live-topology-no-inference",
+        "targets": [run_target_acceptance(tools, target, revision) for target in TARGETS],
+        "claims": {
+            "docker_engine_directly_tested": True,
+            "live_topology_inspected": True,
+            "native_adapter_live_inference": False,
+            "docker_inference_performed": False,
+            "model_quality_evaluated": False,
+            "release_support": False,
+        },
+        "limitations": LIMITATIONS,
+        "sources": source_records(revision),
+    }
+
+
+def validate_report(value: Any) -> list[str]:
+    if not isinstance(value, dict):
+        return ["Docker KVM topology report must be an object"]
+    failures: list[str] = []
+    if (
+        value.get("schema_version") != 1
+        or value.get("artifact_id") != "linux-docker-kvm-topology"
+        or value.get("task_ids") != ["9.2.2.1"]
+        or value.get("status") != "pass-live-topology-no-inference"
+        or REVISION.fullmatch(str(value.get("source_revision"))) is None
+    ):
+        failures.append("Docker KVM topology identity changed")
+    targets = value.get("targets")
+    if (
+        not isinstance(targets, list)
+        or any(not isinstance(item, dict) for item in targets)
+        or [item.get("target_id") for item in targets] != [
+            target.target_id for target in TARGETS
+        ]
+    ):
+        failures.append("Docker KVM target closure changed")
+    else:
+        for specification, target in zip(TARGETS, targets, strict=True):
+            observation = target.get("observation", {})
+            if not isinstance(observation, dict):
+                failures.append(f"Docker KVM live observation changed: {target.get('target_id')}")
+                continue
+            docker = observation.get("docker", {})
+            collector = docker.get("collector", {})
+            native = observation.get("native", {})
+            processes = docker.get("processes", {})
+            guest_cleanup = observation.get("cleanup", {})
+            host_cleanup = target.get("host_cleanup", {})
+            if (
+                observation.get("platform", {}).get("distribution")
+                != specification.distribution
+                or target.get("hypervisor", {}).get("acceleration") != "kvm"
+                or target.get("hypervisor", {}).get("cpu_count") != 32
+                or target.get("network", {}).get("qemu_restrict_mode") is not True
+                or target.get("network", {}).get("external_connection_denied") is not True
+                or observation.get("platform", {}).get("virtualization") != "kvm"
+                or observation.get("platform", {}).get("cgroup_filesystem") != "cgroup2"
+                or native.get("mode") != "packaged-inactive-self-check-only"
+                or native.get("inference_performed") is not False
+                or native.get("host_listener_count_before") != 0
+                or native.get("host_listener_count_after") != 0
+                or docker.get("runner_image_digest") != RUNNER_DIGEST
+                or docker.get("model_manifest_digest") != f"sha256:{MODEL_DIGEST}"
+                or collector.get("record_type") != "agentmage_docker_live_topology_observation"
+                or collector.get("admission", {}).get("status") != "admitted"
+                or collector.get("source_revision") != value.get("source_revision")
+                or set(guest_cleanup) != GUEST_CLEANUP_KEYS
+                or any(item is not True for item in guest_cleanup.values())
+                or set(host_cleanup) != HOST_CLEANUP_KEYS
+                or any(item is not True for item in host_cleanup.values())
+            ):
+                failures.append(f"Docker KVM live observation changed: {target.get('target_id')}")
+                continue
+            expected_processes = {
+                "daemon": (0, None),
+                "runtime_acceptance_peer": (TEST_UID, TEST_GID),
+                "guard": (10002, TEST_GID),
+                "runner": (None, None),
+            }
+            for name, (uid, gid) in expected_processes.items():
+                record = processes.get(name, {})
+                if (
+                    not isinstance(record.get("pid"), int)
+                    or record.get("pid", 0) <= 1
+                    or (uid is not None and record.get("uid") != uid)
+                    or (gid is not None and record.get("gid") != gid)
+                    or SHA256.fullmatch(str(record.get("executable_sha256"))) is None
+                    or SHA256.fullmatch(str(record.get("cgroup_sha256"))) is None
+                    or SHA256.fullmatch(str(record.get("network_namespace_sha256"))) is None
+                    or SHA256.fullmatch(str(record.get("mount_namespace_sha256"))) is None
+                ):
+                    failures.append(
+                        f"Docker KVM process observation changed: {target.get('target_id')}:{name}"
+                    )
+    claims = value.get("claims", {})
+    if (
+        claims.get("docker_engine_directly_tested") is not True
+        or claims.get("live_topology_inspected") is not True
+        or any(
+            claims.get(name) is not False
+            for name in (
+                "native_adapter_live_inference",
+                "docker_inference_performed",
+                "model_quality_evaluated",
+                "release_support",
+            )
+        )
+    ):
+        failures.append("Docker KVM report made an evidence overclaim")
+    if value.get("limitations") != LIMITATIONS:
+        failures.append("Docker KVM limitations changed")
+    sources = value.get("sources")
+    if not isinstance(sources, list) or [item.get("path") for item in sources] != list(SOURCE_PATHS):
+        failures.append("Docker KVM source closure changed")
+    elif any(
+        not isinstance(item.get("bytes"), int)
+        or item.get("bytes", 0) <= 0
+        or SHA256.fullmatch(str(item.get("sha256"))) is None
+        for item in sources
+    ):
+        failures.append("Docker KVM source identity is invalid")
+    return failures
+
+
+def check_report() -> list[str]:
+    if not REPORT_PATH.is_file():
+        return ["Docker KVM topology report is missing"]
+    try:
+        value = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return ["Docker KVM topology report is unreadable"]
+    failures = validate_report(value)
+    if failures:
+        return failures
+    if value["sources"] != source_records(value["source_revision"]):
+        return ["Docker KVM source evidence is stale"]
+    return []
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bootstrap-images", action="store_true")
     parser.add_argument("--force-bootstrap", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--source-revision", default="HEAD")
     parser.add_argument("--toolbox-container", default="fedora-toolbox-44")
     arguments = parser.parse_args()
     try:
         if arguments.force_bootstrap and not arguments.bootstrap_images:
             raise DockerKvmEvidenceError("--force-bootstrap requires --bootstrap-images")
+        if arguments.bootstrap_images and arguments.write:
+            raise DockerKvmEvidenceError("bootstrap and acceptance writes are separate operations")
         tools = vm_support.discover_host_tools(arguments.toolbox_container)
         if arguments.bootstrap_images:
             for target in TARGETS:
@@ -464,6 +832,16 @@ def main() -> int:
         else:
             for target in TARGETS:
                 validate_prepared(target)
+            if arguments.write:
+                revision = git_revision(arguments.source_revision)
+                report = build_report(tools, revision)
+                failures = validate_report(report)
+                if failures:
+                    raise DockerKvmEvidenceError("; ".join(failures))
+                write_atomic(REPORT_PATH, vm_support.pretty_json(report))
+            failures = check_report()
+            if failures:
+                raise DockerKvmEvidenceError("; ".join(failures))
     except (
         DockerKvmEvidenceError,
         vm_support.NativeUbuntuEvidenceError,
@@ -473,7 +851,7 @@ def main() -> int:
     ) as error:
         print(f"Linux Docker KVM evidence failed: {error}", file=sys.stderr)
         return 1
-    print("Prepared Fedora and Ubuntu Docker KVM images validated")
+    print("Fedora and Ubuntu Docker KVM topology evidence validated")
     return 0
 
 

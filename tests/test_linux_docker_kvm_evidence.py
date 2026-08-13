@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from pathlib import Path
 from unittest import mock
 
 from scripts import linux_docker_kvm_evidence as evidence
+from scripts import linux_docker_kvm_guest as guest_probe
 
 
 class LinuxDockerKvmEvidenceTests(unittest.TestCase):
@@ -72,6 +74,62 @@ class LinuxDockerKvmEvidenceTests(unittest.TestCase):
         with mock.patch.object(sys, "argv", ["evidence", "--force-bootstrap"]):
             with contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(evidence.main(), 1)
+
+    def test_report_validator_rejects_missing_targets_and_overclaims(self) -> None:
+        report = {
+            "schema_version": 1,
+            "artifact_id": "linux-docker-kvm-topology",
+            "source_revision": "a" * 40,
+            "task_ids": ["9.2.2.1"],
+            "status": "pass-live-topology-no-inference",
+            "targets": [],
+            "claims": {
+                "docker_engine_directly_tested": True,
+                "live_topology_inspected": True,
+                "native_adapter_live_inference": False,
+                "docker_inference_performed": False,
+                "model_quality_evaluated": False,
+                "release_support": False,
+            },
+            "sources": [
+                {"path": path, "bytes": 1, "sha256": "b" * 64}
+                for path in evidence.SOURCE_PATHS
+            ],
+        }
+        self.assertIn("target closure", "; ".join(evidence.validate_report(report)))
+        report["claims"]["release_support"] = True
+        self.assertIn("overclaim", "; ".join(evidence.validate_report(report)))
+
+    def test_guest_bootstrap_is_exact_and_not_json_serialized(self) -> None:
+        runtime = {
+            "pid": 4242,
+            "start_time_ticks": 99,
+            "executable_sha256": "1" * 64,
+            "cgroup_sha256": "2" * 64,
+        }
+        with tempfile.TemporaryDirectory() as name:
+            path = Path(name) / "bootstrap.bin"
+            with mock.patch.object(guest_probe.os, "chown"):
+                guest_probe.write_bootstrap(runtime, path)
+            frame = path.read_bytes()
+            self.assertEqual(len(frame), 126)
+            self.assertEqual(frame[:8], b"AMDG0001")
+            self.assertNotIn(frame[94:].hex(), json.dumps(runtime))
+
+    def test_guest_cleanup_is_attempted_after_collection_failure(self) -> None:
+        with (
+            mock.patch.object(guest_probe.os, "geteuid", return_value=0),
+            mock.patch.object(guest_probe.sys, "argv", ["probe", "a" * 40]),
+            mock.patch.object(
+                guest_probe,
+                "collect",
+                side_effect=guest_probe.GuestEvidenceError("synthetic"),
+            ),
+            mock.patch.object(guest_probe, "cleanup", return_value={"clean": True}) as cleanup,
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            self.assertEqual(guest_probe.main(), 1)
+        cleanup.assert_called_once_with()
 
 
 if __name__ == "__main__":
