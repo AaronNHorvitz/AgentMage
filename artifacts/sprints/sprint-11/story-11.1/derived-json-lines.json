@@ -1,0 +1,74 @@
+{
+  "artifact_id": "derived-json-lines-export",
+  "claims": {
+    "atomic_create_without_overwrite": true,
+    "bounded_records_and_bytes": true,
+    "deletion_or_tamper_changes_no_canonical_state": true,
+    "deterministic_sorted_regeneration": true,
+    "dual_write_present": false,
+    "external_network_used": false,
+    "identity_and_retained_hashes_only": true,
+    "json_lines_import_api_present": false,
+    "json_lines_startup_authority_rejected": true,
+    "occupied_and_ineligible_destinations_preserved": true,
+    "raw_record_bodies_omitted": true,
+    "raw_record_identifiers_omitted": true,
+    "release_support": false,
+    "versioned_non_executable_header": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The v0.1 derivative is a content-free audit/export view, not a full user-data portability archive.",
+    "No JSON Lines import is implemented; any future import requires a separate explicit validated contract and cannot silently become startup authority.",
+    "Export UI preview, user grant composition, encryption wrapping, crash campaign, canary campaign, cross-platform execution, packaging, and release acceptance remain later work."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "85fa1c25743a96f57cdd0248d04e2c4a6d9ceb3a",
+  "sources": [
+    {
+      "bytes": 148974,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "b3df716535948fa0c3819d804b1e939f5c96c2b337fa8deb3fbd237add2cbd3c"
+    },
+    {
+      "bytes": 16389,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "e93363505c820941810e2006971f66b152707e753b729a0f117915a7721b4e6e"
+    },
+    {
+      "bytes": 8751,
+      "path": "scripts/derived_export_evidence.py",
+      "sha256": "f6714a0584b3584bf4326b3b6cbe82cb83ff15edc0c62d6a6521e5a5c84c091e"
+    },
+    {
+      "bytes": 3035,
+      "path": "tests/test_derived_export_evidence.py",
+      "sha256": "02b45d4c38ee9da20d220828252c1b3349a3660a36332a9607cc3d2dcd37f53e"
+    }
+  ],
+  "status": "pass-one-way-derived-export",
+  "task_ids": [
+    "11.1.1.7"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
+      "exit_code": 0,
+      "expected_marker_sha256": "e10ef256f667e891991282f899aca954c0d3b1033e31c23b0c03c8cd0512e072",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "4f69444a38540d8d3e2df1ae4f53cda6a65a8b0748794bf95c9d0c0e72377695",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    }
+  ]
+}
