@@ -1,0 +1,589 @@
+{
+  "artifact_id": "linux-native-llama-runtime-package",
+  "authority": {
+    "credential": false,
+    "grant": false,
+    "network": false,
+    "tool": false,
+    "workspace": false
+  },
+  "deterministic_rebuild_count": 2,
+  "dynamic_libraries": [
+    {
+      "destination": "lib/libggml-base.so.0.19.0",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "70fb27338be2ed53614ec518abebfc43bf3c0965887b7c865011f23db3a4ed69",
+      "size_bytes": 910784
+    },
+    {
+      "destination": "lib/libggml-cpu-alderlake.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "066906c06e12fa6c8a72a3b87d7be76137dd8ff687e559fc45713c108c367613",
+      "size_bytes": 1141184
+    },
+    {
+      "destination": "lib/libggml-cpu-cannonlake.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "1cff542b64e417fcf1f71ed7177e12eb4e7c1022fa959525d340d212cbca0cbf",
+      "size_bytes": 1286176
+    },
+    {
+      "destination": "lib/libggml-cpu-cascadelake.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "a742e3b1576a6d9c16c50fcb4e045af880fb49634356fff1c4c1053433162fa5",
+      "size_bytes": 1282080
+    },
+    {
+      "destination": "lib/libggml-cpu-cooperlake.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "4ed30298f402d1b3f2cf3c6995c34c2f0b90ead9834294f151a93b032e004d87",
+      "size_bytes": 1282144
+    },
+    {
+      "destination": "lib/libggml-cpu-haswell.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "155eb9bbd263822346f33d1f0612dc69b3269ee2fa18e9b4dbf637e1ab240dae",
+      "size_bytes": 1141184
+    },
+    {
+      "destination": "lib/libggml-cpu-icelake.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "282a2f11091e9aacd7efda3cd33e0cc92e53ddf5e0e90d15b2393b6196d039d6",
+      "size_bytes": 1282080
+    },
+    {
+      "destination": "lib/libggml-cpu-ivybridge.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "abd957ac6f41d0ba22682602e063deea3861d28088934135097f0043a2ae1e08",
+      "size_bytes": 1094656
+    },
+    {
+      "destination": "lib/libggml-cpu-piledriver.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "6b4e6f00f936791a0b5e66b7c8a8a0fb2a6cd3b0150acfb14dc5dc11757407e1",
+      "size_bytes": 1090560
+    },
+    {
+      "destination": "lib/libggml-cpu-sandybridge.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "fd8d67a1ea8f2e37ccd3a1308731af903d698d6069980711e3483909f14aa7f1",
+      "size_bytes": 1081248
+    },
+    {
+      "destination": "lib/libggml-cpu-sapphirerapids.so",
+      "needed": [
+        "ld-linux-x86-64.so.2",
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "d9092412e44f9d2ec07432c0a9110065863ac8d01d972df6c0e9a06d3963021f",
+      "size_bytes": 1548480
+    },
+    {
+      "destination": "lib/libggml-cpu-skylakex.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "d5256e9738827e0c1d4f13107e2d284950e117e303cbb598649abd399a30415d",
+      "size_bytes": 1286176
+    },
+    {
+      "destination": "lib/libggml-cpu-sse42.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "cdbca7612d26f574ecc696a142701b9d13b7c947834e7785df5eee34c1511630",
+      "size_bytes": 882048
+    },
+    {
+      "destination": "lib/libggml-cpu-x64.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "e0027ee90105a950198866d9704dc2e8d5e63b4fb52deaf1bced671b8996700b",
+      "size_bytes": 878128
+    },
+    {
+      "destination": "lib/libggml-cpu-zen4.so",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "ce81e04328400f170dc973304a996bfe49e1eef09a7d516d327c822e6acdbf99",
+      "size_bytes": 1282144
+    },
+    {
+      "destination": "lib/libggml.so.0.19.0",
+      "needed": [
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libstdc++.so.6"
+      ],
+      "sha256": "ffd6a736ad58e2d9407ed427252520ffbd4bca8dd5de467ecb2bd446a7a3d75b",
+      "size_bytes": 54936
+    },
+    {
+      "destination": "lib/libllama.so.0.0.10333",
+      "needed": [
+        "ld-linux-x86-64.so.2",
+        "libc.so.6",
+        "libgcc_s.so.1",
+        "libggml-base.so.0",
+        "libggml.so.0",
+        "libm.so.6",
+        "libstdc++.so.6"
+      ],
+      "sha256": "22c4f9c4e36bcdb75d134f703cb2b5968c40b6a6a0a7c0f59a455b721027db02",
+      "size_bytes": 4165728
+    }
+  ],
+  "enabled_models": 0,
+  "host": {
+    "architecture": "x86_64",
+    "distribution": "fedora",
+    "version": "44"
+  },
+  "inference_started": false,
+  "limitations": [
+    "The package is a pinned CPU-library input for the inactive AgentMage adapter; no model is enabled and inference is not implemented.",
+    "The evidence builds on native Fedora 44 x86_64; clean native Ubuntu package execution remains owned by Sub-task 9.2.2.1.",
+    "Vulkan, CUDA, Docker Model Runner, model-family codecs, LocalModelRuntime, streaming, and cancellation are outside this sub-task.",
+    "The runtime package is not a supported release and carries no model, platform, performance, or release approval."
+  ],
+  "model_store": {
+    "directory_enumeration": false,
+    "directory_mode": 448,
+    "input": "kernel-held-read-only-model-descriptors",
+    "path_input": false,
+    "replacement": "refuse-existing-or-drifted-identity",
+    "required_owner": "invoking-standard-user",
+    "runtime_write": false
+  },
+  "network_used": false,
+  "package": {
+    "bytes": 7754803,
+    "file_count": 28,
+    "members": [
+      {
+        "mode": 448,
+        "name": "runtimes",
+        "target": null,
+        "type": "directory"
+      },
+      {
+        "mode": 365,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64",
+        "target": null,
+        "type": "directory"
+      },
+      {
+        "mode": 365,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib",
+        "target": null,
+        "type": "directory"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/runtime-manifest.json",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/LICENSE.llama.cpp",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-base.so",
+        "target": "libggml-base.so.0",
+        "type": "symlink"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-base.so.0",
+        "target": "libggml-base.so.0.19.0",
+        "type": "symlink"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-base.so.0.19.0",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-alderlake.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-cannonlake.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-cascadelake.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-cooperlake.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-haswell.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-icelake.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-ivybridge.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-piledriver.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-sandybridge.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-sapphirerapids.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-skylakex.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-sse42.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-x64.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml-cpu-zen4.so",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml.so",
+        "target": "libggml.so.0",
+        "type": "symlink"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml.so.0",
+        "target": "libggml.so.0.19.0",
+        "type": "symlink"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libggml.so.0.19.0",
+        "target": null,
+        "type": "file"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libllama.so",
+        "target": "libllama.so.0",
+        "type": "symlink"
+      },
+      {
+        "mode": 511,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libllama.so.0",
+        "target": "libllama.so.0.0.10333",
+        "type": "symlink"
+      },
+      {
+        "mode": 292,
+        "name": "runtimes/llama-cpp-b10333-cpu-linux-x86_64/lib/libllama.so.0.0.10333",
+        "target": null,
+        "type": "file"
+      }
+    ],
+    "package_id": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "sha256": "f746577fb74de40527f5e00417f9207ca4118f4fefac9de8ac6896f520ee2bab"
+  },
+  "platform_status": {
+    "fedora_44_x86_64": "verified-native-package-build",
+    "ubuntu_26_04_x86_64": "not-run-this-subtask"
+  },
+  "process_boundary": {
+    "accepted_operation": "self-check-only",
+    "authority_inputs": [],
+    "component_id": "platform-linux-native-inference",
+    "contract": "authenticated-local-endpoint-v1",
+    "enabled_models": 0,
+    "inference_available": false,
+    "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+    "network_listener": false,
+    "process_boundary_version": 2
+  },
+  "profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+  "readelf": {
+    "executable_sha256": "20f4971b177980026114be33ed5ce3814aeeac3c12ba8a329b9c2ef3b42cf20f",
+    "path_class": "maintainer-host-tool",
+    "version": "GNU readelf version 2.46.1-1.fc44"
+  },
+  "release_claim": "none",
+  "resource_ceiling": {
+    "cpu_percent": 3200,
+    "memory_bytes": 68719476736,
+    "output_bytes": 16777216,
+    "parallel_slots": 1,
+    "runtime_seconds": 3600,
+    "swap_bytes": 0,
+    "tasks": 64
+  },
+  "retained_regular_library_count": 17,
+  "schema_version": 1,
+  "source_archive": {
+    "bytes": 32521550,
+    "name": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
+    "sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5"
+  },
+  "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
+  "sources": [
+    {
+      "bytes": 13033,
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "bytes": 1442,
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "bytes": 35082,
+      "path": "RUNTIME-BOUNDARIES.md",
+      "sha256": "d7bdfdebe299081013fc674f9390842a560e7315b4406023f8023b4f5192fcb0"
+    },
+    {
+      "bytes": 4115,
+      "path": "architecture/build-contract.json",
+      "sha256": "18874f1e5ff200a8a002752b712ea6e1f9ad46f9901b6a45220d1f290441ec80"
+    },
+    {
+      "bytes": 1979,
+      "path": "architecture/component-inventory-policy.json",
+      "sha256": "15d17fff25d7437934c82c8086596609a3316e63081a9db172c0e8aa69600879"
+    },
+    {
+      "bytes": 4868,
+      "path": "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
+      "sha256": "0b8050650a7597eaf3b0e5a77c0436055c6d025569e2c84fd52f3ba428f89c53"
+    },
+    {
+      "bytes": 5428,
+      "path": "docs/decisions/0029-closed-linux-native-llama-runtime-package.md",
+      "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
+    },
+    {
+      "bytes": 8057,
+      "path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
+      "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
+    },
+    {
+      "bytes": 19930,
+      "path": "package.json",
+      "sha256": "7a252ade783d5f004a2d195648955b714f803d4b177cdbd4de52fac3d3904e6b"
+    },
+    {
+      "bytes": 441,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+    },
+    {
+      "bytes": 1301,
+      "path": "platforms/linux-inference/README.md",
+      "sha256": "5dd321f0f0b757182921d409c4db99da0e71f6d40da30c770c68df8838136e80"
+    },
+    {
+      "bytes": 5493,
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "99577980a6d6c4ee7c72d7ac74befc26fa6c2827f8838db85009599a98ce03e6"
+    },
+    {
+      "bytes": 574,
+      "path": "platforms/linux-inference/src/main.rs",
+      "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+    },
+    {
+      "bytes": 16731,
+      "path": "platforms/linux-inference/src/native_runtime.rs",
+      "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
+    },
+    {
+      "bytes": 1192,
+      "path": "platforms/linux-inference/tests/process_boundary.rs",
+      "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
+    },
+    {
+      "bytes": 14060,
+      "path": "scripts/build_contract.py",
+      "sha256": "2d595fda75316431894f6c899c7534409ceedd20e7a75e31e7b3c84d02aea539"
+    },
+    {
+      "bytes": 22949,
+      "path": "scripts/component_inventory.py",
+      "sha256": "87aa197a9e4e4234315bdc96b2b5362194e4e5f2ae41aa60c47d1ea9d7e3be50"
+    },
+    {
+      "bytes": 20159,
+      "path": "scripts/linux_native_runtime_evidence.py",
+      "sha256": "0971700d608e6815744875001f543ce58438bc4dffb89b0156cc518f744e3035"
+    },
+    {
+      "bytes": 24644,
+      "path": "scripts/native_llama_runtime.py",
+      "sha256": "b9881b73394e5c5e7e3bc39f31fa0c06817cdcc4274d66e2ab126c6d8c4ca58e"
+    },
+    {
+      "bytes": 4962,
+      "path": "tests/test_component_inventory.py",
+      "sha256": "0a8deb0ae90b5e552e0a6421533369db1646ab5e9dd298567803d72f40cc033e"
+    },
+    {
+      "bytes": 6027,
+      "path": "tests/test_linux_native_runtime_evidence.py",
+      "sha256": "74642ca927e84694d821233b77b2430de527b785c63c1b408e225a8d89a3167f"
+    },
+    {
+      "bytes": 6237,
+      "path": "tests/test_native_llama_runtime.py",
+      "sha256": "b4a60f48390c42962f796b66ea93d96c078462e7461139d283b6d60d14326e79"
+    }
+  ],
+  "status": "pass-fedora-native-package-boundary",
+  "task_ids": [
+    "9.2.1.1"
+  ],
+  "upstream_entrypoints_included": []
+}
