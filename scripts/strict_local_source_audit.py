@@ -301,6 +301,28 @@ def npm_lock_runtime_packages() -> set[str]:
     return set(runtime) | set(optional)
 
 
+def audit_npm_runtime_packages(
+    policy: dict[str, Any],
+    observed: set[str] | None = None,
+    locked: set[str] | None = None,
+) -> list[str]:
+    """Evaluate the exact VS Code runtime-package closure."""
+
+    observed_packages = npm_runtime_packages() if observed is None else observed
+    locked_packages = npm_lock_runtime_packages() if locked is None else locked
+    failures: list[str] = []
+    if set(policy["denied_npm_runtime_packages"]) & observed_packages:
+        failures.append("denied network-capable npm runtime dependency is present")
+    if observed_packages:
+        failures.append("VS Code shell has undeclared runtime dependencies")
+    if (
+        sorted(observed_packages) != policy["vscode_manifest_profile"]["runtime_packages"]
+        or observed_packages != locked_packages
+    ):
+        failures.append("VS Code runtime package closure changed")
+    return failures
+
+
 def audit_cargo_manifests(
     policy: dict[str, Any],
     content_overrides: dict[str, bytes] | None = None,
@@ -381,12 +403,7 @@ def audit(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
         failures.append("denied network-capable Rust dependency is present")
     if observed_rust != set(policy["approved_cargo_packages"]):
         failures.append("reviewed Cargo package closure changed")
-    denied_npm = set(policy["denied_npm_runtime_packages"])
-    observed_npm = npm_runtime_packages()
-    if denied_npm & observed_npm:
-        failures.append("denied network-capable npm runtime dependency is present")
-    if observed_npm:
-        failures.append("VS Code shell has undeclared runtime dependencies")
+    failures.extend(audit_npm_runtime_packages(policy))
     failures.extend(audit_vscode_manifest(policy))
     return sorted(set(failures))
 

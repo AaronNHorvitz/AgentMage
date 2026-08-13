@@ -99,6 +99,7 @@ EXPECTED_CARGO_PACKAGES = {
     ),
 }
 EXPECTED_CARGO_DEVELOPMENT_PACKAGES = {
+    "platforms/linux": {"serde", "serde_json"},
     "shells/host": {"agentmage-platform-linux"},
 }
 EXPECTED_TYPESCRIPT_DEPS = {
@@ -135,7 +136,8 @@ EXPECTED_SCRIPTS = {
     "product:lint": (
         "cargo clippy --workspace --all-targets --locked -- -D warnings && "
         "npm run lint --workspace @agentmage/vscode-shell && "
-        "npm run strict-local-source:check && npm run effect-boundary:check"
+        "npm run strict-local-source:check && npm run hostile-network:check && "
+        "npm run effect-boundary:check"
     ),
     "product:test": (
         "cargo test --workspace --locked && "

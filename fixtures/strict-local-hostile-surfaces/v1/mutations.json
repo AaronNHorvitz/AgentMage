@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "content": "fetch(telemetryEndpoint);",
+      "expected_failures": [
+        "javascript-network-api found outside its closed allowlist: shells/vscode/src/injected-telemetry.ts"
+      ],
+      "id": "telemetry-upload",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-telemetry.ts"
+    },
+    {
+      "content": "import \"node:https\";",
+      "expected_failures": [
+        "javascript-network-api found outside its closed allowlist: shells/vscode/src/injected-crash-upload.ts"
+      ],
+      "id": "crash-upload",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-crash-upload.ts"
+    },
+    {
+      "content": "@import url('https://fonts.example.invalid/style.css');",
+      "expected_failures": [
+        "remote-web-asset found outside its closed allowlist: shells/vscode/src/injected-remote-font.css",
+        "undeclared external URI in product source: shells/vscode/src/injected-remote-font.css"
+      ],
+      "id": "remote-font-or-asset",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-remote-font.css"
+    },
+    {
+      "content": "new WebSocket('wss://marketplace.example.invalid/agent');",
+      "expected_failures": [
+        "javascript-network-api found outside its closed allowlist: shells/vscode/src/injected-marketplace.ts",
+        "undeclared external URI in product source: shells/vscode/src/injected-marketplace.ts"
+      ],
+      "id": "marketplace-contact",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-marketplace.ts"
+    },
+    {
+      "content": "fn injected_update() { let _ = Command::new(\"curl\"); }",
+      "expected_failures": [
+        "external-network-command found outside its closed allowlist: shells/host/src/injected_update.rs"
+      ],
+      "id": "update-download",
+      "kind": "source",
+      "target": "shells/host/src/injected_update.rs"
+    },
+    {
+      "content": "const proxy = HTTP_PROXY;",
+      "expected_failures": [
+        "ambient-proxy-or-dns-override found outside its closed allowlist: shells/vscode/src/injected-proxy.ts"
+      ],
+      "id": "ambient-proxy",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-proxy.ts"
+    },
+    {
+      "content": "import { createConnection } from \"node:net\"; createConnection({ host: \"127.0.0.1\", port: 12434 });",
+      "expected_failures": [
+        "javascript-local-ipc-api found outside its closed allowlist: shells/vscode/src/injected-loopback.ts"
+      ],
+      "id": "hostile-loopback-client",
+      "kind": "source",
+      "target": "shells/vscode/src/injected-loopback.ts"
+    },
+    {
+      "expected_failures": [
+        "VS Code runtime package closure changed",
+        "VS Code shell has undeclared runtime dependencies",
+        "denied network-capable npm runtime dependency is present"
+      ],
+      "id": "hostile-loopback-runtime-dependency",
+      "kind": "npm_runtime_dependency",
+      "package": "socket.io-client"
+    }
+  ],
+  "schema_version": 1
+}

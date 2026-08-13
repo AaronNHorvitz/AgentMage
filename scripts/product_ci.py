@@ -53,6 +53,7 @@ EXPECTED_LANES = {
         ],
         ["npm", "run", "lint", "--workspace", "@agentmage/vscode-shell"],
         ["npm", "run", "strict-local-source:check"],
+        ["npm", "run", "hostile-network:check"],
     ],
     "build": [
         ["cargo", "build", "--workspace", "--all-targets", "--locked"],
