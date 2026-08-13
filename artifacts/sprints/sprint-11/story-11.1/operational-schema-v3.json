@@ -1,0 +1,141 @@
+{
+  "artifact_id": "encrypted-operational-schema-v3",
+  "claims": {
+    "all_migrations_hash_bound": true,
+    "encrypted_v1_through_v3_executed": true,
+    "encrypted_v2_to_v3_executed": true,
+    "existing_v2_retention_event_initialized": true,
+    "existing_v2_retention_preserved": true,
+    "external_network_used": false,
+    "foreign_key_and_closed_value_constraints_executed": true,
+    "historical_v2_artifact_rewritten": false,
+    "partial_alterations_rejected": true,
+    "release_support": false,
+    "version_three_failure_rollback_executed": true,
+    "version_two_failure_rollback_executed": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This artifact proves the current encrypted schema and migration chain; typed production writes for every normalized domain table and full domain restart reconstruction remain later work.",
+    "The historical operational-schema-v2 artifact remains immutable and describes only its original source revision.",
+    "Cross-process crash injection, live platform key services, cross-platform execution, packaging, and release acceptance remain later gates."
+  ],
+  "migration_sha256": {
+    "0002-domain-schema.sql": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2",
+    "0003-retention-lifecycle.sql": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
+  },
+  "private_user_data_used": false,
+  "schema_profile": {
+    "existing_authority_table_count": 10,
+    "history_versions": [
+      1,
+      2,
+      3
+    ],
+    "migration_1_bytes_preserved": true,
+    "migration_2_bytes_preserved": true,
+    "schema_version": 3,
+    "total_added_index_count": 10,
+    "total_table_count": 20,
+    "upgrade_paths": [
+      "encrypted-v1-through-v3",
+      "encrypted-v2-to-v3"
+    ],
+    "v2_domain_table_count": 9,
+    "v2_domain_tables": [
+      "actions",
+      "decisions",
+      "evidence",
+      "files",
+      "objectives",
+      "plans",
+      "retention",
+      "sessions",
+      "tasks"
+    ],
+    "v2_index_count": 9,
+    "v2_indexes": [
+      "actions_task_idx",
+      "actions_transaction_idx",
+      "decisions_task_idx",
+      "evidence_task_idx",
+      "files_session_idx",
+      "objectives_session_idx",
+      "plans_objective_idx",
+      "retention_disposition_idx",
+      "tasks_plan_idx"
+    ],
+    "v3_index_count": 1,
+    "v3_indexes": [
+      "retention_hold_expiry_idx"
+    ],
+    "v3_lifecycle_table_count": 1,
+    "v3_lifecycle_tables": [
+      "retention_events"
+    ]
+  },
+  "schema_version": 1,
+  "source_revision": "c12759b3a731ae287547627f82ed8413c333e006",
+  "sources": [
+    {
+      "bytes": 16389,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "e93363505c820941810e2006971f66b152707e753b729a0f117915a7721b4e6e"
+    },
+    {
+      "bytes": 5474,
+      "path": "kernel/engine/migrations/operational-store/0002-domain-schema.sql",
+      "sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2"
+    },
+    {
+      "bytes": 1431,
+      "path": "kernel/engine/migrations/operational-store/0003-retention-lifecycle.sql",
+      "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
+    },
+    {
+      "bytes": 154064,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "b10e0acdeb74086840c05943553acd101649e13483d3529b76297ccde2836255"
+    },
+    {
+      "bytes": 11874,
+      "path": "scripts/operational_schema_v3_evidence.py",
+      "sha256": "1fcdb86a27a8ef5da2ca4e15d2d76835a70f7d0d34af2b98b736919a27ad2561"
+    },
+    {
+      "bytes": 4112,
+      "path": "tests/test_operational_schema_v3_evidence.py",
+      "sha256": "282e1182061e045ffb01477177d2acf9b08a396f2f4ce63380cadc4090361aff"
+    }
+  ],
+  "status": "pass-versioned-schema-and-migration-chain",
+  "task_ids": [
+    "11.1.2.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
+      "exit_code": 0,
+      "expected_marker_sha256": "8cead6160380e03c0fabe5245ea639d5f485364d8ea63dd7658bdc19e8a51a03",
+      "status": "pass"
+    },
+    {
+      "command_id": "f8f6d91598b96ddb2ea33994c732947394d3f4956966c145e17bef615b849199",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
