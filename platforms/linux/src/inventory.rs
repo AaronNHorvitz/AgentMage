@@ -23,6 +23,8 @@ pub const MAX_INVENTORY_PROCESSES: usize = 128;
 pub const MAX_INVENTORY_SOCKETS: usize = 4096;
 /// Maximum writable descriptors retained in one session snapshot.
 pub const MAX_INVENTORY_WRITABLES: usize = 4096;
+/// Maximum number of exact listeners declared for one strict-local session.
+pub const MAX_DECLARED_LISTENERS: usize = 32;
 
 const MAX_PROC_RECORD_BYTES: u64 = 8 * 1024 * 1024;
 
@@ -287,6 +289,299 @@ impl LinuxSessionInventory {
     pub fn writable_descriptors(&self) -> &[LinuxWritableObservation] {
         &self.writable_descriptors
     }
+}
+
+/// One exact listener allowed by a strict-local Linux session manifest.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LinuxDeclaredListener {
+    component: NetworkComponent,
+    protocol: LinuxSocketProtocol,
+    local_destination: NetworkDestinationClass,
+    local_port: Option<u16>,
+    endpoint_sha256: Option<[u8; 32]>,
+}
+
+impl LinuxDeclaredListener {
+    /// Declares one exact loopback TCP listener owned by an approved component.
+    pub fn loopback_tcp(
+        component: NetworkComponent,
+        protocol: LinuxSocketProtocol,
+        port: u16,
+    ) -> Result<Self, LinuxListenerBoundaryError> {
+        if !listener_component_allowed(component)
+            || !matches!(
+                protocol,
+                LinuxSocketProtocol::Tcp4 | LinuxSocketProtocol::Tcp6
+            )
+            || port == 0
+        {
+            return Err(listener_error(
+                LinuxListenerBoundaryErrorKind::InvalidDeclaration,
+            ));
+        }
+        Ok(Self {
+            component,
+            protocol,
+            local_destination: NetworkDestinationClass::Loopback,
+            local_port: Some(port),
+            endpoint_sha256: None,
+        })
+    }
+
+    /// Declares one exact named Unix-stream listener owned by an approved component.
+    pub fn unix_stream(
+        component: NetworkComponent,
+        endpoint_sha256: [u8; 32],
+    ) -> Result<Self, LinuxListenerBoundaryError> {
+        if !listener_component_allowed(component) || endpoint_sha256 == [0; 32] {
+            return Err(listener_error(
+                LinuxListenerBoundaryErrorKind::InvalidDeclaration,
+            ));
+        }
+        Ok(Self {
+            component,
+            protocol: LinuxSocketProtocol::UnixStream,
+            local_destination: NetworkDestinationClass::LocalSocket,
+            local_port: None,
+            endpoint_sha256: Some(endpoint_sha256),
+        })
+    }
+
+    /// Returns the declared owner component.
+    #[must_use]
+    pub const fn component(&self) -> NetworkComponent {
+        self.component
+    }
+
+    /// Returns the declared listener protocol.
+    #[must_use]
+    pub const fn protocol(&self) -> LinuxSocketProtocol {
+        self.protocol
+    }
+}
+
+impl fmt::Debug for LinuxDeclaredListener {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxDeclaredListener")
+            .field("component", &self.component)
+            .field("protocol", &self.protocol)
+            .field("local_destination", &self.local_destination)
+            .field("local_port", &self.local_port)
+            .field(
+                "endpoint_identity",
+                &self.endpoint_sha256.map(|_| "sha256:[REDACTED]"),
+            )
+            .finish()
+    }
+}
+
+/// Stable refusal class for strict-local listener reconciliation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LinuxListenerBoundaryErrorKind {
+    /// A declaration used an unapproved component, protocol, port, or identity.
+    InvalidDeclaration,
+    /// The declared-listener set exceeded its closed bound.
+    ResourceLimitExceeded,
+    /// The same exact listener was declared more than once.
+    DuplicateDeclaration,
+    /// An observed listener did not belong to an inventoried process.
+    UnknownProcess,
+    /// A listener used an unspecified, LAN, container, external, or unknown address class.
+    UnsafeDestination,
+    /// A bound socket existed without an exact supported listener declaration.
+    UndeclaredBinding,
+    /// A socket state could not be proven non-listening.
+    IndeterminateSocketState,
+    /// A locally scoped listener was absent from the exact manifest.
+    UndeclaredListener,
+    /// One declared listener was absent from the session inventory.
+    MissingDeclaredListener,
+    /// More than one distinct socket object matched one declaration.
+    DuplicateObservedListener,
+}
+
+/// Content-free strict-local listener refusal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LinuxListenerBoundaryError {
+    kind: LinuxListenerBoundaryErrorKind,
+}
+
+impl LinuxListenerBoundaryError {
+    /// Returns the stable refusal class.
+    #[must_use]
+    pub const fn kind(self) -> LinuxListenerBoundaryErrorKind {
+        self.kind
+    }
+}
+
+impl fmt::Display for LinuxListenerBoundaryError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self.kind {
+            LinuxListenerBoundaryErrorKind::InvalidDeclaration => {
+                "strict_local_listener.invalid_declaration"
+            }
+            LinuxListenerBoundaryErrorKind::ResourceLimitExceeded => {
+                "strict_local_listener.resource_limit"
+            }
+            LinuxListenerBoundaryErrorKind::DuplicateDeclaration => {
+                "strict_local_listener.duplicate_declaration"
+            }
+            LinuxListenerBoundaryErrorKind::UnknownProcess => {
+                "strict_local_listener.unknown_process"
+            }
+            LinuxListenerBoundaryErrorKind::UnsafeDestination => {
+                "strict_local_listener.unsafe_destination"
+            }
+            LinuxListenerBoundaryErrorKind::UndeclaredBinding => {
+                "strict_local_listener.undeclared_binding"
+            }
+            LinuxListenerBoundaryErrorKind::IndeterminateSocketState => {
+                "strict_local_listener.indeterminate_socket_state"
+            }
+            LinuxListenerBoundaryErrorKind::UndeclaredListener => {
+                "strict_local_listener.undeclared"
+            }
+            LinuxListenerBoundaryErrorKind::MissingDeclaredListener => {
+                "strict_local_listener.missing_declared"
+            }
+            LinuxListenerBoundaryErrorKind::DuplicateObservedListener => {
+                "strict_local_listener.duplicate_observed"
+            }
+        })
+    }
+}
+
+impl std::error::Error for LinuxListenerBoundaryError {}
+
+/// Successful exact listener reconciliation without retaining addresses or paths.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LinuxListenerBoundaryReceipt {
+    declared_listeners: usize,
+    observed_listeners: usize,
+}
+
+impl LinuxListenerBoundaryReceipt {
+    /// Returns the number of exact manifest declarations.
+    #[must_use]
+    pub const fn declared_listeners(self) -> usize {
+        self.declared_listeners
+    }
+
+    /// Returns the number of distinct matching socket objects.
+    #[must_use]
+    pub const fn observed_listeners(self) -> usize {
+        self.observed_listeners
+    }
+}
+
+/// Exact fail-closed listener policy for one Linux strict-local session.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LinuxSessionListenerPolicy {
+    declared: Vec<LinuxDeclaredListener>,
+}
+
+impl LinuxSessionListenerPolicy {
+    /// Constructs one bounded unique declaration set.
+    pub fn new(declared: &[LinuxDeclaredListener]) -> Result<Self, LinuxListenerBoundaryError> {
+        if declared.len() > MAX_DECLARED_LISTENERS {
+            return Err(listener_error(
+                LinuxListenerBoundaryErrorKind::ResourceLimitExceeded,
+            ));
+        }
+        let mut declared = declared.to_vec();
+        declared.sort_unstable();
+        if declared.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err(listener_error(
+                LinuxListenerBoundaryErrorKind::DuplicateDeclaration,
+            ));
+        }
+        Ok(Self { declared })
+    }
+
+    /// Requires every observed listener to match one declaration exactly and vice versa.
+    pub fn reconcile(
+        &self,
+        inventory: &LinuxSessionInventory,
+    ) -> Result<LinuxListenerBoundaryReceipt, LinuxListenerBoundaryError> {
+        let processes = inventory
+            .processes
+            .iter()
+            .map(|process| (process.pid, process.component))
+            .collect::<BTreeMap<_, _>>();
+        let mut matched = vec![None; self.declared.len()];
+        let mut observed_objects = BTreeSet::new();
+        for socket in &inventory.sockets {
+            match socket.state {
+                LinuxSocketState::Connected => continue,
+                LinuxSocketState::Bound => {
+                    return Err(listener_error(
+                        LinuxListenerBoundaryErrorKind::UndeclaredBinding,
+                    ));
+                }
+                LinuxSocketState::Other => {
+                    return Err(listener_error(
+                        LinuxListenerBoundaryErrorKind::IndeterminateSocketState,
+                    ));
+                }
+                LinuxSocketState::Listening => {}
+            }
+            if !observed_objects.insert((socket.pid, socket.inode)) {
+                continue;
+            }
+            let component = processes
+                .get(&socket.pid)
+                .copied()
+                .ok_or_else(|| listener_error(LinuxListenerBoundaryErrorKind::UnknownProcess))?;
+            if !matches!(
+                socket.local_destination,
+                NetworkDestinationClass::Loopback | NetworkDestinationClass::LocalSocket
+            ) {
+                return Err(listener_error(
+                    LinuxListenerBoundaryErrorKind::UnsafeDestination,
+                ));
+            }
+            let observed = LinuxDeclaredListener {
+                component,
+                protocol: socket.protocol,
+                local_destination: socket.local_destination,
+                local_port: socket.local_port,
+                endpoint_sha256: socket.endpoint_sha256,
+            };
+            let index = self
+                .declared
+                .binary_search(&observed)
+                .map_err(|_| listener_error(LinuxListenerBoundaryErrorKind::UndeclaredListener))?;
+            if matched[index].replace((socket.pid, socket.inode)).is_some() {
+                return Err(listener_error(
+                    LinuxListenerBoundaryErrorKind::DuplicateObservedListener,
+                ));
+            }
+        }
+        if matched.iter().any(Option::is_none) {
+            return Err(listener_error(
+                LinuxListenerBoundaryErrorKind::MissingDeclaredListener,
+            ));
+        }
+        Ok(LinuxListenerBoundaryReceipt {
+            declared_listeners: self.declared.len(),
+            observed_listeners: observed_objects.len(),
+        })
+    }
+}
+
+const fn listener_component_allowed(component: NetworkComponent) -> bool {
+    matches!(
+        component,
+        NetworkComponent::NativeBridge
+            | NetworkComponent::Kernel
+            | NetworkComponent::KernelNativeInferenceAdapter
+            | NetworkComponent::KernelDockerInferenceAdapter
+    )
+}
+
+const fn listener_error(kind: LinuxListenerBoundaryErrorKind) -> LinuxListenerBoundaryError {
+    LinuxListenerBoundaryError { kind }
 }
 
 /// Stable Linux inventory failure class.
@@ -807,12 +1102,344 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use super::{
-        LinuxInventoryErrorKind, LinuxInventoryTarget, LinuxSessionInventoryCollector,
-        LinuxSocketProtocol, LinuxSocketState, LinuxWritableTargetClass, descriptor_is_writable,
-        parse_internet_table, parse_ip_port, parse_unix_table, pidfd_is_unsupported,
+        LinuxDeclaredListener, LinuxInventoryErrorKind, LinuxInventoryTarget,
+        LinuxListenerBoundaryErrorKind, LinuxProcessIdentityBinding, LinuxSessionInventory,
+        LinuxSessionInventoryCollector, LinuxSessionListenerPolicy, LinuxSessionProcessObservation,
+        LinuxSocketObservation, LinuxSocketProtocol, LinuxSocketState, LinuxWritableTargetClass,
+        descriptor_is_writable, parse_internet_table, parse_ip_port, parse_unix_table,
+        pidfd_is_unsupported,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+    fn synthetic_process(pid: u32, component: NetworkComponent) -> LinuxSessionProcessObservation {
+        LinuxSessionProcessObservation {
+            pid,
+            parent_pid: 1,
+            uid: 1000,
+            component,
+            start_time_ticks: 1,
+            identity_binding: LinuxProcessIdentityBinding::PidFdAndStartTime,
+            executable_sha256: [1; 32],
+        }
+    }
+
+    fn synthetic_listener(
+        pid: u32,
+        descriptor: u32,
+        inode: u64,
+        protocol: LinuxSocketProtocol,
+        destination: NetworkDestinationClass,
+        port: Option<u16>,
+        endpoint_sha256: Option<[u8; 32]>,
+    ) -> LinuxSocketObservation {
+        LinuxSocketObservation {
+            pid,
+            descriptor,
+            inode,
+            protocol,
+            state: LinuxSocketState::Listening,
+            local_destination: destination,
+            remote_destination: NetworkDestinationClass::Unspecified,
+            local_port: port,
+            remote_port: port.map(|_| 0),
+            endpoint_sha256,
+        }
+    }
+
+    fn synthetic_inventory(
+        processes: Vec<LinuxSessionProcessObservation>,
+        sockets: Vec<LinuxSocketObservation>,
+    ) -> LinuxSessionInventory {
+        LinuxSessionInventory {
+            processes,
+            sockets,
+            writable_descriptors: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn strict_local_listener_exact_loopback_and_unix_reconcile_once() {
+        let declarations = [
+            LinuxDeclaredListener::loopback_tcp(
+                NetworkComponent::KernelDockerInferenceAdapter,
+                LinuxSocketProtocol::Tcp4,
+                12434,
+            )
+            .expect("loopback declaration"),
+            LinuxDeclaredListener::unix_stream(NetworkComponent::NativeBridge, [7; 32])
+                .expect("Unix declaration"),
+        ];
+        let policy = LinuxSessionListenerPolicy::new(&declarations).expect("listener policy");
+        let inventory = synthetic_inventory(
+            vec![
+                synthetic_process(10, NetworkComponent::KernelDockerInferenceAdapter),
+                synthetic_process(11, NetworkComponent::NativeBridge),
+            ],
+            vec![
+                synthetic_listener(
+                    10,
+                    3,
+                    100,
+                    LinuxSocketProtocol::Tcp4,
+                    NetworkDestinationClass::Loopback,
+                    Some(12434),
+                    None,
+                ),
+                synthetic_listener(
+                    10,
+                    4,
+                    100,
+                    LinuxSocketProtocol::Tcp4,
+                    NetworkDestinationClass::Loopback,
+                    Some(12434),
+                    None,
+                ),
+                synthetic_listener(
+                    11,
+                    5,
+                    101,
+                    LinuxSocketProtocol::UnixStream,
+                    NetworkDestinationClass::LocalSocket,
+                    None,
+                    Some([7; 32]),
+                ),
+            ],
+        );
+        let receipt = policy.reconcile(&inventory).expect("exact inventory");
+        assert_eq!(receipt.declared_listeners(), 2);
+        assert_eq!(receipt.observed_listeners(), 2);
+        assert!(!format!("{declarations:?}").contains("7, 7"));
+    }
+
+    #[test]
+    fn strict_local_listener_unsafe_destination_matrix_fails_before_manifest_matching() {
+        let policy = LinuxSessionListenerPolicy::new(&[]).expect("empty exact policy");
+        for destination in [
+            NetworkDestinationClass::AuthenticatedLocalSocket,
+            NetworkDestinationClass::Unspecified,
+            NetworkDestinationClass::LinkLocal,
+            NetworkDestinationClass::PrivateLan,
+            NetworkDestinationClass::Multicast,
+            NetworkDestinationClass::ContainerNetwork,
+            NetworkDestinationClass::Proxy,
+            NetworkDestinationClass::Dns,
+            NetworkDestinationClass::External,
+            NetworkDestinationClass::Unknown,
+        ] {
+            let inventory = synthetic_inventory(
+                vec![synthetic_process(10, NetworkComponent::Kernel)],
+                vec![synthetic_listener(
+                    10,
+                    3,
+                    100,
+                    LinuxSocketProtocol::Tcp4,
+                    destination,
+                    Some(12434),
+                    None,
+                )],
+            );
+            assert_eq!(
+                policy
+                    .reconcile(&inventory)
+                    .expect_err("unsafe destination rejects")
+                    .kind(),
+                LinuxListenerBoundaryErrorKind::UnsafeDestination
+            );
+        }
+    }
+
+    #[test]
+    fn strict_local_listener_undeclared_missing_duplicate_and_unknown_fail_closed() {
+        let declaration = LinuxDeclaredListener::loopback_tcp(
+            NetworkComponent::KernelNativeInferenceAdapter,
+            LinuxSocketProtocol::Tcp4,
+            8080,
+        )
+        .expect("declaration");
+        let policy = LinuxSessionListenerPolicy::new(std::slice::from_ref(&declaration))
+            .expect("listener policy");
+        let process = synthetic_process(10, NetworkComponent::KernelNativeInferenceAdapter);
+        let expected = synthetic_listener(
+            10,
+            3,
+            100,
+            LinuxSocketProtocol::Tcp4,
+            NetworkDestinationClass::Loopback,
+            Some(8080),
+            None,
+        );
+
+        assert_eq!(
+            policy
+                .reconcile(&synthetic_inventory(vec![process.clone()], Vec::new()))
+                .expect_err("missing listener rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::MissingDeclaredListener
+        );
+        let mut undeclared = expected.clone();
+        undeclared.local_port = Some(8081);
+        assert_eq!(
+            policy
+                .reconcile(&synthetic_inventory(
+                    vec![process.clone()],
+                    vec![undeclared]
+                ))
+                .expect_err("undeclared listener rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::UndeclaredListener
+        );
+        let mut duplicate = expected.clone();
+        duplicate.inode = 101;
+        duplicate.descriptor = 4;
+        assert_eq!(
+            policy
+                .reconcile(&synthetic_inventory(
+                    vec![process],
+                    vec![expected.clone(), duplicate],
+                ))
+                .expect_err("duplicate socket objects reject")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::DuplicateObservedListener
+        );
+        assert_eq!(
+            policy
+                .reconcile(&synthetic_inventory(Vec::new(), vec![expected]))
+                .expect_err("unknown process rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::UnknownProcess
+        );
+    }
+
+    #[test]
+    fn strict_local_listener_malformed_duplicate_and_unapproved_declarations_fail_closed() {
+        assert_eq!(
+            LinuxDeclaredListener::loopback_tcp(
+                NetworkComponent::VisualStudioCodeExtension,
+                LinuxSocketProtocol::Tcp4,
+                12434,
+            )
+            .expect_err("extension listener rejects")
+            .kind(),
+            LinuxListenerBoundaryErrorKind::InvalidDeclaration
+        );
+        assert_eq!(
+            LinuxDeclaredListener::loopback_tcp(
+                NetworkComponent::Kernel,
+                LinuxSocketProtocol::Udp4,
+                12434,
+            )
+            .expect_err("UDP listener rejects")
+            .kind(),
+            LinuxListenerBoundaryErrorKind::InvalidDeclaration
+        );
+        assert_eq!(
+            LinuxDeclaredListener::unix_stream(NetworkComponent::Kernel, [0; 32])
+                .expect_err("zero identity rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::InvalidDeclaration
+        );
+        let declaration = LinuxDeclaredListener::unix_stream(NetworkComponent::Kernel, [3; 32])
+            .expect("declaration");
+        assert_eq!(
+            LinuxSessionListenerPolicy::new(&[declaration.clone(), declaration])
+                .expect_err("duplicate declaration rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::DuplicateDeclaration
+        );
+        let too_many = (0..=super::MAX_DECLARED_LISTENERS)
+            .map(|index| {
+                LinuxDeclaredListener::loopback_tcp(
+                    NetworkComponent::Kernel,
+                    LinuxSocketProtocol::Tcp4,
+                    u16::try_from(index + 1).expect("bounded port"),
+                )
+                .expect("bounded declaration")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            LinuxSessionListenerPolicy::new(&too_many)
+                .expect_err("declaration limit rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::ResourceLimitExceeded
+        );
+    }
+
+    #[test]
+    fn strict_local_listener_bound_and_indeterminate_states_fail_closed() {
+        let policy = LinuxSessionListenerPolicy::new(&[]).expect("empty exact policy");
+        for (state, expected) in [
+            (
+                LinuxSocketState::Bound,
+                LinuxListenerBoundaryErrorKind::UndeclaredBinding,
+            ),
+            (
+                LinuxSocketState::Other,
+                LinuxListenerBoundaryErrorKind::IndeterminateSocketState,
+            ),
+        ] {
+            let mut socket = synthetic_listener(
+                10,
+                3,
+                100,
+                LinuxSocketProtocol::Udp4,
+                NetworkDestinationClass::Loopback,
+                Some(12434),
+                None,
+            );
+            socket.state = state;
+            let inventory = synthetic_inventory(
+                vec![synthetic_process(10, NetworkComponent::Kernel)],
+                vec![socket],
+            );
+            assert_eq!(
+                policy
+                    .reconcile(&inventory)
+                    .expect_err("unproven socket state rejects")
+                    .kind(),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    #[ignore = "requires a quiescent process descriptor table during the live /proc snapshot"]
+    fn strict_local_listener_live_loopback_passes_and_wildcard_fails() {
+        let loopback =
+            std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).expect("loopback listener");
+        let port = loopback.local_addr().expect("loopback address").port();
+        let target = LinuxInventoryTarget {
+            pid: std::process::id(),
+            component: NetworkComponent::Kernel,
+        };
+        let inventory = LinuxSessionInventoryCollector::collect(&[target])
+            .expect("loopback inventory collects");
+        let declaration = LinuxDeclaredListener::loopback_tcp(
+            NetworkComponent::Kernel,
+            LinuxSocketProtocol::Tcp4,
+            port,
+        )
+        .expect("loopback declaration");
+        LinuxSessionListenerPolicy::new(&[declaration])
+            .expect("loopback policy")
+            .reconcile(&inventory)
+            .expect("exact loopback listener passes");
+        drop(loopback);
+
+        let wildcard =
+            std::net::TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).expect("wildcard listener");
+        let inventory = LinuxSessionInventoryCollector::collect(&[target])
+            .expect("wildcard inventory collects");
+        assert_eq!(
+            LinuxSessionListenerPolicy::new(&[])
+                .expect("empty exact policy")
+                .reconcile(&inventory)
+                .expect_err("wildcard listener rejects")
+                .kind(),
+            LinuxListenerBoundaryErrorKind::UnsafeDestination
+        );
+        drop(wildcard);
+    }
 
     #[test]
     fn proc_ip_encoding_maps_loopback_unspecified_and_external_addresses() {

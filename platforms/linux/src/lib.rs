@@ -18,10 +18,11 @@ pub use configuration_store::{
     LinuxConfigurationStore, open_linux_configuration_store,
 };
 pub use inventory::{
-    LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget,
+    LinuxDeclaredListener, LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget,
+    LinuxListenerBoundaryError, LinuxListenerBoundaryErrorKind, LinuxListenerBoundaryReceipt,
     LinuxProcessIdentityBinding, LinuxSessionInventory, LinuxSessionInventoryCollector,
-    LinuxSessionProcessObservation, LinuxSocketObservation, LinuxSocketProtocol, LinuxSocketState,
-    LinuxWritableObservation, LinuxWritableTargetClass,
+    LinuxSessionListenerPolicy, LinuxSessionProcessObservation, LinuxSocketObservation,
+    LinuxSocketProtocol, LinuxSocketState, LinuxWritableObservation, LinuxWritableTargetClass,
 };
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedIpcSession, LinuxAuthenticatedPeer,

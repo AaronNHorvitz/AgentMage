@@ -62,12 +62,22 @@ Internet addresses are immediately reduced to closed destination classes; only p
 
 Process disappearance, PID reuse, partial or malformed `/proc` state, and
 unexpected pidfd failures reject the snapshot. This inventory is an observation
-primitive, not an authority source or an enforcement claim. A later session
-manifest and platform confinement layer must reconcile every observed process,
-executable, socket, listener, port, and writable target against the exact
-declared session topology. The 60-minute packet/syscall acceptance harness
-remains separately required because a point-in-time `/proc` snapshot cannot
-prove the absence of short-lived connections.
+primitive, not an authority source or a complete confinement claim.
+
+The Linux listener policy now reconciles the snapshot against at most 32 exact,
+unique session declarations. A declaration can represent only an approved
+bridge, kernel, or kernel inference-adapter component and either an exact named
+Unix-stream endpoint digest or an exact loopback TCP protocol and port. Every
+declared listener must appear exactly once. Unknown owners, undeclared or
+missing listeners, duplicate socket objects, wildcard, LAN, link-local,
+multicast, container, proxy, DNS, external, and unknown destinations, bound
+sockets, and indeterminate socket states fail closed. Duplicate descriptors for
+the same PID and socket inode are counted once.
+
+The policy does not make caller-supplied process attribution authoritative or
+prove the absence of short-lived connections. A later complete session
+manifest must bind each process executable and namespace identity, and the
+60-minute packet/syscall acceptance harness remains separately required.
 
 ## Product-Source Gate
 
@@ -108,9 +118,9 @@ Before later storage use, the platform adapter revalidates the held object, moun
 ## Remaining Closure Work
 
 Sprint 10 remains open until the product composes the implemented Linux
-process/socket and writable-path observations into a declared session topology,
-adds normal-process confinement, dependency/static checks for hidden network
-features, hostile-loopback tests, firewall and packet-capture acceptance, a
-complete offline workflow, and equivalent supported-platform evidence. macOS
-implementation and evidence are deliberately deferred and must not be inferred
-from the shared contracts.
+process/socket and writable-path observations into a complete declared session
+topology, adds normal-process confinement, dependency/static checks for hidden
+network features, firewall and packet-capture acceptance, a complete offline
+workflow, and equivalent supported-platform evidence. macOS implementation and
+evidence are deliberately deferred and must not be inferred from the shared
+contracts.
