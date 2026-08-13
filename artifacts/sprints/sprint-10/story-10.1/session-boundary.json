@@ -1,0 +1,147 @@
+{
+  "artifact_id": "strict-local-linux-session-boundary",
+  "claims": {
+    "complete_unified_cgroup_membership_tested_live": true,
+    "continuous_process_confinement_tested": false,
+    "inference_performed": false,
+    "linux_session_manifest_reconciliation_implemented": true,
+    "packet_capture_performed": false,
+    "release_support": false,
+    "short_lived_connection_absence_proven": false
+  },
+  "external_network_used": false,
+  "integration_results": {
+    "caller_selected_process_subset_rejected": true,
+    "exact_topology_admitted": true,
+    "executable_and_parent_substitution_rejected": true,
+    "extra_process_rejected": true,
+    "listener_omission_rejected": true,
+    "live_disposable_systemd_cgroup_collected": true,
+    "network_rule_substitution_rejected": true,
+    "socket_port_and_extra_object_rejected": true,
+    "tool_definition_substitution_rejected": true,
+    "unattributed_socket_rejected": true,
+    "writable_target_and_extra_target_rejected": true
+  },
+  "limitations": [
+    "The report is a point-in-time startup snapshot; it does not establish continuous cgroup confinement or detect every short-lived process, descriptor, or connection after reconciliation.",
+    "Runtime syscall tracing, packet capture, and the long-running offline workflow remain separate Sprint 10 acceptance tasks.",
+    "This evidence is Linux-only and does not claim macOS, Windows, physical-host cross-distribution certification, inference, or release acceptance."
+  ],
+  "local_disposable_process_used": true,
+  "policy_profile": {
+    "closed_limits": {
+      "listeners": 32,
+      "processes": 128,
+      "sockets": 4096,
+      "tools": 256,
+      "writable_descriptors": 4096
+    },
+    "inventory_scope": "complete-unified-cgroup",
+    "listener_rule": "exact-strict-local-listener-policy",
+    "membership_checks": [
+      "all-declared-pids-share-one-unified-cgroup",
+      "declared-pids-equal-kernel-members-before-collection",
+      "kernel-members-unchanged-after-collection"
+    ],
+    "network_rule": "sole-kernel-strict-local-endpoint-identity",
+    "process_fields": [
+      "component",
+      "parent-component",
+      "uid",
+      "executable-sha256",
+      "count"
+    ],
+    "refusal_classes": [
+      "invalid-manifest",
+      "resource-limit",
+      "process-inventory-mismatch",
+      "socket-inventory-mismatch",
+      "writable-inventory-mismatch",
+      "tool-inventory-mismatch",
+      "network-rule-mismatch",
+      "listener-boundary"
+    ],
+    "socket_fields": [
+      "component",
+      "protocol",
+      "state",
+      "local-destination-class",
+      "remote-destination-class",
+      "local-port",
+      "remote-port",
+      "endpoint-sha256",
+      "unique-object-count"
+    ],
+    "tool_fields": [
+      "tool-id",
+      "tool-version",
+      "canonical-definition-sha256"
+    ],
+    "writable_fields": [
+      "component",
+      "target-class",
+      "target-sha256",
+      "count"
+    ]
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "8a1d5ca922e11642a935a09706e2ac34e04d3d4c",
+  "sources": [
+    {
+      "bytes": 11222,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "61ee09049348bcc43baeed21cd50ced940beef59fb5b548af89c9a3d55a0de8b"
+    },
+    {
+      "bytes": 21281,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "ceefb057a34100795586ca8b32ac729d4f651feea3471849feded4be53d0e3e3"
+    },
+    {
+      "bytes": 105100,
+      "path": "platforms/linux/src/inventory.rs",
+      "sha256": "0b747a6ef47b54dcde97922f4142dfb40c43489b082f63f6efb0096ea4848b25"
+    },
+    {
+      "bytes": 51093,
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "8025ebf7da4896d6e25db1b813dbc4d8e3396c57555f16c84b44286d8e99eaa5"
+    },
+    {
+      "bytes": 10888,
+      "path": "scripts/session_boundary_evidence.py",
+      "sha256": "42f4c0253afadf82c4b59df3a1df3a9504903dda7995341650e1a3bb7ad14020"
+    },
+    {
+      "bytes": 3812,
+      "path": "tests/test_session_boundary_evidence.py",
+      "sha256": "2adb5fa25a67a193b76556cf7b25b595dd62344cbb5b7b64b917174a3ff45bf7"
+    }
+  ],
+  "status": "pass-linux-point-in-time-session-reconciliation",
+  "task_ids": [
+    "10.1.1.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "0656171c2fe7901bd227d64f1179172ba0ae37861094a4d64ffc66309132de56",
+      "exit_code": 0,
+      "expected_marker_sha256": "b2fc5f41fea80ba70d6ed82d8871c03d43e6eef2992b101d0e9fa953fec86292",
+      "status": "pass"
+    },
+    {
+      "command_id": "0778f490098688a5304675062d3094a0949e3f1fb2a4291d499890173324af99",
+      "exit_code": 0,
+      "expected_marker_sha256": "e14199177036ab1ae799d4c54a26ee5f38209b0d322e833c964531f2f85c5cbf",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "72a010a8fe7c50307b2afcac0af114c25beeaead9d58f2261306748dc3fc5c3e",
+      "status": "pass"
+    }
+  ]
+}
