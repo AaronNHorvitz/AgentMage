@@ -99,4 +99,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except BaseException as error:
+        (ROOT / "error.txt").write_text(type(error).__name__ + "\n", encoding="ascii")
+        raise

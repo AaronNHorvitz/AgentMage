@@ -165,6 +165,9 @@ def authenticated_guard_control(runner_pid: int) -> dict[str, Any]:
     os.chown(go, topology.RUNTIME_UID, topology.RUNTIME_GID)
     deadline = time.monotonic() + 60
     while time.monotonic() < deadline and not (PEER_ROOT / "result.json").is_file():
+        if (PEER_ROOT / "error.txt").is_file():
+            error_class = (PEER_ROOT / "error.txt").read_text(encoding="ascii").strip()
+            raise topology.GuestEvidenceError(f"guard peer exception: {error_class}")
         peer_state = topology.text(
             ["systemctl", "show", "--property=ActiveState", "--value", topology.RUNTIME_UNIT]
         )
