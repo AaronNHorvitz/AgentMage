@@ -31,8 +31,10 @@ REPORT_PATH: Final = (
 )
 GUEST_PROBE_PATH: Final = ROOT / "scripts/linux_docker_kvm_guest.py"
 SOURCE_PATHS: Final = (
+    "docs/decisions/0036-observe-network-namespace-through-procfs.md",
     "docs/support/linux-docker-kvm-evidence.md",
     "package.json",
+    "platforms/linux-inference/src/docker_linux_observer.rs",
     "scripts/linux_docker_kvm_evidence.py",
     "scripts/linux_docker_kvm_guest.py",
     "scripts/package_candidate.py",

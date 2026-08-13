@@ -34,6 +34,7 @@ SOURCE_PATHS: Final = (
     "Cargo.toml",
     "LICENSE",
     "docs/decisions/0033-production-docker-guard-and-observer-prerequisite.md",
+    "docs/decisions/0036-observe-network-namespace-through-procfs.md",
     "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "package-lock.json",

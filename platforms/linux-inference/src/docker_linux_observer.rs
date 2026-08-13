@@ -230,36 +230,25 @@ pub(crate) fn observe_current_network(
 ) -> Result<NetworkObservation, LinuxObserverError> {
     let mut active = 0_u8;
     let mut non_loopback = 0_u8;
-    let mut loopback_up = false;
+    let loopback_up = parse_ipv6_loopback(&read_bounded(
+        Path::new("/proc/net/if_inet6"),
+        MAX_PROC_RECORD_BYTES,
+    )?)?;
     let mut outbound_bytes = 0_u64;
     let devices = parse_network_devices(&read_bounded(
         Path::new("/proc/net/dev"),
         MAX_PROC_RECORD_BYTES,
     )?)?;
-    for entry in fs::read_dir("/sys/class/net").map_err(|_| LinuxObserverError::NetworkRecord)? {
-        let entry = entry.map_err(|_| LinuxObserverError::NetworkRecord)?;
-        let name = entry.file_name();
-        let flags = fs::read_to_string(entry.path().join("flags"))
-            .map_err(|_| LinuxObserverError::NetworkRecord)?;
-        let flags = flags
-            .trim()
-            .strip_prefix("0x")
-            .and_then(|value| u32::from_str_radix(value, 16).ok())
-            .ok_or(LinuxObserverError::NetworkRecord)?;
-        if flags & 1 == 0 {
-            continue;
-        }
+    for (name, transmitted) in &devices {
         active = active
             .checked_add(1)
             .ok_or(LinuxObserverError::NetworkRecord)?;
-        if name.as_bytes() == b"lo" {
-            loopback_up = true;
-        } else {
+        if name.as_slice() != b"lo" {
             non_loopback = non_loopback
                 .checked_add(1)
                 .ok_or(LinuxObserverError::NetworkRecord)?;
             outbound_bytes = outbound_bytes
-                .checked_add(*devices.get(name.as_bytes()).unwrap_or(&0))
+                .checked_add(*transmitted)
                 .ok_or(LinuxObserverError::NetworkRecord)?;
         }
     }
@@ -536,6 +525,33 @@ fn parse_network_devices(
     Ok(output)
 }
 
+fn parse_ipv6_loopback(bytes: &[u8]) -> Result<bool, LinuxObserverError> {
+    let text = std::str::from_utf8(bytes).map_err(|_| LinuxObserverError::NetworkRecord)?;
+    let mut loopback = false;
+    for line in text.lines() {
+        let fields: Vec<_> = line.split_whitespace().collect();
+        if fields.len() != 6
+            || fields[0].len() != 32
+            || !fields[0].bytes().all(|byte| byte.is_ascii_hexdigit())
+            || u32::from_str_radix(fields[1], 16).is_err()
+            || u8::from_str_radix(fields[2], 16).is_err()
+            || u8::from_str_radix(fields[3], 16).is_err()
+            || u8::from_str_radix(fields[4], 16).is_err()
+            || fields[5].is_empty()
+        {
+            return Err(LinuxObserverError::NetworkRecord);
+        }
+        if fields[0] == "00000000000000000000000000000001"
+            && fields[2] == "80"
+            && fields[3] == "10"
+            && fields[5] == "lo"
+        {
+            loopback = true;
+        }
+    }
+    Ok(loopback)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -605,6 +621,16 @@ mod tests {
         let parsed = parse_network_devices(devices).expect("network devices");
         assert_eq!(parsed.get(b"lo".as_slice()), Some(&2));
         assert_eq!(parsed.get(b"eth0".as_slice()), Some(&4));
+        let inet6 = b"00000000000000000000000000000001 01 80 10 80 lo\nfe800000000000000000000000000001 02 40 20 80 eth0\n";
+        assert_eq!(parse_ipv6_loopback(inet6), Ok(true));
+        assert_eq!(
+            parse_ipv6_loopback(b"fe800000000000000000000000000001 02 40 20 80 eth0\n"),
+            Ok(false)
+        );
+        assert_eq!(
+            parse_ipv6_loopback(b"invalid 01 80 10 80 lo\n"),
+            Err(LinuxObserverError::NetworkRecord)
+        );
     }
 
     fn replace_bytes(input: &[u8], old: &[u8], new: &[u8]) -> Vec<u8> {
