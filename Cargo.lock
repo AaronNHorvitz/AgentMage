@@ -54,6 +54,7 @@ dependencies = [
  "agentmage-kernel-engine",
  "rustix",
  "seccompiler",
+ "serde_json",
  "sha2",
  "zeroize",
 ]

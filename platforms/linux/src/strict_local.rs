@@ -497,6 +497,7 @@ const fn error(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
     use std::fs;
     use std::os::fd::AsRawFd;
     use std::os::unix::ffi::OsStringExt;
@@ -516,6 +517,8 @@ mod tests {
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+    const DETECTION_FIXTURES: &str =
+        include_str!("../../../fixtures/strict-local-storage/v1/detection-fixtures.json");
 
     struct TestDirectory(PathBuf);
 
@@ -536,6 +539,125 @@ mod tests {
     impl Drop for TestDirectory {
         fn drop(&mut self) {
             fs::remove_dir_all(&self.0).expect("test root removes");
+        }
+    }
+
+    fn fixture() -> serde_json::Value {
+        serde_json::from_str(DETECTION_FIXTURES).expect("storage fixture parses")
+    }
+
+    const fn filesystem_label(class: StorageFilesystemClass) -> &'static str {
+        match class {
+            StorageFilesystemClass::Local => "local",
+            StorageFilesystemClass::Remote => "remote",
+            StorageFilesystemClass::Fuse => "fuse",
+            StorageFilesystemClass::Unknown => "unknown",
+        }
+    }
+
+    const fn marker_label(marker: CloudSynchronizationMarker) -> &'static str {
+        match marker {
+            CloudSynchronizationMarker::Dropbox => "dropbox",
+            CloudSynchronizationMarker::OneDrive => "onedrive",
+            CloudSynchronizationMarker::GoogleDrive => "google-drive",
+            CloudSynchronizationMarker::Nextcloud => "nextcloud",
+            CloudSynchronizationMarker::OwnCloud => "owncloud",
+            CloudSynchronizationMarker::ICloudDrive => "icloud-drive",
+            CloudSynchronizationMarker::Syncthing => "syncthing",
+            CloudSynchronizationMarker::OtherKnownMarker => "other-known",
+        }
+    }
+
+    #[test]
+    fn strict_local_storage_fixture_classifies_every_filesystem_magic() {
+        let fixture = fixture();
+        assert_eq!(fixture["schema_version"], 1);
+        let cases = fixture["filesystem_magic"]
+            .as_array()
+            .expect("filesystem fixtures");
+        assert_eq!(cases.len(), 22);
+        let mut identifiers = BTreeSet::new();
+        let mut counts = std::collections::BTreeMap::new();
+        for case in cases {
+            let identifier = case["id"].as_str().expect("fixture id");
+            assert!(identifiers.insert(identifier));
+            let encoded = case["magic"].as_str().expect("fixture magic");
+            let magic =
+                u64::from_str_radix(encoded.strip_prefix("0x").expect("hexadecimal fixture"), 16)
+                    .expect("valid filesystem magic");
+            let expected = case["expected"].as_str().expect("fixture result");
+            assert_eq!(
+                filesystem_label(classify_linux_filesystem_magic(magic)),
+                expected
+            );
+            *counts.entry(expected).or_insert(0_usize) += 1;
+        }
+        assert_eq!(counts.get("local"), Some(&11));
+        assert_eq!(counts.get("remote"), Some(&7));
+        assert_eq!(counts.get("fuse"), Some(&1));
+        assert_eq!(counts.get("unknown"), Some(&3));
+    }
+
+    #[test]
+    fn strict_local_storage_fixture_rejects_provider_and_sentinel_roots() {
+        let fixture = fixture();
+        let providers = fixture["provider_components"]
+            .as_array()
+            .expect("provider fixtures");
+        assert_eq!(providers.len(), 18);
+        for case in providers {
+            let component = case["component"].as_str().expect("provider component");
+            let expected = case["expected"].as_str().expect("provider result");
+            let marker = synchronization_marker_for_component(component)
+                .expect("provider component is recognized");
+            assert_eq!(marker_label(marker), expected);
+
+            let parent = TestDirectory::new("provider-fixture");
+            let candidate = parent.0.join(component);
+            fs::create_dir(&candidate).expect("provider fixture creates");
+            fs::set_permissions(&candidate, fs::Permissions::from_mode(0o700))
+                .expect("provider fixture is private");
+            let held = LinuxStrictLocalRootInspector::inspect(&candidate)
+                .expect("provider fixture inspects");
+            assert_eq!(
+                held.revalidate()
+                    .expect_err("provider fixture rejects")
+                    .kind(),
+                LinuxStrictLocalRootErrorKind::CloudSynchronized
+            );
+        }
+        for component in fixture["ordinary_components"]
+            .as_array()
+            .expect("ordinary fixtures")
+        {
+            assert_eq!(
+                synchronization_marker_for_component(
+                    component.as_str().expect("ordinary component")
+                ),
+                None
+            );
+        }
+        let sentinels = fixture["root_sentinels"]
+            .as_array()
+            .expect("sentinel fixtures");
+        assert_eq!(sentinels.len(), 3);
+        for case in sentinels {
+            let root = TestDirectory::new("sentinel-fixture");
+            fs::create_dir(root.0.join(case["name"].as_str().expect("sentinel name")))
+                .expect("sentinel fixture creates");
+            let held =
+                LinuxStrictLocalRootInspector::inspect(&root.0).expect("sentinel fixture inspects");
+            let marker = held
+                .observation()
+                .synchronization_marker
+                .expect("sentinel is recognized");
+            assert_eq!(marker_label(marker), case["expected"]);
+            assert_eq!(
+                held.revalidate()
+                    .expect_err("sentinel fixture rejects")
+                    .kind(),
+                LinuxStrictLocalRootErrorKind::CloudSynchronized
+            );
         }
     }
 

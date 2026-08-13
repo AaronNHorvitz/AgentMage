@@ -19,5 +19,8 @@ seccompiler.workspace = true
 sha2.workspace = true
 zeroize.workspace = true
 
+[dev-dependencies]
+serde_json.workspace = true
+
 [lints]
 workspace = true

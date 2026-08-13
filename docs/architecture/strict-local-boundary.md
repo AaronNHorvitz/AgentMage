@@ -239,6 +239,16 @@ Organization-suffixed OneDrive names are included. Detection is intentionally
 conservative and is not a claim that every third-party synchronization client
 can be recognized by a folder name alone.
 
+The versioned storage-detection fixture corpus records every classified Linux
+filesystem magic value, including all 11 admitted local values, all seven
+remote values, FUSE, and three unknown boundaries. It also records 18 provider
+component cases, three root sentinels, and ordinary near-miss components. Rust
+tests execute that checked corpus directly and create disposable owner-only
+directories for every provider and sentinel case. These are deterministic
+classification and local-directory fixtures, not live NFS, CIFS, 9P, AFS,
+Ceph, NCP, Coda, or FUSE mounts; live remote-mount execution remains part of
+the later classification acceptance task.
+
 The resulting observation contains only filesystem class, synchronization-marker class, a SHA-256 digest of the held device/inode/mount/filesystem identity, and the symlink-free result. Kernel policy rejects zero identity, any symbolic link, any synchronization marker, remote storage, FUSE, and unknown filesystems.
 
 ```mermaid

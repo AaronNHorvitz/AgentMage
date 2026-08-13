@@ -1,0 +1,60 @@
+{
+  "filesystem_magic": [
+    {"id": "ext-family", "magic": "0x0000ef53", "expected": "local"},
+    {"id": "xfs", "magic": "0x58465342", "expected": "local"},
+    {"id": "btrfs", "magic": "0x9123683e", "expected": "local"},
+    {"id": "tmpfs", "magic": "0x01021994", "expected": "local"},
+    {"id": "ramfs", "magic": "0x858458f6", "expected": "local"},
+    {"id": "f2fs", "magic": "0xf2f52010", "expected": "local"},
+    {"id": "erofs", "magic": "0xe0f5e1e2", "expected": "local"},
+    {"id": "zfs", "magic": "0x2fc12fc1", "expected": "local"},
+    {"id": "msdos", "magic": "0x00004d44", "expected": "local"},
+    {"id": "exfat", "magic": "0x2011bab0", "expected": "local"},
+    {"id": "ntfs3", "magic": "0x7366746e", "expected": "local"},
+    {"id": "nfs", "magic": "0x00006969", "expected": "remote"},
+    {"id": "cifs-smb", "magic": "0xff534d42", "expected": "remote"},
+    {"id": "nine-p", "magic": "0x01021997", "expected": "remote"},
+    {"id": "afs", "magic": "0x5346414f", "expected": "remote"},
+    {"id": "ceph", "magic": "0x00c36400", "expected": "remote"},
+    {"id": "ncp", "magic": "0x0000564c", "expected": "remote"},
+    {"id": "coda", "magic": "0x73757245", "expected": "remote"},
+    {"id": "fuse", "magic": "0x65735546", "expected": "fuse"},
+    {"id": "zero", "magic": "0x00000000", "expected": "unknown"},
+    {"id": "unrecognized", "magic": "0xdeadbeef", "expected": "unknown"},
+    {"id": "maximum", "magic": "0xffffffffffffffff", "expected": "unknown"}
+  ],
+  "ordinary_components": [
+    "ordinary-project",
+    "drive",
+    "proton",
+    "megabyte",
+    "cloud-analysis",
+    "local-notes"
+  ],
+  "provider_components": [
+    {"component": "Dropbox", "expected": "dropbox"},
+    {"component": "Dropbox (Personal)", "expected": "dropbox"},
+    {"component": "OneDrive", "expected": "onedrive"},
+    {"component": "OneDrive - Example Organization", "expected": "onedrive"},
+    {"component": "Google Drive", "expected": "google-drive"},
+    {"component": "Nextcloud", "expected": "nextcloud"},
+    {"component": "ownCloud", "expected": "owncloud"},
+    {"component": "iCloud Drive", "expected": "icloud-drive"},
+    {"component": "Mobile Documents", "expected": "icloud-drive"},
+    {"component": "Syncthing", "expected": "syncthing"},
+    {"component": "Box", "expected": "other-known"},
+    {"component": "Box Drive", "expected": "other-known"},
+    {"component": "Box Sync", "expected": "other-known"},
+    {"component": "MEGA", "expected": "other-known"},
+    {"component": "MEGAsync", "expected": "other-known"},
+    {"component": "pCloud Drive", "expected": "other-known"},
+    {"component": "Proton Drive", "expected": "other-known"},
+    {"component": "Tresorit", "expected": "other-known"}
+  ],
+  "root_sentinels": [
+    {"name": ".stfolder", "expected": "syncthing"},
+    {"name": ".dropbox.cache", "expected": "dropbox"},
+    {"name": ".agentmage-cloud-synchronized", "expected": "other-known"}
+  ],
+  "schema_version": 1
+}
