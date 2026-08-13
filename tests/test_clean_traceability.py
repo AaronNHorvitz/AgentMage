@@ -27,9 +27,9 @@ class CleanTraceabilityTests(unittest.TestCase):
     def test_complete_normative_chain_passes(self) -> None:
         summary = verify_traceability_closure(self.report, self.normative_map)
 
-        self.assertEqual(summary["normative_statements"], 26)
-        self.assertGreater(summary["resolved_requirement_links"], 26)
-        self.assertEqual(summary["traceability_records"], 229)
+        self.assertEqual(summary["normative_statements"], 30)
+        self.assertGreater(summary["resolved_requirement_links"], 30)
+        self.assertEqual(summary["traceability_records"], 241)
 
     def test_orphan_requirement_and_test_are_rejected(self) -> None:
         orphan_requirement = copy.deepcopy(self.normative_map)
@@ -79,7 +79,7 @@ class CleanTraceabilityTests(unittest.TestCase):
 
         self.assertTrue(result["ok"])
         self.assertTrue(all(item["exit_code"] == 0 for item in result["commands"]))
-        self.assertEqual(result["closure"]["normative_statements"], 26)
+        self.assertEqual(result["closure"]["normative_statements"], 30)
 
 
 if __name__ == "__main__":

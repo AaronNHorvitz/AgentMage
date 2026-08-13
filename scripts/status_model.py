@@ -255,7 +255,7 @@ def _validate_scope(model: dict[str, Any], root: Path, failures: list[str]) -> N
         ),
         "stable_requirements": len(registry.get("requirements", [])),
     }
-    expected = {"accepted_epics": 17, "accepted_sprints": 169, "stable_requirements": 229}
+    expected = {"accepted_epics": 17, "accepted_sprints": 169, "stable_requirements": 241}
     for field, count in expected.items():
         if scope.get(field) != count:
             failures.append(f"scope model {field} must equal {count}")

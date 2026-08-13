@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import subprocess
 import sys
 import tarfile
@@ -163,7 +164,7 @@ def verify_traceability_closure(
 
 
 def verify_clean_checkout(revision: str = "HEAD", root: Path = ROOT) -> dict[str, object]:
-    """Archive a Git tree, run offline gates, and verify traceability closure."""
+    """Archive a Git tree, copy its history, and verify traceability offline."""
     archive = subprocess.run(
         ["git", "archive", "--format=tar", revision],
         cwd=root,
@@ -176,15 +177,49 @@ def verify_clean_checkout(revision: str = "HEAD", root: Path = ROOT) -> dict[str
 
     command_results: list[dict[str, object]] = []
     with tempfile.TemporaryDirectory() as temp_dir:
-        checkout = Path(temp_dir) / "checkout"
+        temporary = Path(temp_dir)
+        checkout = temporary / "checkout"
+        history = temporary / "history.git"
+        home = temporary / "home"
         checkout.mkdir()
+        home.mkdir()
         with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as bundle:
             bundle.extractall(checkout, filter="data")
+
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "GIT_CONFIG_GLOBAL": "/dev/null",
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_OPTIONAL_LOCKS": "0",
+                "GIT_TERMINAL_PROMPT": "0",
+                "HOME": str(home),
+                "XDG_CONFIG_HOME": str(home / ".config"),
+            }
+        )
+        clone = subprocess.run(
+            ["git", "clone", "--bare", "--no-local", str(root), str(history)],
+            cwd=temporary,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if clone.returncode != 0:
+            detail = (clone.stderr or clone.stdout).strip()
+            raise CleanTraceabilityError(f"cannot copy repository history: {detail}")
+        environment.update(
+            {
+                "GIT_DIR": str(history),
+                "GIT_WORK_TREE": str(checkout),
+            }
+        )
 
         for command in OFFLINE_COMMANDS:
             result = subprocess.run(
                 command,
                 cwd=checkout,
+                env=environment,
                 check=False,
                 capture_output=True,
                 text=True,
