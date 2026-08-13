@@ -119,12 +119,12 @@
         },
         {
           "id": "kernel-engine-tests",
-          "sha256": "46cf4ad83a370e05f5a363ff2e9380af5c6655c552ad2538088b7bc6b2e8b7fe"
+          "sha256": "bbb9aa6500b326cd007986f1e251e7cbafd8ff057ec9325b1ace259694b854c4"
         }
       ],
-      "container_image_id": "sha256:d1b06e28b1843dea5521f9b31ae44571855e9841d1b0e74400d433925be47d7c",
+      "container_image_id": "sha256:19a5f39b9bdc70be77f52542694e88021ce85b8b6ec5480944a0709da806e251",
       "network_used": false,
-      "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "toolchains": {
         "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
         "rustc": "rustc 1.95.0 (59807616e 2026-04-14)"
@@ -394,7 +394,7 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -422,7 +422,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
+      "sha256": "0eed5c728a70197503efc8787b8cb5c3331a29849af8620a13e55f5794ad692f"
     },
     {
       "path": "platforms/linux/Cargo.toml",

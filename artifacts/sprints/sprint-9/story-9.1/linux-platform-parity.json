@@ -101,10 +101,10 @@
   "input_evidence": [
     {
       "artifact_id": "clean-linux-source-build",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "clean-build",
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "0dd8a46912114794561ac40be3268099aee8a2216bfe6bb36d80a851f2706e5a",
+      "sha256": "7403197414b255ec522454742ba1ccc92c2cb17976121cd645bf1ead367aa4bf",
       "status": "pass-linux"
     },
     {
@@ -125,50 +125,50 @@
     },
     {
       "artifact_id": "linux-clean-package-lifecycle",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "package-lifecycle",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json",
-      "sha256": "20dd7fe5a6ad31af4138f2d41fc951549f1a0a10adacbc71621f8554577eb5bb",
+      "sha256": "8b200ff806b569bcd365fa7fb4b1146a7f5c2890df67bf9955bb6088f962592a",
       "status": "pass-linux-clean-package-lifecycle"
     },
     {
       "artifact_id": "linux-ipc-sandbox-control-verification",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "linux-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-control-verification.json",
-      "sha256": "32f45e161ea27cdd8e2b9d78505503fbe37c3214f68cd3aaa079117769766f93",
+      "sha256": "01a41de84a1905be338cbcd0e6bec0a9d3cbcb41ec4623147c8bd3d565f1f720",
       "status": "pass-fedora-only"
     },
     {
       "artifact_id": "linux-cross-distribution-sandbox-attacks",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "sandbox-attacks",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-cross-distribution-sandbox-attacks.json",
-      "sha256": "2f3da29a49da103d4a2c4a59bd6991165beb12013cccdee8ab26b42823b6b68e",
+      "sha256": "f76c05fcb40b1d3d137b4d9699de836531318305e32126fcb02148612d16e1f9",
       "status": "pass-bounded-cross-distribution"
     },
     {
       "artifact_id": "linux-native-ubuntu-control-verification",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "ubuntu-native-controls",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-ubuntu-control-verification.json",
-      "sha256": "14dca41e136626e1e424f27ce7bf4707e342556261a4ee04410f9430dc28df99",
+      "sha256": "1c32af78b3b567a57dba532e0dec4de1c3a3611d362ca406943ac3072af6f360",
       "status": "pass-native-ubuntu-kernel-controls"
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "inactive-inference",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
-      "sha256": "da537addbccb3f87a4dd890bac8827b3ad55d1ab8236e5039c4ca4b426c29c10",
+      "sha256": "256b53d78a077814fbbb8d1f1851af1a5e17cd2dce2c64ec6a4c36df6d4ab589",
       "status": "pass-fedora-package-boundary"
     },
     {
       "artifact_id": "linux-clean-image-graphical-acceptance",
-      "evidence_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+      "evidence_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
       "id": "clean-image-acceptance",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-clean-image-acceptance.json",
-      "sha256": "1d271db044da76adeaea7292117ad5ef54197b11cd431608168548b1d3237931",
+      "sha256": "b06b1c4c30d692aabeee10c30d46076c81986cb521f78b41880001b468adb889",
       "status": "pass-clean-fedora-ubuntu-images"
     }
   ],
@@ -188,11 +188,11 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
   "sources": [
     {
       "path": "package.json",
-      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
+      "sha256": "0eed5c728a70197503efc8787b8cb5c3331a29849af8620a13e55f5794ad692f"
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",

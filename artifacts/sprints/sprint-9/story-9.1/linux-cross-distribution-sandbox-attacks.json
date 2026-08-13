@@ -132,7 +132,7 @@
       "architecture": "x86_64",
       "base_image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
       "binary_sha256": "3ed85ea046f97f089701f4994a448265cc3f7619bdc7988c69e5c512835d5f33",
-      "build_image_id": "sha256:d1b06e28b1843dea5521f9b31ae44571855e9841d1b0e74400d433925be47d7c",
+      "build_image_id": "sha256:19a5f39b9bdc70be77f52542694e88021ce85b8b6ec5480944a0709da806e251",
       "cgroup_filesystem": "cgroup2",
       "container_controls": {
         "cgroup_namespace": "private",
@@ -217,7 +217,7 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -237,7 +237,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
+      "sha256": "0eed5c728a70197503efc8787b8cb5c3331a29849af8620a13e55f5794ad692f"
     },
     {
       "path": "platforms/linux/Cargo.toml",
