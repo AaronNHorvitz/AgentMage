@@ -53,6 +53,12 @@ impl StrictLocalNetworkPolicy {
         Self { endpoint }
     }
 
+    /// Returns the sole exact endpoint admitted by this policy.
+    #[must_use]
+    pub const fn endpoint(&self) -> &LocalEndpointIdentity {
+        &self.endpoint
+    }
+
     /// Evaluates one content-free observation without opening or contacting anything.
     #[must_use]
     pub fn evaluate(&self, observation: &NetworkObservation) -> StrictLocalNetworkDecision {

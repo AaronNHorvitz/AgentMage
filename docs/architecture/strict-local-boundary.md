@@ -74,10 +74,56 @@ multicast, container, proxy, DNS, external, and unknown destinations, bound
 sockets, and indeterminate socket states fail closed. Duplicate descriptors for
 the same PID and socket inode are counted once.
 
-The policy does not make caller-supplied process attribution authoritative or
-prove the absence of short-lived connections. A later complete session
-manifest must bind each process executable and namespace identity, and the
-60-minute packet/syscall acceptance harness remains separately required.
+The listener policy alone does not make caller-supplied process attribution
+authoritative or prove the absence of short-lived connections. The complete
+session report below adds cgroup membership and executable identity. Namespace
+identity, continuous confinement, and the 60-minute packet/syscall acceptance
+harness remain separately required.
+
+## Linux Session Boundary Report
+
+The Linux startup boundary captures the complete process membership of one
+unified systemd cgroup. Every declared PID must report the same unified cgroup,
+the declared PID set must equal the kernel-owned `cgroup.procs` membership both
+before and after collection, and each process is retained with PID-reuse
+protection, parent topology, user identity, component class, and executable
+digest. A caller-selected PID subset is not eligible for complete session
+reconciliation.
+
+One closed session manifest then reconciles exact multisets for:
+
+- process component, parent component, user, executable digest, and count;
+- unique socket object, protocol, state, local and remote destination classes,
+  local and remote ports, endpoint digest, and count;
+- writable-descriptor component, target class, target digest, and count;
+- canonical registered tool identity, version, definition digest, and count;
+- every declared listener through the strict-local listener policy; and
+- the sole guarded endpoint identity from the active kernel network policy.
+
+Repeated descriptors for the same PID and kernel socket inode are one socket
+object. Missing, extra, duplicate, unattributed, indeterminate, or substituted
+entries fail closed with content-free refusal classes. The successful report
+retains no command lines, environment values, raw addresses, Unix paths,
+writable paths, arguments, payloads, prompts, or file contents.
+
+```mermaid
+flowchart LR
+    C[Unified cgroup membership] --> P[Identity-stable process inventory]
+    P --> O[Socket, port, and writable-target observations]
+    M[Exact session manifest] --> R[Closed reconciliation]
+    T[Canonical tool registry] --> R
+    N[Kernel network policy] --> R
+    L[Listener policy] --> R
+    O --> R
+    R -->|exact match| S[Content-free startup report]
+    R -->|missing, extra, or changed| X[Refuse startup]
+```
+
+This is a point-in-time startup proof. It does not establish continuous cgroup
+confinement or prove the absence of short-lived processes, descriptors, or
+network attempts after the snapshot. Runtime syscall tracing, packet capture,
+and the long-running offline acceptance workflow remain separate Sprint 10
+requirements.
 
 ## Product-Source Gate
 
@@ -128,10 +174,8 @@ is presentation input only; it does not become storage authority.
 
 ## Remaining Closure Work
 
-Sprint 10 remains open until the product composes the implemented Linux
-process/socket and writable-path observations into a complete declared session
-topology, adds normal-process confinement, dependency/static checks for hidden
-network features, firewall and packet-capture acceptance, a complete offline
-workflow, and equivalent supported-platform evidence. macOS implementation and
-evidence are deliberately deferred and must not be inferred from the shared
-contracts.
+Sprint 10 remains open until the product adds normal-process continuous
+confinement, dependency/static checks for hidden network features, firewall and
+packet-capture acceptance, a complete offline workflow, and equivalent
+supported-platform evidence. macOS implementation and evidence are
+deliberately deferred and must not be inferred from the shared contracts.

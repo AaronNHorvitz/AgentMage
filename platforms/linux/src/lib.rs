@@ -18,9 +18,12 @@ pub use configuration_store::{
     LinuxConfigurationStore, open_linux_configuration_store,
 };
 pub use inventory::{
-    LinuxDeclaredListener, LinuxInventoryError, LinuxInventoryErrorKind, LinuxInventoryTarget,
-    LinuxListenerBoundaryError, LinuxListenerBoundaryErrorKind, LinuxListenerBoundaryReceipt,
-    LinuxProcessIdentityBinding, LinuxSessionInventory, LinuxSessionInventoryCollector,
+    LinuxDeclaredListener, LinuxDeclaredNetworkRule, LinuxDeclaredProcess, LinuxDeclaredSocket,
+    LinuxDeclaredTool, LinuxDeclaredWritable, LinuxInventoryError, LinuxInventoryErrorKind,
+    LinuxInventoryScope, LinuxInventoryTarget, LinuxListenerBoundaryError,
+    LinuxListenerBoundaryErrorKind, LinuxListenerBoundaryReceipt, LinuxProcessIdentityBinding,
+    LinuxSessionBoundaryError, LinuxSessionBoundaryErrorKind, LinuxSessionBoundaryManifest,
+    LinuxSessionBoundaryReport, LinuxSessionInventory, LinuxSessionInventoryCollector,
     LinuxSessionListenerPolicy, LinuxSessionProcessObservation, LinuxSocketObservation,
     LinuxSocketProtocol, LinuxSocketState, LinuxWritableObservation, LinuxWritableTargetClass,
 };
