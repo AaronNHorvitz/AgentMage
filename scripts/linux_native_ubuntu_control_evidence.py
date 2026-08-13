@@ -590,6 +590,7 @@ def ssh_script(
     *,
     timeout: int = 300,
     check: bool = True,
+    stage: str = "guest-verification",
 ) -> str:
     completed = run(
         [*ssh_argv(vm), "/usr/bin/bash", "-s"],
@@ -597,7 +598,9 @@ def ssh_script(
         input_value=script,
     )
     if check and completed.returncode != 0:
-        raise NativeUbuntuEvidenceError("Ubuntu guest verification command failed")
+        raise NativeUbuntuEvidenceError(
+            f"Ubuntu guest stage failed: {stage} (exit {completed.returncode})"
+        )
     return completed.stdout
 
 
@@ -780,6 +783,7 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
                 f"test \"$(id -u)\" = {TEST_UID}\n"
                 f"test \"$(id -g)\" = {TEST_GID}\n",
                 timeout=1800,
+                stage="bootstrap-cloud-init-and-identity",
             )
             packages = package_versions(vm)
             ssh_script(
@@ -794,6 +798,7 @@ def bootstrap_image(tools: HostTools, *, force: bool) -> None:
                 "'\n",
                 timeout=30,
                 check=False,
+                stage="bootstrap-clean-and-poweroff",
             )
             wait_for_vm_exit(vm.pid, 60)
         finally:
