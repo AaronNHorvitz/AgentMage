@@ -33,13 +33,13 @@ pub const DOCKER_MODEL_ARTIFACT_DIGEST_HEX: &str =
 
 /// SHA-256 of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256: [u8; 32] = [
-    0xf7, 0x66, 0xd8, 0xf9, 0xe3, 0x24, 0xef, 0x21, 0x54, 0xb8, 0x3f, 0x2e, 0x8f, 0xa7, 0x35, 0xd8,
-    0x24, 0xb5, 0xb2, 0x7b, 0x4a, 0xcf, 0x1c, 0x4a, 0xc6, 0x47, 0x5e, 0xff, 0x84, 0x5a, 0x1c, 0xf7,
+    0xab, 0x8c, 0xde, 0x6b, 0xc1, 0x44, 0x0f, 0x8a, 0x00, 0x13, 0x39, 0x0a, 0xa2, 0xe2, 0x91, 0xa3,
+    0x15, 0xcd, 0xeb, 0xcf, 0xe4, 0x4a, 0xa1, 0xd3, 0x39, 0xf0, 0xaa, 0x0b, 0x1d, 0x70, 0x89, 0x9c,
 ];
 
 /// Lowercase hexadecimal identity of the checked Docker compatibility profile.
 pub const DOCKER_RUNTIME_PROFILE_SHA256_HEX: &str =
-    "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7";
+    "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c";
 
 /// Fixed Docker Engine loopback endpoint required by this compatibility profile.
 pub const DOCKER_MODEL_RUNNER_HOST: Ipv4Addr = Ipv4Addr::LOCALHOST;
@@ -164,7 +164,7 @@ impl DockerDaemonPrerequisites {
             || daemon_uid != 0
             || socket_group_gid == 0
             || launch_uid == 0
-            || !launch_user_has_socket_group
+            || launch_user_has_socket_group
             || rootless_engine
         {
             return Err(DockerRuntimeContractError::DaemonPrerequisite);
@@ -440,7 +440,7 @@ mod tests {
     }
 
     fn daemon() -> DockerDaemonPrerequisites {
-        DockerDaemonPrerequisites::verify([1; 32], [2; 32], 0, 971, 1000, true, false)
+        DockerDaemonPrerequisites::verify([1; 32], [2; 32], 0, 971, 1000, false, false)
             .expect("explicit rootful daemon prerequisites")
     }
 
@@ -540,13 +540,13 @@ mod tests {
         assert_eq!(accepted.socket_group_gid(), 971);
         assert_eq!(accepted.launch_uid(), 1000);
         for values in [
-            ([0; 32], [2; 32], 0, 971, 1000, true, false),
-            ([1; 32], [0; 32], 0, 971, 1000, true, false),
-            ([1; 32], [2; 32], 1000, 971, 1000, true, false),
-            ([1; 32], [2; 32], 0, 0, 1000, true, false),
-            ([1; 32], [2; 32], 0, 971, 0, true, false),
-            ([1; 32], [2; 32], 0, 971, 1000, false, false),
-            ([1; 32], [2; 32], 0, 971, 1000, true, true),
+            ([0; 32], [2; 32], 0, 971, 1000, false, false),
+            ([1; 32], [0; 32], 0, 971, 1000, false, false),
+            ([1; 32], [2; 32], 1000, 971, 1000, false, false),
+            ([1; 32], [2; 32], 0, 0, 1000, false, false),
+            ([1; 32], [2; 32], 0, 971, 0, false, false),
+            ([1; 32], [2; 32], 0, 971, 1000, true, false),
+            ([1; 32], [2; 32], 0, 971, 1000, false, true),
         ] {
             assert_eq!(
                 DockerDaemonPrerequisites::verify(

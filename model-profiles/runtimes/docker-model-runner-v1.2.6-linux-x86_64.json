@@ -19,8 +19,8 @@
     "docker_socket_exposed_to_runner": false,
     "exact_daemon_binary_identity_required": true,
     "launch_user": "invoking-standard-user",
-    "required_supplementary_group": "docker-socket-owner-group",
-    "required_supplementary_group_risk": "host-equivalent-docker-daemon-authority",
+    "launch_user_docker_socket_group_membership": false,
+    "docker_socket_group_risk": "host-equivalent-docker-daemon-authority",
     "rootless_engine_accepted": false
   },
   "decision": {

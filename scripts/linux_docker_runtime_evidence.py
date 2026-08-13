@@ -27,7 +27,7 @@ REPORT_PATH: Final = (
     / "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json"
 )
 PROFILE_SHA256: Final = (
-    "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
+    "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
 )
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
@@ -251,7 +251,8 @@ def validate_profile(profile: Any) -> list[str]:
         or daemon.get("docker_socket_exposed_to_runner") is not False
         or daemon.get("exact_daemon_binary_identity_required") is not True
         or daemon.get("rootless_engine_accepted") is not False
-        or daemon.get("required_supplementary_group_risk")
+        or daemon.get("launch_user_docker_socket_group_membership") is not False
+        or daemon.get("docker_socket_group_risk")
         != "host-equivalent-docker-daemon-authority"
     ):
         failures.append("Docker daemon privilege declaration changed")

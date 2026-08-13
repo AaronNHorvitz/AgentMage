@@ -147,7 +147,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "42049ae96636471c1f6ecc2b4ea033948afa1d9a1069c211519f2094826e1fe7",
+      "identity_set_sha256": "f70eff7b44b32ae7254334aba3809985e09af96dc6b4fae76ba6458097dd8efd",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -304,7 +304,7 @@
         "model_manifest_sha256": "08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "package_id": "docker-model-plugin",
         "platform": "linux-x86_64",
-        "profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+        "profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
         "sha256": "bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
         "source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
         "version": "b9879"
@@ -342,7 +342,7 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "f65f951045f4a33f29297a06e28d79a1959df1245244c46fefa7d9041adde992"
+      "sha256": "342484d91279f861479a1a12416e7e7ea07ce1baef2aaffb05d0ab04fad59161"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -358,7 +358,7 @@
     },
     {
       "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
-      "sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
+      "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
     },
     {
       "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
@@ -374,11 +374,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "564bfe45200a36e0368c3269cf0db4999c864fc8686f98b87e1c85b50af594be"
+      "sha256": "013a51b46374b659ecaae4861c350e9345d50f0bc7e92c79604b5fbb281d8518"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "a7dd60e283f56529fd33daea4423e965be133a0f73adadd3c42e154843431b26"
+      "sha256": "bd027f025276976e811c4ae2d927474ca1e87f393b68d1749d56acbbb5c9ce0f"
     },
     {
       "path": "scripts/component_inventory.py",

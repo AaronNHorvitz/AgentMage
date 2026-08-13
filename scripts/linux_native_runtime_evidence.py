@@ -88,7 +88,7 @@ EXPECTED_DESCRIPTOR: Final = {
     "docker_compatibility_available": False,
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
-    "docker_runtime_profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+    "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
     "enabled_models": 0,
     "inference_available": False,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
