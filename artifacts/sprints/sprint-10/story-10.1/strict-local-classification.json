@@ -1,0 +1,133 @@
+{
+  "artifact_id": "strict-local-cross-layer-classification",
+  "boundary_fixture_sha256": "8a279ebe988cd66ccc1dc5d3e755d2acaf0ffbd5ed8da6ad9260ef7d18bc7a91",
+  "claims": {
+    "cross_layer_fixture_matrix_executed": true,
+    "direct_vscode_and_tool_worker_inference_blocked": true,
+    "every_sync_client_detected": false,
+    "external_network_used": false,
+    "inference_performed": false,
+    "lan_container_proxy_dns_and_external_destinations_blocked": true,
+    "live_remote_mount_tested": false,
+    "only_exact_declared_inference_transports_accepted": true,
+    "release_support": false,
+    "remote_fuse_unknown_and_sync_storage_fixtures_rejected": true
+  },
+  "external_network_used": false,
+  "fixture_profile": {
+    "allowed_policy_case_count": 2,
+    "approved_topologies": [
+      "native-authenticated-unix-socket",
+      "docker-authenticated-guarded-loopback"
+    ],
+    "blocked_policy_case_count": 13,
+    "filesystem_magic_case_count": 22,
+    "ip_case_count": 13,
+    "policy_case_count": 15,
+    "provider_component_count": 18,
+    "root_sentinel_count": 3,
+    "schema_version": 1
+  },
+  "limitations": [
+    "Remote, FUSE, and unknown filesystems are exact deterministic magic-value fixtures; no live NFS, CIFS, 9P, AFS, Ceph, NCP, Coda, or FUSE mount is claimed.",
+    "Cloud-synchronization cases use disposable owner-only directories for the declared provider and sentinel corpus and do not claim detection of every client or deliberately disguised synchronizer.",
+    "The two accepted cases are mutually exclusive configured deployment alternatives; acceptance requires the exact adapter, destination, transport, endpoint digest, and authenticated peer for that topology.",
+    "No product workflow, 60-minute observation, model inference, physical network, cross-platform certification, or release acceptance is claimed."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "e75955ba962dfbf58dce67837fdbcf8dbd366b89",
+  "sources": [
+    {
+      "bytes": 13115,
+      "path": "Cargo.lock",
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
+    },
+    {
+      "bytes": 4533,
+      "path": "fixtures/strict-local-boundary/v1/classification-fixtures.json",
+      "sha256": "8a279ebe988cd66ccc1dc5d3e755d2acaf0ffbd5ed8da6ad9260ef7d18bc7a91"
+    },
+    {
+      "bytes": 2960,
+      "path": "fixtures/strict-local-storage/v1/detection-fixtures.json",
+      "sha256": "bcc11724377fde4691164de57eb6dd7df95e70826fd28c885d68400216415726"
+    },
+    {
+      "bytes": 15921,
+      "path": "kernel/contracts/src/network.rs",
+      "sha256": "08d981961254f32cbab84fe5144de10e90763919aed9fe0762eff01a4a73b5f0"
+    },
+    {
+      "bytes": 54272,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
+    },
+    {
+      "bytes": 591,
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac"
+    },
+    {
+      "bytes": 51093,
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "8025ebf7da4896d6e25db1b813dbc4d8e3396c57555f16c84b44286d8e99eaa5"
+    },
+    {
+      "bytes": 33278,
+      "path": "platforms/linux/src/strict_local.rs",
+      "sha256": "1287998a261f58bf1f54401e5eddfbe3a8551a7a7c0890a95490c12be14fd76a"
+    },
+    {
+      "bytes": 7193,
+      "path": "platforms/linux/tests/strict_local_classification.rs",
+      "sha256": "f02307dd143d59449d5323f0f36bbbb4dfbed2617e17876e6f6b1f98a50f9ffd"
+    },
+    {
+      "bytes": 14827,
+      "path": "scripts/strict_local_classification_evidence.py",
+      "sha256": "c06b72b56ce2c9b2a9923c239122d4d0c5f410b7e70bdacc472dbf41e2dd8258"
+    },
+    {
+      "bytes": 10025,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "c58099babd8af205816529fa7890b44e84cb5417195031a2e01e646d79bee456"
+    },
+    {
+      "bytes": 3876,
+      "path": "tests/test_strict_local_classification_evidence.py",
+      "sha256": "4c45901e15da1b1334f92de30716b8c8d40c8f9d68346a489560f652f77bdf44"
+    }
+  ],
+  "status": "pass-strict-local-cross-layer-fixture-matrix",
+  "task_ids": [
+    "10.1.3.1",
+    "S-010-UT01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "6174f8f7a0292c4cff5830b8897eb8724c0bd0424462564953ea4440a0b2bb46",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "1a817f8bdcfb363ebd2f712caa4828b10c337733ac1ce8b49455e8267e35cb7a",
+      "exit_code": 0,
+      "expected_marker_sha256": "62b7332573e8d22139994edd12cf4b041790995ea56d0e52ac7b352416666b7a",
+      "status": "pass"
+    },
+    {
+      "command_id": "24e458765e12ca62987a602e4365d4ead106967ba54dce8017b727f364f451f8",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
