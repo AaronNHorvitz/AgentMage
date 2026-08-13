@@ -24,6 +24,16 @@ RUNNER_DIGEST: Final = (
 MODEL_DIGEST: Final = (
     "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444"
 )
+MODEL_FILES: Final = {
+    "gemma-4-E4B-it-Q4_K_M.gguf": (
+        4_977_171_584,
+        "85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+    ),
+    "mmproj-F16.gguf": (
+        990_372_672,
+        "ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
+    ),
+}
 RUNTIME_UID: Final = 10001
 RUNTIME_GID: Final = 10001
 GUARD_UID: Final = 10002
@@ -471,6 +481,7 @@ def network_record(pid: int) -> dict[str, Any]:
 
 
 def verify_precollector_topology(
+    container_id: str,
     runtime: dict[str, Any],
     guard: dict[str, Any],
     runner: dict[str, Any],
@@ -481,6 +492,25 @@ def verify_precollector_topology(
     peer = docker_peer_record()
     private_network = network_record(runner["pid"])
     host_network = network_record(os.getpid())
+    container = json.loads(text(["docker", "inspect", container_id]))[0]
+    image = json.loads(text(["docker", "image", "inspect", container["Image"]]))[0]
+    running = text(["docker", "ps", "--quiet", "--no-trunc"]).splitlines()
+    matching_runners = sum(
+        json.loads(text(["docker", "inspect", candidate]))[0]["Image"]
+        == container["Image"]
+        for candidate in running
+    )
+    model_root = (
+        Path(f"/proc/{runner['pid']}/root/models/bundles/sha256")
+        / MODEL_DIGEST.removeprefix("sha256:")
+        / "model"
+    )
+    model_checks = {}
+    for name, (size, digest) in MODEL_FILES.items():
+        path = model_root / name
+        model_checks[name] = (
+            path.is_file() and path.stat().st_size == size and sha256_file(path) == digest
+        )
     checks = {
         "daemon-peer-pid": peer["pid"] == daemon["pid"],
         "daemon-peer-root": peer["uid"] == 0 and daemon["uid"] == 0,
@@ -518,6 +548,13 @@ def verify_precollector_topology(
         ]
         == 0,
         "host-raw-listener-count": host_network["raw_listener_count"] == 0,
+        "runner-container-running": container["State"]["Running"] is True,
+        "runner-container-count": matching_runners == 1,
+        "runner-config-reference": container["Config"]["Image"]
+        == f"docker.io/docker/model-runner@{RUNNER_DIGEST}",
+        "runner-repository-digest": image.get("RepoDigests")
+        == [f"docker.io/docker/model-runner@{RUNNER_DIGEST}"],
+        "model-file-identity": all(model_checks.values()),
     }
     failed = [name for name, passed in checks.items() if not passed]
     if failed:
@@ -542,7 +579,7 @@ def collect(revision: str) -> dict[str, Any]:
     socket_path = Path("/run/docker.sock")
     socket_metadata = socket_path.stat()
     precollector_checks = verify_precollector_topology(
-        runtime, guard, runner, daemon, socket_metadata
+        container_id, runtime, guard, runner, daemon, socket_metadata
     )
     collector_digest = sha256_file(COLLECTOR_PATH)
     request = {

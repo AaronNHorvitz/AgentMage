@@ -82,6 +82,11 @@ PRECOLLECTOR_CHECKS: Final = [
     "private-non-loopback-listener-count",
     "private-management-listener-count",
     "host-raw-listener-count",
+    "runner-container-running",
+    "runner-container-count",
+    "runner-config-reference",
+    "runner-repository-digest",
+    "model-file-identity",
 ]
 RUNNER_DIGEST: Final = (
     "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9"
