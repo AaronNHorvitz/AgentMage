@@ -530,8 +530,9 @@ impl DurableAuthorityRuntime {
 
 fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
     let connection = open_connection(path, key)?;
-    migrate(&connection)?;
     claim_exclusive_writer(&connection)?;
+    verify_runtime_configuration(&connection)?;
+    migrate(&connection)?;
     let mut store = OperationalStore {
         connection,
         generation: 0,
@@ -602,6 +603,49 @@ fn claim_exclusive_writer(connection: &Connection) -> Result<(), OperationalStor
     connection
         .execute_batch("BEGIN EXCLUSIVE; COMMIT;")
         .map_err(classify_open_error)
+}
+
+fn verify_runtime_configuration(connection: &Connection) -> Result<(), OperationalStoreError> {
+    let foreign_keys: i64 = connection
+        .pragma_query_value(None, "foreign_keys", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let trusted_schema: i64 = connection
+        .pragma_query_value(None, "trusted_schema", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let secure_delete: i64 = connection
+        .pragma_query_value(None, "secure_delete", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let temp_store: i64 = connection
+        .pragma_query_value(None, "temp_store", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let synchronous: i64 = connection
+        .pragma_query_value(None, "synchronous", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let wal_autocheckpoint: i64 = connection
+        .pragma_query_value(None, "wal_autocheckpoint", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let busy_timeout: i64 = connection
+        .pragma_query_value(None, "busy_timeout", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let locking_mode: String = connection
+        .pragma_query_value(None, "locking_mode", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    let journal_mode: String = connection
+        .pragma_query_value(None, "journal_mode", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
+    if foreign_keys != 1
+        || trusted_schema != 0
+        || secure_delete != 1
+        || temp_store != 2
+        || synchronous != 2
+        || wal_autocheckpoint != 1
+        || busy_timeout != 0
+        || !locking_mode.eq_ignore_ascii_case("exclusive")
+        || !journal_mode.eq_ignore_ascii_case("wal")
+    {
+        return Err(OperationalStoreError::OpenFailed);
+    }
+    Ok(())
 }
 
 fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
@@ -1436,6 +1480,7 @@ mod tests {
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError,
         OperationalStoreKeyError, OperationalStoreKeyProvider, SCHEMA_VERSION,
         is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_hex,
+        verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -1613,7 +1658,11 @@ mod tests {
         let backup = directory.join("authority.backup.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([8; 32]))
             .expect("first writer");
-        assert!(OperationalStore::open(&path, &observation(), &mut TestKey([8; 32])).is_err());
+        assert!(matches!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([8; 32]))
+                .expect_err("second writer must fail"),
+            OperationalStoreError::OpenFailed | OperationalStoreError::ConcurrentWriter
+        ));
         store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
@@ -1652,8 +1701,9 @@ mod tests {
         store
             .connection
             .execute_batch(
-                "CREATE TRIGGER reject_generation
-                 BEFORE UPDATE ON store_metadata
+                "CREATE TRIGGER reject_checkpoint
+                 BEFORE INSERT ON checkpoints
+                 WHEN NEW.generation > 0
                  BEGIN
                     SELECT RAISE(ABORT, 'synthetic rollback');
                  END;",
@@ -1680,6 +1730,26 @@ mod tests {
             .expect("checkpoint count");
         assert_eq!(generation, 0);
         assert_eq!(checkpoint_count, 1);
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn required_writer_and_database_configuration_is_verified() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([17; 32]))
+            .expect("configured encrypted store");
+        verify_runtime_configuration(&store.connection).expect("exact runtime configuration");
+        store
+            .connection
+            .pragma_update(None, "foreign_keys", false)
+            .expect("configuration mutation");
+        assert_eq!(
+            verify_runtime_configuration(&store.connection)
+                .expect_err("weakened configuration must fail"),
+            OperationalStoreError::OpenFailed
+        );
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }

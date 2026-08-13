@@ -248,6 +248,15 @@ required before another effect can be considered.
 - mode `0600` regular database file with symlinks rejected; and
 - separate encryption key and full verification for every online backup.
 
+The canonical connection acquires and proves its exclusive writer lock and WAL
+mode before inspecting or applying migrations. Startup then re-reads the exact
+foreign-key, trusted-schema, secure-delete, memory-temporary-store, full-sync,
+WAL-autocheckpoint, zero-busy-timeout, locking, and journal settings before any
+canonical row is admitted. A second process can therefore fail during keyed
+open or explicit lock acquisition, but it cannot read, migrate, or publish
+state. Publication uses an immediate transaction; metadata generation update
+and checkpoint insertion either commit together or both roll back.
+
 ## Recovery Invariants
 
 1. A consumed nonce, grant, or attempt remains non-replayable after restart.
