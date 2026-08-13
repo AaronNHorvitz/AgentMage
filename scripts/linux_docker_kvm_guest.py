@@ -344,12 +344,15 @@ def configure_direct_daemon() -> dict[str, Any]:
     override = Path("/etc/systemd/system/docker.service.d/agentmage-evidence.conf")
     override.parent.mkdir(parents=True, exist_ok=True)
     override.write_text(
-        "[Service]\nExecStart=\nExecStart=" + " ".join(arguments) + "\n",
+        "[Unit]\nRequires=\nRequires=containerd.service\n"
+        "[Service]\nExecStart=\nExecStart="
+        + " ".join(arguments)
+        + "\n",
         encoding="ascii",
     )
     override.chmod(0o644)
     run(["systemctl", "stop", "docker.service", "docker.socket"])
-    run(["systemctl", "disable", "docker.socket"], check=False)
+    run(["systemctl", "mask", "docker.socket"])
     run(["systemctl", "daemon-reload"])
     run(["systemctl", "start", "docker.service"])
     wait_for(
