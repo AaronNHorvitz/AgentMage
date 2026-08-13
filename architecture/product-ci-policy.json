@@ -1,23 +1,13 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "enforced",
-  "workflow": ".github/workflows/product.yml",
+  "execution_model": "local-first-manual-macos-only",
   "toolchains": {
     "node": "24.15.0",
     "npm": "11.12.1",
     "rust": "1.95.0"
   },
-  "required_jobs": [
-    "contract",
-    "format",
-    "lint",
-    "build",
-    "rust_unit_contract",
-    "vscode_shell",
-    "native_linux_status",
-    "windows_contract"
-  ],
-  "lanes": {
+  "local_lanes": {
     "format": [
       ["cargo", "fmt", "--all", "--", "--check"],
       [
@@ -73,7 +63,9 @@
     ]
   },
   "native_linux": {
-    "generic_ci_disposition": "pending-native-execution",
+    "execution_venue": "local-disposable-kvm",
+    "targets": ["fedora-x86_64", "ubuntu-x86_64"],
+    "disposition": "pending-complete-local-vm-execution",
     "inventory_command": [
       "cargo",
       "test",
@@ -106,8 +98,10 @@
     ]
   },
   "native_windows": {
-    "disposition": "partial-native-identity-evidence-other-controls-blocked",
-    "runner": "windows-2022",
+    "execution_venue": "local-disposable-kvm",
+    "target": "windows-11-x86_64",
+    "disposition": "partial-native-identity-evidence-local-windows-11-open",
+    "historical_github_runner": "windows-2022",
     "commands": [
       [
         "cargo",
@@ -129,8 +123,26 @@
       ]
     ]
   },
+  "github_hosted": {
+    "automatic_execution": false,
+    "allowed_platform": "macos-arm64",
+    "workflow": ".github/workflows/macos.yml",
+    "trigger": "workflow_dispatch",
+    "runner": "macos-15",
+    "budget_confirmation_input": "confirm_budget",
+    "disposition": "manual-source-compatibility-only-post-ga-support-blocked",
+    "commands": [
+      ["swift", "build", "--package-path", "platforms/macos"],
+      ["swift", "test", "--package-path", "platforms/macos"]
+    ]
+  },
+  "disabled_github_sentinels": [
+    ".github/workflows/product.yml",
+    ".github/workflows/documentation.yml"
+  ],
   "documentation_gate": {
-    "independent": true,
-    "workflow": ".github/workflows/documentation.yml"
+    "execution_venue": "local",
+    "command": ["npm", "run", "docs:clean-check"],
+    "independent": true
   }
 }

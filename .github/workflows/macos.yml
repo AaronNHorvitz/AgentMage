@@ -1,0 +1,34 @@
+name: macOS Compatibility (Manual and Budget-Gated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_budget:
+        description: Confirm that macOS Actions budget is available for this run
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-compatibility-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos_compatibility:
+    if: ${{ inputs.confirm_budget }}
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out the selected revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify Apple Silicon execution
+        shell: bash
+        run: test "$(uname -m)" = "arm64"
+      - name: Build the macOS source package
+        shell: bash
+        run: swift build --package-path platforms/macos
+      - name: Test the macOS source package
+        shell: bash
+        run: swift test --package-path platforms/macos

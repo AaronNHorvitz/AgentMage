@@ -1,38 +1,15 @@
-name: Documentation
+name: Documentation (Local Execution Contract)
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  local_execution_only:
+    if: ${{ false }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
     steps:
-      - name: Check out repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: "24.15.0"
-          cache: npm
-
-      - name: Set up npm
-        run: npm install --global npm@11.12.1
-
-      - name: Install documentation dependencies without lifecycle scripts
-        run: npm ci --ignore-scripts --no-audit --no-fund
-
-      - name: Install the lockfile-bound Mermaid browser
-        run: ./node_modules/.bin/puppeteer browsers install chrome-headless-shell
-
-      - name: Reproduce clean documentation gate
-        run: npm run docs:clean-check
+      - name: Explain local execution authority
+        run: echo "Documentation validation is executed by the repository-owned local gate."

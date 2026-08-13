@@ -17,6 +17,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "architecture" / "product-ci-policy.json"
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "product.yml"
+DOCUMENTATION_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "documentation.yml"
+MACOS_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "macos.yml"
 PACKAGE_PATH = ROOT / "package.json"
 RUST_TOOLCHAIN_PATH = ROOT / "rust-toolchain.toml"
 PINNED_ACTION = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}$")
@@ -25,16 +27,6 @@ VERSION_PATTERNS = {
     "npm": lambda version: re.compile(rf"^{re.escape(version)}$"),
     "rust": lambda version: re.compile(rf"^rustc {re.escape(version)}\b"),
 }
-EXPECTED_JOBS = (
-    "contract",
-    "format",
-    "lint",
-    "build",
-    "rust_unit_contract",
-    "vscode_shell",
-    "native_linux_status",
-    "windows_contract",
-)
 EXPECTED_LANES = {
     "format": [
         ["cargo", "fmt", "--all", "--", "--check"],
@@ -64,6 +56,30 @@ EXPECTED_LANES = {
         ["npm", "run", "test", "--workspace", "@agentmage/vscode-shell"]
     ],
 }
+EXPECTED_WINDOWS_COMMANDS = [
+    [
+        "cargo",
+        "+1.95.0",
+        "test",
+        "-p",
+        "agentmage-platform-windows",
+        "--locked",
+    ],
+    [
+        "cargo",
+        "+1.95.0",
+        "run",
+        "-p",
+        "agentmage-platform-windows",
+        "--bin",
+        "native_evidence",
+        "--locked",
+    ],
+]
+EXPECTED_MACOS_COMMANDS = [
+    ["swift", "build", "--package-path", "platforms/macos"],
+    ["swift", "test", "--package-path", "platforms/macos"],
+]
 EXPECTED_NATIVE_TESTS = (
     "linux_read::tests::approved_read_is_receipted_replay_safe_and_restart_verifiable",
     "linux_read::tests::stale_and_cancelled_previews_start_no_worker_and_publish_no_receipt",
@@ -99,27 +115,64 @@ def _workflow_jobs(workflow: str) -> set[str]:
     return set(re.findall(r"^  ([a-z][a-z0-9_]*):\s*$", jobs, re.MULTILINE))
 
 
+def _workflow_triggers(workflow: str) -> set[str]:
+    try:
+        remainder = workflow.split("\non:\n", 1)[1]
+    except IndexError:
+        return set()
+    lines: list[str] = []
+    for line in remainder.splitlines():
+        if line and not line.startswith(" "):
+            break
+        lines.append(line)
+    return set(
+        match.group(1)
+        for line in lines
+        if (match := re.match(r"^  ([a-z_]+):", line))
+    )
+
+
+def _validate_disabled_sentinel(workflow: str, name: str) -> list[str]:
+    failures: list[str] = []
+    if _workflow_triggers(workflow) != {"workflow_dispatch"}:
+        failures.append(f"{name} sentinel trigger closure drifted")
+    if _workflow_jobs(workflow) != {"local_execution_only"}:
+        failures.append(f"{name} sentinel job closure drifted")
+    if workflow.count("    if: ${{ false }}") != 1:
+        failures.append(f"{name} sentinel can allocate a hosted runner")
+    if re.search(r"^\s*(?:-\s*)?uses:\s*", workflow, re.MULTILINE):
+        failures.append(f"{name} sentinel may not invoke an action")
+    if "permissions:\n  contents: read" not in workflow:
+        failures.append(f"{name} sentinel permissions are not read-only")
+    return failures
+
+
 def validate_contract(
     policy: Any,
     workflow: str,
     package: Any,
     rust_toolchain: Any,
     documentation_workflow: str,
+    macos_workflow: str,
 ) -> list[str]:
     failures: list[str] = []
     if not isinstance(policy, dict):
         return ["product CI policy must be an object"]
-    if policy.get("schema_version") != 1 or policy.get("status") != "enforced":
+    if policy.get("schema_version") != 2 or policy.get("status") != "enforced":
         failures.append("product CI policy identity is invalid")
+    if policy.get("execution_model") != "local-first-manual-macos-only":
+        failures.append("product CI execution model drifted")
     toolchains = policy.get("toolchains", {})
     if toolchains != {"node": "24.15.0", "npm": "11.12.1", "rust": "1.95.0"}:
         failures.append("product CI toolchain closure drifted")
-    if tuple(policy.get("required_jobs", [])) != EXPECTED_JOBS:
-        failures.append("product CI required-job policy closure drifted")
-    if policy.get("lanes") != EXPECTED_LANES:
+    if policy.get("local_lanes") != EXPECTED_LANES:
         failures.append("product CI command closure drifted")
     native = policy.get("native_linux", {})
-    if native.get("generic_ci_disposition") != "pending-native-execution":
+    if native.get("execution_venue") != "local-disposable-kvm":
+        failures.append("product CI native Linux venue drifted")
+    if native.get("targets") != ["fedora-x86_64", "ubuntu-x86_64"]:
+        failures.append("product CI native Linux target closure drifted")
+    if native.get("disposition") != "pending-complete-local-vm-execution":
         failures.append("product CI native disposition drifted")
     if native.get("inventory_command") != [
         "cargo",
@@ -134,33 +187,33 @@ def validate_contract(
     if tuple(native.get("expected_tests", [])) != EXPECTED_NATIVE_TESTS:
         failures.append("product CI native pending-test closure drifted")
     if policy.get("native_windows") != {
-        "disposition": "partial-native-identity-evidence-other-controls-blocked",
-        "runner": "windows-2022",
-        "commands": [
-            [
-                "cargo",
-                "+1.95.0",
-                "test",
-                "-p",
-                "agentmage-platform-windows",
-                "--locked",
-            ],
-            [
-                "cargo",
-                "+1.95.0",
-                "run",
-                "-p",
-                "agentmage-platform-windows",
-                "--bin",
-                "native_evidence",
-                "--locked",
-            ],
-        ],
+        "execution_venue": "local-disposable-kvm",
+        "target": "windows-11-x86_64",
+        "disposition": "partial-native-identity-evidence-local-windows-11-open",
+        "historical_github_runner": "windows-2022",
+        "commands": EXPECTED_WINDOWS_COMMANDS,
     }:
         failures.append("product CI Windows native identity closure drifted")
+    if policy.get("github_hosted") != {
+        "automatic_execution": False,
+        "allowed_platform": "macos-arm64",
+        "workflow": ".github/workflows/macos.yml",
+        "trigger": "workflow_dispatch",
+        "runner": "macos-15",
+        "budget_confirmation_input": "confirm_budget",
+        "disposition": "manual-source-compatibility-only-post-ga-support-blocked",
+        "commands": EXPECTED_MACOS_COMMANDS,
+    }:
+        failures.append("product CI hosted macOS closure drifted")
+    if policy.get("disabled_github_sentinels") != [
+        ".github/workflows/product.yml",
+        ".github/workflows/documentation.yml",
+    ]:
+        failures.append("product CI disabled-sentinel closure drifted")
     if policy.get("documentation_gate") != {
+        "execution_venue": "local",
+        "command": ["npm", "run", "docs:clean-check"],
         "independent": True,
-        "workflow": ".github/workflows/documentation.yml",
     }:
         failures.append("product CI documentation independence policy drifted")
     engines = package.get("engines", {}) if isinstance(package, dict) else {}
@@ -176,45 +229,39 @@ def validate_contract(
     if sorted(rust.get("components", [])) != ["clippy", "rustfmt"]:
         failures.append("product CI Rust component closure drifted")
 
-    expected_jobs = set(EXPECTED_JOBS)
-    actual_jobs = _workflow_jobs(workflow)
-    if actual_jobs != expected_jobs:
-        failures.append("product CI workflow job closure drifted")
-    for lane in policy.get("lanes", {}):
-        invocation = f"python3 scripts/product_ci.py --run-lane {lane}"
-        if workflow.count(invocation) != 1:
-            failures.append(f"product CI lane is not invoked exactly once: {lane}")
-    native_invocation = "python3 scripts/product_ci.py --inventory-native"
-    if workflow.count(native_invocation) != 1:
-        failures.append("native Linux inventory lane is not invoked exactly once")
-    windows_invocation = "cargo +1.95.0 test -p agentmage-platform-windows --locked"
-    if workflow.count(windows_invocation) != 1:
-        failures.append("Windows native test boundary is not invoked exactly once")
-    windows_evidence = (
-        "cargo +1.95.0 run -p agentmage-platform-windows "
-        "--bin native_evidence --locked"
+    failures.extend(_validate_disabled_sentinel(workflow, "product"))
+    failures.extend(
+        _validate_disabled_sentinel(documentation_workflow, "documentation")
     )
-    if workflow.count(windows_evidence) != 1:
-        failures.append("Windows native evidence boundary is not invoked exactly once")
-    if f'node-version: "{toolchains.get("node")}"' not in workflow:
-        failures.append("product CI workflow does not install the declared Node version")
-    npm_install = f"npm install --global npm@{toolchains.get('npm')}"
-    if npm_install not in workflow:
-        failures.append("product CI workflow does not install the declared npm version")
-    rust_install = f"rustup toolchain install {toolchains.get('rust')}"
-    if rust_install not in workflow:
-        failures.append("product CI workflow does not install the declared Rust version")
-    if "permissions:\n  contents: read" not in workflow:
-        failures.append("product CI workflow permissions are not read-only")
-    if "continue-on-error: true" in workflow:
-        failures.append("product CI workflow weakens a required failure")
-    if "docs:check" in workflow or "docs:clean-check" in workflow:
-        failures.append("product CI workflow is not independent from documentation CI")
-    if "product_ci.py" in documentation_workflow:
-        failures.append("documentation CI is not independent from product CI")
-    action_values = re.findall(r"^\s*uses:\s*(\S+)\s*$", workflow, re.MULTILINE)
-    if not action_values or any(not PINNED_ACTION.fullmatch(item) for item in action_values):
-        failures.append("product CI actions must be pinned to full commit identities")
+    if _workflow_triggers(macos_workflow) != {"workflow_dispatch"}:
+        failures.append("macOS workflow trigger closure drifted")
+    if _workflow_jobs(macos_workflow) != {"macos_compatibility"}:
+        failures.append("macOS workflow job closure drifted")
+    required_macos_fragments = (
+        "      confirm_budget:\n",
+        "        required: true\n",
+        "        type: boolean\n",
+        "    if: ${{ inputs.confirm_budget }}\n",
+        "    runs-on: macos-15\n",
+        "    timeout-minutes: 20\n",
+        'run: test "$(uname -m)" = "arm64"',
+        "run: swift build --package-path platforms/macos",
+        "run: swift test --package-path platforms/macos",
+        "permissions:\n  contents: read",
+    )
+    if any(fragment not in macos_workflow for fragment in required_macos_fragments):
+        failures.append("macOS workflow budget, runner, or command closure drifted")
+    if "continue-on-error: true" in macos_workflow:
+        failures.append("macOS workflow weakens a required failure")
+    if "secrets." in macos_workflow:
+        failures.append("macOS compatibility workflow may not receive a secret")
+    action_values = re.findall(
+        r"^\s*(?:-\s*)?uses:\s*(\S+)\s*$", macos_workflow, re.MULTILINE
+    )
+    if not action_values or any(
+        not PINNED_ACTION.fullmatch(item) for item in action_values
+    ):
+        failures.append("macOS workflow actions must be pinned to full identities")
     return failures
 
 
@@ -226,12 +273,17 @@ def check_contract(root: Path = ROOT) -> list[str]:
             (root / RUST_TOOLCHAIN_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
         )
         workflow = (root / WORKFLOW_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
-        documentation = (
-            root / ".github" / "workflows" / "documentation.yml"
-        ).read_text(encoding="utf-8")
+        documentation = (root / DOCUMENTATION_WORKFLOW_PATH.relative_to(ROOT)).read_text(
+            encoding="utf-8"
+        )
+        macos = (root / MACOS_WORKFLOW_PATH.relative_to(ROOT)).read_text(
+            encoding="utf-8"
+        )
     except (OSError, json.JSONDecodeError, tomllib.TOMLDecodeError) as error:
         return [f"cannot read product CI contract: {error}"]
-    return validate_contract(policy, workflow, package, rust_toolchain, documentation)
+    return validate_contract(
+        policy, workflow, package, rust_toolchain, documentation, macos
+    )
 
 
 def sanitize_output(output: str, root: Path = ROOT) -> str:
@@ -273,7 +325,7 @@ def _run(command: list[str], root: Path = ROOT) -> subprocess.CompletedProcess[s
 
 def run_lane(lane: str, root: Path = ROOT) -> int:
     policy = read_json(root / POLICY_PATH.relative_to(ROOT))
-    commands = policy.get("lanes", {}).get(lane)
+    commands = policy.get("local_lanes", {}).get(lane)
     if not isinstance(commands, list):
         print(f"product CI failed: unknown lane: {lane}", file=sys.stderr)
         return 2
