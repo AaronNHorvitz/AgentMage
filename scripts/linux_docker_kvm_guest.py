@@ -191,7 +191,7 @@ def start_runtime_peer() -> int:
         if (
             record["uid"] != RUNTIME_UID
             or record["gid"] != RUNTIME_GID
-            or executable != "/usr/bin/sleep"
+            or executable != os.path.realpath("/usr/bin/sleep")
         ):
             return False
         held_pid = candidate
