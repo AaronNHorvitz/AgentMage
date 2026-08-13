@@ -2772,8 +2772,9 @@ mod tests {
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, OperationalStore,
         OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
         OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
-        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, is_linux_held_descriptor_path,
-        open_connection, prepare_new_store_file, sha256_hex, verify_runtime_configuration,
+        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
+        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_hex,
+        verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -2876,6 +2877,27 @@ mod tests {
             .pragma_update(None, "user_version", 1)
             .expect("legacy user version");
         transaction.commit().expect("legacy migration commit");
+    }
+
+    fn create_version_two_store(path: &Path, key: &[u8; 32]) {
+        create_version_one_store(path, key);
+        let connection = open_connection(path, key).expect("version two encrypted connection");
+        let transaction = connection
+            .unchecked_transaction()
+            .expect("version two migration transaction");
+        transaction
+            .execute_batch(MIGRATION_2_SCHEMA_SQL)
+            .expect("version two schema");
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (2, ?1)",
+                [sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())],
+            )
+            .expect("version two history");
+        transaction
+            .pragma_update(None, "user_version", 2)
+            .expect("version two user version");
+        transaction.commit().expect("version two migration commit");
     }
 
     #[test]
@@ -3601,7 +3623,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_to_two_with_exact_history() {
+    fn version_one_upgrades_through_three_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -3630,6 +3652,100 @@ mod tests {
             ]
         );
         drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn version_two_retention_rows_upgrade_to_three_with_initial_event() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        create_version_two_store(&path, &[17; 32]);
+        let connection = open_connection(&path, &[17; 32]).expect("version two fixture");
+        let digest = "d".repeat(64);
+        connection
+            .execute(
+                "INSERT INTO sessions VALUES ('legacy-session', 'profile-1', 'active', 1, 1, ?1, X'7B7D')",
+                [&digest],
+            )
+            .expect("legacy session");
+        connection
+            .execute(
+                "INSERT INTO retention VALUES (
+                    'legacy-retention', 'sessions', 'legacy-session', 'private',
+                    'retained', 100, 0, ?1
+                )",
+                [&digest],
+            )
+            .expect("legacy retention");
+        drop(connection);
+
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([17; 32]))
+            .expect("version two upgrades");
+        let retained: (String, Option<String>, i64, i64) = store
+            .connection
+            .query_row(
+                "SELECT hold_kind, prior_disposition, revision, updated_at_epoch_ms
+                 FROM retention WHERE retention_id = 'legacy-retention'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("migrated retention");
+        assert_eq!(retained, ("none".to_owned(), None, 1, 0));
+        let event: (String, i64, String) = store
+            .connection
+            .query_row(
+                "SELECT event_kind, occurred_at_epoch_ms, previous_event_sha256
+                 FROM retention_events WHERE retention_id = 'legacy-retention'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("migration event");
+        assert_eq!(event, ("assigned".to_owned(), 0, ZERO_SHA256.to_owned()));
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn failed_version_three_migration_rolls_back_all_alterations() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        create_version_two_store(&path, &[18; 32]);
+        let connection = open_connection(&path, &[18; 32]).expect("version two fixture");
+        connection
+            .execute_batch("CREATE TABLE retention_events(incompatible INTEGER) STRICT;")
+            .expect("conflicting version three table");
+        drop(connection);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([18; 32]))
+                .expect_err("conflicting migration must fail"),
+            OperationalStoreError::MigrationFailed
+        );
+        let connection = open_connection(&path, &[18; 32]).expect("rolled-back version two");
+        let version: i64 = connection
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .expect("rolled-back version");
+        let history_count: i64 = connection
+            .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
+            .expect("rolled-back history");
+        let v3_columns: i64 = connection
+            .query_row(
+                "SELECT COUNT(*) FROM pragma_table_info('retention')
+                 WHERE name IN ('hold_kind', 'prior_disposition', 'revision',
+                                'updated_at_epoch_ms', 'erased_at_epoch_ms')",
+                [],
+                |row| row.get(0),
+            )
+            .expect("rolled-back columns");
+        let v3_index: i64 = connection
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_schema
+                 WHERE type = 'index' AND name = 'retention_hold_expiry_idx'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("rolled-back index");
+        assert_eq!((version, history_count, v3_columns, v3_index), (2, 2, 0, 0));
+        drop(connection);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
