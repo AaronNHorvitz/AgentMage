@@ -764,6 +764,14 @@ def validate_report(value: Any) -> list[str]:
                 or native.get("host_listener_count_after") != 0
                 or docker.get("runner_image_digest") != RUNNER_DIGEST
                 or docker.get("model_manifest_digest") != f"sha256:{MODEL_DIGEST}"
+                or docker.get("daemon_configuration", {}).get("listener")
+                != "direct-unix-socket"
+                or docker.get("daemon_configuration", {}).get("socket_activation_active")
+                is not False
+                or SHA256.fullmatch(
+                    str(docker.get("daemon_configuration", {}).get("override_sha256"))
+                )
+                is None
                 or collector.get("record_type") != "agentmage_docker_live_topology_observation"
                 or collector.get("admission", {}).get("status") != "admitted"
                 or collector.get("source_revision") != value.get("source_revision")

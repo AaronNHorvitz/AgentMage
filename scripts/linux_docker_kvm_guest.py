@@ -326,12 +326,59 @@ def distribution_id() -> str:
     raise GuestEvidenceError("distribution identity is unavailable")
 
 
+def configure_direct_daemon() -> dict[str, Any]:
+    distribution = distribution_id()
+    arguments = [
+        "/usr/bin/dockerd",
+        "--host=unix:///run/docker.sock",
+        "--containerd=/run/containerd/containerd.sock",
+    ]
+    if distribution == "fedora":
+        arguments.extend(
+            [
+                "--selinux-enabled",
+                "--userland-proxy-path=/usr/bin/docker-proxy",
+                "--init-path=/usr/bin/tini-static",
+            ]
+        )
+    override = Path("/etc/systemd/system/docker.service.d/agentmage-evidence.conf")
+    override.parent.mkdir(parents=True, exist_ok=True)
+    override.write_text(
+        "[Service]\nExecStart=\nExecStart=" + " ".join(arguments) + "\n",
+        encoding="ascii",
+    )
+    override.chmod(0o644)
+    run(["systemctl", "stop", "docker.service", "docker.socket"])
+    run(["systemctl", "disable", "docker.socket"], check=False)
+    run(["systemctl", "daemon-reload"])
+    run(["systemctl", "start", "docker.service"])
+    wait_for(
+        lambda: text(
+            ["systemctl", "show", "--property=ActiveState", "--value", "docker.service"]
+        )
+        == "active",
+        "direct Docker daemon",
+    )
+    wait_for(lambda: Path("/run/docker.sock").is_socket(), "direct Docker socket")
+    return {
+        "listener": "direct-unix-socket",
+        "socket_activation_active": text(
+            ["systemctl", "show", "--property=ActiveState", "--value", "docker.socket"]
+        )
+        == "active",
+        "override_sha256": sha256_file(override),
+    }
+
+
 def host_listener_count() -> int:
     output = text(["ss", "-H", "-lnt"])
     return sum(1 for line in output.splitlines() if line.split()[3].endswith(":12434"))
 
 
 def collect(revision: str) -> dict[str, Any]:
+    daemon_configuration = configure_direct_daemon()
+    if daemon_configuration["socket_activation_active"]:
+        raise GuestEvidenceError("Docker socket activation remained active")
     native = json.loads(text([str(NATIVE_PATH), "--self-check"]))
     native_listener_before = host_listener_count()
     runtime_pid = start_runtime_peer()
@@ -398,6 +445,7 @@ def collect(revision: str) -> dict[str, Any]:
             "inference_performed": False,
         },
         "docker": {
+            "daemon_configuration": daemon_configuration,
             "engine_version": text(["docker", "version", "--format={{.Server.Version}}"]),
             "container_id": container_id,
             "runner_image_digest": RUNNER_DIGEST,
