@@ -135,6 +135,66 @@ impl DockerPreflightBaseline {
             guard_cgroup_sha256,
         })
     }
+
+    /// Returns the exact collector executable identity.
+    #[must_use]
+    pub const fn collector_executable_sha256(&self) -> &[u8; 32] {
+        &self.collector_executable_sha256
+    }
+
+    /// Returns the exact Docker daemon executable identity.
+    #[must_use]
+    pub const fn daemon_executable_sha256(&self) -> &[u8; 32] {
+        &self.daemon_executable_sha256
+    }
+
+    /// Returns the exact Docker socket object identity.
+    #[must_use]
+    pub const fn daemon_socket_identity_sha256(&self) -> &[u8; 32] {
+        &self.daemon_socket_identity_sha256
+    }
+
+    /// Returns the exact Docker socket group.
+    #[must_use]
+    pub const fn docker_socket_gid(&self) -> u32 {
+        self.docker_socket_gid
+    }
+
+    /// Returns the exact runtime user.
+    #[must_use]
+    pub const fn runtime_uid(&self) -> u32 {
+        self.runtime_uid
+    }
+
+    /// Returns the exact runtime primary group.
+    #[must_use]
+    pub const fn runtime_gid(&self) -> u32 {
+        self.runtime_gid
+    }
+
+    /// Returns the exact dedicated guard user.
+    #[must_use]
+    pub const fn guard_uid(&self) -> u32 {
+        self.guard_uid
+    }
+
+    /// Returns the exact private namespace identity.
+    #[must_use]
+    pub const fn private_namespace_sha256(&self) -> &[u8; 32] {
+        &self.private_namespace_sha256
+    }
+
+    /// Returns the exact guard executable identity.
+    #[must_use]
+    pub const fn guard_executable_sha256(&self) -> &[u8; 32] {
+        &self.guard_executable_sha256
+    }
+
+    /// Returns the exact guard cgroup identity.
+    #[must_use]
+    pub const fn guard_cgroup_sha256(&self) -> &[u8; 32] {
+        &self.guard_cgroup_sha256
+    }
 }
 
 /// Complete daemon privilege and socket observation.

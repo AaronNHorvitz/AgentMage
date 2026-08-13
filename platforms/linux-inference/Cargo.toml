@@ -11,12 +11,18 @@ publish.workspace = true
 [dependencies]
 agentmage-kernel-contracts.workspace = true
 rustix.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 zeroize.workspace = true
 
 [[bin]]
 name = "agentmage-docker-guard"
 path = "src/docker_guard_main.rs"
+
+[[bin]]
+name = "agentmage-docker-topology-collector"
+path = "src/docker_topology_collector_main.rs"
 
 [[bin]]
 name = "agentmage-native-inference"

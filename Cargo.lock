@@ -64,6 +64,8 @@ version = "0.0.0"
 dependencies = [
  "agentmage-kernel-contracts",
  "rustix",
+ "serde",
+ "serde_json",
  "sha2",
  "zeroize",
 ]

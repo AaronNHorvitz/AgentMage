@@ -13,6 +13,7 @@ mod docker_guard;
 mod docker_guard_service;
 mod docker_preflight;
 mod docker_runtime;
+mod docker_topology_collector;
 mod native_runtime;
 
 pub use docker_guard::{
@@ -38,6 +39,10 @@ pub use docker_runtime::{
     DockerDaemonPrerequisites, DockerInferenceResourceEnvelope, DockerInferenceTopology,
     DockerMountPolicy, DockerOfflineNetworkPolicy, DockerRuntimeContractError,
     PinnedDockerRuntimeIdentity,
+};
+pub use docker_topology_collector::{
+    DOCKER_COLLECTOR_MAX_INPUT_BYTES, DockerCollectorInput, DockerCollectorOutput,
+    DockerTopologyCollectorError, validate_topology_from_reader,
 };
 
 pub use native_runtime::{
