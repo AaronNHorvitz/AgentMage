@@ -82,6 +82,7 @@
     "component_id": "platform-linux-native-inference",
     "contract": "authenticated-local-endpoint-v1",
     "docker_compatibility_available": false,
+    "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
     "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
@@ -90,7 +91,7 @@
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": false,
-    "process_boundary_version": 3
+    "process_boundary_version": 4
   },
   "profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
   "release_claim": "none",
@@ -111,7 +112,7 @@
     "tag_observed": "v1.2.6-cuda"
   },
   "schema_version": 1,
-  "source_revision": "77fbf8d2cc94ba565a61f0561a4382e0a9a0b254",
+  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
   "sources": [
     {
       "bytes": 13033,
@@ -124,19 +125,19 @@
       "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
     },
     {
-      "bytes": 35442,
+      "bytes": 36080,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "b6dbdf8bfe9ac586a723a84959d2a8744795b3a31f52ea6e593842f4fe89b386"
+      "sha256": "5b13327fa1afc59240e8775de74f15cfe436f026417fdfce05f5403756e79ee4"
     },
     {
-      "bytes": 4446,
+      "bytes": 4761,
       "path": "architecture/build-contract.json",
-      "sha256": "6849cee1d9b2f8e46425eeb0f737f583d31ae7be3236baae09f6d11a0ad044bb"
+      "sha256": "2a0dc5b616df845e97c44be3a8d4ae0f5581966bb0a4707cdde6aee1f376cecc"
     },
     {
-      "bytes": 2087,
+      "bytes": 2195,
       "path": "architecture/component-inventory-policy.json",
-      "sha256": "906e8826b5162fe9df085d870ac6900420239440c095d671b5e726415424888f"
+      "sha256": "e6aab7bf206f0920417ae3c8f340e2bcf81d55474f421709f2c0037f44bec807"
     },
     {
       "bytes": 4868,
@@ -154,6 +155,11 @@
       "sha256": "e2ee08928c64ce72af64a2d5c5646e3e188ce276df858bcb4f9a8d81905ef5a5"
     },
     {
+      "bytes": 4985,
+      "path": "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
+      "sha256": "9d68277889d3ded6ab371042ebe513866cbeab1b6952dfc6f46ac62618f42e88"
+    },
+    {
       "bytes": 6213,
       "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
       "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1"
@@ -164,9 +170,14 @@
       "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
     },
     {
-      "bytes": 20157,
+      "bytes": 1690,
+      "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
+      "sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+    },
+    {
+      "bytes": 20376,
       "path": "package.json",
-      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
+      "sha256": "0eed5c728a70197503efc8787b8cb5c3331a29849af8620a13e55f5794ad692f"
     },
     {
       "bytes": 441,
@@ -174,9 +185,9 @@
       "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
     },
     {
-      "bytes": 1940,
+      "bytes": 2537,
       "path": "platforms/linux-inference/README.md",
-      "sha256": "6864107b83902637fcc326a15ef98d1b56bcb93643862dd14ee53ace22abeec7"
+      "sha256": "db3df82c52f61de27f4eed16a5aea17438cfe2321f2f1304e778fa1e7c39897e"
     },
     {
       "bytes": 24595,
@@ -184,9 +195,14 @@
       "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
     },
     {
-      "bytes": 6759,
+      "bytes": 16386,
+      "path": "platforms/linux-inference/src/docker_guard.rs",
+      "sha256": "4304a5f27454299d6323ede6d7a51193312203569525e03862f32c6d7811bd3c"
+    },
+    {
+      "bytes": 7195,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "f5d2260f03a799d58c0d546fca9df3706d7bccba7242ecff7a2096cff77dfb17"
+      "sha256": "557781f9b31f3cdd68b2d3301547a5b90ec9aa57bc584eb91a5a3dbb26bc1060"
     },
     {
       "bytes": 574,
@@ -199,24 +215,24 @@
       "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
     },
     {
-      "bytes": 14094,
+      "bytes": 14130,
       "path": "scripts/build_contract.py",
-      "sha256": "681626d86a97fe9e22476fbb068986b860643d787943883c680aa4e92dda9212"
+      "sha256": "51aa6fc0fab0d5be178754763cf5faf5520888949853340a4a4caa78e0c3a8ea"
     },
     {
-      "bytes": 24968,
+      "bytes": 26020,
       "path": "scripts/component_inventory.py",
-      "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
+      "sha256": "30417d5d61323873658c8d84a3f616f4a7c7db794593fee999057061b2f199ad"
     },
     {
-      "bytes": 19161,
+      "bytes": 19468,
       "path": "scripts/linux_docker_runtime_evidence.py",
-      "sha256": "ef48f055d2699da2e45ca087a8f5cad57681747406aa222767b0257bab8df043"
+      "sha256": "5b6d7cf386eb539b7cf6abd0ca0f1d2c5f5e97bd2dfeb5eb030c1ce027a81147"
     },
     {
-      "bytes": 5300,
+      "bytes": 5376,
       "path": "tests/test_component_inventory.py",
-      "sha256": "dfb8905f5afb42553d55400cf166eadefa2a89cf9b7481224991e573185ad769"
+      "sha256": "b6eef7a36fbd24889a28736b1f90363ffbe0796433af797dd896809b53e9e343"
     },
     {
       "bytes": 4169,

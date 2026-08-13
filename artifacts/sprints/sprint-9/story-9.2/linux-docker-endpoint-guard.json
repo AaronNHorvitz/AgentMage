@@ -1,0 +1,178 @@
+{
+  "allowed_caller": "guarded-kernel-docker-adapter",
+  "artifact_id": "linux-docker-model-runner-endpoint-guard",
+  "authority": {
+    "credential": false,
+    "docker_daemon_control": false,
+    "grant": false,
+    "host_filesystem": false,
+    "network_egress": false,
+    "tool": false,
+    "workspace": false
+  },
+  "denied_callers": [
+    "vscode-extension",
+    "tool-worker",
+    "unrelated-same-user-process",
+    "arbitrary-container",
+    "undeclared"
+  ],
+  "docker_engine_directly_tested": false,
+  "guard_process": {
+    "docker_socket_mounts": 0,
+    "executable_identity_required": true,
+    "network_namespace": "same-private-namespace-as-runner",
+    "process_cgroup_identity_required": true,
+    "runtime_user": "dedicated-non-root-agentmage-dmr-guard",
+    "workspace_mounts": 0
+  },
+  "host": {
+    "architecture": "x86_64",
+    "distribution": "fedora",
+    "docker_cli_available": false,
+    "live_enforcement_executed": false,
+    "version": "44"
+  },
+  "inference_started": false,
+  "kernel_transport": {
+    "authentication": "fresh-session-peer-credentials-and-challenge",
+    "mode": 384,
+    "owner": "invoking-standard-user",
+    "raw_endpoint_fields_exposed": false,
+    "transport": "authenticated-unix-socket"
+  },
+  "limitations": [
+    "The guard is a compiled fail-closed contract; no production proxy, Docker daemon, container, namespace, socket, or packet-filter rule was started on this host.",
+    "The current host has no Docker CLI, and no live Docker Engine reachability claim is made.",
+    "The exact runner and model identities remain inactive with zero enabled models and no inference operation.",
+    "Independent control disablement and hostile live probes remain owned by Sub-tasks 9.2.1.4 and 9.2.2.2."
+  ],
+  "model_count": 0,
+  "permit_contract": {
+    "cloneable": false,
+    "constructible_outside_guard": false,
+    "contains_address": false,
+    "contains_credential": false,
+    "serializable": false
+  },
+  "profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
+  "raw_runtime_endpoint": {
+    "container_bridge_routes": 0,
+    "host": "127.0.0.1",
+    "host_tcp_listeners": 0,
+    "namespace": "private-runner-and-guard-only",
+    "non_loopback_listeners": 0,
+    "port": 12434,
+    "transport": "loopback-tcp"
+  },
+  "release_claim": "none",
+  "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+  "schema_version": 1,
+  "source_revision": "012bc688dc534fc0602d0e3c8a823a1c905140e8",
+  "sources": [
+    {
+      "bytes": 13033,
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "bytes": 1442,
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "bytes": 36080,
+      "path": "RUNTIME-BOUNDARIES.md",
+      "sha256": "5b13327fa1afc59240e8775de74f15cfe436f026417fdfce05f5403756e79ee4"
+    },
+    {
+      "bytes": 4761,
+      "path": "architecture/build-contract.json",
+      "sha256": "2a0dc5b616df845e97c44be3a8d4ae0f5581966bb0a4707cdde6aee1f376cecc"
+    },
+    {
+      "bytes": 2195,
+      "path": "architecture/component-inventory-policy.json",
+      "sha256": "e6aab7bf206f0920417ae3c8f340e2bcf81d55474f421709f2c0037f44bec807"
+    },
+    {
+      "bytes": 6348,
+      "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
+      "sha256": "e2ee08928c64ce72af64a2d5c5646e3e188ce276df858bcb4f9a8d81905ef5a5"
+    },
+    {
+      "bytes": 4985,
+      "path": "docs/decisions/0031-private-docker-model-runner-endpoint-guard.md",
+      "sha256": "9d68277889d3ded6ab371042ebe513866cbeab1b6952dfc6f46ac62618f42e88"
+    },
+    {
+      "bytes": 1690,
+      "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
+      "sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+    },
+    {
+      "bytes": 3386,
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
+    },
+    {
+      "bytes": 20376,
+      "path": "package.json",
+      "sha256": "0eed5c728a70197503efc8787b8cb5c3331a29849af8620a13e55f5794ad692f"
+    },
+    {
+      "bytes": 441,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+    },
+    {
+      "bytes": 2537,
+      "path": "platforms/linux-inference/README.md",
+      "sha256": "db3df82c52f61de27f4eed16a5aea17438cfe2321f2f1304e778fa1e7c39897e"
+    },
+    {
+      "bytes": 16386,
+      "path": "platforms/linux-inference/src/docker_guard.rs",
+      "sha256": "4304a5f27454299d6323ede6d7a51193312203569525e03862f32c6d7811bd3c"
+    },
+    {
+      "bytes": 24595,
+      "path": "platforms/linux-inference/src/docker_runtime.rs",
+      "sha256": "ad36fb2f8ad0b56d10cbe602f6b7622e3baf8a9f5bfe0685a80ece79f1155672"
+    },
+    {
+      "bytes": 7195,
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "557781f9b31f3cdd68b2d3301547a5b90ec9aa57bc584eb91a5a3dbb26bc1060"
+    },
+    {
+      "bytes": 14130,
+      "path": "scripts/build_contract.py",
+      "sha256": "51aa6fc0fab0d5be178754763cf5faf5520888949853340a4a4caa78e0c3a8ea"
+    },
+    {
+      "bytes": 26020,
+      "path": "scripts/component_inventory.py",
+      "sha256": "30417d5d61323873658c8d84a3f616f4a7c7db794593fee999057061b2f199ad"
+    },
+    {
+      "bytes": 15486,
+      "path": "scripts/linux_docker_guard_evidence.py",
+      "sha256": "57bd09dc25149963495ab49613f438aed3479ad1ff4ad9070a3df4801c28e514"
+    },
+    {
+      "bytes": 5376,
+      "path": "tests/test_component_inventory.py",
+      "sha256": "b6eef7a36fbd24889a28736b1f90363ffbe0796433af797dd896809b53e9e343"
+    },
+    {
+      "bytes": 3822,
+      "path": "tests/test_linux_docker_guard_evidence.py",
+      "sha256": "50f6889e92f3b233ef6d73ca524167a595ce5bac417db3d13cd607a164aaa40e"
+    }
+  ],
+  "status": "pass-guard-contract-no-live-docker",
+  "task_ids": [
+    "9.2.1.3"
+  ]
+}
