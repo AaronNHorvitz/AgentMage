@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import stat
 import struct
 import subprocess
@@ -55,7 +56,14 @@ def run(
         check=False,
     )
     if check and completed.returncode != 0:
-        raise GuestEvidenceError(f"guest command failed: {Path(arguments[0]).name}")
+        detail = completed.stderr.decode("utf-8", errors="replace").strip().splitlines()
+        suffix = detail[-1] if detail else ""
+        if len(suffix) > 160 or re.fullmatch(r"[A-Za-z0-9 ./_:=@()-]*", suffix) is None:
+            suffix = ""
+        diagnostic = f" ({suffix})" if suffix else ""
+        raise GuestEvidenceError(
+            f"guest command failed: {Path(arguments[0]).name}{diagnostic}"
+        )
     return completed
 
 

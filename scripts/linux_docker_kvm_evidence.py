@@ -607,15 +607,24 @@ def run_target_acceptance(
                 if target is FEDORA
                 else f"sudo dpkg -i /home/agentmage/{package.name} >/dev/null"
             )
-            output = vm_support.ssh_script(
-                guest,
+            probe_script = (
                 "set -eu\n"
                 f"{install}\n"
                 "sudo chmod 0500 /home/agentmage/linux_docker_kvm_guest.py\n"
-                f"sudo python3 /home/agentmage/linux_docker_kvm_guest.py {revision}\n",
-                timeout=900,
-                stage="docker-kvm-live-topology",
+                f"sudo python3 /home/agentmage/linux_docker_kvm_guest.py {revision}\n"
             )
+            completed = vm_support.run(
+                [*vm_support.ssh_argv(guest), "/usr/bin/bash", "-s"],
+                timeout=900,
+                input_value=probe_script,
+            )
+            if completed.returncode != 0:
+                diagnostic = completed.stderr.strip().splitlines()
+                detail = diagnostic[-1] if diagnostic else "guest probe refused"
+                if len(detail) > 240 or re.fullmatch(r"[A-Za-z0-9 ./_:=@()-]*", detail) is None:
+                    detail = "guest probe refused"
+                raise DockerKvmEvidenceError(f"Docker KVM live topology failed: {detail}")
+            output = completed.stdout
             try:
                 result = json.loads(output)
             except json.JSONDecodeError as error:
