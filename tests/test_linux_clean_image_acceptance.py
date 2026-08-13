@@ -23,6 +23,15 @@ class LinuxCleanImageAcceptanceTests(unittest.TestCase):
             ],
             "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
         )
+        self.assertEqual(
+            acceptance.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
+            3,
+        )
+        self.assertFalse(
+            acceptance.EXPECTED_INFERENCE_DESCRIPTOR[
+                "docker_compatibility_available"
+            ]
+        )
 
     def valid_platform(self, target: acceptance.Target) -> dict:
         steps = []

@@ -20,3 +20,12 @@ surface, Vulkan backend, and model artifact. The Rust contract binds that exact
 package to a private standard-user model-store identity, one authenticated
 kernel endpoint, one inference slot, zero swap, and bounded cgroup inputs. These
 are preconditions for later runtime work, not an inference or release claim.
+
+The optional Linux Docker compatibility profile is
+[`docker-model-runner-v1.2.6-linux-x86_64.json`](../../model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json).
+It pins one plugin version, one Docker Model Runner image manifest, and one
+quarantined model OCI manifest. Its Rust contract makes the rootful-daemon and
+Docker-group prerequisites explicit, accepts only a fixed guarded loopback
+endpoint, closes mounts and resources, and requires no acquisition, tracking,
+proxy, DNS, or egress. Docker is absent on the current host and the profile is
+not activated; it provides no inference or Docker support claim.

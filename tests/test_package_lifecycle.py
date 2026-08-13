@@ -24,8 +24,22 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            2,
+            3,
         )
+        self.assertFalse(
+            lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
+                "docker_compatibility_available"
+            ]
+        )
+        for key in (
+            "docker_runtime_profile_sha256",
+            "docker_model_runner_image_digest",
+            "docker_model_artifact_digest",
+        ):
+            self.assertRegex(
+                lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key],
+                r"^(?:sha256:)?[0-9a-f]{64}$",
+            )
 
     def valid_lifecycle(self) -> dict:
         checks = {

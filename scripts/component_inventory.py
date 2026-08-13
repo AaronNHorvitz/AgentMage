@@ -74,6 +74,7 @@ EXPECTED_SOURCES = {
     "dependency_classes": "architecture/dependency-classes.json",
     "optional_components": "architecture/optional-component-inventory.json",
     "linux_native_runtime_package": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
+    "linux_docker_runtime_profile": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
     "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
     "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json",
@@ -243,6 +244,8 @@ def _build_environments(clean_report: dict[str, Any]) -> list[dict[str, str]]:
 def _runtime_candidates(
     linux_native: dict[str, Any],
     linux_native_profile_sha256: str,
+    linux_docker: dict[str, Any],
+    linux_docker_profile_sha256: str,
     primary: dict[str, Any],
     fallback: dict[str, Any],
     macos: dict[str, Any],
@@ -259,6 +262,14 @@ def _runtime_candidates(
         "status": "PACKAGE_INPUT_PINNED_NOT_ACTIVATED",
     }:
         raise ValueError("Linux native runtime package was promoted without its owning gate")
+    if linux_docker.get("decision") != {
+        "docker_engine_directly_tested": False,
+        "enabled_models": 0,
+        "inference_implemented": False,
+        "release_approval": False,
+        "status": "COMPATIBILITY_PROFILE_PINNED_NOT_ACTIVATED",
+    }:
+        raise ValueError("Linux Docker compatibility profile was promoted without its owning gate")
     if (
         HASH.fullmatch(linux_native_profile_sha256) is None
         or linux_native.get("package", {}).get("package_id")
@@ -313,6 +324,30 @@ def _runtime_candidates(
     docker_digest = IMAGE_DIGEST.fullmatch(primary_docker["digest"])
     if docker_digest is None:
         raise ValueError("Docker runtime candidate digest is invalid")
+    profile_docker_digest = IMAGE_DIGEST.fullmatch(
+        linux_docker.get("engine", {}).get("manifest_digest", "")
+    )
+    model_digest = IMAGE_DIGEST.fullmatch(
+        linux_docker.get("model_artifact", {}).get("manifest_digest", "")
+    )
+    if (
+        HASH.fullmatch(linux_docker_profile_sha256) is None
+        or profile_docker_digest is None
+        or model_digest is None
+        or profile_docker_digest.group(1) != docker_digest.group(1)
+        or linux_docker.get("engine", {}).get("runtime_source_revision")
+        != primary_docker.get("runtime_source_revision")
+        or linux_docker.get("engine", {}).get("runtime_version")
+        != primary_docker.get("runtime_version")
+        or linux_docker.get("package")
+        != {
+            "install_authority": "separate-administrator-operation",
+            "package_id": "docker-model-plugin",
+            "package_version": "1.2.6",
+            "replacement": "exact-version-only",
+        }
+    ):
+        raise ValueError("Linux Docker compatibility profile identity is invalid")
     candidates = [
         {
             "component_id": EXPECTED_RUNTIME_CANDIDATES[0],
@@ -329,10 +364,14 @@ def _runtime_candidates(
         },
         {
             "component_id": EXPECTED_RUNTIME_CANDIDATES[1],
+            "package_id": linux_docker["package"]["package_id"],
             "platform": "linux-x86_64",
             "version": primary_docker["runtime_version"],
             "source_revision": primary_docker["runtime_source_revision"],
             "sha256": docker_digest.group(1),
+            "profile_sha256": linux_docker_profile_sha256,
+            "model_manifest_sha256": model_digest.group(1),
+            "docker_engine_directly_tested": False,
             "approval_status": "candidate-not-approved",
         },
         {
@@ -373,6 +412,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     primary = sources[policy["sources"]["linux_primary_runtime_candidate"]]
     fallback = sources[policy["sources"]["linux_fallback_runtime_candidate"]]
     linux_native = sources[policy["sources"]["linux_native_runtime_package"]]
+    linux_docker = sources[policy["sources"]["linux_docker_runtime_profile"]]
     macos = sources[policy["sources"]["macos_runtime_candidate"]]
     source_failures = [
         *validate_clean_build_report(clean, root),
@@ -401,6 +441,8 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     candidates = _runtime_candidates(
         linux_native,
         sha256_file(root / policy["sources"]["linux_native_runtime_package"]),
+        linux_docker,
+        sha256_file(root / policy["sources"]["linux_docker_runtime_profile"]),
         primary,
         fallback,
         macos,

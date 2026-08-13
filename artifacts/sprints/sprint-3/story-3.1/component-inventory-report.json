@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "c5b4e1606195d81075e58939e72b1815018bb23a72f140c19e3fafa6f76810bb",
+        "sha256": "fbcd26254ec7f1ca5d2478ef4a2604da0afd6504c74056d89500c7d5f4fbb10d",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57",
+        "sha256": "95322dc3d8d5554e581516a41cf87f560d1c6fa0e4d8fe5561a10989e08773b1",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -147,7 +147,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "06a629206d885da10e18af4f78b7c5f40034adc6809112a178a602f86fbb69c7",
+      "identity_set_sha256": "42049ae96636471c1f6ecc2b4ea033948afa1d9a1069c211519f2094826e1fe7",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -300,7 +300,11 @@
       {
         "approval_status": "candidate-not-approved",
         "component_id": "linux-docker-model-runner-b9879",
+        "docker_engine_directly_tested": false,
+        "model_manifest_sha256": "08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+        "package_id": "docker-model-plugin",
         "platform": "linux-x86_64",
+        "profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
         "sha256": "bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
         "source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
         "version": "b9879"
@@ -330,15 +334,15 @@
   "source_artifacts": [
     {
       "path": "architecture/component-inventory-policy.json",
-      "sha256": "15d17fff25d7437934c82c8086596609a3316e63081a9db172c0e8aa69600879"
+      "sha256": "906e8826b5162fe9df085d870ac6900420239440c095d671b5e726415424888f"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "edf15b283de55469fbbebcb6323c4d47eee16a12d5db31cc0ed0104e90bf1083"
+      "sha256": "4615eac673911400d708f9f0006e3ec41acaf2e9cceb211e42a6604fd189e13f"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "10b86143665386de4a693c97532caa5ee1823082a445a9ee370b33cbbb2656c5"
+      "sha256": "f65f951045f4a33f29297a06e28d79a1959df1245244c46fefa7d9041adde992"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -351,6 +355,10 @@
     {
       "path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
       "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
+    },
+    {
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
     },
     {
       "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
@@ -366,19 +374,19 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "aadedbf19e447d2f736eec1eee00104bf0e05cf3ea45c2f2b2c459a628b672a2"
+      "sha256": "564bfe45200a36e0368c3269cf0db4999c864fc8686f98b87e1c85b50af594be"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "0dcf6ddacb663ea4f062407345b12eebd4906efe4be1eb2d75d3160b74d1a849"
+      "sha256": "a7dd60e283f56529fd33daea4423e965be133a0f73adadd3c42e154843431b26"
     },
     {
       "path": "scripts/component_inventory.py",
-      "sha256": "87aa197a9e4e4234315bdc96b2b5362194e4e5f2ae41aa60c47d1ea9d7e3be50"
+      "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "0a8deb0ae90b5e552e0a6421533369db1646ab5e9dd298567803d72f40cc033e"
+      "sha256": "dfb8905f5afb42553d55400cf166eadefa2a89cf9b7481224991e573185ad769"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",

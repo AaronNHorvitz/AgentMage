@@ -1,0 +1,98 @@
+{
+  "architecture": "x86_64",
+  "authority": {
+    "credential": false,
+    "docker_daemon_control": false,
+    "grant": false,
+    "host_filesystem": false,
+    "model_acquisition": false,
+    "network_egress": false,
+    "tool": false,
+    "workspace": false
+  },
+  "backend": "cuda-13.3",
+  "daemon_prerequisites": {
+    "api_access_owner": "separate-admin-install-and-runner-lifecycle",
+    "daemon_uid": 0,
+    "docker_engine_required": true,
+    "docker_socket_exposed_to_adapter": false,
+    "docker_socket_exposed_to_runner": false,
+    "exact_daemon_binary_identity_required": true,
+    "launch_user": "invoking-standard-user",
+    "required_supplementary_group": "docker-socket-owner-group",
+    "required_supplementary_group_risk": "host-equivalent-docker-daemon-authority",
+    "rootless_engine_accepted": false
+  },
+  "decision": {
+    "docker_engine_directly_tested": false,
+    "enabled_models": 0,
+    "inference_implemented": false,
+    "release_approval": false,
+    "status": "COMPATIBILITY_PROFILE_PINNED_NOT_ACTIVATED"
+  },
+  "engine": {
+    "image": "docker.io/docker/model-runner",
+    "manifest_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+    "runtime_version": "b9879",
+    "tag_observed": "v1.2.6-cuda"
+  },
+  "ipc": {
+    "allowed_path": "/engines/llama.cpp/v1/chat/completions",
+    "client": "kernel-docker-inference-adapter",
+    "host": "127.0.0.1",
+    "listener": "docker-model-runner-only",
+    "management_endpoints_allowed": false,
+    "non_loopback_bind": false,
+    "port": 12434,
+    "raw_endpoint_exposed_to_extension": false,
+    "raw_endpoint_exposed_to_tool_worker": false,
+    "transport": "guarded-loopback-tcp"
+  },
+  "model_artifact": {
+    "artifact_type": "application/vnd.cncf.model.manifest.v1+json",
+    "config_digest": "sha256:034b7a797c86d734dfbc975cc1e1b8487268bf172bc19813b5bb8bc31de5bcc5",
+    "manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "model_layer_digest": "sha256:85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+    "projector_layer_digest": "sha256:ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
+    "repository": "docker.io/ai/gemma4",
+    "source_admission": "blocked",
+    "tag_observed": "e4b"
+  },
+  "mount_policy": {
+    "credential_mounts": 0,
+    "docker_socket_mounts": 0,
+    "host_root_mounts": 0,
+    "model_content_store": "docker-managed-exact-oci-artifact-only",
+    "model_content_store_write": false,
+    "private_runtime_tmpfs": true,
+    "workspace_mounts": 0
+  },
+  "network_policy": {
+    "acquisition_allowed": false,
+    "ambient_dns": false,
+    "ambient_proxy": false,
+    "do_not_track": true,
+    "outbound_bytes": 0,
+    "registry_access": false
+  },
+  "package": {
+    "install_authority": "separate-administrator-operation",
+    "package_id": "docker-model-plugin",
+    "package_version": "1.2.6",
+    "replacement": "exact-version-only"
+  },
+  "platform": "linux",
+  "project": "Docker Model Runner",
+  "record_type": "linux_docker_model_runner_compatibility_profile",
+  "resource_ceiling": {
+    "cpu_percent": 3200,
+    "memory_bytes": 68719476736,
+    "output_bytes": 16777216,
+    "parallel_slots": 1,
+    "runtime_seconds": 3600,
+    "swap_bytes": 0,
+    "tasks": 64
+  },
+  "schema_version": 1
+}
