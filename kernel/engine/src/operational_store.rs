@@ -2845,6 +2845,22 @@ mod tests {
         path
     }
 
+    fn assert_artifacts_exclude_canary(store: &Path, backup: &Path, export: &Path, canary: &str) {
+        for artifact in sqlite_artifact_paths(store)
+            .into_iter()
+            .chain(sqlite_artifact_paths(backup))
+            .chain([export.to_path_buf()])
+        {
+            if let Ok(bytes) = fs::read(artifact) {
+                assert!(
+                    !bytes
+                        .windows(canary.len())
+                        .any(|window| window == canary.as_bytes())
+                );
+            }
+        }
+    }
+
     fn create_version_one_store(path: &Path, key: &[u8; 32]) {
         prepare_new_store_file(path).expect("legacy store file");
         let connection = open_connection(path, key).expect("legacy encrypted connection");
@@ -3099,6 +3115,48 @@ mod tests {
             fs::read(&occupied).expect("occupied remains"),
             b"do-not-overwrite"
         );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn synthetic_canary_is_absent_from_encrypted_and_derived_artifacts() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let backup = directory.join("authority.backup.db");
+        let export = directory.join("authority-derived.jsonl");
+        let canary = "AM_SYNTHETIC_SECRET_SPRINT11_STORAGE_BOUNDARY";
+        let record = format!(r#"{{"private":"{canary}"}}"#);
+        let record_sha256 = sha256_hex(record.as_bytes());
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([61; 32]))
+            .expect("encrypted store");
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (?1, ?2, 'active', 1, 1, ?3, ?4)",
+                params![canary, canary, record_sha256, record.as_bytes()],
+            )
+            .expect("synthetic canary fixture");
+
+        let backup_receipt = store
+            .backup(&backup, &observation(), &mut TestKey([62; 32]))
+            .expect("encrypted canary backup");
+        let export_receipt = store
+            .export_json_lines(&export, &observation())
+            .expect("content-free derivative");
+        let diagnostics = format!(
+            "{store:?}{backup_receipt:?}{export_receipt:?}{}{}",
+            OperationalStoreError::IntegrityFailure,
+            OperationalStoreError::RestoreFailure
+        );
+        assert!(!diagnostics.contains(canary));
+        assert_artifacts_exclude_canary(&path, &backup, &export, canary);
+        drop(store);
+        assert_artifacts_exclude_canary(&path, &backup, &export, canary);
+
+        let restored = OperationalStore::open(&backup, &observation(), &mut TestKey([62; 32]))
+            .expect("encrypted backup reopens");
+        assert_eq!(restored.generation(), backup_receipt.generation);
+        drop(restored);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
