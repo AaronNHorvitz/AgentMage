@@ -6,11 +6,26 @@ import copy
 import inspect
 import socket
 import unittest
+from pathlib import Path
 
 from scripts import linux_native_ubuntu_control_evidence as evidence
 
 
 class NativeUbuntuControlEvidenceTests(unittest.TestCase):
+    def test_vm_resource_envelope_rejects_unbounded_values(self) -> None:
+        with self.assertRaisesRegex(
+            evidence.NativeUbuntuEvidenceError, "resource envelope"
+        ):
+            evidence.start_vm(
+                None,
+                Path("guest.qcow2"),
+                Path("seed.iso"),
+                Path("key"),
+                Path("temporary"),
+                restricted_network=True,
+                cpu_count=33,
+            )
+
     def valid_report(self) -> dict:
         tests = {
             "sandbox_live": evidence.LIVE_SANDBOX_TESTS,

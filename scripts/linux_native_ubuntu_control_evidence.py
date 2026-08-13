@@ -499,7 +499,11 @@ def start_vm(
     directory: Path,
     *,
     restricted_network: bool,
+    cpu_count: int = 4,
+    memory_mib: int = 4096,
 ) -> VmHandle:
+    if not 1 <= cpu_count <= 32 or not 1024 <= memory_mib <= 32768:
+        raise NativeUbuntuEvidenceError("QEMU resource envelope is invalid")
     pid_file = directory / "qemu.pid"
     serial_log = directory / "serial.log"
     for _ in range(8):
@@ -517,9 +521,9 @@ def start_vm(
                 "-machine",
                 "q35",
                 "-smp",
-                "4",
+                str(cpu_count),
                 "-m",
-                "4096",
+                str(memory_mib),
                 "-nodefaults",
                 "-display",
                 "none",
