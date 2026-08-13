@@ -10,6 +10,9 @@ cgroup identity is supplied to the production guard. It completes the fresh
 challenge handshake and sends a deliberately disallowed HTTP request. The guard
 must terminate with `docker-guard.service.request-policy`, proving peer
 authentication without forwarding to Model Runner or performing inference.
+The disposable test delivers the secret through a private evidence-only file so
+Python can construct the transcript; it removes that file before connecting and
+does not represent this as the production inherited-channel mechanism.
 
 ```bash
 npm run evidence:story9.2-docker-reachability:build

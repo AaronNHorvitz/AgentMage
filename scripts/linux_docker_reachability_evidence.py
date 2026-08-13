@@ -25,8 +25,10 @@ except ModuleNotFoundError:
 ROOT: Final = Path(__file__).resolve().parents[1]
 REPORT_PATH: Final = ROOT / "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json"
 SOURCE_PATHS: Final = (
+    "docs/decisions/0038-bind-cross-uid-guard-peer-through-challenge.md",
     "docs/support/linux-docker-reachability-evidence.md",
     "package.json",
+    "platforms/linux-inference/src/docker_guard_service.rs",
     "scripts/linux_docker_guard_peer.py",
     "scripts/linux_docker_kvm_guest.py",
     "scripts/linux_docker_reachability_evidence.py",

@@ -28,7 +28,6 @@ const CHALLENGE_BYTES: usize = 34;
 const RESPONSE_BYTES: usize = 66;
 const MAX_REQUEST_BYTES: usize = 16 * 1024 * 1024;
 const MAX_RESPONSE_BYTES: usize = 16 * 1024 * 1024;
-const MAX_PEER_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
 const SOCKET_MODE: u32 = 0o660;
 const SOCKET_PARENT_MODE: u32 = 0o710;
 const IO_TIMEOUT: Duration = Duration::from_secs(30);
@@ -276,10 +275,7 @@ impl DockerGuardService {
             .set_read_timeout(Some(IO_TIMEOUT))
             .and_then(|()| stream.set_write_timeout(Some(IO_TIMEOUT)))
             .map_err(|_| DockerGuardServiceError::Platform)?;
-        let peer = observe_peer(&stream)?;
-        if peer != self.bootstrap.expected_peer {
-            return Err(DockerGuardServiceError::PeerIdentity);
-        }
+        let peer = observe_peer(&stream, &self.bootstrap.expected_peer)?;
         authenticate(&mut stream, &peer, &self.bootstrap.session_secret)?;
         let request = read_frame(&mut stream, MAX_REQUEST_BYTES)?;
         validate_http_request(&request)?;
@@ -338,24 +334,40 @@ impl ObjectIdentity {
     }
 }
 
-fn observe_peer(stream: &UnixStream) -> Result<ExpectedPeer, DockerGuardServiceError> {
+fn observe_peer(
+    stream: &UnixStream,
+    expected: &ExpectedPeer,
+) -> Result<ExpectedPeer, DockerGuardServiceError> {
     let credentials = socket_peercred(stream).map_err(|_| DockerGuardServiceError::Platform)?;
     let pid = credentials.pid.as_raw_nonzero().get();
     let uid = credentials.uid.as_raw();
     let start_time_ticks = process_start_time(pid)?;
-    let executable_sha256 = hash_file_bounded(
-        &PathBuf::from(format!("/proc/{pid}/exe")),
-        MAX_PEER_EXECUTABLE_BYTES,
-    )?;
     let cgroup = fs::read(format!("/proc/{pid}/cgroup"))
         .map_err(|_| DockerGuardServiceError::PeerIdentity)?;
-    Ok(ExpectedPeer {
+    verify_kernel_peer(
+        expected,
         uid,
         pid,
         start_time_ticks,
-        executable_sha256,
-        cgroup_sha256: Sha256::digest(cgroup).into(),
-    })
+        Sha256::digest(cgroup).into(),
+    )
+}
+
+fn verify_kernel_peer(
+    expected: &ExpectedPeer,
+    uid: u32,
+    pid: i32,
+    start_time_ticks: u64,
+    cgroup_sha256: [u8; 32],
+) -> Result<ExpectedPeer, DockerGuardServiceError> {
+    if uid != expected.uid
+        || pid != expected.pid
+        || start_time_ticks != expected.start_time_ticks
+        || cgroup_sha256 != expected.cgroup_sha256
+    {
+        return Err(DockerGuardServiceError::PeerIdentity);
+    }
+    Ok(expected.clone())
 }
 
 fn process_start_time(pid: i32) -> Result<u64, DockerGuardServiceError> {
@@ -369,34 +381,6 @@ fn process_start_time(pid: i32) -> Result<u64, DockerGuardServiceError> {
         .and_then(|value| value.parse().ok())
         .filter(|value| *value > 0)
         .ok_or(DockerGuardServiceError::PeerIdentity)
-}
-
-fn hash_file_bounded(path: &Path, maximum: u64) -> Result<[u8; 32], DockerGuardServiceError> {
-    let metadata = fs::metadata(path).map_err(|_| DockerGuardServiceError::PeerIdentity)?;
-    if !metadata.is_file() || metadata.len() == 0 || metadata.len() > maximum {
-        return Err(DockerGuardServiceError::PeerIdentity);
-    }
-    let mut file = fs::File::open(path).map_err(|_| DockerGuardServiceError::PeerIdentity)?;
-    let mut digest = Sha256::new();
-    let mut buffer = [0_u8; 32 * 1024];
-    let mut total = 0_u64;
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .map_err(|_| DockerGuardServiceError::PeerIdentity)?;
-        if read == 0 {
-            break;
-        }
-        total = total
-            .checked_add(read as u64)
-            .ok_or(DockerGuardServiceError::PeerIdentity)?;
-        if total > maximum {
-            return Err(DockerGuardServiceError::PeerIdentity);
-        }
-        digest.update(&buffer[..read]);
-    }
-    buffer.zeroize();
-    Ok(digest.finalize().into())
 }
 
 fn authenticate(
@@ -709,6 +693,53 @@ mod tests {
             ),
         ] {
             assert_ne!(changed, expected);
+        }
+    }
+
+    #[test]
+    fn kernel_peer_verification_binds_readable_identity_before_challenge() {
+        let expected = peer();
+        assert_eq!(
+            verify_kernel_peer(
+                &expected,
+                expected.uid,
+                expected.pid,
+                expected.start_time_ticks,
+                expected.cgroup_sha256,
+            ),
+            Ok(expected.clone())
+        );
+        for changed in [
+            verify_kernel_peer(
+                &expected,
+                expected.uid + 1,
+                expected.pid,
+                expected.start_time_ticks,
+                expected.cgroup_sha256,
+            ),
+            verify_kernel_peer(
+                &expected,
+                expected.uid,
+                expected.pid + 1,
+                expected.start_time_ticks,
+                expected.cgroup_sha256,
+            ),
+            verify_kernel_peer(
+                &expected,
+                expected.uid,
+                expected.pid,
+                expected.start_time_ticks + 1,
+                expected.cgroup_sha256,
+            ),
+            verify_kernel_peer(
+                &expected,
+                expected.uid,
+                expected.pid,
+                expected.start_time_ticks,
+                [7; 32],
+            ),
+        ] {
+            assert_eq!(changed, Err(DockerGuardServiceError::PeerIdentity));
         }
     }
 
