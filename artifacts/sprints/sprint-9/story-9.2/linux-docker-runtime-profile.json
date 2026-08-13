@@ -1,0 +1,231 @@
+{
+  "artifact_id": "linux-docker-model-runner-compatibility-profile",
+  "authority": {
+    "credential": false,
+    "docker_daemon_control": false,
+    "grant": false,
+    "host_filesystem": false,
+    "model_acquisition": false,
+    "network_egress": false,
+    "tool": false,
+    "workspace": false
+  },
+  "daemon_prerequisites": {
+    "api_access_owner": "separate-admin-install-and-runner-lifecycle",
+    "daemon_uid": 0,
+    "docker_engine_required": true,
+    "docker_socket_exposed_to_adapter": false,
+    "docker_socket_exposed_to_runner": false,
+    "exact_daemon_binary_identity_required": true,
+    "launch_user": "invoking-standard-user",
+    "required_supplementary_group": "docker-socket-owner-group",
+    "required_supplementary_group_risk": "host-equivalent-docker-daemon-authority",
+    "rootless_engine_accepted": false
+  },
+  "enabled_models": 0,
+  "host": {
+    "architecture": "x86_64",
+    "distribution": "fedora",
+    "docker_cli_available": false,
+    "docker_engine_contacted": false,
+    "version": "44"
+  },
+  "inference_started": false,
+  "limitations": [
+    "Docker Engine and docker-model-plugin are absent on this Fedora host; no Docker daemon, socket, container, or API was started.",
+    "Prior exact-image execution under rootless Podman is retained only as quarantined compatibility evidence and is not Docker Engine verification.",
+    "The pinned Gemma 4 E4B OCI artifact remains blocked by source-lineage, reproducibility, and quality gates; it is not enabled or loaded.",
+    "Raw loopback endpoint isolation, drift preflight, clean Fedora/Ubuntu Docker Engine execution, inference, and release support remain later sub-tasks."
+  ],
+  "model_artifact": {
+    "artifact_type": "application/vnd.cncf.model.manifest.v1+json",
+    "config_digest": "sha256:034b7a797c86d734dfbc975cc1e1b8487268bf172bc19813b5bb8bc31de5bcc5",
+    "manifest_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "model_layer_digest": "sha256:85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+    "projector_layer_digest": "sha256:ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51",
+    "repository": "docker.io/ai/gemma4",
+    "source_admission": "blocked",
+    "tag_observed": "e4b"
+  },
+  "mount_policy": {
+    "credential_mounts": 0,
+    "docker_socket_mounts": 0,
+    "host_root_mounts": 0,
+    "model_content_store": "docker-managed-exact-oci-artifact-only",
+    "model_content_store_write": false,
+    "private_runtime_tmpfs": true,
+    "workspace_mounts": 0
+  },
+  "network_policy": {
+    "acquisition_allowed": false,
+    "ambient_dns": false,
+    "ambient_proxy": false,
+    "do_not_track": true,
+    "outbound_bytes": 0,
+    "registry_access": false
+  },
+  "package": {
+    "install_authority": "separate-administrator-operation",
+    "package_id": "docker-model-plugin",
+    "package_version": "1.2.6",
+    "replacement": "exact-version-only"
+  },
+  "prior_evidence": {
+    "docker_engine_directly_tested": false,
+    "podman_compatibility_bundle": "artifacts/sprints/sprint-0/story-0.3-dmr/evidence-manifest.json",
+    "podman_compatibility_bundle_sha256": "4b100f23ae47c7062089d2ec19dd3c8486d4ed8e25c0888a41d37987f9995d38",
+    "quality_status": "FAIL"
+  },
+  "process_boundary": {
+    "accepted_operation": "self-check-only",
+    "authority_inputs": [],
+    "component_id": "platform-linux-native-inference",
+    "contract": "authenticated-local-endpoint-v1",
+    "docker_compatibility_available": false,
+    "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
+    "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "docker_runtime_profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+    "enabled_models": 0,
+    "inference_available": false,
+    "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+    "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
+    "network_listener": false,
+    "process_boundary_version": 3
+  },
+  "profile_sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7",
+  "release_claim": "none",
+  "resource_ceiling": {
+    "cpu_percent": 3200,
+    "memory_bytes": 68719476736,
+    "output_bytes": 16777216,
+    "parallel_slots": 1,
+    "runtime_seconds": 3600,
+    "swap_bytes": 0,
+    "tasks": 64
+  },
+  "runner_engine": {
+    "image": "docker.io/docker/model-runner",
+    "manifest_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
+    "runtime_version": "b9879",
+    "tag_observed": "v1.2.6-cuda"
+  },
+  "schema_version": 1,
+  "source_revision": "d2c8be36f528cc7bff2720a94dd9e27bcc783fc5",
+  "sources": [
+    {
+      "bytes": 13033,
+      "path": "Cargo.lock",
+      "sha256": "072092f2c4a3501d745b485e15980c3fbe3292471006a4316c086b7adbb12fcd"
+    },
+    {
+      "bytes": 1442,
+      "path": "Cargo.toml",
+      "sha256": "d8f1d6e880ea62cc4ddb5c2e5f7981ae427dc9cfc0473b86190aec35a455cb0b"
+    },
+    {
+      "bytes": 35376,
+      "path": "RUNTIME-BOUNDARIES.md",
+      "sha256": "82da6f0cddd4cfb38f1844af4e220f55c55f189f3502e5a9f848dfba9add9ae1"
+    },
+    {
+      "bytes": 4446,
+      "path": "architecture/build-contract.json",
+      "sha256": "6849cee1d9b2f8e46425eeb0f737f583d31ae7be3236baae09f6d11a0ad044bb"
+    },
+    {
+      "bytes": 2087,
+      "path": "architecture/component-inventory-policy.json",
+      "sha256": "906e8826b5162fe9df085d870ac6900420239440c095d671b5e726415424888f"
+    },
+    {
+      "bytes": 4868,
+      "path": "docs/decisions/0028-isolated-linux-inference-package-boundary.md",
+      "sha256": "0b8050650a7597eaf3b0e5a77c0436055c6d025569e2c84fd52f3ba428f89c53"
+    },
+    {
+      "bytes": 5428,
+      "path": "docs/decisions/0029-closed-linux-native-llama-runtime-package.md",
+      "sha256": "d37a7a0ad3cb1f41f953e9809c65ab001a5fd0ef6a1de1085afe2531ccef51f5"
+    },
+    {
+      "bytes": 6330,
+      "path": "docs/decisions/0030-closed-linux-docker-model-runner-compatibility-profile.md",
+      "sha256": "9c0c50d98933661884e58da3c00360438946537519e73057603ffeca7d4fdcbb"
+    },
+    {
+      "bytes": 6213,
+      "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+      "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1"
+    },
+    {
+      "bytes": 3403,
+      "path": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+      "sha256": "f766d8f9e324ef2154b83f2e8fa735d824b5b27b4acf1c4ac6475eff845a1cf7"
+    },
+    {
+      "bytes": 20157,
+      "path": "package.json",
+      "sha256": "1cedebecf17bd9f92f2f767d5aedf35a161b93bd660901cf8bb64609b49f5469"
+    },
+    {
+      "bytes": 441,
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
+    },
+    {
+      "bytes": 1931,
+      "path": "platforms/linux-inference/README.md",
+      "sha256": "5d78c1b779986c78cb691ca7b5c0d8e0e528d6ea400b8137ccdbad2f517c81ac"
+    },
+    {
+      "bytes": 24590,
+      "path": "platforms/linux-inference/src/docker_runtime.rs",
+      "sha256": "c8e132707a23201cc9f2be3a508cc429ef38d73b72bb0e4eb0a2555d3f6e9aa7"
+    },
+    {
+      "bytes": 6759,
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "1ade3bae8140060f2c3855b7d0d71d46e786e8e2cf01be4fd170e9c968fd7f17"
+    },
+    {
+      "bytes": 574,
+      "path": "platforms/linux-inference/src/main.rs",
+      "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+    },
+    {
+      "bytes": 1192,
+      "path": "platforms/linux-inference/tests/process_boundary.rs",
+      "sha256": "6f64bd878913976b14dae5ccc3ca570a2d390571193f4e17dafb1972f4fc97f7"
+    },
+    {
+      "bytes": 14094,
+      "path": "scripts/build_contract.py",
+      "sha256": "681626d86a97fe9e22476fbb068986b860643d787943883c680aa4e92dda9212"
+    },
+    {
+      "bytes": 24968,
+      "path": "scripts/component_inventory.py",
+      "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
+    },
+    {
+      "bytes": 19089,
+      "path": "scripts/linux_docker_runtime_evidence.py",
+      "sha256": "f3d06747c153fe3b2705c48bfb089cb1421ee433511d979acffafb4a47b97d16"
+    },
+    {
+      "bytes": 5300,
+      "path": "tests/test_component_inventory.py",
+      "sha256": "dfb8905f5afb42553d55400cf166eadefa2a89cf9b7481224991e573185ad769"
+    },
+    {
+      "bytes": 4169,
+      "path": "tests/test_linux_docker_runtime_evidence.py",
+      "sha256": "dea720215b1515467cd853f43211654cdf48f81244ae7b03cf8821d28764cd38"
+    }
+  ],
+  "status": "pass-pinned-contract-docker-not-installed",
+  "task_ids": [
+    "9.2.1.2"
+  ]
+}
