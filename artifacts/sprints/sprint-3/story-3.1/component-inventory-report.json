@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "fbcd26254ec7f1ca5d2478ef4a2604da0afd6504c74056d89500c7d5f4fbb10d",
+        "sha256": "dd1a1ac19eb92a25a236880413242624971cb39cb0bc7c77d0280f62c9c26d24",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "95322dc3d8d5554e581516a41cf87f560d1c6fa0e4d8fe5561a10989e08773b1",
+        "sha256": "d1b06e28b1843dea5521f9b31ae44571855e9841d1b0e74400d433925be47d7c",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -338,7 +338,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "4615eac673911400d708f9f0006e3ec41acaf2e9cceb211e42a6604fd189e13f"
+      "sha256": "0dd8a46912114794561ac40be3268099aee8a2216bfe6bb36d80a851f2706e5a"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
