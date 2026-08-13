@@ -28,13 +28,13 @@ class TraceabilityReportTests(unittest.TestCase):
 
         self.assertEqual(committed, report)
         self.assertEqual(report["schema_version"], 2)
-        self.assertEqual(report["counts"]["total"], 229)
+        self.assertEqual(report["counts"]["total"], 241)
         self.assertEqual(
             report["counts"]["by_kind"],
             {
-                "acceptance_test": 108,
+                "acceptance_test": 114,
                 "competitive_requirement": 18,
-                "product_requirement": 103,
+                "product_requirement": 109,
             },
         )
 
