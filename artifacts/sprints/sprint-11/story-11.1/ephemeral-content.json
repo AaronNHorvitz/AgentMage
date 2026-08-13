@@ -1,0 +1,76 @@
+{
+  "artifact_id": "structural-ephemeral-content",
+  "claims": {
+    "closed_raw_content_class": true,
+    "database_page_canary_campaign_complete": false,
+    "external_network_used": false,
+    "forged_handling_refused": true,
+    "mixed_candidate_retains_only_minimized_metadata": true,
+    "public_constructor_forces_ephemeral": true,
+    "raw_only_candidate_selects_no_storage": true,
+    "raw_value_absent_from_prepared_record": true,
+    "raw_value_and_digest_absent_from_receipt": true,
+    "raw_value_digest_absent_from_prepared_record": true,
+    "release_support": false,
+    "same_shape_content_substitution_changes_no_receipt": true,
+    "typed_ingress_adapters_implemented": false
+  },
+  "content_classes": [
+    "raw_attachment",
+    "full_tool_output",
+    "environment_variable",
+    "prompt",
+    "model_response"
+  ],
+  "external_network_used": false,
+  "limitations": [
+    "Attachment, tool, environment, prompt, and model ingress adapters remain later work; this artifact proves the kernel persistence contract they must use.",
+    "The deterministic secret scanner retains its declared bounded signature coverage and makes no exhaustive-discovery claim.",
+    "Database-page, WAL, temporary-file, backup, export, log, crash-output, and model-context canary inspection remains assigned to Sub-task 11.1.3.2.",
+    "Expiration, holds, erasure, export, restore, corruption recovery, cross-platform evidence, and release acceptance remain later work."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "62c3efa40716e42a3c791b55f179c65da08c5003",
+  "sources": [
+    {
+      "bytes": 41038,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "080e416e2976e337b8c2c6423d8434217d37d79034f42ff6fdd7f7e54ec5ffea"
+    },
+    {
+      "bytes": 9517,
+      "path": "scripts/ephemeral_content_evidence.py",
+      "sha256": "c19af7f948b099dc71b3363ef42683e1f92eb312320f5523115d0b4ff7d0f2ad"
+    },
+    {
+      "bytes": 3185,
+      "path": "tests/test_ephemeral_content_evidence.py",
+      "sha256": "4eb6cc85ba0156e69f4774b740eabb2553b9ce4d5122c5a16524c70aca2f3916"
+    }
+  ],
+  "status": "pass-structural-ephemeral-defaults",
+  "task_ids": [
+    "11.1.1.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "b883ec64349dd45b563fb414f037f9d6f71b96d005a13ef070e4a987bf26c81d",
+      "exit_code": 0,
+      "expected_marker_sha256": "18e7b65a7feb5406ff3d5647bd49e4d862481359ba51756f0d1f6d65d81d10c2",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "661bcdc51d60ea09bfd338e4ec0dc6bf08a37e39f26a7636150bfe4d67c364b3",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    }
+  ]
+}
