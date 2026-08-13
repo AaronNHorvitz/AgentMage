@@ -128,7 +128,7 @@
   ],
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "b6a916d9d8a23fbad2d230e524617e0d9f23d7f1",
+  "source_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
   "sources": [
     {
       "bytes": 13090,
@@ -146,9 +146,9 @@
       "sha256": "28b4dc31f04054639d31a81c5ea361eca6d21b8b45c6a965e1e5a9cbcc5e81a9"
     },
     {
-      "bytes": 5596,
+      "bytes": 5660,
       "path": "architecture/build-contract.json",
-      "sha256": "6ac2ac38e415f7fa2ab8a08242154991126d3682a2352fb46f936ab2be6b8f03"
+      "sha256": "5a5eba1da34bd0e14ae45d1cf01564f36ef3ecbf8f8761e1fa738dce93c3e3e7"
     },
     {
       "bytes": 6714,
@@ -203,7 +203,7 @@
     {
       "bytes": 35377,
       "path": "platforms/linux-inference/src/docker_preflight.rs",
-      "sha256": "ee1f002700fe63aeef88e93a6ff9411191ddc9afbbb2a11c5a5db1e6c540d595"
+      "sha256": "f43b7f8888c4b02ec2588bc0a3fe902c1cc307cce52a6411190d4f89f16844eb"
     },
     {
       "bytes": 28369,

@@ -13,8 +13,8 @@
         "docker_mutation": false,
         "enabled": false,
         "network_egress": false,
-        "preflight_contract_version": 2,
-        "protocol_version": 1
+        "preflight_contract_version": 3,
+        "protocol_version": 2
       },
       "format": "rpm",
       "guard_descriptor": {
@@ -31,19 +31,19 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "b611da3052b5666b6901ff52bca48ec559201ef68b6a1b67c03aad6a801bcc26",
+      "manifest_sha256": "3b3ba9cc08f46713323e8df733a8467afe0477bb7c269518558c4cc025ef018b",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "7b634d949f4e3049c843b0f8065c7343ac9d93da47b3b6235630d6fe00faaa56",
+          "sha256": "3e0f611dc8c559d61986425227aae8744b88d063f31c5c34844ea0496f23859b",
           "size": 548216
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "0507ba084de6f59ee55c679a36ac3ac4ccedc735e67441d57db999f8e75928d9",
-          "size": 1021992
+          "sha256": "1fe9b8722cc314dc7682d404db3d4535321c10782b5f16e36d293b4af302ebaf",
+          "size": 1024744
         },
         {
           "mode": 493,
@@ -83,8 +83,8 @@
         "docker_mutation": false,
         "enabled": false,
         "network_egress": false,
-        "preflight_contract_version": 2,
-        "protocol_version": 1
+        "preflight_contract_version": 3,
+        "protocol_version": 2
       },
       "format": "deb",
       "guard_descriptor": {
@@ -101,19 +101,19 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "b611da3052b5666b6901ff52bca48ec559201ef68b6a1b67c03aad6a801bcc26",
+      "manifest_sha256": "3b3ba9cc08f46713323e8df733a8467afe0477bb7c269518558c4cc025ef018b",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "7b634d949f4e3049c843b0f8065c7343ac9d93da47b3b6235630d6fe00faaa56",
+          "sha256": "3e0f611dc8c559d61986425227aae8744b88d063f31c5c34844ea0496f23859b",
           "size": 548216
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "0507ba084de6f59ee55c679a36ac3ac4ccedc735e67441d57db999f8e75928d9",
-          "size": 1021992
+          "sha256": "1fe9b8722cc314dc7682d404db3d4535321c10782b5f16e36d293b4af302ebaf",
+          "size": 1024744
         },
         {
           "mode": 493,
@@ -185,14 +185,14 @@
   },
   "packages": {
     "deb": {
-      "bytes": 1261532,
+      "bytes": 1262222,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "c6a2422bb73f4b45b761a93f090f6e8b31e0849be7b13195d3c8387c97470c41"
+      "sha256": "a94e34ca97eaf06145a290343174bc3a44610924ac345bf591b87d5f1a743480"
     },
     "rpm": {
-      "bytes": 641248,
+      "bytes": 642113,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "07d42b8430bfceea512ef09b1932de85992e5424ab8be92dc9411822f8f80ec0"
+      "sha256": "60e575fa102de83bb9b90a01ad82aea9d66e8261a70a503be6822d42bf6c98b3"
     },
     "vsix": {
       "bytes": 15193,
@@ -203,7 +203,7 @@
   "release_claim": "none",
   "reproducible_package_rebuild": true,
   "schema_version": 1,
-  "source_revision": "b6a916d9d8a23fbad2d230e524617e0d9f23d7f1",
+  "source_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
   "sources": [
     {
       "bytes": 13090,
@@ -286,14 +286,14 @@
       "sha256": "8c8f3db58607fbaec618d9d9afdcc57981c52737d8c9c6015abac46ddb605096"
     },
     {
-      "bytes": 41392,
+      "bytes": 43237,
       "path": "platforms/linux-inference/src/docker_live_collector.rs",
-      "sha256": "c8da45dfcc9feec8cd034b58856a74ce3ebb3f2d26e73973f21bf15d7d540677"
+      "sha256": "b08ad8921c9493a24da7bbe40de7f229238f96cd4d809293fb20a9e52492c4d8"
     },
     {
       "bytes": 35377,
       "path": "platforms/linux-inference/src/docker_preflight.rs",
-      "sha256": "ee1f002700fe63aeef88e93a6ff9411191ddc9afbbb2a11c5a5db1e6c540d595"
+      "sha256": "f43b7f8888c4b02ec2588bc0a3fe902c1cc307cce52a6411190d4f89f16844eb"
     },
     {
       "bytes": 28369,
@@ -301,14 +301,14 @@
       "sha256": "f9a01163089c12943b303e275b4105d04e2e46c745202b647dfabf67240421aa"
     },
     {
-      "bytes": 22036,
+      "bytes": 22322,
       "path": "platforms/linux-inference/src/docker_topology_collector.rs",
-      "sha256": "e7196fef550a9d9bdff0d645e6800ba6f6b2e4c2039be9ad5150de04dbb358dd"
+      "sha256": "d5fd7d70d5e8cf6ce790125dff01b35c06cce13a58b0e2a618a310933b010154"
     },
     {
       "bytes": 2025,
       "path": "platforms/linux-inference/src/docker_topology_collector_main.rs",
-      "sha256": "5c6bb57153dbc26c637973373d6765de41d8171917e1548fd50bc5cb522798b4"
+      "sha256": "a58568d2d00cfccb1518ba4a2e24cbaaef13f44f35a56547c9c7b42423a124eb"
     },
     {
       "bytes": 8503,
@@ -323,7 +323,7 @@
     {
       "bytes": 4843,
       "path": "platforms/linux-inference/tests/process_boundary.rs",
-      "sha256": "94655c9da96fd0622a3a48339ecff48a0c1e660acf1f8db0974ca768614f4704"
+      "sha256": "891b06ea3c3fe8a6d228405d5a4bfccbeb9d7222f18d73fe43981f8ee9eeddfc"
     },
     {
       "bytes": 86,
@@ -333,12 +333,12 @@
     {
       "bytes": 49937,
       "path": "scripts/linux_clean_image_acceptance.py",
-      "sha256": "70182f9ac158a0638f15cdcdb585e5c442ed899c81e5ae8188c8c42076e4be65"
+      "sha256": "6ff3335f20845587fe8613a7a4445308b565d85a28e6a8b46d6c78e46c327715"
     },
     {
       "bytes": 17937,
       "path": "scripts/linux_docker_prerequisite_evidence.py",
-      "sha256": "d7c85b5a9e92f4f21ba3591d15550c259e1f33d70c5bd3014d82d1d9fe99fa0c"
+      "sha256": "894237a521d16e2ddf68703f4574df49d5f59f6f4a47f48a6f4b476b8d9b2bb0"
     },
     {
       "bytes": 20425,
@@ -353,7 +353,7 @@
     {
       "bytes": 38414,
       "path": "scripts/package_lifecycle.py",
-      "sha256": "c308c12fe7e72df1f56479974f3bdd3278ea519e893ec747265684c48d9ba1bd"
+      "sha256": "e87a003efd87498efc28750c6fd1a38f32320645b80eacc041f99460e038140d"
     },
     {
       "bytes": 6082,
