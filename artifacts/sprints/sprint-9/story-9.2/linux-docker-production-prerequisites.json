@@ -203,7 +203,7 @@
   "release_claim": "none",
   "reproducible_package_rebuild": true,
   "schema_version": 1,
-  "source_revision": "79ce99a3b8a1a909afdd154eb07c1403a52451ba",
+  "source_revision": "64c659ba660c1f26b6a55bb4c452fa8b016029b6",
   "sources": [
     {
       "bytes": 13090,
@@ -256,9 +256,9 @@
       "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
     },
     {
-      "bytes": 21429,
+      "bytes": 21682,
       "path": "package.json",
-      "sha256": "200fd3309144249eec59149f9002998cda82d97bb949f56856aefadc240a7a73"
+      "sha256": "035e3e319be95c157b1d7dfe9669f509f44cb780a0b2c683726147cb30e79f52"
     },
     {
       "bytes": 1232,
