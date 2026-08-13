@@ -1,0 +1,103 @@
+{
+  "artifact_id": "pre-persistence-policy",
+  "claims": {
+    "classification_precedes_prepared_record": true,
+    "complete_secret_discovery_claimed": false,
+    "content_free_receipt_generated": true,
+    "external_network_used": false,
+    "omitted_secret_value_and_digest_absent": true,
+    "persisted_secret_denied": true,
+    "release_support": false,
+    "restricted_persistence_implemented": false,
+    "retention_policy_bound": true,
+    "typed_domain_store_writes_implemented": false
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The deterministic scanner covers the six declared signature classes and does not claim exhaustive secret discovery.",
+    "PreparedPersistence is a sealed policy output, but typed domain-table write APIs and their storage integration remain later work.",
+    "Raw attachment, tool-output, environment, prompt, and model-response lifecycle coverage continues in Sub-task 11.1.1.5.",
+    "Expiration execution, holds, erasure, export, restore, corruption recovery, cross-platform evidence, and release acceptance remain later work."
+  ],
+  "private_user_data_used": false,
+  "profile": {
+    "admitted_encryption": "sql_cipher_operational_store",
+    "ephemeral_encryption": "none",
+    "field_handling": [
+      "persist",
+      "digest_only",
+      "ephemeral"
+    ],
+    "maximum_field_bytes": 262144,
+    "maximum_fields": 64,
+    "maximum_total_bytes": 1048576,
+    "restricted_persistence": "denied-until-policy",
+    "secret_classes": [
+      "credential_field",
+      "private_key",
+      "bearer_credential",
+      "provider_token",
+      "cloud_access_key",
+      "embedded_uri_credential"
+    ]
+  },
+  "schema_version": 1,
+  "source_revision": "fcf18387a702342af8953ccdfb91e7c812e90fa1",
+  "sources": [
+    {
+      "bytes": 12366,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "227b2642ba7df78fe0c34c7dc133667d671497f3ddff2fd004a26f6952cfb462"
+    },
+    {
+      "bytes": 1976,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "dfbfae853f7643679444531592f6d9f939d696ee24e2d15457eed9a1929ab2c9"
+    },
+    {
+      "bytes": 34548,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "ae610c24be0863858c4917fd0976f08be306f2f6aef46540eea4e4f67a30df85"
+    },
+    {
+      "bytes": 8614,
+      "path": "scripts/persistence_policy_evidence.py",
+      "sha256": "22777ad37b79a8a95bf0efe153d537d53d9619d4ac9e435a34f05eec9795ef64"
+    },
+    {
+      "bytes": 2811,
+      "path": "tests/test_persistence_policy_evidence.py",
+      "sha256": "147ac21c08484caddd8b9d61dd8558e480bbba0be263765a98878784c66fa8df"
+    }
+  ],
+  "status": "pass-classification-minimization-encryption-retention-receipt",
+  "task_ids": [
+    "11.1.1.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "b883ec64349dd45b563fb414f037f9d6f71b96d005a13ef070e4a987bf26c81d",
+      "exit_code": 0,
+      "expected_marker_sha256": "0969343595e2f8af0df015daffb9554de2a43657bbeb15dec529cb0f612bbcaf",
+      "status": "pass"
+    },
+    {
+      "command_id": "1f6db0672af336c5764092c42782b0d455697fd7e56805c1c49e8c8dcfdfd753",
+      "exit_code": 0,
+      "expected_marker_sha256": "5d6402d134d74597e5dc3f8edb2f54afa6869db5e0f86f401367ab88e1dedc07",
+      "status": "pass"
+    },
+    {
+      "command_id": "6d410928683be5d4418b84b569de073933e3b91abff874e8abb288dd82e7fbd4",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "59be5e97904c73abd7b7a97c226c92e6eb4ffbf431de8e4e1845df975ba6e528",
+      "exit_code": 0,
+      "expected_marker_sha256": "12d8edabcc6e90aabca12b2cf85ccfae94018999d304db9a75f87c5ac76e750b",
+      "status": "pass"
+    }
+  ]
+}
