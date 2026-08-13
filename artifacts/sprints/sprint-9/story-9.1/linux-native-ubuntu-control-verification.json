@@ -115,16 +115,16 @@
       "binaries": [
         {
           "id": "platform-tests",
-          "sha256": "4f1d57a30f03406675dc3fa3e3eb7df9a7a52da854c46a277c483d66ddf9301f"
+          "sha256": "3ed85ea046f97f089701f4994a448265cc3f7619bdc7988c69e5c512835d5f33"
         },
         {
           "id": "kernel-engine-tests",
-          "sha256": "5ddb717c739412bd3e5ef066e1ddec2def7f6715aafd740db0de52e9afdcff1c"
+          "sha256": "ecd82c2fb3e4b9b07b0006cd75d0a154e646301448ded851b9b0529a7d1c3e63"
         }
       ],
-      "container_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57",
+      "container_image_id": "sha256:95322dc3d8d5554e581516a41cf87f560d1c6fa0e4d8fe5561a10989e08773b1",
       "network_used": false,
-      "source_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+      "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
       "toolchains": {
         "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
         "rustc": "rustc 1.95.0 (59807616e 2026-04-14)"
@@ -394,7 +394,7 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "b272fdcfb4a3b6b6091671d6dd5c6d4f1ab85b6b",
+  "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -422,7 +422,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "d0d4014b4b30fe827e4e793700514677fcc1acbc7ce4477ae2379e5b26dc43c5"
+      "sha256": "7a252ade783d5f004a2d195648955b714f803d4b177cdbd4de52fac3d3904e6b"
     },
     {
       "path": "platforms/linux/Cargo.toml",
@@ -438,7 +438,7 @@
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "cc5e64975df7369a763349e43aadd9212a37c799f115c167e3b72d4195ab772f"
+      "sha256": "9c266e786fdc47573343242ac0a934d210af152cd05d25517c7e88c36b8719f6"
     },
     {
       "path": "platforms/linux/src/security_controls.rs",

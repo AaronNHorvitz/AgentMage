@@ -14,14 +14,14 @@
   ],
   "packages": {
     "deb": {
-      "bytes": 616354,
+      "bytes": 616518,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "52540a6bf3b5454e50ce7d6e359895a8be4497798a9f2cea77e0025f8c31a92b"
+      "sha256": "745cd0993fc3fff643d4b264d22d92c5c36f20f158e2675415e3e4717fb5df84"
     },
     "rpm": {
-      "bytes": 424493,
+      "bytes": 424699,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "86c57997d2623b8bcfa3e4b85b816d3517e2c651204aac2032c2fd829e803633"
+      "sha256": "27f18c0afc562fe9fce1cb640105f34889c2846ec8ac32aee3f0c7150e865324"
     },
     "vsix": {
       "bytes": 15193,
@@ -84,8 +84,10 @@
         "contract": "authenticated-local-endpoint-v1",
         "enabled_models": 0,
         "inference_available": false,
+        "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+        "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
         "network_listener": false,
-        "process_boundary_version": 1
+        "process_boundary_version": 2
       },
       "package_file_count": 8,
       "package_format": "rpm",
@@ -269,7 +271,7 @@
         "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
         "chromium_sandbox": "disabled-inside-outer-test-container-only",
         "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
-        "extension_host_log_sha256": "00a1494da6d391ab620002cac24ce390660444e132473fb1cfc9f07aec22480e",
+        "extension_host_log_sha256": "5706e26795c050d150e17bffc62aa27d34cc758e5a0fa4ae21f1a0161607cb76",
         "extension_id": "agentmage-project.agentmage-vscode-shell",
         "extension_version": "0.0.0",
         "provider_probe": {
@@ -340,8 +342,10 @@
         "contract": "authenticated-local-endpoint-v1",
         "enabled_models": 0,
         "inference_available": false,
+        "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
+        "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
         "network_listener": false,
-        "process_boundary_version": 1
+        "process_boundary_version": 2
       },
       "package_file_count": 12,
       "package_format": "deb",
@@ -525,7 +529,7 @@
         "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed",
         "chromium_sandbox": "disabled-inside-outer-test-container-only",
         "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
-        "extension_host_log_sha256": "76c3244bd37f1fb4aac5ac26d88690a687a96ba13f45882b88e251d28c30cd49",
+        "extension_host_log_sha256": "bcf79d1c7e680dd5c91feacbf89dde1d423825c622a9713202e8723901d467c2",
         "extension_id": "agentmage-project.agentmage-vscode-shell",
         "extension_version": "0.0.0",
         "provider_probe": {
@@ -865,14 +869,14 @@
         "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
       },
       {
-        "bytes": 18966,
+        "bytes": 19930,
         "path": "package.json",
-        "sha256": "d01321049e70758cadb13835cb90547836aa9d9b9395772c800492b8dcfdfa93"
+        "sha256": "7a252ade783d5f004a2d195648955b714f803d4b177cdbd4de52fac3d3904e6b"
       },
       {
-        "bytes": 2921,
+        "bytes": 3169,
         "path": "packaging/linux/README.md",
-        "sha256": "e1436664a6229f2d77024c63bf5c91f58d29585e5a8a5221268f6ec460390425"
+        "sha256": "28ff11ed1234becb45e34623f3b848160eb5b76f02fb637e9c0fab93b170f36c"
       },
       {
         "bytes": 1127,
@@ -900,19 +904,24 @@
         "sha256": "c17960b2185e5ea533c2b1620dfd5a3981e0e88b7461515beb1ce21e8289036a"
       },
       {
-        "bytes": 690,
+        "bytes": 1301,
         "path": "platforms/linux-inference/README.md",
-        "sha256": "681f058f17d607c73a789f82bdafa32601fd6cac4637209b8d284eb29b50eff0"
+        "sha256": "5dd321f0f0b757182921d409c4db99da0e71f6d40da30c770c68df8838136e80"
       },
       {
-        "bytes": 4828,
+        "bytes": 5493,
         "path": "platforms/linux-inference/src/lib.rs",
-        "sha256": "423b603b0fa60b575a483fd5ea68e6af89b88babb707d96419835e7cf077da62"
+        "sha256": "99577980a6d6c4ee7c72d7ac74befc26fa6c2827f8838db85009599a98ce03e6"
       },
       {
         "bytes": 574,
         "path": "platforms/linux-inference/src/main.rs",
         "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
+      },
+      {
+        "bytes": 16731,
+        "path": "platforms/linux-inference/src/native_runtime.rs",
+        "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
       },
       {
         "bytes": 1192,
@@ -960,9 +969,9 @@
         "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
       },
       {
-        "bytes": 58277,
+        "bytes": 59557,
         "path": "platforms/linux/src/sandbox.rs",
-        "sha256": "a1a14a5626b48f9b20158cad7e8b062ecf9521adb29f63f33ef9d6bf30069867"
+        "sha256": "9c266e786fdc47573343242ac0a934d210af152cd05d25517c7e88c36b8719f6"
       },
       {
         "bytes": 40155,
@@ -1000,9 +1009,9 @@
         "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
       },
       {
-        "bytes": 47139,
+        "bytes": 47321,
         "path": "scripts/linux_clean_image_acceptance.py",
-        "sha256": "c990ad4d912f7bcd6aef3b9f21b260ad0ff41a8c6e485038db7291199316fca4"
+        "sha256": "8101180faf12492af2ddade5d737212123f43bc6ec7bf4458fce7b1a5e676b28"
       },
       {
         "bytes": 17028,
@@ -1115,13 +1124,13 @@
         "sha256": "0611c22d779c7a8c8638847a8023f5642439a5b8770e723d8315c20956bacc00"
       },
       {
-        "bytes": 9464,
+        "bytes": 9957,
         "path": "tests/test_linux_clean_image_acceptance.py",
-        "sha256": "7128a7df1d9daf407f2ee446a2fa70c77c1414f4126445842c0cb4a72e0c001d"
+        "sha256": "e20b9fc5de47dd06e69734e9917959e5698bd7e0824ad17bb3ec8223f0eed2bd"
       }
     ],
-    "revision": "2ceaa93913de99495ea464abe91670cba18caf24",
-    "tree": "c66ae94e0f91bef868ab81f36617ac8e081f338e"
+    "revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
+    "tree": "03523a46037d869a8ddfc8030f6f8c03b6bff5de"
   },
   "status": "pass-clean-fedora-ubuntu-images",
   "task_ids": [

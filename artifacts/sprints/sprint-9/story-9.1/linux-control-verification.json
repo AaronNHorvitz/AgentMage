@@ -205,7 +205,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "9a807bbdb30be9151657fee62a1136ea021041c3",
+  "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -217,7 +217,7 @@
     },
     {
       "path": "docs/architecture/linux-platform-lifecycle.md",
-      "sha256": "43990c7ad0baa8a9bdd307d286f671459cb3a7e21b5d53a59d4baa6d1d5fbbac"
+      "sha256": "49486d6f83e7ad4ad388128f9766302e5752b39ae60fcd32e8797650545bbdd4"
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
@@ -249,7 +249,7 @@
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "cc5e64975df7369a763349e43aadd9212a37c799f115c167e3b72d4195ab772f"
+      "sha256": "9c266e786fdc47573343242ac0a934d210af152cd05d25517c7e88c36b8719f6"
     },
     {
       "path": "platforms/linux/src/security_controls.rs",

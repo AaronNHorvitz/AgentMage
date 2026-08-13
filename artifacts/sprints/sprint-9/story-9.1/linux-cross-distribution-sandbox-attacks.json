@@ -131,8 +131,8 @@
     "ubuntu-26.04-x86_64": {
       "architecture": "x86_64",
       "base_image": "docker.io/library/ubuntu@sha256:7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
-      "binary_sha256": "e62344b0ee2a2f87e8f79f5f57ac231c96271fc823bba8b5bae0695c44d5b2fb",
-      "build_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57",
+      "binary_sha256": "3ed85ea046f97f089701f4994a448265cc3f7619bdc7988c69e5c512835d5f33",
+      "build_image_id": "sha256:95322dc3d8d5554e581516a41cf87f560d1c6fa0e4d8fe5561a10989e08773b1",
       "cgroup_filesystem": "cgroup2",
       "container_controls": {
         "cgroup_namespace": "private",
@@ -217,7 +217,7 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "29d15d1934683b3356a1b6b3640912c94118a4af",
+  "source_revision": "09d0bd793573c47e391eaec722ce168ab4b25695",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -233,11 +233,11 @@
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "327c872b56e04b1e2540736d97eb8cfe3c7ec58f0af3a3a78d84d424df792f25"
+      "sha256": "18cbcfafb56be752a7d3cd03101d776b4ae8f9ff0e1bf59e6cd895351809584a"
     },
     {
       "path": "package.json",
-      "sha256": "d12fad663d71c735499edd14bec4fc4f21fd6363af71788233594ccf4472f097"
+      "sha256": "7a252ade783d5f004a2d195648955b714f803d4b177cdbd4de52fac3d3904e6b"
     },
     {
       "path": "platforms/linux/Cargo.toml",
@@ -245,7 +245,7 @@
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "dcc158bb4ec9c23a4ee0697971b058734b5e27cfafdb18890946aaa157c43347"
+      "sha256": "9c266e786fdc47573343242ac0a934d210af152cd05d25517c7e88c36b8719f6"
     },
     {
       "path": "release/control-test/Containerfile.ubuntu",
