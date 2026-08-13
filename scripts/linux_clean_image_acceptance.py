@@ -67,13 +67,14 @@ EXPECTED_INFERENCE_DESCRIPTOR: Final = {
     "docker_guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
     "docker_model_artifact_digest": "sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
     "docker_model_runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "docker_preflight_contract_version": 1,
     "docker_runtime_profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
     "enabled_models": 0,
     "inference_available": False,
     "native_runtime_package": "agentmage-llama-cpp-b10333-cpu-linux-x86_64",
     "native_runtime_profile_sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea",
     "network_listener": False,
-    "process_boundary_version": 4,
+    "process_boundary_version": 5,
 }
 CONTAINER_CONTROLS: Final = {
     "runtime": "rootless-podman",

@@ -38,3 +38,11 @@ unforgeable permit only for a fresh authenticated kernel session. Its outer
 surface is a private Unix socket; all extension, tool-worker, same-user,
 container, and undeclared caller classes are denied before a raw permit exists.
 This is a compiled isolation contract, not live Docker Engine evidence.
+
+The mandatory Docker preflight in `docker_preflight.rs` compares one complete,
+fresh, exact-collector observation to a separately verified baseline before
+Docker mode can be represented. Daemon privilege, socket ownership, API binds,
+container reachability, image manifests, mounts, cgroup limits, privilege, and
+zero-egress state each have a stable terminal refusal class. Package boundary
+version 5 advertises preflight contract version 1 while Docker remains
+unavailable. No live Docker collector or support claim exists in this increment.

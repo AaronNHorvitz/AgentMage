@@ -147,7 +147,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "c80afcf78bb2dd79aea68bb84aee75cfaf4e9f76a582eaba0c2b2a542cbe118c",
+      "identity_set_sha256": "33fb014ee2693827b4190f21f2d5e349663a9108a350dadcc175bbc4dd3b03dd",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -305,6 +305,7 @@
         "model_manifest_sha256": "08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "package_id": "docker-model-plugin",
         "platform": "linux-x86_64",
+        "preflight_contract_version": 1,
         "profile_sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c",
         "sha256": "bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
         "source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c",
@@ -343,7 +344,7 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "e68c1ee929463262351b29e7e51fff23d862b76760a7c13084d5ef3e7f92a8d0"
+      "sha256": "b08faf55ab8ce42b3b77cd2240bcbe3c02868530015dbfeb39788fc7b9c7261d"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -379,19 +380,19 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "ad73a8eb14cbef92508811151da0fd8894b339685316995d422c50ac8dd9d335"
+      "sha256": "36b576ca9a2741df057af6e9bdf8799d0a6fa55f32100f1f85c3145f8e5f9e85"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "12204a6f70da0f681258cd66538ee49921a77d8634c7aff8d702c7ee37a0ebfc"
+      "sha256": "385a63acbd36983896b59c0c610870829f97e8d8f4119461355eb84f615b6a03"
     },
     {
       "path": "scripts/component_inventory.py",
-      "sha256": "30417d5d61323873658c8d84a3f616f4a7c7db794593fee999057061b2f199ad"
+      "sha256": "44d1cafc04faa1a4cca9f41f36d88a806ab1c42c27c8c5684c5f95fd04ba45c3"
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "b6eef7a36fbd24889a28736b1f90363ffbe0796433af797dd896809b53e9e343"
+      "sha256": "3cb1b7555d161002ed986e8243552468588de4ef2e20e8a785c511b9e37f266c"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",

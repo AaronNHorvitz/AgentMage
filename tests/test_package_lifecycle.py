@@ -24,7 +24,7 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            4,
+            5,
         )
         self.assertFalse(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
@@ -36,11 +36,15 @@ class PackageLifecycleTests(unittest.TestCase):
             "docker_guard_profile_sha256",
             "docker_model_runner_image_digest",
             "docker_model_artifact_digest",
+            "docker_preflight_contract_version",
         ):
-            self.assertRegex(
-                lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key],
-                r"^(?:sha256:)?[0-9a-f]{64}$",
-            )
+            if key == "docker_preflight_contract_version":
+                self.assertEqual(lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key], 1)
+            else:
+                self.assertRegex(
+                    lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[key],
+                    r"^(?:sha256:)?[0-9a-f]{64}$",
+                )
 
     def valid_lifecycle(self) -> dict:
         checks = {

@@ -180,6 +180,8 @@ Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access
 
 Decision 0031 selects the required Linux guard shape: Model Runner and a dedicated exact-identity guard share one private, route-free network namespace containing the sole raw loopback listener. The guard exposes only a mode-`0600`, fresh-session-authenticated Unix socket to the kernel. An unforgeable permit is returned only for the exact guard UID, executable, cgroup, and authenticated kernel session; extension, tool-worker, unrelated-process, arbitrary-container, and undeclared caller classes are unconditional denials. This is a compiled contract until the later Docker Engine and hostile reachability lanes execute it natively.
 
+Decision 0032 makes a complete fresh topology observation mandatory before Docker mode can be admitted. The observation must match the configured collector, daemon and socket identities, users and groups, private namespace, runner and guard process closure, listener and route closure, immutable OCI manifests, mounts, cgroup limits, container privileges, and zero-egress state exactly. Missing, stale, replayed, partial, or drifted observations return one content-free terminal refusal and cannot activate a weaker Docker topology or claim a native fallback. The validator is compiled and package-bound; live collection and hostile reachability remain separate evidence gates.
+
 ## 6. Lifecycle
 
 1. The separate installer/importer performs preflight, displays identity and license, acquires or imports into staging, verifies all hashes and manifests, runs malware and compatibility checks, activates atomically, and exits.
