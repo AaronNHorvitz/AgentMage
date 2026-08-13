@@ -1,0 +1,247 @@
+{
+  "artifact_id": "strict-local-normal-operation-network-policy",
+  "claims": {
+    "inference_performed": false,
+    "linux_worker_network_isolation_tested": true,
+    "live_host_process_confinement_tested": false,
+    "normal_operation_policy_complete": true,
+    "packet_capture_performed": false,
+    "release_support": false
+  },
+  "limitations": [
+    "This proves the deterministic component policy, closed product-source boundary, dependency exclusion, and one live Linux worker network-isolation test.",
+    "Host, kernel, converter, indexer, and inference process-level confinement remains part of later session-topology and packet-capture tasks.",
+    "The 60-minute integrated workflow, acquisition-return, physical-host, macOS, Windows, and release gates remain open."
+  ],
+  "network_used": false,
+  "policy_matrix": [
+    {
+      "components": [
+        {
+          "component": "visual_studio_code_extension",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "native_bridge",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "kernel",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "kernel_native_inference_adapter",
+          "decision": "allow-exact-authenticated-local-only"
+        },
+        {
+          "component": "kernel_docker_inference_adapter",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "tool_worker",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "converter",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "indexer",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "model_installer",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "undeclared",
+          "decision": "deny-client-not-authorized"
+        }
+      ],
+      "cross_topology_substitution": "denied",
+      "denied_destination_classes": [
+        "local_socket",
+        "unspecified",
+        "link_local",
+        "private_lan",
+        "multicast",
+        "container_network",
+        "proxy",
+        "dns",
+        "external",
+        "unknown"
+      ],
+      "destination": "authenticated_local_socket",
+      "selected_client": "kernel_native_inference_adapter",
+      "topology": "native",
+      "transport": "authenticated_unix_socket"
+    },
+    {
+      "components": [
+        {
+          "component": "visual_studio_code_extension",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "native_bridge",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "kernel",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "kernel_native_inference_adapter",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "kernel_docker_inference_adapter",
+          "decision": "allow-exact-authenticated-local-only"
+        },
+        {
+          "component": "tool_worker",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "converter",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "indexer",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "model_installer",
+          "decision": "deny-client-not-authorized"
+        },
+        {
+          "component": "undeclared",
+          "decision": "deny-client-not-authorized"
+        }
+      ],
+      "cross_topology_substitution": "denied",
+      "denied_destination_classes": [
+        "local_socket",
+        "unspecified",
+        "link_local",
+        "private_lan",
+        "multicast",
+        "container_network",
+        "proxy",
+        "dns",
+        "external",
+        "unknown"
+      ],
+      "destination": "loopback",
+      "selected_client": "kernel_docker_inference_adapter",
+      "topology": "docker",
+      "transport": "guarded_loopback_tcp"
+    }
+  ],
+  "private_user_data_used": false,
+  "runtime_evidence": [
+    {
+      "enabled_models": 0,
+      "inference_started": false,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+      "release_claim": "none",
+      "runtime_id": "native",
+      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb",
+      "source_revision": "b1bc089aa9418e99cfb542da651e048358f8e68a"
+    },
+    {
+      "enabled_models": 0,
+      "inference_started": false,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-runtime-profile.json",
+      "release_claim": "none",
+      "runtime_id": "docker",
+      "sha256": "bc018d78225c701246fd1ef85778f31da06ac1f9dfc3c63dfef83981e49b590f",
+      "source_revision": "b6a916d9d8a23fbad2d230e524617e0d9f23d7f1"
+    }
+  ],
+  "schema_version": 1,
+  "source_audit": {
+    "linux_inference_included": true,
+    "network_capable_runtime_dependencies": 0,
+    "scan_root_count": 8,
+    "undeclared_network_paths": 0
+  },
+  "source_revision": "25c07db90c8f6a3afa45ad7acd82e9edd9f5aef6",
+  "sources": [
+    {
+      "bytes": 8093,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "b06ca04f58f5fa5bf74c83ce85b513c73ca3c2958ee9424436b57d8bed21e902"
+    },
+    {
+      "bytes": 15921,
+      "path": "kernel/contracts/src/network.rs",
+      "sha256": "08d981961254f32cbab84fe5144de10e90763919aed9fe0762eff01a4a73b5f0"
+    },
+    {
+      "bytes": 21109,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "03be94dac8ddb0fdbe4d03f8a45f6477363eafd0b907f8163bc64549ad0f9c22"
+    },
+    {
+      "bytes": 59557,
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "9c266e786fdc47573343242ac0a934d210af152cd05d25517c7e88c36b8719f6"
+    },
+    {
+      "bytes": 3815,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "d9e0a374be78d755531222fce5cac0c8c470ce6e3d93e1068380121b1c78235d"
+    },
+    {
+      "bytes": 14171,
+      "path": "scripts/strict_local_network_policy_evidence.py",
+      "sha256": "b5a2fa1f70b0cc76971c51d7a7ed76c56bacf6b15166a44cceacbe0b8dbeb118"
+    },
+    {
+      "bytes": 8777,
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "87b5a28e217fe335c871add32484003f44174ba7aacb84d4f440668e65a64645"
+    },
+    {
+      "bytes": 5003,
+      "path": "tests/test_strict_local_network_policy_evidence.py",
+      "sha256": "75b4eb751eeab0cd3b5d8202c57dfbcdd69024a39dbbdbc9225d2368e1855fe4"
+    },
+    {
+      "bytes": 4722,
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "ce744201d5b688b76f792a05a040fd182037e2bfbc50080b0957a344e568ada3"
+    }
+  ],
+  "status": "pass-policy-source-worker-no-live-packet-capture",
+  "task_ids": [
+    "10.1.1.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "1a817f8bdcfb363ebd2f712caa4828b10c337733ac1ce8b49455e8267e35cb7a",
+      "exit_code": 0,
+      "expected_marker_sha256": "187f9c7a40c14527390de8cb050df25da8b57c0c4ad9bd2dc178315e9e80c9c6",
+      "status": "pass"
+    },
+    {
+      "command_id": "074426c25a155eec1ea17a897be243f3a9862955fb576533bdd1d9eb8df24c00",
+      "exit_code": 0,
+      "expected_marker_sha256": "4ef1d9d44877fe2638e6915d124b04cc65269c8ca14994dcda52fdbbccafd1a6",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "72a010a8fe7c50307b2afcac0af114c25beeaead9d58f2261306748dc3fc5c3e",
+      "status": "pass"
+    },
+    {
+      "command_id": "f9d9ca02de7ba8d929535b26f39c58673afdd86bcd30abb14b8fb07c10efe6b8",
+      "exit_code": 0,
+      "expected_marker_sha256": "64cee96dc867f58bd14fcc57697766fe2e54eab83b02900584fe5a309ac3fb91",
+      "status": "pass"
+    }
+  ]
+}
