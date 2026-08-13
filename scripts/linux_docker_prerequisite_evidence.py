@@ -337,7 +337,7 @@ def validate_report(value: Any) -> list[str]:
     ):
         failures.append("Docker prerequisite report identity changed")
     components = value.get("components")
-    expected_paths = [path.as_posix() for path in PAYLOAD_FILES]
+    expected_paths = [path.as_posix() for path in sorted(PAYLOAD_FILES)]
     expected_modes = [0o755, 0o755, 0o755, 0o755, 0o644, 0o644]
     if (
         not isinstance(components, list)

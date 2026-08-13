@@ -30,7 +30,7 @@ class LinuxPackageLifecycleEvidenceTests(unittest.TestCase):
                                 "size": 1,
                                 "mode": 0o755 if index < 4 else 0o644,
                             }
-                            for index, path in enumerate(evidence.PAYLOAD_FILES)
+                            for index, path in enumerate(sorted(evidence.PAYLOAD_FILES))
                         ],
                     },
                 }

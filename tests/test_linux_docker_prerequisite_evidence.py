@@ -17,7 +17,7 @@ class LinuxDockerPrerequisiteEvidenceTests(unittest.TestCase):
                 "sha256": "b" * 64,
                 "size": 1,
             }
-            for index, path in enumerate(evidence.PAYLOAD_FILES)
+            for index, path in enumerate(sorted(evidence.PAYLOAD_FILES))
         ]
         components = [
             {
