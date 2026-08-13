@@ -161,14 +161,34 @@ def start_runtime_peer() -> int:
             "900",
         ]
     )
-    wait_for(
-        lambda: text(
-            ["systemctl", "show", "--property=ActiveState", "--value", RUNTIME_UNIT]
-        )
-        == "active",
-        "runtime peer",
-    )
-    return unit_pid(RUNTIME_UNIT)
+    held_pid = 0
+
+    def runtime_ready() -> bool:
+        nonlocal held_pid
+        if (
+            text(
+                ["systemctl", "show", "--property=ActiveState", "--value", RUNTIME_UNIT]
+            )
+            != "active"
+        ):
+            return False
+        try:
+            candidate = unit_pid(RUNTIME_UNIT)
+            record = process_record(candidate)
+            executable = os.readlink(f"/proc/{candidate}/exe")
+        except (GuestEvidenceError, OSError, ValueError):
+            return False
+        if (
+            record["uid"] != RUNTIME_UID
+            or record["gid"] != RUNTIME_GID
+            or executable != "/usr/bin/sleep"
+        ):
+            return False
+        held_pid = candidate
+        return True
+
+    wait_for(runtime_ready, "final runtime peer identity")
+    return held_pid
 
 
 def start_runner() -> tuple[str, int]:
