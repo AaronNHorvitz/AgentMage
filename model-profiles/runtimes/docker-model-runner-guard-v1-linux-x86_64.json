@@ -1,0 +1,59 @@
+{
+  "architecture": "x86_64",
+  "authority": {
+    "credential": false,
+    "docker_daemon_control": false,
+    "grant": false,
+    "host_filesystem": false,
+    "network_egress": false,
+    "tool": false,
+    "workspace": false
+  },
+  "callers": {
+    "allowed": [
+      "guarded-kernel-docker-adapter"
+    ],
+    "denied": [
+      "vscode-extension",
+      "tool-worker",
+      "unrelated-same-user-process",
+      "arbitrary-container",
+      "undeclared"
+    ]
+  },
+  "decision": {
+    "docker_engine_directly_tested": false,
+    "enforcement_live_tested": false,
+    "inference_implemented": false,
+    "release_approval": false,
+    "status": "GUARD_CONTRACT_PINNED_NOT_ACTIVATED"
+  },
+  "guard_process": {
+    "docker_socket_mounts": 0,
+    "executable_identity_required": true,
+    "network_namespace": "same-private-namespace-as-runner",
+    "process_cgroup_identity_required": true,
+    "runtime_user": "dedicated-non-root-agentmage-dmr-guard",
+    "workspace_mounts": 0
+  },
+  "kernel_transport": {
+    "authentication": "fresh-session-peer-credentials-and-challenge",
+    "mode": 384,
+    "owner": "invoking-standard-user",
+    "raw_endpoint_fields_exposed": false,
+    "transport": "authenticated-unix-socket"
+  },
+  "platform": "linux",
+  "raw_runtime_endpoint": {
+    "container_bridge_routes": 0,
+    "host": "127.0.0.1",
+    "host_tcp_listeners": 0,
+    "namespace": "private-runner-and-guard-only",
+    "non_loopback_listeners": 0,
+    "port": 12434,
+    "transport": "loopback-tcp"
+  },
+  "record_type": "linux_docker_model_runner_guard_profile",
+  "runner_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+  "schema_version": 1
+}

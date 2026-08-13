@@ -9,6 +9,7 @@
     "optional_components": "architecture/optional-component-inventory.json",
     "linux_native_runtime_package": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "linux_docker_runtime_profile": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+    "linux_docker_guard_profile": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
     "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json"

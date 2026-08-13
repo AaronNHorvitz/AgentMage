@@ -9,9 +9,15 @@ use agentmage_kernel_contracts::{
     LocalEndpointIdentity, LocalTransport, NetworkComponent, NetworkEndpointError,
 };
 
+mod docker_guard;
 mod docker_runtime;
 mod native_runtime;
 
+pub use docker_guard::{
+    DOCKER_GUARD_PROFILE_SHA256, DOCKER_GUARD_PROFILE_SHA256_HEX, DockerEndpointCallerClass,
+    DockerEndpointCallerObservation, DockerEndpointGuard, DockerEndpointGuardError,
+    DockerRawEndpointPermit,
+};
 pub use docker_runtime::{
     DOCKER_MODEL_ARTIFACT_DIGEST, DOCKER_MODEL_ARTIFACT_DIGEST_HEX, DOCKER_MODEL_PLUGIN_PACKAGE_ID,
     DOCKER_MODEL_PLUGIN_VERSION, DOCKER_MODEL_RUNNER_HOST, DOCKER_MODEL_RUNNER_IMAGE_DIGEST,
@@ -30,11 +36,11 @@ pub use native_runtime::{
 /// Stable component identity included in package and process inventories.
 pub const COMPONENT_ID: &str = "platform-linux-native-inference";
 
-/// Version of the package/process boundary implemented before model-runtime work.
-pub const PROCESS_BOUNDARY_VERSION: u16 = 3;
+/// Version of the package/process boundary including the inactive Docker guard profile.
+pub const PROCESS_BOUNDARY_VERSION: u16 = 4;
 
 /// Exact content-free descriptor emitted by the inactive packaged adapter.
-pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"docker_compatibility_available\":false,\"docker_model_artifact_digest\":\"sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444\",\"docker_model_runner_image_digest\":\"sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9\",\"docker_runtime_profile_sha256\":\"ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c\",\"enabled_models\":0,\"inference_available\":false,\"native_runtime_package\":\"agentmage-llama-cpp-b10333-cpu-linux-x86_64\",\"native_runtime_profile_sha256\":\"21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea\",\"network_listener\":false,\"process_boundary_version\":3}\n";
+pub const BOUNDARY_DESCRIPTION: &[u8] = b"{\"accepted_operation\":\"self-check-only\",\"authority_inputs\":[],\"component_id\":\"platform-linux-native-inference\",\"contract\":\"authenticated-local-endpoint-v1\",\"docker_compatibility_available\":false,\"docker_guard_profile_sha256\":\"88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a\",\"docker_model_artifact_digest\":\"sha256:08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444\",\"docker_model_runner_image_digest\":\"sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9\",\"docker_runtime_profile_sha256\":\"ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c\",\"enabled_models\":0,\"inference_available\":false,\"native_runtime_package\":\"agentmage-llama-cpp-b10333-cpu-linux-x86_64\",\"native_runtime_profile_sha256\":\"21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea\",\"network_listener\":false,\"process_boundary_version\":4}\n";
 
 /// Stable refusal from the pre-runtime adapter process.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -95,7 +101,7 @@ mod tests {
     use agentmage_kernel_contracts::{LocalTransport, NetworkComponent, NetworkEndpointError};
 
     use super::{
-        BOUNDARY_DESCRIPTION, DOCKER_MODEL_ARTIFACT_DIGEST_HEX,
+        BOUNDARY_DESCRIPTION, DOCKER_GUARD_PROFILE_SHA256_HEX, DOCKER_MODEL_ARTIFACT_DIGEST_HEX,
         DOCKER_MODEL_RUNNER_IMAGE_DIGEST_HEX, DOCKER_RUNTIME_PROFILE_SHA256_HEX,
         LinuxInferenceBoundaryError, NATIVE_RUNTIME_PACKAGE_ID, NATIVE_RUNTIME_PROFILE_SHA256_HEX,
         authenticated_endpoint_identity, evaluate_arguments,
@@ -151,6 +157,7 @@ mod tests {
             DOCKER_MODEL_RUNNER_IMAGE_DIGEST_HEX,
             DOCKER_MODEL_ARTIFACT_DIGEST_HEX,
             DOCKER_RUNTIME_PROFILE_SHA256_HEX,
+            DOCKER_GUARD_PROFILE_SHA256_HEX,
             "\"network_listener\":false",
         ] {
             assert!(text.contains(required));

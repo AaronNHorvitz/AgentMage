@@ -24,7 +24,7 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            3,
+            4,
         )
         self.assertFalse(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR[
@@ -33,6 +33,7 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         for key in (
             "docker_runtime_profile_sha256",
+            "docker_guard_profile_sha256",
             "docker_model_runner_image_digest",
             "docker_model_artifact_digest",
         ):

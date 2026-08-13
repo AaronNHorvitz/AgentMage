@@ -178,6 +178,8 @@ AgentMage never describes a Docker-backed installation as wholly unprivileged un
 
 Docker Model Runner's API is unauthenticated. `127.0.0.1` prevents remote access but does not prevent other local processes from sending inference requests. Decision 0030 pins the optional Linux compatibility tuple, records the rootful-daemon prerequisite, prohibits the ordinary AgentMage runtime user from holding host-equivalent Docker-group authority, prohibits Docker-socket and workspace mounts, and requires acquisition-disabled, no-tracking, zero-egress operation. It does not make the raw loopback API safe. The Docker-backed strict-local profile therefore remains `BLOCKED` unless its implemented namespace, proxy, firewall, socket, or equivalent platform boundary satisfies the approved threat model. The extension and tool workers never receive the raw endpoint.
 
+Decision 0031 selects the required Linux guard shape: Model Runner and a dedicated exact-identity guard share one private, route-free network namespace containing the sole raw loopback listener. The guard exposes only a mode-`0600`, fresh-session-authenticated Unix socket to the kernel. An unforgeable permit is returned only for the exact guard UID, executable, cgroup, and authenticated kernel session; extension, tool-worker, unrelated-process, arbitrary-container, and undeclared caller classes are unconditional denials. This is a compiled contract until the later Docker Engine and hostile reachability lanes execute it natively.
+
 ## 6. Lifecycle
 
 1. The separate installer/importer performs preflight, displays identity and license, acquires or imports into staging, verifies all hashes and manifests, runs malware and compatibility checks, activates atomically, and exits.

@@ -25,7 +25,7 @@ class LinuxCleanImageAcceptanceTests(unittest.TestCase):
         )
         self.assertEqual(
             acceptance.EXPECTED_INFERENCE_DESCRIPTOR["process_boundary_version"],
-            3,
+            4,
         )
         self.assertFalse(
             acceptance.EXPECTED_INFERENCE_DESCRIPTOR[

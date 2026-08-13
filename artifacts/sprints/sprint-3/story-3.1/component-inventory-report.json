@@ -147,7 +147,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "f70eff7b44b32ae7254334aba3809985e09af96dc6b4fae76ba6458097dd8efd",
+      "identity_set_sha256": "c80afcf78bb2dd79aea68bb84aee75cfaf4e9f76a582eaba0c2b2a542cbe118c",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -301,6 +301,7 @@
         "approval_status": "candidate-not-approved",
         "component_id": "linux-docker-model-runner-b9879",
         "docker_engine_directly_tested": false,
+        "guard_profile_sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a",
         "model_manifest_sha256": "08fa7b1d44f255be48cfc12359211725bfd659742612ed4b221cd5be90d14444",
         "package_id": "docker-model-plugin",
         "platform": "linux-x86_64",
@@ -334,7 +335,7 @@
   "source_artifacts": [
     {
       "path": "architecture/component-inventory-policy.json",
-      "sha256": "906e8826b5162fe9df085d870ac6900420239440c095d671b5e726415424888f"
+      "sha256": "e6aab7bf206f0920417ae3c8f340e2bcf81d55474f421709f2c0037f44bec807"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
@@ -342,7 +343,7 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "342484d91279f861479a1a12416e7e7ea07ce1baef2aaffb05d0ab04fad59161"
+      "sha256": "e68c1ee929463262351b29e7e51fff23d862b76760a7c13084d5ef3e7f92a8d0"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -361,6 +362,10 @@
       "sha256": "ab8cde6bc1440f8a0013390aa2e291a315cdebcfe44aa1d339f0aa0b1d70899c"
     },
     {
+      "path": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
+      "sha256": "88fb0d5a78829cbdfc34af5cbcbfe3ca2a80f550889947e6478fdb66bf7edb2a"
+    },
+    {
       "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
       "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1"
     },
@@ -374,19 +379,19 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "013a51b46374b659ecaae4861c350e9345d50f0bc7e92c79604b5fbb281d8518"
+      "sha256": "ad73a8eb14cbef92508811151da0fd8894b339685316995d422c50ac8dd9d335"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "bd027f025276976e811c4ae2d927474ca1e87f393b68d1749d56acbbb5c9ce0f"
+      "sha256": "12204a6f70da0f681258cd66538ee49921a77d8634c7aff8d702c7ee37a0ebfc"
     },
     {
       "path": "scripts/component_inventory.py",
-      "sha256": "a4600628f34fe5f2d45022c3f4ad44b0e29d541ee006b81a35bd129f703394d7"
+      "sha256": "30417d5d61323873658c8d84a3f616f4a7c7db794593fee999057061b2f199ad"
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "dfb8905f5afb42553d55400cf166eadefa2a89cf9b7481224991e573185ad769"
+      "sha256": "b6eef7a36fbd24889a28736b1f90363ffbe0796433af797dd896809b53e9e343"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",

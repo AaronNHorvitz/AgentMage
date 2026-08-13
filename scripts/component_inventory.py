@@ -75,6 +75,7 @@ EXPECTED_SOURCES = {
     "optional_components": "architecture/optional-component-inventory.json",
     "linux_native_runtime_package": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
     "linux_docker_runtime_profile": "model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json",
+    "linux_docker_guard_profile": "model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json",
     "linux_primary_runtime_candidate": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
     "linux_fallback_runtime_candidate": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
     "macos_runtime_candidate": "model-profiles/runtimes/llama-cpp-b10333-macos-arm64.json",
@@ -246,6 +247,8 @@ def _runtime_candidates(
     linux_native_profile_sha256: str,
     linux_docker: dict[str, Any],
     linux_docker_profile_sha256: str,
+    linux_docker_guard: dict[str, Any],
+    linux_docker_guard_profile_sha256: str,
     primary: dict[str, Any],
     fallback: dict[str, Any],
     macos: dict[str, Any],
@@ -348,6 +351,20 @@ def _runtime_candidates(
         }
     ):
         raise ValueError("Linux Docker compatibility profile identity is invalid")
+    if (
+        HASH.fullmatch(linux_docker_guard_profile_sha256) is None
+        or linux_docker_guard.get("decision")
+        != {
+            "docker_engine_directly_tested": False,
+            "enforcement_live_tested": False,
+            "inference_implemented": False,
+            "release_approval": False,
+            "status": "GUARD_CONTRACT_PINNED_NOT_ACTIVATED",
+        }
+        or linux_docker_guard.get("runner_image_digest")
+        != linux_docker.get("engine", {}).get("manifest_digest")
+    ):
+        raise ValueError("Linux Docker endpoint guard profile is invalid or promoted")
     candidates = [
         {
             "component_id": EXPECTED_RUNTIME_CANDIDATES[0],
@@ -370,6 +387,7 @@ def _runtime_candidates(
             "source_revision": primary_docker["runtime_source_revision"],
             "sha256": docker_digest.group(1),
             "profile_sha256": linux_docker_profile_sha256,
+            "guard_profile_sha256": linux_docker_guard_profile_sha256,
             "model_manifest_sha256": model_digest.group(1),
             "docker_engine_directly_tested": False,
             "approval_status": "candidate-not-approved",
@@ -413,6 +431,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     fallback = sources[policy["sources"]["linux_fallback_runtime_candidate"]]
     linux_native = sources[policy["sources"]["linux_native_runtime_package"]]
     linux_docker = sources[policy["sources"]["linux_docker_runtime_profile"]]
+    linux_docker_guard = sources[policy["sources"]["linux_docker_guard_profile"]]
     macos = sources[policy["sources"]["macos_runtime_candidate"]]
     source_failures = [
         *validate_clean_build_report(clean, root),
@@ -443,6 +462,8 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         sha256_file(root / policy["sources"]["linux_native_runtime_package"]),
         linux_docker,
         sha256_file(root / policy["sources"]["linux_docker_runtime_profile"]),
+        linux_docker_guard,
+        sha256_file(root / policy["sources"]["linux_docker_guard_profile"]),
         primary,
         fallback,
         macos,

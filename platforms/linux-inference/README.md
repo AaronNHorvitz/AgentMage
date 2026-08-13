@@ -29,3 +29,12 @@ runtime-user Docker-group exclusion explicit, accepts only a fixed guarded loopb
 endpoint, closes mounts and resources, and requires no acquisition, tracking,
 proxy, DNS, or egress. Docker is absent on the current host and the profile is
 not activated; it provides no inference or Docker support claim.
+
+The separate
+[`docker-model-runner-guard-v1-linux-x86_64.json`](../../model-profiles/runtimes/docker-model-runner-guard-v1-linux-x86_64.json)
+profile places the raw loopback API inside a private runner-and-guard network
+namespace. The exact dedicated guard is the sole raw client and returns an
+unforgeable permit only for a fresh authenticated kernel session. Its outer
+surface is a private Unix socket; all extension, tool-worker, same-user,
+container, and undeclared caller classes are denied before a raw permit exists.
+This is a compiled isolation contract, not live Docker Engine evidence.
