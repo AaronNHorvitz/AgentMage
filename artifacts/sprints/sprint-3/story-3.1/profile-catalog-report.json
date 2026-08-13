@@ -18,31 +18,31 @@
     },
     {
       "path": "configuration/profiles/development.json",
-      "sha256": "14526c971a612f3db8e52ec681da7f60d3d59b800510138a0eb8a5d461df6633"
+      "sha256": "a7b4352dd2cf0166a640bbed92e1b42b8593fd767ceb491cb33cfed31c7aba4e"
     },
     {
       "path": "configuration/profiles/synthetic-test.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "configuration/profiles/strict-local-read-only.json",
-      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+      "sha256": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3"
     },
     {
       "path": "configuration/profiles/knowledge.json",
-      "sha256": "88a0c9b1bb20146fcfa651e30589fc26e6692843b600f5f8024765749421dc37"
+      "sha256": "623f25104f695d44c74dc4db046627144184945baf04dfcfa2021c2f9f92c84e"
     },
     {
       "path": "configuration/profiles/write.json",
-      "sha256": "a30524787a9398aea2d3d6c6201537f43789ed2986f29cd24c45c1ff7bd2e76c"
+      "sha256": "498a821b45f2de3daa757d34b54f3846d833b59e5ce86a6a279dc8d648add379"
     },
     {
       "path": "configuration/profiles/coding.json",
-      "sha256": "337877eb03511ba6cdaf9d34de4b5ad682bfe91c377422c11279a541f15c54d8"
+      "sha256": "9426c8772e1e8304a5dbb4d536b1ec770b662527f1ade059badbe7a740d83d67"
     },
     {
       "path": "configuration/profiles/later-network.json",
-      "sha256": "53b6d4882cdfc741b41c68ac52abd5f842941dcb8751afb50678e997a9e1a49b"
+      "sha256": "70c93758e37ff6930aadd943022ebf3527c2381374a839db40bd3b3e4969ec7c"
     }
   ],
   "loader_status": "library-implemented-product-not-registered",
