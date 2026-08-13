@@ -9,14 +9,18 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Final
 
-from scripts import strict_local_capture_harness as harness
-
-
 ROOT: Final = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts import strict_local_capture_harness as harness  # noqa: E402
+
+
 REPORT_PATH: Final = (
     ROOT / "artifacts/sprints/sprint-10/story-10.1/firewall-packet-capture.json"
 )
