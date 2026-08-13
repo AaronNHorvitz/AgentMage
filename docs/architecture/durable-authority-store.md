@@ -3,10 +3,14 @@
 ## Status and Scope
 
 This document describes the durable authority candidate governed by accepted
-Decision 0016 and composed on Linux by accepted Decision 0017. It covers only
+Decision 0016 and composed on Linux by accepted Decision 0017. Schema v1 covers
 canonical grant, nonce, authority-transaction, receipt, and checkpoint state.
-It is not evidence that the complete Sprint 11 data lifecycle, application
-host, Ubuntu execution, macOS, Windows, or a supported product is implemented.
+Schema v2 adds normalized structural tables for sessions, objectives, plans,
+tasks, actions, evidence, decisions, files, and retention. Those v2 tables have
+no public domain-write API yet and are not included in the authority-state
+digest until their owning transaction boundary is implemented. This is not
+evidence that the complete Sprint 11 data lifecycle, application host, Ubuntu
+execution, macOS, Windows, or a supported product is implemented.
 
 ## Ownership
 
@@ -98,18 +102,121 @@ erDiagram
         integer generation PK
         text state_sha256
     }
+    SESSIONS {
+        text session_id PK
+        text profile_id
+        text status
+        integer created_at_epoch_ms
+        integer updated_at_epoch_ms
+        text record_sha256
+        blob record_json
+    }
+    OBJECTIVES {
+        text objective_id PK
+        text session_id FK
+        integer ordinal
+        text status
+        text record_sha256
+        blob record_json
+    }
+    PLANS {
+        text plan_id PK
+        text objective_id FK
+        integer revision
+        text status
+        text record_sha256
+        blob record_json
+    }
+    TASKS {
+        text task_id PK
+        text plan_id FK
+        text parent_task_id FK
+        integer ordinal
+        text status
+        text record_sha256
+        blob record_json
+    }
+    ACTIONS {
+        text action_id PK
+        text task_id FK
+        text transaction_id FK
+        integer ordinal
+        text operation_class
+        text status
+        text record_sha256
+        blob record_json
+    }
+    EVIDENCE {
+        text evidence_id PK
+        text task_id FK
+        text action_id FK
+        integer ordinal
+        text evidence_kind
+        text classification
+        text record_sha256
+        blob record_json
+    }
+    DECISIONS {
+        text decision_id PK
+        text task_id FK
+        integer ordinal
+        text disposition
+        text record_sha256
+        blob record_json
+    }
+    FILES {
+        text file_id PK
+        text session_id FK
+        text workspace_id
+        text object_identity_sha256
+        text relative_path_sha256
+        text content_sha256
+        text status
+        text record_sha256
+        blob record_json
+    }
+    RETENTION {
+        text retention_id PK
+        text record_family
+        text record_id
+        text sensitivity
+        text disposition
+        integer expires_at_epoch_ms
+        integer legal_hold
+        text policy_sha256
+    }
 
     GRANT_IDENTITIES ||--|{ GRANT_REVISIONS : retains
     GRANT_REVISIONS ||--|| GRANT_HEADS : selects
     TRANSACTION_IDENTITIES ||--|{ TRANSACTION_REVISIONS : retains
     TRANSACTION_REVISIONS ||--|| TRANSACTION_HEADS : selects
     TRANSACTION_IDENTITIES ||--o| RECEIPTS : closes
+    SESSIONS ||--o{ OBJECTIVES : owns
+    OBJECTIVES ||--o{ PLANS : revises
+    PLANS ||--o{ TASKS : contains
+    TASKS ||--o{ TASKS : parents
+    TASKS ||--o{ ACTIONS : attempts
+    TASKS ||--o{ EVIDENCE : grounds
+    ACTIONS ||--o{ EVIDENCE : produces
+    TASKS ||--o{ DECISIONS : records
+    SESSIONS ||--o{ FILES : observes
+    TRANSACTION_IDENTITIES ||--o{ ACTIONS : authorizes
 ```
 
 Revision rows are immutable. A duplicate insert must match the retained digest
 and canonical bytes exactly. Head rows may advance only in the same transaction
 as their newly inserted revisions. Receipt sequence and previous-receipt digest
 form a validated hash chain.
+
+Migration v2 is an additive transaction over an admitted v1 database. The
+immutable v1 migration text and digest remain unchanged. A v2 conflict rolls
+back its history row, `user_version`, and every table created by that
+migration; reopening never treats a partial schema as current. The v2 domain
+tables use closed status values, fixed SHA-256 shapes, unique per-parent
+ordinals or revisions, and foreign keys that reject orphaned or cross-task
+records. Retention uses a closed record-family, sensitivity, disposition, hold,
+and expiration shape, but lifecycle transitions and cryptographic erasure are
+later tasks.
 
 ## Publication Boundaries
 
@@ -157,7 +264,9 @@ required before another effect can be considered.
 Current tests inspect encrypted database, WAL, shared-memory, and backup
 artifacts for plaintext canaries; force a rollback; corrupt an encrypted page;
 exercise wrong and missing keys; reject ineligible storage; deny a second
-writer; and restart from every authority transition. Linux tests additionally
+writer; migrate a real encrypted v1 database to v2; reject a partial v2 schema;
+exercise normalized relationship constraints; and restart from every authority
+transition. Linux tests additionally
 exercise private-root owner/mode drift, unsafe authority-state objects, and
 exclusive lifecycle locking. Live Secret Service tests remain explicitly
 environment-dependent. Retained historical story artifacts are not regenerated

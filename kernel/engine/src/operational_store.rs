@@ -28,7 +28,7 @@ use crate::policy::PolicyEngine;
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
 
-const SCHEMA_VERSION: i64 = 1;
+const SCHEMA_VERSION: i64 = 2;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MIGRATION_1_SCHEMA_SQL: &str = "CREATE TABLE schema_history (
@@ -92,6 +92,8 @@ CREATE TABLE checkpoints (
     generation INTEGER PRIMARY KEY CHECK(generation >= 0),
     state_sha256 TEXT NOT NULL CHECK(length(state_sha256) = 64)
 ) STRICT;";
+const MIGRATION_2_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0002-domain-schema.sql");
 
 /// Stable key-broker failure that reveals no key or provider detail.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -603,7 +605,7 @@ fn claim_exclusive_writer(connection: &Connection) -> Result<(), OperationalStor
 }
 
 fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
-    let version: i64 = connection
+    let mut version: i64 = connection
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .map_err(|_| OperationalStoreError::MigrationFailed)?;
     if version > SCHEMA_VERSION {
@@ -636,6 +638,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 1)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 1;
+    }
+    if version == 1 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_2_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (2, ?1)",
+                [sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -655,10 +678,10 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
         })
         .map_err(|_| OperationalStoreError::MigrationFailed)?;
     if rows
-        != [(
-            SCHEMA_VERSION,
-            sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes()),
-        )]
+        != [
+            (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
+            (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
+        ]
     {
         return Err(OperationalStoreError::MigrationFailed);
     }
@@ -1407,10 +1430,12 @@ mod tests {
     use agentmage_kernel_contracts::{
         CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
     };
+    use rusqlite::params;
 
     use super::{
-        OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyProvider, SCHEMA_VERSION, is_linux_held_descriptor_path,
+        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyProvider, SCHEMA_VERSION,
+        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_hex,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::grants::GrantIssuer;
@@ -1456,6 +1481,40 @@ mod tests {
         ));
         fs::create_dir(&path).expect("temporary directory");
         path
+    }
+
+    fn create_version_one_store(path: &Path, key: &[u8; 32]) {
+        prepare_new_store_file(path).expect("legacy store file");
+        let connection = open_connection(path, key).expect("legacy encrypted connection");
+        let transaction = connection
+            .unchecked_transaction()
+            .expect("legacy migration transaction");
+        transaction
+            .execute_batch(MIGRATION_1_SCHEMA_SQL)
+            .expect("legacy schema");
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (1, ?1)",
+                [sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())],
+            )
+            .expect("legacy history");
+        transaction
+            .execute(
+                "INSERT INTO store_metadata(singleton, generation, state_sha256)
+                 VALUES (1, 0, ?1)",
+                [super::ZERO_SHA256],
+            )
+            .expect("legacy metadata");
+        transaction
+            .execute(
+                "INSERT INTO checkpoints(generation, state_sha256) VALUES (0, ?1)",
+                [super::ZERO_SHA256],
+            )
+            .expect("legacy checkpoint");
+        transaction
+            .pragma_update(None, "user_version", 1)
+            .expect("legacy user version");
+        transaction.commit().expect("legacy migration commit");
     }
 
     #[test]
@@ -1622,6 +1681,293 @@ mod tests {
         assert_eq!(generation, 0);
         assert_eq!(checkpoint_count, 1);
         drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn version_two_schema_is_normalized_closed_and_relational() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
+            .expect("version two store");
+        let tables: Vec<String> = store
+            .connection
+            .prepare(
+                "SELECT name FROM sqlite_schema
+                 WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+                 ORDER BY name",
+            )
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get(0))?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .expect("table closure");
+        assert_eq!(
+            tables,
+            [
+                "actions",
+                "checkpoints",
+                "decisions",
+                "evidence",
+                "files",
+                "grant_heads",
+                "grant_identities",
+                "grant_revisions",
+                "objectives",
+                "plans",
+                "receipts",
+                "retention",
+                "schema_history",
+                "sessions",
+                "store_metadata",
+                "tasks",
+                "transaction_heads",
+                "transaction_identities",
+                "transaction_revisions",
+            ]
+        );
+
+        let digest = "a".repeat(64);
+        let record = b"{}".as_slice();
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    "session-1",
+                    "profile-1",
+                    "active",
+                    1_i64,
+                    1_i64,
+                    &digest,
+                    record
+                ],
+            )
+            .expect("session");
+        store
+            .connection
+            .execute(
+                "INSERT INTO objectives VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params!["objective-1", "session-1", 1_i64, "active", &digest, record],
+            )
+            .expect("objective");
+        store
+            .connection
+            .execute(
+                "INSERT INTO plans VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params!["plan-1", "objective-1", 1_i64, "active", &digest, record],
+            )
+            .expect("plan");
+        store
+            .connection
+            .execute(
+                "INSERT INTO tasks VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6)",
+                params!["task-1", "plan-1", 1_i64, "active", &digest, record],
+            )
+            .expect("root task");
+        store
+            .connection
+            .execute(
+                "INSERT INTO tasks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    "task-2", "plan-1", "task-1", 2_i64, "pending", &digest, record
+                ],
+            )
+            .expect("child task");
+        store
+            .connection
+            .execute(
+                "INSERT INTO actions VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    "action-1",
+                    "task-1",
+                    1_i64,
+                    "workspace_read",
+                    "succeeded",
+                    &digest,
+                    record
+                ],
+            )
+            .expect("action");
+        store
+            .connection
+            .execute(
+                "INSERT INTO evidence VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    "evidence-1",
+                    "task-1",
+                    "action-1",
+                    1_i64,
+                    "tool_result",
+                    "observed",
+                    &digest,
+                    record
+                ],
+            )
+            .expect("evidence");
+        store
+            .connection
+            .execute(
+                "INSERT INTO decisions VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params!["decision-1", "task-1", 1_i64, "accepted", &digest, record],
+            )
+            .expect("decision");
+        store
+            .connection
+            .execute(
+                "INSERT INTO files VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    "file-1",
+                    "session-1",
+                    "workspace-1",
+                    &digest,
+                    &digest,
+                    &digest,
+                    "observed",
+                    &digest,
+                    record
+                ],
+            )
+            .expect("file");
+        store
+            .connection
+            .execute(
+                "INSERT INTO retention VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)",
+                params![
+                    "retention-1",
+                    "sessions",
+                    "session-1",
+                    "private",
+                    "retained",
+                    0_i64,
+                    &digest
+                ],
+            )
+            .expect("retention");
+
+        for table in [
+            "sessions",
+            "objectives",
+            "plans",
+            "tasks",
+            "actions",
+            "evidence",
+            "decisions",
+            "files",
+            "retention",
+        ] {
+            let count: i64 = store
+                .connection
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .expect("domain row count");
+            assert!(count > 0, "{table} must retain a normalized row");
+        }
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO objectives VALUES ('orphan', 'missing', 1, 'active', ?1, X'00')",
+                    [&digest],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO evidence VALUES ('cross-task', 'task-2', 'action-1', 2, 'tool_result', 'observed', ?1, X'00')",
+                    [&digest],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO retention VALUES ('bad-retention', 'unknown', 'x', 'private', 'retained', NULL, 0, ?1)",
+                    [&digest],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO decisions VALUES ('duplicate-ordinal', 'task-1', 1, 'accepted', ?1, X'00')",
+                    [&digest],
+                )
+                .is_err()
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn version_one_upgrades_to_two_with_exact_history() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        create_version_one_store(&path, &[15; 32]);
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([15; 32]))
+            .expect("version one upgrades");
+        let version: i64 = store
+            .connection
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .expect("schema version");
+        assert_eq!(version, SCHEMA_VERSION);
+        let history: Vec<(i64, String)> = store
+            .connection
+            .prepare("SELECT version, migration_sha256 FROM schema_history ORDER BY version")
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .expect("migration history");
+        assert_eq!(
+            history,
+            [
+                (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
+                (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
+            ]
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn failed_version_two_migration_rolls_back_without_partial_schema() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        create_version_one_store(&path, &[16; 32]);
+        let connection = open_connection(&path, &[16; 32]).expect("migration fixture");
+        connection
+            .execute_batch("CREATE TABLE sessions(incompatible INTEGER) STRICT;")
+            .expect("incompatible table fixture");
+        drop(connection);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([16; 32]))
+                .expect_err("conflicting migration must fail"),
+            OperationalStoreError::MigrationFailed
+        );
+        let connection = open_connection(&path, &[16; 32]).expect("inspect rolled-back store");
+        let version: i64 = connection
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .expect("rolled-back version");
+        let history_count: i64 = connection
+            .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
+            .expect("rolled-back history");
+        let objectives: i64 = connection
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_schema WHERE type = 'table' AND name = 'objectives'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("rolled-back table closure");
+        assert_eq!((version, history_count, objectives), (1, 1, 0));
+        drop(connection);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
