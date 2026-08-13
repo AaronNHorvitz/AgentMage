@@ -1,0 +1,176 @@
+{
+  "artifact_id": "inference-client-isolation",
+  "claims": {
+    "arbitrary_same_user_process_confinement_tested": false,
+    "docker_vscode_and_worker_positions_denied": true,
+    "enabled_native_runtime_tested": false,
+    "inference_performed": false,
+    "release_support": false,
+    "shipped_vscode_direct_raw_client_absent": true,
+    "tool_worker_direct_raw_client_denied": true
+  },
+  "client_boundaries": [
+    {
+      "admitted_transport": "authenticated-package-bootstrap-host-unix-socket-only",
+      "client": "agentmage-vscode-extension",
+      "controls": [
+        "one-exact-node-net-import",
+        "one-exact-unix-path-connection-call",
+        "package-bootstrap-endpoint-only",
+        "raw-loopback-substitution-mutation-denied"
+      ],
+      "direct_raw_runtime_client": false
+    },
+    {
+      "admitted_transport": "none",
+      "client": "agentmage-tool-worker",
+      "controls": [
+        "fresh-private-network-namespace",
+        "network-syscall-seccomp-denial",
+        "fixed-environment-without-endpoint",
+        "live-raw-loopback-connect-denial"
+      ],
+      "direct_raw_runtime_client": false
+    }
+  ],
+  "limitations": [
+    "The native runtime remains inactive with zero enabled models, so enabled native inference reachability must be rerun in Sprint 13.",
+    "The Visual Studio Code result constrains the shipped AgentMage extension source and Docker hostile position; it is not confinement of every unrelated extension or same-user process.",
+    "This artifact does not perform inference, packet capture, a 60-minute workflow, physical-host certification, or release acceptance."
+  ],
+  "network_used": false,
+  "prerequisite_evidence": {
+    "docker": {
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-reachability.json",
+      "sha256": "5bc772323fca61961849b68468fa3607455f596d97207067c8f51cfe4f6306f4",
+      "source_revision": "37cce172a7e7778b2981ac59b48d11d004c10ae6",
+      "targets": [
+        {
+          "authenticated_guard_control": true,
+          "cleanup_complete": true,
+          "inference_request_sent": false,
+          "positions": [
+            {
+              "position": "vscode-extension",
+              "raw_tcp_connected": false,
+              "status": "denied"
+            },
+            {
+              "position": "tool-worker",
+              "raw_tcp_connected": false,
+              "status": "denied"
+            }
+          ],
+          "target_id": "fedora-44-x86_64"
+        },
+        {
+          "authenticated_guard_control": true,
+          "cleanup_complete": true,
+          "inference_request_sent": false,
+          "positions": [
+            {
+              "position": "vscode-extension",
+              "raw_tcp_connected": false,
+              "status": "denied"
+            },
+            {
+              "position": "tool-worker",
+              "raw_tcp_connected": false,
+              "status": "denied"
+            }
+          ],
+          "target_id": "ubuntu-26.04-x86_64"
+        }
+      ]
+    },
+    "native": {
+      "enabled_models": 0,
+      "inference_started": false,
+      "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+      "release_claim": "none",
+      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb",
+      "source_revision": "b1bc089aa9418e99cfb542da651e048358f8e68a"
+    }
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "30199d9374c23f25142f25b8b20e7798b51cbb9e",
+  "sources": [
+    {
+      "bytes": 61060,
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "29dcc4a4ff0c7ac7f66f54aa2dd4dfc9d9a745dd62bc2cdf78a0cf0dc52d21ef"
+    },
+    {
+      "bytes": 14886,
+      "path": "scripts/inference_client_isolation_evidence.py",
+      "sha256": "ce7ea41143c8377548f9113a1177c19210e63ce98afc959dea26be567dc7fc87"
+    },
+    {
+      "bytes": 10462,
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "f599af5fab43c782ebb71c1d8a504cd63a23c8778db96128f260a11ee39ab069"
+    },
+    {
+      "bytes": 5052,
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "e5ecc5ecaa3e1a0944d6662269e55386e0940ac5b8ed283988b0f1ceb4e78301"
+    },
+    {
+      "bytes": 7302,
+      "path": "shells/vscode/src/host_bootstrap.ts",
+      "sha256": "378a62f8e54f6a6e5d50fe54cce27dae2ed803e8fe2e5bea9788dfec34d12c24"
+    },
+    {
+      "bytes": 12142,
+      "path": "shells/vscode/src/host_bridge.ts",
+      "sha256": "b0306f0a7fa8640d4d2333fbb0cd26cbfb3a1833e76859470221342d4fb3b0f2"
+    },
+    {
+      "bytes": 5546,
+      "path": "tests/test_inference_client_isolation_evidence.py",
+      "sha256": "2ca8dc98760eded9bcfcd6a97a0be3006e5f31db121139b0959645143ef0bcab"
+    },
+    {
+      "bytes": 6059,
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "7f193cf6db913d39a440aa382b9a1d05e9cf5a55c5256c553d7287e537b16201"
+    }
+  ],
+  "status": "pass-shipped-vscode-and-linux-worker-no-enabled-native-inference",
+  "task_ids": [
+    "10.1.1.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "074426c25a155eec1ea17a897be243f3a9862955fb576533bdd1d9eb8df24c00",
+      "exit_code": 0,
+      "expected_marker_sha256": "4ef1d9d44877fe2638e6915d124b04cc65269c8ca14994dcda52fdbbccafd1a6",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "72a010a8fe7c50307b2afcac0af114c25beeaead9d58f2261306748dc3fc5c3e",
+      "status": "pass"
+    },
+    {
+      "command_id": "d943c2fc72dbf8ad9859155bf08a8afadd4c9cc5eaf3ed01ae1b336273463b39",
+      "exit_code": 0,
+      "expected_marker_sha256": "4a23f5c596b55855ce6f56a1b82b6d6715c175d9b881946e9d58c60b8f640876",
+      "status": "pass"
+    },
+    {
+      "command_id": "462549726e55690d4acc59327c7a27baebed1571ab7ff61f62f1b893a0ee6691",
+      "exit_code": 0,
+      "expected_marker_sha256": "64cee96dc867f58bd14fcc57697766fe2e54eab83b02900584fe5a309ac3fb91",
+      "status": "pass"
+    },
+    {
+      "command_id": "aaa2dc804f10f45795179dd80d3a9d9ecb9755d833b803d2d8095b5c4dd2f8ac",
+      "exit_code": 0,
+      "expected_marker_sha256": "64cee96dc867f58bd14fcc57697766fe2e54eab83b02900584fe5a309ac3fb91",
+      "status": "pass"
+    }
+  ]
+}
