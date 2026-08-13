@@ -1,0 +1,142 @@
+{
+  "artifact_id": "strict-local-linux-state-root-policy",
+  "claims": {
+    "all_sync_clients_detected": false,
+    "configuration_and_authority_pre_io_rejection_tested": true,
+    "linux_state_root_policy_implemented": true,
+    "live_remote_mount_tested": false,
+    "release_support": false
+  },
+  "external_network_used": false,
+  "integration_results": {
+    "authority_database_created": false,
+    "configuration_preimage_preserved": true,
+    "configuration_read_started": false,
+    "kernel_rejected_every_risky_or_unknown_observation": true,
+    "provider_and_sentinel_roots_rejected": true,
+    "sentinel_added_after_inspection_rejected": true
+  },
+  "limitations": [
+    "Remote, FUSE, and unknown filesystem classes are covered by deterministic filesystem-magic and kernel-policy matrices; live remote-mount fixtures remain Task 10.1.2.4.",
+    "Folder-name and sentinel detection is conservative and cannot identify every third-party synchronization client or a deliberately disguised synchronizer.",
+    "This evidence is Linux-only and does not claim macOS, Windows, backup, restore, packet-capture, or release acceptance."
+  ],
+  "policy_profile": {
+    "admitted_filesystem_class": "known-local-only",
+    "known_local_filesystem_count": 11,
+    "known_remote_filesystem_count": 7,
+    "path_controls": [
+      "absolute-only",
+      "descriptor-relative",
+      "no-symbolic-links",
+      "current-user-owner",
+      "owner-only-mode",
+      "held-object-revalidation",
+      "mount-and-filesystem-identity"
+    ],
+    "protected_consumers": [
+      "configuration-store",
+      "operational-key-lifecycle",
+      "authority-store"
+    ],
+    "refusal_classes": [
+      "cloud-synchronized",
+      "remote-filesystem",
+      "fuse-filesystem",
+      "unknown-filesystem"
+    ],
+    "rejected_filesystem_classes": [
+      "remote",
+      "fuse",
+      "unknown"
+    ],
+    "root_sentinels": [
+      "dropbox-cache",
+      "explicit-cloud-sync",
+      "syncthing-folder"
+    ],
+    "synchronization_providers": [
+      "box",
+      "dropbox",
+      "google-drive",
+      "icloud-drive",
+      "mega",
+      "nextcloud",
+      "onedrive",
+      "owncloud",
+      "pcloud",
+      "proton-drive",
+      "syncthing",
+      "tresorit"
+    ]
+  },
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "d26bb6ae7e05fd7c4725cda5622c5fb3b35b2f4b",
+  "sources": [
+    {
+      "bytes": 9063,
+      "path": "docs/architecture/strict-local-boundary.md",
+      "sha256": "ff092427d45bd777ef24cc1858fc87a68ec4a8cd0d44260b8e9c362742494d62"
+    },
+    {
+      "bytes": 21109,
+      "path": "kernel/engine/src/strict_local.rs",
+      "sha256": "03be94dac8ddb0fdbe4d03f8a45f6477363eafd0b907f8163bc64549ad0f9c22"
+    },
+    {
+      "bytes": 37047,
+      "path": "platforms/linux/src/configuration_store.rs",
+      "sha256": "9cc8a9a23eb1c234ef3445dcc8621a82667b813d40daa935d05da79755725fe6"
+    },
+    {
+      "bytes": 11968,
+      "path": "platforms/linux/src/lifecycle.rs",
+      "sha256": "7ffcaf7720b166854b703f7b71561aebe46987141754f0cb06769cd8e01ddfdf"
+    },
+    {
+      "bytes": 30477,
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "2f1871760d7d960fb6c2b6e22b691ae8d22f3c3a93a932e4d9ea3e514093f9cb"
+    },
+    {
+      "bytes": 27972,
+      "path": "platforms/linux/src/strict_local.rs",
+      "sha256": "d0087b25eab783642c6e7db448acf5f990fa3077d57e5c175db606939b9ba559"
+    },
+    {
+      "bytes": 11535,
+      "path": "scripts/strict_local_state_root_evidence.py",
+      "sha256": "3cf5fec53d2bfe6eedeecb7ae6db9d0bd9dda9b0ca0956ae718c0d629f5e9c04"
+    },
+    {
+      "bytes": 3995,
+      "path": "tests/test_strict_local_state_root_evidence.py",
+      "sha256": "fd0a35807b5593d8577f3d6704ed87449249b4016b76941cfd911dae06f97a9c"
+    }
+  ],
+  "status": "pass-linux-detection-and-pre-io-rejection",
+  "task_ids": [
+    "10.1.1.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "1e0f8f16877e17b67cc383686b1e5dd08660db38eb0af4f81fe29f8b2c2c067e",
+      "exit_code": 0,
+      "expected_marker_sha256": "f4c0d8ce9fc835018949e4655ee319ce5e86de12a9b40b86cad03850299319e4",
+      "status": "pass"
+    },
+    {
+      "command_id": "fa4db6335984d60379c721d98db64d10c6a6c9ba286bf3b6388e8551809f211f",
+      "exit_code": 0,
+      "expected_marker_sha256": "e14199177036ab1ae799d4c54a26ee5f38209b0d322e833c964531f2f85c5cbf",
+      "status": "pass"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "exit_code": 0,
+      "expected_marker_sha256": "72a010a8fe7c50307b2afcac0af114c25beeaead9d58f2261306748dc3fc5c3e",
+      "status": "pass"
+    }
+  ]
+}
