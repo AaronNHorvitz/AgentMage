@@ -1135,8 +1135,7 @@ mod tests {
     use super::{
         LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
         LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
-        PATH_EXECUTOR, compile_seccomp_policy, directory_projection, file_projection,
-        verified_worker_name,
+        compile_seccomp_policy, directory_projection, file_projection, verified_worker_name,
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
@@ -1287,21 +1286,16 @@ mod tests {
             .kind(),
             LinuxSandboxErrorKind::InvalidManifest
         );
-        let worker = fs::canonicalize("/usr/bin/cat").expect("canonical worker");
-        let manifest = LinuxSandboxManifest::verify(
-            "/usr/bin/systemd-run",
-            "/usr/bin/bwrap",
-            &worker,
-            &runtime_files(&worker),
-        )
-        .expect("verified manifest");
         assert_eq!(
-            manifest.path_executor.launch_path.as_deref(),
-            Some(
-                fs::canonicalize(PATH_EXECUTOR)
-                    .expect("canonical path executor")
-                    .as_path()
+            LinuxSandboxManifest::verify(
+                "/missing/systemd-run",
+                "/missing/bwrap",
+                "/usr/bin/cat",
+                &[]
             )
+            .expect_err("missing launch artifacts must fail")
+            .kind(),
+            LinuxSandboxErrorKind::InvalidManifest
         );
         assert_eq!(
             verified_worker_name(Path::new("/usr/lib/coreutils/cat")).expect("bounded applet name"),
