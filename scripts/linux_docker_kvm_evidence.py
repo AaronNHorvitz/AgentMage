@@ -17,8 +17,10 @@ from typing import Any, Final
 
 try:
     from scripts import linux_native_ubuntu_control_evidence as vm_support
+    from scripts.package_candidate import build_all
 except ModuleNotFoundError:  # Direct execution places only scripts/ on sys.path.
     import linux_native_ubuntu_control_evidence as vm_support
+    from package_candidate import build_all
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
@@ -33,6 +35,7 @@ SOURCE_PATHS: Final = (
     "package.json",
     "scripts/linux_docker_kvm_evidence.py",
     "scripts/linux_docker_kvm_guest.py",
+    "scripts/package_candidate.py",
     "tests/test_linux_docker_kvm_evidence.py",
 )
 LIMITATIONS: Final = [
@@ -530,13 +533,18 @@ def validate_prepared(target: Target) -> dict[str, Any]:
     return value
 
 
-def release_package(target: Target) -> Path:
-    directory = ROOT / "release-output/sprint-9-story-9.1"
-    pattern = "agentmage-0.0.0-1.fc44.x86_64.rpm" if target is FEDORA else "agentmage_0.0.0_amd64.deb"
-    path = directory / pattern
-    if not path.is_file() or path.stat().st_size <= 0:
-        raise DockerKvmEvidenceError("Linux acceptance package is unavailable")
-    return path
+def build_acceptance_packages(output: Path) -> dict[str, Path]:
+    checked(["cargo", "build", "--workspace", "--release", "--locked"], timeout=1800)
+    checked(
+        ["npm", "run", "build", "--workspace", "@agentmage/vscode-shell"],
+        timeout=600,
+    )
+    packages = build_all(output)
+    if sorted(packages) != ["deb", "rpm", "vsix"] or any(
+        not path.is_file() or path.stat().st_size <= 0 for path in packages.values()
+    ):
+        raise DockerKvmEvidenceError("Linux acceptance package build is incomplete")
+    return packages
 
 
 def external_network_denied(guest: vm_support.VmHandle) -> bool:
@@ -560,9 +568,9 @@ def run_target_acceptance(
     tools: vm_support.HostTools,
     target: Target,
     revision: str,
+    package: Path,
 ) -> dict[str, Any]:
     prepared = validate_prepared(target)
-    package = release_package(target)
     result: dict[str, Any] | None = None
     with tempfile.TemporaryDirectory(
         prefix=f"agentmage-{target.distribution}-docker-acceptance-", dir=CACHE_ROOT
@@ -677,24 +685,35 @@ def run_target_acceptance(
 
 
 def build_report(tools: vm_support.HostTools, revision: str) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "artifact_id": "linux-docker-kvm-topology",
-        "source_revision": revision,
-        "task_ids": ["9.2.2.1"],
-        "status": "pass-live-topology-no-inference",
-        "targets": [run_target_acceptance(tools, target, revision) for target in TARGETS],
-        "claims": {
-            "docker_engine_directly_tested": True,
-            "live_topology_inspected": True,
-            "native_adapter_live_inference": False,
-            "docker_inference_performed": False,
-            "model_quality_evaluated": False,
-            "release_support": False,
-        },
-        "limitations": LIMITATIONS,
-        "sources": source_records(revision),
-    }
+    with tempfile.TemporaryDirectory(prefix="agentmage-docker-kvm-packages-") as name:
+        packages = build_acceptance_packages(Path(name))
+        targets = [
+            run_target_acceptance(
+                tools,
+                target,
+                revision,
+                packages["rpm" if target is FEDORA else "deb"],
+            )
+            for target in TARGETS
+        ]
+        return {
+            "schema_version": 1,
+            "artifact_id": "linux-docker-kvm-topology",
+            "source_revision": revision,
+            "task_ids": ["9.2.2.1"],
+            "status": "pass-live-topology-no-inference",
+            "targets": targets,
+            "claims": {
+                "docker_engine_directly_tested": True,
+                "live_topology_inspected": True,
+                "native_adapter_live_inference": False,
+                "docker_inference_performed": False,
+                "model_quality_evaluated": False,
+                "release_support": False,
+            },
+            "limitations": LIMITATIONS,
+            "sources": source_records(revision),
+        }
 
 
 def validate_report(value: Any) -> list[str]:

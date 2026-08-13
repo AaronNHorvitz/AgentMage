@@ -131,6 +131,27 @@ class LinuxDockerKvmEvidenceTests(unittest.TestCase):
             self.assertEqual(guest_probe.main(), 1)
         cleanup.assert_called_once_with()
 
+    def test_acceptance_packages_are_built_instead_of_reusing_release_output(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            output = Path(name)
+            packages = {
+                kind: output / filename
+                for kind, filename in {
+                    "rpm": "candidate.rpm",
+                    "deb": "candidate.deb",
+                    "vsix": "candidate.vsix",
+                }.items()
+            }
+            for path in packages.values():
+                path.write_bytes(b"candidate")
+            with (
+                mock.patch.object(evidence, "checked") as checked,
+                mock.patch.object(evidence, "build_all", return_value=packages) as build,
+            ):
+                self.assertEqual(evidence.build_acceptance_packages(output), packages)
+            self.assertEqual(checked.call_count, 2)
+            build.assert_called_once_with(output)
+
 
 if __name__ == "__main__":
     unittest.main()
