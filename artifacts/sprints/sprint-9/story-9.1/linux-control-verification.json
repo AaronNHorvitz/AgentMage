@@ -35,7 +35,7 @@
     "namespaces": "fresh-user-mount-pid-ipc-uts-cgroup-network",
     "network": "new-network-namespace-plus-address-family-and-seccomp-denial",
     "output": "concurrent-drain-bounded-retention-sha256-diagnostics",
-    "privileges": "no-new-privileges-private-devices-cap-drop-all",
+    "privileges": "bubblewrap-no-new-privileges-private-devices-cap-drop-all",
     "scratch": "private-tmpfs-16777216-bytes",
     "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
     "secret_service": "fixed-attributes-pipe-only-zeroized-bounded-watchdog-client",
@@ -89,8 +89,8 @@
     }
   ],
   "limitations": [
-    "Clean package lifecycle is verified separately on Fedora and Ubuntu; bounded Ubuntu Bubblewrap, seccomp, and cgroup attack evidence is also recorded separately, while native Ubuntu execution and Ubuntu live Secret Service closure remain pending.",
-    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; native Ubuntu preflight execution remains pending.",
+    "This artifact is the native Fedora control run; native Ubuntu-kernel isolation, IPC, Secret Service, startup, syscall, resource, and cleanup evidence is retained separately in linux-native-ubuntu-control-verification.json.",
+    "The seven-control startup preflight passes natively on Fedora and its fail-closed mapping is exercised for Fedora and Ubuntu identities; the separate native Ubuntu artifact executes the same preflight under the Ubuntu kernel.",
     "The inactive inference package boundary is verified separately; enabled inference runtime remains pending.",
     "macOS implementation and execution remain blocked and are not substituted."
   ],
@@ -98,7 +98,7 @@
   "platform_status": {
     "fedora_44_x86_64": "verified-local",
     "macos": "blocked-macos",
-    "ubuntu_26_04_x86_64": "bounded-sandbox-evidence-recorded-separately"
+    "ubuntu_26_04_x86_64": "verified-native-kernel-evidence-recorded-separately"
   },
   "private_values_present": false,
   "release_claim": "none",
@@ -205,7 +205,7 @@
       "test": "sensitive_output_is_bounded_without_a_content_digest"
     }
   ],
-  "source_revision": "1083a042f48a0792a14572a53c12b05734244041",
+  "source_revision": "9a807bbdb30be9151657fee62a1136ea021041c3",
   "sources": [
     {
       "path": "Cargo.lock",
@@ -221,7 +221,7 @@
     },
     {
       "path": "docs/architecture/linux-worker-isolation.md",
-      "sha256": "5e9663e177f396cfbf7577f1536d5671514907df4db3c5c37b020a9746929f26"
+      "sha256": "18cbcfafb56be752a7d3cd03101d776b4ae8f9ff0e1bf59e6cd895351809584a"
     },
     {
       "path": "docs/architecture/platform-adapter-contract.md",
@@ -249,7 +249,7 @@
     },
     {
       "path": "platforms/linux/src/sandbox.rs",
-      "sha256": "a1a14a5626b48f9b20158cad7e8b062ecf9521adb29f63f33ef9d6bf30069867"
+      "sha256": "cc5e64975df7369a763349e43aadd9212a37c799f115c167e3b72d4195ab772f"
     },
     {
       "path": "platforms/linux/src/security_controls.rs",
@@ -261,11 +261,11 @@
     },
     {
       "path": "scripts/linux_sandbox_evidence.py",
-      "sha256": "ffc3193676108e226066332912a4a2955613812e2d26589036bab8f8424c7cbe"
+      "sha256": "481844f8e35e2081cd7564bb5830c8756e447ac5ed09c08b43fcd1dade3f6c8e"
     },
     {
       "path": "tests/test_linux_sandbox_evidence.py",
-      "sha256": "430f8461f0f7fc06fbd8709168b17165a6c62149e75b61f4c43b578403d3eaed"
+      "sha256": "263026726a2b4c743e2315288723082cae3584ff8a409c4ed460e326be23a46d"
     }
   ],
   "startup_control_ids": [
@@ -323,6 +323,14 @@
       "path_class": "root-owned-usr-bin",
       "sha256": "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc",
       "version": "bubblewrap 0.11.0"
+    },
+    {
+      "group_or_world_writable": false,
+      "id": "path-executor",
+      "owner_uid": 0,
+      "path_class": "root-owned-usr-bin",
+      "sha256": "505168d7e1cc5ad8e7dc93d2b5c3867987bf605ff323b679c847441ca1569eeb",
+      "version": "env (GNU coreutils) 9.10"
     },
     {
       "group_or_world_writable": false,
