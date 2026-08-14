@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "campaign_id": "D027-S12-CLASSIFIER",
+  "output_count": 1280,
+  "outputs_per_class": 128,
+  "classes": [
+    "allow_like_unknown_fields",
+    "low_confidence",
+    "disagreement",
+    "truncated",
+    "timed_out",
+    "malformed",
+    "unavailable",
+    "out_of_distribution",
+    "authority_field_escalation",
+    "complete_restrictive"
+  ],
+  "expected_counts": {
+    "parser_rejections": 256,
+    "safe_failure_decisions": 896,
+    "restrictive_decisions": 128,
+    "broader_authority": 0,
+    "completion": 0
+  },
+  "prohibited_capabilities": [
+    "grant_creation_or_widening",
+    "denial_override",
+    "destination_selection",
+    "model_switching",
+    "execution",
+    "completion"
+  ],
+  "private_user_data": false,
+  "external_network": false
+}
