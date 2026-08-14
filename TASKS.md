@@ -2540,15 +2540,15 @@ absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 33.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 33.1.1.1** (legacy `S-027-I06`): Implement encrypted local archives with inspect, restore, export, retention, and delete controls.
-  - [ ] **Sub-task 33.1.1.2** (legacy `S-027-I07`): Implement redacted evidence bundles with claims, states, citations, methods, receipts, manifests, constraints, and user-selected excerpts.
-  - [ ] **Sub-task 33.1.1.3** (legacy `S-027-I08`): Show an exact disclosure preview and exclude secrets, unrelated private text, hidden prompts, and unapproved content.
+- [x] **Task 33.1.1 - Implement the bounded story**
+  - [x] **Sub-task 33.1.1.1** (legacy `S-027-I06`): Implement encrypted local archives with inspect, restore, export, retention, and delete controls.
+  - [x] **Sub-task 33.1.1.2** (legacy `S-027-I07`): Implement redacted evidence bundles with claims, states, citations, methods, receipts, manifests, constraints, and user-selected excerpts.
+  - [x] **Sub-task 33.1.1.3** (legacy `S-027-I08`): Show an exact disclosure preview and exclude secrets, unrelated private text, hidden prompts, and unapproved content.
 
 - [ ] **Task 33.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 33.1.2.1:** Conversation search and branching APIs.
-  - [ ] **Sub-task 33.1.2.2:** Encrypted archive and evidence-bundle formats.
-  - [ ] **Sub-task 33.1.2.3:** Disclosure preview and redaction report.
+  - [x] **Sub-task 33.1.2.1:** Conversation search and branching APIs.
+  - [x] **Sub-task 33.1.2.2:** Encrypted archive and evidence-bundle formats.
+  - [x] **Sub-task 33.1.2.3:** Disclosure preview and redaction report.
   - [ ] **Sub-task 33.1.2.4:** Resume, corruption, simultaneous-access, and deletion test results.
 
 - [ ] **Task 33.1.3 - Verify and close the story**
@@ -2556,7 +2556,7 @@ absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
   - [ ] **Sub-task 33.1.3.2:** `S-027-UT02` branches at every event type and compares parent/child histories; assert immutable shared prefix, independent continuation, and no duplicated side effects or grants.
   - [ ] **Sub-task 33.1.3.3:** `S-027-ST01` exports bundles containing secret, private, stale, denied, copyrighted, and unrelated canaries; assert disclosure preview, policy redaction, explicit omissions, and no hidden metadata leakage.
   - [ ] **Sub-task 33.1.3.4:** `S-027-RT01` crashes during archive, branch, simultaneous access, export, deletion, and restore; assert encryption, canonical ordering, atomic state, retention consistency, and no orphaned content.
-  - [ ] **Sub-task 33.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-007`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-003` through `SR-CIV-005`, `SR-OPS-003`; retain archive integrity tests, branch graphs, disclosure previews, canary reports, and deletion/recovery evidence.
+  - [x] **Sub-task 33.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-007`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-003` through `SR-CIV-005`, `SR-OPS-003`; retain archive integrity tests, branch graphs, disclosure previews, canary reports, and deletion/recovery evidence.
 
 ##### Story Acceptance Criteria
 
@@ -2565,13 +2565,25 @@ absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 33.AC1:** Exact-point resume and branch fixtures preserve the original and continue from the selected evidence state.
-- [ ] **Sprint AC 33.AC2:** Every summary and branch can reopen its original citations and receipts.
-- [ ] **Sprint AC 33.AC3:** Deletion removes eligible records and indexes without breaking retained evidence obligations.
-- [ ] **Sprint AC 33.AC4:** Exports contain only previewed fields and no secrets or unrelated workspace content.
+- [x] **Sprint AC 33.AC1:** Exact-point resume and branch fixtures preserve the original and continue from the selected evidence state.
+- [x] **Sprint AC 33.AC2:** Every summary and branch can reopen its original citations and receipts.
+- [x] **Sprint AC 33.AC3:** Deletion removes eligible records and indexes without breaking retained evidence obligations.
+- [x] **Sprint AC 33.AC4:** Exports contain only previewed fields and no secrets or unrelated workspace content.
 - [ ] **Sprint AC 33.AC5:** Every shell reads and writes conversation state only through the kernel.
 
 **Gate decision:** Sprint 33 is PASS only when Story 33.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** Encrypted archive lifecycle and exact-preview
+evidence bundles are implemented in commits `b909a41`, `22c8c5a`, and `044c6fb`;
+their architecture, verification boundary, and retained evidence are recorded by
+`f836feb` and `d44238e`. The retained [Sprint 33 evidence report](artifacts/sprints/sprint-33/local-evidence-report.json)
+records passing local implementation and product gates with network access, bundle
+import authority, external delivery, and release approval disabled. Sprint 33 remains
+**BLOCKED** because Sprint 32 is not yet a passing upstream dependency, the complete
+`S-027-RT01` crash/simultaneous-access matrix and every-event branch corpus remain
+unfinished, independent Sprint 33 review is absent, and no shell integration is yet
+proved. The story, incomplete artifact/verification items, both story criteria, Sprint
+AC 33.AC5, and the sprint therefore remain open.
 ### [ ] Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
