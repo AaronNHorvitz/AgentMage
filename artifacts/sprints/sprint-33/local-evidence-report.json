@@ -24,7 +24,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "26117af38f22607019774ba5479903c4c3d96653c431891652e659ad189fd6ed"
+      "output_sha256": "6c9edaea9a57cb9ac0c20994be08ec7eac1a27ab252b56608dd26b128b763617"
     },
     {
       "argv": [
@@ -52,7 +52,7 @@
       ],
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "9061da24642875e4b013457fddc1ec32564cbd5eb0242c818066db9e5a1d226b"
+      "output_sha256": "a55f45c53fbcc87d8d23128d07e7d1168b99af2cda44b8bfed5977ab12c3cd83"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "df0255b1313218e8e5127109a3913fa716baaaa9927c30daaaf489ac5765b1a3"
+      "output_sha256": "bbc7fffaeb899b31df93b6d360161d71d7e211d70c1d33d4d03b5f284593bbe4"
     },
     {
       "argv": [
@@ -72,7 +72,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "27908c4c530f395076806fd54710dc885b760f21dfb820c80066a2703a29e70e"
+      "output_sha256": "5c23acdf22e139c8a7cca4c912e9210c1c56524ff3b6217080827b13d6520e39"
     },
     {
       "argv": [
@@ -171,7 +171,7 @@
     "SR-CIV-005",
     "SR-OPS-003"
   ],
-  "source_revision": "f836feb49ec608541b42774adbc436b7818d1163",
+  "source_revision": "b00f98936f09c31d4e9182c256cc8a6025310a91",
   "source_sha256": {
     "docs/architecture/private-archives-evidence-bundles.md": "ba98ed812054125573b766d4b779c71cd3166c4caeaa84cf9a9dc027a9997efc",
     "docs/verification/sprint-33-local-results.md": "ec5033d25e8c2da2bf91f683cca0428b654cfa8df723af6a4cea5fd2d8bc9e56",
