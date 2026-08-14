@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "policy_path": "MODEL-PROVENANCE-POLICY.md",
+  "policy_sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75",
+  "enabled_profile_count": 0,
+  "historical_records": [
+    {
+      "profile_family": "gemma-4-e4b",
+      "path": "model-profiles/candidates/gemma-4-e4b/artifact-admission.json",
+      "sha256": "dab801acabe5dbfec671bc3dcd8c7f80bf6599941f8975d1d848fc82d9ae08c1",
+      "disposition": "BLOCKED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-e4b",
+      "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
+      "sha256": "314f38594ed955234d8516067a827b575d3b3fd81292bdd9c1191688c178464c",
+      "disposition": "REJECTED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-e4b",
+      "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
+      "sha256": "f2e8f8b5adc19e97a6abc8b0857f9deea3dd99db088de5d81e77daf906fbe92b",
+      "disposition": "BLOCKED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-12b-unified",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json",
+      "sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
+      "disposition": "BLOCKED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-12b-unified",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/evaluation-plan.json",
+      "sha256": "196761b5f10e41ea46224c1737147f82eaf33fa72b7f96772bbed05080fec61c",
+      "disposition": "BLOCKED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-12b-unified",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
+      "sha256": "1677d071acb79f569ddbe74c5f219ed74c6ea36c8a7c00b1c1411e733b89574a",
+      "disposition": "REJECTED",
+      "preserved": true
+    },
+    {
+      "profile_family": "gemma-4-12b-unified",
+      "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
+      "sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
+      "disposition": "BLOCKED",
+      "preserved": true
+    }
+  ],
+  "profiles": [
+    {
+      "schema_version": 2,
+      "profile_id": "deterministic-fake-muse-v1",
+      "manifest_id": "deterministic-fake-muse-manifest-v1",
+      "manifest_sha256": "7bbe131714f1789f8a651db9929b6fbec95d6dcb34171a61a6d7dda3da3bcf10",
+      "display_name": "Deterministic fake Muse contract profile",
+      "family": "deterministic_fake_muse",
+      "publisher_control": "AgentMage test fixture",
+      "lineage": [
+        "synthetic-code-fixture",
+        "deterministic-fake-muse-v1"
+      ],
+      "license_spdx": "Apache-2.0",
+      "license_terms_sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+      "artifact": {
+        "artifact_id": "deterministic-fake-muse-bytes-v1",
+        "publisher": "AgentMage test fixture",
+        "source_revision": "source-tree-bound",
+        "format": "synthetic-test-fixture",
+        "bytes": 1,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "transformations": [],
+      "codec": {
+        "codec_id": "deterministic-fake-muse-codec-v1",
+        "codec_version": "1.0.0",
+        "codec_sha256": "04306ffdd54df12c0455f8bc4e17870c21b949d859fcd5a6974904cf470e87ae",
+        "tokenizer": "deterministic-fake-muse-tokenizer-v1",
+        "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "deterministic-fake-muse-template-v1",
+        "template_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tool_protocol_version": "closed-proposal-v1",
+        "end_tokens": [
+          0
+        ],
+        "reasoning_enabled": false
+      },
+      "runtime": {
+        "adapter_id": "deterministic-fake-muse-adapter-v1",
+        "kind": "deterministic_fake",
+        "contract_version": 1,
+        "runtime_build": "agentmage-kernel-engine-test-fixture",
+        "runtime_sha256": "7bbe131714f1789f8a651db9929b6fbec95d6dcb34171a61a6d7dda3da3bcf10",
+        "platform": "deterministic_fake",
+        "architecture": "x86_64"
+      },
+      "quantization": "not-applicable-synthetic-fixture",
+      "modalities": [
+        "text"
+      ],
+      "context": {
+        "max_context_tokens": 8192,
+        "max_input_bytes": 32768,
+        "max_messages": 32,
+        "token_counter": "deterministic-byte-counter-v1",
+        "token_counter_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "decoding": {
+        "profile_id": "deterministic-contract-v1",
+        "sampler_order": [
+          "fixture_exact"
+        ],
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": 1,
+        "repeat_penalty": 1,
+        "seed": 1,
+        "max_output_tokens": 256
+      },
+      "hardware": [
+        {
+          "platform": "deterministic_fake",
+          "architecture": "x86_64",
+          "minimum_system_memory_bytes": 1,
+          "minimum_accelerator_memory_bytes": 0,
+          "accelerator": "none",
+          "driver_constraint": "none"
+        }
+      ],
+      "capabilities": [
+        {
+          "role": "dialogue",
+          "state": "not_evaluated",
+          "evaluation_profile": null,
+          "result_sha256": null,
+          "limitations": [
+            "contract-testing-only",
+            "not-a-model",
+            "no-product-selection"
+          ]
+        }
+      ],
+      "policy_sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75",
+      "lifecycle": "candidate",
+      "enabled": false,
+      "automatic_fallback": false
+    },
+    {
+      "schema_version": 2,
+      "profile_id": "deterministic-fake-gemma-v1",
+      "manifest_id": "deterministic-fake-gemma-manifest-v1",
+      "manifest_sha256": "7bbe131714f1789f8a651db9929b6fbec95d6dcb34171a61a6d7dda3da3bcf10",
+      "display_name": "Deterministic fake Gemma contract profile",
+      "family": "deterministic_fake_gemma",
+      "publisher_control": "AgentMage test fixture",
+      "lineage": [
+        "synthetic-code-fixture",
+        "deterministic-fake-gemma-v1"
+      ],
+      "license_spdx": "Apache-2.0",
+      "license_terms_sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+      "artifact": {
+        "artifact_id": "deterministic-fake-gemma-bytes-v1",
+        "publisher": "AgentMage test fixture",
+        "source_revision": "source-tree-bound",
+        "format": "synthetic-test-fixture",
+        "bytes": 1,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "transformations": [],
+      "codec": {
+        "codec_id": "deterministic-fake-gemma-codec-v1",
+        "codec_version": "1.0.0",
+        "codec_sha256": "04306ffdd54df12c0455f8bc4e17870c21b949d859fcd5a6974904cf470e87ae",
+        "tokenizer": "deterministic-fake-gemma-tokenizer-v1",
+        "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "deterministic-fake-gemma-template-v1",
+        "template_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tool_protocol_version": "closed-proposal-v1",
+        "end_tokens": [
+          0
+        ],
+        "reasoning_enabled": false
+      },
+      "runtime": {
+        "adapter_id": "deterministic-fake-gemma-adapter-v1",
+        "kind": "deterministic_fake",
+        "contract_version": 1,
+        "runtime_build": "agentmage-kernel-engine-test-fixture",
+        "runtime_sha256": "7bbe131714f1789f8a651db9929b6fbec95d6dcb34171a61a6d7dda3da3bcf10",
+        "platform": "deterministic_fake",
+        "architecture": "x86_64"
+      },
+      "quantization": "not-applicable-synthetic-fixture",
+      "modalities": [
+        "text"
+      ],
+      "context": {
+        "max_context_tokens": 8192,
+        "max_input_bytes": 32768,
+        "max_messages": 32,
+        "token_counter": "deterministic-byte-counter-v1",
+        "token_counter_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "decoding": {
+        "profile_id": "deterministic-contract-v1",
+        "sampler_order": [
+          "fixture_exact"
+        ],
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": 1,
+        "repeat_penalty": 1,
+        "seed": 1,
+        "max_output_tokens": 256
+      },
+      "hardware": [
+        {
+          "platform": "deterministic_fake",
+          "architecture": "x86_64",
+          "minimum_system_memory_bytes": 1,
+          "minimum_accelerator_memory_bytes": 0,
+          "accelerator": "none",
+          "driver_constraint": "none"
+        }
+      ],
+      "capabilities": [
+        {
+          "role": "dialogue",
+          "state": "not_evaluated",
+          "evaluation_profile": null,
+          "result_sha256": null,
+          "limitations": [
+            "contract-testing-only",
+            "not-a-model",
+            "no-product-selection"
+          ]
+        }
+      ],
+      "policy_sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75",
+      "lifecycle": "candidate",
+      "enabled": false,
+      "automatic_fallback": false
+    }
+  ]
+}

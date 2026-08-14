@@ -524,11 +524,12 @@
     "lifecycle": {
       "enum": [
         "candidate",
-        "blocked",
-        "rejected",
-        "admitted",
+        "evaluating",
+        "approved",
+        "degraded",
         "quarantined",
-        "disabled"
+        "rejected",
+        "retired"
       ]
     },
     "enabled": {

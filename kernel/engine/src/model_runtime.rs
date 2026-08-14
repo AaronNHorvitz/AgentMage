@@ -144,11 +144,14 @@ impl ModelAdmissionCatalog {
             ModelUsePurpose::Evaluation => {
                 matches!(
                     candidate.lifecycle,
-                    ModelLifecycleState::Candidate | ModelLifecycleState::Admitted
+                    ModelLifecycleState::Candidate | ModelLifecycleState::Evaluating
                 ) && !candidate.enabled
             }
             ModelUsePurpose::Product => {
-                candidate.lifecycle == ModelLifecycleState::Admitted && candidate.enabled
+                matches!(
+                    candidate.lifecycle,
+                    ModelLifecycleState::Approved | ModelLifecycleState::Degraded
+                ) && candidate.enabled
             }
         };
         if !eligible {

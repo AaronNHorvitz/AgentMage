@@ -137,7 +137,7 @@ function validator(name) {
 
 test("generated model schema files are current and every schema compiles", () => {
   synchronize();
-  assert.equal(Object.keys(MODEL_SCHEMAS).length, 13);
+  assert.equal(Object.keys(MODEL_SCHEMAS).length, 14);
 });
 
 test("exact profile is closed, hash-bound, bounded, and has no fallback state", () => {

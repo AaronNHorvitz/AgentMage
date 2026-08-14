@@ -125,7 +125,7 @@ const modelProfile = closed({
   }), 1, 16),
   capabilities: array(capability, 1, 7),
   policy_sha256: digest,
-  lifecycle: { enum: ["candidate", "blocked", "rejected", "admitted", "quarantined", "disabled"] },
+  lifecycle: { enum: ["candidate", "evaluating", "approved", "degraded", "quarantined", "rejected", "retired"] },
   enabled: { type: "boolean" },
   automatic_fallback: { const: false },
 });
@@ -278,6 +278,20 @@ const clientSchemas = closed(Object.fromEntries([
   "stream_fragment", "proposal", "tool_call", "tool_result", "run_result",
   "terminal_claim", "correlation",
 ].map((name) => [name, schemaReference])));
+const profileCatalog = closed({
+  schema_version: positive,
+  policy_path: { const: "MODEL-PROVENANCE-POLICY.md" },
+  policy_sha256: digest,
+  enabled_profile_count: { const: 0 },
+  historical_records: array(closed({
+    profile_family: bounded,
+    path: { type: "string", pattern: "^model-profiles/candidates/[A-Za-z0-9._/-]+\\.json$" },
+    sha256: digest,
+    disposition: { enum: ["BLOCKED", "REJECTED"] },
+    preserved: { const: true },
+  }), 1, 64),
+  profiles: array(modelProfile, 1, 64),
+});
 
 export const MODEL_SCHEMAS = Object.freeze({
   "exact-profile": modelProfile,
@@ -293,6 +307,7 @@ export const MODEL_SCHEMAS = Object.freeze({
   "terminal-claim": runResult,
   correlation: identifier,
   "client-schemas": clientSchemas,
+  "profile-catalog": profileCatalog,
 });
 
 export function modelSchemaDocument(name, schema = MODEL_SCHEMAS[name]) {

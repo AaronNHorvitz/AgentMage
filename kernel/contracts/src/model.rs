@@ -51,16 +51,18 @@ pub enum ModelModality {
 pub enum ModelLifecycleState {
     /// Profile is recorded but has not completed admission.
     Candidate,
-    /// Profile cannot be evaluated until a named blocker is resolved.
-    Blocked,
-    /// Profile failed a mandatory gate and remains historical evidence.
-    Rejected,
-    /// Profile passed its declared admission scope but is not necessarily enabled.
-    Admitted,
+    /// Exact profile may run only in its declared isolated evidence scope.
+    Evaluating,
+    /// Exact profile passed every required gate for its declared capabilities.
+    Approved,
+    /// Exact profile is supported only within recorded limitations.
+    Degraded,
     /// Profile was isolated after identity or behavior drift.
     Quarantined,
-    /// Profile is deliberately unavailable for selection.
-    Disabled,
+    /// Profile failed a mandatory gate and remains historical evidence.
+    Rejected,
+    /// Profile is retained as evidence but cannot be selected for new work.
+    Retired,
 }
 
 /// Runtime adapter family behind the common local model contract.
