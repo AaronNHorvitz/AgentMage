@@ -608,4 +608,164 @@ mod tests {
         }
         assert_eq!(semantic_classifier_calls, 1);
     }
+
+    #[test]
+    fn d027_s12_policy_5120_seeded_fact_mutations_are_deterministic() {
+        const DIMENSION_COUNT: usize = 16;
+        const MUTATIONS_PER_DIMENSION: usize = 320;
+        const MUTATION_COUNT: usize = DIMENSION_COUNT * MUTATIONS_PER_DIMENSION;
+
+        let autonomy_values = [
+            AutonomyLevel::Disabled,
+            AutonomyLevel::Inspect,
+            AutonomyLevel::WorkspaceAutonomous,
+            AutonomyLevel::ConnectedOperations,
+            AutonomyLevel::Owner,
+        ];
+        let source_values = [
+            PolicySourceClass::LocalWorkspace,
+            PolicySourceClass::Attachment,
+            PolicySourceClass::ToolOutput,
+            PolicySourceClass::Connector,
+            PolicySourceClass::Network,
+            PolicySourceClass::Generated,
+            PolicySourceClass::Unknown,
+        ];
+        let destination_values = [
+            PolicyDestinationClass::None,
+            PolicyDestinationClass::LocalWorkspace,
+            PolicyDestinationClass::LocalStore,
+            PolicyDestinationClass::LocalProcess,
+            PolicyDestinationClass::UserDisplay,
+            PolicyDestinationClass::RemoteService,
+            PolicyDestinationClass::Export,
+            PolicyDestinationClass::Unknown,
+        ];
+        let path_values = [
+            PathScopeState::InScope,
+            PathScopeState::OutOfScope,
+            PathScopeState::Ambiguous,
+            PathScopeState::Missing,
+            PathScopeState::NotApplicable,
+        ];
+        let repository_values = [
+            RepositoryState::Clean,
+            RepositoryState::Dirty,
+            RepositoryState::Conflicted,
+            RepositoryState::Detached,
+            RepositoryState::Unborn,
+            RepositoryState::NotRepository,
+            RepositoryState::Unknown,
+        ];
+        let credential_values = [
+            CredentialClass::None,
+            CredentialClass::Brokered,
+            CredentialClass::Environment,
+            CredentialClass::File,
+            CredentialClass::PlatformStore,
+            CredentialClass::Unknown,
+        ];
+        let sensitivity_values = [
+            DataSensitivity::Ephemeral,
+            DataSensitivity::Operational,
+            DataSensitivity::Durable,
+            DataSensitivity::Restricted,
+        ];
+        let network_values = [
+            NetworkRequirement::None,
+            NetworkRequirement::Loopback,
+            NetworkRequirement::LocalNetwork,
+            NetworkRequirement::Internet,
+            NetworkRequirement::Unknown,
+        ];
+        let disclosure_values = [
+            DisclosureClass::None,
+            DisclosureClass::LocalOnly,
+            DisclosureClass::SameTenant,
+            DisclosureClass::External,
+            DisclosureClass::Public,
+            DisclosureClass::Unknown,
+        ];
+        let budget_values = [
+            BudgetState::Within,
+            BudgetState::AtLimit,
+            BudgetState::Exceeded,
+            BudgetState::Unknown,
+        ];
+        let authority_values = [
+            ExactAuthorityState::None,
+            ExactAuthorityState::Pending,
+            ExactAuthorityState::CurrentExact,
+            ExactAuthorityState::Stale,
+            ExactAuthorityState::Consumed,
+            ExactAuthorityState::Uncertain,
+        ];
+
+        let mut seed = 0xd027_5120_5eed_u64;
+        let mut dimension_counts = [0_usize; DIMENSION_COUNT];
+        let mut clearance_count = 0_usize;
+        let mut denial_count = 0_usize;
+
+        for index in 0..MUTATION_COUNT {
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let sample = usize::try_from(seed % 10_000).expect("bounded sample fits usize");
+            let dimension = index % DIMENSION_COUNT;
+            dimension_counts[dimension] += 1;
+            let mut candidate = facts();
+            match dimension {
+                0 => candidate.actor_id = format!("actor-seeded-{sample:04}"),
+                1 => candidate.session_id = SessionId::from_raw(format!("session-{sample:04}")),
+                2 => candidate.task_id = TaskId::from_raw(format!("task-{sample:04}")),
+                3 => candidate.autonomy = autonomy_values[sample % autonomy_values.len()],
+                4 => {
+                    candidate.operation = OperationBinding::new(
+                        GrantOperation::ALL[sample % GrantOperation::ALL.len()],
+                    );
+                }
+                5 => candidate.source = source_values[sample % source_values.len()],
+                6 => {
+                    candidate.destination = destination_values[sample % destination_values.len()];
+                }
+                7 => candidate.path_state = path_values[sample % path_values.len()],
+                8 => {
+                    candidate.repository_state =
+                        repository_values[sample % repository_values.len()];
+                }
+                9 => {
+                    candidate.credential_class =
+                        credential_values[sample % credential_values.len()];
+                }
+                10 => {
+                    candidate.data_sensitivity =
+                        sensitivity_values[sample % sensitivity_values.len()];
+                }
+                11 => candidate.reversible = sample % 2 == 0,
+                12 => candidate.network = network_values[sample % network_values.len()],
+                13 => {
+                    candidate.disclosure = disclosure_values[sample % disclosure_values.len()];
+                }
+                14 => candidate.budget = budget_values[sample % budget_values.len()],
+                15 => {
+                    candidate.exact_authority = authority_values[sample % authority_values.len()];
+                }
+                _ => unreachable!("dimension is reduced modulo 16"),
+            }
+
+            let first = PreclassificationPolicyGate::evaluate(&candidate);
+            let repeated = PreclassificationPolicyGate::evaluate(&candidate);
+            assert_eq!(first, repeated, "decision drift at mutation {index}");
+            if first.is_ok() {
+                clearance_count += 1;
+            } else {
+                denial_count += 1;
+            }
+        }
+
+        assert_eq!(dimension_counts, [MUTATIONS_PER_DIMENSION; DIMENSION_COUNT]);
+        assert_eq!(clearance_count + denial_count, MUTATION_COUNT);
+        assert!(clearance_count > 0);
+        assert!(denial_count > 0);
+    }
 }
