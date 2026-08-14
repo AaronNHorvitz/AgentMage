@@ -9,6 +9,7 @@ pub mod agent_proposal;
 /// Bounded single-agent observe, plan, action-proposal, and review control loop.
 pub mod agent_runtime;
 pub mod agent_state;
+pub mod agent_verifier;
 /// Deterministic non-authoritative approval-display construction.
 pub mod approval;
 /// Metadata-only attachment classification and exact workspace path resolution.

@@ -77,6 +77,18 @@ define_identifier!(
     "Stable identity for one deterministic policy revision."
 );
 define_identifier!(
+    VerifierId,
+    "Stable identity for one deterministic verifier."
+);
+define_identifier!(
+    VerifierRecordId,
+    "Stable identity for one verifier result record."
+);
+define_identifier!(
+    PostconditionId,
+    "Stable identity for one typed postcondition."
+);
+define_identifier!(
     ActionId,
     "Stable identity for one proposed or executed action."
 );

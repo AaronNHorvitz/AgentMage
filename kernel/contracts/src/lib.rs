@@ -5,6 +5,7 @@
 mod agent;
 mod agent_proposal;
 mod agent_state;
+mod agent_verifier;
 mod approval;
 mod boundary;
 mod claim;
@@ -31,6 +32,9 @@ pub use agent::{
 };
 pub use agent_proposal::AgentProposal;
 pub use agent_state::{AgentStateKind, AgentStateTransition};
+pub use agent_verifier::{
+    PostconditionResult, VerifierCandidate, VerifierDisposition, VerifierSource,
+};
 pub use approval::ApprovalRequest;
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
@@ -54,9 +58,9 @@ pub use grant::{
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
     ContextPacketId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelRunId,
-    OperationAttemptId, PlanId, PlanStepId, PolicyId, PromptId, ProposalId, ReceiptId,
-    RepositorySnapshotId, SchemaId, SessionId, TaskId, ToolCallId, ToolCatalogId, ToolId,
-    WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
+    OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
+    ReceiptId, RepositorySnapshotId, SchemaId, SessionId, TaskId, ToolCallId, ToolCatalogId,
+    ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,

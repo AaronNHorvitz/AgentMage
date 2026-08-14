@@ -2,6 +2,8 @@
 
 use agentmage_kernel_contracts::{AgentStateKind, AgentStateTransition};
 
+use crate::agent_verifier::VerifiedCompletion;
+
 const MAX_STATE_REVISIONS: usize = 4_096;
 
 /// Stable reason an agent-state transition is refused.
@@ -15,6 +17,8 @@ pub enum AgentStateError {
     HistoryLimitReached,
     /// A revision counter overflowed.
     RevisionOverflow,
+    /// A verifier proof names another state revision.
+    VerifierStateMismatch,
 }
 
 /// Append-only deterministic state controller for one task.
@@ -62,6 +66,21 @@ impl AgentStateController {
         if target.is_success() {
             return Err(AgentStateError::VerifierRequired);
         }
+        if !legal_transition(self.current, target) {
+            return Err(AgentStateError::IllegalTransition);
+        }
+        self.append(target)
+    }
+
+    /// Completes the exact current verification state using one opaque verifier proof.
+    pub fn complete(
+        &mut self,
+        completion: &VerifiedCompletion,
+    ) -> Result<&AgentStateTransition, AgentStateError> {
+        if completion.state_revision() != self.revision {
+            return Err(AgentStateError::VerifierStateMismatch);
+        }
+        let target = completion.target();
         if !legal_transition(self.current, target) {
             return Err(AgentStateError::IllegalTransition);
         }
