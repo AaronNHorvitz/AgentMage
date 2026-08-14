@@ -29,6 +29,7 @@ mod serialization;
 mod task;
 mod tool;
 mod transaction;
+mod workspace_snapshot;
 
 pub use agent::{
     AgentFinalResponse, AgentFinalState, AgentProgressEvent, AgentProgressKind, AgentStatusKind,
@@ -136,6 +137,7 @@ pub use tool::{
     ToolRiskLevel,
 };
 pub use transaction::{AuthorityTransactionRecord, AuthorityTransactionState};
+pub use workspace_snapshot::{SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot};
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "kernel-contracts";

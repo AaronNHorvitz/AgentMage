@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
+pub use agentmage_kernel_contracts::{SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot};
 use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
 use serde::de::DeserializeOwned;
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
@@ -82,38 +83,6 @@ pub struct ReadOnlyRequest {
     pub limits: ReadOnlyLimits,
     /// Current nested call depth supplied by the kernel dispatcher.
     pub call_depth: u8,
-}
-
-/// Kind of object included in a sealed workspace projection.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SnapshotEntryKind {
-    /// Exact regular file bytes.
-    RegularFile,
-    /// Content-free directory identity.
-    Directory,
-}
-
-/// One exact object projected by a platform worker after path authorization.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SnapshotEntry {
-    /// Canonical workspace-relative components.
-    pub path: Vec<String>,
-    /// Closed supported object kind.
-    pub kind: SnapshotEntryKind,
-    /// Exact regular-file bytes; directories require an empty vector.
-    pub bytes: Vec<u8>,
-    /// Stable executable-bit observation from the held object.
-    pub executable: bool,
-}
-
-/// Bounded sealed projection supplied to pure read-only execution.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct WorkspaceSnapshot {
-    /// Exact projected objects. Execution canonicalizes their order.
-    pub entries: Vec<SnapshotEntry>,
 }
 
 /// Terminal state returned by every read-only attempt.
