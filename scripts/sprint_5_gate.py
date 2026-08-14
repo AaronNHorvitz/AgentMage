@@ -24,8 +24,8 @@ from scripts.story_5_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-5/sprint-gate-report.json"
-REVIEWED_COMMIT = "d25d50671a0879cb2b73c8488b4cdc6cee4f31a9"
-REVIEWED_TREE = "847bcea3e5c65079cc1a1f37b122bfe0c47fcb7f"
+REVIEWED_COMMIT = "132a6d3158661f06f88fff250cd702d264eedcb8"
+REVIEWED_TREE = "b3e12be4b72ae648abe08abb4fea2b00c0c12d32"
 REVIEWED_PATHS = (
     "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
     "scripts/story_5_1_gate.py",
