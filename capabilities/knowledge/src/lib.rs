@@ -20,6 +20,7 @@ mod semantic_benchmark;
 mod skills;
 mod store;
 mod tasks;
+mod workflows;
 
 pub use authority::{
     KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
@@ -112,6 +113,10 @@ pub use tasks::{
     KnowledgeTask, KnowledgeTaskDuplicate, KnowledgeTaskPriority, KnowledgeTaskStatus,
     KnowledgeTaskTransitionPreview, KnowledgeTaskView, KnowledgeTaskViewKind, build_task_view,
     preview_task_transition,
+};
+pub use workflows::{
+    KnowledgeRetrievalMode, KnowledgeWorkflow, KnowledgeWorkflowEvidence, KnowledgeWorkflowResult,
+    built_in_knowledge_skill_pack, built_in_skill_registry, run_read_only_knowledge_workflow,
 };
 
 /// Stable component identity used by diagnostics and build verification.
