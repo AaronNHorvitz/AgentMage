@@ -1,0 +1,245 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-33-BLOCKED",
+      "owner": "33.1"
+    },
+    {
+      "code": "SPRINT-34-NATIVE-CHAT-CLI-INTEGRATION-ABSENT",
+      "owner": "34.1.3.3"
+    },
+    {
+      "code": "SPRINT-34-PLATFORM-MIGRATION-ROLLBACK-ABSENT",
+      "owner": "34.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-SIGNED-V0.2-REVIEW-ABSENT",
+      "owner": "34.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "84bd6a1f0c3943cc81ae3022561170407be4070c40519eaf90b2b00eac48b6a1"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "kernel-tests",
+      "output_sha256": "9f4ac4c46b8acd593723f51430822eb14b6621be63d3917d2f34f3e2af8ec599"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-contracts",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "contract-tests",
+      "output_sha256": "bbb6c24cf33fb2335a014231dff5b842e02d1801b445fea3f7cffeb2fdb94043"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "c82ded33bc372900645707c6a9937c5bc072f391d1b8a333061046c2497db466"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "b2668071c0ec40f9c4db17b5d62434b55052dfdd1247d108f985b49e0768e0cc"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_34_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "authority_free_skill_contract": true,
+    "canonical_task_projection_and_views": true,
+    "cli_product_integration": false,
+    "data_only_skill_assets": true,
+    "eight_builtin_read_only_workflows": true,
+    "evidence_required_unapplied_transition_preview": true,
+    "external_delivery": false,
+    "hash_bound_declarative_skill_registry": true,
+    "lexical_and_approved_semantic_evidence_parity": true,
+    "native_chat_product_integration": false,
+    "network_access": false,
+    "plain_and_obsidian_canonical_parity": true,
+    "signed_v0_2_release": false,
+    "supported_platform_migration_and_rollback": false,
+    "task_write_apply": false,
+    "v0_2_guides_and_draft_release_bundle": true,
+    "visible_precedence_conflicts_and_influence_receipts": true
+  },
+  "record_type": "sprint_34_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-003",
+    "SR-ACC-005",
+    "SR-DAT-001",
+    "SR-DAT-003",
+    "SR-DAT-007",
+    "SR-DAT-010",
+    "SR-AI-001",
+    "SR-AI-004",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-OPS-003",
+    "SR-OPS-006",
+    "SR-TST-001",
+    "SR-TST-005",
+    "SR-TST-009",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005"
+  ],
+  "source_revision": "76038984fb7ac0d1426a69fa7180c29d5dc55395",
+  "source_sha256": {
+    "capabilities/knowledge/README.md": "5d43f782a09749b02d37445b3c669e810a652d74cba3dae1d60fbe32b285b0e3",
+    "capabilities/knowledge/src/lifecycle.rs": "8724271a3fd6b87b62ed0c26bdfb434f299b166582eda98ff88187c40866ac46",
+    "capabilities/knowledge/src/schema.rs": "65f3529ca8991d5f8dcf5e13bf00cae4a34485609943c096c974c96860e40a51",
+    "capabilities/knowledge/src/skills.rs": "c434f68ba7661ae3421519d359b1b10aecfd21b7c57f5b9e4b7e21802ecaa3e5",
+    "capabilities/knowledge/src/tasks.rs": "87940d62205826c2e5f6d859a607bd3a7644fdd680613e0b219e7e435fba6b68",
+    "capabilities/knowledge/src/workflows.rs": "3ba7e069979dafa5d213150bf8996a0d00773996794ca6d6ac2055c9d310e5c9",
+    "docs/architecture/knowledge-tasks-and-declarative-skills.md": "79e73725647d8ccc6bfe709de268820fd0bcf513326e41d9d9210fc68b659815",
+    "docs/guides/conversations.md": "6498780e43ec4defefbda0f2bf04b62cbffcaa9c79ed4993cc60b22fb9175ab7",
+    "docs/guides/knowledge.md": "6e1039c4796a66f2d39f32d044321b360d4b846311db1c2b2b8f366c25b7fc02",
+    "docs/guides/memory.md": "9a29fb7fb2757da2c77b7b0060ab3d47bf545922e91de014a1382bbf2d1af1cb",
+    "docs/guides/privacy.md": "4117026bec219cb4002f9925ff922f5d7fc7555261928b2c00ba23ad4f1124d1",
+    "docs/guides/retrieval.md": "dd163d0bf433a09197d6f60f661e8614de46dca57a1290aba6680b72a5165f78",
+    "docs/guides/skills.md": "0f3836f739fb62784e52334a9ab5610d81c3392c544db474c600f22975201a6b",
+    "docs/guides/tasks.md": "57d0218388e29ff909a3752f1d8f093e922adca21109445747088bf459315577",
+    "docs/guides/vault.md": "577c5cd4a5fd8f4777d32b67bd349b6b438bba1ab4b7255ac5eb922377d46a9c",
+    "docs/release/release-notes-v0.2.0-draft.md": "621cf35e81b0d6b7c7197ebb64102496905839ee0c1b910c3e28b159f7aa5152",
+    "docs/release/v0.2-acceptance-and-migration-bundle.md": "ebc0d14ad2c724e3faecd3ea55e68c3e681134cb502e4e12dbadc7666957c8a7",
+    "docs/release/v0.2-capability-matrix.md": "503d7b1c35f0b83db49367edefcbc7eeb9559d9a23cac555744bffe8449fb0f9",
+    "docs/verification/sprint-34-local-results.md": "445dd41dc0970fec987ec1d3fadc5b19ca1774a311f130a80b361b8408ae2ef1",
+    "scripts/sprint_34_evidence.py": "5454760e647bfe129b105697d008ce3bf26fc9c205fc574afb34caf366306d23",
+    "tests/test_sprint_34_evidence.py": "25c102dbb2271063e973c174f407e43cc5b71782ee24aaf9b17cb9c5621cd864"
+  },
+  "summary": {
+    "independent_signed_review_passed": false,
+    "local_knowledge_task_skill_contract_passed": true,
+    "native_interface_evidence_passed": false,
+    "network_access_enabled": false,
+    "platform_migration_evidence_passed": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "upstream_dependency_passed": false
+  },
+  "verification_evidence": {
+    "complete_local_product_and_docs_gates": true,
+    "independent_signed_release_review": false,
+    "native_chat_and_cli_end_to_end": false,
+    "read_only_workflow_parity_suite": true,
+    "supported_platform_migration_and_rollback": false,
+    "task_and_declarative_skill_suite": true,
+    "upstream_sprint_33_gate": false
+  }
+}
