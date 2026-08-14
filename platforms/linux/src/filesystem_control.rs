@@ -1078,6 +1078,7 @@ mod tests {
             FilesystemTransactionRequest {
                 transaction_id: TRANSACTION_ID.to_owned(),
                 now_epoch_ms: 4_000,
+                cancelled_before_consume: false,
             },
             &mut driver,
         )

@@ -767,6 +767,8 @@ pub struct FilesystemTransactionRequest {
     pub transaction_id: String,
     /// Kernel-clock time for final observation and grant consumption.
     pub now_epoch_ms: u64,
+    /// Explicit cancellation observed before grant consumption.
+    pub cancelled_before_consume: bool,
 }
 
 /// Stable platform-driver failure class retained without paths or content.
@@ -1254,6 +1256,10 @@ pub fn execute_filesystem_transaction<D: ControlledFilesystemDriver>(
 ) -> Result<FilesystemTransactionResult, FilesystemTransactionError> {
     validate_transaction_identifier(&request.transaction_id)?;
     validate_transaction_binding(issuer, plan, approval)?;
+    if request.cancelled_before_consume {
+        invalidate_filesystem_grant(issuer, &approval.grant.grant_id, request.now_epoch_ms)?;
+        return Err(FilesystemTransactionError::PreapplyDenied);
+    }
     let current = driver
         .observe(plan)
         .map_err(|_| FilesystemTransactionError::ObservationFailed)?;
@@ -3091,6 +3097,7 @@ mod tests {
             FilesystemTransactionRequest {
                 transaction_id: "filesystem-transaction-0001".to_owned(),
                 now_epoch_ms: 4_000,
+                cancelled_before_consume: false,
             },
             driver,
         )
@@ -3614,6 +3621,35 @@ mod tests {
             Err(FilesystemTransactionError::PreapplyDenied)
         );
         assert_eq!(collision_driver.apply_calls, 0);
+    }
+
+    #[test]
+    fn cancellation_invalidates_before_observation_consumption_or_apply() {
+        let mut fixture = transaction_fixture(false);
+        let mut driver = MemoryFilesystemDriver::new(&fixture.plan, FilesystemDriverMode::Success);
+        let result = execute_filesystem_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.plan,
+            &fixture.approval,
+            FilesystemTransactionRequest {
+                transaction_id: "filesystem-transaction-cancelled".to_owned(),
+                now_epoch_ms: 4_000,
+                cancelled_before_consume: true,
+            },
+            &mut driver,
+        );
+        assert_eq!(result, Err(FilesystemTransactionError::PreapplyDenied));
+        assert_eq!(driver.apply_calls, 0);
+        assert_eq!(driver.restore_calls, 0);
+        assert_eq!(driver.observations, driver.initial);
+        assert_eq!(
+            fixture
+                .issuer
+                .current(&fixture.approval.grant.grant_id)
+                .map(|grant| grant.status),
+            Some(GrantStatus::Invalidated)
+        );
     }
 
     #[test]
