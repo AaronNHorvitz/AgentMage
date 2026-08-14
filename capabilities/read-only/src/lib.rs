@@ -5,6 +5,7 @@
 use agentmage_kernel_contracts::ToolDefinition;
 
 mod catalog;
+mod git;
 mod protocol;
 mod worker;
 
@@ -12,6 +13,11 @@ pub use catalog::{
     READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_ID,
     READ_ONLY_OUTPUT_SCHEMA_JSON, READ_ONLY_TOOL_VERSION, ReadOnlyToolKind,
     read_only_tool_definition, read_only_tool_definitions, read_only_tool_kind,
+};
+pub use git::{
+    GitCommandPlan, GitInspectionError, GitInspectionOperation, GitInspectionOutcome,
+    GitInspectionRequest, GitInspectionResult, GitRecord, parse_git_inspection,
+    plan_git_inspection,
 };
 pub use protocol::{
     MAX_READ_ONLY_CALL_DEPTH, MAX_READ_ONLY_DEPTH, MAX_READ_ONLY_FILES, MAX_READ_ONLY_INPUT_BYTES,
