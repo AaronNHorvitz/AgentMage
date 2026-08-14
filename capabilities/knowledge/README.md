@@ -21,3 +21,20 @@ previews emit content-free receipts and preserve source authority.
 The capability does not create an operating-system watcher or open a vault path; a trusted local
 adapter must supply observed snapshots and events. Every canonical note write remains outside the
 Sprint 27 and Sprint 28 boundaries.
+
+The v0.2 task projection adds closed status and priority values, owner, project, blocker, next
+action, deferral, stable dependencies, source links, evidence, deterministic duplicate warnings,
+and non-authoritative views. Every transition requires new content-addressed evidence and produces
+only an exact canonical-record preview; this crate still exposes no apply method.
+
+Declarative skills are hash-bound UTF-8 packages containing only prompts, schemas, examples, and
+templates. Exact manifests retain source, signer or provenance, license, version, compatibility,
+purpose, requested read-only scope, precedence, trust state, and complete file identities. Skills
+cannot access filesystems, shells, secrets, networks, connectors, approvals, grants, tool
+registration, execution, workspace expansion, memory promotion, or writes. Conflicting instruction
+keys are visible and omitted from bounded context.
+
+The built-in pack contains Daily Setup, Daily Briefing, Issue Intake, Handoff, Meeting Cleanup,
+Repository Learning, Plain-Workspace Steward, and Obsidian Vault Steward. Each workflow returns the
+same interface-neutral source and evidence contract for native Chat or a later compatible CLI,
+reports zero proposed writes, and leaves all source files unchanged.
