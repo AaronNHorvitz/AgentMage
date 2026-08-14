@@ -1743,36 +1743,36 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 20.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 20.1.1.1** (legacy `S-019-I01`): Implement exactly four material-claim states: Observed, Derived, Inferred, and Unknown/Blocked.
-  - [ ] **Sub-task 20.1.1.2** (legacy `S-019-I02`): Bind Observed claims to authorized deterministic tool receipts and exact source identities.
-  - [ ] **Sub-task 20.1.1.3** (legacy `S-019-I03`): Bind Derived claims to a versioned deterministic method and observed input identifiers.
-  - [ ] **Sub-task 20.1.1.4** (legacy `S-019-I04`): Bind Inferred claims to supporting citations and the exact model/runtime manifest without implying proof.
-  - [ ] **Sub-task 20.1.1.5** (legacy `S-019-I05`): Encode denial, failure, conflict, stale evidence, unsupported parsing, unverifiable data, and scope exclusion as reasoned Unknown/Blocked states.
+- [x] **Task 20.1.1 - Implement the bounded story**
+  - [x] **Sub-task 20.1.1.1** (legacy `S-019-I01`): Implement exactly four material-claim states: Observed, Derived, Inferred, and Unknown/Blocked.
+  - [x] **Sub-task 20.1.1.2** (legacy `S-019-I02`): Bind Observed claims to authorized deterministic tool receipts and exact source identities.
+  - [x] **Sub-task 20.1.1.3** (legacy `S-019-I03`): Bind Derived claims to a versioned deterministic method and observed input identifiers.
+  - [x] **Sub-task 20.1.1.4** (legacy `S-019-I04`): Bind Inferred claims to supporting citations and the exact model/runtime manifest without implying proof.
+  - [x] **Sub-task 20.1.1.5** (legacy `S-019-I05`): Encode denial, failure, conflict, stale evidence, unsupported parsing, unverifiable data, and scope exclusion as reasoned Unknown/Blocked states.
 
-- [ ] **Task 20.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 20.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 20.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 20.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 20.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 20.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 20.1.3 - Verify and close the story**
-  - [ ] **Sub-task 20.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 20.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 20.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 20.1.3.4 - Product security evidence:** Map `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-AI-011`, `SR-OPS-001` through `SR-OPS-005`, `SR-TST-010`; retain labeled classification results, citation resolver output, receipt-chain verification, and recomputation report.
+  - [x] **Sub-task 20.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [ ] **Sub-task 20.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: the assignment is sealed as non-authoritative, injected confidence is rejected, the full effect boundary passes, and no network path is added; production answer-claim composition does not yet require the assignment boundary.
+  - [ ] **Sub-task 20.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Partial local evidence: the source-bound report recomputes the six local command results and remains Blocked; raw native/live outputs and required independent review are not retained.
+  - [ ] **Sub-task 20.1.3.4 - Product security evidence:** Map `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-AI-011`, `SR-OPS-001` through `SR-OPS-005`, `SR-TST-010`; retain labeled classification results, citation resolver output, receipt-chain verification, and recomputation report. Partial local evidence: classification, inference provenance, receipt validation, source hashes, output digests, and explicit blockers are retained; citation resolution, durable chaining, keyed integrity, and clock-anomaly evidence remain Sprint 21 work.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 20.1.AC1:** Given the approved dependencies and source requirements for `S-019-I01`, `S-019-I02`, `S-019-I03`, `S-019-I04`, and `S-019-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 20.1.AC1:** Given the approved dependencies and source requirements for `S-019-I01`, `S-019-I02`, `S-019-I03`, `S-019-I04`, and `S-019-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [ ] **Story AC 20.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-019-I01`, `S-019-I02`, `S-019-I03`, `S-019-I04`, and `S-019-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [ ] **Story AC 20.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 20.AC1:** Every numbered implementation sub-task in Story 20.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 20.AC1:** Every numbered implementation sub-task in Story 20.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 20.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 20.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 20.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 20.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 20.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 20.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 20.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 20 is PASS only when Story 20.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 21 - Citation Freshness and Tamper-Evident Receipts
