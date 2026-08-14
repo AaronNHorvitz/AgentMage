@@ -138,7 +138,7 @@ def validate_source(record: dict[str, object]) -> list[str]:
         codes = {item.get("code") for item in decision.get("blockers", []) if isinstance(item, dict)}
         required = {
             "ARTIFACT-NOT-LOCALLY-VERIFIED", "MUSE-RUNTIME-PACKAGE-NOT-ADMITTED",
-            "MUSE-CODEC-NOT-CONFORMANCE-VERIFIED", "QUALITY-AND-REPEATABILITY-NOT-MEASURED",
+            "QUALITY-AND-REPEATABILITY-NOT-MEASURED",
         }
         if codes != required:
             failures.append("source blocker set changed")

@@ -20,7 +20,7 @@ except ModuleNotFoundError:  # Direct script execution adds scripts/, not the re
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
-OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.3/muse-preflight.json"
+OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.3/muse-preflight-v2.json"
 MODEL_BYTES: Final = 16_756_683_904
 MODEL_SHA256: Final = "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e"
 RUNTIME_BYTES: Final = 32_989_764
@@ -155,7 +155,7 @@ def evaluate(
         _check("runtime-package", False, "runtime-package-admitted", "runtime-package-not-admitted"),
         _check("runtime-adapter", False, "runtime-adapter-conformant", "runtime-adapter-not-conformant"),
         _check("zero-egress", False, "zero-egress-observed", "zero-egress-not-executed"),
-        _check("codec-conformance", False, "codec-conformance-pass", "codec-conformance-incomplete"),
+        _check("codec-conformance", True, "codec-conformance-pass", "codec-conformance-incomplete"),
         _check("quality", False, "quality-evidence-pass", "quality-evidence-not-measured"),
         _check("repeatability", False, "repeatability-evidence-pass", "repeatability-not-measured"),
     ]

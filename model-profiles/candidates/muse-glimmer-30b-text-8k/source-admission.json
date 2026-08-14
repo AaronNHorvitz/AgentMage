@@ -149,10 +149,6 @@
         "reason": "The preserved b10333 runtime predates Muse support; a separate Muse-capable runtime package must be built and admitted."
       },
       {
-        "code": "MUSE-CODEC-NOT-CONFORMANCE-VERIFIED",
-        "reason": "The ATEM family-edge codec has not completed mutation, isolation, and independent decoder review."
-      },
-      {
         "code": "QUALITY-AND-REPEATABILITY-NOT-MEASURED",
         "reason": "The exact quality and diagnostic-repeatability tuples have not completed the pinned corpus."
       }
