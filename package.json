@@ -166,6 +166,7 @@
     "model:schemas:check": "node scripts/model_contract_schemas.mjs",
     "model:profile-catalog:build": "node scripts/model_profile_catalog.mjs --write",
     "model:profile-catalog:check": "node scripts/model_profile_catalog.mjs",
+    "model:muse-candidate-check": "python3 scripts/muse_candidate_admission.py",
     "model:activation:build": "python3 scripts/model_activation.py --write",
     "model:activation:check": "python3 scripts/model_activation.py",
     "model:substitution-build": "python3 scripts/model_substitution.py --write --verification-revision HEAD",

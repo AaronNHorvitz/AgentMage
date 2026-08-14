@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "record_type": "model_source_admission",
+  "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora",
+  "evaluated_at": "2026-08-13T23:00:00Z",
+  "policy": {
+    "path": "MODEL-PROVENANCE-POLICY.md",
+    "sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75"
+  },
+  "identity": {
+    "canonical_model": "meta-models/Muse-Glimmer-30B",
+    "upstream_revision": "a4e59da52a7bc87ae7251dd5545c0dd437c44b68",
+    "gguf_repository": "meta-models/Muse-Glimmer-30B-GGUF",
+    "gguf_revision": "43c7eadd41352a299ea8e0a36b3157978dd63596",
+    "variant": "first-party Q4_K_M text-only evaluation",
+    "architecture": "MuseGlimmerForConditionalGeneration",
+    "model_type": "muse_glimmer",
+    "declared_parameters": "30B"
+  },
+  "ownership_and_origin": {
+    "developer": "Meta",
+    "publisher": "Meta",
+    "publisher_namespace": "meta-models",
+    "publisher_region": "us",
+    "control_disposition": "permitted_non_chinese_supplier",
+    "weight_lineage": "Meta Muse Glimmer 30B distilled from Meta Muse Spark",
+    "lineage_complete_under_policy": true
+  },
+  "license_and_use_policy": {
+    "spdx": "Apache-2.0",
+    "license_url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/blob/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/LICENSE",
+    "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "usage_policy_url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/blob/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/USAGE_POLICY.md",
+    "usage_policy_sha256": "98a14dab9fd97de1666dc8589d399efab1e7fc3ba4e6230d037d6637ba9481d3",
+    "redistribution_review": "first_party_terms_recorded_product_review_required_before_activation"
+  },
+  "source_artifacts": {
+    "model_card": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/README.md",
+      "sha256": "5894e358c58f4f8425645a5b0b890468ecb3e6b049c2e941648db077c4b7df58",
+      "size": 16892
+    },
+    "config": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/config.json",
+      "sha256": "5a9df2d8a385b3d361ab6ae68d73586f4e775033933bd0cd863fb7f3820e6a14",
+      "size": 5109
+    },
+    "generation_config": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/generation_config.json",
+      "sha256": "1fa51889b1f8d3659802dedaa27e005b81e5c58483f13ecf13f2d97306bc6e35",
+      "size": 202
+    },
+    "processor_config": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/processor_config.json",
+      "sha256": "97e2a486dd9866b81f40cf4b8bc0c9ced9a7cd8a5bc65aa4cc2f4de0712dae77",
+      "size": 1084
+    },
+    "chat_template": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/chat_template.jinja",
+      "sha256": "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678",
+      "size": 9992
+    },
+    "tokenizer_config": {
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/resolve/a4e59da52a7bc87ae7251dd5545c0dd437c44b68/tokenizer_config.json",
+      "sha256": "781e6c74f571642c71202167b67d9255b28cc439bdda1582ff31346182f5a9c5",
+      "size": 79936
+    },
+    "tokenizer": {
+      "path": "tokenizer.json",
+      "sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
+      "size": 28129897,
+      "downloaded": false
+    },
+    "gguf": {
+      "path": "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf",
+      "sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+      "size": 16756683904,
+      "quantization": "Q4_K_M",
+      "downloaded": false,
+      "first_party": true
+    }
+  },
+  "codec_contract": {
+    "family": "muse_glimmer",
+    "protocol": "ATEM",
+    "template_sha256": "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678",
+    "bos_token_id": 200000,
+    "eos_token_ids": [
+      200001,
+      200008
+    ],
+    "vocabulary_size": 202048,
+    "reasoning_channel": "assistant to=self",
+    "tool_envelope": "atem:function_calls",
+    "kernel_family_branch_allowed": false
+  },
+  "context_contract": {
+    "declared_tokens": 131072,
+    "first_evaluation_tokens": 8192,
+    "modalities": [
+      "text"
+    ],
+    "vision_enabled": false,
+    "audio_supported": false,
+    "speculative_draft_enabled": false,
+    "parallel_slots": 1
+  },
+  "known_limitations": [
+    "Model output is untrusted and cannot directly own real-world actions.",
+    "The first evaluation tuple is text-only and does not establish vision support.",
+    "The first evaluation tuple is limited to 8192 context tokens.",
+    "The official llama.cpp integration is new and requires exact adapter conformance testing.",
+    "Tool-call and reasoning output require a family-edge parser and closed proposal validation.",
+    "Quality, grounding, uncertainty, and repeated-run behavior have not been measured by AgentMage.",
+    "No result for this tuple may be inherited by another quantization, context, runtime, driver, platform, or model family."
+  ],
+  "source_evidence": [
+    {
+      "id": "meta-research-announcement",
+      "url": "https://research.meta.ai/blog/introducing-muse-glimmer-open-agentic-model",
+      "publisher": "Meta"
+    },
+    {
+      "id": "meta-base-model-revision",
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B/tree/a4e59da52a7bc87ae7251dd5545c0dd437c44b68",
+      "publisher": "Meta"
+    },
+    {
+      "id": "meta-gguf-revision",
+      "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/tree/43c7eadd41352a299ea8e0a36b3157978dd63596",
+      "publisher": "Meta"
+    },
+    {
+      "id": "llama-cpp-muse-support",
+      "url": "https://github.com/ggml-org/llama.cpp/commit/62bf73d25c53b8161f8a22894d4f90c4aebbd7d0",
+      "publisher": "ggml-org"
+    }
+  ],
+  "decision": {
+    "status": "BLOCKED",
+    "scope": "isolated synthetic-data Fedora text-only evaluation",
+    "blockers": [
+      {
+        "code": "ARTIFACT-NOT-LOCALLY-VERIFIED",
+        "reason": "The exact 17 GB first-party GGUF has not been downloaded and hash-verified in the isolated model store."
+      },
+      {
+        "code": "MUSE-RUNTIME-PACKAGE-NOT-ADMITTED",
+        "reason": "The preserved b10333 runtime predates Muse support; a separate Muse-capable runtime package must be built and admitted."
+      },
+      {
+        "code": "MUSE-CODEC-NOT-CONFORMANCE-VERIFIED",
+        "reason": "The ATEM family-edge codec has not completed mutation, isolation, and independent decoder review."
+      },
+      {
+        "code": "QUALITY-AND-REPEATABILITY-NOT-MEASURED",
+        "reason": "The exact quality and diagnostic-repeatability tuples have not completed the pinned corpus."
+      }
+    ],
+    "allowed_actions": [
+      "offline metadata validation",
+      "separately authorized artifact acquisition",
+      "isolated synthetic-data evaluation after every preflight passes"
+    ],
+    "prohibited_actions": [
+      "AgentMage profile activation",
+      "processing user or private data",
+      "workspace tool grant credential connector shell or network authority",
+      "vision or speculative decoding",
+      "automatic fallback",
+      "release support representation"
+    ],
+    "independent_review_performed": false,
+    "release_approval": false
+  }
+}

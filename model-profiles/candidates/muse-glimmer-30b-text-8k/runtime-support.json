@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "record_type": "candidate_runtime_support",
+  "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora",
+  "preserved_runtime": {
+    "release": "b10333",
+    "source_commit": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+    "profile_path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
+    "muse_reference_count": 0,
+    "compatible": false,
+    "preserved_unchanged": true
+  },
+  "first_upstream_support": {
+    "source_commit": "62bf73d25c53b8161f8a22894d4f90c4aebbd7d0",
+    "committed_at": "2026-08-10T13:07:27+02:00",
+    "subject": "model: Muse Glimmer Support (#26841)",
+    "architecture_symbol": "LLM_ARCH_MUSE_GLIMMER",
+    "chat_parser_symbol": "common_chat_params_init_muse_glimmer",
+    "source_url": "https://github.com/ggml-org/llama.cpp/commit/62bf73d25c53b8161f8a22894d4f90c4aebbd7d0"
+  },
+  "candidate_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "release": "b10423",
+    "source_commit": "a94d563ed801d1da1b8c2432946de07d0231bb3d",
+    "published_at": "2026-08-13T22:44:06Z",
+    "asset": "llama-b10423-bin-ubuntu-vulkan-x64.tar.gz",
+    "asset_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+    "asset_size": 32989764,
+    "download_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10423/llama-b10423-bin-ubuntu-vulkan-x64.tar.gz",
+    "backend": "Vulkan",
+    "package_status": "NOT_BUILT_NOT_ADMITTED",
+    "adapter_status": "NOT_IMPLEMENTED",
+    "enabled": false
+  },
+  "execution_tuple": {
+    "platform": "Fedora Kinoite 44",
+    "architecture": "x86_64",
+    "artifact_sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+    "context_tokens": 8192,
+    "parallel_slots": 1,
+    "network_egress": false,
+    "vision": false,
+    "speculative_draft": false,
+    "synthetic_data_only": true
+  },
+  "decision": {
+    "status": "BLOCKED",
+    "reason": "The candidate runtime is source- and release-pinned but has not been packaged, isolated, or exercised through AgentMage.",
+    "activation": false,
+    "fallback": false
+  }
+}
