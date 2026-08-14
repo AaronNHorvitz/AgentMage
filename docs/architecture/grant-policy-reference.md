@@ -123,8 +123,8 @@ only then replaces current state. Two consumers cannot both hold the required ex
 ## Strict-Local Operation Matrix
 
 The named constructor `PolicyEngine::strict_local_read_only` generates the following immutable
-operation ceiling. The twelve hazardous classes are present in the explicit deny set. Other
-non-read operations are denied by absence.
+operation ceiling. All 21 operations outside the one admitted read operation are present in the
+explicit deny set.
 
 | Operation | Strict-local disposition | Rule source |
 |---|---|---|
@@ -133,16 +133,23 @@ non-read operations are denied by absence.
 | `workspace_delete` | Deny | Explicit deny |
 | `command_execute` | Deny | Explicit deny |
 | `network_access` | Deny | Explicit deny and empty network allow set |
+| `git_clone` | Deny | Explicit deny |
+| `git_fetch` | Deny | Explicit deny |
+| `git_worktree_create` | Deny | Explicit deny |
+| `git_worktree_remove` | Deny | Explicit deny |
+| `git_branch_fast_forward` | Deny | Explicit deny |
 | `git_commit` | Deny | Explicit deny |
 | `git_push` | Deny | Explicit deny and empty publication allow set |
 | `publish` | Deny | Explicit deny and empty publication allow set |
 | `send` | Deny | Explicit deny and empty publication allow set |
 | `upload` | Deny | Explicit deny and empty publication allow set |
 | `deploy` | Deny | Explicit deny and empty publication allow set |
-| `database_read` | Deny | Absent from allow set |
+| `database_read` | Deny | Explicit deny |
 | `database_write` | Deny | Explicit deny |
 | `credential_access` | Deny | Explicit deny and empty credential allow set |
-| `model_inference` | Deny | Absent from allow set |
+| `model_inference` | Deny | Explicit deny |
+| `draft_create` | Deny | Explicit deny |
+| `administration` | Deny | Explicit deny |
 
 The general `PolicyEngine::new` constructor supports isolated tests and future separately gated
 profiles. Its existence does not enable a profile. Startup configuration-to-policy binding and

@@ -160,7 +160,7 @@ def validate_sources(root: Path = ROOT) -> dict[str, Any]:
             failures.append(f"missing issuer transition marker: {marker}")
     if "GrantStatus::Revoked" in issuer_source:
         failures.append("revoked is now implemented but the reference says it is reserved")
-    if issuer_source.count("self.transition_status(") != 2:
+    if issuer_source.count("self.transition_status(") != 3:
         failures.append("private terminal transition call-site count changed")
     if failures:
         raise GrantStateError("; ".join(failures))

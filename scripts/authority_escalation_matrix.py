@@ -144,15 +144,28 @@ def validate_receipts(receipts: list[dict[str, Any]]) -> dict[str, Any]:
         error = receipt.get("error")
         if (
             set(receipt) != expected_fields
-            or receipt["schema_version"] != 1
+            or receipt["schema_version"] != 2
             or receipt["actor_id"] != "actor-local-0001"
             or receipt["session_id"] != "session-0001"
             or receipt["task_id"] != "task-0001"
             or receipt["artifact_kind"] != ARTIFACTS[source]
             or receipt["authority_admitted"] is not False
             or not isinstance(error, dict)
+            or set(error) != {
+                "schema_version",
+                "error_id",
+                "code",
+                "category",
+                "message",
+                "field_path",
+                "retry",
+                "caused_by",
+            }
+            or error.get("schema_version") != 2
+            or error.get("error_id") != "error-descriptive-authority-denied"
             or error.get("code") != "authority.descriptive_artifact.denied"
             or error.get("category") != "policy"
+            or error.get("message") != "Descriptive artifacts cannot authorize an operation"
             or error.get("retry") != "after_user_decision"
             or error.get("field_path") != []
             or error.get("caused_by") is not None

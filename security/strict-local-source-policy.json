@@ -6,6 +6,9 @@
     "kernel/engine/src/policy.rs": [
       "https://*.example.invalid"
     ],
+    "platforms/linux-inference/src/model_download.rs": [
+      "https://first-party.invalid/resolve/{}/model.gguf"
+    ],
     "platforms/linux-inference/src/docker_live_collector.rs": [
       "http://example.invalid"
     ]
@@ -16,7 +19,7 @@
     "capabilities/read-only/Cargo.toml": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
     "kernel/engine/Cargo.toml": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2",
-    "platforms/linux-inference/Cargo.toml": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63",
+    "platforms/linux-inference/Cargo.toml": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9",
     "platforms/linux/Cargo.toml": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
@@ -227,6 +230,7 @@
       "allowed_paths": [
         "platforms/linux-inference/src/docker_guard_service.rs",
         "platforms/linux-inference/src/docker_http_observer.rs",
+        "platforms/linux-inference/src/llama_server_driver.rs",
         "platforms/linux/src/ipc.rs"
       ],
       "id": "unix-domain-ipc-api",

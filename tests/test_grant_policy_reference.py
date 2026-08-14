@@ -6,10 +6,10 @@ from scripts import grant_policy_reference as reference
 class GrantPolicyReferenceTests(unittest.TestCase):
     def test_source_contract_and_document_are_complete(self) -> None:
         coverage = reference.validate_sources()
-        self.assertEqual(coverage["grant_field_count"], 29)
-        self.assertEqual(coverage["grant_operation_count"], 15)
+        self.assertEqual(coverage["grant_field_count"], 30)
+        self.assertEqual(coverage["grant_operation_count"], 22)
         self.assertEqual(coverage["policy_denial_scope_count"], 15)
-        self.assertEqual(coverage["strict_explicit_denial_count"], 12)
+        self.assertEqual(coverage["strict_explicit_denial_count"], 21)
 
     def test_missing_field_scope_code_and_operation_are_detected(self) -> None:
         text = reference.DOC_PATH.read_text(encoding="utf-8")
@@ -25,9 +25,14 @@ class GrantPolicyReferenceTests(unittest.TestCase):
     def test_rust_parsers_preserve_security_relevant_order(self) -> None:
         grant = reference.GRANT_PATH.read_text(encoding="utf-8")
         policy = reference.POLICY_PATH.read_text(encoding="utf-8")
+        operations = reference.OPERATION_PATH.read_text(encoding="utf-8")
         self.assertEqual(
             reference.rust_struct_fields(grant, "CapabilityGrant"),
             reference.GRANT_FIELDS,
+        )
+        self.assertEqual(
+            reference.rust_enum_variants(operations, "GrantOperation"),
+            reference.ALL_OPERATIONS,
         )
         self.assertEqual(
             reference.rust_enum_variants(policy, "PolicyDenialScope"),

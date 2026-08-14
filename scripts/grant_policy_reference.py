@@ -18,6 +18,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DOC_PATH = ROOT / "docs/architecture/grant-policy-reference.md"
 GRANT_PATH = ROOT / "kernel/contracts/src/grant.rs"
+OPERATION_PATH = ROOT / "kernel/contracts/src/operation.rs"
 POLICY_PATH = ROOT / "kernel/engine/src/policy.rs"
 REPORT_PATH = (
     ROOT / "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json"
@@ -25,6 +26,7 @@ REPORT_PATH = (
 SOURCE_PATHS = (
     "docs/architecture/grant-policy-reference.md",
     "kernel/contracts/src/grant.rs",
+    "kernel/contracts/src/operation.rs",
     "kernel/engine/src/policy.rs",
     "scripts/grant_policy_reference.py",
     "tests/test_grant_policy_reference.py",
@@ -35,6 +37,7 @@ GRANT_FIELDS = (
     "revision",
     "grant_class",
     "actor_id",
+    "approval_id",
     "session_id",
     "task_id",
     "action_id",
@@ -99,6 +102,11 @@ STRICT_DENIED = (
     "WorkspaceDelete",
     "CommandExecute",
     "NetworkAccess",
+    "GitClone",
+    "GitFetch",
+    "GitWorktreeCreate",
+    "GitWorktreeRemove",
+    "GitBranchFastForward",
     "GitCommit",
     "GitPush",
     "Publish",
@@ -107,14 +115,18 @@ STRICT_DENIED = (
     "Deploy",
     "DatabaseWrite",
     "CredentialAccess",
+    "DatabaseRead",
+    "ModelInference",
+    "DraftCreate",
+    "Administration",
 )
 ALL_OPERATIONS = (
     "WorkspaceRead",
-    *STRICT_DENIED[:4],
-    *STRICT_DENIED[4:10],
+    *STRICT_DENIED[:15],
     "DatabaseRead",
-    *STRICT_DENIED[10:],
+    *STRICT_DENIED[15:17],
     "ModelInference",
+    *STRICT_DENIED[19:],
 )
 REQUIRED_HEADINGS = (
     "Status and Scope",
@@ -175,7 +187,7 @@ def rust_enum_variants(source: str, name: str) -> tuple[str, ...]:
 
 def strict_denied_operations(source: str) -> tuple[str, ...]:
     match = re.search(
-        r"STRICT_LOCAL_DENIED_OPERATIONS:\s*\[GrantOperation;\s*12\]\s*=\s*\[(.*?)\];",
+        r"STRICT_LOCAL_DENIED_OPERATIONS:\s*\[GrantOperation;\s*21\]\s*=\s*\[(.*?)\];",
         source,
         re.DOTALL,
     )
@@ -220,10 +232,11 @@ def validate_reference_text(text: str) -> list[str]:
 
 def validate_sources(root: Path = ROOT) -> dict[str, Any]:
     grant_source = (root / GRANT_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
+    operation_source = (root / OPERATION_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
     policy_source = (root / POLICY_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
     document = (root / DOC_PATH.relative_to(ROOT)).read_text(encoding="utf-8")
     actual_fields = rust_struct_fields(grant_source, "CapabilityGrant")
-    actual_operations = rust_enum_variants(grant_source, "GrantOperation")
+    actual_operations = rust_enum_variants(operation_source, "GrantOperation")
     actual_scopes = rust_enum_variants(policy_source, "PolicyDenialScope")
     actual_codes = denial_codes(policy_source)
     actual_denied = strict_denied_operations(policy_source)
@@ -245,7 +258,7 @@ def validate_sources(root: Path = ROOT) -> dict[str, Any]:
         "policy_denial_scope_count": len(actual_scopes),
         "strict_explicit_denial_count": len(actual_denied),
         "strict_allowed_operations": ["WorkspaceRead"],
-        "strict_denied_by_absence": ["DatabaseRead", "ModelInference"],
+        "strict_denied_by_absence": [],
     }
 
 
