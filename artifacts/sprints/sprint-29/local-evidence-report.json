@@ -9,7 +9,7 @@
       "owner": "29.1.3.4"
     },
     {
-      "code": "SYNTHESIS-RENDERING-INTEGRATION-ABSENT",
+      "code": "APPLICATION-SYNTHESIS-RENDERING-INTEGRATION-ABSENT",
       "owner": "29.1.1.6"
     },
     {
@@ -28,7 +28,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "56c0c4d21903220d02b3a61aefe4d938a4792dc115bfc0e16e0bbbe3ee491f6f"
+      "output_sha256": "5b06931ffdbaa3cfecb82ae6830de125da1a8f3c4120cf5e33e38facbe5caaff"
     },
     {
       "argv": [
@@ -54,7 +54,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "792d2e8f25208b8c78082f4cb92bf70e5a39c06a45f2d5b02690a9c773b17d37"
+      "output_sha256": "d9dce6171124b41124e79e6240fd6fa5b99dad4559de937f3198e5f0e64c6ff3"
     },
     {
       "argv": [
@@ -64,7 +64,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "46cc7ce26c6cb363d22efed4e7cead3224c7599a6fcc36534fa853c7da462e52"
+      "output_sha256": "0eb09db185317f42e3a0a1fe93449d3abbbc8a194b1f05e1ef69dfee80346444"
     },
     {
       "argv": [
@@ -142,9 +142,11 @@
     "question_count": 3
   },
   "implemented_contracts": {
+    "application_synthesis_and_final_rendering_integration": false,
     "byte_bounded_deduplicated_context": true,
     "conflict_stale_denied_and_unknown_states": true,
     "content_bound_citations": true,
+    "evidence_preserving_synthesis_rendering_contract": true,
     "filesystem_network_process_or_write_authority": false,
     "fixed_integer_ranking_and_score_trace": true,
     "literal_term_and_phrase_search": true,
@@ -154,7 +156,6 @@
     "semantic_components_used": false,
     "stable_tie_breaking": true,
     "strict_source_document_and_query_contracts": true,
-    "synthesis_and_final_rendering_integration": false,
     "verification_recency_bands": true
   },
   "record_type": "sprint_29_local_evidence",
@@ -169,15 +170,15 @@
     "SR-AI-011",
     "SR-TST-004"
   ],
-  "source_revision": "ee53bcdd62f8cb00f381361e66f3db07034981d7",
+  "source_revision": "55fd6da95cde38a51362c1c8f52a28cd8dd823a6",
   "source_sha256": {
     "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
-    "capabilities/knowledge/src/lib.rs": "7ab873955795d4adec0f7e5eb6328be31200b85856506f3b89c412ff1f7eeb4e",
-    "capabilities/knowledge/src/retrieval.rs": "013a57a0881b8136c6f8cec1e463bc42b945bb0327eb23e98d34420025ad5e7c",
-    "docs/architecture/deterministic-knowledge-retrieval.md": "9b8f4f29861a7dcad906661a1b594a8b0ea04622d951031da6d7fe49481d5475",
-    "docs/verification/sprint-29-local-results.md": "2f1a1e253dce58f42fc76cdb51c08bb01df55f4aed5028993490d8a1a1c393d0",
-    "scripts/sprint_29_evidence.py": "9e938ab4d69e80f3af34a8a06427b70ef3d86f13b8ae47b06b1596ff5d76799f",
-    "tests/test_sprint_29_evidence.py": "d99a464f4e473967dc939b81c168d26cf2444f97afed0e56cd0ceea5dab5437b"
+    "capabilities/knowledge/src/lib.rs": "cb20bd9d2780792aae8e1c26f38e5fcedfe87ad53d056752d12ecb0de093634a",
+    "capabilities/knowledge/src/retrieval.rs": "e125b1b2a59f793b33ae295ca597cc4dd44aff74f79e98dad184cd73ca242cbf",
+    "docs/architecture/deterministic-knowledge-retrieval.md": "33d3077f490544024798e54e95cd6b2f71e5962193dc19b026afa0e6a4d03f07",
+    "docs/verification/sprint-29-local-results.md": "a9ae8cfbb56234c197272d95864091d04f1096c1bba019bd99b519ac54abc226",
+    "scripts/sprint_29_evidence.py": "53c9929c916bb6cc90e66e3cc28aa93f36e74135b4663bc208fd985d05e42037",
+    "tests/test_sprint_29_evidence.py": "36043988c72d5e07d8fc4acb73c87d2ac9f33651e6715b16a131b49730f3d6de"
   },
   "summary": {
     "local_retrieval_core_passed": true,
@@ -187,13 +188,14 @@
     "write_authority_enabled": false
   },
   "verification_evidence": {
+    "application_synthesis_and_final_rendering_integration": false,
     "complete_local_product_and_docs_gates": true,
     "conflict_stale_denied_and_unknown_states": true,
+    "evidence_preserving_synthesis_rendering_contract": true,
     "fixed_ranking_and_citation_corpus": true,
     "independent_review": false,
     "literal_injection_secret_and_workspace_isolation": true,
     "raw_and_rebuilt_index_integration": false,
-    "synthesis_and_final_rendering_integration": false,
     "upstream_sprint_28_gate": false
   }
 }
