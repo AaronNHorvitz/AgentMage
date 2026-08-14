@@ -27,7 +27,7 @@
     "macOS implementation and execution evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
+  "reference_revision": "00c734988677cccc0fc211b6eac9a73781f4f765",
   "release_claim": "none",
   "review_type": "independent-automated-boundary-review",
   "reviewer_identity": "agentmage-grant-boundary-review-v1",
@@ -35,19 +35,19 @@
   "sources": [
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
     },
     {
       "path": "docs/architecture/grant-policy-reference.md",
-      "sha256": "da5b65d292d037e9781fbaffb16bacbe760b2aae8e573eaae51ae5d130dd0327"
+      "sha256": "f14a878f359761761619dbbe1eb16df217fc36573989f1c1249b89170c7d4eb8"
     },
     {
       "path": "docs/architecture/grant-state-transitions.md",
-      "sha256": "5a88e5edc83fcf247c604939bdee117ef7ecce1306127afe0207dba33e211458"
+      "sha256": "b8d9c2d2de7c82c85a59be7fa7ad4a422ab5871d88372e14e0b7ca2aa4916b47"
     },
     {
       "path": "fixtures/grants/v1/manifest.json",
-      "sha256": "730cf10dbbf8e6b5deeb20d8eaa352865aa1d3efe7845a8b1f68c64f0c5d84a1"
+      "sha256": "5854129e4171f345a13557acb01791bb8a732f377f55654748f1db77935a6d2a"
     },
     {
       "path": "fixtures/grants/adversarial/v1/corpus.json",
@@ -59,63 +59,67 @@
     },
     {
       "path": "kernel/contracts/src/approval.rs",
-      "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe"
+      "sha256": "a00dcb3b13ffc03d190bc87d1471e545e7363df6130a9623c7b7dd703dcf49f8"
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+    },
+    {
+      "path": "kernel/contracts/src/operation.rs",
+      "sha256": "19d29ac6702f9e8e2acf9c1fa41dc918ea128ddb8a00d85d1c0ee784977d2834"
     },
     {
       "path": "kernel/engine/src/approval.rs",
-      "sha256": "1f54405fa755163ca03010d8c8a3f5ea1791ab4532c412d4d404bbcf3a925615"
+      "sha256": "ca83dd5fb50f8267472930fc6806ceb009095f31edf87d92994cb26721bef8b3"
     },
     {
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+      "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
     },
     {
       "path": "kernel/engine/src/grants.rs",
-      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+      "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
-      "sha256": "dd6a86eff1230d6fbf47d5256b8573a8fe801f2cc7cab2e4103e2cf91f4b88d8"
+      "sha256": "63fce6110a2fc74fdea0895302326566371cc6d8bbc22ed77affde6fa3253aed"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
-      "sha256": "e627927c557c2b550803b7470175df8903cce2f45e570635c1b0eca535fc0f54"
+      "sha256": "a8c302a45534fc9e219a92a73182044ada566fe380a920d204500f9121a616bf"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-      "sha256": "7b742627e44a296b91c99ea468373e516ce2f1e7b772d999befd9f38b15bd1f3"
+      "sha256": "1056c27ee6b409a43697d6b34b3c29d41459032de3445f7fe3475f2cdde12936"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
-      "sha256": "7ec1694608dd0d28a523e302ff8c6368ae6567ae652ff931fe7cec22631bfef8"
+      "sha256": "40332e8b38631d6a8b91936faf95a90fe4551b9dedb53588c80e54913ba4aa46"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
-      "sha256": "79d1723b95100c567ed2a2a2b619f9d0ae3aadd1bb6c19e3c1eb17b058286f9b"
+      "sha256": "24143943e7ff28a4767877f3de05ef480bb98875d59f07e63978f31afc0009cd"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-      "sha256": "25735990094f0bb1f16752097c71994c27354e6fb07456a07315acf5239c415f"
+      "sha256": "d4887aa4421150bed4b2aa942a41f14b8008e51b9fb81e04acc3acffcc0b03a4"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
-      "sha256": "ab104c5dbb33ee909e745a0bd40fd52436b92dc3dc8dcbc63d858029fdc0ff26"
+      "sha256": "be3ffa6989e00890b5f74795ba3287fd64dd970e81e9df1286c4a822bd25d73c"
     },
     {
       "path": "scripts/grant_policy_reference.py",
-      "sha256": "83076ed5f1753db876b8441d118641a651cabd119c8a8e3dd09736ec91e66213"
+      "sha256": "a8ca63fa8173a2e97373f1cea74ee26666df5bf44eaed35712baa7f22837c4db"
     },
     {
       "path": "scripts/grant_state_transitions.py",
-      "sha256": "b6b2b7ce216d97a731a62b29daa1cf64ea61b090b7ff4aa20f4b6cad76eca835"
+      "sha256": "e934f384d3905c37919721cbc1dc6a5d47855957280fcf126e8eee9af4431458"
     },
     {
       "path": "scripts/grant_review_fixtures.py",
@@ -131,7 +135,7 @@
     },
     {
       "path": "scripts/authority_escalation_matrix.py",
-      "sha256": "7fc48096ab875845e0712e95321ada3d401f51893923872bba05df086d66a512"
+      "sha256": "1f08eced14d5929a5f595e4ceedd29dec6150b886cca578dfa6b7213d903b1b4"
     },
     {
       "path": "scripts/grant_stale_dispatch.py",
@@ -139,7 +143,7 @@
     },
     {
       "path": "scripts/grant_boundary_review.py",
-      "sha256": "1a9dbe0d76e0c3c4b2bd0661162136f525fe45a3ed0284e5e07aaad512f1ec08"
+      "sha256": "c2d70dd46e100af9a9246dfd57f2ea96112546d7b65dfe72cb8cfa7b179ddc9e"
     },
     {
       "path": "tests/test_grant_boundary_review.py",
@@ -150,38 +154,38 @@
   "subjects": [
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
-      "reference_revision": "1424f1ffc9c6c9631b2ea79eccec68cca13d4054",
-      "sha256": "dd6a86eff1230d6fbf47d5256b8573a8fe801f2cc7cab2e4103e2cf91f4b88d8"
+      "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+      "sha256": "63fce6110a2fc74fdea0895302326566371cc6d8bbc22ed77affde6fa3253aed"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
-      "reference_revision": "9c127fd5f34c26df2bcfc4fa19ddcc9768bd56a8",
-      "sha256": "e627927c557c2b550803b7470175df8903cce2f45e570635c1b0eca535fc0f54"
+      "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+      "sha256": "a8c302a45534fc9e219a92a73182044ada566fe380a920d204500f9121a616bf"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-      "reference_revision": "fd8f4da2225bcbaec39a76418b6f519310be4fae",
-      "sha256": "7b742627e44a296b91c99ea468373e516ce2f1e7b772d999befd9f38b15bd1f3"
+      "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+      "sha256": "1056c27ee6b409a43697d6b34b3c29d41459032de3445f7fe3475f2cdde12936"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
-      "reference_revision": "e88bd1e7cdbc001156de5cbbc3c1f5fe05bc0025",
-      "sha256": "7ec1694608dd0d28a523e302ff8c6368ae6567ae652ff931fe7cec22631bfef8"
+      "reference_revision": "497d4234d2495c227256c40b35c8dfc2d441ba5f",
+      "sha256": "40332e8b38631d6a8b91936faf95a90fe4551b9dedb53588c80e54913ba4aa46"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
-      "reference_revision": "c27e2d7e742a73dc5205f187b6076a334a6abfd8",
-      "sha256": "79d1723b95100c567ed2a2a2b619f9d0ae3aadd1bb6c19e3c1eb17b058286f9b"
+      "reference_revision": "6f35a1e3cd80164c2ebbb3055944cb2afaa5c884",
+      "sha256": "24143943e7ff28a4767877f3de05ef480bb98875d59f07e63978f31afc0009cd"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-      "reference_revision": "c21d8befd3134a1427ce6f7998ac06387c6d7b16",
-      "sha256": "25735990094f0bb1f16752097c71994c27354e6fb07456a07315acf5239c415f"
+      "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+      "sha256": "d4887aa4421150bed4b2aa942a41f14b8008e51b9fb81e04acc3acffcc0b03a4"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
-      "reference_revision": "1bebc26f2947f44c03709d6418e0a02f66e80480",
-      "sha256": "ab104c5dbb33ee909e745a0bd40fd52436b92dc3dc8dcbc63d858029fdc0ff26"
+      "reference_revision": "6f35a1e3cd80164c2ebbb3055944cb2afaa5c884",
+      "sha256": "be3ffa6989e00890b5f74795ba3287fd64dd970e81e9df1286c4a822bd25d73c"
     }
   ],
   "task_id": "5.1.3.5",
