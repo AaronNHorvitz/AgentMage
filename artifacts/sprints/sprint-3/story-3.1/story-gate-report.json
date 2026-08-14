@@ -56,7 +56,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-        "sha256": "90949cdca3901f2bd0649a761aceb9c85f3aaaef6fe71ec45360e2d5f2eadd0b"
+        "sha256": "c2c7f3e0f457f9cfafcd297cf75fcedd5e0cc2b65005e6ae1f1688ed4d89f6aa"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
@@ -72,7 +72,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-        "sha256": "6d88bd25c39c0744b5e18a52fd37ad23c231b20f95196843052bdad1849a14c2"
+        "sha256": "44fca74147fe482ac7a3e36ce4354609a9dec30eea7c8bc12011f267a9d7629a"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
@@ -80,12 +80,12 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
-        "sha256": "d244e3af8f2024022a2cdbc0ddafcf65446c9a094e266f71f5de58d3b2f3380f"
+        "sha256": "bf4f2185f935433ebe124963f861733f449297bd5d32fbe361b6ac7d37be16da"
       }
     ],
     "external_human_review_claim": "none",
-    "reviewed_commit": "ed87a562a0debe407b6051b84a9abc76a8f037d5",
-    "reviewed_tree": "5e2bfc376427d742aae715f329c48f7bc800466a",
+    "reviewed_commit": "79eb3b35093a35f1dacc69207ceddfbeecc1727a",
+    "reviewed_tree": "8d072d14b9735804ee7a568f677cccc781aefce0",
     "reviewer_id": "agentmage-story-3.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -95,8 +95,8 @@
   "product_acceptance_claim": "none",
   "product_startup_activation_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "ed87a562a0debe407b6051b84a9abc76a8f037d5",
-  "reviewed_tree": "5e2bfc376427d742aae715f329c48f7bc800466a",
+  "reviewed_commit": "79eb3b35093a35f1dacc69207ceddfbeecc1727a",
+  "reviewed_tree": "8d072d14b9735804ee7a568f677cccc781aefce0",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 9,
