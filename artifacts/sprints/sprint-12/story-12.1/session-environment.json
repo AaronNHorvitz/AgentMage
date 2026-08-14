@@ -1,0 +1,107 @@
+{
+  "artifact_id": "s-012-i06-session-environment",
+  "case_ids": [
+    "SES-01",
+    "SES-02",
+    "SES-03",
+    "SES-04",
+    "SES-05",
+    "SES-06"
+  ],
+  "claims": {
+    "ambient_environment_discovery_implemented": false,
+    "attachment_content_parsing_implemented": false,
+    "attachment_path_resolution_implemented": false,
+    "canonical_workspace_scopes_only": true,
+    "captured_environment_family_count": 9,
+    "configuration_bound_profiles": true,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "live_git_observations": 0,
+    "manual_fuzzing_executed": false,
+    "maximum_attachment_records": 32,
+    "maximum_workspace_roots": 16,
+    "persistent_session_capture_implemented": false,
+    "release_support": false,
+    "session_authority_admitted_count": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The kernel validates supplied observations; ambient operating-system, Git, editor, and attachment discovery remain adapter and integration work.",
+    "Attachment path resolution and content parsers remain assigned later work.",
+    "The snapshot is in memory only; persistence, restart reconciliation, checkpoints, and UI rendering remain later work.",
+    "Synthetic values exercise the protocol; no private user data, live repository, model, collector, external network, or file content is used.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "069e788c9cfbdc4f85b278fad7358c95b72d289a",
+  "sources": [
+    {
+      "bytes": 2823,
+      "path": "docs/verification/s-012-i06-session-environment-results.md",
+      "sha256": "0da470085f1581f8419613fb6366fc2234c9930267229e27d8542cc178829ccd"
+    },
+    {
+      "bytes": 29177,
+      "path": "kernel/engine/src/session_environment.rs",
+      "sha256": "2b69c2fa5441d24fa14b0bbfd5d67a4c8a3fe0ca1b87c5b949a218e52fb5a4c0"
+    },
+    {
+      "bytes": 132215,
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
+    },
+    {
+      "bytes": 16917,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "ced9452cd870491c3cc15ba13e780de03d03f4d9ca5268925fa39752c9c9d7f1"
+    },
+    {
+      "bytes": 2603,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6a98eaca3c85d47af9b29e208752bdd4bc97ccd85ca946d74cd240bcdc87709f"
+    },
+    {
+      "bytes": 10278,
+      "path": "scripts/session_environment_evidence.py",
+      "sha256": "6e401f6681e3abfd27bed69428d39313e69be35a279e1c47212c817fe3d8f7e8"
+    },
+    {
+      "bytes": 3595,
+      "path": "tests/test_session_environment_evidence.py",
+      "sha256": "a7684567107425940b3a805789011e8619cd3863bda80c4a28866aa08df926ea"
+    }
+  ],
+  "status": "pass-bounded-session-environment-capture",
+  "task_ids": [
+    "12.1.1.6",
+    "S-012-I06"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "ad612aab4e8703e7fd3f4be77170e5caf8a2a79023f80720ae4384b13d09e74b",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "653cf216cc0393af38e8983b96b2696975902c868b233984091c68cb0d039e66",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
