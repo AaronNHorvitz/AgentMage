@@ -34,10 +34,10 @@ EXPECTED_SUBJECTS: dict[str, dict[str, Any]] = {
         "artifact_id": "grant-schema-policy-decision-reference",
         "task_id": "5.1.2.1",
         "coverage": {
-            "grant_field_count": 29,
-            "grant_operation_count": 15,
+            "grant_field_count": 30,
+            "grant_operation_count": 22,
             "policy_denial_scope_count": 15,
-            "strict_explicit_denial_count": 12,
+            "strict_explicit_denial_count": 21,
         },
     },
     "grant-state-report.json": {
@@ -120,6 +120,7 @@ SOURCE_PATHS = (
     "fixtures/grants/adversarial/v1/manifest.json",
     "kernel/contracts/src/approval.rs",
     "kernel/contracts/src/grant.rs",
+    "kernel/contracts/src/operation.rs",
     "kernel/engine/src/approval.rs",
     "kernel/engine/src/authority.rs",
     "kernel/engine/src/grants.rs",
