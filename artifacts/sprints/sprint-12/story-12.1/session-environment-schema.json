@@ -1,0 +1,111 @@
+{
+  "artifact_id": "task-12-1-2-4-session-environment-schema",
+  "case_ids": [
+    "ESC-01",
+    "ESC-02",
+    "ESC-03",
+    "ESC-04",
+    "ESC-05"
+  ],
+  "claims": {
+    "attachment_maximum": 32,
+    "canonical_fixture_count": 1,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "platform_architecture_count": 2,
+    "platform_family_count": 4,
+    "private_user_data_records": 0,
+    "release_support": false,
+    "repository_head_variant_count": 2,
+    "required_top_level_field_count": 23,
+    "session_environment_schema_count": 1,
+    "tool_executions": 0,
+    "unknown_fields_admitted_count": 0,
+    "workspace_root_maximum": 16
+  },
+  "external_network_used": false,
+  "limitations": [
+    "JSON Schema validates normalized record shape; the Rust kernel enforces cross-field workspace, repository, and attachment identity relationships.",
+    "The schema validates digest syntax but does not recompute capture_sha256 from capture material.",
+    "Production serialization, encrypted persistence, restart reconstruction, and UI consumption remain later integration work.",
+    "The canonical fixture is synthetic and contains no private user data, ambient path, remote URL, file content, or credential.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "ff9cd26ac3a3d5a144a039f9b96279123c160453",
+  "sources": [
+    {
+      "bytes": 2765,
+      "path": "docs/verification/task-12-1-2-4-session-environment-schema-results.md",
+      "sha256": "b520aa5a1cd6ef38022fe015b196de4aea14b3b67e78ba8ad1460be3b68f34e1"
+    },
+    {
+      "bytes": 5936,
+      "path": "schemas/runtime/session-environment-capture.schema.json",
+      "sha256": "f4930e5625c89c97e304d611c89ce6b8f90bea65cd93fd448dd263f2fa99b9b8"
+    },
+    {
+      "bytes": 1926,
+      "path": "schemas/runtime/examples/session-environment-capture.valid.json",
+      "sha256": "588c5a65e2fa0923ef7c20c79d00b6dd39f2c06f13e1ca121d89275b5f946b83"
+    },
+    {
+      "bytes": 29177,
+      "path": "kernel/engine/src/session_environment.rs",
+      "sha256": "2b69c2fa5441d24fa14b0bbfd5d67a4c8a3fe0ca1b87c5b949a218e52fb5a4c0"
+    },
+    {
+      "bytes": 21757,
+      "path": "scripts/validate_planning_schemas.mjs",
+      "sha256": "2def7bdff488f73b1d349b65a68f2aeec0a8c3632e5cf07b979951b92424b90a"
+    },
+    {
+      "bytes": 23914,
+      "path": "tests/test_planning_schemas.mjs",
+      "sha256": "23b978e458d90a78fd06f3ba7cf7e03c10b62c771fb20d498dc116492f6385fb"
+    },
+    {
+      "bytes": 11128,
+      "path": "scripts/session_environment_schema_evidence.py",
+      "sha256": "3f3fa5739054d62dcda41fba6da9558e3227a6c7e8a8b4360629ae6a2f603b9f"
+    },
+    {
+      "bytes": 3176,
+      "path": "tests/test_session_environment_schema_evidence.py",
+      "sha256": "c9ae05938abe9e3ddb379457a02b338156768ab2c0ddede4707a834c234720cc"
+    }
+  ],
+  "status": "pass-session-environment-schema",
+  "task_ids": [
+    "12.1.2.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "e339851869dd08460f281733547b9d8b25788f33c4a6ffd6f70da0fe6f9f15c4",
+      "exit_code": 0,
+      "expected_marker_sha256": "08a818f0ebf5ddf7a3c2b0ad79dafdcf4cb5f790f514d37bd3678cae7fa28f12",
+      "status": "pass"
+    },
+    {
+      "command_id": "840590b99c8a97501087713386c60db04058ef5f232da9e4be916337fde4f9a9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a40be38e8960529343770ef9487c2c412fc7272fe8f398047da27c43fcba0bcf",
+      "status": "pass"
+    },
+    {
+      "command_id": "9cdfe95bc8c68f521117b8a5ed6e1aeef42cb528a27450d8a5c37d72cbab7a39",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
