@@ -81,6 +81,8 @@ pub mod task_classification;
 pub mod tooling;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
+/// Exact-preimage shadow changes, review previews, and bounded write grants.
+pub mod write_approval;
 
 #[cfg(test)]
 mod s012_it01;
