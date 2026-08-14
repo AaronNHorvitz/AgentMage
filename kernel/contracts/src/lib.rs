@@ -3,6 +3,7 @@
 //! Interface-independent contracts shared across AgentMage components.
 
 mod agent;
+mod agent_state;
 mod approval;
 mod boundary;
 mod claim;
@@ -27,6 +28,7 @@ pub use agent::{
     AgentFinalResponse, AgentFinalState, AgentProgressEvent, AgentProgressKind, AgentStatusKind,
     AgentStatusResponse, UserMessageDisposition, UserMessageIntent,
 };
+pub use agent_state::{AgentStateKind, AgentStateTransition};
 pub use approval::ApprovalRequest;
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
