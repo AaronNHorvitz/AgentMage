@@ -1,0 +1,202 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-31-BLOCKED",
+      "owner": "31.1"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-32-REVIEW-ABSENT",
+      "owner": "32.1.3.3"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "kernel-tests",
+      "output_sha256": "3ce0cdfcb742bcc4a425479cf775a5fab6b4ad36dc4639415917ea5dd1e354bc"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "kernel-clippy",
+      "output_sha256": "359d32cc8155c9ed41b6866c273eef981f87d9685d8616a793a77772d8957113"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-contracts",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "contract-tests",
+      "output_sha256": "db5bb1c2a5f35ef6eae43eebeba4962ac7be3effd8eb396463029d80a9d694d3"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "fe7a907f9d467c475591a86b9f141be2bfa4e8dd236e53ae55cb3ef29c87340b"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "e2cecb55cffa95c2ca66124d17491e03185bc604d889a70663900ded6ddbf266"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_32_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "approval_bound_atomic_leaf_deletion": true,
+    "bounded_local_filter_and_text_search": true,
+    "citation_receipt_and_source_preserving_compaction": true,
+    "compare_and_swap_metadata_controls": true,
+    "encrypted_backup_and_fresh_restore": true,
+    "encrypted_canonical_conversation_schema": true,
+    "immutable_exact_turn_branching": true,
+    "latest_and_exact_turn_resume_review": true,
+    "network_access": false,
+    "nine_dimension_resume_drift_detection": true,
+    "portable_private_archive_bundle": false,
+    "read_only_timeline_and_relationship_view": true,
+    "sensitivity_and_persistence_policy": true
+  },
+  "record_type": "sprint_32_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-007",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005",
+    "SR-OPS-003"
+  ],
+  "source_revision": "6d350802007722f8ff1410a1394670b5a6f14e77",
+  "source_sha256": {
+    "docs/architecture/encrypted-conversation-library.md": "e3be18a906d3c1849d65c54261d8077788bba4b08528270b11e5b11977405b20",
+    "docs/verification/sprint-32-local-results.md": "b61703f954a028384234c63f57627febb8475b4ec216ebd45886d1e9f93941ea",
+    "kernel/contracts/src/conversation.rs": "474fffe35b951603f78ab16c25609beda1f8eaa9acf2ebceb94f8af5176e2dde",
+    "kernel/contracts/src/ids.rs": "e6811f96ee5b08bdb2ef62cb0c3f196225b011ef5a60888f11caae85c3f4abd8",
+    "kernel/contracts/src/lib.rs": "ca3f23e8c3598a6bc100abd0017165f066adba60c9152d5394a1cd0eb9bb4cd4",
+    "kernel/contracts/src/serialization.rs": "5c68877a5bde0612ab6ac94980326247de96882d2b3cf5ff0d6d1be1939d40e8",
+    "kernel/engine/migrations/operational-store/0005-conversation-library.sql": "035b79e685c570210c67f51cfcd466a12131e93281a33c76768184a816995586",
+    "kernel/engine/src/conversation_library.rs": "6e4a5d34e1378e0acc73fd577572f9874a77a1c0ea91b422ae218a8b578ed3fa",
+    "kernel/engine/src/operational_store.rs": "c67fec4d940868e37d0c3e7e04de22673092aa518d3283015e6f8d4bf01556b9",
+    "scripts/sprint_32_evidence.py": "cc31e67800a81d3169c57118a3c1e04c7b5659004c615822d6fcb2feba97b009",
+    "tests/test_sprint_32_evidence.py": "a07715db1fecb423bf881d2b614d666ba19e9c2a8134e3324612cfd3d5828c1e"
+  },
+  "summary": {
+    "independent_review_passed": false,
+    "local_conversation_contract_passed": true,
+    "network_access_enabled": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "upstream_dependency_passed": false
+  },
+  "verification_evidence": {
+    "canonical_storage_search_and_history_suite": true,
+    "compaction_deletion_and_recovery_suite": true,
+    "complete_local_product_and_docs_gates": true,
+    "independent_review": false,
+    "portable_private_archive_bundle": false,
+    "resume_branch_and_drift_suite": true,
+    "upstream_sprint_31_gate": false
+  }
+}
