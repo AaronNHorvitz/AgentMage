@@ -21,7 +21,7 @@
     {
       "profile_family": "gemma-4-e4b",
       "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
-      "sha256": "f2e8f8b5adc19e97a6abc8b0857f9deea3dd99db088de5d81e77daf906fbe92b",
+      "sha256": "c640d77e17392e5de7b460a2f1b6ed4a0bedfa60400a05fe347b7c359646f885",
       "disposition": "BLOCKED",
       "preserved": true
     },
@@ -35,7 +35,7 @@
     {
       "profile_family": "gemma-4-12b-unified",
       "path": "model-profiles/candidates/gemma-4-12b-unified/evaluation-plan.json",
-      "sha256": "196761b5f10e41ea46224c1737147f82eaf33fa72b7f96772bbed05080fec61c",
+      "sha256": "0d46720a34b83d07810a8e5a81022c6edc7164bf62c6a5849eedc0334584adda",
       "disposition": "BLOCKED",
       "preserved": true
     },
@@ -49,7 +49,7 @@
     {
       "profile_family": "gemma-4-12b-unified",
       "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-      "sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
+      "sha256": "18858de6974a8cf47b18371a9cc93e83be6b7563e005996da1546acfe4a0822d",
       "disposition": "BLOCKED",
       "preserved": true
     },
@@ -73,7 +73,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-muse-v1",
       "manifest_id": "deterministic-fake-muse-manifest-v1",
-      "manifest_sha256": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
+      "manifest_sha256": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
       "display_name": "Deterministic fake Muse contract profile",
       "family": "deterministic_fake_muse",
       "publisher_control": "AgentMage test fixture",
@@ -95,7 +95,7 @@
       "codec": {
         "codec_id": "deterministic-fake-muse-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
+        "codec_sha256": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
         "tokenizer": "deterministic-fake-muse-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-muse-template-v1",
@@ -111,7 +111,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
+        "runtime_sha256": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
@@ -170,7 +170,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-gemma-v1",
       "manifest_id": "deterministic-fake-gemma-manifest-v1",
-      "manifest_sha256": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
+      "manifest_sha256": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
       "display_name": "Deterministic fake Gemma contract profile",
       "family": "deterministic_fake_gemma",
       "publisher_control": "AgentMage test fixture",
@@ -192,7 +192,7 @@
       "codec": {
         "codec_id": "deterministic-fake-gemma-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
+        "codec_sha256": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
         "tokenizer": "deterministic-fake-gemma-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-gemma-template-v1",
@@ -208,7 +208,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
+        "runtime_sha256": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
@@ -267,7 +267,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality-manifest-v1",
-      "manifest_sha256": "64e0966d7b5c3f0951488695a7aaff689c03a32950a84ede2ed8e224d7333017",
+      "manifest_sha256": "ee8353ddf9abb244db9ecf871962a2b3039e920ee247028f14e127299395522d",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora first-party-quality",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -290,7 +290,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "4a63ad223eefb2dbd772ba4267449a76b93cd3dc7c9a5c8c85b5316e5b46662f",
+        "codec_sha256": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -393,7 +393,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability-manifest-v1",
-      "manifest_sha256": "58c7091643220e98fffd4e1da99bca27b405472caa44b9fc1bafc954d602d166",
+      "manifest_sha256": "ec9537e5e7bd48001837da25d91e1ae6829c5fa7b76a1db9243613bc930aaeb9",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora diagnostic-repeatability",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -416,7 +416,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "4a63ad223eefb2dbd772ba4267449a76b93cd3dc7c9a5c8c85b5316e5b46662f",
+        "codec_sha256": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",

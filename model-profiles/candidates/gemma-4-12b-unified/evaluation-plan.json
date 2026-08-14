@@ -4,7 +4,7 @@
     "artifact_sha256": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
     "artifact_status": "BLOCKED",
     "source_path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-    "source_sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
+    "source_sha256": "18858de6974a8cf47b18371a9cc93e83be6b7563e005996da1546acfe4a0822d",
     "source_status": "BLOCKED"
   },
   "adapters": [
