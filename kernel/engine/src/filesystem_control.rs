@@ -3,13 +3,17 @@
 use std::{collections::BTreeSet, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
-    CapabilityGrant, GrantClass, GrantId, GrantStatus, GrantTarget, WorkspaceObjectKind,
-    WorkspacePath,
+    ActionId, ActionKind, ApprovalId, CapabilityGrant, GrantClass, GrantId, GrantNonce,
+    GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationBinding,
+    ToolId, WorkspaceObjectKind, WorkspacePath,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::write_approval::WriteReviewNarrative;
+use crate::{
+    grants::{DerivedOperationGrantRequest, GrantIssueError, GrantIssuer},
+    write_approval::WriteReviewNarrative,
+};
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_IDENTIFIER_BYTES: usize = 128;
@@ -22,6 +26,7 @@ const MAX_PATCH_HUNKS: usize = 4_096;
 const MAX_PATCH_LINES: usize = 131_072;
 const MAX_REVIEW_ITEMS: usize = 64;
 const MAX_REVIEW_TEXT_BYTES: usize = 4_096;
+const MAX_FILESYSTEM_GRANT_LIFETIME_MS: u64 = 300_000;
 
 /// Stable reason a controlled filesystem proposal was denied before authority existed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,6 +49,12 @@ pub enum FilesystemPlanError {
     UnrelatedExistingWork,
     /// Two proposed operations overlap or conflict.
     OperationConflict,
+    /// The explicit approval did not bind the exact current plan and preview.
+    ApprovalMismatch,
+    /// Existing kernel grant issuance rejected the requested authority.
+    GrantIssue,
+    /// Retained parent-grant state is absent or internally inconsistent.
+    GrantState,
 }
 
 impl FilesystemPlanError {
@@ -60,7 +71,16 @@ impl FilesystemPlanError {
             Self::ProtectedPath => "filesystem.plan.protected_path",
             Self::UnrelatedExistingWork => "filesystem.plan.unrelated_existing_work",
             Self::OperationConflict => "filesystem.plan.operation_conflict",
+            Self::ApprovalMismatch => "filesystem.approval.decision_mismatch",
+            Self::GrantIssue => "filesystem.approval.grant_issue_failed",
+            Self::GrantState => "filesystem.approval.grant_state_invalid",
         }
+    }
+}
+
+impl From<GrantIssueError> for FilesystemPlanError {
+    fn from(_: GrantIssueError) -> Self {
+        Self::GrantIssue
     }
 }
 
@@ -489,6 +509,63 @@ pub struct FilesystemApprovalPreview {
     pub preview_sha256: String,
 }
 
+/// Explicit user decision bound to one exact controlled-filesystem preview.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemApprovalDecision {
+    /// Stable approval identity.
+    pub approval_id: ApprovalId,
+    /// Exact approved filesystem-plan digest.
+    pub approved_plan_sha256: String,
+    /// Exact approved preview digest.
+    pub approved_preview_sha256: String,
+    /// Kernel-clock approval time.
+    pub approved_at_epoch_ms: u64,
+    /// Exact short-lived approval expiry.
+    pub expires_at_epoch_ms: u64,
+    /// Exact verification labels allowed after a future apply.
+    pub permitted_verification: Vec<String>,
+    /// False decisions are inert.
+    pub user_confirmed: bool,
+    /// Separate explicit confirmation required exactly for trash-delete plans.
+    pub high_risk_delete_confirmed: bool,
+}
+
+/// Kernel-selected identities needed to derive one controlled-filesystem grant.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemGrantRequest {
+    /// Current session-read parent grant.
+    pub parent_grant_id: GrantId,
+    /// New single-use operation-grant identity.
+    pub grant_id: GrantId,
+    /// Exact action receiving the bounded authority.
+    pub action_id: ActionId,
+    /// Descriptive action class.
+    pub action_kind: ActionKind,
+    /// Exact registered filesystem-tool identity.
+    pub tool_id: ToolId,
+    /// Exact registered filesystem-tool version.
+    pub tool_version: String,
+    /// Unique anti-replay nonce.
+    pub nonce: GrantNonce,
+    /// Current policy digest, which must equal the parent policy.
+    pub policy_sha256: String,
+}
+
+/// Non-authoritative proof that one exact filesystem grant was issued.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemApprovalReceipt {
+    /// Existing kernel-enforced single-use operation grant.
+    pub grant: CapabilityGrant,
+    /// Exact filesystem-plan digest carried as the grant argument identity.
+    pub plan_sha256: String,
+    /// Exact reviewed preview digest.
+    pub preview_sha256: String,
+    /// Exact verification labels cryptographically included in side-effect details.
+    pub permitted_verification: Vec<String>,
+    /// Canonical digest of this non-authoritative binding summary.
+    pub binding_sha256: String,
+}
+
 /// Parses one closed JSON structured patch without accepting target or command syntax.
 pub fn parse_structured_patch_json(bytes: &[u8]) -> Result<StructuredPatch, FilesystemPlanError> {
     if bytes.is_empty() || bytes.len() > MAX_FILE_BYTES {
@@ -687,6 +764,156 @@ pub fn render_filesystem_preview(
     };
     preview.preview_sha256 = canonical_sha256(&preview)?;
     Ok(preview)
+}
+
+/// Verifies an exact decision and derives one short-lived single-use filesystem grant.
+pub fn issue_filesystem_grant(
+    issuer: &mut GrantIssuer,
+    plan: &FilesystemPlan,
+    preview: &FilesystemApprovalPreview,
+    decision: &FilesystemApprovalDecision,
+    request: FilesystemGrantRequest,
+) -> Result<FilesystemApprovalReceipt, FilesystemPlanError> {
+    verify_plan(plan)?;
+    verify_preview(plan, preview)?;
+    validate_identifier(decision.approval_id.as_str())?;
+    validate_verification(&decision.permitted_verification)?;
+    let current_parent = issuer
+        .current(&request.parent_grant_id)
+        .ok_or(FilesystemPlanError::ParentUnavailable)?;
+    let current_parent_sha256 = issuer
+        .revision_hash(&current_parent.grant_id, current_parent.revision)
+        .ok_or(FilesystemPlanError::GrantState)?;
+    if !decision.user_confirmed
+        || decision.high_risk_delete_confirmed != plan.requires_high_risk_delete_grant
+        || decision.approved_plan_sha256 != plan.plan_sha256
+        || decision.approved_preview_sha256 != preview.preview_sha256
+        || decision.permitted_verification != plan.permitted_verification
+        || decision.approved_at_epoch_ms < plan.observed_at_epoch_ms
+        || decision.expires_at_epoch_ms <= decision.approved_at_epoch_ms
+        || decision.expires_at_epoch_ms - decision.approved_at_epoch_ms
+            > MAX_FILESYSTEM_GRANT_LIFETIME_MS
+        || request.parent_grant_id != plan.parent_grant_id
+        || current_parent_sha256 != plan.parent_grant_sha256
+        || request.policy_sha256.is_empty()
+    {
+        return Err(FilesystemPlanError::ApprovalMismatch);
+    }
+
+    let operation = OperationBinding::new(if plan.requires_high_risk_delete_grant {
+        GrantOperation::WorkspaceDelete
+    } else {
+        GrantOperation::WorkspaceWrite
+    });
+    let verification_sha256 = canonical_sha256(&decision.permitted_verification)?;
+    let mut targets = Vec::new();
+    for item in &plan.operations {
+        for target in [item.source.as_ref(), item.destination_parent.as_ref()]
+            .into_iter()
+            .flatten()
+        {
+            if !targets.contains(target) {
+                targets.push(target.clone());
+            }
+        }
+    }
+    let preimages = targets
+        .iter()
+        .enumerate()
+        .filter_map(|(index, target)| {
+            target.preimage().map(|_| {
+                let index = u32::try_from(index).map_err(|_| FilesystemPlanError::InvalidInput)?;
+                GrantPreimage::for_target(index, target)
+                    .ok_or(FilesystemPlanError::PreimageMismatch)
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let expected_side_effects = plan
+        .operations
+        .iter()
+        .map(|item| {
+            let mut target_indexes = Vec::new();
+            for target in [item.source.as_ref(), item.destination_parent.as_ref()]
+                .into_iter()
+                .flatten()
+            {
+                let index = targets
+                    .iter()
+                    .position(|candidate| candidate == target)
+                    .ok_or(FilesystemPlanError::GrantState)?;
+                target_indexes
+                    .push(u32::try_from(index).map_err(|_| FilesystemPlanError::InvalidInput)?);
+            }
+            let details_sha256 = canonical_sha256(&(
+                item.operation_sha256.as_str(),
+                item.kind,
+                item.source_path.as_deref(),
+                item.destination_path.as_deref(),
+                item.source_sha256.as_deref(),
+                item.postimage_sha256.as_deref(),
+                item.source_mode,
+                item.destination_mode,
+                item.sibling_snapshot_sha256.as_deref(),
+                item.structured_patch_sha256.as_deref(),
+                verification_sha256.as_str(),
+                false,
+                false,
+                false,
+            ))?;
+            Ok(GrantSideEffect {
+                operation,
+                target_indexes,
+                details_sha256,
+            })
+        })
+        .collect::<Result<Vec<_>, FilesystemPlanError>>()?;
+    let grant = issuer.derive_operation(
+        &request.parent_grant_id,
+        DerivedOperationGrantRequest {
+            grant_id: request.grant_id,
+            approval_id: decision.approval_id.clone(),
+            action_id: request.action_id,
+            action_kind: request.action_kind,
+            operation,
+            tool_id: request.tool_id,
+            tool_version: request.tool_version,
+            targets,
+            argument_sha256: plan.plan_sha256.clone(),
+            preimages,
+            expected_side_effects,
+            rollback_description: plan.review.rollback.clone(),
+            issued_at_epoch_ms: decision.approved_at_epoch_ms,
+            expires_at_epoch_ms: decision.expires_at_epoch_ms,
+            nonce: request.nonce,
+            preview_sha256: preview.preview_sha256.clone(),
+            policy_sha256: request.policy_sha256,
+        },
+    )?;
+    let binding_sha256 = canonical_sha256(&(
+        grant.grant_id.as_str(),
+        plan.plan_sha256.as_str(),
+        preview.preview_sha256.as_str(),
+        decision.permitted_verification.as_slice(),
+        operation,
+    ))?;
+    Ok(FilesystemApprovalReceipt {
+        grant,
+        plan_sha256: plan.plan_sha256.clone(),
+        preview_sha256: preview.preview_sha256.clone(),
+        permitted_verification: decision.permitted_verification.clone(),
+        binding_sha256,
+    })
+}
+
+fn verify_preview(
+    plan: &FilesystemPlan,
+    preview: &FilesystemApprovalPreview,
+) -> Result<(), FilesystemPlanError> {
+    let expected = render_filesystem_preview(plan)?;
+    if expected != *preview {
+        return Err(FilesystemPlanError::ApprovalMismatch);
+    }
+    Ok(())
 }
 
 fn validate_operation(
@@ -1163,18 +1390,20 @@ fn hex_bytes(value: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        ActorId, AdapterInstanceId, AuthorizedWorkspaceHandle, DataSensitivity, GrantId,
-        GrantNonce, GrantTarget, PathPlatform, SessionId, TaskId, WorkspaceAuthorizationId,
-        WorkspaceId, WorkspacePath, WorkspaceScopePath,
+        ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle,
+        DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantTarget, PathPlatform, SessionId,
+        TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
     };
     use serde_json::json;
     use sha2::{Digest, Sha256};
 
     use super::{
-        ExistingSourceDraft, ExistingWorkDisposition, FileClassification, FilesystemOperationDraft,
-        FilesystemOperationKind, FilesystemPlanError, FilesystemPlanRequest, NewDestinationDraft,
-        StructuredPatch, StructuredPatchHunk, apply_structured_patch, build_filesystem_plan,
-        hex_sha256, parse_structured_patch_json, render_filesystem_preview,
+        ExistingSourceDraft, ExistingWorkDisposition, FileClassification,
+        FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemGrantRequest,
+        FilesystemOperationDraft, FilesystemOperationKind, FilesystemPlan, FilesystemPlanError,
+        FilesystemPlanRequest, NewDestinationDraft, StructuredPatch, StructuredPatchHunk,
+        apply_structured_patch, build_filesystem_plan, hex_sha256, issue_filesystem_grant,
+        parse_structured_patch_json, render_filesystem_preview,
     };
     use crate::grants::{GrantIssuer, SessionReadGrantRequest};
     use crate::write_approval::WriteReviewNarrative;
@@ -1203,7 +1432,7 @@ mod tests {
         }
     }
 
-    fn parent() -> agentmage_kernel_contracts::CapabilityGrant {
+    fn parent_with_issuer() -> (GrantIssuer, agentmage_kernel_contracts::CapabilityGrant) {
         let mut issuer = GrantIssuer::new();
         let root = GrantTarget::workspace_scope(
             &FakeWorkspace,
@@ -1220,7 +1449,7 @@ mod tests {
                 .expect("private scope"),
         )
         .expect("private target");
-        issuer
+        let parent = issuer
             .issue_session_read(SessionReadGrantRequest {
                 grant_id: GrantId::from_raw("grant-parent-filesystem"),
                 actor_id: ActorId::from_raw("actor-local"),
@@ -1236,7 +1465,12 @@ mod tests {
                 preview_sha256: "a".repeat(64),
                 policy_sha256: "b".repeat(64),
             })
-            .expect("parent")
+            .expect("parent");
+        (issuer, parent)
+    }
+
+    fn parent() -> agentmage_kernel_contracts::CapabilityGrant {
+        parent_with_issuer().1
     }
 
     fn source(path: &[&str], bytes: &[u8], work: ExistingWorkDisposition) -> ExistingSourceDraft {
@@ -1326,6 +1560,77 @@ mod tests {
             }],
         })
         .expect("patch json")
+    }
+
+    fn approval_decision(
+        preview: &FilesystemApprovalPreview,
+        high_risk_delete_confirmed: bool,
+    ) -> FilesystemApprovalDecision {
+        FilesystemApprovalDecision {
+            approval_id: ApprovalId::from_raw("approval-filesystem-0001"),
+            approved_plan_sha256: preview.plan_sha256.clone(),
+            approved_preview_sha256: preview.preview_sha256.clone(),
+            approved_at_epoch_ms: 3_000,
+            expires_at_epoch_ms: 30_000,
+            permitted_verification: vec!["cargo-test-filesystem-control".to_owned()],
+            user_confirmed: true,
+            high_risk_delete_confirmed,
+        }
+    }
+
+    fn grant_request() -> FilesystemGrantRequest {
+        FilesystemGrantRequest {
+            parent_grant_id: GrantId::from_raw("grant-parent-filesystem"),
+            grant_id: GrantId::from_raw("grant-filesystem-0001"),
+            action_id: ActionId::from_raw("action-filesystem-0001"),
+            action_kind: ActionKind::DeterministicTool,
+            tool_id: ToolId::from_raw("workspace.filesystem"),
+            tool_version: "1.0.0".to_owned(),
+            nonce: GrantNonce::from_raw("nonce-filesystem-0001"),
+            policy_sha256: "b".repeat(64),
+        }
+    }
+
+    fn write_approval_fixture() -> (GrantIssuer, FilesystemPlan, FilesystemApprovalPreview) {
+        let (issuer, parent) = parent_with_issuer();
+        let operations = vec![
+            FilesystemOperationDraft::Create {
+                operation_id: "operation-create".to_owned(),
+                destination: destination(&["new"], "created.txt", &[]),
+                content: b"created\n".to_vec(),
+                mode: 0o600,
+                classification: FileClassification::Documentation,
+            },
+            FilesystemOperationDraft::Copy {
+                operation_id: "operation-copy".to_owned(),
+                source: source(
+                    &["src", "copy.txt"],
+                    b"copy\n",
+                    ExistingWorkDisposition::Clean,
+                ),
+                destination: destination(&["copies"], "copy.txt", &[]),
+                classification: FileClassification::Data,
+            },
+        ];
+        let plan = build_filesystem_plan(&parent, request(operations)).expect("write plan");
+        let preview = render_filesystem_preview(&plan).expect("write preview");
+        (issuer, plan, preview)
+    }
+
+    fn delete_approval_fixture() -> (GrantIssuer, FilesystemPlan, FilesystemApprovalPreview) {
+        let (issuer, parent) = parent_with_issuer();
+        let operation = FilesystemOperationDraft::TrashDelete {
+            operation_id: "operation-trash".to_owned(),
+            source: source(
+                &["src", "obsolete.txt"],
+                b"obsolete\n",
+                ExistingWorkDisposition::Clean,
+            ),
+            trash_destination: destination(&["trash"], "obsolete.txt", &[]),
+        };
+        let plan = build_filesystem_plan(&parent, request(vec![operation])).expect("delete plan");
+        let preview = render_filesystem_preview(&plan).expect("delete preview");
+        (issuer, plan, preview)
     }
 
     #[test]
@@ -1584,6 +1889,159 @@ mod tests {
         assert_eq!(
             render_filesystem_preview(&changed_operation),
             Err(FilesystemPlanError::InvalidInput)
+        );
+    }
+
+    #[test]
+    fn exact_approval_issues_one_single_use_write_grant() {
+        let (mut issuer, plan, preview) = write_approval_fixture();
+        let receipt = issue_filesystem_grant(
+            &mut issuer,
+            &plan,
+            &preview,
+            &approval_decision(&preview, false),
+            grant_request(),
+        )
+        .expect("write grant");
+
+        assert_eq!(receipt.grant.use_limit, 1);
+        assert_eq!(receipt.grant.use_count, 0);
+        assert_eq!(
+            receipt.grant.operation.operation(),
+            GrantOperation::WorkspaceWrite
+        );
+        assert_eq!(receipt.grant.argument_sha256, plan.plan_sha256());
+        assert_eq!(receipt.grant.preview_sha256, preview.preview_sha256);
+        assert_eq!(receipt.grant.targets.len(), 3);
+        assert_eq!(receipt.grant.preimages.len(), 1);
+        assert_eq!(receipt.grant.preimages[0].target_index, 1);
+        assert_eq!(receipt.grant.expected_side_effects.len(), 2);
+        assert_eq!(receipt.grant.expected_side_effects[0].target_indexes, [0]);
+        assert_eq!(
+            receipt.grant.expected_side_effects[1].target_indexes,
+            [1, 2]
+        );
+        assert_eq!(
+            receipt.permitted_verification,
+            ["cargo-test-filesystem-control"]
+        );
+
+        let mut replay = grant_request();
+        replay.grant_id = GrantId::from_raw("grant-filesystem-0002");
+        replay.nonce = GrantNonce::from_raw("nonce-filesystem-0002");
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &plan,
+                &preview,
+                &approval_decision(&preview, false),
+                replay,
+            ),
+            Err(FilesystemPlanError::ApprovalMismatch)
+        );
+    }
+
+    #[test]
+    fn trash_delete_requires_separate_confirmation_and_delete_authority() {
+        let (mut issuer, plan, preview) = delete_approval_fixture();
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &plan,
+                &preview,
+                &approval_decision(&preview, false),
+                grant_request(),
+            ),
+            Err(FilesystemPlanError::ApprovalMismatch)
+        );
+
+        let (mut issuer, plan, preview) = delete_approval_fixture();
+        let receipt = issue_filesystem_grant(
+            &mut issuer,
+            &plan,
+            &preview,
+            &approval_decision(&preview, true),
+            grant_request(),
+        )
+        .expect("delete grant");
+        assert_eq!(
+            receipt.grant.operation.operation(),
+            GrantOperation::WorkspaceDelete
+        );
+        assert_eq!(receipt.grant.targets.len(), 2);
+        assert_eq!(receipt.grant.preimages.len(), 1);
+        assert_eq!(
+            receipt.grant.expected_side_effects[0].target_indexes,
+            [0, 1]
+        );
+    }
+
+    #[test]
+    fn approval_mutations_cannot_issue_filesystem_authority() {
+        type DecisionMutation = Box<dyn Fn(&mut FilesystemApprovalDecision)>;
+
+        let (mut issuer, plan, preview) = write_approval_fixture();
+        let mut changed_preview = preview.clone();
+        changed_preview.operations[0].destination_path = Some("new/other.txt".to_owned());
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &plan,
+                &changed_preview,
+                &approval_decision(&preview, false),
+                grant_request(),
+            ),
+            Err(FilesystemPlanError::ApprovalMismatch)
+        );
+
+        let (mut issuer, plan, preview) = write_approval_fixture();
+        let mut changed_plan = plan.clone();
+        changed_plan.operations[0].destination_mode = Some(0o644);
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &changed_plan,
+                &preview,
+                &approval_decision(&preview, false),
+                grant_request(),
+            ),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let decision_mutations: Vec<DecisionMutation> = vec![
+            Box::new(|value| value.user_confirmed = false),
+            Box::new(|value| value.approved_plan_sha256 = "c".repeat(64)),
+            Box::new(|value| value.approved_preview_sha256 = "c".repeat(64)),
+            Box::new(|value| value.expires_at_epoch_ms = value.approved_at_epoch_ms + 300_001),
+            Box::new(|value| value.high_risk_delete_confirmed = true),
+            Box::new(|value| {
+                value
+                    .permitted_verification
+                    .push("cargo-test-all".to_owned())
+            }),
+        ];
+        for mutate in decision_mutations {
+            let (mut issuer, plan, preview) = write_approval_fixture();
+            let mut decision = approval_decision(&preview, false);
+            mutate(&mut decision);
+            assert_eq!(
+                issue_filesystem_grant(&mut issuer, &plan, &preview, &decision, grant_request(),),
+                Err(FilesystemPlanError::ApprovalMismatch)
+            );
+        }
+
+        let (mut issuer, plan, preview) = write_approval_fixture();
+        let mut wrong_policy = grant_request();
+        wrong_policy.policy_sha256 = "c".repeat(64);
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &plan,
+                &preview,
+                &approval_decision(&preview, false),
+                wrong_policy,
+            ),
+            Err(FilesystemPlanError::GrantIssue)
         );
     }
 }
