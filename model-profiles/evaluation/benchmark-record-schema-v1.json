@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/benchmark-record-v1.json",
+  "title": "AgentMage exact-profile benchmark record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "record_type", "candidate_id", "role", "suite_id", "disposition", "tuple", "statistics", "limitations", "evidence_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "record_type": {"const": "agentmage_exact_profile_benchmark"},
+    "candidate_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "role": {"enum": ["coding_planner", "dialogue", "domain_specialist", "embedding", "interpretability_research", "multimodal", "research_specialist", "reranking", "safety_classification", "tool_selection", "translation_specialist"]},
+    "suite_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "disposition": {"enum": ["PASS", "FAILED", "BLOCKED", "BLOCKED-HARDWARE", "REJECTED", "STALE", "INCOMPARABLE", "UNKNOWN", "NOT-APPLICABLE"]},
+    "tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_sha256", "tokenizer_sha256", "template_sha256", "codec_sha256", "runtime_sha256", "sampler_sha256", "context_tokens", "inference_slots", "platform", "hardware_sha256", "driver_sha256", "tool_catalog_sha256", "grader_sha256", "corpus_sha256"],
+      "properties": {
+        "artifact_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "tokenizer_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "template_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "codec_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "runtime_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "sampler_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "context_tokens": {"type": ["integer", "null"], "minimum": 1},
+        "inference_slots": {"type": ["integer", "null"], "minimum": 1},
+        "platform": {"type": ["string", "null"]},
+        "hardware_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "driver_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "tool_catalog_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "grader_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "corpus_sha256": {"$ref": "#/$defs/nullableSha256"}
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trial_count", "pass_at_one", "pass_at_k", "pass_to_the_k", "confidence_interval", "variance", "invalid_proposal_rate", "false_completion_rate", "latency_ms", "resident_memory_bytes", "accelerator_memory_bytes", "thermal_behavior", "user_intervention_rate"],
+      "properties": {
+        "trial_count": {"type": ["integer", "null"], "minimum": 1},
+        "pass_at_one": {"$ref": "#/$defs/nullableRate"},
+        "pass_at_k": {"$ref": "#/$defs/nullableRate"},
+        "pass_to_the_k": {"$ref": "#/$defs/nullableRate"},
+        "confidence_interval": {"type": ["array", "null"], "prefixItems": [{"type": "number"}, {"type": "number"}], "minItems": 2, "maxItems": 2},
+        "variance": {"type": ["number", "null"], "minimum": 0},
+        "invalid_proposal_rate": {"$ref": "#/$defs/nullableRate"},
+        "false_completion_rate": {"$ref": "#/$defs/nullableRate"},
+        "latency_ms": {"type": ["number", "null"], "minimum": 0},
+        "resident_memory_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "accelerator_memory_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "thermal_behavior": {"type": ["string", "null"]},
+        "user_intervention_rate": {"$ref": "#/$defs/nullableRate"}
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "evidence_sha256": {"$ref": "#/$defs/nullableSha256"}
+  },
+  "$defs": {
+    "nullableSha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "nullableRate": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+  }
+}
