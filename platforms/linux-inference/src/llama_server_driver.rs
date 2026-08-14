@@ -2,6 +2,7 @@
 
 use std::fs;
 use std::io::{Read, Write};
+use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::MetadataExt;
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
@@ -26,6 +27,7 @@ const MAX_HTTP_RESPONSE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
 const MAX_COMPLETION_BYTES: usize = 16 * 1024 * 1024;
 const EXPECTED_CONTEXT_TOKENS: u32 = 8192;
+const MAX_UNIX_SOCKET_PATH_BYTES: usize = 107;
 const EXPECTED_SERVER_SHA256: &str =
     "f7c93f0de9fed7b596e68557bd4d42a084204027f87d61c893777908e4c62bfe";
 
@@ -109,7 +111,7 @@ impl LlamaServerDriverConfig {
             || !socket_path.is_absolute()
             || startup_timeout.is_zero()
             || startup_timeout > Duration::from_secs(600)
-            || socket_path.file_name().and_then(|name| name.to_str()) != Some("llama-server.sock")
+            || !valid_socket_path(&socket_path)
         {
             return Err(failure("model.llama-driver.configuration-invalid", false));
         }
@@ -121,6 +123,11 @@ impl LlamaServerDriverConfig {
             startup_timeout,
         })
     }
+}
+
+fn valid_socket_path(path: &Path) -> bool {
+    path.as_os_str().as_bytes().len() <= MAX_UNIX_SOCKET_PATH_BYTES
+        && path.file_name().and_then(|name| name.to_str()) == Some("llama-server.sock")
 }
 
 struct LoadedRuntime {
@@ -837,14 +844,17 @@ mod tests {
     use std::fs;
     use std::io::{Read, Write};
     use std::os::unix::net::UnixListener;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
 
     use agentmage_kernel_contracts::{DecodingProfile, ModelRunTerminalState};
     use serde_json::{Value, json};
 
-    use super::{Endpoint, UnixHttpClient, launch_arguments, parse_http_response, plain_text};
+    use super::{
+        Endpoint, UnixHttpClient, launch_arguments, parse_http_response, plain_text,
+        valid_socket_path,
+    };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
 
@@ -948,6 +958,18 @@ mod tests {
                 "--no-context-shift",
             ]
         );
+    }
+
+    #[test]
+    fn unix_socket_path_is_fixed_name_and_bounded_by_linux_address_limit() {
+        assert!(valid_socket_path(Path::new(
+            "/run/user/1000/am/llama-server.sock"
+        )));
+        assert!(!valid_socket_path(Path::new(
+            "/run/user/1000/am/other.sock"
+        )));
+        let oversized = format!("/{}/llama-server.sock", "a".repeat(100));
+        assert!(!valid_socket_path(Path::new(&oversized)));
     }
 
     #[test]
