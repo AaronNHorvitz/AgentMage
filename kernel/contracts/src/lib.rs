@@ -19,6 +19,7 @@ mod evidence;
 mod grant;
 mod ids;
 mod model;
+mod model_discovery;
 mod network;
 mod operation;
 mod path;
@@ -103,6 +104,10 @@ pub use model::{
     ModelRuntimeKind, ModelStreamSink, ModelToolCallCandidate, ModelToolCallWireCandidate,
     ModelTransformation, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
     TokenCountResult,
+};
+pub use model_discovery::{
+    ModelActivationState, ModelCompatibilityState, ModelPickerCapability, ModelPickerDisposition,
+    ModelPickerEntry, ModelPickerSnapshot, ModelSelectionRevalidation, ModelSupportState,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,

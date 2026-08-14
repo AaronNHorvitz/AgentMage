@@ -60,6 +60,7 @@ impl_versioned_contract!(
     crate::SessionCheckpoint,
     crate::EncodedModelContext,
     crate::ExactModelProfile,
+    crate::ModelPickerSnapshot,
     crate::ModelContextPacket,
     crate::ModelRunRequest,
     crate::ModelRunResult,

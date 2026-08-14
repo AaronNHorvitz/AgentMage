@@ -38,6 +38,8 @@ pub mod grants;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
 pub mod model_codec;
+/// Candidate-neutral native-picker projection and stale-selection refusal.
+pub mod model_discovery;
 pub mod model_response;
 /// Candidate-neutral exact-profile admission and local runtime orchestration.
 pub mod model_runtime;
