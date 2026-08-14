@@ -55,8 +55,12 @@ def build_report(
     source_revision: str,
     socket_root: Path,
     response_sha256: str,
+    terminal_state: str,
     input_tokens: int,
     output_tokens: int,
+    fragment_count: int,
+    mid_cancel_fragments: int,
+    mid_cancel_tokens: int,
     load_ms: int,
     run_ms: int,
     unload_ms: int,
@@ -73,8 +77,8 @@ def build_report(
         {"id": "network-boundary", "result": "PASS", "code": "isolated-netns-no-external-interface"},
         {"id": "filesystem-boundary", "result": "PASS", "code": "runtime-model-gpu-socket-only"},
         {"id": "environment-boundary", "result": "PASS", "code": "seven-variable-environment-exact"},
-        {"id": "inference", "result": "PASS", "code": "bounded-advisory-inert"},
-        {"id": "cancellation", "result": "PASS", "code": "pre-request-cancellation-inert"},
+        {"id": "inference", "result": "PASS", "code": "bounded-streamed-inert"},
+        {"id": "cancellation", "result": "PASS", "code": "mid-generation-and-pre-request-inert"},
         {"id": "resources", "result": "PASS", "code": "resident-and-accelerator-memory-positive"},
         {
             "id": "cleanup",
@@ -84,7 +88,7 @@ def build_report(
     ]
     passed = all(check["result"] == "PASS" for check in checks)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "record_type": "muse_sandboxed_live_inference_evidence",
         "source_revision": source_revision,
         "source_sha256": source_sha256,
@@ -103,14 +107,17 @@ def build_report(
         "execution": {
             "test_id": "exact_muse_sandboxed_advisory_cancellation_and_unload",
             "exit_code": 0 if passed else 1,
-            "terminal_state": "advisory_text",
+            "terminal_state": terminal_state,
             "response_sha256": response_sha256,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
             "load_ms": load_ms,
             "run_ms": run_ms,
             "unload_ms": unload_ms,
-            "fragment_count": 1,
+            "fragment_count": fragment_count,
+            "mid_generation_cancellation_terminal": "cancelled",
+            "mid_generation_cancellation_fragments": mid_cancel_fragments,
+            "mid_generation_cancellation_tokens": mid_cancel_tokens,
             "pre_request_cancellation_terminal": "cancelled",
             "raw_output_retained": False,
         },
@@ -130,6 +137,8 @@ def build_report(
         "disposition": {
             "status": "SANDBOXED-LIVE-INFERENCE-PASS" if passed else "BLOCKED",
             "exact_tuple_live_inference_proven": passed,
+            "streaming_response_proven": passed,
+            "mid_generation_cancellation_proven": passed,
             "external_egress_enforced_by_namespace": passed,
             "packet_capture_executed": False,
             "quality_evaluated": False,
@@ -141,7 +150,7 @@ def build_report(
         "limitations": [
             "This is one diagnostic-profile execution and is not a quality or repeatability result.",
             "The fresh network namespace had no external interface; a separate packet-capture artifact was not produced.",
-            "Cancellation was present before request dispatch; mid-generation cancellation remains separately testable.",
+            "Cancellation was exercised both after the first streamed model fragment and before request dispatch.",
             "The response digest is retained, but model output and synthetic prompt content are not retained in this artifact.",
             "The candidate remains disabled and this evidence grants no product or release admission.",
         ],
@@ -156,7 +165,7 @@ def validate_report(report: dict[str, Any]) -> list[str]:
     }
     if set(report) != expected:
         return ["live inference evidence fields are not closed"]
-    if report.get("schema_version") != 1 or report.get("record_type") != "muse_sandboxed_live_inference_evidence":
+    if report.get("schema_version") != 2 or report.get("record_type") != "muse_sandboxed_live_inference_evidence":
         failures.append("live inference evidence identity changed")
     if not REVISION.fullmatch(str(report.get("source_revision", ""))):
         failures.append("live inference source revision is not exact")
@@ -165,10 +174,14 @@ def validate_report(report: dict[str, Any]) -> list[str]:
         failures.append("live inference source closure changed")
     execution = report.get("execution", {})
     if (
-        execution.get("terminal_state") != "advisory_text"
+        execution.get("terminal_state") not in {"advisory_text", "proposed", "rejected"}
         or not SHA256.fullmatch(str(execution.get("response_sha256", "")))
         or not 0 < execution.get("input_tokens", 0) <= 8192
         or not 0 < execution.get("output_tokens", 0) <= 64
+        or not 1 < execution.get("fragment_count", 0) <= 65
+        or execution.get("mid_generation_cancellation_terminal") != "cancelled"
+        or not 2 <= execution.get("mid_generation_cancellation_fragments", 0) <= 65
+        or not 0 < execution.get("mid_generation_cancellation_tokens", 0) <= 64
         or execution.get("pre_request_cancellation_terminal") != "cancelled"
         or execution.get("raw_output_retained") is not False
     ):
@@ -182,6 +195,10 @@ def validate_report(report: dict[str, Any]) -> list[str]:
         failures.append("live inference disposition disagrees with checks")
     if disposition.get("exact_tuple_live_inference_proven") is not passed:
         failures.append("live inference proof disagrees with checks")
+    if disposition.get("streaming_response_proven") is not passed:
+        failures.append("streaming proof disagrees with checks")
+    if disposition.get("mid_generation_cancellation_proven") is not passed:
+        failures.append("mid-generation cancellation proof disagrees with checks")
     if disposition.get("external_egress_enforced_by_namespace") is not passed:
         failures.append("network namespace claim disagrees with checks")
     for field in (
@@ -200,8 +217,16 @@ def main() -> int:
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--socket-root", required=True, type=Path)
     parser.add_argument("--response-sha256", required=True)
+    parser.add_argument(
+        "--terminal-state",
+        required=True,
+        choices=("advisory_text", "proposed", "rejected"),
+    )
     parser.add_argument("--input-tokens", required=True, type=int)
     parser.add_argument("--output-tokens", required=True, type=int)
+    parser.add_argument("--fragment-count", required=True, type=int)
+    parser.add_argument("--mid-cancel-fragments", required=True, type=int)
+    parser.add_argument("--mid-cancel-tokens", required=True, type=int)
     parser.add_argument("--load-ms", required=True, type=int)
     parser.add_argument("--run-ms", required=True, type=int)
     parser.add_argument("--unload-ms", required=True, type=int)
@@ -211,8 +236,12 @@ def main() -> int:
         source_revision=args.source_revision,
         socket_root=args.socket_root,
         response_sha256=args.response_sha256,
+        terminal_state=args.terminal_state,
         input_tokens=args.input_tokens,
         output_tokens=args.output_tokens,
+        fragment_count=args.fragment_count,
+        mid_cancel_fragments=args.mid_cancel_fragments,
+        mid_cancel_tokens=args.mid_cancel_tokens,
         load_ms=args.load_ms,
         run_ms=args.run_ms,
         unload_ms=args.unload_ms,

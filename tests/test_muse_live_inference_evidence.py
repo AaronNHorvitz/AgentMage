@@ -8,7 +8,7 @@ from scripts import muse_live_inference_evidence as evidence
 
 def valid_report() -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "record_type": "muse_sandboxed_live_inference_evidence",
         "source_revision": "a" * 40,
         "source_sha256": {path: "b" * 64 for path in evidence.SOURCE_PATHS},
@@ -19,6 +19,10 @@ def valid_report() -> dict[str, object]:
             "response_sha256": "c" * 64,
             "input_tokens": 653,
             "output_tokens": 64,
+            "fragment_count": 65,
+            "mid_generation_cancellation_terminal": "cancelled",
+            "mid_generation_cancellation_fragments": 2,
+            "mid_generation_cancellation_tokens": 1,
             "pre_request_cancellation_terminal": "cancelled",
             "raw_output_retained": False,
         },
@@ -30,6 +34,8 @@ def valid_report() -> dict[str, object]:
         "disposition": {
             "status": "SANDBOXED-LIVE-INFERENCE-PASS",
             "exact_tuple_live_inference_proven": True,
+            "streaming_response_proven": True,
+            "mid_generation_cancellation_proven": True,
             "external_egress_enforced_by_namespace": True,
             "packet_capture_executed": False,
             "quality_evaluated": False,
@@ -52,6 +58,8 @@ class MuseLiveInferenceEvidenceTests(unittest.TestCase):
         self.assertTrue(evidence.validate_report(report))
         report["disposition"]["status"] = "BLOCKED"
         report["disposition"]["exact_tuple_live_inference_proven"] = False
+        report["disposition"]["streaming_response_proven"] = False
+        report["disposition"]["mid_generation_cancellation_proven"] = False
         report["disposition"]["external_egress_enforced_by_namespace"] = False
         self.assertEqual(evidence.validate_report(report), [])
 
@@ -69,6 +77,9 @@ class MuseLiveInferenceEvidenceTests(unittest.TestCase):
             lambda report: report["source_sha256"].pop(evidence.SOURCE_PATHS[0]),
             lambda report: report["execution"].update({"response_sha256": "invalid"}),
             lambda report: report["execution"].update({"output_tokens": 65}),
+            lambda report: report["execution"].update({"fragment_count": 1}),
+            lambda report: report["execution"].update({"mid_generation_cancellation_fragments": 1}),
+            lambda report: report["execution"].update({"mid_generation_cancellation_tokens": 0}),
             lambda report: report["execution"].update({"pre_request_cancellation_terminal": "completed"}),
             lambda report: report["execution"].update({"raw_output_retained": True}),
             lambda report: report["sandbox"].update({"socket_residue_names": ["llama-server.sock"]}),

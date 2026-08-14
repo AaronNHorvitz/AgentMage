@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{ErrorKind, Read, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::UnixStream;
@@ -28,6 +28,9 @@ use crate::NativeModelDriver;
 const MAX_HTTP_RESPONSE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
 const MAX_COMPLETION_BYTES: usize = 16 * 1024 * 1024;
+const MAX_HTTP_HEADER_BYTES: usize = 32 * 1024;
+const MAX_SSE_EVENT_BYTES: usize = 1024 * 1024;
+const STREAM_POLL_INTERVAL: Duration = Duration::from_millis(50);
 const EXPECTED_CONTEXT_TOKENS: u32 = 8192;
 const MAX_UNIX_SOCKET_PATH_BYTES: usize = 107;
 const BWRAP_PATH: &str = "/usr/bin/bwrap";
@@ -587,44 +590,17 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.llama-driver.request-mismatch", false));
         }
         let started = Instant::now();
-        let cancellation = cancellation
-            .map(ModelCancellationProbe::observe)
-            .transpose()?;
-        if cancellation
-            .as_ref()
-            .and_then(Option::as_ref)
-            .is_some_and(|signal| signal.correlation_id != request.correlation_id)
-        {
-            return Err(failure("model.llama-driver.cancellation-mismatch", false));
-        }
-        let completion = if cancellation.as_ref().is_some_and(Option::is_some) {
-            Completion {
-                bytes: b"cancelled".to_vec(),
-                tokens: 0,
-                terminal_state: ModelRunTerminalState::Cancelled,
-                failure: Some(failure("model.llama-driver.cancelled", false)),
-            }
-        } else {
-            self.client().completion(
-                &context.bytes,
-                request.max_output_tokens,
-                request.timeout_ms,
-                &loaded.decoding,
-            )?
-        };
         let stream_id =
             ModelStreamId::from_raw(format!("stream:{}", request.model_run_id.as_str()));
+        let completion = self.client().completion_stream(
+            &context.bytes,
+            request,
+            &loaded.decoding,
+            cancellation,
+            &stream_id,
+            sink,
+        )?;
         let response_sha256 = sha256(&completion.bytes);
-        sink.accept(StreamedModelFragment {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            stream_id: stream_id.clone(),
-            model_run_id: request.model_run_id.clone(),
-            correlation_id: request.correlation_id.clone(),
-            sequence: 0,
-            bytes: completion.bytes,
-            sha256: response_sha256.clone(),
-            terminal: true,
-        })?;
         let loaded = self.loaded.as_mut().expect("loaded state retained");
         loaded.input_tokens = loaded.input_tokens.saturating_add(0);
         loaded.output_tokens = loaded.output_tokens.saturating_add(completion.tokens);
@@ -636,7 +612,7 @@ impl NativeModelDriver for LlamaServerDriver {
             stream_id,
             correlation_id: request.correlation_id.clone(),
             terminal_state: completion.terminal_state,
-            fragment_count: 1,
+            fragment_count: completion.fragments,
             response_sha256,
             proposal: None,
             failure: completion.failure,
@@ -770,6 +746,7 @@ fn sandbox_arguments(runtime_root: &Path, model_path: &Path, socket_root: &Path)
 struct Completion {
     bytes: Vec<u8>,
     tokens: u32,
+    fragments: u32,
     terminal_state: ModelRunTerminalState,
     failure: Option<ModelRuntimeFailure>,
 }
@@ -778,14 +755,13 @@ struct Completion {
 enum Endpoint {
     Health,
     Tokenize,
-    Completion,
 }
 
 impl Endpoint {
     const fn method(self) -> &'static str {
         match self {
             Self::Health => "GET",
-            Self::Tokenize | Self::Completion => "POST",
+            Self::Tokenize => "POST",
         }
     }
 
@@ -793,7 +769,6 @@ impl Endpoint {
         match self {
             Self::Health => "/health",
             Self::Tokenize => "/tokenize",
-            Self::Completion => "/completion",
         }
     }
 }
@@ -843,21 +818,25 @@ impl UnixHttpClient {
         u32::try_from(count).map_err(|_| failure("model.llama-driver.token-count-overflow", false))
     }
 
-    fn completion(
+    fn completion_stream(
         &self,
         context: &[u8],
-        max_output_tokens: u32,
-        timeout_ms: u64,
+        request: &ModelRunRequest,
         decoding: &DecodingProfile,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        stream_id: &ModelStreamId,
+        sink: &mut dyn ModelStreamSink,
     ) -> Result<Completion, ModelRuntimeFailure> {
         let prompt = std::str::from_utf8(context)
             .map_err(|_| failure("model.llama-driver.context-not-utf8", false))?;
         let body = serde_json::to_vec(&json!({
             "prompt": prompt,
-            "n_predict": max_output_tokens,
-            "stream": false,
+            "n_predict": request.max_output_tokens,
+            "stream": true,
             "cache_prompt": false,
             "return_tokens": true,
+            "return_progress": false,
+            "sse_ping_interval": 1,
             "temperature": decoding.temperature,
             "top_p": decoding.top_p,
             "top_k": decoding.top_k,
@@ -868,55 +847,37 @@ impl UnixHttpClient {
             "id_slot": 0
         }))
         .map_err(|_| failure("model.llama-driver.completion-request-invalid", false))?;
-        let response = self.request(
-            Endpoint::Completion,
-            Some(&body),
-            MAX_HTTP_RESPONSE_BYTES,
-            timeout_ms,
-        )?;
-        let value: Value = serde_json::from_slice(&response)
-            .map_err(|_| failure("model.llama-driver.completion-response-invalid", true))?;
-        let content = value
-            .get("content")
-            .and_then(Value::as_str)
-            .ok_or_else(|| failure("model.llama-driver.completion-response-invalid", true))?
-            .as_bytes()
-            .to_vec();
-        if content.is_empty() || content.len() > MAX_COMPLETION_BYTES {
-            return Err(failure("model.llama-driver.completion-size-invalid", false));
+        let mut state = SseCompletionState::new(request, stream_id, sink);
+        if cancellation_requested(cancellation, request)? {
+            return state.interrupted(ModelRunTerminalState::Cancelled);
         }
-        let tokens = value
-            .get("tokens")
-            .and_then(Value::as_array)
-            .map_or(0, Vec::len);
-        let tokens = u32::try_from(tokens)
-            .map_err(|_| failure("model.llama-driver.completion-token-overflow", false))?;
-        if tokens > max_output_tokens {
-            return Err(failure("model.llama-driver.completion-token-limit", false));
-        }
-        match content
-            .iter()
-            .copied()
-            .find(|byte| !byte.is_ascii_whitespace())
-        {
-            Some(b'{') | Some(b'[') => Ok(Completion {
-                bytes: content,
-                tokens,
-                terminal_state: ModelRunTerminalState::Proposed,
-                failure: None,
-            }),
-            _ if plain_text(&content) => Ok(Completion {
-                bytes: content,
-                tokens,
-                terminal_state: ModelRunTerminalState::AdvisoryText,
-                failure: None,
-            }),
-            _ => Ok(Completion {
-                bytes: content,
-                tokens,
-                terminal_state: ModelRunTerminalState::Rejected,
-                failure: Some(failure("model.llama-driver.completion-rejected", false)),
-            }),
+        let mut stream = UnixStream::connect(&self.socket_path)
+            .map_err(|_| failure("model.llama-driver.socket-connect-failed", true))?;
+        stream
+            .set_read_timeout(Some(STREAM_POLL_INTERVAL))
+            .and_then(|()| {
+                stream.set_write_timeout(Some(Duration::from_millis(
+                    request.timeout_ms.clamp(1, 3_600_000),
+                )))
+            })
+            .map_err(|_| failure("model.llama-driver.socket-timeout-failed", true))?;
+        let header = format!(
+            "POST /completion HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
+            body.len()
+        );
+        stream
+            .write_all(header.as_bytes())
+            .and_then(|()| stream.write_all(&body))
+            .map_err(|_| failure("model.llama-driver.http-write-failed", true))?;
+        let deadline = Instant::now()
+            .checked_add(Duration::from_millis(request.timeout_ms))
+            .ok_or_else(|| failure("model.llama-driver.deadline-invalid", false))?;
+        let mut reader = PollingUnixReader::new(stream, deadline, cancellation, request);
+        match read_streaming_response(&mut reader, &mut state, request.max_output_tokens) {
+            Ok(()) => state.complete(),
+            Err(StreamReadError::Cancelled) => state.interrupted(ModelRunTerminalState::Cancelled),
+            Err(StreamReadError::TimedOut) => state.interrupted(ModelRunTerminalState::TimedOut),
+            Err(StreamReadError::Failed(error)) => Err(error),
         }
     }
 
@@ -955,6 +916,447 @@ impl UnixHttpClient {
         }
         parse_http_response(&response)
     }
+}
+
+enum StreamReadError {
+    Cancelled,
+    TimedOut,
+    Failed(ModelRuntimeFailure),
+}
+
+struct PollingUnixReader<'a> {
+    stream: UnixStream,
+    pending: Vec<u8>,
+    offset: usize,
+    deadline: Instant,
+    cancellation: Option<&'a dyn ModelCancellationProbe>,
+    request: &'a ModelRunRequest,
+}
+
+impl<'a> PollingUnixReader<'a> {
+    fn new(
+        stream: UnixStream,
+        deadline: Instant,
+        cancellation: Option<&'a dyn ModelCancellationProbe>,
+        request: &'a ModelRunRequest,
+    ) -> Self {
+        Self {
+            stream,
+            pending: Vec::new(),
+            offset: 0,
+            deadline,
+            cancellation,
+            request,
+        }
+    }
+
+    fn read_until(&mut self, delimiter: &[u8], maximum: usize) -> Result<Vec<u8>, StreamReadError> {
+        let mut output = Vec::new();
+        while !output.ends_with(delimiter) {
+            if output.len() >= maximum {
+                return Err(StreamReadError::Failed(failure(
+                    "model.llama-driver.http-field-oversized",
+                    false,
+                )));
+            }
+            output.push(self.read_byte()?);
+        }
+        Ok(output)
+    }
+
+    fn read_line(&mut self, maximum: usize) -> Result<Vec<u8>, StreamReadError> {
+        let mut line = self.read_until(b"\r\n", maximum.saturating_add(2))?;
+        line.truncate(line.len() - 2);
+        Ok(line)
+    }
+
+    fn read_exact_bytes(&mut self, length: usize) -> Result<Vec<u8>, StreamReadError> {
+        let mut output = Vec::with_capacity(length);
+        while output.len() < length {
+            output.push(self.read_byte()?);
+        }
+        Ok(output)
+    }
+
+    fn read_byte(&mut self) -> Result<u8, StreamReadError> {
+        loop {
+            if self.offset < self.pending.len() {
+                let byte = self.pending[self.offset];
+                self.offset += 1;
+                return Ok(byte);
+            }
+            self.pending.clear();
+            self.offset = 0;
+            self.check_stop()?;
+            let mut buffer = [0_u8; 8192];
+            match self.stream.read(&mut buffer) {
+                Ok(0) => {
+                    return Err(StreamReadError::Failed(failure(
+                        "model.llama-driver.http-unexpected-eof",
+                        true,
+                    )));
+                }
+                Ok(length) => self.pending.extend_from_slice(&buffer[..length]),
+                Err(error)
+                    if matches!(error.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) =>
+                {
+                    continue;
+                }
+                Err(_) => {
+                    return Err(StreamReadError::Failed(failure(
+                        "model.llama-driver.http-read-failed",
+                        true,
+                    )));
+                }
+            }
+        }
+    }
+
+    fn check_stop(&self) -> Result<(), StreamReadError> {
+        if Instant::now() >= self.deadline {
+            return Err(StreamReadError::TimedOut);
+        }
+        match cancellation_requested(self.cancellation, self.request) {
+            Ok(true) => Err(StreamReadError::Cancelled),
+            Ok(false) => Ok(()),
+            Err(error) => Err(StreamReadError::Failed(error)),
+        }
+    }
+}
+
+struct SseCompletionState<'a> {
+    request: ModelRunRequest,
+    stream_id: ModelStreamId,
+    sink: &'a mut dyn ModelStreamSink,
+    event_buffer: Vec<u8>,
+    bytes: Vec<u8>,
+    tokens: u32,
+    fragments: u32,
+    stop_seen: bool,
+    done_seen: bool,
+}
+
+impl<'a> SseCompletionState<'a> {
+    fn new(
+        request: &ModelRunRequest,
+        stream_id: &ModelStreamId,
+        sink: &'a mut dyn ModelStreamSink,
+    ) -> Self {
+        Self {
+            request: request.clone(),
+            stream_id: stream_id.clone(),
+            sink,
+            event_buffer: Vec::new(),
+            bytes: Vec::new(),
+            tokens: 0,
+            fragments: 0,
+            stop_seen: false,
+            done_seen: false,
+        }
+    }
+
+    fn feed(&mut self, bytes: &[u8], max_output_tokens: u32) -> Result<(), ModelRuntimeFailure> {
+        if self.event_buffer.len().saturating_add(bytes.len()) > MAX_SSE_EVENT_BYTES {
+            return Err(failure("model.llama-driver.sse-event-oversized", false));
+        }
+        self.event_buffer.extend_from_slice(bytes);
+        while let Some((end, delimiter_bytes)) = next_sse_event(&self.event_buffer) {
+            let mut remainder = self.event_buffer.split_off(end + delimiter_bytes);
+            let event = self.event_buffer[..end].to_vec();
+            std::mem::swap(&mut self.event_buffer, &mut remainder);
+            self.process_event(&event, max_output_tokens)?;
+        }
+        Ok(())
+    }
+
+    fn process_event(
+        &mut self,
+        event: &[u8],
+        max_output_tokens: u32,
+    ) -> Result<(), ModelRuntimeFailure> {
+        let lines = event
+            .split(|byte| *byte == b'\n')
+            .map(|line| line.strip_suffix(b"\r").unwrap_or(line))
+            .filter(|line| !line.is_empty())
+            .collect::<Vec<_>>();
+        if !lines.is_empty() && lines.iter().all(|line| line.starts_with(b":")) {
+            return Ok(());
+        }
+        if lines.len() != 1 || !lines[0].starts_with(b"data: ") {
+            return Err(failure("model.llama-driver.sse-event-invalid", false));
+        }
+        let data = &lines[0][6..];
+        if data == b"[DONE]" {
+            if !self.stop_seen || self.done_seen {
+                return Err(failure("model.llama-driver.sse-done-invalid", false));
+            }
+            self.done_seen = true;
+            return Ok(());
+        }
+        if self.stop_seen || self.done_seen {
+            return Err(failure("model.llama-driver.sse-event-after-stop", false));
+        }
+        let value: Value = serde_json::from_slice(data)
+            .map_err(|_| failure("model.llama-driver.sse-json-invalid", false))?;
+        let content = value
+            .get("content")
+            .and_then(Value::as_str)
+            .ok_or_else(|| failure("model.llama-driver.sse-content-invalid", false))?;
+        let tokens = value
+            .get("tokens")
+            .and_then(Value::as_array)
+            .ok_or_else(|| failure("model.llama-driver.sse-tokens-invalid", false))?;
+        if tokens.iter().any(|token| {
+            token
+                .as_u64()
+                .is_none_or(|token| token > u64::from(u32::MAX))
+        }) {
+            return Err(failure("model.llama-driver.sse-tokens-invalid", false));
+        }
+        let token_count = u32::try_from(tokens.len())
+            .map_err(|_| failure("model.llama-driver.sse-token-overflow", false))?;
+        self.tokens = self
+            .tokens
+            .checked_add(token_count)
+            .filter(|tokens| *tokens <= max_output_tokens)
+            .ok_or_else(|| failure("model.llama-driver.completion-token-limit", false))?;
+        let terminal = value
+            .get("stop")
+            .and_then(Value::as_bool)
+            .ok_or_else(|| failure("model.llama-driver.sse-stop-invalid", false))?;
+        if terminal
+            && value
+                .get("stop_type")
+                .and_then(Value::as_str)
+                .is_some_and(|kind| !matches!(kind, "eos" | "limit" | "word"))
+        {
+            return Err(failure("model.llama-driver.sse-stop-type-invalid", false));
+        }
+        let content = content.as_bytes();
+        if self.bytes.len().saturating_add(content.len()) > MAX_COMPLETION_BYTES {
+            return Err(failure("model.llama-driver.completion-size-invalid", false));
+        }
+        self.bytes.extend_from_slice(content);
+        if !content.is_empty() || terminal {
+            self.emit(content.to_vec(), terminal)?;
+        }
+        self.stop_seen = terminal;
+        Ok(())
+    }
+
+    fn emit(&mut self, bytes: Vec<u8>, terminal: bool) -> Result<(), ModelRuntimeFailure> {
+        let sequence = self.fragments;
+        self.fragments = self
+            .fragments
+            .checked_add(1)
+            .ok_or_else(|| failure("model.llama-driver.fragment-overflow", false))?;
+        self.sink.accept(StreamedModelFragment {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            stream_id: self.stream_id.clone(),
+            model_run_id: self.request.model_run_id.clone(),
+            correlation_id: self.request.correlation_id.clone(),
+            sequence,
+            sha256: sha256(&bytes),
+            bytes,
+            terminal,
+        })
+    }
+
+    fn interrupted(
+        mut self,
+        terminal_state: ModelRunTerminalState,
+    ) -> Result<Completion, ModelRuntimeFailure> {
+        if self.stop_seen {
+            return Err(failure(
+                "model.llama-driver.sse-interrupted-after-stop",
+                false,
+            ));
+        }
+        self.emit(Vec::new(), true)?;
+        let code = match terminal_state {
+            ModelRunTerminalState::Cancelled => "model.llama-driver.cancelled",
+            ModelRunTerminalState::TimedOut => "model.llama-driver.timed-out",
+            _ => return Err(failure("model.llama-driver.interruption-invalid", false)),
+        };
+        Ok(Completion {
+            bytes: self.bytes,
+            tokens: self.tokens,
+            fragments: self.fragments,
+            terminal_state,
+            failure: Some(failure(code, false)),
+        })
+    }
+
+    fn complete(self) -> Result<Completion, ModelRuntimeFailure> {
+        for (failed, code) in [
+            (
+                !self.event_buffer.is_empty(),
+                "model.llama-driver.sse-partial-event",
+            ),
+            (!self.stop_seen, "model.llama-driver.sse-stop-missing"),
+            (
+                self.fragments == 0,
+                "model.llama-driver.sse-fragments-missing",
+            ),
+            (
+                self.bytes.is_empty(),
+                "model.llama-driver.sse-content-missing",
+            ),
+        ] {
+            if failed {
+                return Err(failure(code, false));
+            }
+        }
+        let (terminal_state, failure) = match self
+            .bytes
+            .iter()
+            .copied()
+            .find(|byte| !byte.is_ascii_whitespace())
+        {
+            Some(b'{') | Some(b'[') => (ModelRunTerminalState::Proposed, None),
+            _ if plain_text(&self.bytes) => (ModelRunTerminalState::AdvisoryText, None),
+            _ => (
+                ModelRunTerminalState::Rejected,
+                Some(failure("model.llama-driver.completion-rejected", false)),
+            ),
+        };
+        Ok(Completion {
+            bytes: self.bytes,
+            tokens: self.tokens,
+            fragments: self.fragments,
+            terminal_state,
+            failure,
+        })
+    }
+}
+
+fn next_sse_event(bytes: &[u8]) -> Option<(usize, usize)> {
+    let lf = bytes
+        .windows(2)
+        .position(|window| window == b"\n\n")
+        .map(|position| (position, 2));
+    let crlf = bytes
+        .windows(4)
+        .position(|window| window == b"\r\n\r\n")
+        .map(|position| (position, 4));
+    match (lf, crlf) {
+        (Some(left), Some(right)) => Some(if left.0 <= right.0 { left } else { right }),
+        (Some(found), None) | (None, Some(found)) => Some(found),
+        (None, None) => None,
+    }
+}
+
+fn cancellation_requested(
+    cancellation: Option<&dyn ModelCancellationProbe>,
+    request: &ModelRunRequest,
+) -> Result<bool, ModelRuntimeFailure> {
+    let signal = cancellation
+        .map(ModelCancellationProbe::observe)
+        .transpose()?
+        .flatten();
+    if signal
+        .as_ref()
+        .is_some_and(|signal| signal.correlation_id != request.correlation_id)
+    {
+        return Err(failure("model.llama-driver.cancellation-mismatch", false));
+    }
+    Ok(signal.is_some())
+}
+
+fn read_streaming_response(
+    reader: &mut PollingUnixReader<'_>,
+    state: &mut SseCompletionState<'_>,
+    max_output_tokens: u32,
+) -> Result<(), StreamReadError> {
+    let headers = reader.read_until(b"\r\n\r\n", MAX_HTTP_HEADER_BYTES)?;
+    validate_streaming_headers(&headers[..headers.len() - 4]).map_err(StreamReadError::Failed)?;
+    let mut decoded_bytes = 0_usize;
+    loop {
+        let line = reader.read_line(32)?;
+        if line.is_empty() || line.contains(&b';') {
+            return Err(StreamReadError::Failed(failure(
+                "model.llama-driver.http-chunk-size-invalid",
+                false,
+            )));
+        }
+        let line = std::str::from_utf8(&line).map_err(|_| {
+            StreamReadError::Failed(failure("model.llama-driver.http-chunk-size-invalid", false))
+        })?;
+        let length = usize::from_str_radix(line, 16).map_err(|_| {
+            StreamReadError::Failed(failure("model.llama-driver.http-chunk-size-invalid", false))
+        })?;
+        if length == 0 {
+            if !reader.read_line(MAX_HTTP_HEADER_BYTES)?.is_empty() {
+                return Err(StreamReadError::Failed(failure(
+                    "model.llama-driver.http-trailer-prohibited",
+                    false,
+                )));
+            }
+            break;
+        }
+        decoded_bytes = decoded_bytes.checked_add(length).ok_or_else(|| {
+            StreamReadError::Failed(failure("model.llama-driver.http-response-oversized", false))
+        })?;
+        if decoded_bytes > MAX_HTTP_RESPONSE_BYTES {
+            return Err(StreamReadError::Failed(failure(
+                "model.llama-driver.http-response-oversized",
+                false,
+            )));
+        }
+        let chunk = reader.read_exact_bytes(length)?;
+        if reader.read_exact_bytes(2)? != b"\r\n" {
+            return Err(StreamReadError::Failed(failure(
+                "model.llama-driver.http-chunk-framing-invalid",
+                false,
+            )));
+        }
+        state
+            .feed(&chunk, max_output_tokens)
+            .map_err(StreamReadError::Failed)?;
+        reader.check_stop()?;
+    }
+    Ok(())
+}
+
+fn validate_streaming_headers(headers: &[u8]) -> Result<(), ModelRuntimeFailure> {
+    let headers = std::str::from_utf8(headers)
+        .map_err(|_| failure("model.llama-driver.http-malformed", true))?;
+    let mut lines = headers.split("\r\n");
+    if lines.next() != Some("HTTP/1.1 200 OK") {
+        return Err(failure("model.llama-driver.http-status", true));
+    }
+    let mut chunked = false;
+    let mut event_stream = false;
+    for line in lines {
+        let Some((name, value)) = line.split_once(':') else {
+            return Err(failure("model.llama-driver.http-malformed", true));
+        };
+        let value = value.trim();
+        if name.eq_ignore_ascii_case("content-length") {
+            return Err(failure("model.llama-driver.http-stream-length", false));
+        }
+        if name.eq_ignore_ascii_case("transfer-encoding") {
+            if chunked || !value.eq_ignore_ascii_case("chunked") {
+                return Err(failure("model.llama-driver.http-transfer-encoding", false));
+            }
+            chunked = true;
+        }
+        if name.eq_ignore_ascii_case("content-type") {
+            if event_stream
+                || !value
+                    .split(';')
+                    .next()
+                    .is_some_and(|value| value.trim().eq_ignore_ascii_case("text/event-stream"))
+            {
+                return Err(failure("model.llama-driver.http-content-type", false));
+            }
+            event_stream = true;
+        }
+    }
+    if !chunked || !event_stream {
+        return Err(failure("model.llama-driver.http-stream-contract", false));
+    }
+    Ok(())
 }
 
 fn parse_http_response(response: &[u8]) -> Result<Vec<u8>, ModelRuntimeFailure> {
@@ -1217,7 +1619,9 @@ fn plain_text(bytes: &[u8]) -> bool {
         return false;
     };
     !text.is_empty()
-        && !text.chars().any(char::is_control)
+        && text
+            .chars()
+            .all(|character| !character.is_control() || matches!(character, '\n' | '\r' | '\t'))
         && !matches!(
             text.trim_start().as_bytes().first(),
             Some(b'{') | Some(b'[')
@@ -1301,17 +1705,23 @@ mod tests {
     use std::os::unix::fs::PermissionsExt;
     use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
     use std::thread;
+    use std::time::Duration;
 
-    use agentmage_kernel_contracts::{DecodingProfile, ModelRunTerminalState};
+    use agentmage_kernel_contracts::{
+        BoundaryKind, CancellationId, CancellationReason, CancellationSignal, ContextPacketId,
+        CorrelationId, DecodingProfile, ModelAdapterId, ModelCancellationProbe, ModelProfileId,
+        ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
+        ModelStreamSink, StreamedModelFragment, TaskId,
+    };
     use serde_json::{Value, json};
 
     use super::{
-        Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH,
-        GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient,
-        exact_directory, launch_arguments, parse_accelerator_memory, parse_http_response,
-        plain_text, sandbox_arguments, valid_socket_path,
+        CONTRACT_SCHEMA_VERSION, Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT,
+        GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
+        UnixHttpClient, exact_directory, launch_arguments, parse_accelerator_memory,
+        parse_http_response, plain_text, sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -1358,6 +1768,33 @@ mod tests {
         (value, request)
     }
 
+    fn exchange_parts<T>(
+        parts: Vec<(Vec<u8>, Duration)>,
+        operation: impl FnOnce(&UnixHttpClient) -> T,
+    ) -> (T, Vec<u8>) {
+        let directory = TestDirectory::new();
+        let socket = directory.0.join("llama-server.sock");
+        let listener = UnixListener::bind(&socket).expect("listener");
+        let server = thread::spawn(move || {
+            let (mut stream, _) = listener.accept().expect("accept");
+            let mut request = vec![0_u8; 64 * 1024];
+            let count = stream.read(&mut request).expect("request");
+            for (part, delay) in parts {
+                if stream.write_all(&part).is_err() {
+                    break;
+                }
+                thread::sleep(delay);
+            }
+            request.truncate(count);
+            request
+        });
+        let client = UnixHttpClient::new(socket.clone());
+        let value = operation(&client);
+        let request = server.join().expect("server");
+        fs::remove_file(socket).ok();
+        (value, request)
+    }
+
     fn response(value: serde_json::Value) -> Vec<u8> {
         let body = serde_json::to_vec(&value).expect("JSON");
         [
@@ -1369,6 +1806,93 @@ mod tests {
             body,
         ]
         .concat()
+    }
+
+    fn streaming_response(events: &[Vec<u8>]) -> Vec<u8> {
+        let mut response =
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nTransfer-Encoding: chunked\r\n\r\n"
+                .to_vec();
+        for event in events {
+            response.extend_from_slice(format!("{:x}\r\n", event.len()).as_bytes());
+            response.extend_from_slice(event);
+            response.extend_from_slice(b"\r\n");
+        }
+        response.extend_from_slice(b"0\r\n\r\n");
+        response
+    }
+
+    fn streaming_headers() -> Vec<u8> {
+        b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nTransfer-Encoding: chunked\r\n\r\n"
+            .to_vec()
+    }
+
+    fn chunk(bytes: &[u8]) -> Vec<u8> {
+        [
+            format!("{:x}\r\n", bytes.len()).into_bytes(),
+            bytes.to_vec(),
+            b"\r\n".to_vec(),
+        ]
+        .concat()
+    }
+
+    fn sse(value: Value) -> Vec<u8> {
+        let value = serde_json::to_vec(&value).expect("SSE JSON");
+        [b"data: ".as_slice(), value.as_slice(), b"\n\n".as_slice()].concat()
+    }
+
+    fn run_request() -> ModelRunRequest {
+        ModelRunRequest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            model_run_id: ModelRunId::from_raw("run-1"),
+            correlation_id: CorrelationId::from_raw("correlation-1"),
+            context_packet_id: ContextPacketId::from_raw("context-1"),
+            profile_id: ModelProfileId::from_raw("profile-1"),
+            manifest_sha256: "a".repeat(64),
+            adapter_id: ModelAdapterId::from_raw("adapter-1"),
+            decoding_profile_id: "diagnostic-repeatability-v1".to_owned(),
+            max_output_tokens: 8,
+            timeout_ms: 1_000,
+        }
+    }
+
+    #[derive(Default)]
+    struct RecordingSink {
+        fragments: Vec<StreamedModelFragment>,
+    }
+
+    impl ModelStreamSink for RecordingSink {
+        fn accept(&mut self, fragment: StreamedModelFragment) -> Result<(), ModelRuntimeFailure> {
+            self.fragments.push(fragment);
+            Ok(())
+        }
+    }
+
+    struct DelayedCancellation {
+        observations: AtomicUsize,
+        cancel_at: usize,
+        signal: CancellationSignal,
+    }
+
+    impl ModelCancellationProbe for DelayedCancellation {
+        fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+            let observation = self.observations.fetch_add(1, Ordering::SeqCst) + 1;
+            Ok((observation >= self.cancel_at).then(|| self.signal.clone()))
+        }
+    }
+
+    fn cancellation_probe(cancel_at: usize) -> DelayedCancellation {
+        DelayedCancellation {
+            observations: AtomicUsize::new(0),
+            cancel_at,
+            signal: CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-1"),
+                correlation_id: CorrelationId::from_raw("correlation-1"),
+                task_id: TaskId::from_raw("task-1"),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            },
+        }
     }
 
     #[test]
@@ -1542,7 +2066,7 @@ mod tests {
     }
 
     #[test]
-    fn completion_uses_exact_sampling_tuple_and_classifies_inert_output() {
+    fn completion_streams_exact_sampling_tuple_and_classifies_inert_output() {
         let decoding = DecodingProfile {
             profile_id: "diagnostic-repeatability-v1".to_owned(),
             sampler_order: vec!["greedy".to_owned()],
@@ -1553,18 +2077,43 @@ mod tests {
             seed: 42,
             max_output_tokens: 8,
         };
-        let (completion, request) = exchange(
-            response(json!({"content": "bounded advisory", "tokens": [1, 2]})),
-            |client| {
-                client
-                    .completion(b"encoded context", 8, 1000, &decoding)
-                    .expect("completion")
-            },
-        );
+        let mut crlf_event = sse(json!({"content": "bounded ", "tokens": [1], "stop": false}));
+        crlf_event.truncate(crlf_event.len() - 2);
+        crlf_event.extend_from_slice(b"\r\n\r\n");
+        let events = [
+            crlf_event,
+            sse(json!({"content": "advisory", "tokens": [2], "stop": false})),
+            sse(json!({"content": "", "tokens": [], "stop": true, "stop_type": "eos"})),
+            b"data: [DONE]\n\n".to_vec(),
+        ];
+        let ((completion, fragments), request) = exchange(streaming_response(&events), |client| {
+            let request = run_request();
+            let stream_id = ModelStreamId::from_raw("stream-1");
+            let mut sink = RecordingSink::default();
+            let completion = client
+                .completion_stream(
+                    b"encoded context",
+                    &request,
+                    &decoding,
+                    None,
+                    &stream_id,
+                    &mut sink,
+                )
+                .expect("completion");
+            (completion, sink.fragments)
+        });
         assert_eq!(
             completion.terminal_state,
             ModelRunTerminalState::AdvisoryText
         );
+        assert_eq!(completion.bytes, b"bounded advisory");
+        assert_eq!(completion.tokens, 2);
+        assert_eq!(completion.fragments, 3);
+        assert_eq!(fragments.len(), 3);
+        assert!(!fragments[0].terminal);
+        assert!(!fragments[1].terminal);
+        assert!(fragments[2].terminal);
+        assert!(fragments[2].bytes.is_empty());
         let body = request
             .windows(4)
             .position(|window| window == b"\r\n\r\n")
@@ -1576,9 +2125,11 @@ mod tests {
             json!({
                 "prompt": "encoded context",
                 "n_predict": 8,
-                "stream": false,
+                "stream": true,
                 "cache_prompt": false,
                 "return_tokens": true,
+                "return_progress": false,
+                "sse_ping_interval": 1,
                 "temperature": 0.0,
                 "top_p": 1.0,
                 "top_k": 1,
@@ -1590,14 +2141,163 @@ mod tests {
             })
         );
 
-        let (completion, _) =
-            exchange(response(json!({"content": "{}", "tokens": []})), |client| {
-                client
-                    .completion(b"encoded context", 8, 1000, &decoding)
-                    .expect("structured candidate")
-            });
+        // The native /completion endpoint closes after its stop event. Some
+        // transports also expose the implementation's optional [DONE] marker.
+        let structured = [
+            sse(json!({"content": "{}", "tokens": [1], "stop": false})),
+            sse(json!({"content": "", "tokens": [], "stop": true, "stop_type": "limit"})),
+        ];
+        let ((completion, _), _) = exchange(streaming_response(&structured), |client| {
+            let request = run_request();
+            let stream_id = ModelStreamId::from_raw("stream-1");
+            let mut sink = RecordingSink::default();
+            let completion = client
+                .completion_stream(
+                    b"encoded context",
+                    &request,
+                    &decoding,
+                    None,
+                    &stream_id,
+                    &mut sink,
+                )
+                .expect("structured candidate");
+            (completion, sink.fragments)
+        });
         assert_eq!(completion.terminal_state, ModelRunTerminalState::Proposed);
         assert!(completion.failure.is_none());
+    }
+
+    #[test]
+    fn live_probe_cancels_after_a_fragment_and_closes_the_stream_once() {
+        let first = sse(json!({"content": "partial", "tokens": [1], "stop": false}));
+        let mut initial = streaming_headers();
+        initial.extend_from_slice(&chunk(&first));
+        let probe = cancellation_probe(3);
+        let ((completion, fragments), _) = exchange_parts(
+            vec![
+                (initial, Duration::from_millis(150)),
+                (b"0\r\n\r\n".to_vec(), Duration::ZERO),
+            ],
+            |client| {
+                let request = run_request();
+                let stream_id = ModelStreamId::from_raw("stream-1");
+                let mut sink = RecordingSink::default();
+                let completion = client
+                    .completion_stream(
+                        b"encoded context",
+                        &request,
+                        &DecodingProfile {
+                            profile_id: request.decoding_profile_id.clone(),
+                            sampler_order: vec!["greedy".to_owned()],
+                            temperature: 0.0,
+                            top_p: 1.0,
+                            top_k: 1,
+                            repeat_penalty: 1.0,
+                            seed: 42,
+                            max_output_tokens: 8,
+                        },
+                        Some(&probe),
+                        &stream_id,
+                        &mut sink,
+                    )
+                    .expect("cancelled completion");
+                (completion, sink.fragments)
+            },
+        );
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Cancelled);
+        assert_eq!(completion.bytes, b"partial");
+        assert_eq!(completion.tokens, 1);
+        assert_eq!(completion.fragments, 2);
+        assert_eq!(fragments.len(), 2);
+        assert_eq!(fragments[0].bytes, b"partial");
+        assert!(!fragments[0].terminal);
+        assert!(fragments[1].bytes.is_empty());
+        assert!(fragments[1].terminal);
+    }
+
+    #[test]
+    fn deadline_interrupts_a_silent_stream_with_one_terminal_fragment() {
+        let mut request = run_request();
+        request.timeout_ms = 75;
+        let ((completion, fragments), _) = exchange_parts(
+            vec![
+                (streaming_headers(), Duration::from_millis(150)),
+                (b"0\r\n\r\n".to_vec(), Duration::ZERO),
+            ],
+            |client| {
+                let stream_id = ModelStreamId::from_raw("stream-1");
+                let mut sink = RecordingSink::default();
+                let completion = client
+                    .completion_stream(
+                        b"encoded context",
+                        &request,
+                        &DecodingProfile {
+                            profile_id: request.decoding_profile_id.clone(),
+                            sampler_order: vec!["greedy".to_owned()],
+                            temperature: 0.0,
+                            top_p: 1.0,
+                            top_k: 1,
+                            repeat_penalty: 1.0,
+                            seed: 42,
+                            max_output_tokens: 8,
+                        },
+                        None,
+                        &stream_id,
+                        &mut sink,
+                    )
+                    .expect("timed out completion");
+                (completion, sink.fragments)
+            },
+        );
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::TimedOut);
+        assert!(completion.bytes.is_empty());
+        assert_eq!(completion.fragments, 1);
+        assert_eq!(fragments.len(), 1);
+        assert!(fragments[0].terminal);
+        assert!(fragments[0].bytes.is_empty());
+    }
+
+    #[test]
+    fn malformed_chunked_sse_contracts_fail_without_advisory_fallback() {
+        let incomplete = streaming_response(&[sse(
+            json!({"content": "partial", "tokens": [1], "stop": false}),
+        )]);
+        let bad_stop = streaming_response(&[
+            sse(json!({"content": "x", "tokens": [1], "stop": true, "stop_type": "other"})),
+            b"data: [DONE]\n\n".to_vec(),
+        ]);
+        let wrong_headers =
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: 0\r\n\r\n"
+                .to_vec();
+        let mut extended_chunk = streaming_headers();
+        extended_chunk.extend_from_slice(b"1;extension=true\r\nx\r\n0\r\n\r\n");
+        for response in [incomplete, bad_stop, wrong_headers, extended_chunk] {
+            let (failed, _) = exchange(response, |client| {
+                let request = run_request();
+                let stream_id = ModelStreamId::from_raw("stream-1");
+                let mut sink = RecordingSink::default();
+                client
+                    .completion_stream(
+                        b"encoded context",
+                        &request,
+                        &DecodingProfile {
+                            profile_id: request.decoding_profile_id.clone(),
+                            sampler_order: vec!["greedy".to_owned()],
+                            temperature: 0.0,
+                            top_p: 1.0,
+                            top_k: 1,
+                            repeat_penalty: 1.0,
+                            seed: 42,
+                            max_output_tokens: 8,
+                        },
+                        None,
+                        &stream_id,
+                        &mut sink,
+                    )
+                    .is_err()
+            });
+            assert!(failed);
+        }
     }
 
     #[test]
@@ -1620,9 +2320,9 @@ mod tests {
             b"[1,2]".to_vec(),
             vec![0xff],
             vec![b'x'; 16 * 1024 + 1],
-            b"line\nbreak".to_vec(),
         ] {
             assert!(!plain_text(&value));
         }
+        assert!(plain_text(b"line\nbreak"));
     }
 }

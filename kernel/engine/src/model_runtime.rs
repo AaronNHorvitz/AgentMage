@@ -456,7 +456,7 @@ impl ModelStreamSink for StreamCapture<'_> {
             || fragment.model_run_id != self.request.model_run_id
             || fragment.correlation_id != self.request.correlation_id
             || fragment.sequence != self.next_sequence
-            || fragment.bytes.is_empty()
+            || (fragment.bytes.is_empty() && !fragment.terminal)
             || !valid_sha256(&fragment.sha256)
             || sha256_hex(&fragment.bytes) != fragment.sha256
             || self.next_sequence >= MAX_STREAM_FRAGMENTS

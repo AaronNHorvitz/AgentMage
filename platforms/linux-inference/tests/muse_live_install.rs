@@ -1,15 +1,19 @@
 #![forbid(unsafe_code)]
 
 use std::path::PathBuf;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
     ContextPacketId, ContractPayload, CorrelationId, ExactModelProfile, LocalModelRuntime,
-    ModelContextPacket, ModelFamilyCodec, ModelMessage, ModelMessageId, ModelMessageRole,
-    ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamSink,
-    PlatformFamily, RuntimeIsolationObservation, SchemaId, SchemaReference, SessionId,
-    StreamedModelFragment, TaskId, ToolCatalogId,
+    ModelCancellationProbe, ModelContextPacket, ModelFamilyCodec, ModelMessage, ModelMessageId,
+    ModelMessageRole, ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelStreamSink, PlatformFamily, RuntimeIsolationObservation, SchemaId, SchemaReference,
+    SessionId, StreamedModelFragment, TaskId, ToolCatalogId,
 };
 use agentmage_platform_linux_inference::{
     LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig, ModelAcquisitionHost,
@@ -88,6 +92,35 @@ struct FragmentCapture {
 
 impl ModelStreamSink for FragmentCapture {
     fn accept(&mut self, fragment: StreamedModelFragment) -> Result<(), ModelRuntimeFailure> {
+        self.fragments.push(fragment);
+        Ok(())
+    }
+}
+
+struct FragmentAwareCancellation {
+    output_seen: Arc<AtomicBool>,
+    signal: CancellationSignal,
+}
+
+impl ModelCancellationProbe for FragmentAwareCancellation {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok(self
+            .output_seen
+            .load(Ordering::SeqCst)
+            .then(|| self.signal.clone()))
+    }
+}
+
+struct CancellingFragmentCapture {
+    fragments: Vec<StreamedModelFragment>,
+    output_seen: Arc<AtomicBool>,
+}
+
+impl ModelStreamSink for CancellingFragmentCapture {
+    fn accept(&mut self, fragment: StreamedModelFragment) -> Result<(), ModelRuntimeFailure> {
+        if !fragment.terminal && !fragment.bytes.is_empty() {
+            self.output_seen.store(true, Ordering::SeqCst);
+        }
         self.fragments.push(fragment);
         Ok(())
     }
@@ -286,14 +319,25 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
         .stream(&run_request, &encoded, None, &mut capture)
         .expect("bounded exact inference");
     assert_eq!(result.fragment_count as usize, capture.fragments.len());
-    assert_eq!(result.fragment_count, 1);
-    assert_eq!(capture.fragments[0].sha256, result.response_sha256);
+    assert!(result.fragment_count > 1);
+    assert!(
+        capture
+            .fragments
+            .last()
+            .is_some_and(|fragment| fragment.terminal)
+    );
+    let response = capture
+        .fragments
+        .iter()
+        .flat_map(|fragment| fragment.bytes.iter().copied())
+        .collect::<Vec<_>>();
+    assert_eq!(sha256(&response), result.response_sha256);
     match result.terminal_state {
         ModelRunTerminalState::Proposed => {
-            let decoded = codec
-                .decode_proposal(&profile, &run_request, &capture.fragments[0].bytes)
+            let _decoded = codec
+                .decode_proposal(&profile, &run_request, &response)
                 .expect("closed exact proposal");
-            assert_eq!(result.proposal, Some(decoded));
+            assert!(result.proposal.is_none());
             assert!(result.failure.is_none());
         }
         ModelRunTerminalState::AdvisoryText => {
@@ -306,6 +350,58 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
         }
         state => panic!("unexpected live inference terminal state: {state:?}"),
     }
+
+    let mid_run_request = request(&profile, "muse-live-run-mid-cancelled");
+    let output_seen = Arc::new(AtomicBool::new(false));
+    let mid_run_cancellation = FragmentAwareCancellation {
+        output_seen: Arc::clone(&output_seen),
+        signal: CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("muse-live-mid-cancellation-1"),
+            correlation_id: mid_run_request.correlation_id.clone(),
+            task_id: packet.task_id.clone(),
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Kernel,
+        },
+    };
+    let mut mid_run_capture = CancellingFragmentCapture {
+        fragments: Vec::new(),
+        output_seen,
+    };
+    let mid_run_cancelled = adapter
+        .stream(
+            &mid_run_request,
+            &encoded,
+            Some(&mid_run_cancellation),
+            &mut mid_run_capture,
+        )
+        .expect("mid-generation cancellation");
+    assert_eq!(
+        mid_run_cancelled.terminal_state,
+        ModelRunTerminalState::Cancelled
+    );
+    assert!(mid_run_capture.fragments.len() >= 2);
+    assert!(
+        mid_run_capture
+            .fragments
+            .iter()
+            .any(|fragment| { !fragment.terminal && !fragment.bytes.is_empty() })
+    );
+    assert!(
+        mid_run_capture
+            .fragments
+            .last()
+            .is_some_and(|fragment| { fragment.terminal && fragment.bytes.is_empty() })
+    );
+    let mid_run_response = mid_run_capture
+        .fragments
+        .iter()
+        .flat_map(|fragment| fragment.bytes.iter().copied())
+        .collect::<Vec<_>>();
+    assert_eq!(sha256(&mid_run_response), mid_run_cancelled.response_sha256);
+    assert!(mid_run_cancelled.resources.output_tokens > 0);
+    assert!(mid_run_cancelled.proposal.is_none());
+    assert!(mid_run_cancelled.failure.is_some());
 
     let cancel_request = request(&profile, "muse-live-run-cancelled");
     let cancellation = CancellationSignal {
@@ -345,11 +441,14 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
             .exists()
     );
     println!(
-        "MUSE_SANDBOX_INFERENCE_PASS terminal={:?} response_sha256={} input_tokens={} output_tokens={} load_ms={} run_ms={} unload_ms={}",
+        "MUSE_SANDBOX_INFERENCE_PASS terminal={:?} response_sha256={} input_tokens={} output_tokens={} fragments={} mid_cancel_fragments={} mid_cancel_tokens={} load_ms={} run_ms={} unload_ms={}",
         result.terminal_state,
         result.response_sha256,
         count.tokens,
         result.resources.output_tokens,
+        result.fragment_count,
+        mid_run_cancelled.fragment_count,
+        mid_run_cancelled.resources.output_tokens,
         load.elapsed_ms,
         result.resources.elapsed_ms,
         unload.elapsed_ms,
