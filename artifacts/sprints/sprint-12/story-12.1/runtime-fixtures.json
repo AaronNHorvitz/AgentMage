@@ -1,0 +1,111 @@
+{
+  "artifact_id": "task-12-1-2-2-runtime-fixtures",
+  "case_ids": [
+    "FBC-01",
+    "FBC-02",
+    "FBC-03",
+    "FBC-04",
+    "FBC-05"
+  ],
+  "claims": {
+    "completion_case_count": 5,
+    "external_network_used": false,
+    "fixture_case_count": 11,
+    "fixture_family_count": 3,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "planning_case_count": 4,
+    "platform_executions": 0,
+    "private_user_data_records": 0,
+    "reasoning_mode_authority_changes": 0,
+    "reasoning_mode_case_count": 2,
+    "reasoning_mode_evidence_standard_changes": 0,
+    "release_support": false,
+    "successful_completion_case_count": 1,
+    "tool_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Fixtures are deterministic synthetic contract inputs and expected dispositions, not production model, tool, or platform runs.",
+    "Reasoning modes are review profiles for later composition and add no mode router or model implementation.",
+    "Completion references are synthetic and claim no live file, command, Git remote, publication, or provider effect.",
+    "Fixture validation is not persisted replay, crash recovery, or UI transcript evidence.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "ad3289bae928f352b03eb94e886f284cd6387df0",
+  "sources": [
+    {
+      "bytes": 1759,
+      "path": "docs/verification/task-12-1-2-2-runtime-fixture-results.md",
+      "sha256": "e687fc43c4160ea65b82f5bbae3e140c4169f21349dbc3773132f498ac087184"
+    },
+    {
+      "bytes": 2877,
+      "path": "fixtures/runtime/v1/planning-fixtures.json",
+      "sha256": "fa3229399d0f8a188fe0fa86b6ac14dce2a378c0e455fac40206c5356e53ac74"
+    },
+    {
+      "bytes": 1033,
+      "path": "fixtures/runtime/v1/reasoning-mode-fixtures.json",
+      "sha256": "03547e541501556da13bbdc85cf3862c3eb4fc3ea0f07f31bdd43d6e58d5a308"
+    },
+    {
+      "bytes": 2044,
+      "path": "fixtures/runtime/v1/completion-evidence-fixtures.json",
+      "sha256": "08bfd94472ea229ec29a5448eb9e607eb9e9949191ae8568e627e2e94998883d"
+    },
+    {
+      "bytes": 9946,
+      "path": "scripts/runtime_fixture_bundle.py",
+      "sha256": "3ace3a214b51d44b6e4f70224db8492250b0e6d91eead5e01085c3220f1b33e0"
+    },
+    {
+      "bytes": 3466,
+      "path": "tests/test_runtime_fixture_bundle.py",
+      "sha256": "fd4eb703ae692d62ff0bc7381ee802b28edf3123d01b4c621d589ae3f39f975a"
+    },
+    {
+      "bytes": 10458,
+      "path": "scripts/runtime_fixture_evidence.py",
+      "sha256": "cfca91bcbbe008ac4427c7208be85f50f53d649519cba09d78f25ffa683b04b8"
+    },
+    {
+      "bytes": 3540,
+      "path": "tests/test_runtime_fixture_evidence.py",
+      "sha256": "e4960bcc0e9411c63f8e01b7032b9bc81cba29abc805311754aab0f80c668214"
+    }
+  ],
+  "status": "pass-runtime-fixture-bundle",
+  "task_ids": [
+    "12.1.2.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "dbdce952361c7eea45dd3eb5e605576f0d9f75fe0f5b11038751903946107b68",
+      "exit_code": 0,
+      "expected_marker_sha256": "541569c769d6856449ac970d0fe49beb761f43726796c4956b03ec05a978cb11",
+      "status": "pass"
+    },
+    {
+      "command_id": "b0342d637c61aef29b22c5fb902dd33c41f9a821f5e6f84a9bf204d338a3a5cf",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "df7a56f09a087ceedf893316669d03bfc15746524fc1e62b7cc3a655d4b8c35b",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
