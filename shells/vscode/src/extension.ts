@@ -16,6 +16,7 @@ import {
   selectableModelInformation,
   type NativeModelInformation,
 } from "./model_discovery.js";
+import type { HandoffReview } from "./handoff.js";
 
 type AgentMageModelInformation = vscode.LanguageModelChatInformation &
   NativeModelInformation;
@@ -88,6 +89,32 @@ class VsCodeApprovalUi implements ApprovalUi {
       "Write Diagnostic Export",
     );
     return selection === "Write Diagnostic Export";
+  }
+
+  async confirmHandoff(review: HandoffReview): Promise<{
+    readonly approved: boolean;
+    readonly nonPublicAcknowledged: boolean;
+  }> {
+    const approveLabel = review.manifest.acknowledgment_required
+      ? "Acknowledge and Render Local Packet"
+      : "Render Local Packet";
+    const selection = await vscode.window.showWarningMessage(
+      [
+        review.local_only_notice,
+        "",
+        review.packet_markdown,
+        "",
+        `Packet: ${review.manifest.packet_sha256}`,
+        `Size: ${review.manifest.packet_bytes.toString()} bytes`,
+      ].join("\n"),
+      { modal: true },
+      approveLabel,
+    );
+    return {
+      approved: selection === approveLabel,
+      nonPublicAcknowledged:
+        selection === approveLabel && review.manifest.acknowledgment_required,
+    };
   }
 }
 

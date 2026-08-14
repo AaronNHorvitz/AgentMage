@@ -23,7 +23,8 @@
       "http://example.invalid"
     ],
     "shells/host/src/protocol.rs": [
-      "https://example.invalid/health"
+      "https://example.invalid/health",
+      "https://example.invalid/submit"
     ]
   },
   "allowed_first_party_build_scripts": [],

@@ -1,9 +1,12 @@
 //! Closed, length-bounded messages shared by the host and VS Code shell.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use agentmage_capability_read_only::ReadOnlyResult;
-use agentmage_kernel_contracts::{DoctorReport, ModelPickerSnapshot, ModelSelectionRevalidation};
+use agentmage_kernel_contracts::{
+    DoctorReport, HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt, ModelPickerSnapshot,
+    ModelSelectionRevalidation, RenderedHandoff,
+};
 
 /// Version of the Phase 9 host protocol.
 pub const HOST_PROTOCOL_VERSION: u16 = 1;
@@ -69,6 +72,47 @@ impl HostProtocolError {
 #[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRequest {
+    /// Build one exact local-only handoff review from trusted current session state.
+    PreviewHandoff {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+    },
+    /// Revalidate and render one exact reviewed packet locally.
+    RenderHandoff {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+        /// Digest of the exact review confirmed by the user.
+        confirmation_sha256: String,
+        /// Explicit acknowledgment for permitted non-public content.
+        non_public_acknowledged: bool,
+    },
+    /// Cancel one pending handoff review without rendering content.
+    CancelHandoff {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+    },
+    /// Record denial of one prohibited delivery or interface-control attempt.
+    DenyHandoffAction {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Optional exact handoff identity.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        handoff_id: Option<String>,
+        /// Exact prohibited action attempted.
+        action: HandoffProhibitedAction,
+    },
     /// Return the current content-free exact-profile picker projection.
     DiscoverModels {
         /// Protocol schema version.
@@ -200,6 +244,46 @@ pub enum HostRequest {
 impl HostRequest {
     fn validate(&self) -> Result<(), HostProtocolError> {
         let (version, request_id) = match self {
+            Self::PreviewHandoff {
+                schema_version,
+                request_id,
+            } => (*schema_version, request_id),
+            Self::RenderHandoff {
+                schema_version,
+                request_id,
+                preview_id,
+                confirmation_sha256,
+                ..
+            } => {
+                if !valid_identifier(preview_id) || !valid_sha256(confirmation_sha256) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::CancelHandoff {
+                schema_version,
+                request_id,
+                preview_id,
+            } => {
+                if !valid_identifier(preview_id) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::DenyHandoffAction {
+                schema_version,
+                request_id,
+                handoff_id,
+                ..
+            } => {
+                if handoff_id
+                    .as_deref()
+                    .is_some_and(|value| !valid_identifier(value))
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
             Self::DiscoverModels {
                 schema_version,
                 request_id,
@@ -369,6 +453,33 @@ pub struct ReceiptSummary {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostResponse {
+    /// Mandatory exact local-only handoff review.
+    HandoffPreview {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Kernel-built exact packet review and manifest.
+        review: HandoffReview,
+    },
+    /// Exact locally rendered handoff and local-only receipt.
+    HandoffRendered {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Rendered packet, manifest, and no-delivery receipt.
+        rendered: RenderedHandoff,
+    },
+    /// Local cancellation or prohibited-action denial receipt.
+    HandoffReceipt {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Content-free local-only receipt.
+        receipt: LocalHandoffReceipt,
+    },
     /// Current exact-profile discovery result from trusted host composition.
     ModelsDiscovered {
         /// Protocol schema version.
@@ -551,6 +662,14 @@ fn valid_identifier(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
 }
 
+fn deserialize_required_option<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(deserializer)
+}
+
 fn valid_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -695,6 +814,58 @@ mod tests {
         assert!(matches!(
             parse_request(&serde_json::to_vec(&invalid_digest).expect("request JSON")),
             Err(HostProtocolError::InvalidValue)
+        ));
+    }
+
+    #[test]
+    fn handoff_requests_are_local_closed_and_confirmation_bound() {
+        let preview = json!({
+            "kind": "preview_handoff",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-handoff-0001"
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&preview).expect("request JSON")),
+            Ok(HostRequest::PreviewHandoff { .. })
+        ));
+        let render = json!({
+            "kind": "render_handoff",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-handoff-0002",
+            "preview_id": "preview-handoff-0001",
+            "confirmation_sha256": "a".repeat(64),
+            "non_public_acknowledged": true
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&render).expect("request JSON")),
+            Ok(HostRequest::RenderHandoff { .. })
+        ));
+        let denial = json!({
+            "kind": "deny_handoff_action",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-handoff-0003",
+            "handoff_id": null,
+            "action": "clipboard_write"
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&denial).expect("request JSON")),
+            Ok(HostRequest::DenyHandoffAction { .. })
+        ));
+
+        let mut prohibited_transfer = render.clone();
+        prohibited_transfer["endpoint"] = json!("https://example.invalid/submit");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&prohibited_transfer).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
+        let mut omitted_required_null = denial;
+        omitted_required_null
+            .as_object_mut()
+            .expect("object")
+            .remove("handoff_id");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&omitted_required_null).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
         ));
     }
 

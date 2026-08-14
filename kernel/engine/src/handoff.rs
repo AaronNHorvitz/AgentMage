@@ -60,6 +60,11 @@ pub fn seal_handoff_entry(
     Ok(entry)
 }
 
+/// Validates a complete current draft without constructing or retaining a review.
+pub fn validate_handoff_draft(draft: &HandoffDraft) -> Result<(), HandoffError> {
+    validate_draft(draft)
+}
+
 /// Builds the mandatory exact-content local review for one current draft.
 pub fn build_handoff_review(
     draft: &HandoffDraft,

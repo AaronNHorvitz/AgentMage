@@ -99,6 +99,30 @@ class SupervisedHostBridge implements HostBridge {
     child.stderr.on("data", () => this.dispose());
   }
 
+  previewHandoff(
+    request: Parameters<HostBridge["previewHandoff"]>[0],
+  ): ReturnType<HostBridge["previewHandoff"]> {
+    return this.bridge.previewHandoff(request);
+  }
+
+  renderHandoff(
+    request: Parameters<HostBridge["renderHandoff"]>[0],
+  ): ReturnType<HostBridge["renderHandoff"]> {
+    return this.bridge.renderHandoff(request);
+  }
+
+  cancelHandoff(
+    request: Parameters<HostBridge["cancelHandoff"]>[0],
+  ): ReturnType<HostBridge["cancelHandoff"]> {
+    return this.bridge.cancelHandoff(request);
+  }
+
+  denyHandoffAction(
+    request: Parameters<HostBridge["denyHandoffAction"]>[0],
+  ): ReturnType<HostBridge["denyHandoffAction"]> {
+    return this.bridge.denyHandoffAction(request);
+  }
+
   discoverModels(
     request: Parameters<HostBridge["discoverModels"]>[0],
   ): ReturnType<HostBridge["discoverModels"]> {

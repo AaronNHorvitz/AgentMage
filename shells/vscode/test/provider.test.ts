@@ -15,6 +15,7 @@ import {
   type RequestIdentitySource,
   type WorkspaceSource,
 } from "../src/provider.js";
+import { LOCAL_HANDOFF_NOTICE } from "../src/handoff.js";
 
 class Identities implements RequestIdentitySource {
   private nextValue = 0;
@@ -53,6 +54,8 @@ class Approvals implements ApprovalUi {
   onReadConfirmation: (() => void) | undefined;
   diagnosticDestination: string | undefined = "/tmp/private/doctor.json";
   diagnosticApproved = true;
+  handoffApproved = true;
+  nonPublicAcknowledged = true;
 
   confirmWorkspace(): Promise<boolean> {
     return Promise.resolve(this.workspaceApproved);
@@ -71,6 +74,16 @@ class Approvals implements ApprovalUi {
   confirmDiagnosticExport(): Promise<boolean> {
     return Promise.resolve(this.diagnosticApproved);
   }
+
+  confirmHandoff(): Promise<{
+    readonly approved: boolean;
+    readonly nonPublicAcknowledged: boolean;
+  }> {
+    return Promise.resolve({
+      approved: this.handoffApproved,
+      nonPublicAcknowledged: this.nonPublicAcknowledged,
+    });
+  }
 }
 
 class Bridge implements HostBridge {
@@ -87,6 +100,74 @@ class Bridge implements HostBridge {
   revalidationResponse:
     Awaited<ReturnType<HostBridge["revalidateModel"]>> | undefined;
   revalidationCalls = 0;
+  handoffPreviewCalls = 0;
+  handoffRenderCalls = 0;
+  handoffCancellationCalls = 0;
+  handoffDenialCalls = 0;
+
+  previewHandoff(
+    request: Parameters<HostBridge["previewHandoff"]>[0],
+  ): ReturnType<HostBridge["previewHandoff"]> {
+    this.handoffPreviewCalls += 1;
+    return Promise.resolve({
+      kind: "handoff_preview",
+      schema_version: 1,
+      request_id: request.request_id,
+      review: reviewedHandoff(),
+    });
+  }
+
+  renderHandoff(
+    request: Parameters<HostBridge["renderHandoff"]>[0],
+  ): ReturnType<HostBridge["renderHandoff"]> {
+    this.handoffRenderCalls += 1;
+    const review = reviewedHandoff();
+    return Promise.resolve({
+      kind: "handoff_rendered",
+      schema_version: 1,
+      request_id: request.request_id,
+      rendered: {
+        schema_version: 2,
+        packet_markdown: review.packet_markdown,
+        manifest: review.manifest,
+        receipt: handoffReceipt("rendered", review.manifest.packet_sha256),
+      },
+    });
+  }
+
+  cancelHandoff(
+    request: Parameters<HostBridge["cancelHandoff"]>[0],
+  ): ReturnType<HostBridge["cancelHandoff"]> {
+    this.handoffCancellationCalls += 1;
+    return Promise.resolve({
+      kind: "handoff_receipt",
+      schema_version: 1,
+      request_id: request.request_id,
+      receipt: handoffReceipt("cancelled", null),
+    });
+  }
+
+  denyHandoffAction(
+    request: Parameters<HostBridge["denyHandoffAction"]>[0],
+  ): ReturnType<HostBridge["denyHandoffAction"]> {
+    this.handoffDenialCalls += 1;
+    const unsigned = {
+      schema_version: 2 as const,
+      attempt_id: "attempt-denial-0001",
+      handoff_id: request.handoff_id,
+      outcome: "denied" as const,
+      result_code: "handoff.local.action-denied",
+      prohibited_action: request.action,
+      packet_sha256: null,
+      external_delivery_attempted: false as const,
+    };
+    return Promise.resolve({
+      kind: "handoff_receipt",
+      schema_version: 1,
+      request_id: request.request_id,
+      receipt: { ...unsigned, receipt_sha256: jsonDigest(unsigned) },
+    });
+  }
 
   discoverModels(
     request: Parameters<HostBridge["discoverModels"]>[0],
@@ -276,6 +357,62 @@ function preview(
   };
 }
 
+function reviewedHandoff() {
+  const packetMarkdown = "# Manual Codex Handoff\n\nExact local fixture.\n";
+  const unsignedManifest = {
+    schema_version: 2 as const,
+    handoff_id: "handoff-0001",
+    draft_sha256: "a".repeat(64),
+    entry_sha256: ["b".repeat(64)],
+    packet_sha256: createHash("sha256")
+      .update(packetMarkdown, "utf8")
+      .digest("hex"),
+    packet_bytes: Buffer.byteLength(packetMarkdown, "utf8"),
+    destination: "manual_codex_interface" as const,
+    acknowledgment_required: true,
+    delivered: false as const,
+  };
+  const manifest = {
+    ...unsignedManifest,
+    manifest_sha256: jsonDigest(unsignedManifest),
+  };
+  const unsignedReview = {
+    schema_version: 2 as const,
+    preview_id: "handoff-preview-0001",
+    packet_markdown: packetMarkdown,
+    manifest,
+    local_only_notice: LOCAL_HANDOFF_NOTICE,
+    expires_at_ms: Date.now() + 60_000,
+  };
+  return {
+    ...unsignedReview,
+    confirmation_sha256: jsonDigest(unsignedReview),
+  };
+}
+
+function handoffReceipt(
+  outcome: "rendered" | "cancelled",
+  packetSha256: string | null,
+) {
+  const unsigned = {
+    schema_version: 2 as const,
+    attempt_id: `attempt-${outcome}-0001`,
+    handoff_id: "handoff-0001",
+    outcome,
+    result_code: `handoff.local.${outcome}`,
+    prohibited_action: null,
+    packet_sha256: packetSha256,
+    external_delivery_attempted: false as const,
+  };
+  return { ...unsigned, receipt_sha256: jsonDigest(unsigned) };
+}
+
+function jsonDigest(value: unknown): string {
+  return createHash("sha256")
+    .update(JSON.stringify(value), "utf8")
+    .digest("hex");
+}
+
 function fixture(): {
   controller: SecureReadController;
   bridge: Bridge;
@@ -413,6 +550,63 @@ void test("cancelled and malformed diagnostic previews never approve", async () 
   );
   assert.match(malformed.text, /host\.response_invalid/);
   assert.equal(second.bridge.diagnosticApprovalCalls, 0);
+});
+
+void test("reviewed handoff renders the exact local packet without delivery", async () => {
+  const { controller, bridge, signal } = fixture();
+  const response = await controller.respond("handoff", signal);
+  assert.equal(bridge.handoffPreviewCalls, 1);
+  assert.equal(bridge.handoffRenderCalls, 1);
+  assert.equal(bridge.handoffCancellationCalls, 0);
+  assert.equal(bridge.handoffDenialCalls, 0);
+  assert.match(response.text, /# Manual Codex Handoff/);
+  assert.match(response.text, /Exact local fixture/);
+  assert.match(response.text, /AgentMage has not contacted Codex/);
+  assert.match(response.text, /Status: rendered locally/);
+});
+
+void test("handoff cancellation and missing acknowledgement never render", async () => {
+  const cancelled = fixture();
+  cancelled.approvals.handoffApproved = false;
+  const cancelledResult = await cancelled.controller.respond(
+    "handoff",
+    cancelled.signal,
+  );
+  assert.equal(cancelled.bridge.handoffRenderCalls, 0);
+  assert.equal(cancelled.bridge.handoffCancellationCalls, 1);
+  assert.match(cancelledResult.text, /Handoff Cancelled/);
+
+  const unacknowledged = fixture();
+  unacknowledged.approvals.nonPublicAcknowledged = false;
+  const deniedResult = await unacknowledged.controller.respond(
+    "handoff",
+    unacknowledged.signal,
+  );
+  assert.equal(unacknowledged.bridge.handoffRenderCalls, 0);
+  assert.equal(unacknowledged.bridge.handoffCancellationCalls, 1);
+  assert.match(deniedResult.text, /handoff\.acknowledgment_required/);
+});
+
+void test("handoff byte mutation fails closed before unreviewed display", async () => {
+  const { controller, bridge, signal } = fixture();
+  bridge.renderHandoff = (request) => {
+    bridge.handoffRenderCalls += 1;
+    const review = reviewedHandoff();
+    return Promise.resolve({
+      kind: "handoff_rendered",
+      schema_version: 1,
+      request_id: request.request_id,
+      rendered: {
+        schema_version: 2,
+        packet_markdown: `${review.packet_markdown}unreviewed`,
+        manifest: review.manifest,
+        receipt: handoffReceipt("rendered", review.manifest.packet_sha256),
+      },
+    });
+  };
+  const response = await controller.respond("handoff", signal);
+  assert.match(response.text, /handoff\.render_invalid/);
+  assert.doesNotMatch(response.text, /unreviewed/);
 });
 
 void test("one approved read renders bounded content citation and receipt", async () => {

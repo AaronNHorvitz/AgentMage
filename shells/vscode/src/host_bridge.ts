@@ -12,6 +12,11 @@ import {
   parseModelPickerSnapshot,
   parseModelSelectionRevalidation,
 } from "./model_discovery.js";
+import {
+  parseHandoffReview,
+  parseLocalHandoffReceipt,
+  parseRenderedHandoff,
+} from "./handoff.js";
 
 const LINUX_IPC_PROTOCOL_VERSION = 1;
 const AUTHENTICATION_DOMAIN = Buffer.from(
@@ -63,6 +68,30 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     };
     this.secret = Uint8Array.from(credentials.launchSecret);
     credentials.launchSecret.fill(0);
+  }
+
+  previewHandoff(
+    request: Parameters<HostBridge["previewHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  renderHandoff(
+    request: Parameters<HostBridge["renderHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  cancelHandoff(
+    request: Parameters<HostBridge["cancelHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  denyHandoffAction(
+    request: Parameters<HostBridge["denyHandoffAction"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
   }
 
   discoverModels(
@@ -145,7 +174,10 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
       response.kind === "models_discovered" ||
       response.kind === "model_revalidated" ||
       response.kind === "diagnostic_export_preview" ||
-      response.kind === "diagnostic_export_completed"
+      response.kind === "diagnostic_export_completed" ||
+      response.kind === "handoff_preview" ||
+      response.kind === "handoff_rendered" ||
+      response.kind === "handoff_receipt"
         ? {
             kind: "denied",
             schema_version: HOST_PROTOCOL_VERSION,
@@ -331,6 +363,66 @@ function parseResponse(candidate: unknown): HostResponse {
     throw new HostBridgeFailure();
   }
   switch (candidate.kind) {
+    case "handoff_preview":
+      requireKeys(candidate, [
+        "kind",
+        "request_id",
+        "review",
+        "schema_version",
+      ]);
+      if (!validIdentifier(candidate.request_id)) {
+        throw new HostBridgeFailure();
+      }
+      try {
+        return {
+          kind: "handoff_preview",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: candidate.request_id,
+          review: parseHandoffReview(candidate.review),
+        };
+      } catch {
+        throw new HostBridgeFailure();
+      }
+    case "handoff_rendered":
+      requireKeys(candidate, [
+        "kind",
+        "rendered",
+        "request_id",
+        "schema_version",
+      ]);
+      if (!validIdentifier(candidate.request_id)) {
+        throw new HostBridgeFailure();
+      }
+      try {
+        return {
+          kind: "handoff_rendered",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: candidate.request_id,
+          rendered: parseRenderedHandoff(candidate.rendered),
+        };
+      } catch {
+        throw new HostBridgeFailure();
+      }
+    case "handoff_receipt":
+      requireKeys(candidate, [
+        "kind",
+        "receipt",
+        "request_id",
+        "schema_version",
+      ]);
+      if (!validIdentifier(candidate.request_id)) {
+        throw new HostBridgeFailure();
+      }
+      try {
+        return {
+          kind: "handoff_receipt",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: candidate.request_id,
+          receipt: parseLocalHandoffReceipt(candidate.receipt),
+        };
+      } catch {
+        throw new HostBridgeFailure();
+      }
     case "models_discovered":
       requireKeys(candidate, [
         "kind",

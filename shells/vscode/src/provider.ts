@@ -6,6 +6,15 @@ import {
   renderModelManagementReport,
   type ModelPickerSnapshot,
 } from "./model_discovery.js";
+import {
+  parseHandoffReview,
+  parseLocalHandoffReceipt,
+  parseRenderedHandoff,
+  type HandoffProhibitedAction,
+  type HandoffReview,
+  type LocalHandoffReceipt,
+  type RenderedHandoff,
+} from "./handoff.js";
 
 export const PROVIDER_VENDOR = "agentmage" as const;
 export const HOST_PROTOCOL_VERSION = 1 as const;
@@ -145,9 +154,57 @@ export type HostResponse =
       readonly payload_sha256: string;
       readonly payload_bytes: number;
       readonly outcome: "succeeded";
+    }
+  | {
+      readonly kind: "handoff_preview";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly review: HandoffReview;
+    }
+  | {
+      readonly kind: "handoff_rendered";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly rendered: RenderedHandoff;
+    }
+  | {
+      readonly kind: "handoff_receipt";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly receipt: LocalHandoffReceipt;
     };
 
 export interface HostBridge {
+  previewHandoff(request: {
+    readonly kind: "preview_handoff";
+    readonly schema_version: 1;
+    readonly request_id: string;
+  }): Promise<HostResponse>;
+
+  renderHandoff(request: {
+    readonly kind: "render_handoff";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly preview_id: string;
+    readonly confirmation_sha256: string;
+    readonly non_public_acknowledged: boolean;
+  }): Promise<HostResponse>;
+
+  cancelHandoff(request: {
+    readonly kind: "cancel_handoff";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly preview_id: string;
+  }): Promise<HostResponse>;
+
+  denyHandoffAction(request: {
+    readonly kind: "deny_handoff_action";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly handoff_id: string | null;
+    readonly action: HandoffProhibitedAction;
+  }): Promise<HostResponse>;
+
   discoverModels(request: {
     readonly kind: "discover_models";
     readonly schema_version: 1;
@@ -232,6 +289,10 @@ export interface ApprovalUi {
     preview: DiagnosticExportPreview,
     destination: string,
   ): Promise<boolean>;
+  confirmHandoff(review: HandoffReview): Promise<{
+    readonly approved: boolean;
+    readonly nonPublicAcknowledged: boolean;
+  }>;
 }
 
 export interface CancellationSubscription {
@@ -256,6 +317,38 @@ export interface ControllerResult {
 
 /** Inert bridge used until a verified package injects authenticated IPC. */
 export class UnavailableHostBridge implements HostBridge {
+  previewHandoff(
+    request: Parameters<HostBridge["previewHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  renderHandoff(
+    request: Parameters<HostBridge["renderHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  cancelHandoff(
+    request: Parameters<HostBridge["cancelHandoff"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  denyHandoffAction(
+    request: Parameters<HostBridge["denyHandoffAction"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
   discoverModels(
     request: Parameters<HostBridge["discoverModels"]>[0],
   ): Promise<HostResponse> {
@@ -344,6 +437,7 @@ export class SecureReadController {
   private disposed = false;
   private readonly pendingPreviews = new Set<string>();
   private readonly pendingDiagnosticExports = new Set<string>();
+  private readonly pendingHandoffs = new Set<string>();
 
   constructor(
     private readonly host: HostBridge,
@@ -464,6 +558,9 @@ export class SecureReadController {
     }
     if (prompt === "export diagnostics") {
       return this.exportDiagnostics(cancellation);
+    }
+    if (prompt === "handoff") {
+      return this.renderLocalHandoff(cancellation);
     }
     const components = parseReadCommand(prompt);
     if (components === undefined) {
@@ -615,6 +712,116 @@ export class SecureReadController {
     return renderExportTerminal(completed, approvalRequestId);
   }
 
+  private async renderLocalHandoff(
+    cancellation: CancellationSignal,
+  ): Promise<ControllerResult> {
+    if (cancellation.isCancellationRequested) {
+      return cancelledResult();
+    }
+    const previewRequestId = this.identities.next();
+    const response = await this.host.previewHandoff({
+      kind: "preview_handoff",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: previewRequestId,
+    });
+    if (
+      response.kind !== "handoff_preview" ||
+      response.schema_version !== HOST_PROTOCOL_VERSION ||
+      response.request_id !== previewRequestId
+    ) {
+      return renderHandoffTerminal(response, previewRequestId);
+    }
+    let review: HandoffReview;
+    try {
+      review = parseHandoffReview(response.review);
+    } catch {
+      return deniedResult(
+        "vscode.handoff.preview_invalid",
+        "The local host returned an invalid handoff review. Nothing was rendered or delivered.",
+      );
+    }
+    if (review.expires_at_ms <= Date.now()) {
+      return deniedResult(
+        "vscode.handoff.preview_expired",
+        "The local handoff review expired. Nothing was rendered or delivered.",
+      );
+    }
+    this.pendingHandoffs.add(review.preview_id);
+    if (this.disposed || cancellation.isCancellationRequested) {
+      await this.cancelLocalHandoff(review.preview_id);
+      return cancelledResult();
+    }
+    const decision = await this.approvals.confirmHandoff(review);
+    if (
+      !decision.approved ||
+      (review.manifest.acknowledgment_required &&
+        !decision.nonPublicAcknowledged) ||
+      this.disposed ||
+      cancellation.isCancellationRequested
+    ) {
+      await this.cancelLocalHandoff(review.preview_id);
+      return decision.approved && !this.disposed
+        ? deniedResult(
+            "vscode.handoff.acknowledgment_required",
+            "The reviewed packet requires explicit acknowledgement. Nothing was rendered or delivered.",
+          )
+        : result(
+            "# Local Handoff Cancelled\n\nThe reviewed packet was discarded locally. Nothing was rendered or delivered.\n\n- Status: cancelled",
+          );
+    }
+    this.pendingHandoffs.delete(review.preview_id);
+    const renderRequestId = this.identities.next();
+    const renderedResponse = await this.host.renderHandoff({
+      kind: "render_handoff",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: renderRequestId,
+      preview_id: review.preview_id,
+      confirmation_sha256: review.confirmation_sha256,
+      non_public_acknowledged: decision.nonPublicAcknowledged,
+    });
+    if (
+      renderedResponse.kind !== "handoff_rendered" ||
+      renderedResponse.schema_version !== HOST_PROTOCOL_VERSION ||
+      renderedResponse.request_id !== renderRequestId
+    ) {
+      return renderHandoffTerminal(renderedResponse, renderRequestId);
+    }
+    let rendered: RenderedHandoff;
+    try {
+      rendered = parseRenderedHandoff(renderedResponse.rendered);
+    } catch {
+      return deniedResult(
+        "vscode.handoff.render_invalid",
+        "The local host returned an invalid rendered packet. Nothing was delivered.",
+      );
+    }
+    if (
+      rendered.packet_markdown !== review.packet_markdown ||
+      rendered.manifest.manifest_sha256 !== review.manifest.manifest_sha256
+    ) {
+      return deniedResult(
+        "vscode.handoff.render_changed",
+        "The rendered packet did not match the reviewed bytes. Nothing was delivered.",
+      );
+    }
+    return result(
+      rendered.packet_markdown,
+      `\n\n---\n\n${review.local_only_notice}\n\n- Status: rendered locally\n- Packet: \`${rendered.manifest.packet_sha256}\`\n- Receipt: \`${rendered.receipt.receipt_sha256}\``,
+    );
+  }
+
+  private async cancelLocalHandoff(previewId: string): Promise<void> {
+    if (!this.pendingHandoffs.delete(previewId)) {
+      return;
+    }
+    await this.host.cancelHandoff({
+      kind: "cancel_handoff",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: this.identities.next(),
+      preview_id: previewId,
+    });
+  }
+
   private async cancelDiagnosticExport(previewId: string): Promise<void> {
     if (!this.pendingDiagnosticExports.delete(previewId)) {
       return;
@@ -637,6 +844,8 @@ export class SecureReadController {
     this.pendingPreviews.clear();
     const diagnosticExports = [...this.pendingDiagnosticExports];
     this.pendingDiagnosticExports.clear();
+    const handoffs = [...this.pendingHandoffs];
+    this.pendingHandoffs.clear();
     await Promise.allSettled([
       ...previews.map((previewId) =>
         this.host.cancelRead({
@@ -649,6 +858,14 @@ export class SecureReadController {
       ...diagnosticExports.map((previewId) =>
         this.host.cancelDiagnosticExport({
           kind: "cancel_diagnostic_export",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: this.identities.next(),
+          preview_id: previewId,
+        }),
+      ),
+      ...handoffs.map((previewId) =>
+        this.host.cancelHandoff({
+          kind: "cancel_handoff",
           schema_version: HOST_PROTOCOL_VERSION,
           request_id: this.identities.next(),
           preview_id: previewId,
@@ -669,6 +886,41 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function renderHandoffTerminal(
+  response: HostResponse,
+  expectedRequestId: string,
+): ControllerResult {
+  if (
+    response.schema_version !== HOST_PROTOCOL_VERSION ||
+    response.request_id !== expectedRequestId
+  ) {
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The local host response did not match this handoff request.",
+    );
+  }
+  if (response.kind === "denied") {
+    return deniedResult(
+      validCode(response.code) ? response.code : "vscode.host.response_invalid",
+      "The local host refused the handoff request. Nothing was delivered.",
+    );
+  }
+  if (response.kind === "handoff_receipt") {
+    try {
+      const receipt = parseLocalHandoffReceipt(response.receipt);
+      return result(
+        `# Local Handoff ${receipt.outcome === "cancelled" ? "Cancelled" : "Denied"}\n\nNothing was delivered.\n\n- Status: ${receipt.outcome}\n- Code: \`${receipt.result_code}\`\n- Receipt: \`${receipt.receipt_sha256}\``,
+      );
+    } catch {
+      // The generic invalid response below intentionally exposes no parser detail.
+    }
+  }
+  return deniedResult(
+    "vscode.host.response_invalid",
+    "The local host returned an invalid handoff response. Nothing was delivered.",
+  );
 }
 
 function validDiagnosticExportPreview(

@@ -10,6 +10,7 @@ import {
   AuthenticatedLinuxHostBridge,
   type LinuxHostLaunchCredentials,
 } from "../src/host_bridge.js";
+import { LOCAL_HANDOFF_NOTICE } from "../src/handoff.js";
 
 const DOMAIN = Buffer.from("agentmage-linux-ipc-auth-v1\0", "utf8");
 
@@ -184,6 +185,61 @@ void test("tampered authenticated model snapshot fails closed", async () => {
   }
 });
 
+void test("authenticated bridge transports one exact local handoff review", async () => {
+  const fixture = await socketFixture({
+    kind: "handoff_preview",
+    schema_version: 1,
+    request_id: "request-handoff-0001",
+    review: handoffReview(),
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.previewHandoff({
+      kind: "preview_handoff",
+      schema_version: 1,
+      request_id: "request-handoff-0001",
+    });
+    assert.equal(response.kind, "handoff_preview");
+    assert.deepEqual(fixture.observedRequest, {
+      kind: "preview_handoff",
+      schema_version: 1,
+      request_id: "request-handoff-0001",
+    });
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
+void test("delivery claim in authenticated handoff fails closed", async () => {
+  const review = handoffReview();
+  const tampered = structuredClone(review);
+  tampered.manifest.delivered = true;
+  const fixture = await socketFixture({
+    kind: "handoff_preview",
+    schema_version: 1,
+    request_id: "request-handoff-0001",
+    review: tampered,
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.previewHandoff({
+      kind: "preview_handoff",
+      schema_version: 1,
+      request_id: "request-handoff-0001",
+    });
+    assert.deepEqual(response, {
+      kind: "denied",
+      schema_version: 1,
+      request_id: "request-handoff-0001",
+      code: "host.connection.failed",
+    });
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
 void test("out-of-range launch identity fails before socket access", () => {
   const credentials: LinuxHostLaunchCredentials = {
     endpoint: "/tmp/agentmage-invalid.sock",
@@ -199,6 +255,56 @@ void test("out-of-range launch identity fails before socket access", () => {
   assert.throws(() => new AuthenticatedLinuxHostBridge(credentials));
   assert.ok(credentials.launchSecret.every((byte) => byte === 0));
 });
+
+interface MutableHandoffReview {
+  schema_version: number;
+  preview_id: string;
+  packet_markdown: string;
+  manifest: {
+    delivered: boolean;
+    [key: string]: unknown;
+  };
+  local_only_notice: string;
+  expires_at_ms: number;
+  confirmation_sha256: string;
+}
+
+function handoffReview(): MutableHandoffReview {
+  const packet = "# Manual Codex Handoff\n\nSocket fixture.\n";
+  const unsignedManifest = {
+    schema_version: 2,
+    handoff_id: "handoff-0001",
+    draft_sha256: "a".repeat(64),
+    entry_sha256: ["b".repeat(64)],
+    packet_sha256: createHash("sha256").update(packet, "utf8").digest("hex"),
+    packet_bytes: Buffer.byteLength(packet, "utf8"),
+    destination: "manual_codex_interface",
+    acknowledgment_required: true,
+    delivered: false,
+  };
+  const manifest = {
+    ...unsignedManifest,
+    manifest_sha256: objectDigest(unsignedManifest),
+  };
+  const unsignedReview = {
+    schema_version: 2,
+    preview_id: "handoff-preview-0001",
+    packet_markdown: packet,
+    manifest,
+    local_only_notice: LOCAL_HANDOFF_NOTICE,
+    expires_at_ms: Date.now() + 60_000,
+  };
+  return {
+    ...unsignedReview,
+    confirmation_sha256: objectDigest(unsignedReview),
+  };
+}
+
+function objectDigest(value: unknown): string {
+  return createHash("sha256")
+    .update(JSON.stringify(value), "utf8")
+    .digest("hex");
+}
 
 async function socketFixture(response: object): Promise<{
   readonly credentials: LinuxHostLaunchCredentials;
