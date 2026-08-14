@@ -26,11 +26,13 @@ MANIFEST_PATH: Final = PurePosixPath("usr/share/agentmage/package-manifest.json"
 PAYLOAD_FILES: Final = (
     PurePosixPath("usr/libexec/agentmage/agentmage-host"),
     PurePosixPath("usr/libexec/agentmage/agentmage-native-inference"),
+    PurePosixPath("usr/libexec/agentmage/agentmage-model-installer"),
     PurePosixPath("usr/libexec/agentmage/agentmage-docker-guard"),
     PurePosixPath("usr/libexec/agentmage/agentmage-docker-topology-collector"),
     PurePosixPath("usr/share/agentmage/agentmage.vsix"),
     PurePosixPath("usr/share/licenses/agentmage/LICENSE"),
 )
+EXECUTABLE_PAYLOAD_FILES: Final = frozenset(PAYLOAD_FILES[:5])
 
 
 class PackageCandidateError(ValueError):
@@ -140,6 +142,7 @@ def build_vsix(
 def build_payload(
     host: Path,
     inference_adapter: Path,
+    model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
     vsix: Path,
@@ -150,6 +153,7 @@ def build_payload(
     return build_payload_class(
         host,
         inference_adapter,
+        model_installer,
         docker_guard,
         docker_collector,
         vsix,
@@ -164,6 +168,7 @@ def build_payload(
 def build_release_payload(
     host: Path,
     inference_adapter: Path,
+    model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
     vsix: Path,
@@ -177,6 +182,7 @@ def build_release_payload(
     return build_payload_class(
         host,
         inference_adapter,
+        model_installer,
         docker_guard,
         docker_collector,
         vsix,
@@ -191,6 +197,7 @@ def build_release_payload(
 def build_payload_class(
     host: Path,
     inference_adapter: Path,
+    model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
     vsix: Path,
@@ -204,6 +211,7 @@ def build_payload_class(
     for path in (
         host,
         inference_adapter,
+        model_installer,
         docker_guard,
         docker_collector,
         vsix,
@@ -213,17 +221,18 @@ def build_payload_class(
     destinations = {
         PAYLOAD_FILES[0]: host,
         PAYLOAD_FILES[1]: inference_adapter,
-        PAYLOAD_FILES[2]: docker_guard,
-        PAYLOAD_FILES[3]: docker_collector,
-        PAYLOAD_FILES[4]: vsix,
-        PAYLOAD_FILES[5]: license_path,
+        PAYLOAD_FILES[2]: model_installer,
+        PAYLOAD_FILES[3]: docker_guard,
+        PAYLOAD_FILES[4]: docker_collector,
+        PAYLOAD_FILES[5]: vsix,
+        PAYLOAD_FILES[6]: license_path,
     }
     records = []
     for relative, source in destinations.items():
         destination = root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
-        mode = 0o755 if relative in PAYLOAD_FILES[:4] else 0o644
+        mode = 0o755 if relative in EXECUTABLE_PAYLOAD_FILES else 0o644
         destination.chmod(mode)
         records.append(
             {
@@ -403,6 +412,7 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
         raise PackageCandidateError("package.version_invalid")
     host = ROOT / "target/release/agentmage-host"
     inference_adapter = ROOT / "target/release/agentmage-native-inference"
+    model_installer = ROOT / "target/release/agentmage-model-installer"
     docker_guard = ROOT / "target/release/agentmage-docker-guard"
     docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
     extension = ROOT / "shells/vscode"
@@ -415,6 +425,7 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
         build_payload(
             host,
             inference_adapter,
+            model_installer,
             docker_guard,
             docker_collector,
             vsix,
@@ -440,6 +451,7 @@ def build_release_bundle(
         raise PackageCandidateError("package.release_identity_invalid")
     host = ROOT / "target/release/agentmage-host"
     inference_adapter = ROOT / "target/release/agentmage-native-inference"
+    model_installer = ROOT / "target/release/agentmage-model-installer"
     docker_guard = ROOT / "target/release/agentmage-docker-guard"
     docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
     extension = ROOT / "shells/vscode"
@@ -452,6 +464,7 @@ def build_release_bundle(
         build_release_payload(
             host,
             inference_adapter,
+            model_installer,
             docker_guard,
             docker_collector,
             vsix,

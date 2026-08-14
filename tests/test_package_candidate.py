@@ -41,6 +41,9 @@ class PackageCandidateTests(unittest.TestCase):
         self.inference_adapter = self.root / "agentmage-native-inference"
         self.inference_adapter.write_bytes(b"synthetic-inference-adapter")
         self.inference_adapter.chmod(0o755)
+        self.model_installer = self.root / "agentmage-model-installer"
+        self.model_installer.write_bytes(b"synthetic-model-installer")
+        self.model_installer.chmod(0o755)
         self.docker_guard = self.root / "agentmage-docker-guard"
         self.docker_guard.write_bytes(b"synthetic-docker-guard")
         self.docker_guard.chmod(0o755)
@@ -75,6 +78,7 @@ class PackageCandidateTests(unittest.TestCase):
         build_payload(
             self.host,
             self.inference_adapter,
+            self.model_installer,
             self.docker_guard,
             self.docker_collector,
             vsix,
@@ -107,6 +111,7 @@ class PackageCandidateTests(unittest.TestCase):
         build_payload(
             self.host,
             self.inference_adapter,
+            self.model_installer,
             self.docker_guard,
             self.docker_collector,
             vsix,
@@ -133,6 +138,7 @@ class PackageCandidateTests(unittest.TestCase):
         build_payload(
             self.host,
             self.inference_adapter,
+            self.model_installer,
             self.docker_guard,
             self.docker_collector,
             vsix,
@@ -166,6 +172,14 @@ class PackageCandidateTests(unittest.TestCase):
             ),
             0o755,
         )
+        self.assertEqual(
+            stat.S_IMODE(
+                (
+                    payload / "usr/libexec/agentmage/agentmage-model-installer"
+                ).stat().st_mode
+            ),
+            0o755,
+        )
         self.assertEqual(stat.S_IMODE((payload / MANIFEST_PATH).stat().st_mode), 0o644)
 
     def test_release_payload_is_distinct_and_requires_a_positive_sequence(self) -> None:
@@ -175,6 +189,7 @@ class PackageCandidateTests(unittest.TestCase):
         build_release_payload(
             self.host,
             self.inference_adapter,
+            self.model_installer,
             self.docker_guard,
             self.docker_collector,
             vsix,
@@ -197,6 +212,7 @@ class PackageCandidateTests(unittest.TestCase):
             build_release_payload(
                 self.host,
                 self.inference_adapter,
+                self.model_installer,
                 self.docker_guard,
                 self.docker_collector,
                 vsix,
@@ -216,6 +232,7 @@ class PackageCandidateTests(unittest.TestCase):
         manifest = build_payload(
             self.host,
             self.inference_adapter,
+            self.model_installer,
             self.docker_guard,
             self.docker_collector,
             vsix,

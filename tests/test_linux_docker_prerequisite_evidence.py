@@ -12,7 +12,7 @@ class LinuxDockerPrerequisiteEvidenceTests(unittest.TestCase):
     def valid_report(self) -> dict:
         payload = [
             {
-                "mode": 0o755 if index < 4 else 0o644,
+                "mode": 0o755 if index < 5 else 0o644,
                 "path": path.as_posix(),
                 "sha256": "b" * 64,
                 "size": 1,

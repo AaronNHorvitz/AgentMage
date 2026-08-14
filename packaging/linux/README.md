@@ -1,8 +1,9 @@
 # Linux Packaging
 
 This module defines Fedora RPM and Ubuntu DEB candidates containing the native
-host, the isolated inactive native-inference adapter, the Visual Studio Code
-VSIX, the Apache-2.0 license, and an exact payload manifest. Normal operation is
+host, the isolated inactive native-inference adapter, the separate one-shot
+model installer, the Visual Studio Code VSIX, the Apache-2.0 license, and an
+exact payload manifest. Normal operation is
 non-administrator; package-manager installation may follow the host
 distribution's administrative policy.
 
@@ -43,8 +44,8 @@ python3 scripts/package_lifecycle.py \
 The command uses rootless Podman with local images only, disables container
 networking, drops all capabilities, and mounts a temporary package-only
 directory read-only. Container root is limited to the inert container lifecycle
-process and native package-manager operations. Both AgentMage executables,
-package verification, component
+process and native package-manager operations. All packaged AgentMage
+executables, package verification, component
 manifest inspection, ownership checks, and residue scans run as numeric user
 `10001:10001`. A passing run covers clean install, corrupt-upgrade refusal,
 upgrade, rollback, uninstall, reinstall recovery, and a final residue-free

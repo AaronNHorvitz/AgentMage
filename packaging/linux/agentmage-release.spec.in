@@ -29,6 +29,7 @@ tar -xzf %{SOURCE0} -C %{buildroot}
 %license /usr/share/licenses/agentmage/LICENSE
 /usr/libexec/agentmage/agentmage-host
 /usr/libexec/agentmage/agentmage-native-inference
+/usr/libexec/agentmage/agentmage-model-installer
 /usr/libexec/agentmage/agentmage-docker-guard
 /usr/libexec/agentmage/agentmage-docker-topology-collector
 /usr/share/agentmage/agentmage.vsix

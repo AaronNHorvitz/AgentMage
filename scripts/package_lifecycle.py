@@ -17,6 +17,7 @@ from typing import Any, Final
 
 try:
     from scripts.package_candidate import (
+        EXECUTABLE_PAYLOAD_FILES,
         MANIFEST_PATH,
         PAYLOAD_FILES,
         ROOT,
@@ -25,6 +26,7 @@ try:
     )
 except ModuleNotFoundError:
     from package_candidate import (  # type: ignore[no-redef]
+        EXECUTABLE_PAYLOAD_FILES,
         MANIFEST_PATH,
         PAYLOAD_FILES,
         ROOT,
@@ -68,6 +70,19 @@ EXPECTED_DOCKER_GUARD_DESCRIPTOR: Final = {
     "raw_target": "private-namespace-loopback-only",
     "sessions": 1,
 }
+EXPECTED_MODEL_INSTALLER_DESCRIPTOR: Final = {
+    "accepted_operation": "self-check-only",
+    "activation_authority": False,
+    "component_id": "agentmage-model-installer",
+    "inference_authority": False,
+    "network_authority": False,
+    "normal_operation": False,
+    "one_shot": True,
+    "protocol_version": 1,
+    "session_authority": False,
+    "tool_authority": False,
+    "workspace_authority": False,
+}
 EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR: Final = {
     "accepted_operations": ["observe", "self-check", "validate-observation-stdin"],
     "authority": "docker-topology-observation-only",
@@ -87,8 +102,8 @@ INSTALLED_DIRECTORIES: Final = (
     "/usr/share/licenses/agentmage",
 )
 EXPECTED_MODES: Final = {
-    f"/{path.as_posix()}": ("755" if index < 4 else "644")
-    for index, path in enumerate(PAYLOAD_FILES)
+    f"/{path.as_posix()}": ("755" if path in EXECUTABLE_PAYLOAD_FILES else "644")
+    for path in PAYLOAD_FILES
 } | {f"/{MANIFEST_PATH.as_posix()}": "644"}
 VERIFY_STATE_SUFFIXES: Final = (
     "package-version",
@@ -96,6 +111,7 @@ VERIFY_STATE_SUFFIXES: Final = (
     "file-authority",
     "host-launch",
     "inference-boundary-launch",
+    "model-installer-boundary-launch",
     "docker-guard-boundary-launch",
     "docker-collector-boundary-launch",
 )
@@ -522,6 +538,21 @@ def _verify_installed_state(
     if descriptor != EXPECTED_INFERENCE_DESCRIPTOR:
         raise PackageLifecycleError("package.lifecycle.inference_descriptor")
     records.append(adapter_record)
+    installer_record, installer_output = _step_record(
+        container_id,
+        LifecycleStep(
+            f"{phase}-model-installer-boundary-launch",
+            "standard-user",
+            ("/usr/libexec/agentmage/agentmage-model-installer", "--self-check"),
+        ),
+    )
+    try:
+        installer_descriptor = json.loads(installer_output)
+    except json.JSONDecodeError as error:
+        raise PackageLifecycleError("package.lifecycle.model_installer_descriptor") from error
+    if installer_descriptor != EXPECTED_MODEL_INSTALLER_DESCRIPTOR:
+        raise PackageLifecycleError("package.lifecycle.model_installer_descriptor")
+    records.append(installer_record)
     for component, expected in (
         ("docker-guard", EXPECTED_DOCKER_GUARD_DESCRIPTOR),
         ("docker-collector", EXPECTED_DOCKER_COLLECTOR_DESCRIPTOR),
