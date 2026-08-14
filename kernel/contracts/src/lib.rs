@@ -77,14 +77,15 @@ pub use ids::{
     ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use model::{
-    ClosedModelProposal, ContextBudget, DecodingProfile, ExactModelProfile, FamilyCodecIdentity,
-    HardwareEnvelope, LocalModelRuntime, ModelArtifact, ModelCapability, ModelCapabilityState,
-    ModelClientSchemas, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
-    ModelLoadReceipt, ModelManifestObservation, ModelMessage, ModelMessageRole, ModelModality,
-    ModelProposalKind, ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind,
-    ModelStreamSink, ModelToolCallCandidate, ModelTransformation, ModelUnloadReceipt,
-    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
+    ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
+    FamilyCodecIdentity, HardwareEnvelope, LocalModelRuntime, ModelArtifact, ModelCapability,
+    ModelCapabilityState, ModelClientSchemas, ModelContextPacket, ModelFamilyCodec, ModelHealth,
+    ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation,
+    ModelMessage, ModelMessageRole, ModelModality, ModelProposalKind, ModelResourceReport,
+    ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink, ModelToolCallCandidate,
+    ModelTransformation, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
+    TokenCountResult,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,

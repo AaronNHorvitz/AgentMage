@@ -81,7 +81,7 @@
       "codec": {
         "codec_id": "deterministic-fake-muse-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "04306ffdd54df12c0455f8bc4e17870c21b949d859fcd5a6974904cf470e87ae",
+        "codec_sha256": "97f0c8196c32a8a8c6bafb973aed28fde7149f38f56a962c0c0aac669ab54e97",
         "tokenizer": "deterministic-fake-muse-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-muse-template-v1",
@@ -178,7 +178,7 @@
       "codec": {
         "codec_id": "deterministic-fake-gemma-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "04306ffdd54df12c0455f8bc4e17870c21b949d859fcd5a6974904cf470e87ae",
+        "codec_sha256": "97f0c8196c32a8a8c6bafb973aed28fde7149f38f56a962c0c0aac669ab54e97",
         "tokenizer": "deterministic-fake-gemma-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-gemma-template-v1",

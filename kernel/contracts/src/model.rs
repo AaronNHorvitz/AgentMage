@@ -501,6 +501,49 @@ pub trait LocalModelRuntime {
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure>;
 }
 
+/// Exact inert bytes produced by one family codec for one context packet.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EncodedModelContext {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact codec that encoded the packet.
+    pub codec_id: ModelCodecId,
+    /// Exact profile selected for the packet.
+    pub profile_id: ModelProfileId,
+    /// Exact context packet identity.
+    pub context_packet_id: ContextPacketId,
+    /// Encoded prompt bytes with no executable authority.
+    pub bytes: Vec<u8>,
+    /// Lowercase SHA-256 digest of the encoded bytes.
+    pub sha256: String,
+}
+
+/// Model-family edge that owns template encoding and closed proposal decoding.
+///
+/// The codec receives no workspace handle, tool implementation, grant, credential,
+/// endpoint, or execution callback. A decoded proposal remains inert and must pass
+/// kernel admission before any later operation can be considered.
+pub trait ModelFamilyCodec {
+    /// Returns the immutable codec identity.
+    fn identity(&self) -> &FamilyCodecIdentity;
+
+    /// Encodes one already bounded context packet for one exact profile.
+    fn encode_context(
+        &self,
+        profile: &ExactModelProfile,
+        packet: &ModelContextPacket,
+    ) -> Result<EncodedModelContext, ModelRuntimeFailure>;
+
+    /// Decodes one complete response into a closed inert proposal.
+    fn decode_proposal(
+        &self,
+        profile: &ExactModelProfile,
+        request: &ModelRunRequest,
+        response: &[u8],
+    ) -> Result<ClosedModelProposal, ModelRuntimeFailure>;
+}
+
 /// One bounded message in an exact model context packet.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
