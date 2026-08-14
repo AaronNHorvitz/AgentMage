@@ -28,7 +28,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "84bd6a1f0c3943cc81ae3022561170407be4070c40519eaf90b2b00eac48b6a1"
+      "output_sha256": "9ed5be3b59e22e54b7576eb09b03bcf52370cedc5d904e86e2ca4d499fed3488"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "9f4ac4c46b8acd593723f51430822eb14b6621be63d3917d2f34f3e2af8ec599"
+      "output_sha256": "2d549fb5f95ebe978fc0eb0553560d0f86dbda3813dcfab172495dcaf0848557"
     },
     {
       "argv": [
@@ -68,7 +68,7 @@
       ],
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "bbb6c24cf33fb2335a014231dff5b842e02d1801b445fea3f7cffeb2fdb94043"
+      "output_sha256": "e6a97d99d67f538c0a1b818b63c3cdd01d7339ca611a009a9790b6c2428fbd48"
     },
     {
       "argv": [
@@ -78,7 +78,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "c82ded33bc372900645707c6a9937c5bc072f391d1b8a333061046c2497db466"
+      "output_sha256": "e9a54c3f608c7c1b4f298d5cba214a21c971cef1cb81352ce92dfb78d8b13deb"
     },
     {
       "argv": [
@@ -88,7 +88,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "b2668071c0ec40f9c4db17b5d62434b55052dfdd1247d108f985b49e0768e0cc"
+      "output_sha256": "5767ec91f03325ce0c686cfde669717f0db33ec688b77df589fba2be467f1040"
     },
     {
       "argv": [
@@ -199,7 +199,7 @@
     "SR-CIV-004",
     "SR-CIV-005"
   ],
-  "source_revision": "76038984fb7ac0d1426a69fa7180c29d5dc55395",
+  "source_revision": "1f530e950518795283474bf30ded5a87c477a487",
   "source_sha256": {
     "capabilities/knowledge/README.md": "5d43f782a09749b02d37445b3c669e810a652d74cba3dae1d60fbe32b285b0e3",
     "capabilities/knowledge/src/lifecycle.rs": "8724271a3fd6b87b62ed0c26bdfb434f299b166582eda98ff88187c40866ac46",
