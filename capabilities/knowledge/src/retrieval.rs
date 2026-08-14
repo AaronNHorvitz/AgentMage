@@ -16,6 +16,7 @@ const MAX_QUERY_ITEM_BYTES: usize = 256;
 const MAX_RESULT_COUNT: u32 = 1_000;
 const MAX_CONTEXT_BYTES: u64 = 4 * 1024 * 1024;
 const MAX_FRAGMENT_BYTES: usize = 1024 * 1024;
+const MAX_SYNTHESIS_BYTES: usize = 1024 * 1024;
 
 /// Closed source file type used by deterministic metadata filters.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -219,6 +220,45 @@ pub struct KnowledgeRetrievalResult {
     pub semantic_components_used: bool,
 }
 
+/// Source-traceable input envelope for a later bounded synthesis implementation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KnowledgeSynthesisEnvelope {
+    /// Retrieval evidence state that synthesis may not change.
+    pub evidence_state: KnowledgeEvidenceState,
+    /// Exact bounded context supplied to synthesis.
+    pub context: Vec<KnowledgeContextEntry>,
+    /// Complete admissible citation set.
+    pub citation_sha256: Vec<String>,
+    /// Contradictory fact keys that synthesis must preserve.
+    pub conflicting_fact_keys: Vec<String>,
+}
+
+/// One proposed synthesis output before deterministic rendering.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KnowledgeAnswerDraft {
+    /// Evidence state copied exactly from the synthesis envelope.
+    pub evidence_state: KnowledgeEvidenceState,
+    /// Bounded answer body; empty for unknown or blocked evidence.
+    pub text: String,
+    /// Unique citations selected from the envelope.
+    pub citation_sha256: Vec<String>,
+}
+
+/// Deterministically validated final knowledge answer.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KnowledgeRenderedAnswer {
+    /// Preserved evidence state.
+    pub evidence_state: KnowledgeEvidenceState,
+    /// Stable user-visible state label.
+    pub state_label: String,
+    /// Validated answer body or fixed blocked response.
+    pub text: String,
+    /// Validated source citation identities.
+    pub citation_sha256: Vec<String>,
+    /// Contradictory fact keys preserved for final display.
+    pub conflicting_fact_keys: Vec<String>,
+}
+
 /// Content-free deterministic retrieval failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KnowledgeRetrievalError {
@@ -226,6 +266,74 @@ pub enum KnowledgeRetrievalError {
     InvalidInput,
     /// Arithmetic or fixed resource bound was exceeded.
     ResourceLimit,
+    /// Synthesis attempted to change evidence state or cite unavailable evidence.
+    EvidenceDrift,
+}
+
+/// Creates the exact evidence-preserving boundary consumed by later synthesis.
+#[must_use]
+pub fn prepare_knowledge_synthesis(
+    result: &KnowledgeRetrievalResult,
+) -> KnowledgeSynthesisEnvelope {
+    KnowledgeSynthesisEnvelope {
+        evidence_state: result.evidence_state,
+        context: result.context.clone(),
+        citation_sha256: result
+            .hits
+            .iter()
+            .map(|hit| hit.citation_sha256.clone())
+            .collect(),
+        conflicting_fact_keys: result.conflicting_fact_keys.clone(),
+    }
+}
+
+/// Validates a synthesis draft and renders it without weakening evidence state.
+pub fn render_knowledge_answer(
+    envelope: &KnowledgeSynthesisEnvelope,
+    draft: &KnowledgeAnswerDraft,
+) -> Result<KnowledgeRenderedAnswer, KnowledgeRetrievalError> {
+    if draft.evidence_state != envelope.evidence_state
+        || draft.text.len() > MAX_SYNTHESIS_BYTES
+        || draft.text.chars().any(char::is_control)
+    {
+        return Err(KnowledgeRetrievalError::EvidenceDrift);
+    }
+    let available = envelope
+        .citation_sha256
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let selected = draft
+        .citation_sha256
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if selected.len() != draft.citation_sha256.len()
+        || !selected.is_subset(&available)
+        || draft
+            .citation_sha256
+            .iter()
+            .any(|value| !valid_sha256(value))
+    {
+        return Err(KnowledgeRetrievalError::EvidenceDrift);
+    }
+    let blocked = envelope.evidence_state == KnowledgeEvidenceState::UnknownBlocked;
+    if blocked && (!draft.text.is_empty() || !draft.citation_sha256.is_empty())
+        || !blocked && (draft.text.is_empty() || draft.citation_sha256.is_empty())
+    {
+        return Err(KnowledgeRetrievalError::EvidenceDrift);
+    }
+    Ok(KnowledgeRenderedAnswer {
+        evidence_state: envelope.evidence_state,
+        state_label: evidence_state_label(envelope.evidence_state).to_owned(),
+        text: if blocked {
+            "No admissible evidence is available.".to_owned()
+        } else {
+            draft.text.clone()
+        },
+        citation_sha256: draft.citation_sha256.clone(),
+        conflicting_fact_keys: envelope.conflicting_fact_keys.clone(),
+    })
 }
 
 /// Runs exact lexical and metadata retrieval with a fixed ranking decision table.
@@ -613,6 +721,15 @@ const fn fragment_kind_id(kind: KnowledgeSourceFragmentKind) -> &'static str {
     }
 }
 
+const fn evidence_state_label(state: KnowledgeEvidenceState) -> &'static str {
+    match state {
+        KnowledgeEvidenceState::Observed => "Observed",
+        KnowledgeEvidenceState::Stale => "Stale",
+        KnowledgeEvidenceState::Conflicting => "Conflicting",
+        KnowledgeEvidenceState::UnknownBlocked => "Unknown/Blocked",
+    }
+}
+
 fn valid_range(range: ObsidianSourceRange) -> bool {
     range.start_line > 0
         && range.start_column > 0
@@ -685,9 +802,10 @@ mod tests {
     use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath, WorkspaceScopePath};
 
     use super::{
-        KnowledgeContextQuery, KnowledgeEvidenceState, KnowledgeFileType, KnowledgeFreshness,
-        KnowledgeRetrievalError, KnowledgeSourceAuthority, KnowledgeSourceDocument,
-        KnowledgeSourceFragment, KnowledgeSourceFragmentKind, retrieve_knowledge,
+        KnowledgeAnswerDraft, KnowledgeContextQuery, KnowledgeEvidenceState, KnowledgeFileType,
+        KnowledgeFreshness, KnowledgeRetrievalError, KnowledgeSourceAuthority,
+        KnowledgeSourceDocument, KnowledgeSourceFragment, KnowledgeSourceFragmentKind,
+        prepare_knowledge_synthesis, render_knowledge_answer, retrieve_knowledge,
     };
     use crate::ObsidianSourceRange;
 
@@ -1175,5 +1293,63 @@ mod tests {
             }
         }
         assert_eq!(correct, 3, "fixed corpus top-1 precision must remain 100%");
+    }
+
+    #[test]
+    fn synthesis_and_rendering_preserve_state_citations_conflicts_and_blocked_answers() {
+        let source = document(
+            "answer.md",
+            KnowledgeSourceAuthority::CanonicalMarkdown,
+            None,
+            true,
+            vec![fragment(
+                KnowledgeSourceFragmentKind::Body,
+                "needle observed",
+                1,
+                None,
+            )],
+        );
+        let result = retrieve_knowledge(&query("needle"), &[source]).expect("retrieval succeeds");
+        let envelope = prepare_knowledge_synthesis(&result);
+        let draft = KnowledgeAnswerDraft {
+            evidence_state: KnowledgeEvidenceState::Observed,
+            text: "The bounded answer is observed.".to_owned(),
+            citation_sha256: vec![result.hits[0].citation_sha256.clone()],
+        };
+        let rendered = render_knowledge_answer(&envelope, &draft).expect("render succeeds");
+        assert_eq!(rendered.evidence_state, KnowledgeEvidenceState::Observed);
+        assert_eq!(rendered.state_label, "Observed");
+        assert_eq!(rendered.citation_sha256, draft.citation_sha256);
+
+        let mut drifted = draft.clone();
+        drifted.evidence_state = KnowledgeEvidenceState::Conflicting;
+        assert_eq!(
+            render_knowledge_answer(&envelope, &drifted),
+            Err(KnowledgeRetrievalError::EvidenceDrift)
+        );
+        drifted = draft;
+        drifted.citation_sha256 = vec!["f".repeat(64)];
+        assert_eq!(
+            render_knowledge_answer(&envelope, &drifted),
+            Err(KnowledgeRetrievalError::EvidenceDrift)
+        );
+
+        let unknown = retrieve_knowledge(&query("absent"), &[]).expect("retrieval succeeds");
+        let unknown_envelope = prepare_knowledge_synthesis(&unknown);
+        let unknown_rendered = render_knowledge_answer(
+            &unknown_envelope,
+            &KnowledgeAnswerDraft {
+                evidence_state: KnowledgeEvidenceState::UnknownBlocked,
+                text: String::new(),
+                citation_sha256: Vec::new(),
+            },
+        )
+        .expect("blocked answer renders");
+        assert_eq!(unknown_rendered.state_label, "Unknown/Blocked");
+        assert_eq!(
+            unknown_rendered.text,
+            "No admissible evidence is available."
+        );
+        assert!(unknown_rendered.citation_sha256.is_empty());
     }
 }

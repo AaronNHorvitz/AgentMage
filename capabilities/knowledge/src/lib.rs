@@ -55,10 +55,12 @@ pub use plain_folder::{
     render_canonical_markdown,
 };
 pub use retrieval::{
-    KnowledgeContextEntry, KnowledgeContextQuery, KnowledgeEvidenceState, KnowledgeFileType,
-    KnowledgeFreshness, KnowledgeRetrievalError, KnowledgeRetrievalHit, KnowledgeRetrievalResult,
-    KnowledgeScoreFactor, KnowledgeSourceAuthority, KnowledgeSourceDocument,
-    KnowledgeSourceFragment, KnowledgeSourceFragmentKind, retrieve_knowledge,
+    KnowledgeAnswerDraft, KnowledgeContextEntry, KnowledgeContextQuery, KnowledgeEvidenceState,
+    KnowledgeFileType, KnowledgeFreshness, KnowledgeRenderedAnswer, KnowledgeRetrievalError,
+    KnowledgeRetrievalHit, KnowledgeRetrievalResult, KnowledgeScoreFactor,
+    KnowledgeSourceAuthority, KnowledgeSourceDocument, KnowledgeSourceFragment,
+    KnowledgeSourceFragmentKind, KnowledgeSynthesisEnvelope, prepare_knowledge_synthesis,
+    render_knowledge_answer, retrieve_knowledge,
 };
 pub use schema::{
     KnowledgeRecordSchema, knowledge_schema, knowledge_schemas, verify_schema_registry,
