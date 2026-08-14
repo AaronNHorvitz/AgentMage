@@ -45,7 +45,15 @@ const SCHEMAS: &[KnowledgeRecordSchema] = &[
     schema(
         KnowledgeRecordKind::Task,
         &["status", "owner"],
-        &["due_at", "next_action", "notes"],
+        &[
+            "project",
+            "due_at",
+            "next_action",
+            "blocker",
+            "priority",
+            "deferred_until",
+            "notes",
+        ],
     ),
     schema(
         KnowledgeRecordKind::Decision,

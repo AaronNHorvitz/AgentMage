@@ -18,6 +18,7 @@ mod schema;
 mod semantic;
 mod semantic_benchmark;
 mod store;
+mod tasks;
 
 pub use authority::{
     KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
@@ -98,6 +99,11 @@ pub use semantic_benchmark::{
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
+};
+pub use tasks::{
+    KnowledgeTask, KnowledgeTaskDuplicate, KnowledgeTaskPriority, KnowledgeTaskStatus,
+    KnowledgeTaskTransitionPreview, KnowledgeTaskView, KnowledgeTaskViewKind, build_task_view,
+    preview_task_transition,
 };
 
 /// Stable component identity used by diagnostics and build verification.
