@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "agentmage-capability-knowledge"
+version = "0.0.0"
+dependencies = [
+ "agentmage-kernel-contracts",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "agentmage-capability-read-only"
 version = "0.0.0"
 dependencies = [

@@ -50,6 +50,12 @@ EXPECTED_MODULES = {
         "rust",
         "cargo",
     ),
+    "capability-knowledge": (
+        "capabilities/knowledge",
+        "capability-packs",
+        "rust",
+        "cargo",
+    ),
     "capability-repository-map": (
         "capabilities/repository-map",
         "capability-packs",

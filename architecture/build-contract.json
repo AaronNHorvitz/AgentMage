@@ -25,6 +25,8 @@
     ".editorconfig",
     "Cargo.lock",
     "Cargo.toml",
+    "capabilities/knowledge/Cargo.toml",
+    "capabilities/knowledge/src/lib.rs",
     "capabilities/repository-map/Cargo.toml",
     "capabilities/repository-map/src/lib.rs",
     "capabilities/read-only/Cargo.toml",

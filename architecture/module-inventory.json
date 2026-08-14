@@ -113,6 +113,19 @@
       ]
     },
     {
+      "id": "capability-knowledge",
+      "path": "capabilities/knowledge",
+      "category": "capability-packs",
+      "language": "rust",
+      "build_system": "cargo",
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ]
+    },
+    {
       "id": "capability-repository-map",
       "path": "capabilities/repository-map",
       "category": "capability-packs",

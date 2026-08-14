@@ -75,6 +75,17 @@
       "assembly_inputs": []
     },
     {
+      "id": "capability-knowledge",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
       "id": "capability-read-only",
       "layer": 1,
       "allowed_imports": [

@@ -29,7 +29,8 @@
   },
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
-    "Cargo.toml": "4a9aea8f16f0e2f3586c6513bf2894cc0cb8947b65be457777e64fa1ef0bab73",
+    "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
+    "capabilities/knowledge/Cargo.toml": "edff6da464afae33d21a8796e7c0c49b74b0263349ecfa9a8bc8ab2d3a7781da",
     "capabilities/read-only/Cargo.toml": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
@@ -41,6 +42,7 @@
     "shells/host/Cargo.toml": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
   },
   "approved_cargo_packages": [
+    "agentmage-capability-knowledge@0.0.0",
     "agentmage-capability-read-only@0.0.0",
     "agentmage-capability-repository-map@0.0.0",
     "agentmage-host@0.0.0",
@@ -223,6 +225,7 @@
     }
   ],
   "scan_roots": [
+    "capabilities/knowledge/src",
     "capabilities/read-only/src",
     "capabilities/repository-map/src",
     "kernel/contracts/src",

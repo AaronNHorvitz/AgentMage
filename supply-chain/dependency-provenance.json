@@ -2,6 +2,26 @@
   "components": [
     {
       "classification": "production",
+      "component_id": "cargo:agentmage-capability-knowledge@0.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "a14ab4800cecb05757af50c0e30da7cefd52a7fbe8f5daed5acf9a953d5ac44d"
+        }
+      ],
+      "integrity": null,
+      "license": "Apache-2.0",
+      "name": "agentmage-capability-knowledge",
+      "scope": "required",
+      "source": {
+        "path": "capabilities/knowledge",
+        "type": "repository-path"
+      },
+      "version": "0.0.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:agentmage-capability-read-only@0.0.0",
       "ecosystem": "cargo",
       "hashes": [
@@ -8984,6 +9004,15 @@
   ],
   "dependencies": [
     {
+      "component_id": "cargo:agentmage-capability-knowledge@0.0.0",
+      "depends_on": [
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0"
+      ]
+    },
+    {
       "component_id": "cargo:agentmage-capability-read-only@0.0.0",
       "depends_on": [
         "cargo:agentmage-kernel-contracts@0.0.0",
@@ -11794,8 +11823,8 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "b3d92799aa7e1cb171280eab1c8b9c4d7560bfa0802496a5b6d895a16876fc96",
-    "Cargo.toml": "4a9aea8f16f0e2f3586c6513bf2894cc0cb8947b65be457777e64fa1ef0bab73",
+    "Cargo.lock": "ad5e7c092e58cfb58e670d69fab238bc625d07ca36531b629f55f984fc440e64",
+    "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",

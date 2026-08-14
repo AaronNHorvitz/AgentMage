@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "capabilities/knowledge",
   "capabilities/repository-map",
   "capabilities/read-only",
   "kernel/contracts",
@@ -21,6 +22,7 @@ repository = "https://github.com/AaronNHorvitz/AgentMage"
 publish = false
 
 [workspace.dependencies]
+agentmage-capability-knowledge = { path = "capabilities/knowledge" }
 agentmage-capability-repository-map = { path = "capabilities/repository-map" }
 agentmage-capability-read-only = { path = "capabilities/read-only" }
 agentmage-kernel-contracts = { path = "kernel/contracts" }

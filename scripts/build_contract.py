@@ -23,6 +23,7 @@ EXPECTED_TOOLCHAINS = {
     "swift_tools": "6.0",
 }
 EXPECTED_MEMBERS = {
+    "capabilities/knowledge",
     "capabilities/repository-map",
     "capabilities/read-only",
     "kernel/contracts",
@@ -34,6 +35,10 @@ EXPECTED_MEMBERS = {
     "shells/host",
 }
 EXPECTED_CARGO_PACKAGES = {
+    "capabilities/knowledge": (
+        "agentmage-capability-knowledge",
+        {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},
+    ),
     "capabilities/repository-map": (
         "agentmage-capability-repository-map",
         {
