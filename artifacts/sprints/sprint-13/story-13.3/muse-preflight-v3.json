@@ -1,0 +1,135 @@
+{
+  "checks": [
+    {
+      "code": "exact-records-valid",
+      "id": "source-admission",
+      "result": "PASS"
+    },
+    {
+      "code": "linux-x86_64",
+      "id": "platform",
+      "result": "PASS"
+    },
+    {
+      "code": "system-memory-sufficient",
+      "id": "system-memory",
+      "result": "PASS"
+    },
+    {
+      "code": "disk-sufficient",
+      "id": "disk",
+      "result": "PASS"
+    },
+    {
+      "code": "accelerator-memory-sufficient",
+      "id": "accelerator-memory",
+      "result": "PASS"
+    },
+    {
+      "code": "driver-exact",
+      "id": "driver",
+      "result": "PASS"
+    },
+    {
+      "code": "model-artifact-exact",
+      "id": "model-artifact",
+      "result": "PASS"
+    },
+    {
+      "code": "runtime-archive-exact",
+      "id": "runtime-archive",
+      "result": "PASS"
+    },
+    {
+      "code": "runtime-package-not-admitted",
+      "id": "runtime-package",
+      "result": "BLOCKED"
+    },
+    {
+      "code": "runtime-adapter-not-conformant",
+      "id": "runtime-adapter",
+      "result": "BLOCKED"
+    },
+    {
+      "code": "zero-egress-not-executed",
+      "id": "zero-egress",
+      "result": "BLOCKED"
+    },
+    {
+      "code": "codec-conformance-pass",
+      "id": "codec-conformance",
+      "result": "PASS"
+    },
+    {
+      "code": "quality-evidence-not-measured",
+      "id": "quality",
+      "result": "BLOCKED"
+    },
+    {
+      "code": "repeatability-not-measured",
+      "id": "repeatability",
+      "result": "BLOCKED"
+    }
+  ],
+  "disposition": {
+    "activation": false,
+    "automatic_fallback": false,
+    "blockers": [
+      "runtime-package-not-admitted",
+      "runtime-adapter-not-conformant",
+      "zero-egress-not-executed",
+      "quality-evidence-not-measured",
+      "repeatability-not-measured"
+    ],
+    "model_loaded": false,
+    "status": "BLOCKED"
+  },
+  "limitations": [
+    "This preflight does not load or execute a model.",
+    "A host observation is evidence only for this exact machine state and tuple.",
+    "A BLOCKED result cannot be reused as product support or release evidence."
+  ],
+  "observations": {
+    "host": {
+      "accelerator": {
+        "available": true,
+        "driver": "610.43.03",
+        "free_bytes": 23231201280,
+        "name": "NVIDIA GeForce RTX 4090",
+        "total_bytes": 25757220864
+      },
+      "architecture": "x86_64",
+      "disk_available_bytes": 1334669426688,
+      "system": "Linux",
+      "system_memory_bytes": 67143954432
+    },
+    "model_artifact": {
+      "bytes": 16756683904,
+      "exact": true,
+      "present": true,
+      "regular": true,
+      "sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e"
+    },
+    "runtime_archive": {
+      "bytes": 32989764,
+      "exact": true,
+      "present": true,
+      "regular": true,
+      "sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286"
+    }
+  },
+  "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora",
+  "record_type": "muse_isolated_preflight",
+  "schema_version": 1,
+  "source_revision": "c1eb77eac24cf1b2e8bd93826293cdf9114c6011",
+  "tuple": {
+    "context_tokens": 8192,
+    "model_sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+    "network_egress": false,
+    "parallel_slots": 1,
+    "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+    "speculative_draft": false,
+    "synthetic_data_only": true,
+    "vision": false
+  }
+}
