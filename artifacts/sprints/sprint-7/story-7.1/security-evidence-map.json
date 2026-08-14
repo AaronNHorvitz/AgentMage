@@ -1,34 +1,34 @@
 {
   "artifacts": [
     {
-      "bytes": 80205,
+      "bytes": 136944,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
     },
     {
-      "bytes": 5565,
+      "bytes": 7638,
       "path": "docs/architecture/platform-adapter-contract.md",
-      "sha256": "6f48b66d591e25ae53d584fd41815034bbc989c04fb21479da2bae3ba9166f57"
+      "sha256": "98455f2e3f7871fbeeac856b19dd4a85b2292878049c149ba1c7f8fc5429ed53"
     },
     {
-      "bytes": 11520,
+      "bytes": 12172,
       "path": "kernel/contracts/src/platform.rs",
-      "sha256": "0516054a15ceb238ea4f6b1b233caae4704f2ad628cda0cae4e0ee9073e7b2b8"
+      "sha256": "00d135598a9e7d7b1f28f457e8305a85a020107ffe0f0d29e7ca206d933c8042"
     },
     {
-      "bytes": 13797,
+      "bytes": 24626,
       "path": "kernel/engine/src/platform_startup.rs",
-      "sha256": "8aa495e12d635c1398823de675d6b2cffe42d51882e8a098758e911c99d950d0"
+      "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
     },
     {
-      "bytes": 3346,
+      "bytes": 4747,
       "path": "kernel/engine/tests/platform_adapter_conformance.rs",
-      "sha256": "c275562bf26657b1ad38d76d56e9fc8a039278c8645b83d316779740d60bbecf"
+      "sha256": "43be8fff79e866d85f5c393e01102af8f45c2b71101879b8bf36b1e933e05c6e"
     },
     {
-      "bytes": 875,
+      "bytes": 1205,
       "path": "release/platform-manifests/README.md",
-      "sha256": "f7d60785d346dc4652e029f55b367b71c16ed05118baba5e3fb9dec07a3091ce"
+      "sha256": "03edbe9a7f00122cdf3a1c14f5f7f7e55989624451e8cc00739166878f3e1ac9"
     },
     {
       "bytes": 3675,
@@ -48,27 +48,27 @@
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "c0ae668bbb40d6d5654faf3fbe684b13ea03b8f35dc7a478646d581c422db81d"
+      "sha256": "d0ba8816b71ac1f6e3cba5c7c563356147d1f7e9facbcd677e2f946d94048ba5"
     },
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "ab8e47cea5ab4602e6c72e6648c9ef3f55f9872223ee6cc298c1691544d12d42"
+      "sha256": "1e4c38473be9aa1871fb0f05dd1dfa74d119fdd07e12138ef3a7d0315efe78a7"
     },
     {
-      "bytes": 385413,
+      "bytes": 395040,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "fe63fc20390ba7ceb5fb0ef44de0ec4bf6d62611e804024ca52d8d6721ea658f"
+      "sha256": "976398bd54cf3809c8d7bcca51b025dfb22f9e28ea13508ff5d21aead46ebfa2"
     },
     {
-      "bytes": 400467,
+      "bytes": 410971,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "0084364db7a53d4e89355118fb6ca5f4ee6a5d98fe1f9e9af671a47f6e81a5e0"
+      "sha256": "da8158299a3e2b41cae7ce0cc09716e4625c93e4dcf583d8d0667f29b1780a92"
     },
     {
-      "bytes": 22770,
+      "bytes": 23383,
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "7375fdfa53892bd592a0bcaf47df6094cd637e9f8353331e8caf2e1b1c893233"
+      "sha256": "0129e11b46cba745b2e093c9b7b5244129bde7c249bfac4ea82a130d1d6b00c3"
     },
     {
       "bytes": 17584,
@@ -81,9 +81,9 @@
       "sha256": "a53e67552c7c765a7840b92f4508c6634a950421b92c6822065af58d78fec021"
     },
     {
-      "bytes": 5648,
+      "bytes": 6384,
       "path": "tests/test_platform_manifest_artifact.py",
-      "sha256": "f063bcc09599f724600d444934cea4bf8b9e977569c3aa771f12dc9223b447bd"
+      "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
     },
     {
       "bytes": 8072,
@@ -244,7 +244,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "617731b671df3378652f771cb94773080d155298",
+  "source_revision": "79513aebd89cdf9df0db4f995415d0d3156025fa",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
