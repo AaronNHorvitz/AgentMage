@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+pub mod agent_ceiling;
 /// One-active-step plan history, progress, interruption, and response validation.
 pub mod agent_progress;
 pub mod agent_proposal;
