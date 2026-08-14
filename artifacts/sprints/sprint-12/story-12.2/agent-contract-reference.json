@@ -1,0 +1,126 @@
+{
+  "artifact_id": "task-12-2-3-1-agent-contract-reference",
+  "case_ids": [
+    "ART-01",
+    "ART-02",
+    "ART-03",
+    "ART-04",
+    "ART-05"
+  ],
+  "claims": {
+    "active_state_count": 8,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "legal_transition_count": 52,
+    "manual_fuzzing_executed": false,
+    "ordered_state_pair_count": 289,
+    "ordinary_success_routes": 0,
+    "proposal_identity_field_count": 12,
+    "release_support": false,
+    "runtime_ceiling_count": 13,
+    "terminal_state_count": 9,
+    "total_state_count": 17
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The document describes completed contracts and focused deterministic tests, not full product integration or release support.",
+    "Encrypted agent-state persistence, production workers, live UI, and cross-platform packaging remain later tasks.",
+    "No private user data or external network operation is used.",
+    "Manual fuzzing remains deferred to its assigned final gate."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "b384a823b930eb04cef3cc6cf11e0bfd3aa5b20a",
+  "sources": [
+    {
+      "bytes": 1666,
+      "path": "docs/verification/task-12-2-3-1-agent-contract-artifacts-results.md",
+      "sha256": "c9b4aaad4501408eaac992e123528b321dc13cb44c2eec5fcc012ab8dbdc089e"
+    },
+    {
+      "bytes": 7915,
+      "path": "docs/architecture/agent-state-contract-reference.md",
+      "sha256": "51579df7718a20cc7a232687f800917bf9d5f60e8d188f60ba4c4ec14fd1e4a8"
+    },
+    {
+      "bytes": 4603,
+      "path": "kernel/contracts/src/agent_state.rs",
+      "sha256": "04f8652b7d4bfd72fc456f6d9e085b9fd87704550046dcf9e8548abe0752a90f"
+    },
+    {
+      "bytes": 1667,
+      "path": "kernel/contracts/src/agent_proposal.rs",
+      "sha256": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f"
+    },
+    {
+      "bytes": 1546,
+      "path": "kernel/contracts/src/agent_restart.rs",
+      "sha256": "7fd6056c992b927b800c11d2c442e2044b6a0830e7c5ed870954c20e9e3175b6"
+    },
+    {
+      "bytes": 2680,
+      "path": "kernel/contracts/src/agent_verifier.rs",
+      "sha256": "5881f021ab0f4e1f3de5e8db61463c2a9875cb8bff843bb8574ed034b6c0e0cb"
+    },
+    {
+      "bytes": 10583,
+      "path": "kernel/engine/src/agent_ceiling.rs",
+      "sha256": "fb74598a65e9fba04a953ce11c7df15f4784832abc130ac6e34ea09ac44f79b1"
+    },
+    {
+      "bytes": 12906,
+      "path": "kernel/engine/src/agent_state.rs",
+      "sha256": "90934d5e35755a622a8afd8ef33a7246231e6e58deeea21fe1cfed6f2c1ad30b"
+    },
+    {
+      "bytes": 15404,
+      "path": "kernel/engine/src/agent_verifier.rs",
+      "sha256": "3b0ea2536062494382255db747ba6b06124e863c803720d9161455bdf5a3afb2"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3634,
+      "path": "scripts/agent_contract_artifact_evidence.py",
+      "sha256": "797f7edba0682e77ebeea1e5f01f65a770da819a2d5dd93c501c30c7e2930a5d"
+    },
+    {
+      "bytes": 3586,
+      "path": "tests/test_agent_contract_artifact_evidence.py",
+      "sha256": "9ddaec5f230bbdb90450bb2485a97aac1ef0d85051afad5ec7c09b5edb674f2f"
+    }
+  ],
+  "status": "pass-agent-contract-reference",
+  "task_ids": [
+    "12.2.3.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "996a5e0582ed73eaf6502a5031ee1577e5c0181225be5a7430a9b319395e14d0",
+      "exit_code": 0,
+      "expected_marker_sha256": "fe70446aba469149abdeb565c734a5f09a15654b4055b8a3c564800c4b0cea25",
+      "status": "pass"
+    },
+    {
+      "command_id": "78cc14ab78f6720438f2d969c4f7101055a76ad3f73e01739be351f5ec0977bd",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    },
+    {
+      "command_id": "b94b4f584443a3c30cfc18773707d75d424110788ec344b4f26349116cf09223",
+      "exit_code": 0,
+      "expected_marker_sha256": "f08effd0ce32c0eff348e122c99f4626c17a8f260a1d783993f63b3eb3e3f53e",
+      "status": "pass"
+    }
+  ]
+}
