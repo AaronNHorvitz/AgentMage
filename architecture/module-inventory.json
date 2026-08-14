@@ -54,7 +54,8 @@
       "platforms": [
         "macos-arm64",
         "fedora-x86_64",
-        "ubuntu-x86_64"
+        "ubuntu-x86_64",
+        "windows-x86_64"
       ]
     },
     {

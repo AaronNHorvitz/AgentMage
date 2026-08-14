@@ -20,7 +20,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CRATE_NAME = "agentmage-kernel-contracts"
 CRATE_VERSION = "0.0.0"
-CONTRACT_SCHEMA_VERSION = 1
+CONTRACT_SCHEMA_VERSION = 2
 PREFIX = f"{CRATE_NAME}-{CRATE_VERSION}"
 OUTPUT_DIR = ROOT / "artifacts/sprints/sprint-4/story-4.1"
 ARCHIVE_PATH = OUTPUT_DIR / f"{PREFIX}.crate"
@@ -33,23 +33,35 @@ SOURCE_MEMBERS = {
     "LICENSE": "kernel/contracts/LICENSE",
     "README.md": "kernel/contracts/README.md",
     "rust-toolchain.toml": "kernel/contracts/rust-toolchain.toml",
+    "src/agent.rs": "kernel/contracts/src/agent.rs",
+    "src/agent_proposal.rs": "kernel/contracts/src/agent_proposal.rs",
+    "src/agent_restart.rs": "kernel/contracts/src/agent_restart.rs",
+    "src/agent_state.rs": "kernel/contracts/src/agent_state.rs",
+    "src/agent_verifier.rs": "kernel/contracts/src/agent_verifier.rs",
     "src/approval.rs": "kernel/contracts/src/approval.rs",
     "src/boundary.rs": "kernel/contracts/src/boundary.rs",
+    "src/claim.rs": "kernel/contracts/src/claim.rs",
+    "src/classification.rs": "kernel/contracts/src/classification.rs",
     "src/common.rs": "kernel/contracts/src/common.rs",
     "src/display_link.rs": "kernel/contracts/src/display_link.rs",
     "src/evidence.rs": "kernel/contracts/src/evidence.rs",
     "src/grant.rs": "kernel/contracts/src/grant.rs",
     "src/ids.rs": "kernel/contracts/src/ids.rs",
     "src/lib.rs": "kernel/contracts/src/lib.rs",
+    "src/model.rs": "kernel/contracts/src/model.rs",
     "src/network.rs": "kernel/contracts/src/network.rs",
+    "src/operation.rs": "kernel/contracts/src/operation.rs",
     "src/path.rs": "kernel/contracts/src/path.rs",
     "src/platform.rs": "kernel/contracts/src/platform.rs",
     "src/platform_path.rs": "kernel/contracts/src/platform_path.rs",
     "src/prompt.rs": "kernel/contracts/src/prompt.rs",
+    "src/reasoning.rs": "kernel/contracts/src/reasoning.rs",
     "src/serialization.rs": "kernel/contracts/src/serialization.rs",
     "src/task.rs": "kernel/contracts/src/task.rs",
     "src/tool.rs": "kernel/contracts/src/tool.rs",
+    "src/transaction.rs": "kernel/contracts/src/transaction.rs",
     "tests/contract_family.rs": "kernel/contracts/tests/contract_family.rs",
+    "tests/grant_target_contract.rs": "kernel/contracts/tests/grant_target_contract.rs",
 }
 EXCLUDED_CRATE_MEMBERS = (
     "kernel/contracts/tests/path_corpus.rs",
@@ -305,7 +317,7 @@ def build_report(path: Path, root: Path = ROOT) -> dict[str, Any]:
         },
         "limitations": [
             "This is an unpublished source-contract review package, not a product release.",
-            "Cargo version 0.0.0 and wire contract schema version 1 are separate identities.",
+            "Cargo version 0.0.0 and wire contract schema version 2 are separate identities.",
             "No macOS build or execution evidence is claimed.",
             "The package contains no CapabilityGrant implementation or positive execution path.",
         ],

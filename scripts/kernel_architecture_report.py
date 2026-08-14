@@ -30,7 +30,9 @@ CARGO_MANIFESTS = {
     "capability-read-only": "capabilities/read-only/Cargo.toml",
     "kernel-contracts": "kernel/contracts/Cargo.toml",
     "kernel-engine": "kernel/engine/Cargo.toml",
+    "platform-linux-native-inference": "platforms/linux-inference/Cargo.toml",
     "platform-linux": "platforms/linux/Cargo.toml",
+    "platform-windows": "platforms/windows/Cargo.toml",
     "release-xtask": "release/xtask/Cargo.toml",
     "shell-host": "shells/host/Cargo.toml",
 }
@@ -45,6 +47,7 @@ SOURCE_PATHS = (
     "kernel/engine/Cargo.toml",
     "package-lock.json",
     "platforms/linux/Cargo.toml",
+    "platforms/linux-inference/Cargo.toml",
     "platforms/macos/Package.resolved",
     "platforms/macos/Package.swift",
     "release/xtask/Cargo.toml",
@@ -52,6 +55,7 @@ SOURCE_PATHS = (
     "shells/host/Cargo.toml",
     "shells/vscode/package.json",
     "tests/test_kernel_architecture_report.py",
+    "platforms/windows/Cargo.toml",
 )
 EXPECTED_UNMATERIALIZED = {
     ("platform-macos", "kernel-contracts"): "blocked-macos",

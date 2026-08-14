@@ -6,10 +6,8 @@ retained machine-verifiable companion is the
 [`kernel-architecture-dependency-report.json`](../../artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json)
 artifact.
 
-That Story 4.1 artifact is revision-bound to the previous seven-edge graph and
-therefore fails the current checker as stale. It is not regenerated or
-represented as Phase 5 evidence; current policy and graph behavior are tested
-directly from source until the later evidence-supersession phase.
+The companion artifact is regenerated only from the closed manifest inventory
+and records the exact reviewed source revision.
 
 ## Evidence Boundary
 
@@ -29,6 +27,8 @@ flowchart BT
     KE["kernel-engine"] --> KC["kernel-contracts"]
     PL["platform-linux"] --> KC
     PL -->|"effect mediation only"| KE
+    PLI["platform-linux-native-inference"] --> KC
+    PW["platform-windows"] --> KC
     CR["capability-read-only"] --> KC
     SH["shell-host"] --> KC
     SH --> KE
@@ -36,18 +36,20 @@ flowchart BT
     SH --> CR
 ```
 
-The eight materialized internal product edges are:
+The ten materialized internal product edges are:
 
 - `capability-read-only` -> `kernel-contracts`
 - `kernel-engine` -> `kernel-contracts`
 - `platform-linux` -> `kernel-contracts`
 - `platform-linux` -> `kernel-engine`
+- `platform-linux-native-inference` -> `kernel-contracts`
+- `platform-windows` -> `kernel-contracts`
 - `shell-host` -> `capability-read-only`
 - `shell-host` -> `kernel-contracts`
 - `shell-host` -> `kernel-engine`
 - `shell-host` -> `platform-linux` under `cfg(target_os = "linux")`
 
-Both the amended twelve-edge logical graph and this eight-edge materialized graph
+Both the amended fourteen-edge logical graph and this ten-edge materialized graph
 are acyclic. Every materialized edge is in the source module's exact allowlist.
 
 ## Declared but Unmaterialized Edges
@@ -67,7 +69,10 @@ verify each edge before its status can change.
 
 The Cargo manifests directly use `serde` and `serde_json` in contracts;
 `ed25519-dalek`, `serde`, `serde_json`, and `sha2` in the kernel engine; and
-`rustix`, `seccompiler`, `sha2`, and `zeroize` in the Linux adapter. `seccompiler` is a
+`rustix`, `seccompiler`, `sha2`, and `zeroize` in the Linux adapter; and `rustix`,
+`serde`, `serde_json`, `sha2`, and `zeroize` in the Linux inference adapter. The
+Windows adapter currently has only the contracts dependency on non-Windows hosts,
+with target-gated `sha2` and `windows-sys` dependencies. `seccompiler` is a
 pure-Rust classic-BPF policy compiler used to produce the fixed Bubblewrap
 worker filter; it does not add a native `libseccomp` link. `zeroize` clears
 credential and sensitive pipe buffers when they leave scope. Exact resolved
@@ -83,10 +88,12 @@ by the supply-chain controls and are not duplicated here.
 
 - `kernel-contracts` has zero internal product dependencies.
 - `kernel-engine` has exactly one internal edge, to `kernel-contracts`.
-- Neither the kernel, Linux adapter, nor read-only capability imports a shell.
+- Neither the kernel, Linux adapters, Windows adapter, nor read-only capability imports a shell.
 - The Linux adapter depends inward on contracts and the kernel's consuming
   effect-mediation interface. The read-only capability depends only on
   contracts; neither imports the other.
+- Linux inference and Windows each depend inward on contracts without importing
+  the kernel engine or a shell.
 - The host shell is the only materialized composition root.
 - No compile cycle or prohibited observed edge exists.
 
