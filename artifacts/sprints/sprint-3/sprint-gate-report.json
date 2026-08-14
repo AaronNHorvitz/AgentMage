@@ -56,19 +56,19 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json",
-        "sha256": "78c15c38455f68e1ebf55c1a3f5e814f2025b34fd25305f804b422fd5e238ea9"
+        "sha256": "8c7358b01c6f78711458ed82d57f5a502df2367a43212eda3b30795d21d3bcca"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json",
-        "sha256": "10d953bfdeb0b5151f0c9eed9ea3fb67823931b1315fdeaccfe72d2efd4b43b0"
+        "sha256": "27e4c1647dff3131dab73474621958a79309a7153c83ab5ac880202d85e99216"
       },
       {
         "path": "scripts/story_3_1_gate.py",
-        "sha256": "e81c7ae03e6a7827536dfe6742988b363e8332f33123171ddfe7467d99126dc8"
+        "sha256": "dd356235593d12fbcc10650543eb22710482789e131132a034d406609e33fa1d"
       },
       {
         "path": "scripts/story_3_2_gate.py",
-        "sha256": "59e1781fd78a7058d556521806e790ea588ebb54b2edd0a3aa23b683f0cee2bb"
+        "sha256": "c42aa3b5a1186eafe0ac29361adf6de988ec50f309b15e6961e7ab204007a438"
       },
       {
         "path": "tests/test_story_3_1_gate.py",
@@ -80,39 +80,39 @@
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-        "sha256": "4c5c55738c0eded913756160d9e246e8e411ac8837c41557a31c0edace16bd94"
+        "sha256": "c8e2c5b24038302d1291c4b0487e652672aad1c9578554f34eabfa3659591aed"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-        "sha256": "8c36564b8bfcf8a77fb437b50272719dfae694a9997592fbde1e26a45756471d"
+        "sha256": "ecbd37baff3b424d800771e0b01fcd6c1416544d7df952b8b35e7ac9af8a9315"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-        "sha256": "363e58caf55bb668679b03771e4eb751465efff00452cbcd2f9a4956ccb0f078"
+        "sha256": "c2c7f3e0f457f9cfafcd297cf75fcedd5e0cc2b65005e6ae1f1688ed4d89f6aa"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-        "sha256": "84c548db0d9bb23648970e75c255926ee371c3971a62b6cdaf03f119be8d1dbe"
+        "sha256": "a52407db54514158283cd5a6c267011ecbc45e5573a2d1fa66b490b7fd7edb69"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-        "sha256": "64134c5940e36594cd10ccc2deaef08872a89d71a4f70d0e7e53458bbc1f678a"
+        "sha256": "1f31c7601cf1ca5b672a907394e614a084d3ef2e2deb648646706e27ff9edb1e"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-        "sha256": "fd1bfdd25dd20e52b8c3a3bf65cd83d3a9b58b7853022e28e219364c5f673898"
+        "sha256": "1c7723b408c69bfc8c3e04cbb5baa75ab5d3ec3d826e0fab1a26e000dda7e915"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-        "sha256": "e90ff13725062370f899ca9f937aa05a01f1b5483a75b2bbb41fe36b937a0127"
+        "sha256": "fd1891893baf0d861f7e08d70e82bd8083f6d7ce3be4080e78c14b18efa01eb1"
       },
       {
         "path": "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
-        "sha256": "c15497513847444f268c2d95e66da6ad8c611bf7f7f4c1f64e7ddc450b106ac7"
+        "sha256": "ecc1ee34019e83331d5eeac26eb42ea62909a5904605e2711a69d27653496c1e"
       }
     ],
-    "reviewed_commit": "46073551d1b73ebb01c98fd43145418b67ac168f",
-    "reviewed_tree": "fb5189c4cb64fb6159a9f4040d6071b9960b4358",
+    "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
+    "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
     "reviewer_id": "agentmage-sprint-3-independent-gate-v1"
   },
   "macos": {
@@ -124,8 +124,8 @@
   "product_acceptance_claim": "none",
   "product_startup_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "46073551d1b73ebb01c98fd43145418b67ac168f",
-  "reviewed_tree": "fb5189c4cb64fb6159a9f4040d6071b9960b4358",
+  "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
+  "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
   "schema_version": 1,
   "sprint_id": 3,
   "status": "blocked-macos",
