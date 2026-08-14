@@ -2,7 +2,7 @@
 
 use std::process::{Command, Stdio};
 
-use agentmage_platform_linux_inference::BOUNDARY_DESCRIPTION;
+use agentmage_platform_linux_inference::{BOUNDARY_DESCRIPTION, MODEL_INSTALLER_SELF_CHECK};
 
 const DOCKER_GUARD_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"serve-one-session\",\"self-check\"],\"authority\":\"guarded-inference-transport-only\",\"component_id\":\"agentmage-docker-guard\",\"docker_control\":false,\"enabled\":false,\"network_egress\":false,\"protocol_version\":1,\"raw_target\":\"private-namespace-loopback-only\",\"sessions\":1}\n";
 const DOCKER_COLLECTOR_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"observe\",\"self-check\",\"validate-observation-stdin\"],\"authority\":\"docker-topology-observation-only\",\"component_id\":\"agentmage-docker-topology-collector\",\"docker_mutation\":false,\"enabled\":false,\"network_egress\":false,\"preflight_contract_version\":3,\"protocol_version\":2}\n";
@@ -38,6 +38,44 @@ fn packaged_process_refuses_inference_and_ambient_arguments() {
             output.stderr,
             b"agentmage.native-inference.operation-unavailable-no-admitted-profile\n"
         );
+    }
+}
+
+#[test]
+fn packaged_model_installer_is_one_shot_inactive_and_content_free() {
+    let output = Command::new(env!("CARGO_BIN_EXE_agentmage-model-installer"))
+        .arg("--self-check")
+        .env("AGENTMAGE_TEST_SECRET_CANARY", "must-not-appear")
+        .stdin(Stdio::null())
+        .output()
+        .expect("installer executes and exits");
+    assert!(output.status.success());
+    assert_eq!(output.stdout, MODEL_INSTALLER_SELF_CHECK);
+    assert!(output.stderr.is_empty());
+    assert!(
+        !output
+            .stdout
+            .windows(15)
+            .any(|value| value == b"must-not-appear")
+    );
+}
+
+#[test]
+fn packaged_model_installer_refuses_lifecycle_and_ambient_arguments() {
+    for arguments in [
+        vec![],
+        vec!["--install"],
+        vec!["--source", "/tmp/model.gguf"],
+        vec!["--self-check", "extra"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_agentmage-model-installer"))
+            .args(arguments)
+            .stdin(Stdio::null())
+            .output()
+            .expect("installer executes and exits");
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        assert_eq!(output.stderr, b"model.installer.operation-unavailable\n");
     }
 }
 

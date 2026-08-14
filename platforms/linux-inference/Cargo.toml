@@ -28,5 +28,9 @@ path = "src/docker_topology_collector_main.rs"
 name = "agentmage-native-inference"
 path = "src/main.rs"
 
+[[bin]]
+name = "agentmage-model-installer"
+path = "src/model_installer_main.rs"
+
 [lints]
 workspace = true
