@@ -50,6 +50,10 @@ export const CONFIGURATION_REVIEW_TYPES = Object.freeze([
   "configuration-diff",
   "configuration-rollback-report",
 ]);
+export const RUNTIME_RECORD_TYPES = Object.freeze([
+  "single-agent-state-machine",
+  "agent-progress-event",
+]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
 
@@ -172,6 +176,52 @@ export function createConfigurationValidators() {
       },
     ),
   );
+}
+
+export function createRuntimeValidators() {
+  const ajv = new Ajv2020({
+    allErrors: true,
+    coerceTypes: false,
+    removeAdditional: false,
+    strict: true,
+    useDefaults: false,
+  });
+  addFormats(ajv);
+
+  return Object.fromEntries(
+    RUNTIME_RECORD_TYPES.map((recordType) => {
+      const schema = readJson(`schemas/runtime/${recordType}.schema.json`);
+      return [recordType, ajv.compile(schema)];
+    }),
+  );
+}
+
+export function validateRuntimeRecord(recordType, data, validators) {
+  const validator = validators[recordType];
+  if (!validator) {
+    throw new Error(`unknown runtime record type: ${recordType}`);
+  }
+  const valid = validator(data);
+  return {
+    valid,
+    schemaErrors: valid
+      ? []
+      : (validator.errors ?? []).map((error) =>
+        `${error.instancePath || "/"} ${error.message}`,
+      ),
+  };
+}
+
+export function validateRuntimeFixtures() {
+  const validators = createRuntimeValidators();
+  return RUNTIME_RECORD_TYPES.map((recordType) => ({
+    recordType,
+    ...validateRuntimeRecord(
+      recordType,
+      readJson(`schemas/runtime/examples/${recordType}.valid.json`),
+      validators,
+    ),
+  }));
 }
 
 export function planningSemanticErrors(recordType, data) {
@@ -631,6 +681,7 @@ function main() {
   const configurationBoundResultResults =
     validateConfigurationResultFixtures();
   const configurationReviewResults = validateConfigurationReviewFixtures();
+  const runtimeResults = validateRuntimeFixtures();
   const results = [
     ...planningResults,
     ...testingResults,
@@ -638,6 +689,7 @@ function main() {
     ...configurationProfileResults,
     ...configurationBoundResultResults,
     ...configurationReviewResults,
+    ...runtimeResults,
   ];
   const failures = results.filter((result) => !result.valid);
   if (process.argv.includes("--legacy-report-currentness")) {
@@ -669,7 +721,8 @@ function main() {
       + `${configurationResults.length} configuration schema fixture(s), plus `
       + `${configurationProfileResults.length} profile record(s) and `
       + `${configurationBoundResultResults.length} configuration-bound result(s) and `
-      + `${configurationReviewResults.length} review record(s).`,
+      + `${configurationReviewResults.length} review record(s) and `
+      + `${runtimeResults.length} runtime record(s).`,
   );
   return 0;
 }

@@ -11,11 +11,13 @@ import {
   CONFIGURATION_REVIEW_TYPES,
   CONFIGURATION_SECTION_TYPES,
   RECORD_TYPES,
+  RUNTIME_RECORD_TYPES,
   TEST_RECORD_TYPES,
   TEMPLATE_TYPES,
   buildConfigurationSchemaReport,
   createConfigurationValidators,
   createPlanningValidators,
+  createRuntimeValidators,
   createTestingValidators,
   validateConfigurationFixtures,
   validateConfigurationRecord,
@@ -25,6 +27,8 @@ import {
   validateConfigurationSchemaReport,
   validatePlanningRecord,
   validatePlanningTemplates,
+  validateRuntimeFixtures,
+  validateRuntimeRecord,
   validateTestingFixtures,
   validateTestingRecord,
 } from "../scripts/validate_planning_schemas.mjs";
@@ -33,6 +37,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const validators = createPlanningValidators();
 const testingValidators = createTestingValidators();
 const configurationValidators = createConfigurationValidators();
+const runtimeValidators = createRuntimeValidators();
 
 function fixture(recordType) {
   const fixturePath = path.join(
@@ -336,6 +341,115 @@ test("unknown testing record types fail explicitly", () => {
   assert.throws(
     () => validateTestingRecord("unknown-record", {}, testingValidators),
     /unknown testing record type/,
+  );
+});
+
+test("single-agent state-machine and event fixtures satisfy closed schemas", () => {
+  const results = validateRuntimeFixtures();
+  assert.deepEqual(RUNTIME_RECORD_TYPES, [
+    "single-agent-state-machine",
+    "agent-progress-event",
+  ]);
+  assert.deepEqual(
+    results.map((result) => result.valid),
+    [true, true],
+  );
+});
+
+test("runtime schemas reject missing and unknown fields", () => {
+  for (const recordType of RUNTIME_RECORD_TYPES) {
+    const source = JSON.parse(
+      fs.readFileSync(
+        path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+        "utf8",
+      ),
+    );
+    const missing = structuredClone(source);
+    delete missing.schema_version;
+    assert.equal(
+      validateRuntimeRecord(recordType, missing, runtimeValidators).valid,
+      false,
+    );
+    const unknown = structuredClone(source);
+    unknown.model_instruction = "broaden authority";
+    assert.equal(
+      validateRuntimeRecord(recordType, unknown, runtimeValidators).valid,
+      false,
+    );
+  }
+});
+
+test("state-machine schema rejects phase edge and authority drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/single-agent-state-machine.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  for (const mutation of ["phase", "edge", "authority", "terminal"]) {
+    const changed = structuredClone(source);
+    if (mutation === "phase") {
+      changed.phases[2] = "execute";
+    } else if (mutation === "edge") {
+      changed.transitions[4].to = "act";
+    } else if (mutation === "authority") {
+      changed.authority = "model-authorized";
+    } else {
+      changed.terminal_phases = ["review"];
+    }
+    assert.equal(
+      validateRuntimeRecord(
+        "single-agent-state-machine",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("progress events enforce sequence revision step identity and content-free shape", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/agent-progress-event.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const cases = [];
+  const zeroSequence = structuredClone(source);
+  zeroSequence.sequence = 0;
+  cases.push(zeroSequence);
+  const zeroRevision = structuredClone(source);
+  zeroRevision.plan_revision = 0;
+  cases.push(zeroRevision);
+  const planWithStep = structuredClone(source);
+  planWithStep.plan_step_id = "step-unexpected";
+  cases.push(planWithStep);
+  const stepWithoutIdentity = structuredClone(source);
+  stepWithoutIdentity.kind = "step_started";
+  cases.push(stepWithoutIdentity);
+  const content = structuredClone(source);
+  content.message = "private progress content";
+  cases.push(content);
+  for (const changed of cases) {
+    assert.equal(
+      validateRuntimeRecord("agent-progress-event", changed, runtimeValidators)
+        .valid,
+      false,
+    );
+  }
+});
+
+test("unknown runtime record types fail explicitly", () => {
+  assert.throws(
+    () => validateRuntimeRecord("unknown-record", {}, runtimeValidators),
+    /unknown runtime record type/,
   );
 });
 

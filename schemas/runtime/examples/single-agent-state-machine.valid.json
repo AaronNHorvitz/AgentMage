@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "record_type": "single-agent-state-machine",
+  "machine_id": "agentmage-single-agent-loop-v1",
+  "initial_phase": "observe",
+  "phases": [
+    "observe",
+    "plan",
+    "act",
+    "review",
+    "stopped"
+  ],
+  "transitions": [
+    {
+      "from": "observe",
+      "to": "plan",
+      "reason": "observation_requires_plan"
+    },
+    {
+      "from": "observe",
+      "to": "act",
+      "reason": "observation_plan_exists"
+    },
+    {
+      "from": "observe",
+      "to": "stopped",
+      "reason": "budget_or_stop"
+    },
+    {
+      "from": "plan",
+      "to": "act",
+      "reason": "plan_created"
+    },
+    {
+      "from": "act",
+      "to": "review",
+      "reason": "action_admitted"
+    },
+    {
+      "from": "act",
+      "to": "stopped",
+      "reason": "budget_or_stop"
+    },
+    {
+      "from": "review",
+      "to": "observe",
+      "reason": "progress_reviewed"
+    },
+    {
+      "from": "review",
+      "to": "stopped",
+      "reason": "terminal_review_or_stop"
+    }
+  ],
+  "terminal_phases": [
+    "stopped"
+  ],
+  "authority": "descriptive-only",
+  "record_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/agent-progress-event.schema.json",
+  "title": "AgentMage Agent Progress Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sequence",
+    "task_id",
+    "plan_id",
+    "plan_revision",
+    "plan_step_id",
+    "kind"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    },
+    "task_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "plan_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "plan_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "plan_step_id": {
+      "oneOf": [
+        { "$ref": "#/$defs/identifier" },
+        { "type": "null" }
+      ]
+    },
+    "kind": {
+      "enum": [
+        "plan_current",
+        "step_ready",
+        "step_started",
+        "step_completed",
+        "step_blocked",
+        "step_skipped",
+        "cancelled"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "kind": { "const": "plan_current" }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "plan_step_id": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "step_ready",
+              "step_started",
+              "step_completed",
+              "step_blocked",
+              "step_skipped"
+            ]
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "plan_step_id": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    }
+  }
+}

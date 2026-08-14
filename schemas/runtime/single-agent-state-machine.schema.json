@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/single-agent-state-machine.schema.json",
+  "title": "AgentMage Single-Agent State Machine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "machine_id",
+    "initial_phase",
+    "phases",
+    "transitions",
+    "terminal_phases",
+    "authority",
+    "record_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "record_type": {
+      "const": "single-agent-state-machine"
+    },
+    "machine_id": {
+      "const": "agentmage-single-agent-loop-v1"
+    },
+    "initial_phase": {
+      "const": "observe"
+    },
+    "phases": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "observe" },
+        { "const": "plan" },
+        { "const": "act" },
+        { "const": "review" },
+        { "const": "stopped" }
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "transitions": {
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/observeToPlan" },
+        { "$ref": "#/$defs/observeToAct" },
+        { "$ref": "#/$defs/observeToStopped" },
+        { "$ref": "#/$defs/planToAct" },
+        { "$ref": "#/$defs/actToReview" },
+        { "$ref": "#/$defs/actToStopped" },
+        { "$ref": "#/$defs/reviewToObserve" },
+        { "$ref": "#/$defs/reviewToStopped" }
+      ],
+      "items": false,
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "terminal_phases": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "stopped" }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "authority": {
+      "const": "descriptive-only"
+    },
+    "record_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "reason"
+      ],
+      "properties": {
+        "from": {
+          "enum": [
+            "observe",
+            "plan",
+            "act",
+            "review",
+            "stopped"
+          ]
+        },
+        "to": {
+          "enum": [
+            "observe",
+            "plan",
+            "act",
+            "review",
+            "stopped"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      }
+    },
+    "observeToPlan": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "observe" },
+            "to": { "const": "plan" },
+            "reason": { "const": "observation_requires_plan" }
+          }
+        }
+      ]
+    },
+    "observeToAct": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "observe" },
+            "to": { "const": "act" },
+            "reason": { "const": "observation_plan_exists" }
+          }
+        }
+      ]
+    },
+    "observeToStopped": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "observe" },
+            "to": { "const": "stopped" },
+            "reason": { "const": "budget_or_stop" }
+          }
+        }
+      ]
+    },
+    "planToAct": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "plan" },
+            "to": { "const": "act" },
+            "reason": { "const": "plan_created" }
+          }
+        }
+      ]
+    },
+    "actToReview": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "act" },
+            "to": { "const": "review" },
+            "reason": { "const": "action_admitted" }
+          }
+        }
+      ]
+    },
+    "actToStopped": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "act" },
+            "to": { "const": "stopped" },
+            "reason": { "const": "budget_or_stop" }
+          }
+        }
+      ]
+    },
+    "reviewToObserve": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "review" },
+            "to": { "const": "observe" },
+            "reason": { "const": "progress_reviewed" }
+          }
+        }
+      ]
+    },
+    "reviewToStopped": {
+      "allOf": [
+        { "$ref": "#/$defs/transition" },
+        {
+          "type": "object",
+          "properties": {
+            "from": { "const": "review" },
+            "to": { "const": "stopped" },
+            "reason": { "const": "terminal_review_or_stop" }
+          }
+        }
+      ]
+    }
+  }
+}
