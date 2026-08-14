@@ -3,17 +3,17 @@
   "fixtures": [
     {
       "path": "fixtures/grants/v1/approval-preview.workspace-read.json",
-      "sha256": "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707",
-      "size_bytes": 1673
+      "sha256": "17663308186bc6251e013e01f975cafd4a9def008599783487c22fd743b2f883",
+      "size_bytes": 2540
     },
     {
       "path": "fixtures/grants/v1/denial-receipt.argument-mismatch.json",
-      "sha256": "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41",
-      "size_bytes": 1116
+      "sha256": "ebaefe44484bc6b1bc028d436d265d5ad2531e6f3b34ae42bbda631c809e3cfd",
+      "size_bytes": 1356
     },
     {
       "path": "fixtures/grants/v1/policy-denial.argument-mismatch.json",
-      "sha256": "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96",
+      "sha256": "0be101a274d5f90b4209829a9552d5f19a97833f6ca67cbade495f9b59189e6d",
       "size_bytes": 334
     }
   ],
