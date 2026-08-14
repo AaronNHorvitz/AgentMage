@@ -1,0 +1,107 @@
+{
+  "artifact_id": "s-012-i07-attachment-resolution",
+  "case_ids": [
+    "ATT-01",
+    "ATT-02",
+    "ATT-03",
+    "ATT-04",
+    "ATT-05",
+    "ATT-06"
+  ],
+  "claims": {
+    "attachment_format_count": 12,
+    "deferred_release_pack_format_count": 7,
+    "exact_preimage_required": true,
+    "external_network_used": false,
+    "file_content_bytes_retained": 0,
+    "focused_case_count": 6,
+    "format_detection_implemented": false,
+    "live_file_observations": 0,
+    "manual_fuzzing_executed": false,
+    "parser_executions": 0,
+    "persistent_resolution_records_implemented": false,
+    "raw_text_eligible_format_count": 4,
+    "release_support": false,
+    "resolved_record_authority_admitted_count": 0,
+    "unsupported_format_count": 1
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The focused suite uses a deterministic fake adapter and synthetic preimages; no live file or platform execution is claimed.",
+    "The boundary resolves and hashes metadata only; it retains no file bytes and runs no decoder, parser, scanner, or renderer.",
+    "Shell discovery, format detection, content reading, parsers, persistence, checkpoints, and UI rendering remain later work.",
+    "No private user data, model, external network, publication, or release path is used.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "a16a996e87cfbab3ff346f26f0be28ad67397380",
+  "sources": [
+    {
+      "bytes": 2699,
+      "path": "docs/verification/s-012-i07-attachment-resolution-results.md",
+      "sha256": "a1b2e654c06143bfddf8d9b6cee44abe2ff9d4d958434fa979fe2c0c2f4a4c3f"
+    },
+    {
+      "bytes": 24759,
+      "path": "kernel/engine/src/attachment.rs",
+      "sha256": "2a9f4448994bb0dc8dab2e73294c58ab8fa2fee11d9e25efa92fd0e594c0c79f"
+    },
+    {
+      "bytes": 29177,
+      "path": "kernel/engine/src/session_environment.rs",
+      "sha256": "2b69c2fa5441d24fa14b0bbfd5d67a4c8a3fe0ca1b87c5b949a218e52fb5a4c0"
+    },
+    {
+      "bytes": 17169,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
+    },
+    {
+      "bytes": 2704,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "154c28993897c612e9d2c36f5805c935aa034085f72ceb362396514af89daccc"
+    },
+    {
+      "bytes": 10164,
+      "path": "scripts/attachment_resolution_evidence.py",
+      "sha256": "d56a6c7854dd3c1ff45346b5e3d3791124f8fea04547bc9529e5372631538ce0"
+    },
+    {
+      "bytes": 3551,
+      "path": "tests/test_attachment_resolution_evidence.py",
+      "sha256": "60976c4c3181cb78f685ef3a7d0be9c405410fbf136cbb9deb8f6fd1baa53e73"
+    }
+  ],
+  "status": "pass-bounded-attachment-resolution",
+  "task_ids": [
+    "12.1.1.7",
+    "S-012-I07"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "73189de80dcbd86fcf488c4253ce221d05e072dff7f317273e753e432649c24c",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "69864421651a3c99f73f294031cbbee88758bfb4f38ea736d3b1437153ff1a87",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
