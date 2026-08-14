@@ -1,0 +1,199 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-28-BLOCKED",
+      "owner": "28.1"
+    },
+    {
+      "code": "RAW-AND-REBUILT-INDEX-INTEGRATION-ABSENT",
+      "owner": "29.1.3.4"
+    },
+    {
+      "code": "SYNTHESIS-RENDERING-INTEGRATION-ABSENT",
+      "owner": "29.1.1.6"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-29-REVIEW-ABSENT",
+      "owner": "29.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "56c0c4d21903220d02b3a61aefe4d938a4792dc115bfc0e16e0bbbe3ee491f6f"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "792d2e8f25208b8c78082f4cb92bf70e5a39c06a45f2d5b02690a9c773b17d37"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "46cc7ce26c6cb363d22efed4e7cead3224c7599a6fcc36534fa853c7da462e52"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_29_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "fixture_corpus_metrics": {
+    "expected_citation_set_match": 1.0,
+    "expected_top_1_precision": 1.0,
+    "expected_top_1_recall": 1.0,
+    "fixture_version": 1,
+    "production_quality_claim": false,
+    "question_count": 3
+  },
+  "implemented_contracts": {
+    "byte_bounded_deduplicated_context": true,
+    "conflict_stale_denied_and_unknown_states": true,
+    "content_bound_citations": true,
+    "filesystem_network_process_or_write_authority": false,
+    "fixed_integer_ranking_and_score_trace": true,
+    "literal_term_and_phrase_search": true,
+    "metadata_and_authority_filters": true,
+    "raw_and_rebuilt_index_integration": false,
+    "secret_and_workspace_canary_exclusion": true,
+    "semantic_components_used": false,
+    "stable_tie_breaking": true,
+    "strict_source_document_and_query_contracts": true,
+    "synthesis_and_final_rendering_integration": false,
+    "verification_recency_bands": true
+  },
+  "record_type": "sprint_29_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-AI-003",
+    "SR-AI-005",
+    "SR-AI-007",
+    "SR-AI-008",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-TST-004"
+  ],
+  "source_revision": "ee53bcdd62f8cb00f381361e66f3db07034981d7",
+  "source_sha256": {
+    "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
+    "capabilities/knowledge/src/lib.rs": "7ab873955795d4adec0f7e5eb6328be31200b85856506f3b89c412ff1f7eeb4e",
+    "capabilities/knowledge/src/retrieval.rs": "013a57a0881b8136c6f8cec1e463bc42b945bb0327eb23e98d34420025ad5e7c",
+    "docs/architecture/deterministic-knowledge-retrieval.md": "9b8f4f29861a7dcad906661a1b594a8b0ea04622d951031da6d7fe49481d5475",
+    "docs/verification/sprint-29-local-results.md": "2f1a1e253dce58f42fc76cdb51c08bb01df55f4aed5028993490d8a1a1c393d0",
+    "scripts/sprint_29_evidence.py": "9e938ab4d69e80f3af34a8a06427b70ef3d86f13b8ae47b06b1596ff5d76799f",
+    "tests/test_sprint_29_evidence.py": "d99a464f4e473967dc939b81c168d26cf2444f97afed0e56cd0ceea5dab5437b"
+  },
+  "summary": {
+    "local_retrieval_core_passed": true,
+    "release_approval": false,
+    "semantic_components_used": false,
+    "sprint_status": "BLOCKED",
+    "write_authority_enabled": false
+  },
+  "verification_evidence": {
+    "complete_local_product_and_docs_gates": true,
+    "conflict_stale_denied_and_unknown_states": true,
+    "fixed_ranking_and_citation_corpus": true,
+    "independent_review": false,
+    "literal_injection_secret_and_workspace_isolation": true,
+    "raw_and_rebuilt_index_integration": false,
+    "synthesis_and_final_rendering_integration": false,
+    "upstream_sprint_28_gate": false
+  }
+}
