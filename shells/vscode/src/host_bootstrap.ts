@@ -99,6 +99,18 @@ class SupervisedHostBridge implements HostBridge {
     child.stderr.on("data", () => this.dispose());
   }
 
+  discoverModels(
+    request: Parameters<HostBridge["discoverModels"]>[0],
+  ): ReturnType<HostBridge["discoverModels"]> {
+    return this.bridge.discoverModels(request);
+  }
+
+  revalidateModel(
+    request: Parameters<HostBridge["revalidateModel"]>[0],
+  ): ReturnType<HostBridge["revalidateModel"]> {
+    return this.bridge.revalidateModel(request);
+  }
+
   doctor(
     request: Parameters<HostBridge["doctor"]>[0],
   ): ReturnType<HostBridge["doctor"]> {

@@ -8,6 +8,10 @@ import {
   type HostResponse,
   type ReceiptSummary,
 } from "./provider.js";
+import {
+  parseModelPickerSnapshot,
+  parseModelSelectionRevalidation,
+} from "./model_discovery.js";
 
 const LINUX_IPC_PROTOCOL_VERSION = 1;
 const AUTHENTICATION_DOMAIN = Buffer.from(
@@ -59,6 +63,18 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     };
     this.secret = Uint8Array.from(credentials.launchSecret);
     credentials.launchSecret.fill(0);
+  }
+
+  discoverModels(
+    request: Parameters<HostBridge["discoverModels"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  revalidateModel(
+    request: Parameters<HostBridge["revalidateModel"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
   }
 
   doctor(request: Parameters<HostBridge["doctor"]>[0]): Promise<HostResponse> {
@@ -126,6 +142,8 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
   ): Promise<HostReadResponse> {
     return this.safeExchange(request).then((response) =>
       response.kind === "doctor_completed" ||
+      response.kind === "models_discovered" ||
+      response.kind === "model_revalidated" ||
       response.kind === "diagnostic_export_preview" ||
       response.kind === "diagnostic_export_completed"
         ? {
@@ -313,6 +331,46 @@ function parseResponse(candidate: unknown): HostResponse {
     throw new HostBridgeFailure();
   }
   switch (candidate.kind) {
+    case "models_discovered":
+      requireKeys(candidate, [
+        "kind",
+        "request_id",
+        "schema_version",
+        "snapshot",
+      ]);
+      if (!validIdentifier(candidate.request_id)) {
+        throw new HostBridgeFailure();
+      }
+      try {
+        return {
+          kind: "models_discovered",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: candidate.request_id,
+          snapshot: parseModelPickerSnapshot(candidate.snapshot),
+        };
+      } catch {
+        throw new HostBridgeFailure();
+      }
+    case "model_revalidated":
+      requireKeys(candidate, [
+        "kind",
+        "request_id",
+        "revalidation",
+        "schema_version",
+      ]);
+      if (!validIdentifier(candidate.request_id)) {
+        throw new HostBridgeFailure();
+      }
+      try {
+        return {
+          kind: "model_revalidated",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: candidate.request_id,
+          revalidation: parseModelSelectionRevalidation(candidate.revalidation),
+        };
+      } catch {
+        throw new HostBridgeFailure();
+      }
     case "doctor_completed":
       requireKeys(candidate, [
         "kind",

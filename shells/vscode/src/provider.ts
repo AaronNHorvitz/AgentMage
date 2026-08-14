@@ -1,8 +1,13 @@
-/** Closed controller for the Phase 9 secure-read chat provider. */
+/** Closed controller for the native AgentMage chat provider. */
+
+import {
+  parseModelPickerSnapshot,
+  parseModelSelectionRevalidation,
+  renderModelManagementReport,
+  type ModelPickerSnapshot,
+} from "./model_discovery.js";
 
 export const PROVIDER_VENDOR = "agentmage" as const;
-export const PROVIDER_MODEL_ID = "secure-local-read" as const;
-export const PROVIDER_FAMILY = "agentmage-secure-read" as const;
 export const HOST_PROTOCOL_VERSION = 1 as const;
 
 const MAX_PROMPT_BYTES = 4_096;
@@ -114,6 +119,18 @@ export type HostReadResponse =
 export type HostResponse =
   | HostReadResponse
   | {
+      readonly kind: "models_discovered";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly snapshot: ModelPickerSnapshot;
+    }
+  | {
+      readonly kind: "model_revalidated";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly revalidation: ReturnType<typeof parseModelSelectionRevalidation>;
+    }
+  | {
       readonly kind: "doctor_completed";
       readonly schema_version: 1;
       readonly request_id: string;
@@ -131,6 +148,20 @@ export type HostResponse =
     };
 
 export interface HostBridge {
+  discoverModels(request: {
+    readonly kind: "discover_models";
+    readonly schema_version: 1;
+    readonly request_id: string;
+  }): Promise<HostResponse>;
+
+  revalidateModel(request: {
+    readonly kind: "revalidate_model";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly profile_id: string;
+    readonly expected_entry_sha256: string;
+  }): Promise<HostResponse>;
+
   doctor(request: {
     readonly kind: "doctor";
     readonly schema_version: 1;
@@ -222,6 +253,22 @@ export interface ControllerResult {
 
 /** Inert bridge used until a verified package injects authenticated IPC. */
 export class UnavailableHostBridge implements HostBridge {
+  discoverModels(
+    request: Parameters<HostBridge["discoverModels"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  revalidateModel(
+    request: Parameters<HostBridge["revalidateModel"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
   doctor(request: Parameters<HostBridge["doctor"]>[0]): Promise<HostResponse> {
     return Promise.resolve(
       denied(request.request_id, "host.connection.unavailable"),
@@ -302,12 +349,97 @@ export class SecureReadController {
     private readonly identities: RequestIdentitySource,
   ) {}
 
+  /** Returns only a current digest-verified model snapshot from the host. */
+  async discoverModels(
+    cancellation: CancellationSignal,
+  ): Promise<ModelPickerSnapshot | undefined> {
+    if (this.disposed || cancellation.isCancellationRequested) {
+      return undefined;
+    }
+    const requestId = this.identities.next();
+    const response = await this.host.discoverModels({
+      kind: "discover_models",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: requestId,
+    });
+    if (
+      this.disposed ||
+      cancellation.isCancellationRequested ||
+      response.kind !== "models_discovered" ||
+      response.schema_version !== HOST_PROTOCOL_VERSION ||
+      response.request_id !== requestId
+    ) {
+      return undefined;
+    }
+    try {
+      return parseModelPickerSnapshot(response.snapshot);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Revalidates one exact displayed entry and never selects an alternative. */
+  async revalidateSelectedModel(
+    profileId: string,
+    expectedEntrySha256: string,
+    cancellation: CancellationSignal,
+  ): Promise<ControllerResult | undefined> {
+    if (this.disposed || cancellation.isCancellationRequested) {
+      return cancelledResult();
+    }
+    const requestId = this.identities.next();
+    const response = await this.host.revalidateModel({
+      kind: "revalidate_model",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: requestId,
+      profile_id: profileId,
+      expected_entry_sha256: expectedEntrySha256,
+    });
+    if (
+      this.disposed ||
+      cancellation.isCancellationRequested ||
+      response.kind !== "model_revalidated" ||
+      response.schema_version !== HOST_PROTOCOL_VERSION ||
+      response.request_id !== requestId
+    ) {
+      return result(
+        "# Request Stopped\n\nAgentMage could not revalidate the selected local model. No model or tool was started.\n\n- Status: unavailable\n- Code: `vscode.model.revalidation-unavailable`",
+      );
+    }
+    let revalidation: ReturnType<typeof parseModelSelectionRevalidation>;
+    try {
+      revalidation = parseModelSelectionRevalidation(response.revalidation);
+    } catch {
+      return result(
+        "# Request Stopped\n\nAgentMage rejected an invalid model revalidation response. No model or tool was started.\n\n- Status: denied\n- Code: `vscode.model.revalidation-invalid`",
+      );
+    }
+    if (
+      revalidation.profile_id !== profileId ||
+      revalidation.expected_entry_sha256 !== expectedEntrySha256 ||
+      !revalidation.admitted
+    ) {
+      return result(
+        `# Request Stopped\n\nThe selected local model is no longer available in its displayed state. AgentMage did not substitute another model.\n\n- Exact profile: \`${profileId}\`\n- Status: denied\n- Code: \`${revalidation.result_code}\``,
+      );
+    }
+    return undefined;
+  }
+
   async respond(
     prompt: string,
     cancellation: CancellationSignal,
   ): Promise<ControllerResult> {
     if (this.disposed) {
       return result("AgentMage denied the request: `vscode.host.deactivated`.");
+    }
+    if (prompt === "models") {
+      const snapshot = await this.discoverModels(cancellation);
+      return snapshot === undefined
+        ? result(
+            "# Local Model Profiles\n\nModel discovery is unavailable. No profile is selectable.\n\n- Status: unavailable\n- Code: `vscode.model.discovery-unavailable`",
+          )
+        : result(renderModelManagementReport(snapshot));
     }
     if (prompt === "doctor") {
       if (cancellation.isCancellationRequested) {

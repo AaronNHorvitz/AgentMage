@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -107,6 +107,77 @@ void test("authenticated bridge validates the closed diagnostic export preview",
     });
     assert.equal(response.kind, "diagnostic_export_preview");
     assert.equal(fixture.observedRequest.kind, "preview_diagnostic_export");
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
+void test("authenticated bridge verifies model snapshot digests before display", async () => {
+  const unsigned = {
+    schema_version: 1,
+    catalog_sha256: "a".repeat(64),
+    catalog_signature_verified: true,
+    observed_at_ms: 10,
+    entries: [],
+  };
+  const fixture = await socketFixture({
+    kind: "models_discovered",
+    schema_version: 1,
+    request_id: "request-models-0001",
+    snapshot: {
+      ...unsigned,
+      snapshot_sha256: createHash("sha256")
+        .update(JSON.stringify(unsigned), "utf8")
+        .digest("hex"),
+    },
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.discoverModels({
+      kind: "discover_models",
+      schema_version: 1,
+      request_id: "request-models-0001",
+    });
+    assert.equal(response.kind, "models_discovered");
+    assert.deepEqual(fixture.observedRequest, {
+      kind: "discover_models",
+      schema_version: 1,
+      request_id: "request-models-0001",
+    });
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
+void test("tampered authenticated model snapshot fails closed", async () => {
+  const fixture = await socketFixture({
+    kind: "models_discovered",
+    schema_version: 1,
+    request_id: "request-models-0001",
+    snapshot: {
+      schema_version: 1,
+      catalog_sha256: "a".repeat(64),
+      catalog_signature_verified: true,
+      observed_at_ms: 10,
+      entries: [],
+      snapshot_sha256: "b".repeat(64),
+    },
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.discoverModels({
+      kind: "discover_models",
+      schema_version: 1,
+      request_id: "request-models-0001",
+    });
+    assert.deepEqual(response, {
+      kind: "denied",
+      schema_version: 1,
+      request_id: "request-models-0001",
+      code: "host.connection.failed",
+    });
     bridge.dispose();
   } finally {
     await fixture.close();

@@ -3,8 +3,6 @@ import * as vscode from "vscode";
 import { RegistrationSlot } from "./index.js";
 import { launchInstalledHost } from "./host_bootstrap.js";
 import {
-  PROVIDER_FAMILY,
-  PROVIDER_MODEL_ID,
   PROVIDER_VENDOR,
   type DiagnosticExportPreview,
   SecureReadController,
@@ -14,19 +12,13 @@ import {
   type ReadPreview,
   type WorkspaceSource,
 } from "./provider.js";
+import {
+  selectableModelInformation,
+  type NativeModelInformation,
+} from "./model_discovery.js";
 
-const MODEL: vscode.LanguageModelChatInformation = {
-  id: PROVIDER_MODEL_ID,
-  name: "AgentMage Secure Read",
-  family: PROVIDER_FAMILY,
-  version: "0.0.0-phase9",
-  maxInputTokens: 1_024,
-  maxOutputTokens: 262_144,
-  capabilities: {
-    imageInput: false,
-    toolCalling: false,
-  },
-};
+type AgentMageModelInformation = vscode.LanguageModelChatInformation &
+  NativeModelInformation;
 
 const registrationSlot = new RegistrationSlot();
 let activeController: SecureReadController | undefined;
@@ -112,27 +104,44 @@ export async function activate(
     new SessionRequestIdentitySource(),
   );
   activeController = controller;
-  const provider: vscode.LanguageModelChatProvider = {
-    provideLanguageModelChatInformation: (_options, token) =>
-      token.isCancellationRequested ? [] : [MODEL],
-    provideLanguageModelChatResponse: async (
-      _model,
-      messages,
-      _options,
-      progress,
-      token,
-    ) => {
-      const prompt = lastUserText(messages);
-      const response = await controller.respond(prompt, token);
-      progress.report(new vscode.LanguageModelTextPart(response.text));
-    },
-    provideTokenCount: (_model, value) => {
-      const text = typeof value === "string" ? value : requestText(value);
-      return Promise.resolve(
-        Math.max(1, Math.ceil(Buffer.byteLength(text, "utf8") / 4)),
-      );
-    },
-  };
+  const provider: vscode.LanguageModelChatProvider<AgentMageModelInformation> =
+    {
+      provideLanguageModelChatInformation: async (_options, token) => {
+        if (token.isCancellationRequested) {
+          return [];
+        }
+        const snapshot = await controller.discoverModels(token);
+        return snapshot === undefined
+          ? []
+          : selectableModelInformation(snapshot).map((model) => ({ ...model }));
+      },
+      provideLanguageModelChatResponse: async (
+        model,
+        messages,
+        _options,
+        progress,
+        token,
+      ) => {
+        const stopped = await controller.revalidateSelectedModel(
+          model.id,
+          model.entrySha256,
+          token,
+        );
+        if (stopped !== undefined) {
+          progress.report(new vscode.LanguageModelTextPart(stopped.text));
+          return;
+        }
+        const prompt = lastUserText(messages);
+        const response = await controller.respond(prompt, token);
+        progress.report(new vscode.LanguageModelTextPart(response.text));
+      },
+      provideTokenCount: (_model, value) => {
+        const text = typeof value === "string" ? value : requestText(value);
+        return Promise.resolve(
+          Math.max(1, Math.ceil(Buffer.byteLength(text, "utf8") / 4)),
+        );
+      },
+    };
   const registration = vscode.lm.registerLanguageModelChatProvider(
     PROVIDER_VENDOR,
     provider,

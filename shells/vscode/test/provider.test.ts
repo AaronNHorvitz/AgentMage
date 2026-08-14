@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import {
@@ -81,6 +82,38 @@ class Bridge implements HostBridge {
   diagnosticPreviewCalls = 0;
   diagnosticApprovalCalls = 0;
   diagnosticCancellationCalls = 0;
+  discoveryResponse:
+    Awaited<ReturnType<HostBridge["discoverModels"]>> | undefined;
+  revalidationResponse:
+    Awaited<ReturnType<HostBridge["revalidateModel"]>> | undefined;
+  revalidationCalls = 0;
+
+  discoverModels(
+    request: Parameters<HostBridge["discoverModels"]>[0],
+  ): ReturnType<HostBridge["discoverModels"]> {
+    return Promise.resolve(
+      this.discoveryResponse ?? {
+        kind: "denied",
+        schema_version: 1,
+        request_id: request.request_id,
+        code: "host.model-discovery.unavailable",
+      },
+    );
+  }
+
+  revalidateModel(
+    request: Parameters<HostBridge["revalidateModel"]>[0],
+  ): ReturnType<HostBridge["revalidateModel"]> {
+    this.revalidationCalls += 1;
+    return Promise.resolve(
+      this.revalidationResponse ?? {
+        kind: "denied",
+        schema_version: 1,
+        request_id: request.request_id,
+        code: "host.model-discovery.unavailable",
+      },
+    );
+  }
 
   doctor(
     request: Parameters<HostBridge["doctor"]>[0],
@@ -210,6 +243,22 @@ class Bridge implements HostBridge {
   }
 }
 
+function emptyModelSnapshot() {
+  const unsigned = {
+    schema_version: 1 as const,
+    catalog_sha256: "a".repeat(64),
+    catalog_signature_verified: true as const,
+    observed_at_ms: 10,
+    entries: [],
+  };
+  return {
+    ...unsigned,
+    snapshot_sha256: createHash("sha256")
+      .update(JSON.stringify(unsigned), "utf8")
+      .digest("hex"),
+  };
+}
+
 function preview(
   requestId: string,
   components: readonly string[],
@@ -263,6 +312,48 @@ void test("closed read grammar rejects ambient and traversal paths", () => {
   ]) {
     assert.equal(parseReadCommand(candidate), undefined, candidate);
   }
+});
+
+void test("model management reports an exact empty snapshot without inventing a profile", async () => {
+  const { controller, bridge, signal } = fixture();
+  bridge.discoveryResponse = {
+    kind: "models_discovered",
+    schema_version: 1,
+    request_id: "request-0001",
+    snapshot: emptyModelSnapshot(),
+  };
+  const response = await controller.respond("models", signal);
+  assert.match(response.text, /# Local Model Profiles/);
+  assert.match(response.text, /No exact local model profile/);
+  assert.doesNotMatch(
+    response.text,
+    /secure-local-read|Gemma|required family/i,
+  );
+});
+
+void test("selected model is revalidated exactly and refusal names no fallback", async () => {
+  const { controller, bridge, signal } = fixture();
+  bridge.revalidationResponse = {
+    kind: "model_revalidated",
+    schema_version: 1,
+    request_id: "request-0001",
+    revalidation: {
+      schema_version: 1,
+      profile_id: "selected-profile",
+      expected_entry_sha256: "b".repeat(64),
+      current_snapshot_sha256: "c".repeat(64),
+      admitted: false,
+      result_code: "model.selection.profile-changed",
+    },
+  };
+  const response = await controller.revalidateSelectedModel(
+    "selected-profile",
+    "b".repeat(64),
+    signal,
+  );
+  assert.equal(bridge.revalidationCalls, 1);
+  assert.match(response?.text ?? "", /did not substitute another model/);
+  assert.match(response?.text ?? "", /model\.selection\.profile-changed/);
 });
 
 void test("doctor renders every typed state without workspace approval", async () => {
