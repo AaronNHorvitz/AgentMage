@@ -40,6 +40,7 @@ impl_versioned_contract!(
     crate::Action,
     crate::ApprovalRequest,
     crate::AgentProposal,
+    crate::AgentRestartSnapshot,
     crate::VerifierCandidate,
     crate::AuthorityTransactionRecord,
     crate::BoundaryFailure,

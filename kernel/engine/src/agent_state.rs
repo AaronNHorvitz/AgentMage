@@ -2,6 +2,7 @@
 
 use agentmage_kernel_contracts::{AgentStateKind, AgentStateTransition};
 
+use crate::agent_restart::RestartPermit;
 use crate::agent_verifier::VerifiedCompletion;
 
 const MAX_STATE_REVISIONS: usize = 4_096;
@@ -19,6 +20,12 @@ pub enum AgentStateError {
     RevisionOverflow,
     /// A verifier proof names another state revision.
     VerifierStateMismatch,
+    /// A restored controller has not reconciled persisted restart state.
+    RestartRequired,
+    /// A restart permit names another state or revision.
+    RestartPermitMismatch,
+    /// A restored state or revision is not valid.
+    InvalidRestoredState,
 }
 
 /// Append-only deterministic state controller for one task.
@@ -27,6 +34,7 @@ pub struct AgentStateController {
     current: AgentStateKind,
     revision: u64,
     transitions: Vec<AgentStateTransition>,
+    restart_required: bool,
 }
 
 impl AgentStateController {
@@ -37,7 +45,33 @@ impl AgentStateController {
             current: AgentStateKind::Observation,
             revision: 1,
             transitions: Vec::new(),
+            restart_required: false,
         }
+    }
+
+    /// Reconstructs one interrupted active state locked behind restart reconciliation.
+    pub fn restore(current: AgentStateKind, revision: u64) -> Result<Self, AgentStateError> {
+        if revision == 0 || current.is_terminal() {
+            return Err(AgentStateError::InvalidRestoredState);
+        }
+        Ok(Self {
+            current,
+            revision,
+            transitions: Vec::new(),
+            restart_required: true,
+        })
+    }
+
+    /// Consumes one exact reconciliation permit and unlocks future transitions.
+    pub fn resume_after_restart(&mut self, permit: RestartPermit) -> Result<(), AgentStateError> {
+        if !self.restart_required {
+            return Err(AgentStateError::RestartPermitMismatch);
+        }
+        if permit.agent_state() != self.current || permit.agent_state_revision() != self.revision {
+            return Err(AgentStateError::RestartPermitMismatch);
+        }
+        self.restart_required = false;
+        Ok(())
     }
 
     /// Returns the exact current state.
@@ -63,6 +97,9 @@ impl AgentStateController {
         &mut self,
         target: AgentStateKind,
     ) -> Result<&AgentStateTransition, AgentStateError> {
+        if self.restart_required {
+            return Err(AgentStateError::RestartRequired);
+        }
         if target.is_success() {
             return Err(AgentStateError::VerifierRequired);
         }
@@ -77,6 +114,9 @@ impl AgentStateController {
         &mut self,
         completion: &VerifiedCompletion,
     ) -> Result<&AgentStateTransition, AgentStateError> {
+        if self.restart_required {
+            return Err(AgentStateError::RestartRequired);
+        }
         if completion.state_revision() != self.revision {
             return Err(AgentStateError::VerifierStateMismatch);
         }

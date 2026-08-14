@@ -4,6 +4,7 @@
 
 mod agent;
 mod agent_proposal;
+mod agent_restart;
 mod agent_state;
 mod agent_verifier;
 mod approval;
@@ -31,6 +32,7 @@ pub use agent::{
     AgentStatusResponse, UserMessageDisposition, UserMessageIntent,
 };
 pub use agent_proposal::AgentProposal;
+pub use agent_restart::AgentRestartSnapshot;
 pub use agent_state::{AgentStateKind, AgentStateTransition};
 pub use agent_verifier::{
     PostconditionResult, VerifierCandidate, VerifierDisposition, VerifierSource,
