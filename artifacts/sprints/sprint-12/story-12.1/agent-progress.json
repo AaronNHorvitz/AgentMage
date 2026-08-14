@@ -1,0 +1,108 @@
+{
+  "artifact_id": "s-012-i03-agent-progress",
+  "case_ids": [
+    "AP-01",
+    "AP-02",
+    "AP-03",
+    "AP-04",
+    "AP-05"
+  ],
+  "claims": {
+    "append_only_in_memory_plan_history": true,
+    "completion_rejects_unresolved_items": true,
+    "completion_requires_evidence": true,
+    "content_free_progress_and_status": true,
+    "exact_material_claim_proof_implemented": false,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "one_active_step_enforced": true,
+    "persistent_history_implemented": false,
+    "release_support": false,
+    "tool_or_model_executions": 0,
+    "typed_descendant_cancellation": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Plan history and events are in memory only; persistence, restart reconstruction, and terminal-result reconciliation remain later work.",
+    "Completion evidence validation is structural; exact material-claim proof remains Sub-task 12.1.1.5.",
+    "No production session host, UI transcript, tool, model, worker, platform, package, release, or cross-platform workflow is exercised or claimed.",
+    "Manual fuzzing remains deferred and is not represented by these deterministic tests."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "ead0845b68c1b5c006454de4f45132348f155d99",
+  "sources": [
+    {
+      "bytes": 2428,
+      "path": "docs/verification/s-012-i03-agent-progress-results.md",
+      "sha256": "3440bed38b30932967004b663865bf9f680d6d3fae6ca69ee173f95765c65bd5"
+    },
+    {
+      "bytes": 5035,
+      "path": "kernel/contracts/src/agent.rs",
+      "sha256": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5"
+    },
+    {
+      "bytes": 3654,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "905318e31b1dbc3886d147d0e30e1e2201f7f69fa16902c10345b098f8d40918"
+    },
+    {
+      "bytes": 26634,
+      "path": "kernel/engine/src/agent_progress.rs",
+      "sha256": "d9386d9720610abb4a2f0222843f51f2b6fd29eca63fc30b50f6d298d21cb65d"
+    },
+    {
+      "bytes": 20481,
+      "path": "kernel/engine/src/propagation.rs",
+      "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
+    },
+    {
+      "bytes": 2297,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6a1cb5dcb2908c75893368c9eb41c840bfd18c08581b85edef871487b67f8566"
+    },
+    {
+      "bytes": 9984,
+      "path": "scripts/agent_progress_evidence.py",
+      "sha256": "266d6147b67131c3286e95efcc2bb8a4b5513a0632bbcf7f9ce958b2f32da17c"
+    },
+    {
+      "bytes": 3370,
+      "path": "tests/test_agent_progress_evidence.py",
+      "sha256": "cce67d840999c4ac0860e3c8a40d814acadf660e2cfddbd82961d225afb4039b"
+    }
+  ],
+  "status": "pass-bounded-in-memory-progress",
+  "task_ids": [
+    "12.1.1.3",
+    "S-012-I03"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "e545741a36b31ffdd5dee6f4b46fdc8cf6aa2b013c7f432ca6bdaaffe7b3f1b3",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "03d8a2b55e9c043efda051196e6d867ade9042e23a6e962a81b29adc2b3a0c48",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
