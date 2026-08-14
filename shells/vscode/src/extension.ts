@@ -49,23 +49,23 @@ class VsCodeApprovalUi implements ApprovalUi {
     const selection = await vscode.window.showWarningMessage(
       `Allow a bounded read preview for ${workspace.name}/${components.join("/")}?`,
       { modal: true },
-      "Continue",
+      "Review Read Preview",
     );
-    return selection === "Continue";
+    return selection === "Review Read Preview";
   }
 
   async confirmRead(preview: ReadPreview): Promise<boolean> {
     const selection = await vscode.window.showWarningMessage(
       `Read ${preview.components.join("/")} (${preview.byte_len.toString()} bytes, ${preview.content_sha256})? No state change is permitted.`,
       { modal: true },
-      "Read",
+      "Approve Read",
     );
-    return selection === "Read";
+    return selection === "Approve Read";
   }
 
   async selectDiagnosticDestination(): Promise<string | undefined> {
     const destination = await vscode.window.showSaveDialog({
-      saveLabel: "Review Export",
+      saveLabel: "Select Diagnostic Export Destination",
       filters: { JSON: ["json"] },
       title: "Select a private local diagnostic export destination",
     });
@@ -85,9 +85,9 @@ class VsCodeApprovalUi implements ApprovalUi {
         `Payload: ${preview.payload_sha256}.`,
       ].join(" "),
       { modal: true },
-      "Export",
+      "Write Diagnostic Export",
     );
-    return selection === "Export";
+    return selection === "Write Diagnostic Export";
   }
 }
 

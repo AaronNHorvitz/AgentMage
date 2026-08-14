@@ -137,8 +137,9 @@ def validate_policy(policy: Any) -> list[str]:
         failures.append("model.policy.fallback")
     provider = policy.get("deterministic_provider")
     if provider != {
-        "model_id": "secure-local-read",
+        "model_id": None,
         "model_inference": False,
+        "profile_discovery": "signed-exact-admitted-only",
         "vendor": "agentmage",
     }:
         failures.append("model.policy.provider")
@@ -188,8 +189,10 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     providers = package.get("contributes", {}).get("languageModelChatProviders", [])
     if providers != [{"vendor": "agentmage", "displayName": "AgentMage"}]:
         failures.append("model.provider.registration")
-    if 'PROVIDER_MODEL_ID = "secure-local-read"' not in provider_source:
+    if "PROVIDER_MODEL_ID" in provider_source or "PROVIDER_FAMILY" in provider_source:
         failures.append("model.provider.identity")
+    if "discoverModels" not in provider_source or "ModelPickerSnapshot" not in provider_source:
+        failures.append("model.provider.discovery_missing")
     lowered = provider_source.lower()
     if "gemma" in lowered or any(profile_id in provider_source for profile_id in model_by_id):
         failures.append("model.provider.rejected_identity_exposed")
@@ -211,7 +214,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         "candidates": candidates,
         "deterministic_provider": {
             **policy["deterministic_provider"],
-            "classification": "bounded-non-inference-workflow",
+            "classification": "zero-profile-exact-discovery-boundary",
         },
         "automatic_fallback": False,
         "activation_status": "disabled-until-new-hash-bound-admission",

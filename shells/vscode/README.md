@@ -1,15 +1,25 @@
 # Visual Studio Code Shell
 
-This TypeScript module registers the Phase 9 AgentMage Secure Read provider
-through the stable Visual Studio Code language-model chat-provider API. It
-accepts only `read <workspace-relative-path>`, selects exactly one local VS Code
-workspace, renders two modal confirmations, and returns bounded content, a
-local citation, or a content-free denial.
+This TypeScript module registers AgentMage through the pinned stable Visual
+Studio Code language-model chat-provider API. It discovers only exact current
+profiles projected by the authenticated host; no model ID or family is compiled
+into the picker. An unavailable, stale, blocked, incompatible, quarantined,
+rejected, retired, or changed profile is absent from ordinary selection and can
+never trigger automatic substitution.
+
+The current bounded interaction controller supports `models`, `doctor`,
+`export diagnostics`, and `read <workspace-relative-path>`. Model metadata,
+status, limitations, diagnostics, denials, cancellation, citations, and receipts
+are emitted as structured text through native Chat. Exact model revalidation
+runs before every provider response.
 
 The shell has display, interaction, provider-registration, and authenticated
-IPC client responsibilities only. It does not read repository files, launch a
-process, open a listener, inspect credentials, or access the Internet. The
-authenticated Linux client is implemented for package injection, but ordinary
-activation deliberately installs an unavailable bridge until Phase 11 provides
-an independently signed host package, trusted endpoint, and direct one-use
-launch credentials.
+IPC client responsibilities only. It does not read repository files, open a
+listener, inspect credentials, or access the Internet. Ordinary activation
+launches only the independently verified local host package and authenticates a
+one-use local channel; package, platform, or activation failure leaves an inert
+unavailable bridge and an empty picker.
+
+The production model-run route, native accessibility evidence, macOS host, and
+complete session indicators are not yet integrated. Their absence blocks the
+Sprint 23 product gate even though the shell contracts and local tests pass.

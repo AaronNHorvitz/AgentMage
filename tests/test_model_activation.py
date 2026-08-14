@@ -42,6 +42,11 @@ class ModelActivationTests(unittest.TestCase):
         self.assertEqual(report["enabled_profiles"], [])
         self.assertTrue(all(not row["picker_visible"] for row in report["candidates"]))
         self.assertFalse(report["deterministic_provider"]["model_inference"])
+        self.assertIsNone(report["deterministic_provider"]["model_id"])
+        self.assertEqual(
+            report["deterministic_provider"]["profile_discovery"],
+            "signed-exact-admitted-only",
+        )
 
     def test_rejected_and_blocked_profiles_are_denied(self) -> None:
         for disposition in ("rejected", "blocked"):

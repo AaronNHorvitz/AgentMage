@@ -13,8 +13,9 @@
     "gemma-4-e4b-it"
   ],
   "deterministic_provider": {
-    "model_id": "secure-local-read",
+    "model_id": null,
     "model_inference": false,
+    "profile_discovery": "signed-exact-admitted-only",
     "vendor": "agentmage"
   },
   "required_binding_ids": [
