@@ -35,7 +35,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "069e788c9cfbdc4f85b278fad7358c95b72d289a",
+  "source_revision": "721a3a04ddd28a37ff2cac713f3a700fac17e7b5",
   "sources": [
     {
       "bytes": 2823,
@@ -53,19 +53,19 @@
       "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
     },
     {
-      "bytes": 16917,
+      "bytes": 17169,
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "ced9452cd870491c3cc15ba13e780de03d03f4d9ca5268925fa39752c9c9d7f1"
+      "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
     },
     {
-      "bytes": 2603,
+      "bytes": 3356,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "6a98eaca3c85d47af9b29e208752bdd4bc97ccd85ca946d74cd240bcdc87709f"
+      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
     },
     {
-      "bytes": 10278,
+      "bytes": 10334,
       "path": "scripts/session_environment_evidence.py",
-      "sha256": "6e401f6681e3abfd27bed69428d39313e69be35a279e1c47212c817fe3d8f7e8"
+      "sha256": "81b0c95a0ccf4aacc285880abbbf07d5656863221cb1610614a8a620d2f2033a"
     },
     {
       "bytes": 3595,

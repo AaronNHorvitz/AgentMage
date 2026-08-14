@@ -61,7 +61,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "1c8151cc1048da71e474a550008363f1c962aa54",
+  "source_revision": "721a3a04ddd28a37ff2cac713f3a700fac17e7b5",
   "sources": [
     {
       "bytes": 5661,
@@ -69,14 +69,14 @@
       "sha256": "232804d009c28a4aba81955a704622c4e13dd73aa1391b0ea928ff806f7011cf"
     },
     {
-      "bytes": 156876,
+      "bytes": 181401,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "53bccacb06ca363bc86c8c26119d6bb8b81c3c980c2a4216ee33b828c36ec3ae"
+      "sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211"
     },
     {
-      "bytes": 11463,
+      "bytes": 11573,
       "path": "scripts/store_unit_acceptance_evidence.py",
-      "sha256": "7e30870de6828cfb8f6c8c4f38583111cb21c6bc86bdf0da2af2061ea57bc86d"
+      "sha256": "88367c00369d11f1a84630e54c580f967831033031cb5ffe7b3e699d4a755543"
     },
     {
       "bytes": 3600,
@@ -93,7 +93,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "71f464626d1d1cfc9378f4594be04c07f9afae4b02adcca5c67d7173be3ab829",
+      "expected_marker_sha256": "2f929e2c8a026806983b9b3c8f191b9f19e4170f52879f8e374367208f8782f9",
       "status": "pass"
     },
     {

@@ -28,18 +28,18 @@
   "limitations": [
     "The schemas are formal review artifacts for current Rust behavior and do not add a second runtime implementation.",
     "Validation executes no model, tool, platform adapter, or state transition.",
-    "Status, interruption, final-response, session-environment, and persisted terminal-result schemas remain later work.",
+    "Status, interruption, final-response, and persisted terminal-result schemas remain later work; the separately evidenced session-environment schema is outside this task's two-schema claim.",
     "Fixture digests are synthetic review values; no release-signing or package-attestation claim is made.",
     "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "a90a274bd8c12ef958817207b38d805775625af6",
+  "source_revision": "721a3a04ddd28a37ff2cac713f3a700fac17e7b5",
   "sources": [
     {
-      "bytes": 1767,
+      "bytes": 1841,
       "path": "docs/verification/task-12-1-2-1-runtime-schema-results.md",
-      "sha256": "e6fe345e0c8c8f75a32c574e90134c0b423412bf1508f961dd0addc94dbc174b"
+      "sha256": "d5d8256fdd4e6c711c71610898085abbe47ce7e62f1189c70c4ec6ccbd66f913"
     },
     {
       "bytes": 5122,
@@ -62,19 +62,19 @@
       "sha256": "ace70a9c4fde70455d7d9c17af8ecec8f49f19af02426f35f270ec716320e6ab"
     },
     {
-      "bytes": 21724,
+      "bytes": 21757,
       "path": "scripts/validate_planning_schemas.mjs",
-      "sha256": "e4fa49b80f5c3b82ac5e3b19c92ba1d6d7104839ec03545f083d895e192e2d9c"
+      "sha256": "2def7bdff488f73b1d349b65a68f2aeec0a8c3632e5cf07b979951b92424b90a"
     },
     {
-      "bytes": 22022,
+      "bytes": 23914,
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "98a865148f26eb986cb36a87b88e0c87c82192c474478cd7aed65154b8080996"
+      "sha256": "23b978e458d90a78fd06f3ba7cf7e03c10b62c771fb20d498dc116492f6385fb"
     },
     {
-      "bytes": 10352,
+      "bytes": 10423,
       "path": "scripts/runtime_schema_evidence.py",
-      "sha256": "2120df29827fade0685ed95b415c98bbf94abf4063a2f15b2583f8a14fc1de21"
+      "sha256": "9078a85433404c55321baafd52f9627b92031e2e1f8471327e016078e2aea774"
     },
     {
       "bytes": 3381,
@@ -90,7 +90,7 @@
     {
       "command_id": "e339851869dd08460f281733547b9d8b25788f33c4a6ffd6f70da0fe6f9f15c4",
       "exit_code": 0,
-      "expected_marker_sha256": "b435c6da7d4feb9a3124f5f67235b0586be9011b58544cf4a9a2ab2138fa86dc",
+      "expected_marker_sha256": "08a818f0ebf5ddf7a3c2b0ad79dafdcf4cb5f790f514d37bd3678cae7fa28f12",
       "status": "pass"
     },
     {

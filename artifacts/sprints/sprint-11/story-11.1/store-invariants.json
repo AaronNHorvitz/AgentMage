@@ -47,12 +47,12 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "ef68da57763a412f342d2d15537da10e284ef5fa",
+  "source_revision": "721a3a04ddd28a37ff2cac713f3a700fac17e7b5",
   "sources": [
     {
-      "bytes": 10683,
+      "bytes": 16389,
       "path": "docs/architecture/durable-authority-store.md",
-      "sha256": "8c04c010eb540e038bc238289a6db57a6679356b3370dc48453c79805df76dcb"
+      "sha256": "e93363505c820941810e2006971f66b152707e753b729a0f117915a7721b4e6e"
     },
     {
       "bytes": 5474,
@@ -60,14 +60,14 @@
       "sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2"
     },
     {
-      "bytes": 80251,
+      "bytes": 181401,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "d639a001773b78b86223f96ffec83db91cc4608b3f29b1ebf5d0d530a61c7898"
+      "sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211"
     },
     {
-      "bytes": 11574,
+      "bytes": 11613,
       "path": "scripts/operational_store_invariants_evidence.py",
-      "sha256": "d323b4becc8ea9de1dd3ca2948f8116d4492fed52d04d11dc1e193422974b109"
+      "sha256": "ba056336cbd0fa08962d4b6882586a1ee02add6a24e73d531b15d422e349c488"
     },
     {
       "bytes": 4162,
@@ -76,7 +76,7 @@
     }
   ],
   "status": "pass-writer-transaction-wal-checkpoint-migration-invariants",
-  "store_source_sha256": "d639a001773b78b86223f96ffec83db91cc4608b3f29b1ebf5d0d530a61c7898",
+  "store_source_sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211",
   "task_ids": [
     "11.1.1.2"
   ],
@@ -84,13 +84,13 @@
     {
       "command_id": "a41190dff99e6a8df112a146711da3cfe6320acb2d12e39b9c20bd278df8e71e",
       "exit_code": 0,
-      "expected_marker_sha256": "04ad9982d145ef859bb81dce7d670a8e05174b05e91f5358a9f0d12aa35264bc",
+      "expected_marker_sha256": "2f929e2c8a026806983b9b3c8f191b9f19e4170f52879f8e374367208f8782f9",
       "status": "pass"
     },
     {
       "command_id": "1f6db0672af336c5764092c42782b0d455697fd7e56805c1c49e8c8dcfdfd753",
       "exit_code": 0,
-      "expected_marker_sha256": "c9f025701ba94f1afc2ce3b29f573ae3ac0abe9ba15636d4bd13349cfae7cc06",
+      "expected_marker_sha256": "8974cc4605d29be0e26b714d028dac22a28f0ed22c414099818126e9c83dbc4b",
       "status": "pass"
     },
     {

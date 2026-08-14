@@ -1,5 +1,5 @@
 {
-  "case_count": 32,
+  "case_count": 58,
   "cases": [
     {
       "case_id": "S-001-UT01-001",
@@ -28,6 +28,19 @@
     },
     {
       "case_id": "S-001-UT01-003",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> platform-linux-native-inference; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> platform-linux-native-inference (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-contracts -> platform-linux-native-inference -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-004",
       "expected_diagnostic": "prohibited import edge: kernel-contracts -> platform-macos; outside its allowlist",
       "observed_diagnostics": [
         "kernel-contracts declared imports do not match the accepted architecture",
@@ -40,7 +53,20 @@
       "target": "platform-macos"
     },
     {
-      "case_id": "S-001-UT01-004",
+      "case_id": "S-001-UT01-005",
+      "expected_diagnostic": "prohibited import edge: kernel-contracts -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-contracts declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-contracts -> platform-windows; outside its allowlist",
+        "prohibited reverse edge: kernel-contracts -> platform-windows (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-contracts -> platform-windows -> kernel-contracts"
+      ],
+      "source": "kernel-contracts",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-006",
       "expected_diagnostic": "prohibited import edge: kernel-contracts -> capability-read-only; outside its allowlist",
       "observed_diagnostics": [
         "kernel-contracts declared imports do not match the accepted architecture",
@@ -53,7 +79,7 @@
       "target": "capability-read-only"
     },
     {
-      "case_id": "S-001-UT01-005",
+      "case_id": "S-001-UT01-007",
       "expected_diagnostic": "prohibited import edge: kernel-contracts -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "kernel-contracts declared imports do not match the accepted architecture",
@@ -66,7 +92,7 @@
       "target": "shell-host"
     },
     {
-      "case_id": "S-001-UT01-006",
+      "case_id": "S-001-UT01-008",
       "expected_diagnostic": "prohibited import edge: kernel-contracts -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "kernel-contracts declared imports do not match the accepted architecture",
@@ -79,31 +105,57 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-007",
+      "case_id": "S-001-UT01-009",
       "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-linux; outside its allowlist",
       "observed_diagnostics": [
         "kernel-engine declared imports do not match the accepted architecture",
         "prohibited import edge: kernel-engine -> platform-linux; outside its allowlist",
-        "prohibited reverse edge: kernel-engine -> platform-linux (kernel cannot import platform-adapters)"
+        "prohibited reverse edge: kernel-engine -> platform-linux (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-engine -> platform-linux -> kernel-engine"
       ],
       "source": "kernel-engine",
       "status": "pass",
       "target": "platform-linux"
     },
     {
-      "case_id": "S-001-UT01-008",
+      "case_id": "S-001-UT01-010",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> platform-linux-native-inference; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> platform-linux-native-inference (kernel cannot import platform-adapters)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-011",
       "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-macos; outside its allowlist",
       "observed_diagnostics": [
         "kernel-engine declared imports do not match the accepted architecture",
         "prohibited import edge: kernel-engine -> platform-macos; outside its allowlist",
-        "prohibited reverse edge: kernel-engine -> platform-macos (kernel cannot import platform-adapters)"
+        "prohibited reverse edge: kernel-engine -> platform-macos (kernel cannot import platform-adapters)",
+        "compile dependency cycle: kernel-engine -> platform-macos -> kernel-engine"
       ],
       "source": "kernel-engine",
       "status": "pass",
       "target": "platform-macos"
     },
     {
-      "case_id": "S-001-UT01-009",
+      "case_id": "S-001-UT01-012",
+      "expected_diagnostic": "prohibited import edge: kernel-engine -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "kernel-engine declared imports do not match the accepted architecture",
+        "prohibited import edge: kernel-engine -> platform-windows; outside its allowlist",
+        "prohibited reverse edge: kernel-engine -> platform-windows (kernel cannot import platform-adapters)"
+      ],
+      "source": "kernel-engine",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-013",
       "expected_diagnostic": "prohibited import edge: kernel-engine -> capability-read-only; outside its allowlist",
       "observed_diagnostics": [
         "kernel-engine declared imports do not match the accepted architecture",
@@ -115,7 +167,7 @@
       "target": "capability-read-only"
     },
     {
-      "case_id": "S-001-UT01-010",
+      "case_id": "S-001-UT01-014",
       "expected_diagnostic": "prohibited import edge: kernel-engine -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "kernel-engine declared imports do not match the accepted architecture",
@@ -128,7 +180,7 @@
       "target": "shell-host"
     },
     {
-      "case_id": "S-001-UT01-011",
+      "case_id": "S-001-UT01-015",
       "expected_diagnostic": "prohibited import edge: kernel-engine -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "kernel-engine declared imports do not match the accepted architecture",
@@ -140,18 +192,18 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-012",
-      "expected_diagnostic": "prohibited import edge: platform-linux -> kernel-engine; outside its allowlist",
+      "case_id": "S-001-UT01-016",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> platform-linux-native-inference; outside its allowlist",
       "observed_diagnostics": [
         "platform-linux declared imports do not match the accepted architecture",
-        "prohibited import edge: platform-linux -> kernel-engine; outside its allowlist"
+        "prohibited import edge: platform-linux -> platform-linux-native-inference; outside its allowlist"
       ],
       "source": "platform-linux",
       "status": "pass",
-      "target": "kernel-engine"
+      "target": "platform-linux-native-inference"
     },
     {
-      "case_id": "S-001-UT01-013",
+      "case_id": "S-001-UT01-017",
       "expected_diagnostic": "prohibited import edge: platform-linux -> platform-macos; outside its allowlist",
       "observed_diagnostics": [
         "platform-linux declared imports do not match the accepted architecture",
@@ -162,7 +214,18 @@
       "target": "platform-macos"
     },
     {
-      "case_id": "S-001-UT01-014",
+      "case_id": "S-001-UT01-018",
+      "expected_diagnostic": "prohibited import edge: platform-linux -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux -> platform-windows; outside its allowlist"
+      ],
+      "source": "platform-linux",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-019",
       "expected_diagnostic": "prohibited import edge: platform-linux -> capability-read-only; outside its allowlist",
       "observed_diagnostics": [
         "platform-linux declared imports do not match the accepted architecture",
@@ -174,7 +237,7 @@
       "target": "capability-read-only"
     },
     {
-      "case_id": "S-001-UT01-015",
+      "case_id": "S-001-UT01-020",
       "expected_diagnostic": "prohibited import edge: platform-linux -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "platform-linux declared imports do not match the accepted architecture",
@@ -187,7 +250,7 @@
       "target": "shell-host"
     },
     {
-      "case_id": "S-001-UT01-016",
+      "case_id": "S-001-UT01-021",
       "expected_diagnostic": "prohibited import edge: platform-linux -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "platform-linux declared imports do not match the accepted architecture",
@@ -199,18 +262,87 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-017",
-      "expected_diagnostic": "prohibited import edge: platform-macos -> kernel-engine; outside its allowlist",
+      "case_id": "S-001-UT01-022",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> kernel-engine; outside its allowlist",
       "observed_diagnostics": [
-        "platform-macos declared imports do not match the accepted architecture",
-        "prohibited import edge: platform-macos -> kernel-engine; outside its allowlist"
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> kernel-engine; outside its allowlist"
       ],
-      "source": "platform-macos",
+      "source": "platform-linux-native-inference",
       "status": "pass",
       "target": "kernel-engine"
     },
     {
-      "case_id": "S-001-UT01-018",
+      "case_id": "S-001-UT01-023",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> platform-linux; outside its allowlist"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-024",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> platform-macos; outside its allowlist"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-025",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> platform-windows; outside its allowlist"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-026",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: platform-linux-native-inference -> capability-read-only (platform-adapters cannot import capability-packs)"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-027",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> shell-host; outside its allowlist",
+        "prohibited reverse edge: platform-linux-native-inference -> shell-host (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-028",
+      "expected_diagnostic": "prohibited import edge: platform-linux-native-inference -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-linux-native-inference declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-linux-native-inference -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: platform-linux-native-inference -> shell-vscode (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-linux-native-inference",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-029",
       "expected_diagnostic": "prohibited import edge: platform-macos -> platform-linux; outside its allowlist",
       "observed_diagnostics": [
         "platform-macos declared imports do not match the accepted architecture",
@@ -221,7 +353,29 @@
       "target": "platform-linux"
     },
     {
-      "case_id": "S-001-UT01-019",
+      "case_id": "S-001-UT01-030",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> platform-linux-native-inference; outside its allowlist"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-031",
+      "expected_diagnostic": "prohibited import edge: platform-macos -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-macos declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-macos -> platform-windows; outside its allowlist"
+      ],
+      "source": "platform-macos",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-032",
       "expected_diagnostic": "prohibited import edge: platform-macos -> capability-read-only; outside its allowlist",
       "observed_diagnostics": [
         "platform-macos declared imports do not match the accepted architecture",
@@ -233,7 +387,7 @@
       "target": "capability-read-only"
     },
     {
-      "case_id": "S-001-UT01-020",
+      "case_id": "S-001-UT01-033",
       "expected_diagnostic": "prohibited import edge: platform-macos -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "platform-macos declared imports do not match the accepted architecture",
@@ -246,7 +400,7 @@
       "target": "shell-host"
     },
     {
-      "case_id": "S-001-UT01-021",
+      "case_id": "S-001-UT01-034",
       "expected_diagnostic": "prohibited import edge: platform-macos -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "platform-macos declared imports do not match the accepted architecture",
@@ -258,7 +412,87 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-022",
+      "case_id": "S-001-UT01-035",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> kernel-engine; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> kernel-engine; outside its allowlist"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "kernel-engine"
+    },
+    {
+      "case_id": "S-001-UT01-036",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> platform-linux; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> platform-linux; outside its allowlist"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "platform-linux"
+    },
+    {
+      "case_id": "S-001-UT01-037",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> platform-linux-native-inference; outside its allowlist"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-038",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> platform-macos; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> platform-macos; outside its allowlist"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "platform-macos"
+    },
+    {
+      "case_id": "S-001-UT01-039",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> capability-read-only; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> capability-read-only; outside its allowlist",
+        "prohibited reverse edge: platform-windows -> capability-read-only (platform-adapters cannot import capability-packs)"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "capability-read-only"
+    },
+    {
+      "case_id": "S-001-UT01-040",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> shell-host; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> shell-host; outside its allowlist",
+        "prohibited reverse edge: platform-windows -> shell-host (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "shell-host"
+    },
+    {
+      "case_id": "S-001-UT01-041",
+      "expected_diagnostic": "prohibited import edge: platform-windows -> shell-vscode; outside its allowlist",
+      "observed_diagnostics": [
+        "platform-windows declared imports do not match the accepted architecture",
+        "prohibited import edge: platform-windows -> shell-vscode; outside its allowlist",
+        "prohibited reverse edge: platform-windows -> shell-vscode (platform-adapters cannot import shells)"
+      ],
+      "source": "platform-windows",
+      "status": "pass",
+      "target": "shell-vscode"
+    },
+    {
+      "case_id": "S-001-UT01-042",
       "expected_diagnostic": "prohibited import edge: capability-read-only -> kernel-engine; outside its allowlist",
       "observed_diagnostics": [
         "capability-read-only declared imports do not match the accepted architecture",
@@ -269,7 +503,7 @@
       "target": "kernel-engine"
     },
     {
-      "case_id": "S-001-UT01-023",
+      "case_id": "S-001-UT01-043",
       "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-linux; outside its allowlist",
       "observed_diagnostics": [
         "capability-read-only declared imports do not match the accepted architecture",
@@ -281,7 +515,19 @@
       "target": "platform-linux"
     },
     {
-      "case_id": "S-001-UT01-024",
+      "case_id": "S-001-UT01-044",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> platform-linux-native-inference; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> platform-linux-native-inference (capability-packs cannot import platform-adapters)"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-045",
       "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-macos; outside its allowlist",
       "observed_diagnostics": [
         "capability-read-only declared imports do not match the accepted architecture",
@@ -293,7 +539,19 @@
       "target": "platform-macos"
     },
     {
-      "case_id": "S-001-UT01-025",
+      "case_id": "S-001-UT01-046",
+      "expected_diagnostic": "prohibited import edge: capability-read-only -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "capability-read-only declared imports do not match the accepted architecture",
+        "prohibited import edge: capability-read-only -> platform-windows; outside its allowlist",
+        "prohibited reverse edge: capability-read-only -> platform-windows (capability-packs cannot import platform-adapters)"
+      ],
+      "source": "capability-read-only",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-047",
       "expected_diagnostic": "prohibited import edge: capability-read-only -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "capability-read-only declared imports do not match the accepted architecture",
@@ -306,7 +564,7 @@
       "target": "shell-host"
     },
     {
-      "case_id": "S-001-UT01-026",
+      "case_id": "S-001-UT01-048",
       "expected_diagnostic": "prohibited import edge: capability-read-only -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "capability-read-only declared imports do not match the accepted architecture",
@@ -318,7 +576,29 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-027",
+      "case_id": "S-001-UT01-049",
+      "expected_diagnostic": "prohibited import edge: shell-host -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-host declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-host -> platform-linux-native-inference; outside its allowlist"
+      ],
+      "source": "shell-host",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-050",
+      "expected_diagnostic": "prohibited import edge: shell-host -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-host declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-host -> platform-windows; outside its allowlist"
+      ],
+      "source": "shell-host",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-051",
       "expected_diagnostic": "prohibited import edge: shell-host -> shell-vscode; outside its allowlist",
       "observed_diagnostics": [
         "shell-host declared imports do not match the accepted architecture",
@@ -329,7 +609,7 @@
       "target": "shell-vscode"
     },
     {
-      "case_id": "S-001-UT01-028",
+      "case_id": "S-001-UT01-052",
       "expected_diagnostic": "prohibited import edge: shell-vscode -> kernel-engine; outside its allowlist",
       "observed_diagnostics": [
         "shell-vscode declared imports do not match the accepted architecture",
@@ -340,7 +620,7 @@
       "target": "kernel-engine"
     },
     {
-      "case_id": "S-001-UT01-029",
+      "case_id": "S-001-UT01-053",
       "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-linux; outside its allowlist",
       "observed_diagnostics": [
         "shell-vscode declared imports do not match the accepted architecture",
@@ -351,7 +631,18 @@
       "target": "platform-linux"
     },
     {
-      "case_id": "S-001-UT01-030",
+      "case_id": "S-001-UT01-054",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-linux-native-inference; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> platform-linux-native-inference; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "platform-linux-native-inference"
+    },
+    {
+      "case_id": "S-001-UT01-055",
       "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-macos; outside its allowlist",
       "observed_diagnostics": [
         "shell-vscode declared imports do not match the accepted architecture",
@@ -362,7 +653,18 @@
       "target": "platform-macos"
     },
     {
-      "case_id": "S-001-UT01-031",
+      "case_id": "S-001-UT01-056",
+      "expected_diagnostic": "prohibited import edge: shell-vscode -> platform-windows; outside its allowlist",
+      "observed_diagnostics": [
+        "shell-vscode declared imports do not match the accepted architecture",
+        "prohibited import edge: shell-vscode -> platform-windows; outside its allowlist"
+      ],
+      "source": "shell-vscode",
+      "status": "pass",
+      "target": "platform-windows"
+    },
+    {
+      "case_id": "S-001-UT01-057",
       "expected_diagnostic": "prohibited import edge: shell-vscode -> capability-read-only; outside its allowlist",
       "observed_diagnostics": [
         "shell-vscode declared imports do not match the accepted architecture",
@@ -373,7 +675,7 @@
       "target": "capability-read-only"
     },
     {
-      "case_id": "S-001-UT01-032",
+      "case_id": "S-001-UT01-058",
       "expected_diagnostic": "prohibited import edge: shell-vscode -> shell-host; outside its allowlist",
       "observed_diagnostics": [
         "shell-vscode declared imports do not match the accepted architecture",
