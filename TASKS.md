@@ -2072,14 +2072,14 @@ claims.
 
 - [ ] **Task 25.1.1 - Implement the bounded story**
   - [ ] **Sub-task 25.1.1.1** (legacy `S-021-I08`): Rerun the complete security, privacy, injection, path, network, model, repository-map, evidence, recovery, quality, performance, accessibility, support, and documentation suites after their owning sprints have completed first execution.
-  - [ ] **Sub-task 25.1.1.2** (legacy `S-021-I09`): Publish install, first-run, model installation, diagnostics, permissions, evidence, repository-map, privacy, offline proof, recovery, troubleshooting, limitation, and maintainer release guides.
+  - [x] **Sub-task 25.1.1.2** (legacy `S-021-I09`): Publish install, first-run, model installation, diagnostics, permissions, evidence, repository-map, privacy, offline proof, recovery, troubleshooting, limitation, and maintainer release guides. Evidence: commit `42e8aad` adds a versioned pre-release index, complete operator guide, maintainer release procedure, capability and limitation matrix, and draft release notes while preserving Decision 0008's v1.0 first-supported-GA boundary.
   - [ ] **Sub-task 25.1.1.3** (legacy `S-021-I10`): Run clean installations and the identical supported workflow on the recorded MacBook Pro M5, Fedora, and Ubuntu environments.
 
 - [ ] **Task 25.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 25.1.2.1:** Signed and verified v0.1 packages for all reference platforms. Partial Linux mechanics: Decision 0022 implements deterministic detached package-manifest signing and external-trust verification; Decision 0023 verifies that package before creating an authentication-only owner-local bootstrap endpoint. This item remains open because no production signer or trust-root provisioning, OS-package signature, signed platform activation, clean package lifecycle, Windows package, or supported release evidence exists.
   - [ ] **Sub-task 25.1.2.2:** Visual Studio Code extension and provider package. Partial Linux mechanics: the extension now supervises only the fixed installed host, parses a bounded secret-bearing binary frame without creating a secret string, validates the exact extension-host PID and UID, authenticates the private socket, terminates malformed or extra-output children, and falls back to the inert bridge. This item remains open because signed platform activation, the usable model-enabled workflow, clean VSIX installation, Windows parity, and release evidence do not exist.
   - [ ] **Sub-task 25.1.2.3:** Complete v0.1 acceptance-result bundle and release manifest.
-  - [ ] **Sub-task 25.1.2.4:** Published operating guides, capability matrix, limitations, and release notes.
+  - [ ] **Sub-task 25.1.2.4:** Published operating guides, capability matrix, limitations, and release notes. Partial evidence: the versioned operating guides, capability matrix, complete current limitations, and non-published draft release notes exist at commit `42e8aad`; approved signed-release identities and final published release notes do not exist.
 
 - [ ] **Task 25.1.3 - Verify and close the story**
   - [ ] **Sub-task 25.1.3.1:** `S-021-UT01` validates every extension/host message, Chat response, command, cancellation, status, citation, and error schema with malformed/replayed/wrong-session inputs; assert authenticated fail-closed handling.
@@ -2123,7 +2123,7 @@ claims.
 - [ ] **Sprint AC 25.AC1:** Every `AM-*` v0.1 backlog row is complete with its required `AT-*` receipts.
 - [ ] **Sprint AC 25.AC2:** Every Section 31B threshold passes without waiver on the declared platforms.
 - [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, applicable historical `AT-VSC-001`, `AT-VSC-002`, `AT-VSC-003`, `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`, `RV-21`, and v0.1 `RV-22` pass.
-- [ ] **Sprint AC 25.AC4:** Release notes list every v0.1 exclusion, including writes, semantic indexing, Obsidian, full CLI, desktop, GitHub, browser, connectors, schedules, child agents, and Codex transfer.
+- [x] **Sprint AC 25.AC4:** Release notes list every v0.1 exclusion, including writes, semantic indexing, Obsidian, full CLI, desktop, GitHub, browser, connectors, schedules, child agents, and Codex transfer.
 - [ ] **Sprint AC 25.AC5:** `G-V0.1` closes only after the signed artifacts, documentation, tests, and offline proof agree exactly.
 - [ ] **Sprint AC 25.AC6:** The release uses one explicitly selected exact admitted profile; the candidate-neutral kernel/codec boundary, complete initial candidate evidence, classifier non-authority, verifier-only completion, separate repeatability claims, and no-fallback behavior reproduce from raw evidence.
 
