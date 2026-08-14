@@ -485,14 +485,14 @@ pub trait LocalModelRuntime {
     /// Counts one exact context packet using the selected profile tokenizer.
     fn count_tokens(
         &self,
-        packet: &ModelContextPacket,
+        context: &EncodedModelContext,
     ) -> Result<TokenCountResult, ModelRuntimeFailure>;
 
     /// Runs one bounded request and emits inert sequential fragments.
     fn stream(
         &mut self,
         request: &ModelRunRequest,
-        packet: &ModelContextPacket,
+        context: &EncodedModelContext,
         cancellation: Option<&CancellationSignal>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
@@ -728,7 +728,7 @@ pub struct TokenCountResult {
     pub tokens: u32,
     /// Exact token-counter implementation identity.
     pub counter: String,
-    /// Lowercase SHA-256 digest of the counted canonical packet.
+    /// Lowercase SHA-256 digest of the counted encoded context bytes.
     pub packet_sha256: String,
 }
 

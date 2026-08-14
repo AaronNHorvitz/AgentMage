@@ -1,11 +1,11 @@
 //! Candidate-neutral Linux `LocalModelRuntime` adapter boundary.
 
 use agentmage_kernel_contracts::{
-    CancellationSignal, ExactModelProfile, LocalModelRuntime, ModelHealth, ModelHealthState,
-    ModelLoadReceipt, ModelManifestObservation, ModelProfileId, ModelResourceReport,
-    ModelRunRequest, ModelRunResult, ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind,
-    ModelStreamSink, ModelUnloadReceipt, PlatformArchitecture, PlatformFamily,
-    RuntimeIsolationObservation, TokenCountResult,
+    CancellationSignal, EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelHealth,
+    ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
+    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink, ModelUnloadReceipt,
+    PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation, TokenCountResult,
 };
 
 /// Driver operations available behind the Linux runtime adapter.
@@ -38,14 +38,14 @@ pub trait NativeModelDriver {
     /// Counts tokens for one exact bounded packet.
     fn count_tokens(
         &self,
-        packet: &agentmage_kernel_contracts::ModelContextPacket,
+        context: &EncodedModelContext,
     ) -> Result<TokenCountResult, ModelRuntimeFailure>;
 
     /// Streams inert response fragments for one exact request.
     fn stream(
         &mut self,
         request: &ModelRunRequest,
-        packet: &agentmage_kernel_contracts::ModelContextPacket,
+        context: &EncodedModelContext,
         cancellation: Option<&CancellationSignal>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
@@ -200,28 +200,29 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
 
     fn count_tokens(
         &self,
-        packet: &agentmage_kernel_contracts::ModelContextPacket,
+        context: &EncodedModelContext,
     ) -> Result<TokenCountResult, ModelRuntimeFailure> {
-        self.loaded_profile(&packet.profile_id)?;
-        self.driver.count_tokens(packet)
+        self.loaded_profile(&context.profile_id)?;
+        self.driver.count_tokens(context)
     }
 
     fn stream(
         &mut self,
         request: &ModelRunRequest,
-        packet: &agentmage_kernel_contracts::ModelContextPacket,
+        context: &EncodedModelContext,
         cancellation: Option<&CancellationSignal>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
         self.loaded_profile(&request.profile_id)?;
-        if request.profile_id != packet.profile_id
+        if request.profile_id != context.profile_id
+            || request.context_packet_id != context.context_packet_id
             || request.adapter_id != self.identity.adapter_id
             || self.verified.as_ref()
                 != Some(&(request.profile_id.clone(), request.manifest_sha256.clone()))
         {
             return Err(failure("model.linux-adapter.request-drift"));
         }
-        self.driver.stream(request, packet, cancellation, sink)
+        self.driver.stream(request, context, cancellation, sink)
     }
 
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
@@ -256,9 +257,10 @@ fn failure(code: &str) -> ModelRuntimeFailure {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        ExactModelProfile, LocalModelRuntime, ModelHealth, ModelHealthState, ModelLoadReceipt,
-        ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRuntimeFailure,
-        ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation, TokenCountResult,
+        EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelHealth, ModelHealthState,
+        ModelLoadReceipt, ModelManifestObservation, ModelProfileId, ModelResourceReport,
+        ModelRuntimeFailure, ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation,
+        TokenCountResult,
     };
 
     use super::{LinuxNativeModelAdapter, NativeModelDriver, failure};
@@ -333,7 +335,7 @@ mod tests {
 
         fn count_tokens(
             &self,
-            _packet: &agentmage_kernel_contracts::ModelContextPacket,
+            _context: &EncodedModelContext,
         ) -> Result<TokenCountResult, ModelRuntimeFailure> {
             Err(failure("fixture.not-used"))
         }
@@ -341,7 +343,7 @@ mod tests {
         fn stream(
             &mut self,
             _request: &agentmage_kernel_contracts::ModelRunRequest,
-            _packet: &agentmage_kernel_contracts::ModelContextPacket,
+            _context: &EncodedModelContext,
             _cancellation: Option<&agentmage_kernel_contracts::CancellationSignal>,
             _sink: &mut dyn ModelStreamSink,
         ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure> {

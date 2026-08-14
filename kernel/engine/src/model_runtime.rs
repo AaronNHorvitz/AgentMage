@@ -4,10 +4,11 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CancellationSignal, ExactModelProfile, LocalModelRuntime, ModelCapabilityState,
-    ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState, ModelLoadReceipt,
-    ModelManifestObservation, ModelModality, ModelProfileId, ModelResourceReport, ModelRunRequest,
-    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-    ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TokenCountResult,
+    ModelContextPacket, ModelFamilyCodec, ModelHealth, ModelHealthState, ModelLifecycleState,
+    ModelLoadReceipt, ModelManifestObservation, ModelModality, ModelProfileId, ModelResourceReport,
+    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment,
+    TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
@@ -192,20 +193,28 @@ impl AdmittedModelProfile {
 }
 
 /// Kernel-owned controller for one exact selected profile and local adapter.
-pub struct LocalModelController<R: LocalModelRuntime> {
+pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     runtime: R,
+    codec: C,
     admitted: AdmittedModelProfile,
     loaded: bool,
 }
 
-impl<R: LocalModelRuntime> LocalModelController<R> {
+impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     /// Binds one admitted profile to one exact runtime identity.
-    pub fn new(runtime: R, admitted: AdmittedModelProfile) -> Result<Self, ModelRuntimeGateError> {
-        if runtime.identity() != &admitted.profile.runtime {
+    pub fn new(
+        runtime: R,
+        codec: C,
+        admitted: AdmittedModelProfile,
+    ) -> Result<Self, ModelRuntimeGateError> {
+        if runtime.identity() != &admitted.profile.runtime
+            || codec.identity() != &admitted.profile.codec
+        {
             return Err(ModelRuntimeGateError::RuntimeMismatch);
         }
         Ok(Self {
             runtime,
+            codec,
             admitted,
             loaded: false,
         })
@@ -251,13 +260,17 @@ impl<R: LocalModelRuntime> LocalModelController<R> {
         packet: &ModelContextPacket,
     ) -> Result<TokenCountResult, ModelRuntimeGateError> {
         self.validate_packet(packet)?;
+        let context = self
+            .codec
+            .encode_context(&self.admitted.profile, packet)
+            .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
         let result = self
             .runtime
-            .count_tokens(packet)
+            .count_tokens(&context)
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
         if result.profile_id != self.admitted.profile.profile_id
             || result.context_packet_id != packet.context_packet_id
-            || result.packet_sha256 != packet.packet_sha256
+            || result.packet_sha256 != context.sha256
             || result.counter != self.admitted.profile.context.token_counter
             || result.tokens != packet.input_tokens
         {
@@ -290,10 +303,14 @@ impl<R: LocalModelRuntime> LocalModelController<R> {
         {
             return Err(ModelRuntimeGateError::RequestMismatch);
         }
+        let context = self
+            .codec
+            .encode_context(&self.admitted.profile, packet)
+            .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
         let mut capture = StreamCapture::new(request);
         let result = self
             .runtime
-            .stream(request, packet, cancellation, &mut capture)
+            .stream(request, &context, cancellation, &mut capture)
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
         capture.finish(&result)?;
         validate_result(&self.admitted.profile, request, &result)?;
@@ -673,22 +690,23 @@ mod tests {
     use agentmage_kernel_contracts::{
         BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
         CancellationSignal, ClosedModelProposal, ContextBudget, ContextPacketId, CorrelationId,
-        DecodingProfile, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
-        LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability, ModelCapabilityState,
-        ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
-        ModelLoadReceipt, ModelManifestId, ModelManifestObservation, ModelMessage, ModelMessageId,
-        ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport,
-        ModelRole, ModelRunId, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-        ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId,
-        ModelStreamSink, ModelTransformation, ModelUnloadReceipt, PlatformArchitecture,
-        PlatformFamily, ProposalId, RuntimeIsolationObservation, SessionId, StreamedModelFragment,
-        TaskId, TokenCountResult, ToolCatalogId,
+        DecodingProfile, EncodedModelContext, ExactModelProfile, FamilyCodecIdentity,
+        HardwareEnvelope, LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability,
+        ModelCapabilityState, ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState,
+        ModelLifecycleState, ModelLoadReceipt, ModelManifestId, ModelManifestObservation,
+        ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
+        ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId, ModelRunRequest,
+        ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
+        ModelRuntimeKind, ModelStreamId, ModelStreamSink, ModelTransformation, ModelUnloadReceipt,
+        PlatformArchitecture, PlatformFamily, ProposalId, RuntimeIsolationObservation, SessionId,
+        StreamedModelFragment, TaskId, TokenCountResult, ToolCatalogId,
     };
 
     use super::{
         LocalModelController, ModelAdmissionCatalog, ModelRuntimeGateError, ModelUsePurpose,
         runtime_failure, sha256_hex,
     };
+    use crate::model_codec::ClosedJsonFamilyCodec;
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -804,21 +822,21 @@ mod tests {
 
         fn count_tokens(
             &self,
-            packet: &ModelContextPacket,
+            context: &EncodedModelContext,
         ) -> Result<TokenCountResult, ModelRuntimeFailure> {
             Ok(TokenCountResult {
-                profile_id: packet.profile_id.clone(),
-                context_packet_id: packet.context_packet_id.clone(),
-                tokens: packet.input_tokens,
+                profile_id: context.profile_id.clone(),
+                context_packet_id: context.context_packet_id.clone(),
+                tokens: 1,
                 counter: self.token_counter.clone(),
-                packet_sha256: packet.packet_sha256.clone(),
+                packet_sha256: context.sha256.clone(),
             })
         }
 
         fn stream(
             &mut self,
             request: &ModelRunRequest,
-            _packet: &ModelContextPacket,
+            _context: &EncodedModelContext,
             cancellation: Option<&CancellationSignal>,
             sink: &mut dyn ModelStreamSink,
         ) -> Result<ModelRunResult, ModelRuntimeFailure> {
@@ -1089,8 +1107,12 @@ mod tests {
         let admitted = catalog
             .admit(&profile, ModelUsePurpose::ContractTest)
             .expect("admitted");
-        let mut controller =
-            LocalModelController::new(FakeRuntime::new(&profile), admitted).expect("controller");
+        let mut controller = LocalModelController::new(
+            FakeRuntime::new(&profile),
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+        )
+        .expect("controller");
 
         controller.load().expect("load");
         assert_eq!(
@@ -1169,7 +1191,12 @@ mod tests {
             let mut fake = FakeRuntime::new(&profile);
             fake.manifest_drift = manifest_drift;
             fake.isolation_drift = isolation_drift;
-            let mut controller = LocalModelController::new(fake, admitted).expect("controller");
+            let mut controller = LocalModelController::new(
+                fake,
+                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                admitted,
+            )
+            .expect("controller");
             assert_eq!(controller.load(), Err(expected));
         }
 
@@ -1178,7 +1205,12 @@ mod tests {
             .expect("admitted");
         let mut fake = FakeRuntime::new(&profile);
         fake.scenario = FakeScenario::Replay;
-        let mut controller = LocalModelController::new(fake, admitted).expect("controller");
+        let mut controller = LocalModelController::new(
+            fake,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+        )
+        .expect("controller");
         controller.load().expect("load");
         assert_eq!(
             controller.stream(&request(&profile), &packet(&profile), None),
@@ -1231,7 +1263,12 @@ mod tests {
                     .expect("admitted");
                 let mut fake = FakeRuntime::new(&profile);
                 fake.scenario = scenario;
-                let mut controller = LocalModelController::new(fake, admitted).expect("controller");
+                let mut controller = LocalModelController::new(
+                    fake,
+                    ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                    admitted,
+                )
+                .expect("controller");
                 controller.load().expect("load");
                 let packet = packet(&profile);
                 let signal = cancellation();
