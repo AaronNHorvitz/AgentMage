@@ -102,7 +102,12 @@ fn exact_muse_import_scan_load_unload_and_evidence_activation() {
     let activated =
         activate_verified_model(&profile, &store, &verified_name, &mut verifier, |_| false)
             .expect("scan, load, unload, and evidence-store activation");
-    assert_eq!(activated.disposition, ModelActivationDisposition::Activated);
+    assert_eq!(
+        activated.disposition,
+        ModelActivationDisposition::Activated,
+        "native verifier failure: {:?}",
+        verifier.last_failure_code()
+    );
     assert_eq!(activated.active_profile_id, Some(profile.profile_id));
     assert!(!activated.workspace_available);
     assert!(!activated.session_available);

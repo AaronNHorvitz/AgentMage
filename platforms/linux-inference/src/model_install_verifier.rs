@@ -22,13 +22,24 @@ const PINNED_GGUF_SCAN_POLICY: &[u8] = b"agentmage.pinned-gguf-scan.v1\0exact-pr
 pub struct NativeModelInstallVerifier<D: NativeModelDriver> {
     adapter: LinuxNativeModelAdapter<D>,
     identity: ModelRuntimeIdentity,
+    last_failure_code: Option<String>,
 }
 
 impl<D: NativeModelDriver> NativeModelInstallVerifier<D> {
     /// Binds one already-isolated adapter to its exact runtime identity.
     #[must_use]
     pub fn new(adapter: LinuxNativeModelAdapter<D>, identity: ModelRuntimeIdentity) -> Self {
-        Self { adapter, identity }
+        Self {
+            adapter,
+            identity,
+            last_failure_code: None,
+        }
+    }
+
+    /// Returns the latest content-free native verification failure.
+    #[must_use]
+    pub fn last_failure_code(&self) -> Option<&str> {
+        self.last_failure_code.as_deref()
     }
 }
 
@@ -55,19 +66,38 @@ impl<D: NativeModelDriver> ModelInstallVerifier for NativeModelInstallVerifier<D
         _artifact: &Path,
         profile: &ExactModelProfile,
     ) -> Option<ModelInstallSelfTestReport> {
+        self.last_failure_code = None;
         if profile.runtime != self.identity {
+            self.last_failure_code = Some("model.install-verifier.runtime-identity".to_owned());
             return None;
         }
-        let load = self.adapter.load(profile).ok()?;
+        let load = match self.adapter.load(profile) {
+            Ok(receipt) => receipt,
+            Err(error) => {
+                self.last_failure_code = Some(error.code);
+                return None;
+            }
+        };
         let health = self.adapter.health();
         let ready = health.profile_id.as_ref() == Some(&profile.profile_id)
             && health.state == ModelHealthState::Ready;
-        let unload = self.adapter.unload(&profile.profile_id).ok();
+        let unload = match self.adapter.unload(&profile.profile_id) {
+            Ok(receipt) => Some(receipt),
+            Err(error) => {
+                self.last_failure_code = Some(error.code);
+                None
+            }
+        };
         let unloaded = unload.as_ref().is_some_and(|receipt| {
             receipt.profile_id == profile.profile_id
                 && receipt.adapter_id == profile.runtime.adapter_id
                 && receipt.empty
         }) && self.adapter.health().state == ModelHealthState::Unloaded;
+        if !ready && self.last_failure_code.is_none() {
+            self.last_failure_code = Some(health.reason_code.clone());
+        } else if !unloaded && self.last_failure_code.is_none() {
+            self.last_failure_code = Some("model.install-verifier.unload-incomplete".to_owned());
+        }
         Some(ModelInstallSelfTestReport {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
