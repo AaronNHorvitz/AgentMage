@@ -1,0 +1,167 @@
+{
+  "checks": [
+    {
+      "code": "muse-edge-codec-pass",
+      "id": "muse-edge-codec",
+      "result": "PASS"
+    },
+    {
+      "code": "generic-codec-pass",
+      "id": "generic-codec",
+      "result": "PASS"
+    },
+    {
+      "code": "bounded-response-pass",
+      "id": "bounded-response",
+      "result": "PASS"
+    },
+    {
+      "code": "fake-family-parity-pass",
+      "id": "fake-family-parity",
+      "result": "PASS"
+    },
+    {
+      "code": "no-family-branch",
+      "id": "production-kernel-family-neutrality",
+      "result": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--locked",
+        "muse_atem_codec::tests::"
+      ],
+      "exit_code": 0,
+      "id": "muse-edge-codec",
+      "output_sha256": "588c6c8feb59a9145d71d2c8304c75d0b3145683a0c3bb1faef9646f7bb3eb07"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "model_codec::tests_support::"
+      ],
+      "exit_code": 0,
+      "id": "generic-codec",
+      "output_sha256": "90bb98f8d2e883c50bf2aa593808415dd5cb96842a7b4a6ecc2c411de141e565"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "model_response::tests::"
+      ],
+      "exit_code": 0,
+      "id": "bounded-response",
+      "output_sha256": "47c411ac5704ae8c3fbc67ef80990ae6d57646d104e33a13c18d8d21755a1b74"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked",
+        "fake_muse_and_gemma_cover_every_runtime_terminal_and_hostile_response_state"
+      ],
+      "exit_code": 0,
+      "id": "fake-family-parity",
+      "output_sha256": "425e6f841590165d5d1c6a1d7e1956ac958804d0a8c4dca1cc18c7c18394447b"
+    }
+  ],
+  "disposition": {
+    "authority_change": false,
+    "codec_at_platform_edge": true,
+    "kernel_family_neutral": true,
+    "model_loaded": false,
+    "profile_activated": false,
+    "release_approval": false,
+    "status": "PASS-CONTRACT"
+  },
+  "limitations": [
+    "This campaign uses deterministic synthetic packets and proposals, not model output.",
+    "Codec conformance does not prove model quality, runtime isolation, or release readiness.",
+    "Test-only family labels exercise parity and are not production kernel branches."
+  ],
+  "mutations": [
+    {
+      "id": "tokenizer",
+      "proving_test": "rejects_every_identity_dimension_independently",
+      "result": "PASS"
+    },
+    {
+      "id": "template",
+      "proving_test": "rejects_every_identity_dimension_independently",
+      "result": "PASS"
+    },
+    {
+      "id": "reasoning-flag",
+      "proving_test": "rejects_every_identity_dimension_independently",
+      "result": "PASS"
+    },
+    {
+      "id": "message-boundary",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
+    },
+    {
+      "id": "end-token",
+      "proving_test": "rejects_every_identity_dimension_independently",
+      "result": "PASS"
+    },
+    {
+      "id": "tool-envelope",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
+    },
+    {
+      "id": "tool-protocol",
+      "proving_test": "rejects_every_identity_dimension_independently",
+      "result": "PASS"
+    },
+    {
+      "id": "stream-split",
+      "proving_test": "replay_missing_and_exhausted_repairs_have_distinct_closed_results",
+      "result": "PASS"
+    },
+    {
+      "id": "unknown-field",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
+    },
+    {
+      "id": "trailing-bytes",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
+    },
+    {
+      "id": "proposal-identity",
+      "proving_test": "malformed_stale_replayed_and_authority_seeking_envelopes_remain_inert",
+      "result": "PASS"
+    }
+  ],
+  "production_kernel_family_references": [],
+  "record_type": "d027_s13_muse_codec_evidence",
+  "schema_version": 1,
+  "source_revision": "dfc4ae6806b79caae8a89570dad6d183cbc47930",
+  "source_sha256": {
+    "kernel/contracts/src/model.rs": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
+    "kernel/engine/src/model_codec.rs": "99b050126cdbff486f906e611920ff1c422e0db9554d76db885dee9b1ff55d66",
+    "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
+    "kernel/engine/src/model_runtime.rs": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
+    "platforms/linux-inference/src/muse_atem_codec.rs": "4a63ad223eefb2dbd772ba4267449a76b93cd3dc7c9a5c8c85b5316e5b46662f",
+    "scripts/muse_codec_evidence.py": "9dc85655d8cc76fb224c4a9a020dcb0280cbcc9d789000ed6c77384223dff27e",
+    "tests/test_muse_codec_evidence.py": "bc54637ef8ecde8b234b5412d9d3b599bcb8652148050344a07ed1ca26aca701"
+  }
+}
