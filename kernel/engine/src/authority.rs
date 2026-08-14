@@ -1,8 +1,11 @@
 //! Sealed classification and fail-closed rejection of descriptive authority candidates.
 
 use agentmage_kernel_contracts::{
-    Action, ActorId, ApprovalRequest, ContractError, ErrorCategory, ErrorId, Plan, Prompt,
-    RequiredGrantTemplate, RetryDisposition, SessionId, Task, TaskId, ToolDefinition, WorkPacket,
+    Action, ActorId, ApprovalRequest, AssumptionRecord, ClaimAssertion, ClarificationQuestion,
+    ContractError, ContradictionRecord, ErrorCategory, ErrorId, HypothesisRecord,
+    IndependentVerificationRequest, IndependentVerificationResult, Plan, ProblemFact, ProblemFrame,
+    Prompt, RequiredGrantTemplate, RetryDisposition, SessionId, Task, TaskId, ToolDefinition,
+    WorkPacket,
 };
 
 use crate::task_classification::TaskClassification;
@@ -31,6 +34,8 @@ pub enum DescriptiveArtifactKind {
     RequiredGrantTemplate,
     /// Deterministic descriptive task classification.
     TaskClassification,
+    /// Concise reasoning or independent-verification record.
+    ReasoningRecord,
 }
 
 /// Claimed producer of one descriptive authority-escalation attempt.
@@ -83,6 +88,15 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::Prompt {}
     impl Sealed for agentmage_kernel_contracts::ToolDefinition {}
     impl Sealed for agentmage_kernel_contracts::RequiredGrantTemplate {}
+    impl Sealed for agentmage_kernel_contracts::ProblemFrame {}
+    impl Sealed for agentmage_kernel_contracts::ProblemFact {}
+    impl Sealed for agentmage_kernel_contracts::AssumptionRecord {}
+    impl Sealed for agentmage_kernel_contracts::HypothesisRecord {}
+    impl Sealed for agentmage_kernel_contracts::ClaimAssertion {}
+    impl Sealed for agentmage_kernel_contracts::ContradictionRecord {}
+    impl Sealed for agentmage_kernel_contracts::ClarificationQuestion {}
+    impl Sealed for agentmage_kernel_contracts::IndependentVerificationRequest {}
+    impl Sealed for agentmage_kernel_contracts::IndependentVerificationResult {}
     impl Sealed for crate::task_classification::TaskClassification {}
 }
 
@@ -115,6 +129,17 @@ impl_non_authoritative!(Prompt => Prompt);
 impl_non_authoritative!(ToolDefinition => ToolDefinition);
 impl_non_authoritative!(RequiredGrantTemplate => RequiredGrantTemplate);
 impl_non_authoritative!(TaskClassification => TaskClassification);
+impl_non_authoritative!(ReasoningRecord =>
+    ProblemFrame,
+    ProblemFact,
+    AssumptionRecord,
+    HypothesisRecord,
+    ClaimAssertion,
+    ContradictionRecord,
+    ClarificationQuestion,
+    IndependentVerificationRequest,
+    IndependentVerificationResult,
+);
 
 /// Typed result produced when a descriptive artifact is offered as execution authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -287,6 +312,15 @@ mod tests {
         assert_sealed::<agentmage_kernel_contracts::Prompt>();
         assert_sealed::<agentmage_kernel_contracts::ToolDefinition>();
         assert_sealed::<agentmage_kernel_contracts::RequiredGrantTemplate>();
+        assert_sealed::<agentmage_kernel_contracts::ProblemFrame>();
+        assert_sealed::<agentmage_kernel_contracts::ProblemFact>();
+        assert_sealed::<agentmage_kernel_contracts::AssumptionRecord>();
+        assert_sealed::<agentmage_kernel_contracts::HypothesisRecord>();
+        assert_sealed::<agentmage_kernel_contracts::ClaimAssertion>();
+        assert_sealed::<agentmage_kernel_contracts::ContradictionRecord>();
+        assert_sealed::<agentmage_kernel_contracts::ClarificationQuestion>();
+        assert_sealed::<agentmage_kernel_contracts::IndependentVerificationRequest>();
+        assert_sealed::<agentmage_kernel_contracts::IndependentVerificationResult>();
     }
 
     #[test]

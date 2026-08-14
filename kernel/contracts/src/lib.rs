@@ -16,6 +16,7 @@ mod path;
 mod platform;
 mod platform_path;
 mod prompt;
+mod reasoning;
 mod serialization;
 mod task;
 mod tool;
@@ -72,6 +73,12 @@ pub use platform_path::{
     WorkspaceObjectIdentity, WorkspaceObjectKind,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
+pub use reasoning::{
+    AssumptionRecord, AssumptionRisk, AssumptionStatus, ClaimAssertion, ClaimStatus,
+    ClarificationImpact, ClarificationQuestion, ClarificationState, ContradictionRecord,
+    HypothesisRecord, HypothesisStatus, IndependentVerificationRequest,
+    IndependentVerificationResult, ProblemFact, ProblemFrame, VerificationDisposition,
+};
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
 };

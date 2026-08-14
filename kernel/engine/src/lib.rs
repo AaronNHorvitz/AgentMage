@@ -26,6 +26,8 @@ pub mod platform_startup;
 pub mod policy;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
+/// Bounded concise reasoning records and deterministic verification gates.
+pub mod reasoning;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
