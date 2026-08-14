@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Authority-reducing application of advisory classifier output.
+pub mod advisory_policy;
 pub mod agent_ceiling;
 /// One-active-step plan history, progress, interruption, and response validation.
 pub mod agent_progress;

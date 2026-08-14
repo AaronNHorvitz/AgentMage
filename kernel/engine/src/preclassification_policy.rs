@@ -3,10 +3,10 @@
 use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
-    ActionRisk, AuthorityClass, AutonomyLevel, BudgetState, CredentialClass,
+    ActionId, ActionRisk, AuthorityClass, AutonomyLevel, BudgetState, CredentialClass,
     DeterministicPolicyFacts, DisclosureClass, ExactAuthorityState, ModelCapabilityStatus,
     NetworkRequirement, PathScopeState, PolicyDestinationClass, RepositoryState,
-    StaticPolicyCheckKind, StaticPolicyCheckState, to_canonical_json,
+    StaticPolicyCheckKind, StaticPolicyCheckState, TaskId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -79,6 +79,8 @@ impl PreclassificationDenial {
 pub struct PreclassificationClearance {
     fact_set_sha256: String,
     policy_sha256: String,
+    task_id: TaskId,
+    action_id: ActionId,
     completed_checks: u8,
 }
 
@@ -99,6 +101,17 @@ impl PreclassificationClearance {
     #[must_use]
     pub const fn completed_checks(&self) -> u8 {
         self.completed_checks
+    }
+
+    pub(crate) fn matches_advisory_identity(
+        &self,
+        task_id: &TaskId,
+        action_id: Option<&ActionId>,
+        input_sha256: &str,
+    ) -> bool {
+        self.task_id == *task_id
+            && action_id == Some(&self.action_id)
+            && self.fact_set_sha256 == input_sha256
     }
 }
 
@@ -210,6 +223,8 @@ impl PreclassificationPolicyGate {
         Ok(PreclassificationClearance {
             fact_set_sha256: sha256_hex(&bytes),
             policy_sha256: facts.policy_sha256.clone(),
+            task_id: facts.task_id.clone(),
+            action_id: facts.action_id.clone(),
             completed_checks: u8::try_from(completed).expect("fixed check count fits u8"),
         })
     }
