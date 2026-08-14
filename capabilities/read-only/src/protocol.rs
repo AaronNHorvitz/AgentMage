@@ -238,6 +238,63 @@ pub struct ReadOnlyResult {
     pub result_sha256: String,
 }
 
+impl ReadOnlyResult {
+    /// Verifies schema, tool identity, bounds, outcome invariants, and the exact result digest.
+    #[must_use]
+    pub fn verify(&self, kind: ReadOnlyToolKind) -> bool {
+        if self.schema_version != 1
+            || self.tool != kind.id()
+            || self.output_bytes > MAX_READ_ONLY_OUTPUT_BYTES
+            || self.output_bytes
+                != serde_json::to_vec(&self.items)
+                    .map(|bytes| bytes.len() as u64)
+                    .unwrap_or(u64::MAX)
+            || self.truncated != (self.outcome == ReadOnlyOutcome::Truncated)
+            || (matches!(
+                self.outcome,
+                ReadOnlyOutcome::Malformed | ReadOnlyOutcome::Denied | ReadOnlyOutcome::Failed
+            ) && (!self.items.is_empty()
+                || self.observed_files != 0
+                || self.observed_bytes != 0))
+            || (self.outcome == ReadOnlyOutcome::NoResult && !self.items.is_empty())
+            || (matches!(
+                self.outcome,
+                ReadOnlyOutcome::Succeeded | ReadOnlyOutcome::Partial
+            ) && self.items.is_empty())
+        {
+            return false;
+        }
+        result(
+            kind,
+            self.outcome,
+            self.items.clone(),
+            self.observed_files,
+            self.observed_bytes,
+            self.truncated,
+        ) == *self
+    }
+}
+
+/// Closed request-validation failure before any projection is processed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReadOnlyRequestError {
+    /// JSON, required fields, duplicate keys, or the closed request shape is malformed.
+    Malformed,
+    /// The request exceeds a hard bound or conflicts with the exact selected tool.
+    Denied,
+}
+
+impl ReadOnlyRequestError {
+    /// Stable content-free error code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Malformed => "read_only.request.malformed",
+            Self::Denied => "read_only.request.denied",
+        }
+    }
+}
+
 /// Cancellation boundary checked before and during deterministic processing.
 pub trait ReadOnlyCancellation {
     /// Returns true once the current attempt must stop.
@@ -266,13 +323,15 @@ pub fn execute_read_only(
     snapshot: &WorkspaceSnapshot,
     cancellation: &impl ReadOnlyCancellation,
 ) -> ReadOnlyResult {
-    let request = match parse_request(request_bytes) {
+    let request = match validate_read_only_request(kind, request_bytes) {
         Ok(request) => request,
-        Err(()) => return result(kind, ReadOnlyOutcome::Malformed, Vec::new(), 0, 0, false),
+        Err(ReadOnlyRequestError::Malformed) => {
+            return result(kind, ReadOnlyOutcome::Malformed, Vec::new(), 0, 0, false);
+        }
+        Err(ReadOnlyRequestError::Denied) => {
+            return result(kind, ReadOnlyOutcome::Denied, Vec::new(), 0, 0, false);
+        }
     };
-    if !valid_request(kind, &request) {
-        return result(kind, ReadOnlyOutcome::Denied, Vec::new(), 0, 0, false);
-    }
     if cancellation.is_cancelled() {
         return result(kind, ReadOnlyOutcome::Cancelled, Vec::new(), 0, 0, false);
     }
@@ -288,12 +347,20 @@ pub fn execute_read_only(
     execute(kind, &request, &entries, cancellation)
 }
 
-fn parse_request(bytes: &[u8]) -> Result<ReadOnlyRequest, ()> {
+/// Parses and validates one exact closed request for one exact selected tool.
+pub fn validate_read_only_request(
+    kind: ReadOnlyToolKind,
+    bytes: &[u8],
+) -> Result<ReadOnlyRequest, ReadOnlyRequestError> {
     if bytes.is_empty() || bytes.len() > 64 * 1024 {
-        return Err(());
+        return Err(ReadOnlyRequestError::Malformed);
     }
-    serde_json::from_slice::<ClosedJson>(bytes).map_err(|_| ())?;
-    serde_json::from_slice(bytes).map_err(|_| ())
+    serde_json::from_slice::<ClosedJson>(bytes).map_err(|_| ReadOnlyRequestError::Malformed)?;
+    let request: ReadOnlyRequest =
+        serde_json::from_slice(bytes).map_err(|_| ReadOnlyRequestError::Malformed)?;
+    valid_request(kind, &request)
+        .then_some(request)
+        .ok_or(ReadOnlyRequestError::Denied)
 }
 
 fn valid_request(kind: ReadOnlyToolKind, request: &ReadOnlyRequest) -> bool {
@@ -959,6 +1026,11 @@ mod tests {
             &request(&[&["src", "lib.rs"]], ReadOnlyEncoding::Utf8),
         );
         assert!(matches!(text.items[0], ReadOnlyItem::Text { .. }));
+        assert!(text.verify(ReadOnlyToolKind::ReadText));
+        let mut forged = text.clone();
+        forged.result_sha256 = "0".repeat(64);
+        assert!(!forged.verify(ReadOnlyToolKind::ReadText));
+        assert!(!text.verify(ReadOnlyToolKind::HashFile));
 
         let multi = run(
             ReadOnlyToolKind::ReadMultiple,

@@ -16,7 +16,8 @@ pub use protocol::{
     MAX_READ_ONLY_CALL_DEPTH, MAX_READ_ONLY_DEPTH, MAX_READ_ONLY_FILES, MAX_READ_ONLY_INPUT_BYTES,
     MAX_READ_ONLY_MATCHES, MAX_READ_ONLY_OUTPUT_BYTES, NeverCancelled, ReadOnlyCancellation,
     ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest,
-    ReadOnlyResult, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
+    ReadOnlyRequestError, ReadOnlyResult, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot,
+    execute_read_only, validate_read_only_request,
 };
 
 /// Stable component identity used by diagnostics and build verification.
