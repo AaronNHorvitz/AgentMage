@@ -71,7 +71,7 @@ CREATE TABLE conversation_turn_receipts (
 
 CREATE TABLE conversation_turn_checkpoints (
     turn_id TEXT PRIMARY KEY,
-    checkpoint_id TEXT NOT NULL UNIQUE,
+    checkpoint_id TEXT NOT NULL,
     FOREIGN KEY(turn_id) REFERENCES conversation_turns(turn_id) ON DELETE CASCADE
 ) STRICT;
 

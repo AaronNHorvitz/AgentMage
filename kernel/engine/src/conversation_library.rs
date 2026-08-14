@@ -5,11 +5,15 @@ use std::fmt::Write as _;
 use agentmage_kernel_contracts::{
     ApprovalId, CONTRACT_SCHEMA_VERSION, ConversationId, ConversationRecord, ConversationRetention,
     ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
-    DataSensitivity, WorkspaceId, from_json, to_canonical_json,
+    DataSensitivity, SessionCheckpoint, SessionCheckpointId, WorkspaceId, from_json,
+    to_canonical_json,
 };
 use rusqlite::{OptionalExtension, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
 
+use agentmage_kernel_contracts::ResumeDriftDimension;
+
+use crate::context_management::{ResumeDirective, ResumeObservation, revalidate_resume};
 use crate::operational_store::OperationalStore;
 
 const MAX_TITLE_BYTES: usize = 512;
@@ -261,6 +265,38 @@ pub struct ConversationDeletionReceipt {
     pub deleted_turn_count: u64,
     /// Fixed true marker after one atomic committed deletion.
     pub deleted: bool,
+}
+
+/// Read-only checkpoint and drift result for resuming one exact conversation turn.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationResumeReview {
+    /// Conversation selected for continuation.
+    pub conversation_id: ConversationId,
+    /// Exact historical turn owning the selected checkpoint.
+    pub turn_id: ConversationTurnId,
+    /// Hash-verified metadata-only checkpoint.
+    pub checkpoint: SessionCheckpoint,
+    /// Current-versus-recorded drift result from the shared resume engine.
+    pub directive: ResumeDirective,
+    /// Digest of the immutable source history prefix through the selected turn.
+    pub source_history_sha256: String,
+    /// Fixed false marker: review never resumes work or creates a branch.
+    pub resumed: bool,
+}
+
+/// Exact no-write preview for a visible branch from one historical turn.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationBranchPreview {
+    /// Source checkpoint and current drift result.
+    pub resume_review: ConversationResumeReview,
+    /// Complete proposed empty child conversation.
+    pub proposed_conversation: ConversationRecord,
+    /// Digest of the proposed canonical child record.
+    pub proposed_record_sha256: String,
+    /// Digest binding source history, checkpoint, drift state, and proposed child.
+    pub preview_sha256: String,
+    /// Fixed false marker: constructing a branch preview performs no write.
+    pub applied: bool,
 }
 
 impl OperationalStore {
@@ -642,6 +678,120 @@ impl OperationalStore {
         })
     }
 
+    /// Reviews the latest safe checkpoint before resuming a conversation in place.
+    pub fn review_latest_conversation_resume(
+        &self,
+        conversation_id: &ConversationId,
+        current: &ResumeObservation,
+    ) -> Result<ConversationResumeReview, ConversationLibraryError> {
+        let turn_id = self
+            .connection
+            .query_row(
+                "SELECT turn.turn_id FROM conversation_turns AS turn
+                 JOIN conversation_turn_checkpoints AS checkpoint
+                   ON checkpoint.turn_id=turn.turn_id
+                 WHERE turn.conversation_id=?1
+                 ORDER BY turn.ordinal DESC LIMIT 1",
+                [conversation_id.as_str()],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(|_| ConversationLibraryError::StorageFailed)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        self.review_conversation_resume_from_turn(
+            conversation_id,
+            &ConversationTurnId::from_raw(turn_id),
+            current,
+        )
+    }
+
+    /// Reviews one exact historical turn checkpoint without changing the original timeline.
+    pub fn review_conversation_resume_from_turn(
+        &self,
+        conversation_id: &ConversationId,
+        turn_id: &ConversationTurnId,
+        current: &ResumeObservation,
+    ) -> Result<ConversationResumeReview, ConversationLibraryError> {
+        let turn = self
+            .conversation_turn(turn_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        if &turn.conversation_id != conversation_id {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let checkpoint_id = turn
+            .checkpoint_id
+            .as_ref()
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let checkpoint = self.load_conversation_checkpoint(checkpoint_id)?;
+        let directive = revalidate_resume(&checkpoint, current)
+            .map_err(|_| ConversationLibraryError::IntegrityFailure)?;
+        Ok(ConversationResumeReview {
+            conversation_id: conversation_id.clone(),
+            turn_id: turn_id.clone(),
+            checkpoint,
+            directive,
+            source_history_sha256: self.source_history_sha256(conversation_id, turn.ordinal)?,
+            resumed: false,
+        })
+    }
+
+    /// Constructs a no-write branch preview from one exact historical turn.
+    pub fn preview_conversation_branch(
+        &self,
+        source_conversation_id: &ConversationId,
+        source_turn_id: &ConversationTurnId,
+        proposed_conversation: ConversationRecord,
+        current: &ResumeObservation,
+    ) -> Result<ConversationBranchPreview, ConversationLibraryError> {
+        if proposed_conversation.parent_conversation_id.as_ref() != Some(source_conversation_id)
+            || proposed_conversation.branch_from_turn_id.as_ref() != Some(source_turn_id)
+            || proposed_conversation.current_turn_id.is_some()
+            || proposed_conversation.status != ConversationStatus::Active
+        {
+            return Err(ConversationLibraryError::InvalidInput);
+        }
+        validate_conversation(&proposed_conversation, true)?;
+        if self
+            .conversation(&proposed_conversation.conversation_id)?
+            .is_some()
+        {
+            return Err(ConversationLibraryError::DuplicateIdentity);
+        }
+        let resume_review = self.review_conversation_resume_from_turn(
+            source_conversation_id,
+            source_turn_id,
+            current,
+        )?;
+        let proposed_record_sha256 = canonical_record_sha256(&proposed_conversation)?;
+        let preview_sha256 = branch_preview_digest(&resume_review, &proposed_record_sha256);
+        Ok(ConversationBranchPreview {
+            resume_review,
+            proposed_conversation,
+            proposed_record_sha256,
+            preview_sha256,
+            applied: false,
+        })
+    }
+
+    /// Creates one visible child branch only when the preview and current state remain exact.
+    pub fn apply_conversation_branch(
+        &mut self,
+        preview: &ConversationBranchPreview,
+        current: &ResumeObservation,
+    ) -> Result<ConversationMutationReceipt, ConversationLibraryError> {
+        validate_branch_preview(preview)?;
+        let fresh = self.preview_conversation_branch(
+            &preview.resume_review.conversation_id,
+            &preview.resume_review.turn_id,
+            preview.proposed_conversation.clone(),
+            current,
+        )?;
+        if &fresh != preview || preview.resume_review.directive != ResumeDirective::Continue {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        self.create_conversation(&preview.proposed_conversation)
+    }
+
     /// Constructs an exact metadata change preview without writing canonical state.
     pub fn preview_conversation_change(
         &self,
@@ -905,6 +1055,58 @@ impl OperationalStore {
             .map_err(|_| ConversationLibraryError::StorageFailed)?;
         u64::try_from(value).map_err(|_| ConversationLibraryError::IntegrityFailure)
     }
+
+    fn load_conversation_checkpoint(
+        &self,
+        checkpoint_id: &SessionCheckpointId,
+    ) -> Result<SessionCheckpoint, ConversationLibraryError> {
+        let row = self
+            .connection
+            .query_row(
+                "SELECT checkpoint_sha256, record_json FROM session_checkpoints
+                 WHERE checkpoint_id=?1",
+                [checkpoint_id.as_str()],
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, Vec<u8>>(1)?)),
+            )
+            .optional()
+            .map_err(|_| ConversationLibraryError::StorageFailed)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let checkpoint: SessionCheckpoint =
+            from_json(&row.1).map_err(|_| ConversationLibraryError::IntegrityFailure)?;
+        if checkpoint.checkpoint_id != *checkpoint_id
+            || checkpoint.checkpoint_sha256 != row.0
+            || checkpoint.ephemeral
+            || crate::context_management::verify_checkpoint(&checkpoint).is_err()
+        {
+            return Err(ConversationLibraryError::IntegrityFailure);
+        }
+        Ok(checkpoint)
+    }
+
+    fn source_history_sha256(
+        &self,
+        conversation_id: &ConversationId,
+        through_ordinal: u64,
+    ) -> Result<String, ConversationLibraryError> {
+        let history = self.conversation_history(conversation_id)?;
+        if through_ordinal == 0 || through_ordinal > history.turns.len() as u64 {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let mut value = String::from("conversation-history-v1\n");
+        for turn in history.turns.iter().take(through_ordinal as usize) {
+            writeln!(
+                &mut value,
+                "{} {}",
+                turn.turn_id.as_str(),
+                sha256(
+                    &to_canonical_json(turn)
+                        .map_err(|_| ConversationLibraryError::IntegrityFailure)?
+                )
+            )
+            .expect("writing to a String cannot fail");
+        }
+        Ok(sha256(value.as_bytes()))
+    }
 }
 
 fn metadata_change_kind(change: &ConversationMetadataChange) -> ConversationMetadataChangeKind {
@@ -914,6 +1116,68 @@ fn metadata_change_kind(change: &ConversationMetadataChange) -> ConversationMeta
         ConversationMetadataChange::Archive => ConversationMetadataChangeKind::Archive,
         ConversationMetadataChange::ReplaceTags(_) => ConversationMetadataChangeKind::ReplaceTags,
         ConversationMetadataChange::SetRetention(_) => ConversationMetadataChangeKind::SetRetention,
+    }
+}
+
+fn branch_preview_digest(
+    review: &ConversationResumeReview,
+    proposed_record_sha256: &str,
+) -> String {
+    let mut value = format!(
+        "conversation-branch-v1\n{}\n{}\n{}\n{}\n{}\n",
+        review.conversation_id.as_str(),
+        review.turn_id.as_str(),
+        review.checkpoint.checkpoint_sha256,
+        review.source_history_sha256,
+        proposed_record_sha256,
+    );
+    match &review.directive {
+        ResumeDirective::Continue => value.push_str("continue\n"),
+        ResumeDirective::DecisionRequired { drift } => {
+            value.push_str("decision_required\n");
+            for dimension in drift {
+                writeln!(&mut value, "{}", drift_dimension_code(*dimension))
+                    .expect("writing to a String cannot fail");
+            }
+        }
+    }
+    sha256(value.as_bytes())
+}
+
+fn validate_branch_preview(
+    preview: &ConversationBranchPreview,
+) -> Result<(), ConversationLibraryError> {
+    validate_conversation(&preview.proposed_conversation, true)?;
+    if preview.applied
+        || preview.resume_review.resumed
+        || preview
+            .proposed_conversation
+            .parent_conversation_id
+            .as_ref()
+            != Some(&preview.resume_review.conversation_id)
+        || preview.proposed_conversation.branch_from_turn_id.as_ref()
+            != Some(&preview.resume_review.turn_id)
+        || canonical_record_sha256(&preview.proposed_conversation)?
+            != preview.proposed_record_sha256
+        || branch_preview_digest(&preview.resume_review, &preview.proposed_record_sha256)
+            != preview.preview_sha256
+    {
+        return Err(ConversationLibraryError::InvalidInput);
+    }
+    Ok(())
+}
+
+const fn drift_dimension_code(dimension: ResumeDriftDimension) -> &'static str {
+    match dimension {
+        ResumeDriftDimension::Workspace => "workspace",
+        ResumeDriftDimension::File => "file",
+        ResumeDriftDimension::Instruction => "instruction",
+        ResumeDriftDimension::Branch => "branch",
+        ResumeDriftDimension::RepositoryMap => "repository_map",
+        ResumeDriftDimension::Citation => "citation",
+        ResumeDriftDimension::Model => "model",
+        ResumeDriftDimension::Permission => "permission",
+        ResumeDriftDimension::Policy => "policy",
     }
 }
 
@@ -1717,17 +1981,20 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        ApprovalId, CONTRACT_SCHEMA_VERSION, CloudSynchronizationMarker,
+        ApprovalId, CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, CloudSynchronizationMarker,
         ConversationAttachmentReference, ConversationId, ConversationRecord, ConversationRetention,
         ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
-        ConversationTurnRole, DataSensitivity, GrantId, ModelProfileId, ReceiptId,
-        SessionCheckpointId, StorageFilesystemClass, StrictLocalStorageObservation, WorkspaceId,
+        ConversationTurnRole, DataSensitivity, EvidenceId, GrantId, ModelProfileId, PlanId,
+        PlanStepId, PolicyId, ReceiptId, RepositorySnapshotId, SessionCheckpoint,
+        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId, WorkspaceId, to_canonical_json,
     };
 
     use super::{
         ConversationDeletionApproval, ConversationLibraryError, ConversationMetadataChange,
         ConversationQuery, sha256,
     };
+    use crate::context_management::{ResumeDirective, ResumeObservation, finalize_checkpoint};
     use crate::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
@@ -1820,6 +2087,94 @@ mod tests {
             ))),
             citation_ids: vec![format!("citation-{ordinal}")],
             source_sha256: vec!["b".repeat(64)],
+        }
+    }
+
+    fn checkpoint() -> SessionCheckpoint {
+        finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-1"),
+            session_id: SessionId::from_raw("session-conversation-1"),
+            task_id: TaskId::from_raw("task-conversation-1"),
+            objective_sha256: "1".repeat(64),
+            plan_id: PlanId::from_raw("plan-conversation-1"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-conversation-1"),
+            next_action_sha256: "2".repeat(64),
+            workspace_id: WorkspaceId::from_raw("workspace-alpha"),
+            workspace_state_sha256: "3".repeat(64),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("repository-conversation-1"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: "4".repeat(64),
+            files: vec![CheckpointFileIdentity {
+                object_id: "file-alpha".to_owned(),
+                content_sha256: "5".repeat(64),
+                observed_revision: "revision-1".to_owned(),
+            }],
+            instruction_sha256: "6".repeat(64),
+            permission_profile_id: "permission-alpha".to_owned(),
+            permission_profile_sha256: "7".repeat(64),
+            policy_id: PolicyId::from_raw("policy-alpha"),
+            policy_sha256: "8".repeat(64),
+            model_profile_id: ModelProfileId::from_raw("model-local-alpha"),
+            model_manifest_sha256: "9".repeat(64),
+            model_runtime_sha256: "a".repeat(64),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-alpha")],
+            citation_set_sha256: "b".repeat(64),
+            blockers: Vec::new(),
+            context_packet_sha256: "c".repeat(64),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: false,
+            checkpoint_sha256: "0".repeat(64),
+        })
+        .expect("checkpoint finalizes")
+    }
+
+    fn seed_checkpoint(store: &OperationalStore, checkpoint: &SessionCheckpoint) {
+        let bytes = to_canonical_json(checkpoint).expect("checkpoint serializes");
+        store
+            .connection
+            .execute(
+                "INSERT INTO checkpoints(generation, state_sha256, session_checkpoint_sha256)
+                 VALUES (1, ?1, ?2)",
+                rusqlite::params!["0".repeat(64), &checkpoint.checkpoint_sha256],
+            )
+            .expect("checkpoint generation seeds");
+        store
+            .connection
+            .execute(
+                "INSERT INTO session_checkpoints(
+                    generation, checkpoint_id, checkpoint_sha256, record_json
+                 ) VALUES (1, ?1, ?2, ?3)",
+                rusqlite::params![
+                    checkpoint.checkpoint_id.as_str(),
+                    &checkpoint.checkpoint_sha256,
+                    bytes,
+                ],
+            )
+            .expect("session checkpoint seeds");
+    }
+
+    fn resume_observation(checkpoint: &SessionCheckpoint) -> ResumeObservation {
+        ResumeObservation {
+            workspace_id: checkpoint.workspace_id.as_str().to_owned(),
+            workspace_state_sha256: checkpoint.workspace_state_sha256.clone(),
+            files: checkpoint.files.clone(),
+            instruction_sha256: checkpoint.instruction_sha256.clone(),
+            repository_branch: checkpoint.repository_branch.clone(),
+            repository_map_sha256: checkpoint.repository_map_sha256.clone(),
+            citation_set_sha256: checkpoint.citation_set_sha256.clone(),
+            model_profile_id: checkpoint.model_profile_id.as_str().to_owned(),
+            model_manifest_sha256: checkpoint.model_manifest_sha256.clone(),
+            model_runtime_sha256: checkpoint.model_runtime_sha256.clone(),
+            permission_profile_id: checkpoint.permission_profile_id.clone(),
+            permission_profile_sha256: checkpoint.permission_profile_sha256.clone(),
+            policy_id: checkpoint.policy_id.as_str().to_owned(),
+            policy_sha256: checkpoint.policy_sha256.clone(),
         }
     }
 
@@ -2309,6 +2664,156 @@ mod tests {
                 .expect("parent reads")
                 .is_some()
         );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn latest_resume_and_exact_branch_reuse_shared_drift_checks_without_rewriting_source() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        let first = turn(1, Some("immutable source turn"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("source turn appends");
+        let checkpoint = checkpoint();
+        seed_checkpoint(&store, &checkpoint);
+        let observation = resume_observation(&checkpoint);
+        let latest = store
+            .review_latest_conversation_resume(&original.conversation_id, &observation)
+            .expect("latest resume reviews");
+        assert_eq!(latest.turn_id, first.turn_id);
+        assert_eq!(latest.directive, ResumeDirective::Continue);
+        assert!(!latest.resumed);
+
+        let mut branch = conversation(true);
+        branch.conversation_id = ConversationId::from_raw("conversation-exact-branch");
+        branch.title = "Exact branch".to_owned();
+        branch.parent_conversation_id = Some(original.conversation_id.clone());
+        branch.branch_from_turn_id = Some(first.turn_id.clone());
+        branch.created_at_epoch_ms += 100;
+        branch.updated_at_epoch_ms += 100;
+        let preview = store
+            .preview_conversation_branch(
+                &original.conversation_id,
+                &first.turn_id,
+                branch.clone(),
+                &observation,
+            )
+            .expect("branch previews");
+        assert!(!preview.applied);
+        store
+            .apply_conversation_branch(&preview, &observation)
+            .expect("branch applies");
+        let source_history = store
+            .conversation_history(&original.conversation_id)
+            .expect("source history remains");
+        assert_eq!(source_history.turns, vec![first.clone()]);
+        let branch_history = store
+            .conversation_history(&branch.conversation_id)
+            .expect("branch history reads");
+        assert!(branch_history.turns.is_empty());
+        assert_eq!(
+            branch_history.conversation.branch_from_turn_id,
+            Some(first.turn_id)
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn resume_drift_requires_a_decision_and_prevents_branch_creation() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        let first = turn(1, Some("drift source"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let checkpoint = checkpoint();
+        seed_checkpoint(&store, &checkpoint);
+        let mut drifted = resume_observation(&checkpoint);
+        drifted.instruction_sha256 = "d".repeat(64);
+        let review = store
+            .review_conversation_resume_from_turn(
+                &original.conversation_id,
+                &first.turn_id,
+                &drifted,
+            )
+            .expect("drift reviews");
+        assert!(matches!(
+            review.directive,
+            ResumeDirective::DecisionRequired { .. }
+        ));
+        let mut branch = conversation(true);
+        branch.conversation_id = ConversationId::from_raw("conversation-drift-branch");
+        branch.parent_conversation_id = Some(original.conversation_id.clone());
+        branch.branch_from_turn_id = Some(first.turn_id.clone());
+        branch.created_at_epoch_ms += 100;
+        branch.updated_at_epoch_ms += 100;
+        let preview = store
+            .preview_conversation_branch(
+                &original.conversation_id,
+                &first.turn_id,
+                branch.clone(),
+                &drifted,
+            )
+            .expect("drifted preview remains visible");
+        assert_eq!(
+            store.apply_conversation_branch(&preview, &drifted),
+            Err(ConversationLibraryError::Conflict)
+        );
+        assert_eq!(store.conversation(&branch.conversation_id), Ok(None));
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn stale_branch_preview_and_missing_checkpoint_fail_without_child_creation() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        let first = turn(1, Some("checkpoint source"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let checkpoint = checkpoint();
+        let observation = resume_observation(&checkpoint);
+        assert_eq!(
+            store.review_latest_conversation_resume(&original.conversation_id, &observation),
+            Err(ConversationLibraryError::NotFound)
+        );
+        seed_checkpoint(&store, &checkpoint);
+        let mut branch = conversation(true);
+        branch.conversation_id = ConversationId::from_raw("conversation-stale-branch");
+        branch.parent_conversation_id = Some(original.conversation_id.clone());
+        branch.branch_from_turn_id = Some(first.turn_id.clone());
+        branch.created_at_epoch_ms += 100;
+        branch.updated_at_epoch_ms += 100;
+        let preview = store
+            .preview_conversation_branch(
+                &original.conversation_id,
+                &first.turn_id,
+                branch.clone(),
+                &observation,
+            )
+            .expect("branch previews");
+        store
+            .connection
+            .execute(
+                "UPDATE session_checkpoints SET record_json=X'7b7d' WHERE checkpoint_id=?1",
+                [checkpoint.checkpoint_id.as_str()],
+            )
+            .expect("checkpoint tamper fixture");
+        assert_eq!(
+            store.apply_conversation_branch(&preview, &observation),
+            Err(ConversationLibraryError::IntegrityFailure)
+        );
+        assert_eq!(store.conversation(&branch.conversation_id), Ok(None));
         fs::remove_dir_all(directory).expect("cleanup");
     }
 }
