@@ -7,6 +7,7 @@ mod domain;
 mod index;
 mod lifecycle;
 mod obsidian;
+mod obsidian_index;
 mod operations;
 mod plain_folder;
 mod schema;
@@ -28,10 +29,19 @@ pub use lifecycle::{
     preview_migration, preview_restore, verify_backup,
 };
 pub use obsidian::{
-    ObsidianBacklink, ObsidianEntryKind, ObsidianError, ObsidianFrontmatterValue, ObsidianHeading,
-    ObsidianLinkIssue, ObsidianLinkIssueKind, ObsidianNoteInput, ObsidianParsedNote,
-    ObsidianResolvedLink, ObsidianTask, ObsidianTimestamp, ObsidianVaultSelection,
+    ObsidianAttachment, ObsidianBacklink, ObsidianBlockReference, ObsidianCallout,
+    ObsidianCoverageItem, ObsidianEmbed, ObsidianEntryKind, ObsidianError,
+    ObsidianFrontmatterValue, ObsidianHeading, ObsidianLinkIssue, ObsidianLinkIssueKind,
+    ObsidianNoteInput, ObsidianParsedNote, ObsidianProperty, ObsidianResolvedLink,
+    ObsidianSourceRange, ObsidianTag, ObsidianTask, ObsidianTimestamp, ObsidianVaultSelection,
     ObsidianVaultSnapshot,
+};
+pub use obsidian_index::{
+    ObsidianAccessKind, ObsidianAccessReceipt, ObsidianFileChangePreview, ObsidianIndexConflict,
+    ObsidianIndexConflictKind, ObsidianIndexElementKind, ObsidianIndexError, ObsidianIndexHit,
+    ObsidianIndexReport, ObsidianIndexUpdate, ObsidianPreviewResult, ObsidianQueryResult,
+    ObsidianTemporalClass, ObsidianTraversalResult, ObsidianVaultFreshness, ObsidianVaultIndex,
+    ObsidianWatchEvent, ObsidianWatchEventKind,
 };
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
@@ -55,6 +65,9 @@ pub const COMPONENT_ID: &str = "capability-knowledge";
 
 /// Immutable schema version for the first canonical knowledge-domain family.
 pub const KNOWLEDGE_SCHEMA_VERSION: u16 = 1;
+
+/// Exact Obsidian parser generation bound into every vault index element.
+pub const OBSIDIAN_PARSER_VERSION: u16 = 2;
 
 /// Returns the identity of the contracts consumed by this capability.
 #[must_use]

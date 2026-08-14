@@ -8,6 +8,7 @@ use agentmage_kernel_contracts::{
 use sha2::{Digest, Sha256};
 
 const MAX_NOTE_BYTES: usize = 4 * 1024 * 1024;
+const MAX_ATTACHMENT_BYTES: usize = 64 * 1024 * 1024;
 const MAX_NOTES: usize = 100_000;
 const MAX_FRONTMATTER_FIELDS: usize = 128;
 const MAX_FRONTMATTER_VALUES: usize = 512;
@@ -162,6 +163,19 @@ pub enum ObsidianFrontmatterValue {
     Sequence(Vec<String>),
 }
 
+/// Exact one-based line and byte-column range in an authorized note snapshot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ObsidianSourceRange {
+    /// One-based first source line.
+    pub start_line: u32,
+    /// One-based UTF-8 byte column on the first line.
+    pub start_column: u32,
+    /// One-based final source line.
+    pub end_line: u32,
+    /// Exclusive one-based UTF-8 byte column on the final line.
+    pub end_column: u32,
+}
+
 /// One ATX heading outside a fenced code block.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObsidianHeading {
@@ -171,6 +185,8 @@ pub struct ObsidianHeading {
     pub text: String,
     /// One-based source line.
     pub line_number: u32,
+    /// Exact marker-through-text source range.
+    pub source_range: ObsidianSourceRange,
 }
 
 /// One Markdown task outside a fenced code block.
@@ -182,6 +198,8 @@ pub struct ObsidianTask {
     pub text: String,
     /// One-based source line.
     pub line_number: u32,
+    /// Exact list-marker-through-text source range.
+    pub source_range: ObsidianSourceRange,
 }
 
 /// One recognized timestamp-valued frontmatter field.
@@ -193,6 +211,85 @@ pub struct ObsidianTimestamp {
     pub value: String,
     /// One-based source line.
     pub line_number: u32,
+    /// Exact frontmatter field source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One frontmatter property with its flat values and source range.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianProperty {
+    /// Normalized lowercase key.
+    pub key: String,
+    /// One or more exact bounded scalar values.
+    pub values: Vec<String>,
+    /// Exact frontmatter field source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One parsed inline or frontmatter tag outside fenced code.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianTag {
+    /// Tag text without the leading marker.
+    pub value: String,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One Obsidian callout marker outside fenced code.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianCallout {
+    /// Uppercase callout kind such as `NOTE` or `WARNING`.
+    pub kind: String,
+    /// Optional title following the marker.
+    pub title: Option<String>,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One explicit Obsidian block identifier.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianBlockReference {
+    /// Identifier without the leading caret.
+    pub identifier: String,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One embedded note or attachment reference.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianEmbed {
+    /// Exact source target before graph normalization.
+    pub target: String,
+    /// Optional display alias.
+    pub alias: Option<String>,
+    /// Whether the target resolved to a non-Markdown attachment.
+    pub attachment: bool,
+    /// Resolved canonical target path, absent when unresolved or ambiguous.
+    pub target_path: Option<WorkspacePath>,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One parser coverage observation for unsupported but visible syntax.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianCoverageItem {
+    /// Stable syntax class such as `remote_markdown_embed` or `obsidian_uri`.
+    pub syntax: String,
+    /// Whether the syntax produced a supported semantic element.
+    pub supported: bool,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
+}
+
+/// One verified non-Markdown attachment visible to embed resolution.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianAttachment {
+    /// Canonical attachment path.
+    pub path: WorkspacePath,
+    /// Digest of the exact held bytes.
+    pub content_sha256: String,
+    /// Exact held byte count.
+    pub byte_count: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -200,6 +297,8 @@ struct ParsedWikiLink {
     target: String,
     alias: Option<String>,
     line_number: u32,
+    embedded: bool,
+    source_range: ObsidianSourceRange,
 }
 
 /// One parsed note without a filesystem handle or executable instruction state.
@@ -219,7 +318,28 @@ pub struct ObsidianParsedNote {
     pub tasks: Vec<ObsidianTask>,
     /// Parsed recognized timestamps in source order.
     pub timestamps: Vec<ObsidianTimestamp>,
+    /// Every parsed frontmatter property in key order.
+    pub properties: Vec<ObsidianProperty>,
+    /// Parsed tags in source order, including flat frontmatter tags.
+    pub tags: Vec<ObsidianTag>,
+    /// Parsed callout markers in source order.
+    pub callouts: Vec<ObsidianCallout>,
+    /// Parsed block identifiers in source order.
+    pub blocks: Vec<ObsidianBlockReference>,
+    /// Parsed embeds after graph resolution.
+    pub embeds: Vec<ObsidianEmbed>,
+    /// Visible unsupported syntax coverage.
+    pub coverage: Vec<ObsidianCoverageItem>,
+    source: Vec<u8>,
     wiki_links: Vec<ParsedWikiLink>,
+}
+
+impl ObsidianParsedNote {
+    /// Returns the exact immutable source bytes used for every extracted range.
+    #[must_use]
+    pub fn source_bytes(&self) -> &[u8] {
+        &self.source
+    }
 }
 
 /// Resolved wiki link between two canonical paths.
@@ -233,6 +353,8 @@ pub struct ObsidianResolvedLink {
     pub alias: Option<String>,
     /// One-based source line.
     pub line_number: u32,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
 }
 
 /// Backlink derived from a resolved wiki link.
@@ -244,6 +366,8 @@ pub struct ObsidianBacklink {
     pub alias: Option<String>,
     /// One-based source line.
     pub line_number: u32,
+    /// Exact source range in the source note.
+    pub source_range: ObsidianSourceRange,
 }
 
 /// Closed unresolved-link classification.
@@ -268,12 +392,15 @@ pub struct ObsidianLinkIssue {
     pub kind: ObsidianLinkIssueKind,
     /// Number of candidates, zero for unresolved links.
     pub candidate_count: usize,
+    /// Exact source range.
+    pub source_range: ObsidianSourceRange,
 }
 
 /// Complete deterministic read-only parse of one admitted vault snapshot.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObsidianVaultSnapshot {
     notes: Vec<ObsidianParsedNote>,
+    attachments: Vec<ObsidianAttachment>,
     resolved_links: Vec<ObsidianResolvedLink>,
     backlinks: BTreeMap<WorkspacePath, Vec<ObsidianBacklink>>,
     link_issues: Vec<ObsidianLinkIssue>,
@@ -291,6 +418,7 @@ impl ObsidianVaultSnapshot {
         inputs.sort_by(|left, right| left.path.cmp(&right.path));
         let mut paths = BTreeSet::new();
         let mut notes = Vec::new();
+        let mut attachments = Vec::new();
         for input in inputs {
             if input.entry_kind == ObsidianEntryKind::SymbolicLink {
                 return Err(ObsidianError::InvalidEntry);
@@ -315,10 +443,12 @@ impl ObsidianVaultSnapshot {
                 .components()
                 .last()
                 .is_some_and(|component| component.as_str().ends_with(".md"));
-            if !is_markdown {
-                continue;
-            }
-            if input.content.len() > MAX_NOTE_BYTES {
+            let byte_limit = if is_markdown {
+                MAX_NOTE_BYTES
+            } else {
+                MAX_ATTACHMENT_BYTES
+            };
+            if input.content.len() > byte_limit {
                 return Err(ObsidianError::ResourceLimit);
             }
             if !paths.insert(input.path.clone()) {
@@ -328,11 +458,22 @@ impl ObsidianVaultSnapshot {
             if actual_sha256 != input.content_sha256 {
                 return Err(ObsidianError::ContentDrift);
             }
-            notes.push(parse_note(input.path, actual_sha256, &input.content)?);
+            if is_markdown {
+                notes.push(parse_note(input.path, actual_sha256, &input.content)?);
+            } else {
+                attachments.push(ObsidianAttachment {
+                    path: input.path,
+                    content_sha256: actual_sha256,
+                    byte_count: u64::try_from(input.content.len())
+                        .map_err(|_| ObsidianError::ResourceLimit)?,
+                });
+            }
         }
-        let (resolved_links, backlinks, link_issues) = resolve_links(selection, &notes);
+        let (resolved_links, backlinks, link_issues) =
+            resolve_links(selection, &mut notes, &attachments);
         Ok(Self {
             notes,
+            attachments,
             resolved_links,
             backlinks,
             link_issues,
@@ -343,6 +484,12 @@ impl ObsidianVaultSnapshot {
     #[must_use]
     pub fn notes(&self) -> &[ObsidianParsedNote] {
         &self.notes
+    }
+
+    /// Returns verified non-Markdown attachments in canonical path order.
+    #[must_use]
+    pub fn attachments(&self) -> &[ObsidianAttachment] {
+        &self.attachments
     }
 
     /// Returns resolved links in canonical source and line order.
@@ -394,36 +541,93 @@ fn parse_note(
     let (frontmatter, frontmatter_lines, body_start) = parse_frontmatter(&lines)?;
     let aliases = frontmatter
         .get("aliases")
+        .or_else(|| frontmatter.get("alias"))
         .map(frontmatter_values)
         .unwrap_or_default();
-    let mut timestamps = frontmatter
-        .iter()
-        .filter(|(key, _)| timestamp_key(key))
-        .flat_map(|(key, value)| {
-            let line_number = frontmatter_lines.get(key).copied().unwrap_or(1);
+    let mut timestamps = Vec::new();
+    for (key, value) in frontmatter.iter().filter(|(key, _)| timestamp_key(key)) {
+        let line_number = frontmatter_lines.get(key).copied().unwrap_or(1);
+        let source_range = source_line_range(
+            line_number,
+            lines
+                .get(line_number as usize - 1)
+                .copied()
+                .unwrap_or_default(),
+        );
+        timestamps.extend(
             frontmatter_values(value)
                 .into_iter()
-                .map(move |value| ObsidianTimestamp {
+                .map(|value| ObsidianTimestamp {
                     key: key.clone(),
                     value,
                     line_number,
-                })
-        })
-        .collect::<Vec<_>>();
+                    source_range,
+                }),
+        );
+    }
     timestamps.sort_by(|left, right| {
         left.line_number
             .cmp(&right.line_number)
             .then_with(|| left.key.cmp(&right.key))
             .then_with(|| left.value.cmp(&right.value))
     });
+    let properties = frontmatter
+        .iter()
+        .map(|(key, value)| {
+            let line_number = frontmatter_lines.get(key).copied().unwrap_or(1);
+            ObsidianProperty {
+                key: key.clone(),
+                values: frontmatter_values(value),
+                source_range: source_line_range(
+                    line_number,
+                    lines
+                        .get(line_number as usize - 1)
+                        .copied()
+                        .unwrap_or_default(),
+                ),
+            }
+        })
+        .collect();
+    let mut tags = Vec::new();
+    for key in ["tags", "tag"] {
+        if let Some(value) = frontmatter.get(key) {
+            let line_number = frontmatter_lines.get(key).copied().unwrap_or(1);
+            let source_range = source_line_range(
+                line_number,
+                lines
+                    .get(line_number as usize - 1)
+                    .copied()
+                    .unwrap_or_default(),
+            );
+            tags.extend(
+                frontmatter_values(value)
+                    .into_iter()
+                    .map(|value| ObsidianTag {
+                        value: value.strip_prefix('#').unwrap_or(&value).to_owned(),
+                        source_range,
+                    }),
+            );
+        }
+    }
 
     let mut headings = Vec::new();
     let mut tasks = Vec::new();
     let mut wiki_links = Vec::new();
+    let mut callouts = Vec::new();
+    let mut blocks = Vec::new();
+    let mut coverage = Vec::new();
     let mut fence: Option<(u8, usize)> = None;
     for (index, line) in lines.iter().enumerate().skip(body_start) {
         let line_number = u32::try_from(index + 1).map_err(|_| ObsidianError::ResourceLimit)?;
+        let was_in_fence = fence.is_some();
         if update_fence(line, &mut fence) {
+            if !was_in_fence && fence.is_some() {
+                coverage.push(ObsidianCoverageItem {
+                    syntax: "fenced_code".to_owned(),
+                    supported: false,
+                    source_range: source_line_range(line_number, line),
+                });
+            }
             continue;
         }
         if fence.is_some() {
@@ -435,8 +639,24 @@ fn parse_note(
         if let Some(task) = parse_task(line, line_number) {
             tasks.push(task);
         }
+        tags.extend(parse_inline_tags(line, line_number));
+        if let Some(callout) = parse_callout(line, line_number) {
+            callouts.push(callout);
+        }
+        if let Some(block) = parse_block_reference(line, line_number) {
+            blocks.push(block);
+        }
+        coverage.extend(parse_unsupported_coverage(line, line_number));
         wiki_links.extend(parse_wiki_links(line, line_number)?);
-        if headings.len() + tasks.len() + wiki_links.len() > MAX_EXTRACTED_ITEMS {
+        if headings.len()
+            + tasks.len()
+            + wiki_links.len()
+            + tags.len()
+            + callouts.len()
+            + blocks.len()
+            + coverage.len()
+            > MAX_EXTRACTED_ITEMS
+        {
             return Err(ObsidianError::ResourceLimit);
         }
     }
@@ -448,8 +668,37 @@ fn parse_note(
         headings,
         tasks,
         timestamps,
+        properties,
+        tags,
+        callouts,
+        blocks,
+        embeds: Vec::new(),
+        coverage,
+        source: content.to_vec(),
         wiki_links,
     })
+}
+
+fn source_line_range(line_number: u32, line: &str) -> ObsidianSourceRange {
+    ObsidianSourceRange {
+        start_line: line_number,
+        start_column: 1,
+        end_line: line_number,
+        end_column: u32::try_from(line.len() + 1).unwrap_or(u32::MAX),
+    }
+}
+
+fn source_inline_range(
+    line_number: u32,
+    start_byte: usize,
+    end_byte: usize,
+) -> ObsidianSourceRange {
+    ObsidianSourceRange {
+        start_line: line_number,
+        start_column: u32::try_from(start_byte + 1).unwrap_or(u32::MAX),
+        end_line: line_number,
+        end_column: u32::try_from(end_byte + 1).unwrap_or(u32::MAX),
+    }
 }
 
 type FrontmatterParse = (
@@ -654,6 +903,7 @@ fn update_fence(line: &str, fence: &mut Option<(u8, usize)>) -> bool {
 
 fn parse_heading(line: &str, line_number: u32) -> Option<ObsidianHeading> {
     let trimmed = line.trim_start();
+    let start = line.len() - trimmed.len();
     let count = trimmed
         .as_bytes()
         .iter()
@@ -670,11 +920,13 @@ fn parse_heading(line: &str, line_number: u32) -> Option<ObsidianHeading> {
         level: u8::try_from(count).expect("bounded heading level"),
         text: text.to_owned(),
         line_number,
+        source_range: source_inline_range(line_number, start, line.len()),
     })
 }
 
 fn parse_task(line: &str, line_number: u32) -> Option<ObsidianTask> {
     let trimmed = line.trim_start();
+    let start = line.len() - trimmed.len();
     let remainder = trimmed
         .strip_prefix("- [")
         .or_else(|| trimmed.strip_prefix("* ["))
@@ -688,14 +940,108 @@ fn parse_task(line: &str, line_number: u32) -> Option<ObsidianTask> {
         completed: matches!(marker, b'x' | b'X'),
         text: text.to_owned(),
         line_number,
+        source_range: source_inline_range(line_number, start, line.len()),
     })
+}
+
+fn parse_inline_tags(line: &str, line_number: u32) -> Vec<ObsidianTag> {
+    let bytes = line.as_bytes();
+    let mut tags = Vec::new();
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] != b'#'
+            || (index > 0 && !bytes[index - 1].is_ascii_whitespace())
+            || bytes
+                .get(index + 1)
+                .is_none_or(|byte| !byte.is_ascii_alphanumeric() && !matches!(byte, b'_' | b'-'))
+        {
+            index += 1;
+            continue;
+        }
+        let end = bytes[index + 1..]
+            .iter()
+            .position(|byte| !byte.is_ascii_alphanumeric() && !matches!(byte, b'_' | b'-' | b'/'))
+            .map_or(bytes.len(), |offset| index + 1 + offset);
+        tags.push(ObsidianTag {
+            value: line[index + 1..end].to_owned(),
+            source_range: source_inline_range(line_number, index, end),
+        });
+        index = end;
+    }
+    tags
+}
+
+fn parse_callout(line: &str, line_number: u32) -> Option<ObsidianCallout> {
+    let trimmed = line.trim_start();
+    let start = line.len() - trimmed.len();
+    let remainder = trimmed.strip_prefix("> [!")?;
+    let close = remainder.find(']')?;
+    let kind = &remainder[..close];
+    if kind.is_empty()
+        || kind.len() > 64
+        || !kind
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
+    {
+        return None;
+    }
+    let title = remainder[close + 1..].trim();
+    Some(ObsidianCallout {
+        kind: kind.to_ascii_uppercase(),
+        title: (!title.is_empty()).then(|| title.to_owned()),
+        source_range: source_inline_range(line_number, start, line.len()),
+    })
+}
+
+fn parse_block_reference(line: &str, line_number: u32) -> Option<ObsidianBlockReference> {
+    let trimmed = line.trim_end();
+    let marker = trimmed.rfind(" ^")? + 1;
+    let identifier = &trimmed[marker + 1..];
+    if identifier.is_empty()
+        || identifier.len() > 128
+        || !identifier
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
+    {
+        return None;
+    }
+    Some(ObsidianBlockReference {
+        identifier: identifier.to_owned(),
+        source_range: source_inline_range(line_number, marker, trimmed.len()),
+    })
+}
+
+fn parse_unsupported_coverage(line: &str, line_number: u32) -> Vec<ObsidianCoverageItem> {
+    let mut items = Vec::new();
+    for (needle, syntax) in [
+        (concat!("![](http", "://"), "remote_markdown_embed"),
+        (concat!("![](https", "://"), "remote_markdown_embed"),
+        (concat!("obsidian", "://"), "obsidian_uri"),
+        ("<script", "script_markup"),
+    ] {
+        let mut offset = 0;
+        while let Some(found) = line[offset..].find(needle) {
+            let start = offset + found;
+            let end = start + needle.len();
+            items.push(ObsidianCoverageItem {
+                syntax: syntax.to_owned(),
+                supported: false,
+                source_range: source_inline_range(line_number, start, end),
+            });
+            offset = end;
+        }
+    }
+    items
 }
 
 fn parse_wiki_links(line: &str, line_number: u32) -> Result<Vec<ParsedWikiLink>, ObsidianError> {
     let mut links = Vec::new();
     let mut offset = 0;
     while let Some(start) = line[offset..].find("[[") {
-        let content_start = offset + start + 2;
+        let marker_start = offset + start;
+        let embedded = marker_start > 0 && line.as_bytes()[marker_start - 1] == b'!';
+        let source_start = marker_start - usize::from(embedded);
+        let content_start = marker_start + 2;
         let Some(end) = line[content_start..].find("]]") else {
             break;
         };
@@ -715,6 +1061,8 @@ fn parse_wiki_links(line: &str, line_number: u32) -> Result<Vec<ParsedWikiLink>,
             target: target.to_owned(),
             alias: alias.map(str::to_owned),
             line_number,
+            embedded,
+            source_range: source_inline_range(line_number, source_start, content_start + end + 2),
         });
         offset = content_start + end + 2;
     }
@@ -729,11 +1077,13 @@ type LinkResolution = (
 
 fn resolve_links(
     selection: &ObsidianVaultSelection,
-    notes: &[ObsidianParsedNote],
+    notes: &mut [ObsidianParsedNote],
+    attachments: &[ObsidianAttachment],
 ) -> LinkResolution {
     let mut exact = BTreeMap::<String, BTreeSet<WorkspacePath>>::new();
     let mut loose = BTreeMap::<String, BTreeSet<WorkspacePath>>::new();
-    for note in notes {
+    let mut attachment_paths = BTreeSet::new();
+    for note in notes.iter() {
         let relative = note_key(selection, &note.path);
         exact
             .entry(relative.clone())
@@ -752,6 +1102,20 @@ fn resolve_links(
                 .insert(note.path.clone());
         }
     }
+    for attachment in attachments {
+        let relative = relative_key(selection, &attachment.path, false);
+        exact
+            .entry(relative.clone())
+            .or_default()
+            .insert(attachment.path.clone());
+        if let Some(basename) = relative.rsplit('/').next() {
+            loose
+                .entry(basename.to_owned())
+                .or_default()
+                .insert(attachment.path.clone());
+        }
+        attachment_paths.insert(attachment.path.clone());
+    }
     let mut resolved = Vec::new();
     let mut issues = Vec::new();
     let mut backlinks = notes
@@ -759,7 +1123,8 @@ fn resolve_links(
         .map(|note| (note.path.clone(), Vec::new()))
         .collect::<BTreeMap<_, _>>();
     for note in notes {
-        for link in &note.wiki_links {
+        let links = note.wiki_links.clone();
+        for link in links {
             let target = normalized_link_target(&link.target);
             let candidates = if target.is_empty() {
                 BTreeSet::from([note.path.clone()])
@@ -772,21 +1137,45 @@ fn resolve_links(
             };
             if candidates.len() == 1 {
                 let target_path = candidates.into_iter().next().expect("one candidate");
-                resolved.push(ObsidianResolvedLink {
-                    source_path: note.path.clone(),
-                    target_path: target_path.clone(),
-                    alias: link.alias.clone(),
-                    line_number: link.line_number,
-                });
-                backlinks
-                    .entry(target_path)
-                    .or_default()
-                    .push(ObsidianBacklink {
+                let attachment = attachment_paths.contains(&target_path);
+                if link.embedded {
+                    note.embeds.push(ObsidianEmbed {
+                        target: link.target.clone(),
+                        alias: link.alias.clone(),
+                        attachment,
+                        target_path: Some(target_path.clone()),
+                        source_range: link.source_range,
+                    });
+                } else {
+                    resolved.push(ObsidianResolvedLink {
                         source_path: note.path.clone(),
+                        target_path: target_path.clone(),
                         alias: link.alias.clone(),
                         line_number: link.line_number,
+                        source_range: link.source_range,
                     });
+                }
+                if !attachment {
+                    backlinks
+                        .entry(target_path)
+                        .or_default()
+                        .push(ObsidianBacklink {
+                            source_path: note.path.clone(),
+                            alias: link.alias.clone(),
+                            line_number: link.line_number,
+                            source_range: link.source_range,
+                        });
+                }
             } else {
+                if link.embedded {
+                    note.embeds.push(ObsidianEmbed {
+                        target: link.target.clone(),
+                        alias: link.alias.clone(),
+                        attachment: false,
+                        target_path: None,
+                        source_range: link.source_range,
+                    });
+                }
                 issues.push(ObsidianLinkIssue {
                     source_path: note.path.clone(),
                     target: link.target.clone(),
@@ -797,6 +1186,7 @@ fn resolve_links(
                         ObsidianLinkIssueKind::Ambiguous
                     },
                     candidate_count: candidates.len(),
+                    source_range: link.source_range,
                 });
             }
         }
@@ -810,13 +1200,21 @@ fn resolve_links(
 }
 
 fn note_key(selection: &ObsidianVaultSelection, path: &WorkspacePath) -> String {
+    relative_key(selection, path, true)
+}
+
+fn relative_key(
+    selection: &ObsidianVaultSelection,
+    path: &WorkspacePath,
+    strip_markdown_extension: bool,
+) -> String {
     let relative = &path.components()[selection.root.components().len()..];
     relative
         .iter()
         .enumerate()
         .map(|(index, component)| {
             let value = component.as_str();
-            if index + 1 == relative.len() {
+            if strip_markdown_extension && index + 1 == relative.len() {
                 value.strip_suffix(".md").unwrap_or(value)
             } else {
                 value
@@ -979,6 +1377,14 @@ mod tests {
             "- [ ] Confirm scope\n",
             "- [X] Preserve evidence\n",
             "See [[Target|target note]] and [[#Current Plan]].\n",
+            "> [!NOTE] Review carefully\n",
+            "Paragraph #work ^block-1\n",
+            "![[diagram.png]]\n",
+            concat!(
+                "![](https",
+                "://example.invalid/image.png) obsidian",
+                "://open <script\n"
+            ),
             "```markdown\n",
             "# Not a heading\n",
             "- [ ] Not a task\n",
@@ -990,6 +1396,7 @@ mod tests {
             vec![
                 input(&["Vault", "Current.md"], source),
                 input(&["Vault", "Target.md"], "# Target\n"),
+                input(&["Vault", "diagram.png"], "synthetic image bytes"),
             ],
         )
         .expect("snapshot");
@@ -1001,11 +1408,21 @@ mod tests {
         assert!(!note.tasks[0].completed);
         assert!(note.tasks[1].completed);
         assert_eq!(note.timestamps[0].line_number, 3);
+        assert_eq!(note.properties.len(), 3);
+        assert_eq!(note.callouts[0].kind, "NOTE");
+        assert_eq!(note.blocks[0].identifier, "block-1");
+        assert_eq!(note.embeds.len(), 1);
+        assert!(note.embeds[0].attachment);
+        assert_eq!(note.tags.len(), 2);
+        assert_eq!(note.coverage.len(), 4);
+        assert_eq!(note.source_bytes(), source.as_bytes());
+        assert_eq!(note.tasks[0].source_range.start_line, 8);
         assert_eq!(
             note.frontmatter.get("tags"),
             Some(&ObsidianFrontmatterValue::Sequence(vec!["work".to_owned()]))
         );
         assert_eq!(snapshot.resolved_links().len(), 2);
+        assert_eq!(snapshot.attachments().len(), 1);
         assert!(snapshot.link_issues().is_empty());
         assert_eq!(
             snapshot
