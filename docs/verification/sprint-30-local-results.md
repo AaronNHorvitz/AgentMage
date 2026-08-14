@@ -20,6 +20,8 @@
   chunker, schema, policy, and complete opt-in identity.
 - Atomic rebuild, stale omission, deterministic fixed-point query, inspect, delete, clear, and
   rebuild controls mutate no source and expose no network contract.
+- Remote embedding, reranking, indexing, and source-upload attempts produce content-free rejection
+  receipts proving no network use or upload.
 - Instruction-like content remains inert. Secret-bearing, oversized, out-of-scope, undisclosed,
   duplicate, missing-vector, wrong-dimension, and cross-workspace inputs fail closed without
   changing the prior index.

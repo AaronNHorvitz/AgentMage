@@ -64,6 +64,7 @@ IMPLEMENTED: Final = {
     "atomic_rebuild_stale_omission_and_configuration_invalidation": True,
     "inspect_delete_clear_and_complete_rebuild": True,
     "deterministic_lexical_fallback": True,
+    "remote_attempt_rejection_receipts": True,
     "four_mode_integer_comparison_gate": True,
     "synthetic_contract_fixture_only": True,
     "real_approved_embedding_profile": False,

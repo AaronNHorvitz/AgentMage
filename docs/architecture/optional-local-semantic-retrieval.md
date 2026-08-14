@@ -66,6 +66,11 @@ Delete-by-path, clear, and complete rebuild update only the derived projection a
 receipts stating that no network or source mutation occurred. Deleted excerpts and vectors are no
 longer queryable. Lexical fallback is always reported available.
 
+Remote embedding, reranking, indexing, and source-upload requests enter a closed rejection
+function carrying only an operation class and proposed-destination digest. Its content-free receipt
+always records rejection, no network use, and no source upload. No endpoint text or client handle
+is accepted.
+
 ## Comparative Gate
 
 One versioned comparison accepts labeled code-symbol and concept/prose cases containing structural,
