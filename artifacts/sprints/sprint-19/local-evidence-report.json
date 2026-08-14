@@ -1,0 +1,212 @@
+{
+  "blockers": [
+    {
+      "code": "PRODUCTION-HELD-REPOSITORY-PROJECTION-NOT-INTEGRATED",
+      "owner": "19.1.3.1"
+    },
+    {
+      "code": "PRODUCTION-CITATION-INVALIDATION-NOT-INTEGRATED",
+      "owner": "19.1.3.2"
+    },
+    {
+      "code": "PACKAGED-WORKER-CANCELLATION-AND-PARSER-FAILURE-MATRIX-INCOMPLETE",
+      "owner": "19.1.3.3"
+    },
+    {
+      "code": "NATIVE-PLATFORM-REPOSITORY-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "19.1.3.4"
+    },
+    {
+      "code": "MANUAL-REPOSITORY-PARSER-FUZZING-DEFERRED",
+      "owner": "19.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-19-REVIEW-NOT-RETAINED",
+      "owner": "19.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "repository-map-tests",
+      "output_sha256": "6fccc60e9e69936f3dfde2bca1dd4b4d806fe62eddb34ddbd0514081f3d8bc36"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "repository-map-clippy",
+      "output_sha256": "9982c9fa976c589fb742d20e8b761206db9d1862bd3e0c9b9daa77cefa4dae74"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "grammar_bom": {
+    "grammar_set_sha256": "f24d6d3e951d79dcf3e7f37d84a8413706d9f9b3dd7ebe49671b3ccb6e290902",
+    "grammars": [
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-rust",
+        "crate_version": "0.24.2",
+        "descriptor_sha256": "dbb18c0ae1ad8389ebebfad5984f25fd2af3fbd6a3a84086353303f72bd206b8",
+        "language": "rust",
+        "node_types_sha256": "4b73a1248978340336100db455bf0731c23f9190568c9ae62265fa4a80a327d5",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-rust"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-python",
+        "crate_version": "0.25.0",
+        "descriptor_sha256": "94371af62103a1a4b314d7a6d280de13832b0997976c51d76429bb6f006fec49",
+        "language": "python",
+        "node_types_sha256": "a2456847bea3adff5b2222b2f7b03a870159470d8908622204e6eb29ee2fe45e",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-python"
+      },
+      {
+        "abi_version": 14,
+        "crate_name": "tree-sitter-typescript",
+        "crate_version": "0.23.2",
+        "descriptor_sha256": "ebbcd6c2f9ceb7b6a63583d80b92b586ffa9f735d435006214eca9721c2163c1",
+        "language": "type_script",
+        "node_types_sha256": "c790a733fc756b54d4e54dceeb7d2d51e40d8b57136e70277753a75804cce3e3",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-typescript"
+      },
+      {
+        "abi_version": 14,
+        "crate_name": "tree-sitter-typescript",
+        "crate_version": "0.23.2",
+        "descriptor_sha256": "213a283836596fd23613545876f6992b276748dd3d16945bb02118d17a98f6cd",
+        "language": "tsx",
+        "node_types_sha256": "78b5789145286799a27a0a7ecc36cc1bcb151f94ec7fa631b248459867010c8c",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-typescript"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-javascript",
+        "crate_version": "0.25.0",
+        "descriptor_sha256": "13f3425b2ebc6e07811ea59f08b749518c0af5facb39ac1db8fa08f3896f850c",
+        "language": "java_script",
+        "node_types_sha256": "188a8baa97018edaf63bf7ece372c07bc0d74d1301004bc8f211eb7dee5a6e70",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-javascript"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-swift",
+        "crate_version": "0.7.3",
+        "descriptor_sha256": "67a2f8ba9b3da1c987057dbce1e382fa3c4333c9a03fcae03da5fafd470c848e",
+        "language": "swift",
+        "node_types_sha256": "62e0d3bf83969c7c3e783bb377117b370749584fbfe7e1f4926ce4cda629c5d4",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/alex-pinkus/tree-sitter-swift"
+      }
+    ],
+    "schema_version": 1
+  },
+  "implemented_contracts": {
+    "cache_key_dimensions": 7,
+    "coverage_file_states": 10,
+    "coverage_fixed_budgets": 5,
+    "filesystem_authority": false,
+    "golden_context_sha256": "e96786f4873c335ae350a98fa6b5d31aaf39d4e4015ed5b5a0f41adbe9cdb0ef",
+    "golden_map_sha256": "296fd3fb3768778f17af5bd6d00879cd922c5c74cbc9a467cc0c290db7bc8106",
+    "maximum_context_tokens": 262144,
+    "maximum_lexical_matches_per_file": 32,
+    "minimum_context_tokens": 512,
+    "network_authority": false,
+    "process_authority": false,
+    "render_priority_tiers": 6,
+    "unknown_blocked_fallback": true
+  },
+  "platform_evidence": {
+    "linux_packaged_worker": false,
+    "local_pure_core": true,
+    "macos_native_map": false,
+    "windows_native_map": false
+  },
+  "record_type": "sprint_19_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-OPS-001",
+    "SR-TST-002",
+    "SR-TST-004"
+  ],
+  "source_revision": "f6a62f594ad3b37e0b8cebd386fe651686a4b304",
+  "source_sha256": {
+    "capabilities/repository-map/src/cache.rs": "82b3ff7ea210e4b203573c7ff98e178f1b04ebf46f5efb7b6e378d32780aebf0",
+    "capabilities/repository-map/src/invariance_tests.rs": "57c07973279e7783832ced22f54c684a3d1ee90795fec9eeb8f9fab7f74d3693",
+    "capabilities/repository-map/src/inventory.rs": "ff18c63a7f19c5dfd564e39398233d9a1ff9764bb74fff48ef5e3d10776b4107",
+    "capabilities/repository-map/src/lib.rs": "e45fdba8a3335c749c2f03f77c4693a5c935a145cdb9b4179f6455f687f3f1c2",
+    "capabilities/repository-map/src/renderer.rs": "1b85417ac4b8cae5739b939b47e3c3cca30ecaad9b6c3856f48fb106535ffa33",
+    "capabilities/repository-map/src/resolution.rs": "97c641a8767e7c1fac53251cbc67c2b32e7a8afbb50273b431b48c3fc32c09d5",
+    "docs/architecture/pinned-repository-map.md": "198d879fbfa0a539630910c8fb2d0a9557e949d97bc09492c68e2f9ba47cfda3",
+    "docs/verification/sprint-19-local-results.md": "110b44f379192d687cb5f267ec41e784394c36c83c3f315b296b2e4b31737d09",
+    "scripts/sprint_19_evidence.py": "cc7e6623278ef8e8d7917c192e823553cfcfb78e4fcab57a11f0286ec246a13b",
+    "tests/test_sprint_19_evidence.py": "d729feae77a6b135e56d91fae9b2deb03785bbde2b22ddf6a0e8545d397e0689"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "coverage_matrix": true,
+    "disposable_git_invariance": true,
+    "golden_hashes": true,
+    "independent_review": false,
+    "lexical_fallback_unknown_blocked": true,
+    "manual_parser_fuzzing": false,
+    "selective_invalidation": true,
+    "source_resolution": true
+  }
+}
