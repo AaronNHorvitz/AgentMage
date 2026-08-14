@@ -7,7 +7,7 @@ use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::{RepositoryFileRecord, verify_repository_file_record};
+use crate::{RepositoryFileRecord, grammar_set_sha256, verify_repository_file_record};
 
 const MAX_CACHE_ENTRIES: u64 = 250_000;
 
@@ -27,6 +27,32 @@ pub struct RepositoryMapCacheKey {
     pub parser_version: String,
     /// Exact policy revision.
     pub policy_sha256: String,
+}
+
+impl RepositoryMapCacheKey {
+    /// Constructs the only exact key admitted for one verified file record.
+    pub fn for_record(record: &RepositoryFileRecord) -> Result<Self, RepositoryMapCacheError> {
+        if !verify_repository_file_record(record) {
+            return Err(RepositoryMapCacheError::InvalidInput);
+        }
+        let (grammar_sha256, parser_version) = record.structure.as_ref().map_or_else(
+            || (grammar_set_sha256(), "inventory-v1".to_owned()),
+            |structure| {
+                (
+                    structure.grammar_sha256.clone(),
+                    crate::grammar_descriptor(structure.language).parser_version,
+                )
+            },
+        );
+        Ok(Self {
+            path: record.path.clone(),
+            content_sha256: record.content_sha256.clone(),
+            git_identity_sha256: record_git_identity_sha256(record),
+            grammar_sha256,
+            parser_version,
+            policy_sha256: record.policy_sha256.clone(),
+        })
+    }
 }
 
 /// Disposable in-process SQLite repository-map cache.
@@ -260,13 +286,29 @@ fn validate_key_record(
     record: &RepositoryFileRecord,
 ) -> Result<(), RepositoryMapCacheError> {
     validate_key(key)?;
+    let expected = RepositoryMapCacheKey::for_record(record)?;
     if key.path != record.path
         || key.content_sha256 != record.content_sha256
+        || key.git_identity_sha256 != expected.git_identity_sha256
+        || key.grammar_sha256 != expected.grammar_sha256
+        || key.parser_version != expected.parser_version
+        || key.policy_sha256 != expected.policy_sha256
         || !verify_repository_file_record(record)
     {
         return Err(RepositoryMapCacheError::InvalidInput);
     }
     Ok(())
+}
+
+fn record_git_identity_sha256(record: &RepositoryFileRecord) -> String {
+    serde_json::to_vec(&(
+        &record.repository_sha256,
+        &record.worktree_sha256,
+        &record.branch,
+        &record.commit_id,
+    ))
+    .map(|bytes| sha256_hex(&bytes))
+    .unwrap_or_else(|_| sha256_hex(b"repository-cache-git-identity-failed"))
 }
 
 fn validate_key(key: &RepositoryMapCacheKey) -> Result<(), RepositoryMapCacheError> {
@@ -309,7 +351,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use agentmage_kernel_contracts::WorkspaceId;
+    use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
 
     use super::{RepositoryMapCache, RepositoryMapCacheKey};
     use crate::{
@@ -318,14 +360,7 @@ mod tests {
     };
 
     fn key(record: &RepositoryFileRecord) -> RepositoryMapCacheKey {
-        RepositoryMapCacheKey {
-            path: record.path.clone(),
-            content_sha256: record.content_sha256.clone(),
-            git_identity_sha256: "b".repeat(64),
-            grammar_sha256: "c".repeat(64),
-            parser_version: "0.26.12".to_owned(),
-            policy_sha256: "d".repeat(64),
-        }
+        RepositoryMapCacheKey::for_record(record).expect("key")
     }
 
     fn record(marker: char, path: &[&str]) -> RepositoryFileRecord {
@@ -391,5 +426,64 @@ mod tests {
         let second_key = key(&second_record);
         assert!(cache.put(&second_key, &second_record).is_err());
         assert_eq!(cache.len().expect("rollback count"), 1);
+    }
+
+    #[test]
+    fn every_workspace_path_content_git_grammar_parser_and_policy_change_misses_then_invalidates() {
+        let exact_record = record('a', &["src", "lib.rs"]);
+        let exact = key(&exact_record);
+        let stable_record = record('z', &["tests", "stable.rs"]);
+        let stable_key = key(&stable_record);
+        let mut changes = Vec::new();
+
+        let mut workspace = exact.clone();
+        workspace.path = WorkspacePath::new(
+            WorkspaceId::from_raw("workspace-other"),
+            vec!["src".to_owned(), "lib.rs".to_owned()],
+        )
+        .expect("path");
+        changes.push(workspace);
+
+        let mut path = exact.clone();
+        path.path = WorkspacePath::new(
+            WorkspaceId::from_raw("workspace-cache"),
+            vec!["src".to_owned(), "other.rs".to_owned()],
+        )
+        .expect("path");
+        changes.push(path);
+
+        let mut content = exact.clone();
+        content.content_sha256 = "1".repeat(64);
+        changes.push(content);
+        let mut git = exact.clone();
+        git.git_identity_sha256 = "2".repeat(64);
+        changes.push(git);
+        let mut grammar = exact.clone();
+        grammar.grammar_sha256 = "3".repeat(64);
+        changes.push(grammar);
+        let mut parser = exact.clone();
+        parser.parser_version = "0.26.13".to_owned();
+        changes.push(parser);
+        let mut policy = exact.clone();
+        policy.policy_sha256 = "4".repeat(64);
+        changes.push(policy);
+
+        for changed in changes {
+            let mut cache = RepositoryMapCache::in_memory(8).expect("cache");
+            cache.put(&exact, &exact_record).expect("put");
+            cache.put(&stable_key, &stable_record).expect("stable put");
+            assert_eq!(cache.get(&changed).expect("miss"), None);
+            assert_eq!(
+                cache
+                    .invalidate_except(&[changed, stable_key.clone()])
+                    .expect("invalidate"),
+                1
+            );
+            assert_eq!(cache.len().expect("one retained"), 1);
+            assert_eq!(
+                cache.get(&stable_key).expect("stable get"),
+                Some(stable_record.clone())
+            );
+        }
     }
 }

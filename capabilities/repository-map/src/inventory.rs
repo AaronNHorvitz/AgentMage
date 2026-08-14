@@ -40,6 +40,8 @@ pub enum RepositoryEntryDisposition {
     Parsed,
     /// Parsed with a pinned grammar that reported syntax errors.
     ParsedWithErrors,
+    /// Parsed with a pinned grammar until the structural-item ceiling was reached.
+    Truncated,
     /// A supported source path was discovered but its bytes were not authorized for reading.
     ContentNotRead,
     /// Inventoried but no pinned grammar supports the language.
@@ -58,6 +60,44 @@ pub enum RepositoryEntryDisposition {
     VendoredExcluded,
     /// An admitted parser failed before returning a tree.
     ParseFailed,
+}
+
+/// Complete visible coverage and fixed budgets for one repository map.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RepositoryCoverage {
+    /// Files discovered before exclusions and parser selection.
+    pub discovered_files: u64,
+    /// Files whose bytes were supplied through the authorized projection.
+    pub read_files: u64,
+    /// Files for which a pinned parser returned a syntax tree.
+    pub parsed_files: u64,
+    /// Files lexically searched; zero during base-map construction.
+    pub searched_files: u64,
+    /// Files skipped because content was unread, binary, or over the parse limit.
+    pub skipped_files: u64,
+    /// Files excluded by Git or product policy.
+    pub excluded_files: u64,
+    /// Files with no pinned grammar.
+    pub unsupported_files: u64,
+    /// Files whose admitted parser failed before returning a tree.
+    pub failed_files: u64,
+    /// Files whose structural traversal reached its fixed item ceiling.
+    pub truncated_files: u64,
+    /// Files not fully structurally understood.
+    pub uncertain_files: u64,
+    /// Sum of discovered file sizes.
+    pub discovered_bytes: u64,
+    /// Fixed repository file-count ceiling.
+    pub repository_file_budget: u64,
+    /// Fixed repository byte ceiling.
+    pub repository_byte_budget: u64,
+    /// Fixed per-file inventory byte ceiling.
+    pub file_byte_budget: u64,
+    /// Fixed per-file parser byte ceiling.
+    pub parse_byte_budget: u64,
+    /// Fixed structural-item ceiling per parsed file.
+    pub structural_item_budget: u64,
 }
 
 /// Immutable metadata and optional authorized bytes for one discovered file.
@@ -116,6 +156,14 @@ pub struct RepositoryFileRecord {
     pub size_bytes: u64,
     /// Exact file content digest.
     pub content_sha256: String,
+    /// Whether authorized bytes were supplied to this pure capability.
+    pub content_read: bool,
+    /// Stable repository identity digest, never a remote URL.
+    pub repository_sha256: String,
+    /// Exact held worktree identity digest.
+    pub worktree_sha256: String,
+    /// Exact policy revision used to classify the path.
+    pub policy_sha256: String,
     /// Visible terminal inventory or parse state.
     pub disposition: RepositoryEntryDisposition,
     /// Pinned parser facts only when bytes were admitted and parsing returned.
@@ -152,6 +200,8 @@ pub struct RepositoryMap {
     pub freshness_sha256: String,
     /// Stable path-ordered inventory including all visible exclusions.
     pub files: Vec<RepositoryFileRecord>,
+    /// Complete visible base-map coverage and budget ledger.
+    pub coverage: RepositoryCoverage,
     /// Total discovered files.
     pub discovered_files: u64,
     /// Total files parsed with a pinned grammar.
@@ -240,6 +290,9 @@ pub fn build_repository_map(
         records.push(build_file_record(
             path,
             file,
+            input.repository_sha256.clone(),
+            input.worktree_sha256.clone(),
+            input.policy_sha256.clone(),
             input.branch.clone(),
             input.commit_id.clone(),
         ));
@@ -249,7 +302,9 @@ pub fn build_repository_map(
         .filter(|record| {
             matches!(
                 record.disposition,
-                RepositoryEntryDisposition::Parsed | RepositoryEntryDisposition::ParsedWithErrors
+                RepositoryEntryDisposition::Parsed
+                    | RepositoryEntryDisposition::ParsedWithErrors
+                    | RepositoryEntryDisposition::Truncated
             )
         })
         .count() as u64;
@@ -265,6 +320,7 @@ pub fn build_repository_map(
             )
         })
         .count() as u64;
+    let coverage = coverage_for_records(&records);
     let mut map = RepositoryMap {
         schema_version: 1,
         workspace_id: input.workspace_id,
@@ -279,6 +335,7 @@ pub fn build_repository_map(
         parsed_files,
         inventory_only_files: records.len() as u64 - parsed_files - excluded_files,
         excluded_files,
+        coverage,
         files: records,
         map_sha256: String::new(),
     };
@@ -290,6 +347,9 @@ pub fn build_repository_map(
 #[must_use]
 pub fn verify_repository_file_record(record: &RepositoryFileRecord) -> bool {
     is_sha256(&record.content_sha256)
+        && is_sha256(&record.repository_sha256)
+        && is_sha256(&record.worktree_sha256)
+        && is_sha256(&record.policy_sha256)
         && valid_commit(&record.commit_id)
         && record.branch.as_deref().is_none_or(|branch| {
             !branch.is_empty()
@@ -303,18 +363,27 @@ pub fn verify_repository_file_record(record: &RepositoryFileRecord) -> bool {
                 && structure.content_sha256 == record.content_sha256
         })
         && matches!(
-            (record.disposition, record.structure.is_some()),
-            (RepositoryEntryDisposition::Parsed, true)
-                | (RepositoryEntryDisposition::ParsedWithErrors, true)
-                | (RepositoryEntryDisposition::ContentNotRead, false)
-                | (RepositoryEntryDisposition::UnsupportedLanguage, false)
-                | (RepositoryEntryDisposition::BinaryInventoryOnly, false)
-                | (RepositoryEntryDisposition::ParseLimitExceeded, false)
-                | (RepositoryEntryDisposition::GitIgnored, false)
-                | (RepositoryEntryDisposition::PolicyExcluded, false)
-                | (RepositoryEntryDisposition::GeneratedExcluded, false)
-                | (RepositoryEntryDisposition::VendoredExcluded, false)
-                | (RepositoryEntryDisposition::ParseFailed, false)
+            (
+                record.disposition,
+                record.structure.is_some(),
+                record.content_read
+            ),
+            (RepositoryEntryDisposition::Parsed, true, true)
+                | (RepositoryEntryDisposition::ParsedWithErrors, true, true)
+                | (RepositoryEntryDisposition::Truncated, true, true)
+                | (RepositoryEntryDisposition::ContentNotRead, false, false)
+                | (
+                    RepositoryEntryDisposition::UnsupportedLanguage,
+                    false,
+                    true | false
+                )
+                | (RepositoryEntryDisposition::BinaryInventoryOnly, false, true)
+                | (RepositoryEntryDisposition::ParseLimitExceeded, false, true)
+                | (RepositoryEntryDisposition::GitIgnored, false, false)
+                | (RepositoryEntryDisposition::PolicyExcluded, false, false)
+                | (RepositoryEntryDisposition::GeneratedExcluded, false, false)
+                | (RepositoryEntryDisposition::VendoredExcluded, false, false)
+                | (RepositoryEntryDisposition::ParseFailed, false, true)
         )
         && record.record_sha256 == file_digest(record)
 }
@@ -328,7 +397,9 @@ pub fn verify_repository_map(map: &RepositoryMap) -> bool {
         .filter(|record| {
             matches!(
                 record.disposition,
-                RepositoryEntryDisposition::Parsed | RepositoryEntryDisposition::ParsedWithErrors
+                RepositoryEntryDisposition::Parsed
+                    | RepositoryEntryDisposition::ParsedWithErrors
+                    | RepositoryEntryDisposition::Truncated
             )
         })
         .count() as u64;
@@ -345,6 +416,7 @@ pub fn verify_repository_map(map: &RepositoryMap) -> bool {
             )
         })
         .count() as u64;
+    let coverage = coverage_for_records(&map.files);
     map.schema_version == 1
         && is_sha256(&map.repository_sha256)
         && is_sha256(&map.worktree_sha256)
@@ -356,6 +428,9 @@ pub fn verify_repository_map(map: &RepositoryMap) -> bool {
         && map.files.windows(2).all(|pair| pair[0].path < pair[1].path)
         && map.files.iter().all(|record| {
             record.path.workspace_id() == &map.workspace_id
+                && record.repository_sha256 == map.repository_sha256
+                && record.worktree_sha256 == map.worktree_sha256
+                && record.policy_sha256 == map.policy_sha256
                 && record.branch == map.branch
                 && record.commit_id == map.commit_id
                 && verify_repository_file_record(record)
@@ -364,12 +439,16 @@ pub fn verify_repository_map(map: &RepositoryMap) -> bool {
         && map.parsed_files == parsed
         && map.excluded_files == excluded
         && map.inventory_only_files == map.discovered_files - parsed - excluded
+        && map.coverage == coverage
         && map.map_sha256 == map_digest(map)
 }
 
 fn build_file_record(
     path: WorkspacePath,
     file: RepositoryFileInput,
+    repository_sha256: String,
+    worktree_sha256: String,
+    policy_sha256: String,
     branch: Option<String>,
     commit_id: String,
 ) -> RepositoryFileRecord {
@@ -380,6 +459,7 @@ fn build_file_record(
         .collect::<Vec<_>>()
         .join("/");
     let language = language_for_path(&path_text);
+    let content_read = file.content.is_some();
     let (disposition, structure) = if file.policy_excluded {
         (RepositoryEntryDisposition::PolicyExcluded, None)
     } else if file.generated {
@@ -405,10 +485,12 @@ fn build_file_record(
                 content,
             ) {
                 Ok(structure) => {
-                    let disposition = if structure.disposition == crate::ParseDisposition::Parsed {
-                        RepositoryEntryDisposition::Parsed
-                    } else {
-                        RepositoryEntryDisposition::ParsedWithErrors
+                    let disposition = match structure.disposition {
+                        crate::ParseDisposition::Parsed => RepositoryEntryDisposition::Parsed,
+                        crate::ParseDisposition::ParsedWithErrors => {
+                            RepositoryEntryDisposition::ParsedWithErrors
+                        }
+                        crate::ParseDisposition::Truncated => RepositoryEntryDisposition::Truncated,
                     };
                     (disposition, Some(structure))
                 }
@@ -424,6 +506,10 @@ fn build_file_record(
         language,
         size_bytes: file.size_bytes,
         content_sha256: file.content_sha256,
+        content_read,
+        repository_sha256,
+        worktree_sha256,
+        policy_sha256,
         disposition,
         structure,
         branch,
@@ -441,6 +527,10 @@ fn file_digest(record: &RepositoryFileRecord) -> String {
         record.language,
         record.size_bytes,
         &record.content_sha256,
+        record.content_read,
+        &record.repository_sha256,
+        &record.worktree_sha256,
+        &record.policy_sha256,
         record.disposition,
         &record.structure,
         &record.branch,
@@ -460,11 +550,64 @@ fn map_digest(map: &RepositoryMap) -> String {
         &map.policy_sha256,
         &map.freshness_sha256,
         &map.files,
+        &map.coverage,
         map.discovered_files,
         map.parsed_files,
         map.inventory_only_files,
         map.excluded_files,
     ))
+}
+
+fn coverage_for_records(records: &[RepositoryFileRecord]) -> RepositoryCoverage {
+    let count = |predicate: fn(&RepositoryFileRecord) -> bool| {
+        records.iter().filter(|record| predicate(record)).count() as u64
+    };
+    RepositoryCoverage {
+        discovered_files: records.len() as u64,
+        read_files: count(|record| record.content_read),
+        parsed_files: count(|record| record.structure.is_some()),
+        searched_files: 0,
+        skipped_files: count(|record| {
+            matches!(
+                record.disposition,
+                RepositoryEntryDisposition::ContentNotRead
+                    | RepositoryEntryDisposition::BinaryInventoryOnly
+                    | RepositoryEntryDisposition::ParseLimitExceeded
+            )
+        }),
+        excluded_files: count(|record| {
+            matches!(
+                record.disposition,
+                RepositoryEntryDisposition::GitIgnored
+                    | RepositoryEntryDisposition::PolicyExcluded
+                    | RepositoryEntryDisposition::GeneratedExcluded
+                    | RepositoryEntryDisposition::VendoredExcluded
+            )
+        }),
+        unsupported_files: count(|record| {
+            record.disposition == RepositoryEntryDisposition::UnsupportedLanguage
+        }),
+        failed_files: count(|record| record.disposition == RepositoryEntryDisposition::ParseFailed),
+        truncated_files: count(|record| {
+            record.disposition == RepositoryEntryDisposition::Truncated
+        }),
+        uncertain_files: count(|record| {
+            !matches!(
+                record.disposition,
+                RepositoryEntryDisposition::Parsed
+                    | RepositoryEntryDisposition::GitIgnored
+                    | RepositoryEntryDisposition::PolicyExcluded
+                    | RepositoryEntryDisposition::GeneratedExcluded
+                    | RepositoryEntryDisposition::VendoredExcluded
+            )
+        }),
+        discovered_bytes: records.iter().map(|record| record.size_bytes).sum(),
+        repository_file_budget: MAX_REPOSITORY_FILES as u64,
+        repository_byte_budget: MAX_REPOSITORY_BYTES,
+        file_byte_budget: MAX_FILE_BYTES,
+        parse_byte_budget: MAX_PARSE_BYTES,
+        structural_item_budget: 10_000,
+    }
 }
 
 fn digest<T: Serialize>(value: &T) -> String {
@@ -498,7 +641,7 @@ mod tests {
 
     use super::{
         GitTrackedState, RepositoryEntryDisposition, RepositoryFileInput, RepositoryMapInput,
-        build_repository_map, sha256_hex,
+        build_repository_map, sha256_hex, verify_repository_map,
     };
 
     fn file(path: &[&str], content: Option<&[u8]>) -> RepositoryFileInput {
@@ -595,6 +738,74 @@ mod tests {
         assert_eq!(
             not_read.files[0].disposition,
             RepositoryEntryDisposition::ContentNotRead
+        );
+    }
+
+    #[test]
+    fn coverage_ledger_exposes_every_base_map_outcome_and_fixed_budget() {
+        let empty = build_repository_map(input(Vec::new())).expect("empty map");
+        assert_eq!(empty.coverage.discovered_files, 0);
+        assert!(verify_repository_map(&empty));
+
+        let mut ignored = file(&["ignored.rs"], None);
+        ignored.git_state = GitTrackedState::Ignored;
+        let mut generated = file(&["dist", "bundle.js"], None);
+        generated.generated = true;
+        let mut vendored = file(&["vendor", "lib.py"], None);
+        vendored.vendored = true;
+        let mut excluded = file(&["private", "secret.rs"], None);
+        excluded.policy_excluded = true;
+        let oversized = vec![b'a'; 4 * 1024 * 1024 + 1];
+        let mut many = String::new();
+        for index in 0..10_050 {
+            use std::fmt::Write;
+            writeln!(&mut many, "fn item_{index}() {{}}").expect("fixture");
+        }
+        let files = vec![
+            file(&["src", "lib.rs"], Some(b"fn run() {}\n")),
+            file(&["src", "malformed.rs"], Some(b"fn {")),
+            file(&["src", "truncated.rs"], Some(many.as_bytes())),
+            file(&["src", "binary.rs"], Some(b"fn run() {}\0")),
+            file(&["legacy", "tool.rb"], Some(b"puts 'visible'\n")),
+            file(&["src", "not-read.rs"], None),
+            file(&["src", "invalid.rs"], Some(b"\xff")),
+            file(&["src", "oversized.rs"], Some(&oversized)),
+            ignored,
+            generated,
+            vendored,
+            excluded,
+        ];
+        let first = build_repository_map(input(files.clone())).expect("coverage map");
+        let second = build_repository_map(input(files)).expect("coverage map");
+        assert_eq!(
+            serde_json::to_vec(&first).unwrap(),
+            serde_json::to_vec(&second).unwrap()
+        );
+        assert!(verify_repository_map(&first));
+        assert_eq!(
+            first.map_sha256,
+            "296fd3fb3768778f17af5bd6d00879cd922c5c74cbc9a467cc0c290db7bc8106"
+        );
+        assert_eq!(first.coverage.discovered_files, 12);
+        assert_eq!(first.coverage.read_files, 7);
+        assert_eq!(first.coverage.parsed_files, 3);
+        assert_eq!(first.coverage.searched_files, 0);
+        assert_eq!(first.coverage.skipped_files, 3);
+        assert_eq!(first.coverage.excluded_files, 4);
+        assert_eq!(first.coverage.unsupported_files, 1);
+        assert_eq!(first.coverage.failed_files, 1);
+        assert_eq!(first.coverage.truncated_files, 1);
+        assert_eq!(first.coverage.uncertain_files, 7);
+        assert_eq!(first.coverage.repository_file_budget, 100_000);
+        assert_eq!(first.coverage.repository_byte_budget, 256 * 1024 * 1024);
+        assert_eq!(first.coverage.file_byte_budget, 16 * 1024 * 1024);
+        assert_eq!(first.coverage.parse_byte_budget, 4 * 1024 * 1024);
+        assert_eq!(first.coverage.structural_item_budget, 10_000);
+        assert!(
+            first
+                .files
+                .iter()
+                .any(|record| { record.disposition == RepositoryEntryDisposition::Truncated })
         );
     }
 }

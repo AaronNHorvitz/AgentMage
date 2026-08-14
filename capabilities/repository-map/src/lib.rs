@@ -4,8 +4,12 @@
 
 mod cache;
 mod grammar;
+#[cfg(test)]
+mod invariance_tests;
 mod inventory;
 mod parser;
+mod renderer;
+mod resolution;
 
 pub use cache::{RepositoryMapCache, RepositoryMapCacheError, RepositoryMapCacheKey};
 pub use grammar::{
@@ -13,14 +17,24 @@ pub use grammar::{
     language_for_path, supported_grammars, verify_grammar_descriptor,
 };
 pub use inventory::{
-    GitTrackedState, RepositoryEntryDisposition, RepositoryFileInput, RepositoryFileRecord,
-    RepositoryMap, RepositoryMapError, RepositoryMapInput, build_repository_map,
-    verify_repository_file_record, verify_repository_map,
+    GitTrackedState, RepositoryCoverage, RepositoryEntryDisposition, RepositoryFileInput,
+    RepositoryFileRecord, RepositoryMap, RepositoryMapError, RepositoryMapInput,
+    build_repository_map, verify_repository_file_record, verify_repository_map,
 };
 pub use parser::{
     ParseDisposition, RepositoryParseError, SourceRange, StructuralItem, StructuralItemKind,
     StructuralParseResult, StructuralRelationship, StructuralRelationshipKind, parse_structure,
     verify_structural_parse_result,
+};
+pub use renderer::{
+    LexicalSourceMatch, RenderedRepositoryContext, RenderedRepositoryFile,
+    RepositoryContextRequest, RepositoryContextSource, RepositoryLimitation,
+    RepositoryLimitationCode, RepositoryRenderCoverage, RepositoryRenderError,
+    RepositoryRenderPriority, render_repository_context, verify_rendered_repository_context,
+};
+pub use resolution::{
+    RepositoryGitIdentity, StructuralSourceResolution, resolve_structural_records,
+    verify_structural_source_resolution,
 };
 
 /// Stable component identity used by diagnostics and build verification.
