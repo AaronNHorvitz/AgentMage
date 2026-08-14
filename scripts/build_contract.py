@@ -37,7 +37,7 @@ EXPECTED_MEMBERS = {
 EXPECTED_CARGO_PACKAGES = {
     "capabilities/knowledge": (
         "agentmage-capability-knowledge",
-        {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},
+        {"agentmage-kernel-contracts", "rusqlite", "serde", "serde_json", "sha2"},
     ),
     "capabilities/repository-map": (
         "agentmage-capability-repository-map",

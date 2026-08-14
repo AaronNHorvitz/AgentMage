@@ -7,6 +7,7 @@ name = "agentmage-capability-knowledge"
 version = "0.0.0"
 dependencies = [
  "agentmage-kernel-contracts",
+ "rusqlite",
  "serde",
  "serde_json",
  "sha2",
