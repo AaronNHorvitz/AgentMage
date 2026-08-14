@@ -1,0 +1,108 @@
+{
+  "artifact_id": "task-12-2-2-1-classification-contracts",
+  "case_ids": [
+    "CLS-01",
+    "CLS-02",
+    "CLS-03",
+    "CLS-04",
+    "CLS-05",
+    "CLS-06"
+  ],
+  "claims": {
+    "action_risk_label_count": 4,
+    "advisory_authority_field_count": 0,
+    "advisory_classifier_status_count": 8,
+    "advisory_completion_field_count": 0,
+    "advisory_disposition_count": 5,
+    "classifier_executions": 0,
+    "data_sensitivity_label_count": 4,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "manual_fuzzing_executed": false,
+    "model_capability_role_count": 7,
+    "model_capability_status_count": 4,
+    "model_executions": 0,
+    "platform_executions": 0,
+    "release_support": false,
+    "separate_versioned_schema_count": 5,
+    "static_policy_check_kind_count": 4,
+    "tool_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This task defines closed wire schemas; deterministic fact collection and policy evaluation begin in Task 12.2.2.2.",
+    "Advisory disposition enforcement, failure mapping, and continuous boundary reclassification remain Tasks 12.2.2.3 through 12.2.2.5.",
+    "Tests use synthetic content-free records with no model, classifier, tool, worker, platform effect, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "c9e392a8e8ee546a25054b950edb5b1274a44766",
+  "sources": [
+    {
+      "bytes": 2441,
+      "path": "docs/verification/task-12-2-2-1-classification-contract-results.md",
+      "sha256": "7bb25775f1cca2bd026c2bc3ee5a1c0e4f2402dcfef1ad37e45f42f8288c6c70"
+    },
+    {
+      "bytes": 29255,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "ea41d05be09816ad47e6450be254492542ce6cb82abedf1d433fb7f30617c30f"
+    },
+    {
+      "bytes": 5210,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "99879bc8be237d4a72a985091083973007db6dcda0cf7af7bbabf3594ed825f4"
+    },
+    {
+      "bytes": 10703,
+      "path": "kernel/contracts/src/serialization.rs",
+      "sha256": "063d15a100b9702541128f810d8c72dcd35bf882b29e6940c649114fea3e16c7"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3854,
+      "path": "scripts/classification_contract_evidence.py",
+      "sha256": "fe3468d90157b5426592b79dbef74475f079153590bb44552e7bc4a4238a8d98"
+    },
+    {
+      "bytes": 3243,
+      "path": "tests/test_classification_contract_evidence.py",
+      "sha256": "8e9a54b7a1b6c5d1c7a7521bec8d73557d896d88c6b316cc5cd618718a3edc8c"
+    }
+  ],
+  "status": "pass-separated-classification-contracts",
+  "task_ids": [
+    "12.2.2.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "c8569d7f36339267eaa0054f975fd6c8d0a3aa816a116c317815adb9fe81a9c4",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "9914dca094184061eed15aa2be6ced5e7849ae7d34714249f54b76a0c2286d45",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "b9191f96f97b3fd0359cfed879dec3cb193e1b341b381fa4e6ca147daf48b481",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
