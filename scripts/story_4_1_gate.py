@@ -27,8 +27,8 @@ from scripts.story_4_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json"
-REVIEWED_COMMIT = "941ccfc94777bd93e5bab2336d85437f19246725"
-REVIEWED_TREE = "c1527b953cf95a8a34f30b10c6719abcf669360a"
+REVIEWED_COMMIT = "2c11868757e0e2cc533e5fccb86ee76061ac4f04"
+REVIEWED_TREE = "de1b2dc1f6bda807b0c32ac5bff231c015573012"
 REVIEWED_PATHS = (
     "architecture/dependency-rules.json",
     "docs/architecture/kernel-contract-reference.md",
@@ -40,6 +40,31 @@ REVIEWED_PATHS = (
     "fixtures/contracts/fixture_verifier.rs",
     "fixtures/contracts/compatibility.json",
     "fixtures/contracts/v1/manifest.json",
+    "fixtures/contracts/compatibility-v2.json",
+    "fixtures/contracts/v2/manifest.json",
+    "fixtures/contracts/v2/valid/action.json",
+    "fixtures/contracts/v2/valid/approval_request.json",
+    "fixtures/contracts/v2/valid/boundary_failure.json",
+    "fixtures/contracts/v2/valid/cancellation_signal.json",
+    "fixtures/contracts/v2/valid/capability_grant.json",
+    "fixtures/contracts/v2/valid/contract_error.json",
+    "fixtures/contracts/v2/valid/evidence_reference.json",
+    "fixtures/contracts/v2/valid/plan.json",
+    "fixtures/contracts/v2/valid/prompt.json",
+    "fixtures/contracts/v2/valid/receipt.json",
+    "fixtures/contracts/v2/valid/task.json",
+    "fixtures/contracts/v2/valid/tool_call.json",
+    "fixtures/contracts/v2/valid/tool_definition.json",
+    "fixtures/contracts/v2/valid/tool_result.json",
+    "fixtures/contracts/v2/valid/work_packet.json",
+    "fixtures/contracts/compatibility/v2/task.v0.unsupported.json",
+    "fixtures/contracts/compatibility/v2/task.v1.unsupported.json",
+    "fixtures/contracts/compatibility/v2/task.v2.duplicate-field.json",
+    "fixtures/contracts/compatibility/v2/task.v2.malformed.json",
+    "fixtures/contracts/compatibility/v2/task.v2.missing-field.json",
+    "fixtures/contracts/compatibility/v2/task.v2.trailing-value.json",
+    "fixtures/contracts/compatibility/v2/task.v2.unknown-field.json",
+    "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
     "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
     "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
     "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",

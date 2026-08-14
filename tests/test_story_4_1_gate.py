@@ -8,6 +8,7 @@ from scripts.story_4_1_gate import (
     REPORT_PATH,
     REQUIRED_TASK_MARKERS,
     REVIEWED_COMMIT,
+    REVIEWED_PATHS,
     REVIEWED_TREE,
     build_report,
     check_report,
@@ -38,7 +39,7 @@ class Story41GateTests(unittest.TestCase):
         )
         self.assertEqual(report["acceptance_criteria"][1]["valid_fixture_count"], 15)
         self.assertEqual(
-            report["acceptance_criteria"][1]["persisted_invalid_fixture_count"], 7
+            report["acceptance_criteria"][1]["persisted_invalid_fixture_count"], 8
         )
 
     def test_architecture_acceptance_is_bounded_to_the_contract_layer(self) -> None:
@@ -53,7 +54,7 @@ class Story41GateTests(unittest.TestCase):
         review = build_report()["independent_review"]
         self.assertEqual(review["reviewed_commit"], REVIEWED_COMMIT)
         self.assertEqual(review["reviewed_tree"], REVIEWED_TREE)
-        self.assertEqual(len(review["artifacts"]), 18)
+        self.assertEqual(len(review["artifacts"]), len(REVIEWED_PATHS))
         self.assertEqual(review["finding_count"], 0)
 
     def test_task_omission_is_detected(self) -> None:
