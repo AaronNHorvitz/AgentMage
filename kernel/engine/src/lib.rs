@@ -33,6 +33,8 @@ pub mod conversation_archive;
 pub mod conversation_library;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
+/// Exact-preview redacted evidence bundles derived from canonical conversation state.
+pub mod evidence_bundle;
 /// Fresh citation resolution, complete answer ledgers, and keyed receipt integrity.
 pub mod evidence_reconciliation;
 /// Deterministic assignment of explicit evidence states to material claims.

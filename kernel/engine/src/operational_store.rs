@@ -2973,7 +2973,10 @@ fn json_line<T: Serialize>(value: &T) -> Result<Vec<u8>, OperationalStoreError> 
     Ok(bytes)
 }
 
-fn write_derived_export(destination: &Path, bytes: &[u8]) -> Result<(), OperationalStoreError> {
+pub(crate) fn write_derived_export(
+    destination: &Path,
+    bytes: &[u8],
+) -> Result<(), OperationalStoreError> {
     let parent = destination
         .parent()
         .ok_or(OperationalStoreError::ExportRejected)?;

@@ -203,6 +203,15 @@ pub enum SecretFindingClass {
     EmbeddedUriCredential,
 }
 
+/// Scans one named byte value with the deterministic persistence secret detector.
+///
+/// The result contains only stable finding classes and never retains or returns the
+/// candidate value. Callers must still apply their own boundary-specific policy.
+#[must_use]
+pub fn detect_secret_classes(name: &str, value: &[u8]) -> Vec<SecretFindingClass> {
+    detect(name, value).into_iter().collect()
+}
+
 /// Storage encryption selected by the gate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
