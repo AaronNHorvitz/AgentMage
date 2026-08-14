@@ -176,6 +176,8 @@ pub struct ShadowWriteOperation {
     generated_file: bool,
     complete_diff: String,
     #[serde(with = "byte_serialization")]
+    preimage_bytes: Vec<u8>,
+    #[serde(with = "byte_serialization")]
     proposed_bytes: Vec<u8>,
     operation_sha256: String,
 }
@@ -226,6 +228,12 @@ impl ShadowWriteOperation {
     #[must_use]
     pub fn expected_postimage_sha256(&self) -> &str {
         &self.expected_postimage_sha256
+    }
+
+    /// Returns the exact reviewed preimage bytes retained for possible restoration.
+    #[must_use]
+    pub fn preimage_bytes(&self) -> &[u8] {
+        &self.preimage_bytes
     }
 
     /// Returns the proposed complete postimage bytes.
@@ -506,6 +514,7 @@ pub fn build_shadow_change_set(
             line_endings: draft.line_endings,
             generated_file: draft.generated_file,
             complete_diff,
+            preimage_bytes: draft.observed_bytes,
             proposed_bytes: draft.proposed_bytes,
             operation_sha256: ZERO_SHA256.to_owned(),
         };
@@ -1066,6 +1075,11 @@ mod tests {
                 .complete_diff()
                 .contains("enabled")
         );
+        assert_eq!(
+            change_set.operations()[0].preimage_bytes(),
+            b"{\"enabled\":false}\n"
+        );
+        assert!(!format!("{:?}", change_set.operations()[0]).contains("enabled"));
         assert_eq!(receipt.permitted_verification, ["cargo-test-focused"]);
 
         let mut replay = grant_request();
