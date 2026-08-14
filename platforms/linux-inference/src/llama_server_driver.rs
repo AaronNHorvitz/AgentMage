@@ -303,24 +303,7 @@ impl NativeModelDriver for LlamaServerDriver {
             .to_str()
             .ok_or_else(|| failure("model.llama-driver.model-path-invalid", false))?;
         let child = Command::new(server)
-            .args([
-                "--model",
-                model,
-                "--alias",
-                profile.profile_id.as_str(),
-                "--host",
-                socket,
-                "--ctx-size",
-                "8192",
-                "--parallel",
-                "1",
-                "--n-gpu-layers",
-                "999",
-                "--no-webui",
-                "--no-slots",
-                "--jinja",
-                "--no-context-shift",
-            ])
+            .args(launch_arguments(model, profile.profile_id.as_str(), socket))
             .env_clear()
             .env("LD_LIBRARY_PATH", &library)
             .env("PATH", "/usr/bin:/bin")
@@ -517,6 +500,27 @@ impl NativeModelDriver for LlamaServerDriver {
                 .min(u128::from(u64::MAX)) as u64,
         })
     }
+}
+
+fn launch_arguments<'a>(model: &'a str, profile_id: &'a str, socket: &'a str) -> [&'a str; 16] {
+    [
+        "--model",
+        model,
+        "--alias",
+        profile_id,
+        "--host",
+        socket,
+        "--ctx-size",
+        "8192",
+        "--parallel",
+        "1",
+        "--n-gpu-layers",
+        "999",
+        "--no-webui",
+        "--no-slots",
+        "--jinja",
+        "--no-context-shift",
+    ]
 }
 
 struct Completion {
@@ -835,9 +839,10 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
 
-    use serde_json::json;
+    use agentmage_kernel_contracts::{DecodingProfile, ModelRunTerminalState};
+    use serde_json::{Value, json};
 
-    use super::{Endpoint, UnixHttpClient, parse_http_response, plain_text};
+    use super::{Endpoint, UnixHttpClient, launch_arguments, parse_http_response, plain_text};
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
 
@@ -861,33 +866,26 @@ mod tests {
         }
     }
 
-    fn exchange(path: &str, body: Vec<u8>, response: Vec<u8>) -> Vec<u8> {
+    fn exchange<T>(
+        response: Vec<u8>,
+        operation: impl FnOnce(&UnixHttpClient) -> T,
+    ) -> (T, Vec<u8>) {
         let directory = TestDirectory::new();
         let socket = directory.0.join("llama-server.sock");
         let listener = UnixListener::bind(&socket).expect("listener");
-        let expected = path.to_owned();
         let server = thread::spawn(move || {
             let (mut stream, _) = listener.accept().expect("accept");
             let mut request = vec![0_u8; 64 * 1024];
             let count = stream.read(&mut request).expect("request");
-            let text = std::str::from_utf8(&request[..count]).expect("request UTF-8");
-            assert!(text.starts_with(&expected));
             stream.write_all(&response).expect("response");
+            request.truncate(count);
+            request
         });
         let client = UnixHttpClient::new(socket.clone());
-        let value = match path {
-            "GET /health" => {
-                client.health().expect("health");
-                Vec::new()
-            }
-            "POST /tokenize" => client
-                .request(Endpoint::Tokenize, Some(&body), 4096, 1000)
-                .expect("tokenize"),
-            _ => panic!("unknown fixture path"),
-        };
-        server.join().expect("server");
+        let value = operation(&client);
+        let request = server.join().expect("server");
         fs::remove_file(socket).ok();
-        value
+        (value, request)
     }
 
     fn response(value: serde_json::Value) -> Vec<u8> {
@@ -905,16 +903,110 @@ mod tests {
 
     #[test]
     fn exact_health_and_tokenize_requests_use_only_closed_endpoints() {
-        exchange("GET /health", Vec::new(), response(json!({"status": "ok"})));
-        let value = exchange(
-            "POST /tokenize",
-            b"{}".to_vec(),
-            response(json!({"tokens": [1, 2, 3]})),
-        );
+        let ((), request) = exchange(response(json!({"status": "ok"})), |client| {
+            client.health().expect("health");
+        });
+        assert!(request.starts_with(b"GET /health HTTP/1.1\r\n"));
+        let (value, request) = exchange(response(json!({"tokens": [1, 2, 3]})), |client| {
+            client
+                .request(Endpoint::Tokenize, Some(b"{}"), 4096, 1000)
+                .expect("tokenize")
+        });
+        assert!(request.starts_with(b"POST /tokenize HTTP/1.1\r\n"));
         assert_eq!(
             serde_json::from_slice::<serde_json::Value>(&value).unwrap()["tokens"],
             json!([1, 2, 3])
         );
+    }
+
+    #[test]
+    fn launch_tuple_is_fixed_to_one_private_socket_and_slot() {
+        assert_eq!(
+            launch_arguments(
+                "/models/model.gguf",
+                "exact-profile",
+                "/run/private/llama-server.sock"
+            ),
+            [
+                "--model",
+                "/models/model.gguf",
+                "--alias",
+                "exact-profile",
+                "--host",
+                "/run/private/llama-server.sock",
+                "--ctx-size",
+                "8192",
+                "--parallel",
+                "1",
+                "--n-gpu-layers",
+                "999",
+                "--no-webui",
+                "--no-slots",
+                "--jinja",
+                "--no-context-shift",
+            ]
+        );
+    }
+
+    #[test]
+    fn completion_uses_exact_sampling_tuple_and_classifies_inert_output() {
+        let decoding = DecodingProfile {
+            profile_id: "diagnostic-repeatability-v1".to_owned(),
+            sampler_order: vec!["greedy".to_owned()],
+            temperature: 0.0,
+            top_p: 1.0,
+            top_k: 1,
+            repeat_penalty: 1.0,
+            seed: 42,
+            max_output_tokens: 8,
+        };
+        let (completion, request) = exchange(
+            response(json!({"content": "bounded advisory", "tokens": [1, 2]})),
+            |client| {
+                client
+                    .completion(b"encoded context", 8, 1000, &decoding)
+                    .expect("completion")
+            },
+        );
+        assert_eq!(
+            completion.terminal_state,
+            ModelRunTerminalState::AdvisoryText
+        );
+        assert!(completion.proposal.is_none());
+        let body = request
+            .windows(4)
+            .position(|window| window == b"\r\n\r\n")
+            .map(|index| &request[index + 4..])
+            .expect("HTTP body");
+        let body: Value = serde_json::from_slice(body).expect("request JSON");
+        assert_eq!(
+            body,
+            json!({
+                "prompt": "encoded context",
+                "n_predict": 8,
+                "stream": false,
+                "cache_prompt": false,
+                "return_tokens": true,
+                "temperature": 0.0,
+                "top_p": 1.0,
+                "top_k": 1,
+                "repeat_penalty": 1.0,
+                "seed": 42,
+                "samplers": ["greedy"],
+                "stop": ["<|eot|>"],
+                "id_slot": 0
+            })
+        );
+
+        let (completion, _) =
+            exchange(response(json!({"content": "{}", "tokens": []})), |client| {
+                client
+                    .completion(b"encoded context", 8, 1000, &decoding)
+                    .expect("closed rejection")
+            });
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Rejected);
+        assert!(completion.proposal.is_none());
+        assert!(completion.failure.is_some());
     }
 
     #[test]
