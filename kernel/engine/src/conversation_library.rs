@@ -3235,4 +3235,45 @@ mod tests {
         assert_eq!(receipt.deleted_compaction_count, 1);
         fs::remove_dir_all(directory).expect("cleanup");
     }
+
+    #[test]
+    fn encrypted_backup_and_fresh_restore_preserve_complete_conversation_history() {
+        let (directory, _path, mut store) = store();
+        let backup = directory.join("conversation.backup.db");
+        let restored_path = directory.join("conversation.restored.db");
+        let conversation = conversation(true);
+        let first = turn(1, Some("encrypted recovery canary"));
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        store
+            .append_conversation_compaction(&compaction(&first))
+            .expect("compaction appends");
+        store
+            .backup(&backup, &observation(), &mut TestKey([42; 32]))
+            .expect("encrypted backup");
+        drop(store);
+        OperationalStore::restore_to_fresh_candidate(
+            &backup,
+            &observation(),
+            &mut TestKey([42; 32]),
+            &restored_path,
+            &observation(),
+            &mut TestKey([43; 32]),
+        )
+        .expect("fresh restore");
+        let restored =
+            OperationalStore::open(&restored_path, &observation(), &mut TestKey([43; 32]))
+                .expect("restored store opens");
+        let history = restored
+            .conversation_history(&conversation.conversation_id)
+            .expect("restored history");
+        assert_eq!(history.turns, vec![first]);
+        assert_eq!(history.compactions.len(), 1);
+        drop(restored);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
 }
