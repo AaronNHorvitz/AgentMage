@@ -1,7 +1,7 @@
 {
   "artifact_id": "grant-approval-denial-review-fixtures",
   "coverage": {
-    "approval_field_count": 20,
+    "approval_field_count": 21,
     "approval_forbidden_authority_field_count": 0,
     "denial_resulting_status": "invalidated",
     "denial_resulting_use_count": 0,
@@ -22,7 +22,7 @@
     "macos_implementation_claim": "none",
     "shared_contracts": "verified-local"
   },
-  "reference_revision": "fd8f4da2225bcbaec39a76418b6f519310be4fae",
+  "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
   "schema_version": 1,
   "sources": [
     {
@@ -31,43 +31,43 @@
     },
     {
       "path": "fixtures/grants/v1/approval-preview.workspace-read.json",
-      "sha256": "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707"
+      "sha256": "17663308186bc6251e013e01f975cafd4a9def008599783487c22fd743b2f883"
     },
     {
       "path": "fixtures/grants/v1/denial-receipt.argument-mismatch.json",
-      "sha256": "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41"
+      "sha256": "ebaefe44484bc6b1bc028d436d265d5ad2531e6f3b34ae42bbda631c809e3cfd"
     },
     {
       "path": "fixtures/grants/v1/policy-denial.argument-mismatch.json",
-      "sha256": "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96"
+      "sha256": "0be101a274d5f90b4209829a9552d5f19a97833f6ca67cbade495f9b59189e6d"
     },
     {
       "path": "fixtures/grants/v1/manifest.json",
-      "sha256": "730cf10dbbf8e6b5deeb20d8eaa352865aa1d3efe7845a8b1f68c64f0c5d84a1"
+      "sha256": "5854129e4171f345a13557acb01791bb8a732f377f55654748f1db77935a6d2a"
     },
     {
       "path": "kernel/contracts/src/approval.rs",
-      "sha256": "e312316e36fdd6780ee42a16ef8f05ab028b6285a2550f61af9e7d62a6afd6fe"
+      "sha256": "a00dcb3b13ffc03d190bc87d1471e545e7363df6130a9623c7b7dd703dcf49f8"
     },
     {
       "path": "kernel/contracts/src/evidence.rs",
-      "sha256": "09c751b7153e1674ccabdf0f729878843e45966f8dc8142152d356340dfabf92"
+      "sha256": "62dbb51deb31096e429499f7f5fd5014fdf43f6c0b0f206a3b1dff0fb352d691"
     },
     {
       "path": "kernel/engine/src/approval.rs",
-      "sha256": "1f54405fa755163ca03010d8c8a3f5ea1791ab4532c412d4d404bbcf3a925615"
+      "sha256": "ca83dd5fb50f8267472930fc6806ceb009095f31edf87d92994cb26721bef8b3"
     },
     {
       "path": "kernel/engine/src/grants.rs",
-      "sha256": "93a3d29cb3dba7df8d13f932749215868aeac8b35d727cad5cbec492be0b35c1"
+      "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
     },
     {
       "path": "kernel/engine/tests/grant_review_fixtures.rs",
-      "sha256": "9e3500b6f12c0f19797ea7d7b5d78d71d888401a2e586782d95c32b66ac200bd"
+      "sha256": "9ef43e8b54a75844126fb55b3a81a32b6ab74be92dd5b77556da8ebba3e8950a"
     },
     {
       "path": "scripts/grant_review_fixtures.py",

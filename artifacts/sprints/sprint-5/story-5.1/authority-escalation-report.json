@@ -33,10 +33,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "model",
       "task_id": "task-0001"
@@ -53,10 +53,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "model",
       "task_id": "task-0001"
@@ -73,10 +73,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "model",
       "task_id": "task-0001"
@@ -93,10 +93,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "model",
       "task_id": "task-0001"
@@ -113,10 +113,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "prompt",
       "task_id": "task-0001"
@@ -133,10 +133,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "prompt",
       "task_id": "task-0001"
@@ -153,10 +153,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "prompt",
       "task_id": "task-0001"
@@ -173,10 +173,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "prompt",
       "task_id": "task-0001"
@@ -193,10 +193,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "shell",
       "task_id": "task-0001"
@@ -213,10 +213,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "shell",
       "task_id": "task-0001"
@@ -233,10 +233,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "shell",
       "task_id": "task-0001"
@@ -253,10 +253,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "shell",
       "task_id": "task-0001"
@@ -273,10 +273,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "tool",
       "task_id": "task-0001"
@@ -293,10 +293,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "tool",
       "task_id": "task-0001"
@@ -313,10 +313,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "tool",
       "task_id": "task-0001"
@@ -333,10 +333,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "tool",
       "task_id": "task-0001"
@@ -353,10 +353,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "plugin",
       "task_id": "task-0001"
@@ -373,10 +373,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "plugin",
       "task_id": "task-0001"
@@ -393,10 +393,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "plugin",
       "task_id": "task-0001"
@@ -413,10 +413,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "plugin",
       "task_id": "task-0001"
@@ -433,10 +433,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "approval_display",
       "task_id": "task-0001"
@@ -453,10 +453,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "approval_display",
       "task_id": "task-0001"
@@ -473,10 +473,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "approval_display",
       "task_id": "task-0001"
@@ -493,10 +493,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "approval_display",
       "task_id": "task-0001"
@@ -513,10 +513,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "mint",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "simulated_child",
       "task_id": "task-0001"
@@ -533,10 +533,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "widen",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "simulated_child",
       "task_id": "task-0001"
@@ -553,10 +553,10 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "transfer",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "simulated_child",
       "task_id": "task-0001"
@@ -573,29 +573,29 @@
         "field_path": [],
         "message": "Descriptive artifacts cannot authorize an operation",
         "retry": "after_user_decision",
-        "schema_version": 1
+        "schema_version": 2
       },
       "escalation_kind": "combine",
-      "schema_version": 1,
+      "schema_version": 2,
       "session_id": "session-0001",
       "source": "simulated_child",
       "task_id": "task-0001"
     }
   ],
-  "reference_revision": "c21d8befd3134a1427ce6f7998ac06387c6d7b16",
+  "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
   "schema_version": 1,
   "sources": [
     {
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+      "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
     },
     {
       "path": "kernel/engine/tests/authority_escalation_matrix.rs",
-      "sha256": "3ae491dd10c8cc1ef5246d895efdaac28383546c7e2135da8c1be05ddb871880"
+      "sha256": "aab60684341ced1fa0b62fb8c6d57a118b3c2cdc8046e65cba07d50b88678369"
     },
     {
       "path": "scripts/authority_escalation_matrix.py",
-      "sha256": "7fc48096ab875845e0712e95321ada3d401f51893923872bba05df086d66a512"
+      "sha256": "1f08eced14d5929a5f595e4ceedd29dec6150b886cca578dfa6b7213d903b1b4"
     },
     {
       "path": "tests/test_authority_escalation_matrix.py",

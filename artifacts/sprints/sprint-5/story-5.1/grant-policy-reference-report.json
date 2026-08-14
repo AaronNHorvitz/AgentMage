@@ -1,17 +1,14 @@
 {
   "artifact_id": "grant-schema-policy-decision-reference",
   "coverage": {
-    "grant_field_count": 29,
-    "grant_operation_count": 15,
+    "grant_field_count": 30,
+    "grant_operation_count": 22,
     "policy_denial_scope_count": 15,
     "strict_allowed_operations": [
       "WorkspaceRead"
     ],
-    "strict_denied_by_absence": [
-      "DatabaseRead",
-      "ModelInference"
-    ],
-    "strict_explicit_denial_count": 12
+    "strict_denied_by_absence": [],
+    "strict_explicit_denial_count": 21
   },
   "limitations": [
     "Grant and policy state is in-memory and is not crash durable.",
@@ -26,28 +23,32 @@
     "macos_implementation_claim": "none",
     "shared_contracts": "verified-local"
   },
-  "reference_revision": "1424f1ffc9c6c9631b2ea79eccec68cca13d4054",
+  "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/grant-policy-reference.md",
-      "sha256": "da5b65d292d037e9781fbaffb16bacbe760b2aae8e573eaae51ae5d130dd0327"
+      "sha256": "f14a878f359761761619dbbe1eb16df217fc36573989f1c1249b89170c7d4eb8"
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+    },
+    {
+      "path": "kernel/contracts/src/operation.rs",
+      "sha256": "19d29ac6702f9e8e2acf9c1fa41dc918ea128ddb8a00d85d1c0ee784977d2834"
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "06c9ca0e2d223f8c18796c195d3cdad89bed393cb5eb0d5313aad9b1b5cc9441"
+      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
     },
     {
       "path": "scripts/grant_policy_reference.py",
-      "sha256": "83076ed5f1753db876b8441d118641a651cabd119c8a8e3dd09736ec91e66213"
+      "sha256": "a8ca63fa8173a2e97373f1cea74ee26666df5bf44eaed35712baa7f22837c4db"
     },
     {
       "path": "tests/test_grant_policy_reference.py",
-      "sha256": "157d69fab1d7ed3d66b29beb3993fe2e17a359443233243d4e2c7dec21768081"
+      "sha256": "617235e126d7430a885779d90a70d3443b9990658b67e17798ccadb1609b4f18"
     }
   ],
   "status": "pass-shared-linux-reference",
