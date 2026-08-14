@@ -33,7 +33,7 @@
   },
   "trigger_disposition": {
     "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
-    "sha256": "314f38594ed955234d8516067a827b575d3b3fd81292bdd9c1191688c178464c",
+    "sha256": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
     "status": "REJECTED"
   }
 }
