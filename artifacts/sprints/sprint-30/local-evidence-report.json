@@ -1,0 +1,205 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-29-BLOCKED",
+      "owner": "29.1"
+    },
+    {
+      "code": "REAL-APPROVED-SEMANTIC-PROFILES-ABSENT",
+      "owner": "30.1.1.1"
+    },
+    {
+      "code": "REAL-HARDWARE-COMPARATIVE-BENCHMARK-ABSENT",
+      "owner": "30.1.1.8"
+    },
+    {
+      "code": "APPLICATION-SEMANTIC-INTEGRATION-ABSENT",
+      "owner": "30.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-30-REVIEW-ABSENT",
+      "owner": "30.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "1584e0abea6daac74c7e39dd5ef10afb0ad4aca27598601d9773f5799288a6ae"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "c2a6c19724147aceefd8caa1fd93d21de2d81f5aa9c09e9e9e2847d3bf07302a"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "a630856e6fc93971146829af72153533922415bc4b668c765f49138702f341ed"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_30_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "atomic_rebuild_stale_omission_and_configuration_invalidation": true,
+    "content_addressed_source_ranged_fixed_point_index": true,
+    "deterministic_lexical_fallback": true,
+    "exact_embedding_and_optional_reranker_admission_contract": true,
+    "four_mode_integer_comparison_gate": true,
+    "inspect_delete_clear_and_complete_rebuild": true,
+    "local_only_storage_and_lifecycle_disclosure": true,
+    "per_workspace_file_and_field_opt_in": true,
+    "real_approved_embedding_profile": false,
+    "real_approved_reranker_profile": false,
+    "real_hardware_benefit_benchmark": false,
+    "real_runtime_generated_vectors": false,
+    "remote_semantic_capability": false,
+    "semantic_release_enabled": false,
+    "source_write_authority": false,
+    "synthetic_contract_fixture_only": true
+  },
+  "record_type": "sprint_30_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-AI-006",
+    "SR-AI-007",
+    "SR-AI-008",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-AI-012",
+    "SR-AI-013",
+    "SR-TST-006"
+  ],
+  "source_revision": "59e558cdfaefd9593fc77248d59520662b3d6d14",
+  "source_sha256": {
+    "capabilities/knowledge/src/lib.rs": "cdd0000d9671b7e0f968941a84285f0febbdafec91d19f1da9f825d2dbac6b3d",
+    "capabilities/knowledge/src/semantic.rs": "4a489147fe1a5d36caf2f925d9a64afcbd11859980b2920318d5dc5a91ab0a0a",
+    "capabilities/knowledge/src/semantic_benchmark.rs": "3438db4f7b79158f839575f8502d21964c5b075bb74c0cac9544d32367e42ac2",
+    "docs/architecture/optional-local-semantic-retrieval.md": "bfea8d087fd41e31af8fb6e046d898916a61f21d69a0cd803cc2f3e75fc58e72",
+    "docs/verification/sprint-30-local-results.md": "f22f80712d0ae8cfe4eab59184580699a19c8217efb92ce9b2ebd41afdf359d9",
+    "scripts/sprint_30_evidence.py": "d0af65a58197a6231f3ef1e998990150a9441c6061ad1c3cc6a35c12e06d6b85",
+    "tests/test_sprint_30_evidence.py": "f512573d8f55bccd60cd7564e1e0766b232c40de9b392369c0cf7dd2b8941d9c"
+  },
+  "summary": {
+    "local_semantic_contract_passed": true,
+    "release_approval": false,
+    "remote_semantic_capability": false,
+    "semantic_release_enabled": false,
+    "source_write_authority": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "application_semantic_integration": false,
+    "complete_local_product_and_docs_gates": true,
+    "independent_review": false,
+    "real_approved_semantic_profiles": false,
+    "real_hardware_comparative_benchmark": false,
+    "synthetic_four_mode_comparison_gate": true,
+    "synthetic_manifest_scope_lifecycle_and_adversarial_suite": true,
+    "upstream_sprint_29_gate": false
+  }
+}
