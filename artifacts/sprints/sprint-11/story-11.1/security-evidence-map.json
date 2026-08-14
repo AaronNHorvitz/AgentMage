@@ -1,0 +1,518 @@
+{
+  "artifact_id": "sprint-11-product-security-evidence-map",
+  "artifacts": [
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 1452,
+      "path": "Cargo.toml",
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+    },
+    {
+      "bytes": 6888,
+      "path": "docs/architecture/data-classification-retention-table.md",
+      "sha256": "2566c1dc42904421b653e2bed4d17c081add7d3816f147d20afc42fa3d1ec038"
+    },
+    {
+      "bytes": 16389,
+      "path": "docs/architecture/durable-authority-store.md",
+      "sha256": "e93363505c820941810e2006971f66b152707e753b729a0f117915a7721b4e6e"
+    },
+    {
+      "bytes": 8301,
+      "path": "docs/architecture/secret-store-encrypted-backup-format.md",
+      "sha256": "efec29e4831070a980afc52071209fa778a321a3924fcc6eae6b4ddc0336fb01"
+    },
+    {
+      "bytes": 4478,
+      "path": "docs/security/sprint-11-cryptographic-inventory.md",
+      "sha256": "266d23cc616dc47a4111caac3154ab3d67a85bc4fc7ede45d13ab3c5df2be31e"
+    },
+    {
+      "bytes": 4734,
+      "path": "docs/verification/s-011-it01-provider-substitution-results.md",
+      "sha256": "fb5655154e3457786fcb8737a1c7f014ba43de4e47a9436e7bc19854b94e2997"
+    },
+    {
+      "bytes": 4328,
+      "path": "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
+      "sha256": "471d46a450054af5567ffe37d8846f523babbb6e62c2d3fc40bcc4f64f17569d"
+    },
+    {
+      "bytes": 5612,
+      "path": "docs/verification/s-011-st01-secret-canary-results.md",
+      "sha256": "a35c5898054278693c8bdc93f029a20ce95940e2c3716e0b29bad1da43173ef0"
+    },
+    {
+      "bytes": 5661,
+      "path": "docs/verification/s-011-ut01-store-unit-results.md",
+      "sha256": "232804d009c28a4aba81955a704622c4e13dd73aa1391b0ea928ff806f7011cf"
+    },
+    {
+      "bytes": 81328,
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "dffa4f7c807796a17312d7445c8452251361709756ad4512a5b4003ed95fafa1"
+    },
+    {
+      "bytes": 181401,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211"
+    },
+    {
+      "bytes": 45281,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "400b9e71f568a10093b9a0811ffe372a4b84a555027b392113f33c815b395f7e"
+    },
+    {
+      "bytes": 30510,
+      "path": "platforms/linux/src/platform.rs",
+      "sha256": "db383150be5ce3111b36fd18c55a8390e181c62fce43d1de810e7e2aa1eeec59"
+    },
+    {
+      "bytes": 44067,
+      "path": "platforms/linux/src/secret_service.rs",
+      "sha256": "8752c509fcea69735ade5ebe2a6031b83c755327fe91f27dce86546af1925cd2"
+    },
+    {
+      "bytes": 3642,
+      "path": "artifacts/sprints/sprint-11/story-11.1/classification-retention-table.json",
+      "sha256": "43572d600adc9d2cd37de3eb276f8f3f395c28aff5bf9547fe5d31b588daf4ce"
+    },
+    {
+      "bytes": 4356,
+      "path": "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+      "sha256": "26286bc6d0d535d59b27d961a7aa96beba8aa74f0ab97f40d87961861becedb4"
+    },
+    {
+      "bytes": 2876,
+      "path": "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+      "sha256": "3ca10bd56dbbe6e404c904bede157f01c608b3460c1946ba0c8a3ffca3c39898"
+    },
+    {
+      "bytes": 2991,
+      "path": "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+      "sha256": "dd2c0d58cd87ea5ecd6aa5a64af11aeeeab546202772f374350450cf56d5e240"
+    },
+    {
+      "bytes": 4837,
+      "path": "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
+      "sha256": "0404e05ddad66dba447a9bbc505ab5bd89e40855eb507adcc31888a3806f07d1"
+    },
+    {
+      "bytes": 3761,
+      "path": "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+      "sha256": "d1fb1fa4bdf3b8300dc30fcec012718218114dd5e9abba41da00712deb46e14d"
+    },
+    {
+      "bytes": 4635,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json",
+      "sha256": "86963a3d195a97319406ecb003f563de711314c6c9548f3d2e22b6b7c57b1eb8"
+    },
+    {
+      "bytes": 3976,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
+      "sha256": "f97ee5b7a5f2ff367f0b74d140a77aed3d1960e707ea99513eaa93b220cb1f5b"
+    },
+    {
+      "bytes": 4286,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json",
+      "sha256": "644669b4da500aa86f343fbb7416598a00774a57b4f9e2c43b05dc8343e418b8"
+    },
+    {
+      "bytes": 4842,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
+      "sha256": "c649cbe93c1f300c8ee39377bb621c134d333fa5216200a69d7d2e21d75b105a"
+    },
+    {
+      "bytes": 4667,
+      "path": "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+      "sha256": "bb450422ba4cfe61aa47c14e8e20656c8719b0e1711ebb822c5344bf9b27824e"
+    },
+    {
+      "bytes": 4363,
+      "path": "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+      "sha256": "88a07e33355085ff546bec7fc871580398094985084fa82d8c9a21f0023c36fc"
+    },
+    {
+      "bytes": 4239,
+      "path": "artifacts/sprints/sprint-11/story-11.1/store-invariants.json",
+      "sha256": "ea5372bb17623cd39134fad1e96da3ddab95f2e66544b39bd2f5ccc46bd1bad4"
+    },
+    {
+      "bytes": 3861,
+      "path": "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+      "sha256": "f626d2900d76050423c2ad3e4da5a4baa0280efde01e6c337d5799856dff641f"
+    },
+    {
+      "bytes": 16500,
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "36e7dcae4d48633e2d21694aa0153cf7453824f7aba5bc928507fef35f79e833"
+    },
+    {
+      "bytes": 51,
+      "path": "fixtures/support/manual-patch/artifacts/metadata/cryptographic-bom.json",
+      "sha256": "af2c0fe15e90eeb7e4244a9cd7a1060ba6bbd66e563d68160cfb517ed3db11a4"
+    },
+    {
+      "bytes": 17274,
+      "path": "scripts/sprint_11_security_evidence.py",
+      "sha256": "c9ee51be129bf3d56c5956f9832f70578bb5269b995679708f9efbca9886cd29"
+    },
+    {
+      "bytes": 3687,
+      "path": "tests/test_sprint_11_security_evidence.py",
+      "sha256": "75a351aff8f8a94c859b4b3a3e1309bd8008fe869b49c5596cd81efc54e70fd2"
+    }
+  ],
+  "controls": [
+    {
+      "control_id": "SR-DAT-001",
+      "demonstrated": "The current encrypted schema, policy families, retention table, and derived surfaces are inventoried and versioned.",
+      "evidence": [
+        "docs/architecture/durable-authority-store.md",
+        "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
+        "artifacts/sprints/sprint-11/story-11.1/store-invariants.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Typed writers and runtime inventories for later product families must extend the dictionary.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-002",
+      "demonstrated": "All currently representable persistence candidates pass classification, minimization, secret detection, encryption selection, and retention before prepared bytes exist.",
+      "evidence": [
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Every later ingress and durable writer must bind the same gate.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "SR-DAT-003",
+      "demonstrated": "Five raw-content classes are structurally ephemeral and retain neither value nor value digest.",
+      "evidence": [
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Later active prompt, model, attachment, and tool adapters must rerun the canary gate.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "SR-DAT-004",
+      "demonstrated": "Missing, malformed, substituted, or plaintext providers fail closed while explicit ephemeral policy remains storage-free.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json",
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Other platform key stores require equivalent native evidence.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "SR-DAT-005",
+      "demonstrated": "The pinned bundled SQLCipher, OpenSSL boundary, runtime cipher check, key sizes, configuration, and errors are inventoried.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Signed release runtime extraction, provider self-tests where available, and independent review remain open.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-006",
+      "demonstrated": "Documents and receipts make bounded provider, erasure, remanence, backup, and platform claims with explicit negative claims.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Release-generated wording must remain bound to signed manifests.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "SR-DAT-007",
+      "demonstrated": "Linux uses one exact Secret Service identity and excludes key values from arguments, environment, configuration, receipts, and artifacts.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Live retained evidence, backup-key provisioning, rotation, macOS, and Windows remain open.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-008",
+      "demonstrated": "Current Sprint 11 cryptographic components and key uses are inventoried and earlier component/CBOM schemas exist.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json",
+        "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+        "fixtures/support/manual-patch/artifacts/metadata/cryptographic-bom.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "A release-derived product CBOM reconciled with runtime observations remains open.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-009",
+      "demonstrated": "Provider and format identities are versioned and downgrade-sensitive; schema migrations are additive and exact.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Runtime provider agility, approved replacement, rotation, and post-quantum migration are later work.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-010",
+      "demonstrated": "Fake-clock expiry, user/legal holds, export, separately keyed backup, fresh restore, and deletion transitions are deterministic and restart-safe.",
+      "evidence": [
+        "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+        "artifacts/sprints/sprint-11/story-11.1/classification-retention-table.json",
+        "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Every later store/index and live-store swap must join the lifecycle engine.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "SR-DAT-011",
+      "demonstrated": "Whole-store erasure destroys and verifies the scoped key before ciphertext removal and disclaims overwrite or backup erasure.",
+      "evidence": [
+        "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+        "artifacts/sprints/sprint-11/story-11.1/classification-retention-table.json",
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Live key destruction and all separately keyed copies require later end-to-end evidence.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-DAT-012",
+      "demonstrated": "Known store, WAL, SHM, backup, and export boundaries and sanitization limits are documented and tested.",
+      "evidence": [
+        "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+        "artifacts/sprints/sprint-11/story-11.1/classification-retention-table.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Complete product uninstall, model/cache/log/socket residue scanning, and externally managed remnants remain Sprint 24/25 work.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-OPS-001",
+      "demonstrated": "Authority receipts and retention events are structured, sequenced, identity-bound, and content-free.",
+      "evidence": [
+        "kernel/engine/src/authority_transaction.rs",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "The product audit schema must add complete release, actor/session, object, policy, and correlation coverage.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-OPS-002",
+      "demonstrated": "Grant, transaction, denial, recovery, retention, and integrity outcomes contribute typed records.",
+      "evidence": [
+        "kernel/engine/src/authority_transaction.rs",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Complete installer, configuration, model/runtime, alert, and access event coverage remains later work.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-OPS-003",
+      "demonstrated": "Current receipts, errors, debug surfaces, encrypted artifacts, exports, and absent logger/model paths pass canary checks.",
+      "evidence": [
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json",
+        "kernel/engine/src/authority_transaction.rs",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Active logging and model-context paths must rerun and extend the gate.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-OPS-004",
+      "demonstrated": "Receipts and retention events are hash chained and JSON Lines is an explicit non-authoritative export.",
+      "evidence": [
+        "kernel/engine/src/authority_transaction.rs",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "A complete tamper-evident product audit ledger and protected external-collector export remain later work.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-OPS-005",
+      "demonstrated": "Receipt and lifecycle revisions preserve monotonic sequence and explicit trusted wall times.",
+      "evidence": [
+        "kernel/engine/src/authority_transaction.rs",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Monotonic clock capture, anomaly events, backward/forward clock tests, and sleep/resume evidence remain later work.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "SR-TST-005",
+      "demonstrated": "A 128-seed subprocess campaign covers every before/after durable boundary and the authority test proves zero recovery/replay launches.",
+      "evidence": [
+        "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Power-loss, torn-sector, and later durable boundaries require their own campaigns.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "RV-08",
+      "demonstrated": "All current input classes and 12 reachable surfaces close with zero raw canary leakage.",
+      "evidence": [
+        "docs/architecture/data-classification-retention-table.md",
+        "artifacts/sprints/sprint-11/story-11.1/persistence-policy.json",
+        "artifacts/sprints/sprint-11/story-11.1/ephemeral-content.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Future active adapters, logging, and model context invalidate this result until extended.",
+      "story_contribution": "demonstrated-story-scope"
+    },
+    {
+      "control_id": "RV-09",
+      "demonstrated": "Provider, build features, configuration, key channels, substitution failures, and bounded claims are recorded.",
+      "evidence": [
+        "docs/security/sprint-11-cryptographic-inventory.md",
+        "docs/architecture/secret-store-encrypted-backup-format.md",
+        "artifacts/sprints/sprint-11/story-11.1/secret-store-key-boundary.json",
+        "artifacts/sprints/sprint-11/story-11.1/secret-backup-format.json",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-it01.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Release runtime/CBOM reconciliation, self-tests where available, rotation, and native cross-platform evidence remain open.",
+      "story_contribution": "partial-story-evidence"
+    },
+    {
+      "control_id": "RV-10",
+      "demonstrated": "Current retention, hold, export, backup, restore, crash, and whole-store erasure paths pass deterministic tests.",
+      "evidence": [
+        "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+        "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+        "artifacts/sprints/sprint-11/story-11.1/classification-retention-table.json",
+        "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
+        "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
+        "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json"
+      ],
+      "product_status": "not-complete",
+      "remaining": "Complete uninstall/reinstall sanitization, every future index/copy, live swap, and clean-device recovery remain open.",
+      "story_contribution": "partial-story-evidence"
+    }
+  ],
+  "external_network_used": false,
+  "manual_fuzzing_executed": false,
+  "private_user_data_used": false,
+  "product_requirement_completion_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "source_revision": "422e656a2e05524211792966000aa7fa20b623e8",
+  "status": "pass-story-security-mapping-with-open-product-controls",
+  "summary": {
+    "demonstrated_story_scope_count": 7,
+    "mapped_control_count": 21,
+    "partial_story_evidence_count": 14,
+    "product_controls_complete": 0,
+    "retained_artifact_count": 33
+  },
+  "task_ids": [
+    "11.1.3.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "109d68012a42b8c86b2831a6e5fd32ded60c494b2a5b7541bc2813800831ec25",
+      "exit_code": 0,
+      "expected_marker_sha256": "e591684a6296912dd8a68caf5f85a96f804a763c8741f25499885234a3796f36",
+      "status": "pass"
+    },
+    {
+      "command_id": "d27b716f2c44a4511c1fb178c5991d5a47095bad7321ed844694fc6cf9aa8fee",
+      "exit_code": 0,
+      "expected_marker_sha256": "605563cbf3b82fede5eeaf5f6555d01902ab181dcdbeeb12599d45cb45a75a28",
+      "status": "pass"
+    },
+    {
+      "command_id": "9aaca04b1fa98b211dd90ae43b69149b03ad9039a7a46d7790ae23a16f8c4730",
+      "exit_code": 0,
+      "expected_marker_sha256": "9a1f5639fe9dd1f86ed8b322304c80518bd7df16ff038f6a4c7e20ad228832c3",
+      "status": "pass"
+    },
+    {
+      "command_id": "db9b71aa8937883d99d1525cfbba5f46d1409c6e6bc47a2fc68b37c20591cf3c",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
