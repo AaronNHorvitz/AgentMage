@@ -451,6 +451,21 @@ pub trait ModelStreamSink {
     fn accept(&mut self, fragment: StreamedModelFragment) -> Result<(), ModelRuntimeFailure>;
 }
 
+/// Trusted observation point for cancellation that may arrive during inference.
+///
+/// Implementations expose no wake handle, execution callback, or authority. A
+/// runtime may only poll for an immutable cancellation signal and stop work.
+pub trait ModelCancellationProbe: Sync {
+    /// Returns the current cancellation signal, if one has been requested.
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure>;
+}
+
+impl ModelCancellationProbe for CancellationSignal {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok(Some(self.clone()))
+    }
+}
+
 /// Candidate-neutral local runtime contract implemented by every adapter.
 ///
 /// This interface carries no workspace handle, tool implementation, grant,
@@ -493,7 +508,7 @@ pub trait LocalModelRuntime {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
-        cancellation: Option<&CancellationSignal>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
 

@@ -13,11 +13,12 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, CancellationSignal, DecodingProfile, EncodedModelContext,
-    ExactModelProfile, ModelHealth, ModelHealthState, ModelLoadReceipt, ModelManifestObservation,
-    ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamId, ModelStreamSink, ModelUnloadReceipt,
-    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
+    CONTRACT_SCHEMA_VERSION, DecodingProfile, EncodedModelContext, ExactModelProfile,
+    ModelCancellationProbe, ModelHealth, ModelHealthState, ModelLoadReceipt,
+    ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamId,
+    ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
+    TokenCountResult,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -571,7 +572,7 @@ impl NativeModelDriver for LlamaServerDriver {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
-        cancellation: Option<&CancellationSignal>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
         let loaded = self
@@ -586,7 +587,17 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.llama-driver.request-mismatch", false));
         }
         let started = Instant::now();
-        let completion = if cancellation.is_some() {
+        let cancellation = cancellation
+            .map(ModelCancellationProbe::observe)
+            .transpose()?;
+        if cancellation
+            .as_ref()
+            .and_then(Option::as_ref)
+            .is_some_and(|signal| signal.correlation_id != request.correlation_id)
+        {
+            return Err(failure("model.llama-driver.cancellation-mismatch", false));
+        }
+        let completion = if cancellation.as_ref().is_some_and(Option::is_some) {
             Completion {
                 bytes: b"cancelled".to_vec(),
                 tokens: 0,

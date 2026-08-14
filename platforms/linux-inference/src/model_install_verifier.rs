@@ -260,7 +260,7 @@ mod tests {
             &mut self,
             _request: &agentmage_kernel_contracts::ModelRunRequest,
             _context: &EncodedModelContext,
-            _cancellation: Option<&agentmage_kernel_contracts::CancellationSignal>,
+            _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
             _sink: &mut dyn ModelStreamSink,
         ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure> {
             unreachable!("not used")

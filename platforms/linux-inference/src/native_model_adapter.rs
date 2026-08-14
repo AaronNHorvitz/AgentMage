@@ -1,7 +1,7 @@
 //! Candidate-neutral Linux `LocalModelRuntime` adapter boundary.
 
 use agentmage_kernel_contracts::{
-    CancellationSignal, EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelHealth,
+    EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe, ModelHealth,
     ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
     ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRuntimeFailure,
     ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink, ModelUnloadReceipt,
@@ -46,7 +46,7 @@ pub trait NativeModelDriver {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
-        cancellation: Option<&CancellationSignal>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
 
@@ -210,7 +210,7 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
-        cancellation: Option<&CancellationSignal>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
         self.loaded_profile(&request.profile_id)?;
@@ -344,7 +344,7 @@ mod tests {
             &mut self,
             _request: &agentmage_kernel_contracts::ModelRunRequest,
             _context: &EncodedModelContext,
-            _cancellation: Option<&agentmage_kernel_contracts::CancellationSignal>,
+            _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
             _sink: &mut dyn ModelStreamSink,
         ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure> {
             Err(failure("fixture.not-used"))

@@ -3,12 +3,12 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    CancellationSignal, ExactModelProfile, LocalModelRuntime, ModelCapabilityState,
-    ModelContextPacket, ModelFamilyCodec, ModelHealth, ModelHealthState, ModelLifecycleState,
-    ModelLoadReceipt, ModelManifestObservation, ModelModality, ModelProfileId, ModelResourceReport,
-    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment,
-    TokenCountResult,
+    CorrelationId, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
+    ModelCapabilityState, ModelContextPacket, ModelFamilyCodec, ModelHealth, ModelHealthState,
+    ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation, ModelModality, ModelProfileId,
+    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamSink, ModelUnloadReceipt,
+    StreamedModelFragment, TaskId, TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
@@ -284,7 +284,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         &mut self,
         request: &ModelRunRequest,
         packet: &ModelContextPacket,
-        cancellation: Option<&CancellationSignal>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, ModelRuntimeGateError> {
         self.validate_packet(packet)?;
         if request.profile_id != self.admitted.profile.profile_id
@@ -298,11 +298,11 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         {
             return Err(ModelRuntimeGateError::RequestMismatch);
         }
-        if let Some(signal) = cancellation
-            && (signal.correlation_id != request.correlation_id || signal.task_id != packet.task_id)
-        {
-            return Err(ModelRuntimeGateError::RequestMismatch);
-        }
+        let bound_cancellation = cancellation.map(|source| BoundCancellationProbe {
+            source,
+            task_id: &packet.task_id,
+            correlation_id: &request.correlation_id,
+        });
         let context = self
             .codec
             .encode_context(&self.admitted.profile, packet)
@@ -310,7 +310,14 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         let mut capture = StreamCapture::new(request);
         let mut result = self
             .runtime
-            .stream(request, &context, cancellation, &mut capture)
+            .stream(
+                request,
+                &context,
+                bound_cancellation
+                    .as_ref()
+                    .map(|probe| probe as &dyn ModelCancellationProbe),
+                &mut capture,
+            )
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
         capture.finish(&result)?;
         if result.response_sha256 != sha256_hex(&capture.bytes) {
@@ -387,6 +394,26 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::RequestMismatch);
         }
         Ok(())
+    }
+}
+
+struct BoundCancellationProbe<'a> {
+    source: &'a dyn ModelCancellationProbe,
+    task_id: &'a TaskId,
+    correlation_id: &'a CorrelationId,
+}
+
+impl ModelCancellationProbe for BoundCancellationProbe<'_> {
+    fn observe(
+        &self,
+    ) -> Result<Option<agentmage_kernel_contracts::CancellationSignal>, ModelRuntimeFailure> {
+        let signal = self.source.observe()?;
+        if signal.as_ref().is_some_and(|signal| {
+            signal.task_id != *self.task_id || signal.correlation_id != *self.correlation_id
+        }) {
+            return Err(runtime_failure("model.cancellation.identity-mismatch"));
+        }
+        Ok(signal)
     }
 }
 
@@ -711,15 +738,15 @@ mod tests {
         BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
         CancellationSignal, ContextBudget, ContextPacketId, CorrelationId, DecodingProfile,
         EncodedModelContext, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
-        LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability, ModelCapabilityState,
-        ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
-        ModelLoadReceipt, ModelManifestId, ModelManifestObservation, ModelMessage, ModelMessageId,
-        ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport,
-        ModelRole, ModelRunId, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-        ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId,
-        ModelStreamSink, ModelTransformation, ModelUnloadReceipt, PlatformArchitecture,
-        PlatformFamily, RuntimeIsolationObservation, SessionId, StreamedModelFragment, TaskId,
-        TokenCountResult, ToolCatalogId,
+        LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability,
+        ModelCapabilityState, ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState,
+        ModelLifecycleState, ModelLoadReceipt, ModelManifestId, ModelManifestObservation,
+        ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
+        ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId, ModelRunRequest,
+        ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
+        ModelRuntimeKind, ModelStreamId, ModelStreamSink, ModelTransformation, ModelUnloadReceipt,
+        PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation, SessionId,
+        StreamedModelFragment, TaskId, TokenCountResult, ToolCatalogId,
     };
 
     use super::{
@@ -855,13 +882,18 @@ mod tests {
             &mut self,
             request: &ModelRunRequest,
             _context: &EncodedModelContext,
-            cancellation: Option<&CancellationSignal>,
+            cancellation: Option<&dyn ModelCancellationProbe>,
             sink: &mut dyn ModelStreamSink,
         ) -> Result<ModelRunResult, ModelRuntimeFailure> {
             if self.scenario == FakeScenario::Crashed {
                 return Err(runtime_failure("fixture.runtime-crashed"));
             }
-            if self.scenario == FakeScenario::Cancelled && cancellation.is_none() {
+            let cancellation = cancellation
+                .map(ModelCancellationProbe::observe)
+                .transpose()?;
+            if self.scenario == FakeScenario::Cancelled
+                && cancellation.as_ref().is_none_or(Option::is_none)
+            {
                 return Err(runtime_failure("fixture.cancellation-missing"));
             }
             let candidate = agentmage_kernel_contracts::ModelProposalWireCandidate {
