@@ -17,6 +17,7 @@ mod docker_live_collector;
 mod docker_preflight;
 mod docker_runtime;
 mod docker_topology_collector;
+mod native_model_adapter;
 mod native_runtime;
 
 pub use docker_guard::{
@@ -53,6 +54,7 @@ pub use docker_topology_collector::{
     DockerTopologyCollectorError, validate_topology_from_reader,
 };
 
+pub use native_model_adapter::{LinuxNativeModelAdapter, NativeModelDriver};
 pub use native_runtime::{
     NATIVE_RUNTIME_PACKAGE_ID, NATIVE_RUNTIME_PROFILE_SHA256, NATIVE_RUNTIME_PROFILE_SHA256_HEX,
     NATIVE_RUNTIME_SOURCE_ARCHIVE_SHA256, NativeInferenceResourceEnvelope, NativeInferenceTopology,
