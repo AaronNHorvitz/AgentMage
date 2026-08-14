@@ -10,14 +10,14 @@
     "maximum_output_tokens": 1024,
     "maximum_processes": 0,
     "maximum_tree_depth": 64,
-    "schema_version": 1
+    "schema_version": 2
   },
   "core": {
     "configuration_mode": "synthetic-test",
     "inheritance_mode": "restrict-only",
     "product_id": "agentmage",
     "profile_id": "synthetic-test",
-    "schema_version": 1,
+    "schema_version": 2,
     "startup_failure_policy": "fail-closed",
     "strict_local": true
   },
@@ -37,7 +37,7 @@
       "private_paths": "redact",
       "secret_values": "redact"
     },
-    "schema_version": 1,
+    "schema_version": 2,
     "structured": true
   },
   "model": {
@@ -55,7 +55,7 @@
     "model_profile_id": "fake-model-v1",
     "network_access": false,
     "runtime_adapter_id": "fake-inference-runtime-v1",
-    "schema_version": 1,
+    "schema_version": 2,
     "transport": "local-stdio"
   },
   "permission": {
@@ -76,7 +76,7 @@
       "allowed_endpoints": [],
       "mode": "deny-all"
     },
-    "schema_version": 1
+    "schema_version": 2
   },
   "platform": {
     "adapter_id": "linux-platform-v1",
@@ -85,7 +85,7 @@
     "path_identity_strategy": "descriptor-relative",
     "platform_id": "fedora-x86_64",
     "sandbox_profile_id": "synthetic-no-side-effect-v1",
-    "schema_version": 1,
+    "schema_version": 2,
     "secret_provider_id": "secret-service",
     "standard_user_required": true
   },
@@ -94,19 +94,19 @@
     "expired_data_action": "delete-on-next-startup-or-maintenance",
     "logs_days": 14,
     "receipts_days": 90,
-    "schema_version": 1,
+    "schema_version": 2,
     "secure_deletion_claim": "best-effort-no-physical-erasure-claim",
     "sessions_days": 30,
     "temporary_artifacts_minutes": 60
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "shell": {
     "diagnostics_surface": "native-chat-status",
     "direct_command_execution": false,
     "launch_privilege": "standard-user",
     "model_to_tool_channel": "prohibited",
     "network_access": false,
-    "schema_version": 1,
+    "schema_version": 2,
     "shell_id": "vscode-shell-v1",
     "surface_id": "vscode-native-chat",
     "transport": "local-ipc"
@@ -116,21 +116,25 @@
     "catalog_paths": [],
     "enablement": "manual-only",
     "maximum_enabled_skills": 0,
-    "schema_version": 1,
+    "schema_version": 2,
     "self_modification": "deny",
     "unsigned_skill_policy": "disabled"
   },
   "tool": {
     "registry_path": "fixtures/tool-registry.json",
-    "schema_version": 1,
+    "schema_version": 2,
     "tools": [
       {
         "enabled": true,
         "integrity_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "operation": {
+          "authority_class": "observe",
+          "operation": "workspace_read",
+          "taxonomy_version": 1
+        },
         "required_capabilities": [
           "workspace.read"
         ],
-        "side_effect_class": "read",
         "tool_id": "synthetic-read-file",
         "version": "1.0.0"
       }
@@ -149,7 +153,7 @@
         "root_id": "synthetic-workspace"
       }
     ],
-    "schema_version": 1,
+    "schema_version": 2,
     "symlink_policy": "deny"
   }
 }

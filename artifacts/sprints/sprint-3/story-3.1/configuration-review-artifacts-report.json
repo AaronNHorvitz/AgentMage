@@ -8,23 +8,23 @@
   "review_artifacts": [
     {
       "path": "fixtures/configuration/migration/v0.valid.json",
-      "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
+      "sha256": "4d663c3424e80369adf1ff9e8bd1ee73a22c241fb2002dcff2e64e374951a712"
     },
     {
       "path": "fixtures/configuration/migration/v1.expected.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "fixtures/configuration/migration/v1.not-migratable.invalid.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "fixtures/configuration/migration/v0.reserved-version.invalid.json",
-      "sha256": "2f61f504a5ca486cbaad6a958a3b3962e0c75dcdf0d3e6f002c530f05246e704"
+      "sha256": "22e2883150b083c20f33064d16727c51b9c7c7c3034b9b46f73bc30384b0154c"
     },
     {
       "path": "fixtures/configuration/migration/v0.missing-section.invalid.json",
-      "sha256": "6f012e1d4b12f6bb20191b70b050848b5de1487f11ce05f8208f69cb59810689"
+      "sha256": "1e50882a4b6c3ffbe894bb426c01d9fc8a508ed528031df99535e3def53a3779"
     },
     {
       "path": "configuration/profiles/capability-deltas.json",
@@ -43,11 +43,11 @@
   "source_artifacts": [
     {
       "path": "schemas/configuration/common.schema.json",
-      "sha256": "d01ef7808eacd03024ad8cf96734405791a9c0f85865e0f7a0a6934b072a178d"
+      "sha256": "e84e306d12026d94dee5d5d8b1974b10b9665c89248b15c9df559f795be3e83e"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
-      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+      "sha256": "cfd71d4100d4c2f7155df52c9fc19af08be9d76eef855289ca0283d677eadd36"
     },
     {
       "path": "schemas/configuration/configuration-diff.schema.json",
@@ -63,15 +63,15 @@
     },
     {
       "path": "configuration/profiles/synthetic-test.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "41878e7f3c6bceb884d16307e4a5284e500f9b2c1f3ea1e4e63448e59bb30108"
+      "sha256": "7ad92d628f774d66480428d638a6b4f2fcbd8c0b272427e9637a4c4111e91284"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+      "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
     },
     {
       "path": "scripts/configuration_review_artifacts.py",
@@ -79,7 +79,7 @@
     },
     {
       "path": "tests/test_configuration_review_artifacts.py",
-      "sha256": "6f7796998f024468613f61483d55bee1fa32ea3897c67701047e1f1563facc43"
+      "sha256": "c0777c1a6da15d29ceb7be8ee28e3b9bcb3f30b186024ff53929d60fd5ab5d4a"
     }
   ],
   "status": "pass-shared-configuration-review-artifacts",

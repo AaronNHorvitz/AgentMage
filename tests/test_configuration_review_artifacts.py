@@ -31,7 +31,7 @@ class ConfigurationReviewArtifactTests(unittest.TestCase):
         legacy = outputs[MIGRATION_FIXTURES[0]]
         expected = outputs[MIGRATION_FIXTURES[1]]
         self.assertEqual(legacy["schema_version"], 0)
-        self.assertEqual(expected["schema_version"], 1)
+        self.assertEqual(expected["schema_version"], 2)
         self.assertIn("profile", legacy["core"])
         self.assertNotIn("profile_id", legacy["core"])
         for section in (
@@ -51,7 +51,7 @@ class ConfigurationReviewArtifactTests(unittest.TestCase):
 
     def test_invalid_migration_fixtures_cover_version_reserved_and_missing_cases(self) -> None:
         outputs = build_outputs()
-        self.assertEqual(outputs[MIGRATION_FIXTURES[2]]["schema_version"], 1)
+        self.assertEqual(outputs[MIGRATION_FIXTURES[2]]["schema_version"], 2)
         self.assertIn("schema_version", outputs[MIGRATION_FIXTURES[3]]["core"])
         self.assertNotIn("shell", outputs[MIGRATION_FIXTURES[4]])
 
