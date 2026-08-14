@@ -7,6 +7,12 @@ use agentmage_kernel_contracts::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::{
+    KnowledgeError, KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordSummary, KnowledgeStore,
+    KnowledgeWritePreview, PlainFolderEntryKind, PlainFolderKnowledgeStore, PlainFolderLayout,
+    PlainFolderNoteInput,
+};
+
 const MAX_NOTE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_ATTACHMENT_BYTES: usize = 64 * 1024 * 1024;
 const MAX_NOTES: usize = 100_000;
@@ -508,6 +514,68 @@ impl ObsidianVaultSnapshot {
     #[must_use]
     pub fn link_issues(&self) -> &[ObsidianLinkIssue] {
         &self.link_issues
+    }
+}
+
+/// Canonical-record view over exact AgentMage notes inside one parsed Obsidian vault.
+pub struct ObsidianKnowledgeStore {
+    inner: PlainFolderKnowledgeStore,
+}
+
+impl ObsidianKnowledgeStore {
+    /// Selects notes carrying the configured canonical record key and applies the plain-folder
+    /// contract unchanged; ordinary Obsidian notes remain outside this canonical view.
+    pub fn from_vault_snapshot(
+        layout: PlainFolderLayout,
+        snapshot: &ObsidianVaultSnapshot,
+    ) -> Result<Self, KnowledgeError> {
+        let inputs = snapshot
+            .notes()
+            .iter()
+            .filter(|note| {
+                note.frontmatter
+                    .contains_key(&layout.frontmatter_record_key)
+            })
+            .map(|note| PlainFolderNoteInput {
+                path: note.path.clone(),
+                entry_kind: PlainFolderEntryKind::RegularFile,
+                cloud_synchronized: false,
+                hidden: false,
+                content_sha256: note.content_sha256.clone(),
+                content: note.source_bytes().to_vec(),
+            })
+            .collect();
+        Ok(Self {
+            inner: PlainFolderKnowledgeStore::from_snapshots(layout, inputs)?,
+        })
+    }
+}
+
+impl KnowledgeStore for ObsidianKnowledgeStore {
+    fn summaries(&self) -> Result<Vec<KnowledgeRecordSummary>, KnowledgeError> {
+        self.inner.summaries()
+    }
+
+    fn record(
+        &self,
+        record_id: &KnowledgeRecordId,
+    ) -> Result<Option<KnowledgeRecord>, KnowledgeError> {
+        self.inner.record(record_id)
+    }
+
+    fn preview_create(
+        &self,
+        record: &KnowledgeRecord,
+    ) -> Result<KnowledgeWritePreview, KnowledgeError> {
+        self.inner.preview_create(record)
+    }
+
+    fn preview_update(
+        &self,
+        expected_sha256: &str,
+        record: &KnowledgeRecord,
+    ) -> Result<KnowledgeWritePreview, KnowledgeError> {
+        self.inner.preview_update(expected_sha256, record)
     }
 }
 
@@ -1265,13 +1333,21 @@ fn prohibited_link_target(target: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
-        WorkspaceId, WorkspacePath, WorkspaceScopePath,
+        CloudSynchronizationMarker, DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference,
+        StorageFilesystemClass, StrictLocalStorageObservation, WorkspaceId, WorkspacePath,
+        WorkspaceScopePath,
     };
 
     use super::{
-        ObsidianEntryKind, ObsidianError, ObsidianFrontmatterValue, ObsidianLinkIssueKind,
-        ObsidianNoteInput, ObsidianVaultSelection, ObsidianVaultSnapshot, sha256,
+        ObsidianEntryKind, ObsidianError, ObsidianFrontmatterValue, ObsidianKnowledgeStore,
+        ObsidianLinkIssueKind, ObsidianNoteInput, ObsidianVaultSelection, ObsidianVaultSnapshot,
+        sha256,
+    };
+    use crate::{
+        KNOWLEDGE_SCHEMA_VERSION, KnowledgeField, KnowledgePrivacy, KnowledgeRecord,
+        KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention, KnowledgeRetentionKind,
+        KnowledgeStore, PlainFolderEntryKind, PlainFolderKnowledgeStore, PlainFolderLayout,
+        PlainFolderNoteInput, knowledge_schema, render_canonical_markdown,
     };
 
     fn workspace() -> WorkspaceId {
@@ -1540,5 +1616,90 @@ mod tests {
         assert_eq!(snapshot.notes().len(), 1);
         assert_eq!(snapshot.notes()[0].headings.len(), 1);
         assert_eq!(snapshot.resolved_links().len(), 0);
+    }
+
+    #[test]
+    fn plain_folder_and_obsidian_canonical_views_share_the_same_store_contract() {
+        let layout = PlainFolderLayout::default_for(workspace());
+        let record = KnowledgeRecord {
+            schema_version: KNOWLEDGE_SCHEMA_VERSION,
+            record_id: KnowledgeRecordId::parse("knowledge-person-conformance").expect("identity"),
+            kind: KnowledgeRecordKind::Person,
+            title: "Conformance Person".to_owned(),
+            privacy: KnowledgePrivacy::Private,
+            sensitivity: DataSensitivity::Durable,
+            retention: KnowledgeRetention {
+                kind: KnowledgeRetentionKind::UntilSupersededOrDeleted,
+                expires_at: None,
+            },
+            created_at: "2026-08-14T00:00:00Z".to_owned(),
+            updated_at: "2026-08-14T00:00:00Z".to_owned(),
+            last_verified_at: None,
+            fields: knowledge_schema(KnowledgeRecordKind::Person)
+                .required_fields
+                .iter()
+                .map(|name| KnowledgeField {
+                    name: (*name).to_owned(),
+                    value: "fixture".to_owned(),
+                })
+                .collect(),
+            links: Vec::new(),
+            tags: vec!["fixture".to_owned()],
+            evidence: vec![EvidenceReference {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                evidence_id: EvidenceId::from_raw("evidence-obsidian-conformance"),
+                kind: EvidenceKind::Document,
+                source_id: "fixture-source".to_owned(),
+                object_id: "knowledge-person-conformance".to_owned(),
+                fragment: None,
+                content_sha256: "a".repeat(64),
+                observed_revision: Some("fixture-v1".to_owned()),
+            }],
+        };
+        let content = render_canonical_markdown(&layout, &record).expect("markdown");
+        let note_path = path(&["Vault", "Person.md"]);
+        let digest = sha256(&content);
+        let plain = PlainFolderKnowledgeStore::from_snapshots(
+            layout.clone(),
+            vec![PlainFolderNoteInput {
+                path: note_path.clone(),
+                entry_kind: PlainFolderEntryKind::RegularFile,
+                cloud_synchronized: false,
+                hidden: false,
+                content_sha256: digest.clone(),
+                content: content.clone(),
+            }],
+        )
+        .expect("plain store");
+        let vault = ObsidianVaultSnapshot::from_snapshots(
+            &selection(),
+            vec![ObsidianNoteInput {
+                path: note_path,
+                entry_kind: ObsidianEntryKind::RegularFile,
+                hidden: false,
+                cloud_synchronized: false,
+                content_sha256: digest.clone(),
+                content,
+            }],
+        )
+        .expect("vault");
+        let obsidian =
+            ObsidianKnowledgeStore::from_vault_snapshot(layout, &vault).expect("obsidian store");
+        assert_eq!(
+            plain.summaries().expect("summaries"),
+            obsidian.summaries().expect("summaries")
+        );
+        assert_eq!(
+            plain.record(&record.record_id).expect("plain record"),
+            obsidian.record(&record.record_id).expect("obsidian record")
+        );
+        assert_eq!(
+            plain
+                .preview_update(&digest, &record)
+                .expect("plain preview"),
+            obsidian
+                .preview_update(&digest, &record)
+                .expect("obsidian preview")
+        );
     }
 }

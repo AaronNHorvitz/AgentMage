@@ -31,10 +31,10 @@ pub use lifecycle::{
 pub use obsidian::{
     ObsidianAttachment, ObsidianBacklink, ObsidianBlockReference, ObsidianCallout,
     ObsidianCoverageItem, ObsidianEmbed, ObsidianEntryKind, ObsidianError,
-    ObsidianFrontmatterValue, ObsidianHeading, ObsidianLinkIssue, ObsidianLinkIssueKind,
-    ObsidianNoteInput, ObsidianParsedNote, ObsidianProperty, ObsidianResolvedLink,
-    ObsidianSourceRange, ObsidianTag, ObsidianTask, ObsidianTimestamp, ObsidianVaultSelection,
-    ObsidianVaultSnapshot,
+    ObsidianFrontmatterValue, ObsidianHeading, ObsidianKnowledgeStore, ObsidianLinkIssue,
+    ObsidianLinkIssueKind, ObsidianNoteInput, ObsidianParsedNote, ObsidianProperty,
+    ObsidianResolvedLink, ObsidianSourceRange, ObsidianTag, ObsidianTask, ObsidianTimestamp,
+    ObsidianVaultSelection, ObsidianVaultSnapshot,
 };
 pub use obsidian_index::{
     ObsidianAccessKind, ObsidianAccessReceipt, ObsidianFileChangePreview, ObsidianIndexConflict,
