@@ -75,11 +75,12 @@ def validate_profile(profile: Any) -> None:
     }:
         raise MuseRuntimeError("muse-runtime.profile-authority")
     if profile["listener"] != {
-        "kind": "private-loopback-behind-authenticated-agentmage-adapter",
-        "non_loopback_bind": False,
+        "fixed_name": "llama-server.sock",
+        "kind": "private-unix-domain-socket-inside-owner-only-directory",
+        "parent_directory_mode": 0o700,
         "public_reachability": False,
-        "runtime_selectable_host": False,
-        "runtime_selectable_port": False,
+        "runtime_selectable_path": False,
+        "tcp_bind": False,
     }:
         raise MuseRuntimeError("muse-runtime.profile-listener")
     if profile["decision"] != {

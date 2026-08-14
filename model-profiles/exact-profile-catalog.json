@@ -63,7 +63,7 @@
     {
       "profile_family": "muse-glimmer-30b-text-8k",
       "path": "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json",
-      "sha256": "1c3ce0efe5c8bd820139f6cab2af9c27dea9511e2531b1ea953052607bf7dda8",
+      "sha256": "b89a5580b0d5eebc25b95b5bcdebefb3797101e10055729ed269d2c44a607d97",
       "disposition": "BLOCKED",
       "preserved": true
     }
@@ -267,7 +267,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality-manifest-v1",
-      "manifest_sha256": "683ec02bd6ac8ba1537de6aa90305ebe1b11112cc2a0a4d70e32e70318106143",
+      "manifest_sha256": "40b2dd99ff9f6360cff3ab809064afbf1498de32d91edc29db4a4604112d3873",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora first-party-quality",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -393,7 +393,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability-manifest-v1",
-      "manifest_sha256": "da126b8b2f3431fbc8546b5c1d66c92c8d4d649bd57b522d9a711951c0a826a0",
+      "manifest_sha256": "1541b633350a463114b6e2ead4f9eaccb338a2839bd6325580f8479239a5b9c7",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora diagnostic-repeatability",
       "family": "muse_glimmer",
       "publisher_control": "Meta",

@@ -175,13 +175,13 @@ def validate_runtime(record: dict[str, object]) -> list[str]:
             "asset_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
             "asset_size": 32_989_764,
             "package_profile_path": "model-profiles/runtimes/llama-cpp-b10423-muse-linux-x86_64.json",
-            "package_profile_sha256": "dc8909677972c33a0c5ea98516d871c453575a315ae3afb8d4038123e78fb28f",
-            "package_sha256": "f63793c42e6a2ffd9ff450f70ee09827663654aab698206e2d42a89dec7f15cb",
-            "package_size": 25_449_086,
+            "package_profile_sha256": "3255d01ab010cf958da13874402018195beeeaf387c3c2a519dbb5c11fc09e39",
+            "package_sha256": "83d08dd70d46d55c9f576368c0a7ad6861e74b9bc93fe510d1ad965bcf43d31c",
+            "package_size": 25_449_031,
             "package_status": "LOCALLY_BUILT_HASH_VERIFIED_NOT_ADMITTED",
             "unprivileged_extraction_verified": True,
             "version_self_check_verified": True,
-            "adapter_status": "NOT_IMPLEMENTED",
+            "adapter_status": "CONTRACT_IMPLEMENTED_NOT_LIVE_PROVEN",
             "enabled": False,
         }
         for field, value in exact.items():

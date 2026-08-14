@@ -17,11 +17,12 @@
     "workspace": false
   },
   "listener": {
-    "kind": "private-loopback-behind-authenticated-agentmage-adapter",
-    "non_loopback_bind": false,
+    "fixed_name": "llama-server.sock",
+    "kind": "private-unix-domain-socket-inside-owner-only-directory",
+    "parent_directory_mode": 448,
     "public_reachability": false,
-    "runtime_selectable_host": false,
-    "runtime_selectable_port": false
+    "runtime_selectable_path": false,
+    "tcp_bind": false
   },
   "model_store": {
     "directory_enumeration": false,
