@@ -23,6 +23,13 @@ class Sprint5GateTests(unittest.TestCase):
         self.assertEqual(report["acceptance_criteria"][0]["admitted_mutation_count"], 0)
         self.assertEqual(report["acceptance_criteria"][1]["replay_success_count"], 0)
         self.assertEqual(report["acceptance_criteria"][3]["admitted_authority_count"], 0)
+        self.assertEqual(report["acceptance_criteria"][4]["grant_operation_count"], 22)
+        self.assertEqual(
+            report["acceptance_criteria"][4]["strict_explicit_denial_count"], 21
+        )
+        self.assertEqual(
+            report["acceptance_criteria"][4]["strict_denied_by_absence_count"], 0
+        )
 
     def test_story_and_sprint_preserve_the_macos_blocker(self) -> None:
         report = build_report()
@@ -62,11 +69,13 @@ class Sprint5GateTests(unittest.TestCase):
         criterion["acceptance_criteria"][0]["admitted_mutation_count"] = 1
         replay = copy.deepcopy(report)
         replay["acceptance_criteria"][1]["replay_success_count"] = 1
+        policy = copy.deepcopy(report)
+        policy["acceptance_criteria"][4]["grant_operation_count"] = 21
         story = copy.deepcopy(report)
         story["story_gates"][0]["status"] = "pass"
         blocker = copy.deepcopy(report)
         blocker["summary"]["blocking_controls"] = []
-        for changed in (criterion, replay, story, blocker):
+        for changed in (criterion, replay, policy, story, blocker):
             with self.subTest(changed=changed):
                 self.assertTrue(validate_report(changed, verify_current=False))
 

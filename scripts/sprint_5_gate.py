@@ -349,9 +349,9 @@ def validate_report(
         or criteria[3].get("escalation_kind_count") != 4
         or criteria[3].get("attempt_count") != 28
         or criteria[3].get("admitted_authority_count") != 0
-        or criteria[4].get("grant_operation_count") != 15
-        or criteria[4].get("strict_explicit_denial_count") != 12
-        or criteria[4].get("strict_denied_by_absence_count") != 2
+        or criteria[4].get("grant_operation_count") != 22
+        or criteria[4].get("strict_explicit_denial_count") != 21
+        or criteria[4].get("strict_denied_by_absence_count") != 0
         or criteria[4].get("approval_forbidden_authority_field_count") != 0
     ):
         failures.append("Sprint 5 acceptance evidence is invalid")
