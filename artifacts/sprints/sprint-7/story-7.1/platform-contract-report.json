@@ -14,7 +14,7 @@
     "networked_test_count": 0,
     "ubuntu_contract": "verified-no-network-container",
     "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-    "ubuntu_image_id": "sha256:b681ba16f528f59a7fb5129dc24c27be4cd5ca0fd241ba6ad2588ae576de0b57"
+    "ubuntu_image_id": "sha256:8556ead43fd12012e32cf5d397acabda47d6dfd0e800db018599c94e547a7801"
   },
   "limitations": [
     "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
@@ -51,25 +51,25 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "82c190db8b504330c98ccb8e2d315b98e4307a54",
+  "reference_revision": "1fbd2ad8c038f4134df542a5d263e02882548200",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/platform-adapter-contract.md",
-      "sha256": "e496d7f80794aced9f5a5f6c230797656555d6900a08ccc9301ce8a916f1e16c"
+      "sha256": "98455f2e3f7871fbeeac856b19dd4a85b2292878049c149ba1c7f8fc5429ed53"
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "095b3ece8b29f6e47a25714efe9a9a6f0e1bb6884c3d0e8a2f38da6b700b0cb5"
+      "sha256": "57a994d2db0a7ccbc1cef96f67c2ae4d5fb279a9dd73d4880a71e0fa805d27e8"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
-      "sha256": "43e9af9322414acf26b13b56f9f36d3b97562e38603da6ebe688c11bfd17aefa"
+      "sha256": "00d135598a9e7d7b1f28f457e8305a85a020107ffe0f0d29e7ca206d933c8042"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "812706df7a4c58263f8f08841e03dead780f5e7fb08b50ae173aaf12ba8a414b"
+      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
     },
     {
       "path": "kernel/engine/src/platform_startup.rs",
