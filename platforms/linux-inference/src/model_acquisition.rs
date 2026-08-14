@@ -501,7 +501,7 @@ fn source_identity_from_metadata(
 }
 
 pub(super) struct StoreHandle {
-    directory: File,
+    pub(super) directory: File,
     pub(super) held_path: PathBuf,
 }
 
