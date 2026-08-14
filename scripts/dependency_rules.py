@@ -25,6 +25,7 @@ EXPECTED_IMPORTS = {
     "platform-macos": {"kernel-contracts", "kernel-engine"},
     "platform-windows": {"kernel-contracts"},
     "capability-read-only": {"kernel-contracts"},
+    "capability-repository-map": {"kernel-contracts"},
     "shell-host": {
         "capability-read-only",
         "kernel-contracts",
@@ -47,11 +48,13 @@ EXPECTED_ASSEMBLY_INPUTS = {
     "platform-macos": set(),
     "platform-windows": set(),
     "capability-read-only": set(),
+    "capability-repository-map": set(),
     "shell-host": set(),
     "shell-vscode": set(),
     "fixture-corpus": set(),
     "packaging-linux": {
         "capability-read-only",
+        "capability-repository-map",
         "platform-linux",
         "platform-linux-native-inference",
         "shell-host",
@@ -59,6 +62,7 @@ EXPECTED_ASSEMBLY_INPUTS = {
     },
     "packaging-macos": {
         "capability-read-only",
+        "capability-repository-map",
         "platform-macos",
         "shell-host",
         "shell-vscode",
@@ -81,6 +85,7 @@ EXPECTED_LAYERS = {
     "platform-macos": 2,
     "platform-windows": 2,
     "capability-read-only": 1,
+    "capability-repository-map": 1,
     "shell-host": 3,
     "shell-vscode": 3,
     "packaging-linux": 4,
@@ -100,6 +105,7 @@ COMPILE_MODULE_IDS = (
     "platform-macos",
     "platform-windows",
     "capability-read-only",
+    "capability-repository-map",
     "shell-host",
     "shell-vscode",
 )

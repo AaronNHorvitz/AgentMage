@@ -50,6 +50,12 @@ EXPECTED_MODULES = {
         "rust",
         "cargo",
     ),
+    "capability-repository-map": (
+        "capabilities/repository-map",
+        "capability-packs",
+        "rust",
+        "cargo",
+    ),
     "shell-host": ("shells/host", "shells", "rust", "cargo"),
     "shell-vscode": ("shells/vscode", "shells", "typescript", "npm"),
     "fixture-corpus": ("fixtures/corpus", "fixtures", "data", "none"),

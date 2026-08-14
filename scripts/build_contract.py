@@ -23,6 +23,7 @@ EXPECTED_TOOLCHAINS = {
     "swift_tools": "6.0",
 }
 EXPECTED_MEMBERS = {
+    "capabilities/repository-map",
     "capabilities/read-only",
     "kernel/contracts",
     "kernel/engine",
@@ -33,6 +34,22 @@ EXPECTED_MEMBERS = {
     "shells/host",
 }
 EXPECTED_CARGO_PACKAGES = {
+    "capabilities/repository-map": (
+        "agentmage-capability-repository-map",
+        {
+            "agentmage-kernel-contracts",
+            "rusqlite",
+            "serde",
+            "serde_json",
+            "sha2",
+            "tree-sitter",
+            "tree-sitter-javascript",
+            "tree-sitter-python",
+            "tree-sitter-rust",
+            "tree-sitter-swift",
+            "tree-sitter-typescript",
+        },
+    ),
     "capabilities/read-only": (
         "agentmage-capability-read-only",
         {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},

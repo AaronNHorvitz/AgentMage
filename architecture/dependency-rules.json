@@ -86,6 +86,17 @@
       "assembly_inputs": []
     },
     {
+      "id": "capability-repository-map",
+      "layer": 1,
+      "allowed_imports": [
+        "kernel-contracts"
+      ],
+      "declared_imports": [
+        "kernel-contracts"
+      ],
+      "assembly_inputs": []
+    },
+    {
       "id": "shell-host",
       "layer": 3,
       "allowed_imports": [
@@ -129,6 +140,7 @@
       "declared_imports": [],
       "assembly_inputs": [
         "capability-read-only",
+        "capability-repository-map",
         "platform-linux",
         "platform-linux-native-inference",
         "shell-host",
@@ -142,6 +154,7 @@
       "declared_imports": [],
       "assembly_inputs": [
         "capability-read-only",
+        "capability-repository-map",
         "platform-macos",
         "shell-host",
         "shell-vscode"
