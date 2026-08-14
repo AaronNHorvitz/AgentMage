@@ -154,7 +154,7 @@
     "scheduled_full_target": 3600
   },
   "policy_id": "agentmage-fuzz-toolchain-policy-v1",
-  "policy_sha256": "d58939136bde8c1a2cbb91144e29fdbcfdc451848c61ecbce3854a3a6d11963e",
+  "policy_sha256": "008d44fa82f1c323f5d4fd74995f003f1353e9f520b93afb1a9259b6aada33c0",
   "policy_version": "1.0.0",
   "product_fuzz_execution_claim": "none",
   "regression_retention": {
@@ -198,7 +198,7 @@
   "target_registry": {
     "path": "fuzzing/target-registry.json",
     "registry_version": "1.0.0",
-    "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+    "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
   },
   "tool_acquisition_separate_from_execution": true
 }

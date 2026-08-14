@@ -7,8 +7,8 @@
   "owner_gate_count": 13,
   "policy": {
     "path": "fuzzing/story-gate-policy.json",
-    "self_sha256": "e7ef7cef3333032bad45ff8d7aa94e545a16d51fdb956676f4062681fc2bef0a",
-    "sha256": "7e03aa0aba1eec30f7b0e15407ec084c7eb4640736305ba63b24a87767e7d737",
+    "self_sha256": "c8a650cdcbd8bec4ee3a2b8637c105ed92aea3e76bad4fd910847646746d9b96",
+    "sha256": "7e84ddad228fcb5749e0888c41ae77231f82d2282e36d75a4355bc451c4d318d",
     "version": "1.0.0"
   },
   "product_boundary_execution_claim": "none",

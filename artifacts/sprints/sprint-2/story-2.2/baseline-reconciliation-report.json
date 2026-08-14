@@ -23,15 +23,15 @@
   "runs": [
     {
       "allowlisted_input_count": 13,
-      "campaign_report_sha256": "ad387f3247ea970eb95aea5070e55c6c801f6ee4f3a2c3553f5711361ba59b67",
+      "campaign_report_sha256": "01be5122a376b925c3ae57bff99b610ef0371b019b5c81788a0040a4cd3f61db",
       "clean_root_started_empty": true,
       "fake_boundary_engine": "agentmage-bounded-fake-fuzzer",
-      "input_set_sha256": "06019ad1ea3651820ad748d2fa66b3436e309c8b16ffe333cef1e88c902a794e",
+      "input_set_sha256": "cdb4809d0ebb9999ed971c73e941f5fe6c1f671c8e5868e2f1e8e6aba9cf42e2",
       "inputs_unchanged": true,
       "non_pass_result_count": 6,
-      "normalized_result_set_sha256": "5414aefbece8920cf017291237184c7e498e471d4b00078a37ad8192c24f7293",
+      "normalized_result_set_sha256": "cf5c91311aa479ae77d2e6541b79e2df7d87005f04abf28938379c6cc9d05009",
       "product_boundary_count": 0,
-      "reconciliation_sha256": "5fc0eb48bc520dc47e3ce26194df48a3ef9576efbf7173443bd0c84db60e2d08",
+      "reconciliation_sha256": "2870a36ef1078a131f234665db05dfe5499c28ceff2d09f895dc15a37e233383",
       "regression_set_sha256": "5ae667e30c4ea472873cf3a6d245349393219e602e7b5e6fd9a7d1415220c575",
       "regressions": [
         {
@@ -70,7 +70,7 @@
         {
           "coverage_sha256": "13cc1fe72e88863fb580b91b59fe7d0e88bd19bea4100b464d35409bb26f2bd1",
           "crash_signature": "0560ddffb08ccc806a40b54040f2c6909da55e27ce2c030fb02d0ddf57fdf8c5",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "crash",
           "minimized_sha256": "6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5",
           "ownership": {
@@ -81,7 +81,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-0560ddffb08ccc806a40",
-          "record_sha256": "81ab7fb36b589b842e29445c3a18700f208b137d6e4bc082be3a1f0e885c03a0",
+          "record_sha256": "6053af1085f52c9845c5e049520eb1a2161d28e42ac4e3894267517a8220b71e",
           "regression_path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
           "result_status": "crash",
           "sanitizer_state_sha256": "9e42ade25ca412d5a74cb87b700d7602ca9719b882eabfee8524569ccd4deb40",
@@ -97,7 +97,7 @@
         {
           "coverage_sha256": "d9b58ad1b667e4426bdf9c50cc90d5396caea277e3160f82225baf6bf7779421",
           "crash_signature": "dde5442e5f569789b68f6032828f2c05b3d3a282abf1f7adb6a4ee6208606e69",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "hang",
           "minimized_sha256": "b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9",
           "ownership": {
@@ -108,7 +108,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-dde5442e5f569789b68f",
-          "record_sha256": "ee7edd79b9f1413ed5109ce751b078dbb09ad52a844ac53ef38a468ae36eeed9",
+          "record_sha256": "d39206e197905aaa4a7786609e9f13359969411ecff4d28f123c88b903d811d6",
           "regression_path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
           "result_status": "hang",
           "sanitizer_state_sha256": "7dd7c550498687b476366bbd1b4bcc4b89561f7f536b384e3e99f5f10b12ad78",
@@ -124,7 +124,7 @@
         {
           "coverage_sha256": "5dce7bf7b25090afa10b717925801974aae0c7d6a133c0a28d7df789134b9d35",
           "crash_signature": "18063008c7e6c349448569d069cfd823c516ad9ca218a2e3a459824334607e33",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "resource-exhaustion",
           "minimized_sha256": "1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc",
           "ownership": {
@@ -135,7 +135,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-18063008c7e6c3494485",
-          "record_sha256": "699ba16bd8eeed8a6ce31bc22092b44ca1d3d688c89991dd0151395a4a8d6c9b",
+          "record_sha256": "7835212b8c05ab26035ba466b90ec8f14386b4d9406b68ea9804b741f9e18419",
           "regression_path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
           "result_status": "resource-exhaustion",
           "sanitizer_state_sha256": "a1b820ed1c806625870e33f6fcdabbe3935d9145ba728fcc125c6f447fd1943a",
@@ -151,7 +151,7 @@
         {
           "coverage_sha256": "6e061c91eaf7b47c04e94918e3fbe60fc6afb1552ca5e463b3d910cce25e9b05",
           "crash_signature": "1be200cf10c9cd7a13520580d1bde838ce5d21f6e2797f67726d37425ea2ae1c",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "path-escape",
           "minimized_sha256": "fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7",
           "ownership": {
@@ -162,7 +162,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-1be200cf10c9cd7a1352",
-          "record_sha256": "279042bbf5a895ad79f0d75d581d05192d73dce3246d9a7cdf791990a4ae7802",
+          "record_sha256": "5baeaa6fe42d99da9e059b7eb9e8dfb6b1922405e00fe893bb62d3f698e70359",
           "regression_path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
           "result_status": "path-escape",
           "sanitizer_state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
@@ -178,7 +178,7 @@
         {
           "coverage_sha256": "36b849f322c2e842eed552e141bb1e00104b87a2534cfc9d9cb65840f1a3ab83",
           "crash_signature": "759944aa9d77d6e403db793c4d0d02182e7f07d8b61167a09802da9a9743e1ac",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "secret-leak",
           "minimized_sha256": "e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43",
           "ownership": {
@@ -189,7 +189,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-759944aa9d77d6e403db",
-          "record_sha256": "f9839c2e5d82a3bc6554d7df25311ad197014b20bb653bf229015f5d0234822f",
+          "record_sha256": "bda567828dd2d755c3600e2ce3c6ed2766c42ac7b2e252ef11bef6718edb36e7",
           "regression_path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
           "result_status": "secret-leak",
           "sanitizer_state_sha256": "763a7ac6cf2784dc3976e737df215e7cd6a85a5746bd3516ae342a2a78bd22f6",
@@ -205,7 +205,7 @@
         {
           "coverage_sha256": "295f0b07208baa9c54812300a976d01c6d33ae75cf0ad2655a5fd354940aa79d",
           "crash_signature": "75cf1143c1264a7181fadfb71405426817ede516f3a47568d70d6942ddef65e6",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "authorization-bypass",
           "minimized_sha256": "7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a",
           "ownership": {
@@ -216,7 +216,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-75cf1143c1264a7181fa",
-          "record_sha256": "163e05e4f84d17a8f36eb03f0a0075c92b3c12593c36ce31e2d4b130342ceaaf",
+          "record_sha256": "b6586194ad18b021de25b216d8d2a2b179afff13e13f3c836845209752602f90",
           "regression_path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
           "result_status": "authorization-bypass",
           "sanitizer_state_sha256": "b0959c04750d40ce8284f9a2d416ceff696bacd0e29ce50d51239cfd010a6e29",
@@ -235,15 +235,15 @@
     },
     {
       "allowlisted_input_count": 13,
-      "campaign_report_sha256": "ad387f3247ea970eb95aea5070e55c6c801f6ee4f3a2c3553f5711361ba59b67",
+      "campaign_report_sha256": "01be5122a376b925c3ae57bff99b610ef0371b019b5c81788a0040a4cd3f61db",
       "clean_root_started_empty": true,
       "fake_boundary_engine": "agentmage-bounded-fake-fuzzer",
-      "input_set_sha256": "06019ad1ea3651820ad748d2fa66b3436e309c8b16ffe333cef1e88c902a794e",
+      "input_set_sha256": "cdb4809d0ebb9999ed971c73e941f5fe6c1f671c8e5868e2f1e8e6aba9cf42e2",
       "inputs_unchanged": true,
       "non_pass_result_count": 6,
-      "normalized_result_set_sha256": "5414aefbece8920cf017291237184c7e498e471d4b00078a37ad8192c24f7293",
+      "normalized_result_set_sha256": "cf5c91311aa479ae77d2e6541b79e2df7d87005f04abf28938379c6cc9d05009",
       "product_boundary_count": 0,
-      "reconciliation_sha256": "5fc0eb48bc520dc47e3ce26194df48a3ef9576efbf7173443bd0c84db60e2d08",
+      "reconciliation_sha256": "2870a36ef1078a131f234665db05dfe5499c28ceff2d09f895dc15a37e233383",
       "regression_set_sha256": "5ae667e30c4ea472873cf3a6d245349393219e602e7b5e6fd9a7d1415220c575",
       "regressions": [
         {
@@ -282,7 +282,7 @@
         {
           "coverage_sha256": "13cc1fe72e88863fb580b91b59fe7d0e88bd19bea4100b464d35409bb26f2bd1",
           "crash_signature": "0560ddffb08ccc806a40b54040f2c6909da55e27ce2c030fb02d0ddf57fdf8c5",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "crash",
           "minimized_sha256": "6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5",
           "ownership": {
@@ -293,7 +293,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-0560ddffb08ccc806a40",
-          "record_sha256": "81ab7fb36b589b842e29445c3a18700f208b137d6e4bc082be3a1f0e885c03a0",
+          "record_sha256": "6053af1085f52c9845c5e049520eb1a2161d28e42ac4e3894267517a8220b71e",
           "regression_path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
           "result_status": "crash",
           "sanitizer_state_sha256": "9e42ade25ca412d5a74cb87b700d7602ca9719b882eabfee8524569ccd4deb40",
@@ -309,7 +309,7 @@
         {
           "coverage_sha256": "d9b58ad1b667e4426bdf9c50cc90d5396caea277e3160f82225baf6bf7779421",
           "crash_signature": "dde5442e5f569789b68f6032828f2c05b3d3a282abf1f7adb6a4ee6208606e69",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "hang",
           "minimized_sha256": "b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9",
           "ownership": {
@@ -320,7 +320,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-dde5442e5f569789b68f",
-          "record_sha256": "ee7edd79b9f1413ed5109ce751b078dbb09ad52a844ac53ef38a468ae36eeed9",
+          "record_sha256": "d39206e197905aaa4a7786609e9f13359969411ecff4d28f123c88b903d811d6",
           "regression_path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
           "result_status": "hang",
           "sanitizer_state_sha256": "7dd7c550498687b476366bbd1b4bcc4b89561f7f536b384e3e99f5f10b12ad78",
@@ -336,7 +336,7 @@
         {
           "coverage_sha256": "5dce7bf7b25090afa10b717925801974aae0c7d6a133c0a28d7df789134b9d35",
           "crash_signature": "18063008c7e6c349448569d069cfd823c516ad9ca218a2e3a459824334607e33",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "resource-exhaustion",
           "minimized_sha256": "1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc",
           "ownership": {
@@ -347,7 +347,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-18063008c7e6c3494485",
-          "record_sha256": "699ba16bd8eeed8a6ce31bc22092b44ca1d3d688c89991dd0151395a4a8d6c9b",
+          "record_sha256": "7835212b8c05ab26035ba466b90ec8f14386b4d9406b68ea9804b741f9e18419",
           "regression_path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
           "result_status": "resource-exhaustion",
           "sanitizer_state_sha256": "a1b820ed1c806625870e33f6fcdabbe3935d9145ba728fcc125c6f447fd1943a",
@@ -363,7 +363,7 @@
         {
           "coverage_sha256": "6e061c91eaf7b47c04e94918e3fbe60fc6afb1552ca5e463b3d910cce25e9b05",
           "crash_signature": "1be200cf10c9cd7a13520580d1bde838ce5d21f6e2797f67726d37425ea2ae1c",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "path-escape",
           "minimized_sha256": "fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7",
           "ownership": {
@@ -374,7 +374,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-1be200cf10c9cd7a1352",
-          "record_sha256": "279042bbf5a895ad79f0d75d581d05192d73dce3246d9a7cdf791990a4ae7802",
+          "record_sha256": "5baeaa6fe42d99da9e059b7eb9e8dfb6b1922405e00fe893bb62d3f698e70359",
           "regression_path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
           "result_status": "path-escape",
           "sanitizer_state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
@@ -390,7 +390,7 @@
         {
           "coverage_sha256": "36b849f322c2e842eed552e141bb1e00104b87a2534cfc9d9cb65840f1a3ab83",
           "crash_signature": "759944aa9d77d6e403db793c4d0d02182e7f07d8b61167a09802da9a9743e1ac",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "secret-leak",
           "minimized_sha256": "e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43",
           "ownership": {
@@ -401,7 +401,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-759944aa9d77d6e403db",
-          "record_sha256": "f9839c2e5d82a3bc6554d7df25311ad197014b20bb653bf229015f5d0234822f",
+          "record_sha256": "bda567828dd2d755c3600e2ce3c6ed2766c42ac7b2e252ef11bef6718edb36e7",
           "regression_path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
           "result_status": "secret-leak",
           "sanitizer_state_sha256": "763a7ac6cf2784dc3976e737df215e7cd6a85a5746bd3516ae342a2a78bd22f6",
@@ -417,7 +417,7 @@
         {
           "coverage_sha256": "295f0b07208baa9c54812300a976d01c6d33ae75cf0ad2655a5fd354940aa79d",
           "crash_signature": "75cf1143c1264a7181fadfb71405426817ede516f3a47568d70d6942ddef65e6",
-          "evidence_sha256": "c9d229ec79ee0f5afc2767f01b5b3ab1c1d792420f5ca450801d5ae4f7d17f7e",
+          "evidence_sha256": "60b0a06aa22dc92a1e1ff6d3032725bf74ddc3290d903d472e88491684d93edc",
           "failure_class": "authorization-bypass",
           "minimized_sha256": "7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a",
           "ownership": {
@@ -428,7 +428,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-75cf1143c1264a7181fa",
-          "record_sha256": "163e05e4f84d17a8f36eb03f0a0075c92b3c12593c36ce31e2d4b130342ceaaf",
+          "record_sha256": "b6586194ad18b021de25b216d8d2a2b179afff13e13f3c836845209752602f90",
           "regression_path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
           "result_status": "authorization-bypass",
           "sanitizer_state_sha256": "b0959c04750d40ce8284f9a2d416ceff696bacd0e29ce50d51239cfd010a6e29",

@@ -1,19 +1,19 @@
 {
   "artifacts": [
     {
-      "bytes": 23407,
+      "bytes": 23523,
       "path": "fuzzing/target-registry.json",
-      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+      "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
     },
     {
       "bytes": 6312,
       "path": "fuzzing/toolchain-policy.json",
-      "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+      "sha256": "c69dd0923029dc65d213f8b8368e4b2e9c7e462721df0f1d5fb34980e689d305"
     },
     {
       "bytes": 6778,
       "path": "fuzzing/story-gate-policy.json",
-      "sha256": "7e03aa0aba1eec30f7b0e15407ec084c7eb4640736305ba63b24a87767e7d737"
+      "sha256": "7e84ddad228fcb5749e0888c41ae77231f82d2282e36d75a4355bc451c4d318d"
     },
     {
       "bytes": 4453,
@@ -26,34 +26,34 @@
       "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
     },
     {
-      "bytes": 1678,
+      "bytes": 1794,
       "path": "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
-      "sha256": "fc7256ce3227a9a2981bb784e44e58eb00c29aa3ab9f0e14aa757dcfb3d23b81"
+      "sha256": "bf5ae6d9e56ac5a5bf85609c4930f90c2e89b660015c41b8a7f949cfa26b3f92"
     },
     {
       "bytes": 730,
       "path": "artifacts/sprints/sprint-2/story-2.2/toolchain-policy-report.json",
-      "sha256": "1ef7ec18305292fc469e3df7c5a0eab20fe4755bcbdcbc1b72f25dad0a89aeb7"
+      "sha256": "fedaf4e99bc0d37b875f6756fb0c1afac6d88c2f8b7eee6e22ecb84caa3014ee"
     },
     {
       "bytes": 1057,
       "path": "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
-      "sha256": "86c989516e1c74975aa7318854e7e9a712eb4c17c93f6506261977514911cfee"
+      "sha256": "5d6c7374a198cbddbea239d2e0fc06e2dd890ca04dd3d6d787b3b54201144ca8"
     },
     {
       "bytes": 770,
       "path": "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
-      "sha256": "62cca78adc0f28e512c61f9c7e2b375c2e7f0d470ffd120f678df5d9bca2e918"
+      "sha256": "89f974a4841706b7084b8e80ccb51cca839b2cd8b0a589bb369d6fcb9ef3f742"
     },
     {
       "bytes": 29790,
       "path": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
-      "sha256": "27bdb5f1c89bb9d5d9591758c762930e843667d0fd134e3acf6230e06244d0a4"
+      "sha256": "01be5122a376b925c3ae57bff99b610ef0371b019b5c81788a0040a4cd3f61db"
     },
     {
       "bytes": 22500,
       "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-      "sha256": "e98bb44c7ace973866197629b6dbfa2d06f0f5565ff3e382a21a516117699c24"
+      "sha256": "da6e5b015f590d3105a8fa4cfb35dcca24cefb4385daa42c970c62d8032e1792"
     },
     {
       "bytes": 6,
@@ -88,7 +88,7 @@
     {
       "bytes": 5319,
       "path": "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
-      "sha256": "1b9c3c4356463e5510e1ac61f10583b247cedcbc6bea325673b5282b5997d72d"
+      "sha256": "0c9547e25e65f3bf137fbd718a803c90cd3c8cb25d9fe02e2e20b6673fd8dc8f"
     },
     {
       "bytes": 628,
@@ -105,14 +105,14 @@
   "release_claim": "none",
   "requirements": [
     {
-      "demonstrated": "The registry inventories the FFI boundary class, currently discovers zero active FFI boundaries, and requires sanitizers plus focused fuzz ownership when one appears.",
+      "demonstrated": "The registry inventories the FFI boundary class, records the Windows native-identity FFI edge, and requires focused ownership plus the deferred final sanitizer and fuzz campaign.",
       "evidence": [
         "fuzzing/target-registry.json",
         "fuzzing/toolchain-policy.json",
         "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json"
       ],
       "product_requirement_status": "not-complete",
-      "remaining": "Every future unsafe block, FFI edge, native library, privilege, and entitlement still requires concrete inventory, justification, review, and product-boundary fuzz evidence.",
+      "remaining": "The recorded Windows edge and every future unsafe block, FFI edge, native library, privilege, and entitlement still require concrete justification, review, and product-boundary fuzz evidence before release.",
       "requirement_id": "SR-SUP-009",
       "story_contribution": "partial-story-evidence"
     },

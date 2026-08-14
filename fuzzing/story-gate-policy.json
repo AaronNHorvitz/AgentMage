@@ -156,11 +156,11 @@
     },
     "target_registry": {
       "path": "fuzzing/target-registry.json",
-      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+      "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
     },
     "toolchain_policy": {
       "path": "fuzzing/toolchain-policy.json",
-      "sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b"
+      "sha256": "c69dd0923029dc65d213f8b8368e4b2e9c7e462721df0f1d5fb34980e689d305"
     }
   },
   "macos_execution_status": "blocked-macos",
@@ -274,7 +274,7 @@
     }
   ],
   "policy_id": "agentmage-fuzz-story-gate-policy-v1",
-  "policy_sha256": "e7ef7cef3333032bad45ff8d7aa94e545a16d51fdb956676f4062681fc2bef0a",
+  "policy_sha256": "c8a650cdcbd8bec4ee3a2b8637c105ed92aea3e76bad4fd910847646746d9b96",
   "policy_version": "1.0.0",
   "product_boundary_execution_claim": "none",
   "required_evidence_fields": [
