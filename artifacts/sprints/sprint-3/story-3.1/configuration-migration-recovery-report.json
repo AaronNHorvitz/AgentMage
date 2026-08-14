@@ -6,8 +6,8 @@
         "test",
         "--offline",
         "-p",
-        "agentmage-kernel-engine",
-        "configuration::tests::migration_interruptions_select_valid_state_and_rollback_is_repeatable",
+        "agentmage-platform-linux",
+        "configuration_store::tests::migration_interruptions_select_valid_state_and_rollback_is_repeatable",
         "--locked",
         "--",
         "--exact"
@@ -20,7 +20,7 @@
         "clippy",
         "--offline",
         "-p",
-        "agentmage-kernel-engine",
+        "agentmage-platform-linux",
         "--all-targets",
         "--locked",
         "--",
@@ -59,23 +59,31 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "fac731b4c971dace8cff2391f5643ff3456943118942df83691c6be80239cc06"
+      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+      "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac"
+    },
+    {
+      "path": "platforms/linux/src/configuration_store.rs",
+      "sha256": "36a98b1c58dcff3bb9fce58214d88509cd28b32bb821e8c9d7ddc851599a87f1"
     },
     {
       "path": "fixtures/configuration/migration/v0.valid.json",
@@ -83,15 +91,15 @@
     },
     {
       "path": "fixtures/configuration/migration/v1.expected.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
     },
     {
       "path": "scripts/configuration_migration_recovery_evidence.py",
-      "sha256": "4fa8646f63275a864b7a45fe0d2c3cd5ee012b9c3720349058c40cc2dea570d7"
+      "sha256": "47ad4fbb49b92579690e88e125a9640f59fc68d28e4a320ac37236aba8334796"
     },
     {
       "path": "tests/test_configuration_migration_recovery_evidence.py",
-      "sha256": "c779362ff9b12a3965b3ab6c037eb6f0ec43138ec6fdfd9afc6b40220e9a457c"
+      "sha256": "ae38736de2b2ab222fc32a6b8555c7529db9f94c723bba537946ce1e588bf955"
     }
   ],
   "state_selection": {

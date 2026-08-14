@@ -44,10 +44,37 @@
     {
       "argv": [
         "cargo",
+        "test",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "configuration_store::tests",
+        "--locked"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
         "clippy",
         "--offline",
         "-p",
         "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
         "--all-targets",
         "--locked",
         "--",
@@ -69,35 +96,43 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "fac731b4c971dace8cff2391f5643ff3456943118942df83691c6be80239cc06"
+      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+      "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac"
+    },
+    {
+      "path": "platforms/linux/src/configuration_store.rs",
+      "sha256": "36a98b1c58dcff3bb9fce58214d88509cd28b32bb821e8c9d7ddc851599a87f1"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
-      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+      "sha256": "cfd71d4100d4c2f7155df52c9fc19af08be9d76eef855289ca0283d677eadd36"
     },
     {
       "path": "configuration/profiles/strict-local-read-only.json",
-      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+      "sha256": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3"
     },
     {
       "path": "configuration/profiles/synthetic-test.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "fixtures/configuration/migration/v0.valid.json",
@@ -105,11 +140,11 @@
     },
     {
       "path": "fixtures/configuration/migration/v1.expected.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
     },
     {
       "path": "fixtures/configuration/migration/v1.not-migratable.invalid.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
     },
     {
       "path": "fixtures/configuration/migration/v0.reserved-version.invalid.json",
@@ -121,18 +156,18 @@
     },
     {
       "path": "scripts/configuration_loader_evidence.py",
-      "sha256": "ae5bcade37c4af34a6f26bddbb75e14dddca0e874dd44a0ffface7cff4a72daa"
+      "sha256": "48f5a8151bbdc0b6aca16080b69d236eaa547f7f8000cf574746be4f0644a664"
     },
     {
       "path": "tests/test_configuration_loader_evidence.py",
-      "sha256": "49d27e53a969d327eee661d14f0330338d0ce1e7c29c815ee820a043c69f455e"
+      "sha256": "e9c80e7fbc57cf5f140ef9ab5df440e5126c0940828d845094cb11a7ea3d644a"
     }
   ],
   "status": "pass-shared-linux-configuration-loader",
   "summary": {
     "atomic_backup": "pass-content-addressed-private-file",
     "failed_test_count": 0,
-    "focused_test_count": 12,
+    "focused_test_count": 17,
     "migration": "pass-version-0-to-1-only",
     "redacted_diff": "pass-hash-only-values",
     "rollback": "pass-preimage-checked",
@@ -142,17 +177,22 @@
   },
   "task_id": "3.1.1.3",
   "tests": [
-    "atomic_apply_retains_backup_and_rollback_restores_exact_identity",
+    "apply_retains_immutable_backup_and_rollback_restores_it",
+    "changed_preimage_is_preserved_and_never_overwritten",
     "diff_is_stable_redacted_and_classifies_authority_and_resource_changes",
     "every_configuration_schema_failure_class_is_stable_and_side_effect_free",
-    "invalid_candidate_and_stale_rollback_preimage_preserve_current_file",
+    "interrupted_exchange_is_verified_and_completed_without_republication",
     "loads_canonical_profile_deterministically",
     "migrates_only_version_zero_with_fixed_non_broadening_operations",
+    "migration_and_repeatable_rollback_preserve_the_exact_legacy_preimage",
+    "migration_interruptions_select_valid_state_and_rollback_is_repeatable",
     "migration_rejects_wrong_source_ambiguous_version_and_missing_section",
     "mirrors_published_identifier_version_collection_and_numeric_bounds",
     "published_migration_fixtures_match_the_runtime_contract",
     "rejects_permission_network_logging_and_budget_broadening",
     "rejects_unknown_duplicate_missing_unsupported_and_oversized_input",
-    "safe_defaults_are_explicit_read_only_and_minimum_authority"
+    "safe_defaults_are_explicit_read_only_and_minimum_authority",
+    "strict_local_state_root_configuration_load_rejects_sync_before_read",
+    "symlink_hard_link_and_public_mode_targets_fail_closed"
   ]
 }

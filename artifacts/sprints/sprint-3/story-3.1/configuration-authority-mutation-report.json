@@ -66,7 +66,7 @@
     },
     "path": "configuration/permission-bearing-values.json",
     "permission_bearing_value_count": 97,
-    "sha256": "477c3fd1888c8ec153bdeb2d5136a9850faa1bebceee7286c207029b8717db78"
+    "sha256": "5bb55c87576297cc2d5768b5bbbf9696dde085b96ed5b1160d8416a2cb3a6de6"
   },
   "platform_execution": "fedora-linux",
   "private_paths_persisted": false,
@@ -77,35 +77,35 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "4ba41991c42cad220458f723f1267565edb8c26f444c2b2df81b64c600aa1cc0"
+      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "7e8db8b0c95f8c1e8faf4379447b6ade0614922262873f4be34bb5f233e4d711"
+      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "fac731b4c971dace8cff2391f5643ff3456943118942df83691c6be80239cc06"
+      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
-      "sha256": "1650c2efe2861902fe443bb709fe36d59e920088b53b6eff2ca543572798b9db"
+      "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
     },
     {
       "path": "configuration/permission-bearing-values.json",
-      "sha256": "477c3fd1888c8ec153bdeb2d5136a9850faa1bebceee7286c207029b8717db78"
+      "sha256": "5bb55c87576297cc2d5768b5bbbf9696dde085b96ed5b1160d8416a2cb3a6de6"
     },
     {
       "path": "configuration/profiles/strict-local-read-only.json",
-      "sha256": "e0d697b4820601099cd0bcbd56713fd35ce063966840d8b6863fb6e72fd05e8e"
+      "sha256": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3"
     },
     {
       "path": "configuration/profiles/synthetic-test.json",
-      "sha256": "04e07e739cf6ab0c628a4fa4f441fb0eeac1abbb5a13994f03612c0659d15e01"
+      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
     },
     {
       "path": "scripts/configuration_authority_mutation_evidence.py",

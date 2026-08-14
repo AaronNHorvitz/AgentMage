@@ -8,23 +8,23 @@
   "review_artifacts": [
     {
       "path": "fixtures/configuration/migration/v0.valid.json",
-      "sha256": "4d663c3424e80369adf1ff9e8bd1ee73a22c241fb2002dcff2e64e374951a712"
+      "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
     },
     {
       "path": "fixtures/configuration/migration/v1.expected.json",
-      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
+      "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
     },
     {
       "path": "fixtures/configuration/migration/v1.not-migratable.invalid.json",
-      "sha256": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb"
+      "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
     },
     {
       "path": "fixtures/configuration/migration/v0.reserved-version.invalid.json",
-      "sha256": "22e2883150b083c20f33064d16727c51b9c7c7c3034b9b46f73bc30384b0154c"
+      "sha256": "2f61f504a5ca486cbaad6a958a3b3962e0c75dcdf0d3e6f002c530f05246e704"
     },
     {
       "path": "fixtures/configuration/migration/v0.missing-section.invalid.json",
-      "sha256": "1e50882a4b6c3ffbe894bb426c01d9fc8a508ed528031df99535e3def53a3779"
+      "sha256": "6f012e1d4b12f6bb20191b70b050848b5de1487f11ce05f8208f69cb59810689"
     },
     {
       "path": "configuration/profiles/capability-deltas.json",
@@ -67,7 +67,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "7ad92d628f774d66480428d638a6b4f2fcbd8c0b272427e9637a4c4111e91284"
+      "sha256": "6d88bd25c39c0744b5e18a52fd37ad23c231b20f95196843052bdad1849a14c2"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
@@ -75,11 +75,11 @@
     },
     {
       "path": "scripts/configuration_review_artifacts.py",
-      "sha256": "82020a78150d9449459e013d443eb85f735bcd3628b86019781a549d5ba8c19f"
+      "sha256": "f79333c92865b68a941bec5ef89b1a0408cd69cdc76f1322608ea8b6d4bddee5"
     },
     {
       "path": "tests/test_configuration_review_artifacts.py",
-      "sha256": "c0777c1a6da15d29ceb7be8ee28e3b9bcb3f30b186024ff53929d60fd5ab5d4a"
+      "sha256": "46fb52e641cbf6b7b9be1fb53efbe0dc029d616d893b6e14e8dea75b9581ba34"
     }
   ],
   "status": "pass-shared-configuration-review-artifacts",
