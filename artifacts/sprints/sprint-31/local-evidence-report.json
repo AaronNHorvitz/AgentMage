@@ -28,7 +28,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "ceaab6b75c0d9d5ee6f250c343fc0454586d5b08c0a48d982a4ef4f07132f901"
+      "output_sha256": "f5b1d67085b996ee276b911b252293f046a1f24283b7213e7080c78dac09d7a7"
     },
     {
       "argv": [
@@ -44,7 +44,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157"
     },
     {
       "argv": [
@@ -54,7 +54,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "96a067b4c6e9195326f033d19a3ca6f30b034692ebde3a2da05a28eba3868a8a"
+      "output_sha256": "c5e2ee180606e38aeaf6f089e34ff21dc0cf16d000430d5ff4a06e1597619317"
     },
     {
       "argv": [
@@ -64,7 +64,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "93523ffe8ca7f26da970b98152d0443496f6e712d4897bbf7b677e461b3c399d"
+      "output_sha256": "0714c5989027f65eb30eaee0a02a9c40179249e28ae7636ed96ff3a5c71e5133"
     },
     {
       "argv": [
@@ -120,7 +120,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
     }
   ],
   "environment": {
@@ -165,7 +165,7 @@
     "SR-CIV-004",
     "SR-CIV-005"
   ],
-  "source_revision": "d4cd4d2ed60b42b95955ccce9bf84f4855ac93a1",
+  "source_revision": "d11c8e6372765f4be96fe7d1091867d39bfb1c60",
   "source_sha256": {
     "capabilities/knowledge/src/lib.rs": "0059046289744deecd2e77806e1c2a3ede3ec185d4395d00ee7c65110aa6a760",
     "capabilities/knowledge/src/memory.rs": "f880bf3998de8d97cb8e6e0484126985173f186c52da900f82da46f7b8ae8c92",
