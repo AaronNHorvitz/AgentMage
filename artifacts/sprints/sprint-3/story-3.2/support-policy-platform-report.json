@@ -17,7 +17,7 @@
         "raw_output_retained": false,
         "status": "pass"
       },
-      "container_image_id": "sha256:b178e966595cf0dc9a44fb0dc839b20e1b214c5245784c6f8a2c2c581e724935",
+      "container_image_id": "sha256:fb7f4199ff530a6363a6ce48e4e3832f606f9279251bca98af7a98a31dcb6584",
       "controls": {
         "capabilities": "all-dropped",
         "network": "none",
@@ -53,7 +53,7 @@
         "raw_output_retained": false,
         "status": "pass"
       },
-      "container_image_id": "sha256:fa4d402e0649574c315b89f8f1db8e589113714830da8824fe1616ee8f96f464",
+      "container_image_id": "sha256:8556ead43fd12012e32cf5d397acabda47d6dfd0e800db018599c94e547a7801",
       "controls": {
         "capabilities": "all-dropped",
         "network": "none",
@@ -89,7 +89,7 @@
       {
         "bytes": 13424,
         "path": "scripts/vulnerability_support_platform_evidence.py",
-        "sha256": "457be99abd66dc98e308530cd878d9aafafd51baa851267bf4cd8b3366d298d2"
+        "sha256": "5f8d005f492e7069ce89fe1b62d86f80c89f87a6c61e17a658d36dee7caa8dad"
       },
       {
         "bytes": 2788,
@@ -99,14 +99,14 @@
     ],
     "implementation_artifacts": [
       {
-        "bytes": 2760,
+        "bytes": 2795,
         "path": ".gitignore",
-        "sha256": "7cf70b61cdb44ca1663c270390643bedb407dfc6644335e62a761ab40d7587fc"
+        "sha256": "2733d44f0d718f678a2ec60a3f7efe351ebc30d66af7e728b6ed729c73a8b34a"
       },
       {
         "bytes": 2547,
         "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
-        "sha256": "8ef43599dffd2e206b57f837e03f08837c9650e4db29d7bbaa664d03660fb3e7"
+        "sha256": "214bb6e19cacbfd8287e891e804f7323d87896c0c8f0591ddfd34090c5f7c0d3"
       },
       {
         "bytes": 10934,
@@ -139,8 +139,8 @@
         "sha256": "0c7749fee7750015eaa2b24f9cb5f8b11a1dbeb294b282d5df9fdf5511a78652"
       }
     ],
-    "revision": "617731b671df3378652f771cb94773080d155298",
-    "tree": "05b886f34170210f787e3fc150520f65ba8ea747"
+    "revision": "33867494df391c3ed6072abeec36eef9ff7a1e8e",
+    "tree": "db72c717c199da7e9554dd265faa09fdf1ef633d"
   },
   "status": "blocked-macos",
   "story_id": "3.2",
