@@ -23,6 +23,15 @@ const MAX_TIMEOUT_MS: u64 = 300_000;
 pub trait Tool: Send + Sync {
     /// Returns the tool's immutable candidate definition.
     fn definition(&self) -> &ToolDefinition;
+
+    /// Validates exact tool-specific argument bytes after common schema binding succeeds.
+    ///
+    /// The default admits no additional shape beyond common kernel validation. Capability
+    /// packs with a closed request schema must override this method. Validation cannot execute
+    /// the tool or grant authority.
+    fn validate_arguments(&self, _arguments: &[u8]) -> Vec<ValidationIssue> {
+        Vec::new()
+    }
 }
 
 /// Typed reason a definition or call cannot pass the tool registry.
@@ -85,9 +94,15 @@ pub struct PreGrantDispatchReceipt {
 }
 
 /// Exact-version registry of non-executable tool definitions.
+struct RegisteredTool {
+    definition: ToolDefinition,
+    implementation: Box<dyn Tool>,
+}
+
+/// Exact-version registry of non-executable tool definitions and validators.
 #[derive(Default)]
 pub struct ToolRegistry {
-    tools: BTreeMap<(ToolId, String), ToolDefinition>,
+    tools: BTreeMap<(ToolId, String), RegisteredTool>,
 }
 
 impl ToolRegistry {
@@ -108,20 +123,31 @@ impl ToolRegistry {
         if self.tools.contains_key(&key) {
             return Err(ToolRegistryError::AlreadyRegistered);
         }
-        self.tools.insert(key, definition);
+        self.tools.insert(
+            key,
+            RegisteredTool {
+                definition,
+                implementation: tool,
+            },
+        );
         Ok(())
     }
 
     /// Returns one exact registered definition.
     #[must_use]
     pub fn get_tool(&self, tool_id: &ToolId, tool_version: &str) -> Option<&ToolDefinition> {
-        self.tools.get(&(tool_id.clone(), tool_version.to_owned()))
+        self.tools
+            .get(&(tool_id.clone(), tool_version.to_owned()))
+            .map(|registered| &registered.definition)
     }
 
     /// Lists definitions in stable tool-identity and version order.
     #[must_use]
     pub fn list_tools(&self) -> Vec<&ToolDefinition> {
-        self.tools.values().collect()
+        self.tools
+            .values()
+            .map(|registered| &registered.definition)
+            .collect()
     }
 
     /// Validates a call against its exact frozen definition and schema identity.
@@ -130,10 +156,11 @@ impl ToolRegistry {
         call: &ToolCall,
     ) -> Result<&ToolDefinition, ToolRegistryError> {
         let mut issues = validate_call_shape(call);
-        let definition = self
+        let registered = self
             .tools
             .get(&(call.tool_id.clone(), call.tool_version.clone()))
             .ok_or(ToolRegistryError::NotRegistered)?;
+        let definition = &registered.definition;
         if call.arguments.schema != definition.input_schema {
             issues.push(issue(
                 "tool.arguments.schema_mismatch",
@@ -141,11 +168,133 @@ impl ToolRegistry {
                 "Tool arguments do not use the registered input schema",
             ));
         }
+        if issues.is_empty() {
+            issues.extend(
+                registered
+                    .implementation
+                    .validate_arguments(&call.arguments.bytes),
+            );
+        }
         if !issues.is_empty() {
             return Err(ToolRegistryError::InvalidCall { issues });
         }
         Ok(definition)
     }
+}
+
+/// Stable refusal from the deterministic repeated-call guard.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolAttemptGuardError {
+    /// The configured repeat limit is outside the closed supported range.
+    InvalidLimit,
+    /// The call depth exceeds the configured maximum.
+    CallDepthExceeded,
+    /// The exact call identity was already recorded.
+    DuplicateCallIdentity,
+    /// The same semantic call reached its configured repeat ceiling.
+    RepeatLimitExceeded,
+}
+
+impl ToolAttemptGuardError {
+    /// Stable content-free refusal code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::InvalidLimit => "tool.attempt.repeat_limit.invalid",
+            Self::CallDepthExceeded => "tool.attempt.call_depth.exceeded",
+            Self::DuplicateCallIdentity => "tool.attempt.call_identity.duplicate",
+            Self::RepeatLimitExceeded => "tool.attempt.repeat_limit.exceeded",
+        }
+    }
+}
+
+/// Content-free record emitted for one semantically bounded tool attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ToolAttemptRecord {
+    /// Monotonic in-memory attempt sequence.
+    pub sequence: u64,
+    /// Digest of tool, version, action, schema, and exact argument bytes.
+    pub semantic_sha256: String,
+    /// One-based occurrence of this exact semantic call.
+    pub occurrence: u8,
+    /// Explicit nested call depth.
+    pub call_depth: u8,
+}
+
+/// Deterministic non-authoritative repeated-call and call-depth guard.
+///
+/// The guard does not validate grants and cannot authorize or execute a tool. A dispatcher
+/// records an admitted semantic attempt before consuming the operation's sole grant.
+pub struct ToolAttemptGuard {
+    maximum_repeats: u8,
+    maximum_call_depth: u8,
+    next_sequence: u64,
+    seen_call_ids: BTreeSet<String>,
+    occurrences: BTreeMap<String, u8>,
+}
+
+impl ToolAttemptGuard {
+    /// Creates an empty guard with closed repeat and call-depth ceilings.
+    pub fn new(maximum_repeats: u8, maximum_call_depth: u8) -> Result<Self, ToolAttemptGuardError> {
+        if !(1..=16).contains(&maximum_repeats) || maximum_call_depth > 32 {
+            return Err(ToolAttemptGuardError::InvalidLimit);
+        }
+        Ok(Self {
+            maximum_repeats,
+            maximum_call_depth,
+            next_sequence: 1,
+            seen_call_ids: BTreeSet::new(),
+            occurrences: BTreeMap::new(),
+        })
+    }
+
+    /// Records one validated attempt or refuses it without changing guard state.
+    pub fn record_attempt(
+        &mut self,
+        call: &ToolCall,
+        call_depth: u8,
+    ) -> Result<ToolAttemptRecord, ToolAttemptGuardError> {
+        if call_depth > self.maximum_call_depth {
+            return Err(ToolAttemptGuardError::CallDepthExceeded);
+        }
+        if self.seen_call_ids.contains(call.tool_call_id.as_str()) {
+            return Err(ToolAttemptGuardError::DuplicateCallIdentity);
+        }
+        let semantic_sha256 = semantic_call_sha256(call);
+        let occurrence = self.occurrences.get(&semantic_sha256).copied().unwrap_or(0);
+        if occurrence >= self.maximum_repeats {
+            return Err(ToolAttemptGuardError::RepeatLimitExceeded);
+        }
+        let occurrence = occurrence + 1;
+        let sequence = self.next_sequence;
+        let next_sequence = sequence
+            .checked_add(1)
+            .ok_or(ToolAttemptGuardError::RepeatLimitExceeded)?;
+        self.seen_call_ids
+            .insert(call.tool_call_id.as_str().to_owned());
+        self.occurrences.insert(semantic_sha256.clone(), occurrence);
+        self.next_sequence = next_sequence;
+        Ok(ToolAttemptRecord {
+            sequence,
+            semantic_sha256,
+            occurrence,
+            call_depth,
+        })
+    }
+}
+
+fn semantic_call_sha256(call: &ToolCall) -> String {
+    let material = serde_json::to_vec(&(
+        call.action_id.as_str(),
+        call.tool_id.as_str(),
+        &call.tool_version,
+        call.arguments.schema.schema_id.as_str(),
+        call.arguments.schema.schema_version,
+        &call.arguments.schema.schema_sha256,
+        &call.arguments.sha256,
+    ))
+    .expect("closed semantic call material serializes");
+    sha256_hex(&material)
 }
 
 /// Pre-grant dispatcher boundary over one exact registry.
@@ -574,8 +723,8 @@ fn terminal_result(
 #[cfg(test)]
 mod tests {
     use super::{
-        PreGrantDispatchDisposition, ProposalOrigin, Tool, ToolDispatcher, ToolRegistry,
-        ToolRegistryError, sha256_hex,
+        PreGrantDispatchDisposition, ProposalOrigin, Tool, ToolAttemptGuard, ToolAttemptGuardError,
+        ToolDispatcher, ToolRegistry, ToolRegistryError, sha256_hex,
     };
     use agentmage_kernel_contracts::{
         ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, GrantOperation,
@@ -591,6 +740,31 @@ mod tests {
     impl Tool for FakeTool {
         fn definition(&self) -> &ToolDefinition {
             &self.definition
+        }
+    }
+
+    struct StrictTool {
+        definition: ToolDefinition,
+    }
+
+    impl Tool for StrictTool {
+        fn definition(&self) -> &ToolDefinition {
+            &self.definition
+        }
+
+        fn validate_arguments(
+            &self,
+            arguments: &[u8],
+        ) -> Vec<agentmage_kernel_contracts::ValidationIssue> {
+            if arguments == br#"{"required":true}"# {
+                Vec::new()
+            } else {
+                vec![super::issue(
+                    "fixture.arguments.required",
+                    "arguments.required",
+                    "Synthetic required field is absent",
+                )]
+            }
         }
     }
 
@@ -761,6 +935,84 @@ mod tests {
                 .as_str(),
             "fixture.read"
         );
+    }
+
+    #[test]
+    fn tool_specific_validation_runs_before_dispatch_and_cannot_execute() {
+        let mut registry = ToolRegistry::new();
+        registry
+            .register_tool(Box::new(StrictTool {
+                definition: definition("fixture.strict"),
+            }))
+            .expect("strict validator registers");
+        let invalid = call("fixture.strict", br#"{}"#);
+        let Err(ToolRegistryError::InvalidCall { issues }) = registry.validate_arguments(&invalid)
+        else {
+            panic!("tool-specific invalid arguments must fail");
+        };
+        assert_eq!(issues[0].code, "fixture.arguments.required");
+        let receipt = ToolDispatcher::new(&registry).dispatch(ProposalOrigin::Model, &invalid);
+        assert_eq!(
+            receipt.disposition,
+            PreGrantDispatchDisposition::InvalidCall
+        );
+        assert_eq!(receipt.result.outcome, OperationOutcome::Failed);
+
+        registry
+            .validate_arguments(&call("fixture.strict", br#"{"required":true}"#))
+            .expect("exact strict request validates");
+    }
+
+    #[test]
+    fn repeated_call_guard_is_exact_bounded_and_non_authoritative() {
+        let mut guard = ToolAttemptGuard::new(2, 3).expect("bounded guard");
+        let first = call("fixture.read", br#"{"path":"fixture.txt"}"#);
+        let first_record = guard.record_attempt(&first, 0).expect("first attempt");
+        assert_eq!(first_record.sequence, 1);
+        assert_eq!(first_record.occurrence, 1);
+
+        let mut repeated = first.clone();
+        repeated.tool_call_id = ToolCallId::from_raw("call-0002");
+        repeated.correlation_id = CorrelationId::from_raw("correlation-0002");
+        let repeated_record = guard.record_attempt(&repeated, 1).expect("bounded repeat");
+        assert_eq!(repeated_record.sequence, 2);
+        assert_eq!(repeated_record.occurrence, 2);
+        assert_eq!(
+            repeated_record.semantic_sha256,
+            first_record.semantic_sha256
+        );
+
+        let mut excessive = repeated.clone();
+        excessive.tool_call_id = ToolCallId::from_raw("call-0003");
+        assert_eq!(
+            guard.record_attempt(&excessive, 1),
+            Err(ToolAttemptGuardError::RepeatLimitExceeded)
+        );
+        assert_eq!(
+            guard.record_attempt(&first, 0),
+            Err(ToolAttemptGuardError::DuplicateCallIdentity)
+        );
+
+        let mut different = repeated;
+        different.tool_call_id = ToolCallId::from_raw("call-0004");
+        different.arguments.bytes = br#"{"path":"other.txt"}"#.to_vec();
+        different.arguments.sha256 = sha256_hex(&different.arguments.bytes);
+        assert_eq!(
+            guard.record_attempt(&different, 4),
+            Err(ToolAttemptGuardError::CallDepthExceeded)
+        );
+        let different_record = guard.record_attempt(&different, 3).expect("different call");
+        assert_eq!(different_record.sequence, 3);
+        assert_eq!(different_record.occurrence, 1);
+        assert_ne!(
+            different_record.semantic_sha256,
+            first_record.semantic_sha256
+        );
+
+        assert!(matches!(
+            ToolAttemptGuard::new(0, 0),
+            Err(ToolAttemptGuardError::InvalidLimit)
+        ));
     }
 
     #[test]
