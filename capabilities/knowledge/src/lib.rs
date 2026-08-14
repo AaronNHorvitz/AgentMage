@@ -3,6 +3,7 @@
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
 mod domain;
+mod operations;
 mod plain_folder;
 mod schema;
 mod store;
@@ -11,6 +12,11 @@ pub use domain::{
     KnowledgeError, KnowledgeField, KnowledgeLink, KnowledgeLinkKind, KnowledgePrivacy,
     KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention,
     KnowledgeRetentionKind, validate_record,
+};
+pub use operations::{
+    KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
+    KnowledgeImportReport, KnowledgeRelationship, build_dashboard, build_json_lines_export,
+    validate_import,
 };
 pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,

@@ -229,6 +229,8 @@ pub enum KnowledgeError {
     ContentDrift,
     /// Stable identity or canonical path is duplicated.
     DuplicateRecord,
+    /// A relationship target is absent from the complete import set.
+    UnresolvedLink,
 }
 
 impl KnowledgeError {
@@ -249,6 +251,7 @@ impl KnowledgeError {
             Self::InvalidMarkdown => "knowledge.markdown.invalid",
             Self::ContentDrift => "knowledge.content.drift",
             Self::DuplicateRecord => "knowledge.record.duplicate",
+            Self::UnresolvedLink => "knowledge.link.unresolved",
         }
     }
 }
