@@ -2100,11 +2100,11 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 25.2.1 - Prepare incident and support operations**
-  - [ ] **Sub-task 25.2.1.1:** Publish versioned local-first runbooks for suspected egress, compromised dependency/package, prompt-injection disclosure, model/runtime revocation, key-store or cryptographic failure, and corrupted operational state.
-  - [ ] **Sub-task 25.2.1.2:** Define detection, local suspension, containment, bounded evidence preservation, severity, ownership, communication, remediation, signed manual patch, verification, recovery, and lessons-record transitions for each scenario.
-  - [ ] **Sub-task 25.2.1.3:** Define what diagnostics may be requested and prohibit raw prompts, workspace files, credentials, private keys, full environment dumps, unrelated paths, and unreviewed archives from support evidence.
-  - [ ] **Sub-task 25.2.1.4:** Prepare signed emergency-disable and manual patch fixtures that require explicit local user installation and never create a remote kill switch, telemetry channel, or silent update check.
+- [x] **Task 25.2.1 - Prepare incident and support operations**
+  - [x] **Sub-task 25.2.1.1:** Publish versioned local-first runbooks for suspected egress, compromised dependency/package, prompt-injection disclosure, model/runtime revocation, key-store or cryptographic failure, and corrupted operational state. Evidence: commit `2b087aa` adds all six scenario runbooks without an actual-incident or external-action claim.
+  - [x] **Sub-task 25.2.1.2:** Define detection, local suspension, containment, bounded evidence preservation, severity, ownership, communication, remediation, signed manual patch, verification, recovery, and lessons-record transitions for each scenario. Evidence: the versioned incident runbook defines the common eleven-state sequence, role separation, scenario-specific containment and verification, ambiguous-signal handling, and closure requirements.
+  - [x] **Sub-task 25.2.1.3:** Define what diagnostics may be requested and prohibit raw prompts, workspace files, credentials, private keys, full environment dumps, unrelated paths, and unreviewed archives from support evidence. Evidence: the runbook contains closed support-evidence request and prohibition lists, retention, hold, access, canary, and closure rules.
+  - [x] **Sub-task 25.2.1.4:** Prepare signed emergency-disable and manual patch fixtures that require explicit local user installation and never create a remote kill switch, telemetry channel, or silent update check. Evidence: the retained signed synthetic five-subject local-disable fixture and ten-case patch corpus pass their metadata, verifier, policy, 8 schema, and 21 behavioral tests; commit `2b087aa` adds the bounded exercise procedure and preserves their no-product-activation status.
 
 - [ ] **Task 25.2.2 - Execute tabletop and patch exercises**
   - [ ] **Sub-task 25.2.2.1:** Run the four required `RV-21` scenarios with named participants independent of the component under test; inject ambiguous, late, duplicate, and false-positive signals and record decisions.
