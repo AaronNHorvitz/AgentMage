@@ -21,6 +21,7 @@ mod llama_server_driver;
 mod model_acquisition;
 mod model_download;
 mod model_install_lifecycle;
+mod model_install_verifier;
 mod model_installer_process;
 mod muse_atem_codec;
 mod native_model_adapter;
@@ -78,6 +79,7 @@ pub use model_install_lifecycle::{
     activate_verified_model, read_active_model_manifest, recover_model_store,
     rollback_active_model,
 };
+pub use model_install_verifier::NativeModelInstallVerifier;
 pub use model_installer_process::{
     MODEL_INSTALLER_SELF_CHECK, ModelInstallerProcessError, evaluate_model_installer_arguments,
 };
