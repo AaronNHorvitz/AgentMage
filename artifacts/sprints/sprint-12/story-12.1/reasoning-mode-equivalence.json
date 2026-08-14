@@ -1,0 +1,101 @@
+{
+  "artifact_id": "s-012-it01-reasoning-mode-equivalence",
+  "case_ids": [
+    "RME-01",
+    "RME-02",
+    "RME-03",
+    "RME-04",
+    "RME-05"
+  ],
+  "claims": {
+    "budget_record_count_per_task": 6,
+    "cross_mode_receipt_comparison_count": 2,
+    "external_network_used": false,
+    "fake_model_calls_per_task": 1,
+    "fake_tool_calls_per_task": 1,
+    "fixed_task_count": 2,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "private_user_data_records": 0,
+    "production_model_calls_per_task": 0,
+    "reasoning_mode_count": 2,
+    "release_support": false,
+    "repeatability_comparison_count": 2,
+    "rust_test_count": 5,
+    "status_event_count_per_task": 6,
+    "tool_state_changes": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The integration harness uses deterministic synthetic components and does not invoke a production model, tool worker, platform adapter, filesystem effect, or network request.",
+    "Fake-model proposal count is test-harness activity; production model-call budget usage remains zero.",
+    "The test proves fixed-task mode equivalence, not general model-output equivalence for arbitrary prompts.",
+    "Persistence, restart recovery, live UI rendering, cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "bb0a250ea5ca30c7e3adb372bca7e6aa27b41315",
+  "sources": [
+    {
+      "bytes": 2126,
+      "path": "docs/verification/s-012-it01-reasoning-mode-equivalence-results.md",
+      "sha256": "dacecc0e7f7d8c44319f4ee86eb5cc49da4fb9bd13c42303e4c4b36a29f65cdf"
+    },
+    {
+      "bytes": 1033,
+      "path": "fixtures/runtime/v1/reasoning-mode-fixtures.json",
+      "sha256": "03547e541501556da13bbdc85cf3862c3eb4fc3ea0f07f31bdd43d6e58d5a308"
+    },
+    {
+      "bytes": 12733,
+      "path": "kernel/engine/src/s012_it01.rs",
+      "sha256": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f"
+    },
+    {
+      "bytes": 2788,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "c5288042c29a28461f715e2afd9d456d657cff0443ef681fa1e4178493f4c47e"
+    },
+    {
+      "bytes": 9841,
+      "path": "scripts/reasoning_mode_equivalence_evidence.py",
+      "sha256": "f2562f2e12527e73f9675dcdbbfe9af220146146525f7080f1d49467be7ed89a"
+    },
+    {
+      "bytes": 3167,
+      "path": "tests/test_reasoning_mode_equivalence_evidence.py",
+      "sha256": "1d43f9240c3fdbae65f0611650a61c0856abd2b072759fec9c602e7327d40618"
+    }
+  ],
+  "status": "pass-reasoning-mode-equivalence",
+  "task_ids": [
+    "12.1.3.4",
+    "S-012-IT01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "92388579faf499ab1ac4aa61290b9fa8ce251ff291bbfb05f6391927e961d6f0",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "440fd926424980c1d8caa5d957fa0cd1d4bb72e629df43b9b3f6599fa4c6186e",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
