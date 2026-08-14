@@ -2738,20 +2738,20 @@ the sprint therefore remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 36.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 36.1.1.1** (legacy `S-029-I07`): Apply atomically where supported and restore all already-applied preimages if an operation fails.
-  - [ ] **Sub-task 36.1.1.2** (legacy `S-029-I08`): Emit per-operation proposed, approved, applied, verified, failed, rolled-back, or superseded receipts with hashes.
-  - [ ] **Sub-task 36.1.1.3** (legacy `S-029-I09`): Require separately bounded grants for formatters, tests, builds, migrations, or other post-write commands.
-  - [ ] **Sub-task 36.1.1.4** (legacy `S-029-I10`): Implement rollback as a fresh reviewed transaction that refuses to overwrite later user changes.
+- [x] **Task 36.1.1 - Implement the bounded story**
+  - [x] **Sub-task 36.1.1.1** (legacy `S-029-I07`): Apply atomically where supported and restore all already-applied preimages if an operation fails.
+  - [x] **Sub-task 36.1.1.2** (legacy `S-029-I08`): Emit per-operation proposed, approved, applied, verified, failed, rolled-back, or superseded receipts with hashes.
+  - [x] **Sub-task 36.1.1.3** (legacy `S-029-I09`): Require separately bounded grants for formatters, tests, builds, migrations, or other post-write commands.
+  - [x] **Sub-task 36.1.1.4** (legacy `S-029-I10`): Implement rollback as a fresh reviewed transaction that refuses to overwrite later user changes.
 
 - [ ] **Task 36.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 36.1.2.1:** Write-transaction state machine and schemas.
-  - [ ] **Sub-task 36.1.2.2:** Shadow change-set and preview format.
+  - [x] **Sub-task 36.1.2.1:** Write-transaction state machine and schemas.
+  - [x] **Sub-task 36.1.2.2:** Shadow change-set and preview format.
   - [ ] **Sub-task 36.1.2.3:** Atomic application and restoration engine.
-  - [ ] **Sub-task 36.1.2.4:** Stale, partial-failure, collision, uncertain-result, and rollback fixtures.
+  - [x] **Sub-task 36.1.2.4:** Stale, partial-failure, collision, uncertain-result, and rollback fixtures.
 
 - [ ] **Task 36.1.3 - Verify and close the story**
-  - [ ] **Sub-task 36.1.3.1:** `S-029-UT01` exercises every legal and illegal write-transaction transition from request through validate/stage/preview/approve/revalidate/apply/verify/commit-or-restore; assert deterministic state and receipt.
+  - [x] **Sub-task 36.1.3.1:** `S-029-UT01` exercises every legal and illegal write-transaction transition from request through validate/stage/preview/approve/revalidate/apply/verify/commit-or-restore; assert deterministic state and receipt.
   - [ ] **Sub-task 36.1.3.2:** `S-029-UT02` mutates target, arguments, bytes, preimage, metadata, preview, policy, grant, workspace, and expected side effects after preview; assert stale approval and zero target change.
   - [ ] **Sub-task 36.1.3.3:** `S-029-ST01` races file replacement, symlink/alias swap, rename, concurrent writer, mount change, grant replay, and approval replay at each boundary; assert descriptor identity and atomic consumption prevent unintended write.
   - [ ] **Sub-task 36.1.3.4:** `S-029-RT01` crashes before and after every staging, application, verification, restoration, and durable-state transition; assert prior bytes or exact approved bytes, never an unexplained partial state.
@@ -2764,13 +2764,28 @@ the sprint therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 36.AC1:** No write reaches a user path before exact preview and grant consumption.
-- [ ] **Sprint AC 36.AC2:** Any preimage, operation, preview, policy, path, or scope change invalidates approval.
+- [x] **Sprint AC 36.AC1:** No write reaches a user path before exact preview and grant consumption.
+- [x] **Sprint AC 36.AC2:** Any preimage, operation, preview, policy, path, or scope change invalidates approval.
 - [ ] **Sprint AC 36.AC3:** Partial failure leaves either the complete approved postimage or restored preimages, never an unreported mixed state.
-- [ ] **Sprint AC 36.AC4:** Rollback preserves concurrent user work and requires new approval.
-- [ ] **Sprint AC 36.AC5:** Every operation status and hash is reconstructable from receipts.
+- [x] **Sprint AC 36.AC4:** Rollback preserves concurrent user work and requires new approval.
+- [x] **Sprint AC 36.AC5:** Every operation status and hash is reconstructable from receipts.
 
 **Gate decision:** Sprint 36 is PASS only when Story 36.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** The grant-consuming transaction coordinator,
+opaque driver authorization, deterministic operation state machine, hash-chained receipts,
+known partial restoration, uncertain terminal outcome, separately granted verification
+requirements, and fresh rollback proposal are implemented in `a588a64`. Architecture and
+verification boundaries are recorded by `a8e9a02`; the retained
+[Sprint 36 evidence report](artifacts/sprints/sprint-36/local-evidence-report.json) in
+`fd27587` records passing focused tests with zero blocking skips plus complete local product,
+documentation, strict-local, effect-boundary, dependency, and supply-chain gates. A native
+filesystem driver, native atomicity proof, the complete `S-029-UT02`, `S-029-ST01`, and
+`S-029-RT01` matrices, and independent transaction review remain absent. Sprint 36 remains
+**BLOCKED** because Sprint 35 is not yet a passing upstream dependency and those native and
+independent proofs are open. Task 36.1.2 and its native-engine sub-task, Task 36.1.3 and its
+remaining verification sub-tasks, both story criteria, Sprint AC 36.AC3, the story, and the
+sprint therefore remain open.
 ### [ ] Sprint 37 - File Creation, Patch, Copy, Move, and Delete Controls
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
