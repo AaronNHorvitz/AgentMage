@@ -20,7 +20,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "3ce0cdfcb742bcc4a425479cf775a5fab6b4ad36dc4639415917ea5dd1e354bc"
+      "output_sha256": "944d45cfcf73a5b8764eea5647067746c1b05ea06445b09e45992cbd867e5ea6"
     },
     {
       "argv": [
@@ -36,7 +36,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "359d32cc8155c9ed41b6866c273eef981f87d9685d8616a793a77772d8957113"
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
     },
     {
       "argv": [
@@ -48,7 +48,7 @@
       ],
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "db5bb1c2a5f35ef6eae43eebeba4962ac7be3effd8eb396463029d80a9d694d3"
+      "output_sha256": "0e8ab69e9c9bc62980da264f5393d9eb82c8991a2812c20c022a4afcbec9654e"
     },
     {
       "argv": [
@@ -58,7 +58,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "fe7a907f9d467c475591a86b9f141be2bfa4e8dd236e53ae55cb3ef29c87340b"
+      "output_sha256": "200f9db89c40595efc2469e2afe21bc75c138cc19b837d73b3e949663577df8b"
     },
     {
       "argv": [
@@ -68,7 +68,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "e2cecb55cffa95c2ca66124d17491e03185bc604d889a70663900ded6ddbf266"
+      "output_sha256": "18f7732ec71ca8cff57b402bac98b905563dbc7570d757c4fb7bdfb026f97a5d"
     },
     {
       "argv": [
@@ -168,7 +168,7 @@
     "SR-CIV-005",
     "SR-OPS-003"
   ],
-  "source_revision": "6d350802007722f8ff1410a1394670b5a6f14e77",
+  "source_revision": "860f015b164bd642258e465ab6b5a0d1d9c025a7",
   "source_sha256": {
     "docs/architecture/encrypted-conversation-library.md": "e3be18a906d3c1849d65c54261d8077788bba4b08528270b11e5b11977405b20",
     "docs/verification/sprint-32-local-results.md": "b61703f954a028384234c63f57627febb8475b4ec216ebd45886d1e9f93941ea",
