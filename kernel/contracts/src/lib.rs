@@ -46,8 +46,11 @@ pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
 };
 pub use claim::{
-    ClaimBoundFinalResponse, ClaimEvidence, ClaimEvidenceRole, MaterialClaim, MaterialClaimKind,
-    VerifiedMaterialClaim,
+    ClaimBoundFinalResponse, ClaimEvidence, ClaimEvidenceRole, DerivedClaimProvenance,
+    DeterministicMethodIdentity, InferenceRuntimeProvenance, InferredClaimProvenance,
+    MaterialClaim, MaterialClaimEvidenceAssignment, MaterialClaimEvidenceState,
+    MaterialClaimEvidenceStateKind, MaterialClaimKind, ObservedClaimProvenance,
+    UnknownBlockedClaimProvenance, UnknownBlockedReason, VerifiedMaterialClaim,
 };
 pub use classification::{
     ActionRisk, ActionRiskAssessment, AdvisoryClassifierDisposition, AdvisoryClassifierResult,

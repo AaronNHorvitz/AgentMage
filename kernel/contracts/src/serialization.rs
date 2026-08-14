@@ -54,6 +54,7 @@ impl_versioned_contract!(
     crate::CancellationSignal,
     crate::ContractError,
     crate::EvidenceReference,
+    crate::MaterialClaimEvidenceAssignment,
     crate::EncodedModelContext,
     crate::ExactModelProfile,
     crate::ModelContextPacket,

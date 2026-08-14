@@ -27,6 +27,8 @@ pub mod claim_evidence;
 pub mod configuration;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
+/// Deterministic assignment of explicit evidence states to material claims.
+pub mod evidence_state;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
