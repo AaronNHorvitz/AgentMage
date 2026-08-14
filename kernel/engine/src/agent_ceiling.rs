@@ -303,4 +303,30 @@ mod tests {
         assert_eq!(partitioned.usage(AgentCeilingKind::InputTokens), 7);
         assert_eq!(single.terminal(), partitioned.terminal());
     }
+
+    #[test]
+    fn d027_s12_state_every_ceiling_has_one_sticky_terminal_result() {
+        for kind in ALL_AGENT_CEILINGS {
+            let mut controller = AgentCeilingController::new(&profile(2)).expect("profile");
+            assert_eq!(
+                controller.consume(kind, 2),
+                AgentCeilingDecision::Continue {
+                    used: 2,
+                    remaining: 0,
+                }
+            );
+            let terminal = controller.consume(kind, 1);
+            let AgentCeilingDecision::Terminal(breach) = terminal else {
+                panic!("one unit beyond the inclusive limit must terminate");
+            };
+            let expected = if kind == AgentCeilingKind::NoProgressCycles {
+                AgentStateKind::Stalled
+            } else {
+                AgentStateKind::Exhausted
+            };
+            assert_eq!(breach.terminal, expected);
+            assert_eq!(controller.usage(kind), 2);
+            assert_eq!(controller.consume(kind, u64::MAX), terminal);
+        }
+    }
 }

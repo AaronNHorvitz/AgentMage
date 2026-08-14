@@ -379,4 +379,26 @@ mod tests {
             assert_eq!(registry.seen_count(), 0);
         }
     }
+
+    #[test]
+    fn d027_s12_state_duplicate_and_competing_proposals_never_replace_admission() {
+        let first = proposal();
+        let mut registry = ProposalAdmissionRegistry::new(context()).expect("context");
+        let admitted = registry.admit(&first).expect("first proposal");
+        assert_eq!(admitted.proposal_id(), &first.proposal_id);
+
+        assert_eq!(
+            registry.admit(&first),
+            Err(ProposalAdmissionError::Replayed)
+        );
+        let mut competing = proposal();
+        competing.proposal_id = ProposalId::from_raw("proposal-d027-competing");
+        competing.proposal_sha256 = "c".repeat(64);
+        assert_eq!(
+            registry.admit(&competing),
+            Err(ProposalAdmissionError::CompetingProposal)
+        );
+        assert_eq!(registry.admitted(), Some(&first.proposal_id));
+        assert_eq!(registry.seen_count(), 2);
+    }
 }

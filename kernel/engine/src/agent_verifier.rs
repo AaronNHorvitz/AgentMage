@@ -381,4 +381,38 @@ mod tests {
             Err(AgentStateError::VerifierStateMismatch)
         );
     }
+
+    #[test]
+    fn d027_s12_state_false_completion_sources_produce_no_verified_success() {
+        let registry = VerifierRegistry::new(context()).expect("valid registry");
+        for source in [
+            VerifierSource::ModelProse,
+            VerifierSource::Confidence,
+            VerifierSource::SelfReview,
+            VerifierSource::ModelJudge,
+            VerifierSource::Classifier,
+        ] {
+            for disposition in [VerifierDisposition::Success, VerifierDisposition::NoOp] {
+                let mut untrusted = candidate(disposition);
+                untrusted.source = source;
+                assert_eq!(
+                    registry.verify(&untrusted),
+                    Err(VerifierError::NonDeterministicSource)
+                );
+            }
+        }
+
+        let mut incomplete = candidate(VerifierDisposition::Success);
+        incomplete.postconditions.pop();
+        assert_eq!(
+            registry.verify(&incomplete),
+            Err(VerifierError::PostconditionSetInvalid)
+        );
+        let mut failed = candidate(VerifierDisposition::Success);
+        failed.postconditions[0].passed = false;
+        assert_eq!(
+            registry.verify(&failed),
+            Err(VerifierError::PostconditionUnverified)
+        );
+    }
 }

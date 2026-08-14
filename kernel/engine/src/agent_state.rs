@@ -391,4 +391,57 @@ mod tests {
         );
         assert_eq!(controller.current(), AgentStateKind::Observation);
     }
+
+    #[test]
+    fn d027_s12_state_every_graph_pair_and_controller_disposition_is_exact() {
+        let mut legal_edges = 0;
+        let mut illegal_edges = 0;
+        let mut ordinary_admissions = 0;
+        let mut verifier_gated = 0;
+
+        for from in STATES {
+            for to in STATES {
+                let graph_legal = legal_transition(from, to);
+                if graph_legal {
+                    legal_edges += 1;
+                } else {
+                    illegal_edges += 1;
+                }
+
+                let mut controller = AgentStateController {
+                    current: from,
+                    revision: 1,
+                    transitions: Vec::new(),
+                    restart_required: false,
+                };
+                let before = controller.clone();
+                if to.is_success() {
+                    assert_eq!(
+                        controller.transition(to),
+                        Err(AgentStateError::VerifierRequired)
+                    );
+                    assert_eq!(controller, before);
+                    verifier_gated += 1;
+                } else if graph_legal {
+                    let transition = controller.transition(to).expect("legal ordinary edge");
+                    assert_eq!(transition.from, from);
+                    assert_eq!(transition.to, to);
+                    assert_eq!(controller.current(), to);
+                    ordinary_admissions += 1;
+                } else {
+                    assert_eq!(
+                        controller.transition(to),
+                        Err(AgentStateError::IllegalTransition)
+                    );
+                    assert_eq!(controller, before);
+                }
+            }
+        }
+
+        assert_eq!(legal_edges, 52);
+        assert_eq!(illegal_edges, 237);
+        assert_eq!(ordinary_admissions, 48);
+        assert_eq!(verifier_gated, 34);
+        assert_eq!(STATES.iter().filter(|state| state.is_terminal()).count(), 9);
+    }
 }
