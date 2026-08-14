@@ -229,8 +229,6 @@ def build_bytes(profile: dict[str, Any], profile_sha256: str, payload: dict[str,
     root = profile["package"]["relative_install_root"]
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
-        for directory, mode in (("runtimes", 0o700), (root, 0o555), (f"{root}/bin", 0o555), (f"{root}/lib", 0o555)):
-            archive.addfile(_info(directory, mode, tarfile.DIRTYPE))
         manifest_bytes = canonical(manifest(profile, profile_sha256))
         item = _info(f"{root}/runtime-manifest.json", 0o444)
         item.size = len(manifest_bytes)
@@ -245,6 +243,15 @@ def build_bytes(profile: dict[str, Any], profile_sha256: str, payload: dict[str,
                 content = bytes(value)
                 item.size = len(content)
                 archive.addfile(item, io.BytesIO(content))
+        # Directory entries come last so an unprivileged general-purpose
+        # extractor can create payload files before the tree becomes read-only.
+        for directory, mode in (
+            (f"{root}/bin", 0o555),
+            (f"{root}/lib", 0o555),
+            (root, 0o555),
+            ("runtimes", 0o700),
+        ):
+            archive.addfile(_info(directory, mode, tarfile.DIRTYPE))
     compressed = io.BytesIO()
     with gzip.GzipFile(fileobj=compressed, mode="wb", filename="", mtime=0, compresslevel=9) as stream:
         stream.write(output.getvalue())
