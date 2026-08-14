@@ -1,0 +1,208 @@
+{
+  "blockers": [
+    {
+      "code": "NO-ADMITTED-PRODUCT-MODEL",
+      "owner": "15.1/15.3"
+    },
+    {
+      "code": "CHAT-MODEL-SELECTION-NOT-WIRED",
+      "owner": "15.1"
+    },
+    {
+      "code": "RESOURCE-STOP-NOT-WIRED-TO-OS-WORKER",
+      "owner": "15.1"
+    },
+    {
+      "code": "FULL-DURABLE-SURFACE-CANARY-SWEEP-MISSING",
+      "owner": "15.2"
+    },
+    {
+      "code": "NATIVE-ACCESSIBILITY-AND-MACOS-EVIDENCE-MISSING",
+      "owner": "15.2/15.3"
+    },
+    {
+      "code": "EXACT-GEMMA-ARTIFACT-EVALUATION-INCOMPLETE",
+      "owner": "15.3"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "kernel-diagnostics-selection-resource",
+      "output_sha256": "1a83e034690da81e4dee64341ce49e2b1062f481bba995b88039fdd68b1b6a19"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "host-doctor-export",
+      "output_sha256": "24fa19f80dfc7841f6e3aa5c68824fefdd73c62c33cde7232fb36ac5cd98f3fc"
+    },
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "shells/vscode",
+        "test"
+      ],
+      "exit_code": 0,
+      "id": "native-chat",
+      "output_sha256": "f995179c965c7651f145129776c99b388b1a78779a38b10d59687a251159fff8"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "tests.test_benchmark_contract",
+        "tests.test_model_role_evaluation_matrix"
+      ],
+      "exit_code": 0,
+      "id": "evaluation-contracts",
+      "output_sha256": "a468607329533f372ad72d9841e555a17ba2e4ca42d4f58aeeedcb3ef3a62b54"
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/model_role_evaluation_matrix.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "id": "candidate-role-reconciliation",
+      "output_sha256": "507b3545a59b801b56eda502120ae8b5842044f075193a5e5a137316c9403687"
+    }
+  ],
+  "evidence_sha256": {
+    "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
+    "artifacts/sprints/sprint-15/story-15.3/candidate-role-evaluation-matrix.json": "022abb833c37ce275f516b9a6c7af3672df3e84589e5867ee14a4ad6d5fafc57",
+    "model-profiles/evaluation/benchmark-record-schema-v1.json": "ba830922eccdb88ee30faf3847c6d35caac3e167d7b55f1620b60272decda9c3",
+    "model-profiles/evaluation/role-suite-corpus-v1.json": "a8969433a4a07127dc5d9690d9157505c05fb739624a251869957e61e4009639"
+  },
+  "evidence_state": {
+    "automatic_fallback": false,
+    "candidate_count": 416,
+    "candidate_dispositions": {
+      "BLOCKED": 415,
+      "INELIGIBLE": 1
+    },
+    "doctor_component_count": 13,
+    "doctor_fixture_count": 100,
+    "enabled_model_count": 0,
+    "exact_muse_disposition": "REJECTED",
+    "inference_slot_default": 1,
+    "manual_selection": true,
+    "resource_limit_classes": 9,
+    "reviewed_export": true,
+    "unsupported_claim_count": 0
+  },
+  "record_type": "sprint_15_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": {
+    "15.1": [
+      "SR-GOV-004",
+      "SR-PLT-010",
+      "SR-AI-006",
+      "SR-AI-009",
+      "SR-AI-013",
+      "SR-OPS-009",
+      "SR-TST-006",
+      "RV-13",
+      "RV-16"
+    ],
+    "15.2": [
+      "SR-GOV-001",
+      "SR-DAT-002",
+      "SR-DAT-003",
+      "SR-OPS-003",
+      "SR-CIV-006",
+      "SR-CIV-007",
+      "SR-CIV-008",
+      "SR-CIV-009",
+      "RV-08",
+      "RV-16",
+      "RV-18",
+      "RV-20"
+    ],
+    "15.3": [
+      "SR-AI-006",
+      "SR-AI-010",
+      "SR-AI-011",
+      "SR-AI-013",
+      "SR-AI-015",
+      "SR-AI-016",
+      "SR-MGM-004",
+      "SR-MGM-005",
+      "RV-14",
+      "RV-41"
+    ]
+  },
+  "source_revision": "7de166e14797640d9038633b8a4f521b117a3587",
+  "source_sha256": {
+    "docs/verification/sprint-15-local-results.md": "c1284728ba09155599c9ed412be96917ab3dbd60ce63a329accfb615a965c901",
+    "kernel/contracts/src/diagnostics.rs": "08260d209729487869a19f43e72e5c836ee567c7aaa551c31779cae9aee31d8d",
+    "kernel/engine/src/diagnostics.rs": "28d1a788c7a4c6f665474744e2f5e34e9700411c950f13318102f2ec6f8b6635",
+    "kernel/engine/src/model_runtime.rs": "43d542b84e8a4a0ec0bd919afb2d623d104b3cfb3b653b82cd457129f53e8a9a",
+    "kernel/engine/src/model_selection.rs": "22727b8aef1eeefac922a2fafe7fb5e752623aa62da8ee4addad5ac3ff383635",
+    "scripts/benchmark_contract.py": "f58631cfe90f7ed75aca1a2983c075c118fbfb74100597aac7431b05fea32889",
+    "scripts/model_role_evaluation_matrix.py": "def8fcdb7f89616738089d8229697f5ab9aca5de17c36d5decf9776cf702446e",
+    "scripts/sprint_15_evidence.py": "433ea2025cd727f65415f2e697b0d903f6b94b73217807b7a7008421f1a68cbb",
+    "shells/host/src/diagnostic_export.rs": "f005a64cdc4d72adb2aa6ef3d874212a8aa2b3a77d67ddc3259195cda6cac345",
+    "shells/host/src/linux_read.rs": "224755dfb22a01911f522279707921f37b6967f1c4a68fcc7106f5093b79d8d4",
+    "shells/host/src/protocol.rs": "4abaa2a9aefdaa30c394c90df6959981cd42cc368a07056c72884a1cc060bb85",
+    "shells/vscode/src/extension.ts": "2c476d08d7f16f05507f1c3c083025c778ecf12329c94053d63c3ab0f794034f",
+    "shells/vscode/src/host_bridge.ts": "2777059e54ef1e16807f47dfcf6b5e514147fc8d9a1a9e3fdfbb1bc337744f2b",
+    "shells/vscode/src/provider.ts": "b3f6c06dd5e6fad168301c8bcb77bbcfe4bc524ed5fbfb70cf070c9325c34de4",
+    "tests/test_benchmark_contract.py": "9a2998f0dd3b5cb1d0df88acd6fba10759cfc53e21a0b6526d3450e7de46d1b4",
+    "tests/test_model_role_evaluation_matrix.py": "1fb7835b7a389d83ae2323af81819fc1900e8988aafed2f054163de6652cc993",
+    "tests/test_sprint_15_evidence.py": "f50450014bccc79f844b7c8b78b69883f11f939c6519b3485cc43288531e972c"
+  },
+  "stories": [
+    {
+      "chat_model_selection": false,
+      "deterministic_first": true,
+      "doctor_provider": true,
+      "manual_selection": true,
+      "os_worker_resource_enforcement": false,
+      "resource_governor": true,
+      "status": "PASS-LOCAL-CONTRACTS-BLOCKED-PRODUCT-WIRING",
+      "story_id": "15.1"
+    },
+    {
+      "full_surface_canary_sweep": false,
+      "native_accessibility_evidence": false,
+      "native_chat_doctor": true,
+      "network_health_probe": false,
+      "reviewed_export": true,
+      "status": "PASS-LINUX-LOCAL-BLOCKED-NATIVE-ACCESSIBILITY",
+      "story_id": "15.2"
+    },
+    {
+      "admitted_product_profile": false,
+      "benchmark_schema": true,
+      "candidate_matrix_reconciled": true,
+      "exact_gemma_trials_complete": false,
+      "frozen_corpus": true,
+      "muse_exact_rejection_retained": true,
+      "status": "PASS-ATTRIBUTION-BLOCKED-EXACT-CANDIDATE-EVALUATION",
+      "story_id": "15.3"
+    }
+  ],
+  "summary": {
+    "local_contract_passed": true,
+    "product_model_available": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  }
+}
