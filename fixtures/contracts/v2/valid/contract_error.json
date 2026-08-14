@@ -1,0 +1,1 @@
+{"schema_version":2,"error_id":"error-0001","code":"fixture.denied","category":"policy","message":"Synthetic denial","field_path":[],"retry":"after_user_decision","caused_by":null}

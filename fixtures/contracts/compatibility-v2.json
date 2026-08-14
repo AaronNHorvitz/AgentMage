@@ -1,0 +1,25 @@
+{
+  "automatic_migration": "none",
+  "canonical_bytes": "stable-for-exact-schema-v2-values",
+  "cargo_package_version": "0.0.0",
+  "current_wire_version": 2,
+  "duplicate_fields": "rejected",
+  "macos_status": "blocked-macos",
+  "missing_fields": "rejected",
+  "newer_version_disposition": {
+    "status": "rejected",
+    "version": 3
+  },
+  "older_version_disposition": {
+    "status": "rejected",
+    "version": 1
+  },
+  "positive_authority_path": "absent",
+  "record_type": "kernel-contract-compatibility",
+  "schema_version": 1,
+  "supported_wire_versions": [
+    2
+  ],
+  "trailing_values": "rejected",
+  "unknown_fields": "rejected"
+}

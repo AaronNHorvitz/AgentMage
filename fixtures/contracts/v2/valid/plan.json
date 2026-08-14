@@ -1,0 +1,1 @@
+{"schema_version":2,"plan_id":"plan-0001","task_id":"task-0001","work_packet_revision":1,"revision":1,"steps":[{"plan_step_id":"step-0001","ordinal":0,"description":"Read the fixture","depends_on":[],"expected_evidence":["observation"],"state":"ready"}],"state":"current"}
