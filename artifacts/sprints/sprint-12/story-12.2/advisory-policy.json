@@ -1,0 +1,112 @@
+{
+  "artifact_id": "task-12-2-2-3-advisory-policy",
+  "case_ids": [
+    "ADV-01",
+    "ADV-02",
+    "ADV-03",
+    "ADV-04",
+    "ADV-05",
+    "ADV-06"
+  ],
+  "claims": {
+    "allowed_advisory_disposition_count": 5,
+    "classifier_completions": 0,
+    "classifier_created_grants": 0,
+    "classifier_denial_overrides": 0,
+    "classifier_destination_selections": 0,
+    "classifier_executions": 0,
+    "classifier_model_switches": 0,
+    "classifier_runtime_executions": 0,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "incomplete_status_count": 7,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "platform_executions": 0,
+    "prohibited_field_attack_count": 6,
+    "release_support": false,
+    "tool_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Task 12.2.2.4 assigns explicit narrower, user-decision, or blocked outcomes to incomplete classifier states; this task only prevents them from changing clearance.",
+    "Tool-set subtraction and scope/redaction/isolation materialization remain later typed product-boundary integrations.",
+    "Tests use synthetic content-free facts and classifier records with no model, classifier runtime, tool, worker, platform effect, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "f7f783adadcd71ff82778a4f6202fbc39300a856",
+  "sources": [
+    {
+      "bytes": 2361,
+      "path": "docs/verification/task-12-2-2-3-advisory-policy-results.md",
+      "sha256": "6e8df07c16cbc4dec13ccc20ba0745dd8bf081e9bf00e753b620d4b538e3b1a4"
+    },
+    {
+      "bytes": 29255,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "ea41d05be09816ad47e6450be254492542ce6cb82abedf1d433fb7f30617c30f"
+    },
+    {
+      "bytes": 22979,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "ee986845df9e90e5f34b700acd3257ac75be6c92fccaa11a061949d62642f798"
+    },
+    {
+      "bytes": 15942,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "1a97de42fc3a3727fd751c2e54c7426179f5ca70679a77de496a62f111417398"
+    },
+    {
+      "bytes": 3107,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "589a01d34eaaaf9b8ede41aebda9dec9c52636144baae08ef65c17ae700a03f1"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3963,
+      "path": "scripts/advisory_policy_evidence.py",
+      "sha256": "a5b2e8b579316a2e6181d6fdaa4ee5b8a11b7f798f2bf5c718a3227ba2ce448e"
+    },
+    {
+      "bytes": 3239,
+      "path": "tests/test_advisory_policy_evidence.py",
+      "sha256": "7fd8561eae9be5cd59a7a5993d5004c4fc610381179279e38e02a94963553df6"
+    }
+  ],
+  "status": "pass-advisory-authority-reduction",
+  "task_ids": [
+    "12.2.2.3"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "f6e1db5c9373669f9c7f0605ad2abb749da67bb38fc085969f9046e272a92756",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "776276261a383d2bc6832041836cbef86c098ed268216199fc031f18b59ec078",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
