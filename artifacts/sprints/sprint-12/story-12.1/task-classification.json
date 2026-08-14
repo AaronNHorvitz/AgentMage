@@ -1,0 +1,104 @@
+{
+  "artifact_id": "s-012-i02-task-classification",
+  "case_ids": [
+    "TC-01",
+    "TC-02",
+    "TC-03",
+    "TC-04",
+    "TC-05"
+  ],
+  "claims": {
+    "authority_class_count": 8,
+    "classification_authority_admitted_count": 0,
+    "complexity_class_count": 3,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "intent_class_count": 8,
+    "manual_fuzzing_executed": false,
+    "natural_language_intent_parsing_implemented": false,
+    "persistent_state_changed": false,
+    "release_support": false,
+    "risk_class_count": 4,
+    "risk_intent_cross_product_count": 72,
+    "semantic_classifier_implemented": false,
+    "tool_or_model_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Intent is an explicit descriptive label supplied with an already typed task; natural-language intent parsing is not claimed.",
+    "Data sensitivity, model capability, advisory classifier restrictions, confidence/disagreement behavior, and Decision 0027 quantitative campaigns remain Story 12.2 work.",
+    "No tool, model, worker, persistence, network, platform, package, or release workflow is exercised or claimed.",
+    "Manual fuzzing remains deferred and is not represented by the deterministic tests."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "4e18a2a2df38872e3139274a822ca4c305a94b5c",
+  "sources": [
+    {
+      "bytes": 2471,
+      "path": "docs/verification/s-012-i02-task-classification-results.md",
+      "sha256": "55dc0cb770aa5a10debaf8e5084a6f7a58f6faeec47cbf584b3c31cc0f760a2b"
+    },
+    {
+      "bytes": 15121,
+      "path": "kernel/engine/src/task_classification.rs",
+      "sha256": "c3e99a740d7518015b7ddd64bce4e817f7797a77e9938b631436c95ea58c1285"
+    },
+    {
+      "bytes": 14109,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "50f2c5041492162ce3d23a509e394e16f03ac34d15d35a843dbc68a0eb884119"
+    },
+    {
+      "bytes": 48415,
+      "path": "kernel/engine/src/work_packet.rs",
+      "sha256": "579547244132d5db8f824ec94f9c841daa7c574034c7b8a5f5b339947c7da36e"
+    },
+    {
+      "bytes": 2190,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "c8d777787730e8435b4a3012aed1fb9a3c98ad4b8507a1524fe247fe6ed2c105"
+    },
+    {
+      "bytes": 9459,
+      "path": "scripts/task_classification_evidence.py",
+      "sha256": "3a4278ef37ee5c8cf6076bb69c71e44d50e5a45a8a20dfe47915c4f8dc6471d8"
+    },
+    {
+      "bytes": 3449,
+      "path": "tests/test_task_classification_evidence.py",
+      "sha256": "075e15857bb14545f6539687c87e7c1122d2207fe55204690337e8cb3ba97854"
+    }
+  ],
+  "status": "pass-deterministic-descriptive-classification",
+  "task_ids": [
+    "12.1.1.2",
+    "S-012-I02"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "3bd5ddcb56a0470ddf9d11b38d1988493e5efc93518ec3441fd12d4bdd522bd5",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "75dfdfb0e106f74b1f71c47fea83d94a861bade255e2249775a7ab568baae95e",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
