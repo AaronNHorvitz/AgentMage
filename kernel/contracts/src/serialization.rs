@@ -46,6 +46,7 @@ impl_versioned_contract!(
     crate::ModelCapabilityAssessment,
     crate::DeterministicPolicyFacts,
     crate::AdvisoryClassifierResult,
+    crate::ReclassificationRequest,
     crate::VerifierCandidate,
     crate::AuthorityTransactionRecord,
     crate::BoundaryFailure,

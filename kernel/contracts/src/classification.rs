@@ -492,6 +492,86 @@ pub struct AdvisoryClassifierResult {
     pub evidence: Vec<EvidenceReference>,
 }
 
+/// Content class that requires fresh classification before its next trust boundary.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum ReclassificationContentKind {
+    /// Newly read file, record, or other content.
+    ReadContent,
+    /// Registered tool output.
+    ToolOutput,
+    /// Proposed or produced patch.
+    Patch,
+    /// Proposed or produced diff.
+    Diff,
+    /// Email, chat, or other message content.
+    Message,
+    /// User- or provider-supplied attachment.
+    Attachment,
+    /// Connector or provider result.
+    ConnectorResult,
+    /// Generated or imported summary.
+    Summary,
+    /// Diagnostic record or output.
+    Diagnostic,
+    /// Payload prepared for export.
+    ExportPayload,
+}
+
+/// Closed trust boundary used by continuous reclassification.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum ClassificationBoundary {
+    /// Initial content ingestion boundary.
+    Ingest,
+    /// Security-authoritative kernel processing boundary.
+    Kernel,
+    /// Local model-context boundary.
+    ModelContext,
+    /// Registered tool-input boundary.
+    ToolInput,
+    /// Encrypted persistence boundary.
+    Persistence,
+    /// User-visible display boundary.
+    UserDisplay,
+    /// Local export assembly boundary.
+    Export,
+    /// Approved external network boundary.
+    Network,
+}
+
+/// Versioned request to reclassify one exact observed revision before its next boundary.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReclassificationRequest {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable reclassification request identity.
+    pub request_id: String,
+    /// Exact task identity.
+    pub task_id: TaskId,
+    /// Exact action identity.
+    pub action_id: ActionId,
+    /// Content class requiring reclassification.
+    pub content_kind: ReclassificationContentKind,
+    /// Current source trust boundary.
+    pub source_boundary: ClassificationBoundary,
+    /// Requested next trust boundary.
+    pub destination_boundary: ClassificationBoundary,
+    /// Lowercase SHA-256 digest of exact observed content.
+    pub subject_sha256: String,
+    /// Exact source revision or generation observed.
+    pub observed_revision: String,
+    /// Exact current data-sensitivity assessment identity.
+    pub sensitivity_assessment_id: String,
+    /// Lowercase SHA-256 digest of current deterministic policy facts.
+    pub policy_fact_sha256: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::{

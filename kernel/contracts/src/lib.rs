@@ -48,11 +48,12 @@ pub use claim::{
 };
 pub use classification::{
     ActionRisk, ActionRiskAssessment, AdvisoryClassifierDisposition, AdvisoryClassifierResult,
-    AdvisoryClassifierStatus, AutonomyLevel, BudgetState, CredentialClass,
+    AdvisoryClassifierStatus, AutonomyLevel, BudgetState, ClassificationBoundary, CredentialClass,
     DataSensitivityAssessment, DeterministicPolicyFacts, DisclosureClass, ExactAuthorityState,
     ModelCapabilityAssessment, ModelCapabilityRole, ModelCapabilityStatus, NetworkRequirement,
-    PathScopeState, PolicyDestinationClass, PolicySourceClass, RepositoryState, StaticPolicyCheck,
-    StaticPolicyCheckKind, StaticPolicyCheckState,
+    PathScopeState, PolicyDestinationClass, PolicySourceClass, ReclassificationContentKind,
+    ReclassificationRequest, RepositoryState, StaticPolicyCheck, StaticPolicyCheckKind,
+    StaticPolicyCheckState,
 };
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,

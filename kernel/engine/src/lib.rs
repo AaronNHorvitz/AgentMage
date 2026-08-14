@@ -41,6 +41,8 @@ pub mod preclassification_policy;
 pub mod propagation;
 /// Bounded concise reasoning records and deterministic verification gates.
 pub mod reasoning;
+/// Continuous content reclassification before successive trust boundaries.
+pub mod reclassification;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
 /// Bounded, configuration-bound session environment and provenance capture.

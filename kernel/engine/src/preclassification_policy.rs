@@ -113,6 +113,17 @@ impl PreclassificationClearance {
             && action_id == Some(&self.action_id)
             && self.fact_set_sha256 == input_sha256
     }
+
+    pub(crate) fn matches_reclassification_identity(
+        &self,
+        task_id: &TaskId,
+        action_id: &ActionId,
+        fact_set_sha256: &str,
+    ) -> bool {
+        self.task_id == *task_id
+            && self.action_id == *action_id
+            && self.fact_set_sha256 == fact_set_sha256
+    }
 }
 
 /// Stateless deterministic gate that must run before advisory classification.
