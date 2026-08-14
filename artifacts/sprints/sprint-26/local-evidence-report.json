@@ -1,0 +1,210 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-G-V0.1-BLOCKED",
+      "owner": "25.1"
+    },
+    {
+      "code": "PRIVACY-DECISION-PLACEHOLDER",
+      "owner": "26.1.3.5"
+    },
+    {
+      "code": "RECORDS-DECISION-PLACEHOLDER",
+      "owner": "26.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-26-REVIEW-ABSENT",
+      "owner": "26.1.3.5"
+    },
+    {
+      "code": "SUPPORTED-PACKAGE-INTEGRATION-ABSENT",
+      "owner": "26.1.2.2"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "43f6c124a69d863215c1bbd94759c12a808c1c948d7b7040394033be0be0fec3"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "d3cb2e4047f152c0bdc9cdc34944130840065306823b4b6997966a2e62927bff"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "311cb3431f93353627700ca8fdb388270b36348f7b11bf843f252015a56c7cfa"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "4babe543cad6162787359d1e8a5a4dd82643f03d2e344d00c2fca53927161f99"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_26_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "backup_restore_and_migration_preview": true,
+    "canonical_markdown_write_authority": false,
+    "closed_fourteen_record_schema_registry": true,
+    "configurable_layout_defaults": true,
+    "disposable_sqlite_index": true,
+    "field_level_owner_and_lifecycle_dictionary": true,
+    "obsidian_specific_behavior": false,
+    "operational_store_dependency": false,
+    "plain_folder_snapshot_adapter": true,
+    "preview_only_create_and_compare_swap_update": true,
+    "relationship_duplicate_import_dashboard_and_export": true,
+    "secret_candidate_rejection": true,
+    "stable_path_independent_identity": true,
+    "supported_package_integration": false
+  },
+  "record_type": "sprint_26_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-GOV-006",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-CIV-001",
+    "SR-CIV-002",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005"
+  ],
+  "source_revision": "2cb70b60aa92810719ce9e84c5e9e91e25efe273",
+  "source_sha256": {
+    "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
+    "capabilities/knowledge/README.md": "fcf9e6e4c09e10025c7efa99c2df0b129236d166b7b824a51b2686407faab5f5",
+    "capabilities/knowledge/src/authority.rs": "225a72198b8a867700645cc3c53e34b3cc6410ba7ec1c192527484df62f4d139",
+    "capabilities/knowledge/src/domain.rs": "7eb91872cf08f5c496ee2ddc83e3387c1ca0434bd844d99e328e4041c07d678d",
+    "capabilities/knowledge/src/index.rs": "858fa352ee67226f01d1d10217d05c987d90d6c8424d08240cd8094ea05170e4",
+    "capabilities/knowledge/src/lib.rs": "b8b998afd88f011dc373b6cb7744161669cc25468132bb290cf30cbeb8603886",
+    "capabilities/knowledge/src/lifecycle.rs": "8724271a3fd6b87b62ed0c26bdfb434f299b166582eda98ff88187c40866ac46",
+    "capabilities/knowledge/src/operations.rs": "3a29668b8e47a319fd69568110cef1a70de5495f2d90336dc6f26ccdfa09f4ca",
+    "capabilities/knowledge/src/plain_folder.rs": "34df6fe363a79497a26397522ec535fbb1910ba1c38abfc0fb91540f09129b84",
+    "capabilities/knowledge/src/schema.rs": "db47ced60e9d5218dd3a74f388f17ca4bba35cfddca59667e1703cd2ade046f3",
+    "capabilities/knowledge/src/store.rs": "170bf86535172b578f2802e0b06a72d51b873576e095723b04c5efcb1c494e59",
+    "docs/architecture/knowledge-authority-boundary.md": "f8f2e77b1856b0ce743e3b985b33a6ac24cc642bdf26b16670a1768093698aab",
+    "docs/verification/sprint-26-local-results.md": "2906334da47ec1db8bf0cf0fd865815ba3308f9187907d94f11a820d95cf6c4d",
+    "scripts/sprint_26_evidence.py": "fe7bbf67435542186fda4b0f93d3a177a6047024cd3ce88feb8c752c7f702821",
+    "tests/test_sprint_26_evidence.py": "9086551c55c03a0810587a648106b9b88ba6dbd651295b0ead833671c90cc55e"
+  },
+  "summary": {
+    "canonical_write_enabled": false,
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "adversarial_secret_path_link_and_content_matrix": true,
+    "backup_restore_and_migration_dry_run": true,
+    "canonical_schema_and_data_dictionary": true,
+    "complete_local_product_and_docs_gates": true,
+    "derived_index_export_and_dashboard": true,
+    "independent_review": false,
+    "operational_knowledge_separation": true,
+    "plain_folder_and_stable_identity": true,
+    "privacy_and_records_decisions": false,
+    "supported_package_integration": false,
+    "upstream_release_gate": false
+  }
+}
