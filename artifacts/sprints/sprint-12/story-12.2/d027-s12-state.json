@@ -1,0 +1,109 @@
+{
+  "artifact_id": "task-12-2-4-1-d027-s12-state",
+  "case_ids": [
+    "D027-STATE-01",
+    "D027-STATE-02",
+    "D027-STATE-03",
+    "D027-STATE-04",
+    "D027-STATE-05"
+  ],
+  "claims": {
+    "advisory_completion_candidate_count": 10,
+    "ceiling_count": 13,
+    "competing_proposal_admissions": 0,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "illegal_edge_count": 237,
+    "legal_edge_count": 52,
+    "manual_fuzzing_executed": false,
+    "ordered_state_pair_count": 289,
+    "ordinary_admission_count": 48,
+    "ordinary_verifier_gated_count": 34,
+    "proposal_replay_admissions": 0,
+    "release_support": false,
+    "state_count": 17,
+    "terminal_state_count": 9,
+    "unverified_success_count": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This campaign proves the in-process deterministic state boundary; encrypted persistence wiring and the full crash-before-and-after campaign remain Task 12.2.4.4.",
+    "Tests use synthetic identifiers and records with no production model, classifier, tool, worker, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "68ed7adc78c97168ecf8bd31fca9042a0a993761",
+  "sources": [
+    {
+      "bytes": 1821,
+      "path": "docs/verification/task-12-2-4-1-d027-state-results.md",
+      "sha256": "80ff215a694a4ce32cdd9ab550368ffa1544e0919787e5170e9c85acc2420501"
+    },
+    {
+      "bytes": 14890,
+      "path": "kernel/engine/src/agent_state.rs",
+      "sha256": "de0f9e5d87329ac29f020648232268ffc1629c40adf5f942ad3552e0560686d2"
+    },
+    {
+      "bytes": 11618,
+      "path": "kernel/engine/src/agent_ceiling.rs",
+      "sha256": "b7ed6f7535ffb3c65c6fc807800429b8c81ac5f335f90da7d810668c5eb9623b"
+    },
+    {
+      "bytes": 15400,
+      "path": "kernel/engine/src/agent_proposal.rs",
+      "sha256": "5855b419148639397962347de31eb470c20a0506810843eed96119d2a04aad0a"
+    },
+    {
+      "bytes": 16678,
+      "path": "kernel/engine/src/agent_verifier.rs",
+      "sha256": "f93c2755b5d306e5c3be619c23c41d4289ec0fea8f2b7dc097127cbdb7ff3973"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4066,
+      "path": "scripts/d027_s12_state_evidence.py",
+      "sha256": "323eb42c86942973548f89b3f47aafa4bd3794ec2e5190dc9b1bac25bd30a4c7"
+    },
+    {
+      "bytes": 3351,
+      "path": "tests/test_d027_s12_state_evidence.py",
+      "sha256": "ac20c4867efce461edf33e3e554e727b93e4180b8b12601391a5b34338ecd0b4"
+    }
+  ],
+  "status": "pass-d027-s12-state",
+  "task_ids": [
+    "12.2.4.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "4d75bf7c68f1718e1125ae81be3b4d7294b0e0409a1823241ac004fc982bb920",
+      "exit_code": 0,
+      "expected_marker_sha256": "3a4e42a589081c7fec0694fb1d696c210e96e2e8edab9009608b577a751526af",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "8f9e43a2db710bec24eed0eb9bdbd1d9e361791105b3916d790927b7d37e071e",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
