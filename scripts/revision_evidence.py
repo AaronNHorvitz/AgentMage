@@ -13,14 +13,24 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from scripts.evidence_core import (
-    EvidenceError,
-    atomic_write,
-    canonical_json_bytes,
-    git_blob,
-    git_source_identity,
-    valid_sha256,
-)
+try:
+    from scripts.evidence_core import (
+        EvidenceError,
+        atomic_write,
+        canonical_json_bytes,
+        git_blob,
+        git_source_identity,
+        valid_sha256,
+    )
+except ModuleNotFoundError:
+    from evidence_core import (
+        EvidenceError,
+        atomic_write,
+        canonical_json_bytes,
+        git_blob,
+        git_source_identity,
+        valid_sha256,
+    )
 
 
 @dataclass(frozen=True)

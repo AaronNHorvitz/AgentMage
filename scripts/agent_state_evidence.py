@@ -3,7 +3,10 @@
 
 from pathlib import Path
 
-from scripts.revision_evidence import RevisionEvidenceSpec, run_cli
+try:
+    from scripts.revision_evidence import RevisionEvidenceSpec, run_cli
+except ModuleNotFoundError:
+    from revision_evidence import RevisionEvidenceSpec, run_cli
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = RevisionEvidenceSpec(
