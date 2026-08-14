@@ -306,6 +306,11 @@ struct VerifiedArtifact {
     sha256: [u8; 32],
 }
 
+struct ProjectionMount<'descriptor> {
+    descriptor: &'descriptor OwnedFd,
+    guest_path: &'static str,
+}
+
 impl fmt::Debug for VerifiedArtifact {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
@@ -432,7 +437,13 @@ impl LinuxSandboxRunner {
                     return Err(error(LinuxSandboxErrorKind::TargetMismatch));
                 }
                 let projection = file_projection(held)?;
-                self.run_projection_arguments(&projection, &[OsString::from("/input/object")])
+                self.run_projection_arguments(
+                    &[ProjectionMount {
+                        descriptor: &projection,
+                        guest_path: "/input/object",
+                    }],
+                    &[OsString::from("/input/object")],
+                )
             }
             LinuxSandboxOperation::ReadDirectory(_) => {
                 if held.intent() != PathResolutionIntent::ReadDirectory
@@ -441,16 +452,30 @@ impl LinuxSandboxRunner {
                     return Err(error(LinuxSandboxErrorKind::TargetMismatch));
                 }
                 let projection = directory_projection(held, excluded_targets)?;
-                self.run_projection_arguments(&projection, &[OsString::from("/input/object")])
+                self.run_projection_arguments(
+                    &[ProjectionMount {
+                        descriptor: &projection,
+                        guest_path: "/input/object",
+                    }],
+                    &[OsString::from("/input/object")],
+                )
             }
         }
     }
 
     fn run_projection_arguments(
         &self,
-        projection_descriptor: &OwnedFd,
+        projections: &[ProjectionMount<'_>],
         arguments: &[OsString],
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        if projections.is_empty()
+            || projections.len() > 8
+            || projections
+                .iter()
+                .any(|projection| !valid_input_guest_path(projection.guest_path))
+        {
+            return Err(error(LinuxSandboxErrorKind::InvalidManifest));
+        }
         let parent_pid = std::process::id();
         let descriptor_source =
             |descriptor: &OwnedFd| format!("/proc/{parent_pid}/fd/{}", descriptor.as_raw_fd());
@@ -499,15 +524,17 @@ impl LinuxSandboxRunner {
             .arg(format!(
                 "--property=RuntimeMaxSec={}s",
                 self.limits.runtime_seconds
-            ))
-            .arg(format!(
-                "--property=OpenFile={}:object:read-only",
-                descriptor_source(projection_descriptor)
-            ))
-            .arg(format!(
-                "--property=OpenFile={}:worker:read-only",
-                descriptor_source(&self.manifest.worker.descriptor)
             ));
+        for (index, projection) in projections.iter().enumerate() {
+            command.arg(format!(
+                "--property=OpenFile={}:projection-{index}:read-only",
+                descriptor_source(projection.descriptor)
+            ));
+        }
+        command.arg(format!(
+            "--property=OpenFile={}:worker:read-only",
+            descriptor_source(&self.manifest.worker.descriptor)
+        ));
         for (index, runtime) in self.manifest.runtime_files.iter().enumerate() {
             command.arg(format!(
                 "--property=OpenFile={}:runtime-{index}:read-only",
@@ -545,12 +572,17 @@ impl LinuxSandboxRunner {
                 "/app",
                 "--dir",
                 "/input",
-                "--ro-bind-data",
-                "3",
-                "/input/object",
-                "--ro-bind-fd",
-                "4",
             ]);
+        for (index, projection) in projections.iter().enumerate() {
+            command
+                .arg("--ro-bind-data")
+                .arg((index + 3).to_string())
+                .arg(projection.guest_path);
+        }
+        let worker_descriptor = projections.len() + 3;
+        command
+            .arg("--ro-bind-fd")
+            .arg(worker_descriptor.to_string());
         command.arg(
             self.manifest
                 .worker
@@ -561,7 +593,7 @@ impl LinuxSandboxRunner {
         for (index, runtime) in self.manifest.runtime_files.iter().enumerate() {
             command
                 .arg("--ro-bind-fd")
-                .arg((index + 5).to_string())
+                .arg((index + worker_descriptor + 1).to_string())
                 .arg(runtime.guest_path.as_deref().expect("verified guest path"));
         }
         command
@@ -939,6 +971,10 @@ fn valid_runtime_guest_path(path: &Path) -> bool {
     )
 }
 
+fn valid_input_guest_path(path: &str) -> bool {
+    matches!(path, "/input/object" | "/input/request" | "/input/snapshot")
+}
+
 fn file_projection(held: &LinuxHeldObject) -> Result<OwnedFd, LinuxSandboxError> {
     let expected = held
         .preimage()
@@ -1253,7 +1289,13 @@ mod tests {
         arguments: &[OsString],
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         let projection = file_projection(held)?;
-        runner.run_projection_arguments(&projection, arguments)
+        runner.run_projection_arguments(
+            &[super::ProjectionMount {
+                descriptor: &projection,
+                guest_path: "/input/object",
+            }],
+            arguments,
+        )
     }
 
     #[test]
