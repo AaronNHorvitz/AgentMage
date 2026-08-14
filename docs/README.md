@@ -20,3 +20,8 @@ release trust and the Phase 8 Linux platform, configuration, state, key, IPC,
 and process lifecycle candidate.
 Accepted Decision 0018 defines the Phase 9 exact Linux read-and-receipt source
 candidate and preserves the unavailable signed-package boundary for Phase 11.
+
+Sprint 25 pre-release procedures and user-facing limitation disclosures are
+indexed in [`release/README.md`](release/README.md). These documents do not
+supersede Decision 0008: v0.1 is a validation milestone, while v1.0 GA remains
+the first supported release.
