@@ -1,0 +1,176 @@
+{
+  "blockers": [
+    {
+      "code": "PRODUCTION-CONTEXT-PIPELINE-NOT-INTEGRATED",
+      "owner": "22.1.3.1"
+    },
+    {
+      "code": "LONG-PRODUCTION-RESUME-MATRIX-NOT-RETAINED",
+      "owner": "22.1.3.4"
+    },
+    {
+      "code": "PRODUCT-WIDE-CANARY-SWEEP-NOT-RETAINED",
+      "owner": "22.1.3.5"
+    },
+    {
+      "code": "NATIVE-PLATFORM-CRASH-EVIDENCE-NOT-RETAINED",
+      "owner": "22.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-22-REVIEW-NOT-RETAINED",
+      "owner": "22.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "context_management::tests",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "context-tests",
+      "output_sha256": "45bca8542c76047467353bbec753d363a0b30853bb62a3714c4360d50075cdc3"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "checkpoint",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "checkpoint-tests",
+      "output_sha256": "3fefbb70d2b6a4820a2a75a0cd38674af7eca3ae63e7ad62d9ac152ffc67b18c"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "seeded_crash_recovery_campaign_never_repeats_a_completed_transition",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "crash-campaign",
+      "output_sha256": "1b1bbca0b2eb4a0ffa80d47c9930ae94f14b054915c6d0a1d3ca581dd9fbac1b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "engine-clippy",
+      "output_sha256": "551a72c77c1093340b9fa328f31bfa46a60f73a6286448ad946c8748d5b2976c"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_22_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "implemented_contracts": {
+    "ambient_filesystem_access": false,
+    "authoritative_evidence_first_dedupe": true,
+    "checked_summary_source_separation": true,
+    "complete_content_free_accounting": true,
+    "context_item_kinds": 11,
+    "encrypted_atomic_checkpoint_publication": true,
+    "ephemeral_checkpoint_persistence": false,
+    "explicit_drift_decisions": 3,
+    "network_authority": false,
+    "resume_authority": false,
+    "resume_drift_dimensions": 9,
+    "subprocess_crash_runs": 126,
+    "terminal_receipt_checkpoint_binding": true
+  },
+  "record_type": "sprint_22_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-008",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-OPS-003",
+    "SR-TST-005",
+    "SR-TST-006"
+  ],
+  "source_revision": "db32c995fc3ed4fa734fc7934e4486abc3509227",
+  "source_sha256": {
+    "docs/architecture/context-and-crash-safe-resume.md": "505368dccc5c4e37b9c0ce56c9ed4844e3b481574dbd9f405a6d251c44d85c3c",
+    "docs/verification/sprint-22-local-results.md": "2a37ec79bbe130acf39a0ae10d4e1161a701a7d62a13624beafada5bae05d220",
+    "kernel/contracts/src/context.rs": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97",
+    "kernel/engine/migrations/operational-store/0004-session-checkpoints.sql": "2ba8afc6ed5aed817e4b88046e6f28fc1b0b3c7aec98b7479daea34cebb43089",
+    "kernel/engine/src/authority_transaction.rs": "f6dcc6d976bb10faebb4a385e456b7aceecb681bbf1d35f289d796ed8f14ab60",
+    "kernel/engine/src/context_management.rs": "4640c87cc85fdf99a2dc91128a83e11325139fe0bcdc0c77dc380f0762ba8141",
+    "kernel/engine/src/operational_store.rs": "2430fa292326d51e952fe2e745c75732bfb0c971283e7ba2a1819a4008852d59",
+    "scripts/sprint_22_evidence.py": "b31491c8f065fdb3f56864674462f6035ea795b1645ff3543ad7b540c99fb654",
+    "tests/test_sprint_22_evidence.py": "7c5dc538e206224a53311fa7797dd01b3f88ac1018de0bc394b3f5176aca9a33"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "atomic_terminal_publication": true,
+    "checked_summary_matrix": true,
+    "checkpoint_schema_and_tamper_matrix": true,
+    "context_composition_matrix": true,
+    "drift_decision_matrix": true,
+    "ephemeral_no_persistence": true,
+    "independent_review": false,
+    "native_platform_crash_matrix": false,
+    "product_wide_canary_sweep": false,
+    "production_context_integration": false,
+    "subprocess_crash_campaign": true
+  }
+}
