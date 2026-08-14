@@ -32,6 +32,8 @@ pub mod propagation;
 pub mod reasoning;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
+/// Bounded, configuration-bound session environment and provenance capture.
+pub mod session_environment;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
 /// Deterministic descriptive task intent, complexity, and risk classification.

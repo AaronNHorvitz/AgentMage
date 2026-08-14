@@ -366,6 +366,18 @@ impl LoadedConfiguration {
         &self.configuration.permission.allowed_capabilities
     }
 
+    /// Returns the model profile selected by this exact configuration.
+    #[must_use]
+    pub fn model_profile_id(&self) -> &str {
+        &self.configuration.model.model_profile_id
+    }
+
+    /// Returns the configuration profile that owns the effective permission policy.
+    #[must_use]
+    pub fn permission_profile_id(&self) -> &str {
+        &self.configuration.core.profile_id
+    }
+
     /// Reports whether this exact profile enables a model runtime.
     #[must_use]
     pub const fn model_enabled(&self) -> bool {

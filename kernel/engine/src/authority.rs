@@ -38,6 +38,8 @@ pub enum DescriptiveArtifactKind {
     ReasoningRecord,
     /// Proposed or verified material-claim record.
     ClaimRecord,
+    /// Captured session environment or provenance record.
+    SessionRecord,
 }
 
 /// Claimed producer of one descriptive authority-escalation attempt.
@@ -102,6 +104,7 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::MaterialClaim {}
     impl Sealed for agentmage_kernel_contracts::VerifiedMaterialClaim {}
     impl Sealed for agentmage_kernel_contracts::ClaimBoundFinalResponse {}
+    impl Sealed for crate::session_environment::SessionEnvironmentCapture {}
     impl Sealed for crate::task_classification::TaskClassification {}
 }
 
@@ -150,6 +153,7 @@ impl_non_authoritative!(ClaimRecord =>
     VerifiedMaterialClaim,
     ClaimBoundFinalResponse,
 );
+impl_non_authoritative!(SessionRecord => crate::session_environment::SessionEnvironmentCapture);
 
 /// Typed result produced when a descriptive artifact is offered as execution authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
