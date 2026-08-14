@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Interface-independent contracts shared across AgentMage components.
 
+mod agent;
 mod approval;
 mod boundary;
 mod common;
@@ -20,6 +21,10 @@ mod task;
 mod tool;
 mod transaction;
 
+pub use agent::{
+    AgentFinalResponse, AgentFinalState, AgentProgressEvent, AgentProgressKind, AgentStatusKind,
+    AgentStatusResponse, UserMessageDisposition, UserMessageIntent,
+};
 pub use approval::ApprovalRequest;
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,

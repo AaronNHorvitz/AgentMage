@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// One-active-step plan history, progress, interruption, and response validation.
+pub mod agent_progress;
 /// Bounded single-agent observe, plan, action-proposal, and review control loop.
 pub mod agent_runtime;
 /// Deterministic non-authoritative approval-display construction.
