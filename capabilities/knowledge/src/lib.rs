@@ -12,6 +12,7 @@ mod operations;
 mod plain_folder;
 mod retrieval;
 mod schema;
+mod semantic;
 mod store;
 
 pub use authority::{
@@ -64,6 +65,13 @@ pub use retrieval::{
 };
 pub use schema::{
     KnowledgeRecordSchema, knowledge_schema, knowledge_schemas, verify_schema_registry,
+};
+pub use semantic::{
+    LocalSemanticIndex, SemanticActivation, SemanticAdmissionReceipt, SemanticChunkInput,
+    SemanticError, SemanticField, SemanticIndexHit, SemanticIndexKey, SemanticIndexReport,
+    SemanticIndexSummary, SemanticLifecycleReceipt, SemanticModelManifest, SemanticModelRole,
+    SemanticOptIn, SemanticProfileState, SemanticRuntime, SemanticScopeEntry,
+    SemanticStorageProtection, SemanticVectorInput,
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
