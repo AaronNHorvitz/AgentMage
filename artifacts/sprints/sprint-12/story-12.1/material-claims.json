@@ -1,0 +1,110 @@
+{
+  "artifact_id": "s-012-i05-material-claims",
+  "case_ids": [
+    "MCL-01",
+    "MCL-02",
+    "MCL-03",
+    "MCL-04",
+    "MCL-05",
+    "MCL-06"
+  ],
+  "claims": {
+    "claim_authority_admitted_count": 0,
+    "claim_evidence_role_count": 9,
+    "current_subject_bound_proof_required": true,
+    "evidence_reuse_admitted_count": 0,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "live_operation_executions": 0,
+    "manual_fuzzing_executed": false,
+    "material_claim_class_count": 7,
+    "natural_language_claim_extraction_implemented": false,
+    "persistent_claim_ledger_implemented": false,
+    "release_support": false,
+    "typed_unsupported_claims_rejected": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The boundary verifies explicitly typed material claims; natural-language extraction from arbitrary response prose remains later model-output and integration work.",
+    "The ledger is in memory only; encrypted persistence, restart reconciliation, and production session/UI composition remain later work.",
+    "Synthetic evidence references exercise the protocol; no file, test command, Git remote, publication provider, model, or platform worker runs.",
+    "Cross-platform, packaging, release, and quantitative adversarial acceptance remain later gates.",
+    "Manual fuzzing remains deferred and is not represented by these deterministic tests."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "fa5bfabf8a72ccea6e5f730ffbae39f7a5c022ba",
+  "sources": [
+    {
+      "bytes": 2840,
+      "path": "docs/verification/s-012-i05-material-claim-results.md",
+      "sha256": "beb758dd9e3c8fcc926eedc1c0c1e3a93c8fcbda3f0ca30a00414560b17a7615"
+    },
+    {
+      "bytes": 3787,
+      "path": "kernel/contracts/src/claim.rs",
+      "sha256": "193793b9aefa4aa7425060d46fa27fb1481b4e25d5a7f2265b8bdc9d8a8872fa"
+    },
+    {
+      "bytes": 4181,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "c4659dac83a4262c9d09d1c5069baa706ab439af8250003d2bcc9f472a787e51"
+    },
+    {
+      "bytes": 20058,
+      "path": "kernel/engine/src/claim_evidence.rs",
+      "sha256": "2457ba3cf32e9633f7854105da85876b2e951dc1cc3f6f5e67687f8695e255f1"
+    },
+    {
+      "bytes": 16665,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "9e3f1ef2aa9dd8794adc11ef4be9ce224a6a09e6d2e1e852f514cfc5fde52759"
+    },
+    {
+      "bytes": 2497,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "e8c881716c5d92088c9f7016886ce6d26d3e4996f4fdc06a23fb1ac4446c5d75"
+    },
+    {
+      "bytes": 10204,
+      "path": "scripts/material_claim_evidence.py",
+      "sha256": "b734f5c40e55568c538203c802c72f56831b0f9f5dbdc4cf8b695a167e8b2989"
+    },
+    {
+      "bytes": 3498,
+      "path": "tests/test_material_claim_evidence.py",
+      "sha256": "54a51e57b501857f0ca2d0b2115c2cb4337fac6d01b90e11cbecfea672e1c7ee"
+    }
+  ],
+  "status": "pass-typed-evidence-required-claims",
+  "task_ids": [
+    "12.1.1.5",
+    "S-012-I05"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "aa2992a4c884acbb57e52f4a7225bac9ad80cb550f0ca9de55c621176e12830c",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "b7b9884c9ec2b7e336bc6e0c9fc1d4b236149fa50da13f364a4a3df13b4e0613",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
