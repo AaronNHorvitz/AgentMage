@@ -3,6 +3,7 @@
 //! Fedora and Ubuntu platform path adapter.
 
 mod configuration_store;
+mod filesystem_control;
 mod inventory;
 mod ipc;
 mod lifecycle;
@@ -18,6 +19,7 @@ pub use configuration_store::{
     LinuxConfigurationEffectRequest, LinuxConfigurationError, LinuxConfigurationErrorKind,
     LinuxConfigurationStore, open_linux_configuration_store,
 };
+pub use filesystem_control::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits};
 pub use inventory::{
     LinuxDeclaredListener, LinuxDeclaredNetworkRule, LinuxDeclaredProcess, LinuxDeclaredSocket,
     LinuxDeclaredTool, LinuxDeclaredWritable, LinuxInventoryError, LinuxInventoryErrorKind,

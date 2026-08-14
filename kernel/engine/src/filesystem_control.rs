@@ -2021,10 +2021,7 @@ fn validate_operation(
         } => {
             validate_destination(parent, &destination, true)?;
             validate_mode(mode)?;
-            if content.is_empty()
-                || content.len() > MAX_FILE_BYTES
-                || std::str::from_utf8(&content).is_err()
-            {
+            if content.len() > MAX_FILE_BYTES || std::str::from_utf8(&content).is_err() {
                 return Err(FilesystemPlanError::InvalidInput);
             }
             account_bytes(total_bytes, content.len())?;
@@ -3330,6 +3327,40 @@ mod tests {
         assert_eq!(
             build_filesystem_plan(&parent(), request(duplicates)),
             Err(FilesystemPlanError::OperationConflict)
+        );
+
+        let unicode_collision = FilesystemOperationDraft::Create {
+            operation_id: "operation-unicode-collision".to_owned(),
+            destination: destination(&["new"], "Résumé.md", &["RÉSUMÉ.MD"]),
+            content: b"collision\n".to_vec(),
+            mode: 0o600,
+            classification: FileClassification::Documentation,
+        };
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(vec![unicode_collision])),
+            Err(FilesystemPlanError::DestinationCollision)
+        );
+    }
+
+    #[test]
+    fn empty_file_creation_has_an_exact_zero_byte_postimage() {
+        let operation = FilesystemOperationDraft::Create {
+            operation_id: "operation-empty-create".to_owned(),
+            destination: destination(&["new"], "empty.txt", &[]),
+            content: Vec::new(),
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+        let plan = build_filesystem_plan(&parent(), request(vec![operation])).expect("empty plan");
+        let preview = render_filesystem_preview(&plan).expect("empty preview");
+        assert_eq!(plan.operations()[0].postimage_bytes(), b"");
+        assert_eq!(
+            plan.operations()[0].postimage_sha256(),
+            Some(hex_sha256(b"").as_str())
+        );
+        assert_eq!(
+            preview.operations[0].complete_content_preview.as_deref(),
+            Some("\"\"")
         );
     }
 

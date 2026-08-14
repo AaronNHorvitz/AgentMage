@@ -136,7 +136,7 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             .collect()
     }
 
-    fn replace_exact(
+    pub(super) fn replace_exact(
         &self,
         transaction_id: &str,
         index: usize,
@@ -333,7 +333,7 @@ impl AtomicWriteDriver for LinuxAtomicWriteDriver<'_> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ReplaceOutcome {
+pub(super) enum ReplaceOutcome {
     Applied,
     NoChange,
     Uncertain,
@@ -374,7 +374,7 @@ fn uncertain_restore() -> WriteRestoreReport {
     }
 }
 
-fn open_parent(
+pub(super) fn open_parent(
     workspace: &LinuxAuthorizedWorkspace,
     components: &[agentmage_kernel_contracts::WorkspacePathComponent],
 ) -> Result<(OwnedFd, String), WriteDriverError> {
@@ -423,7 +423,7 @@ fn open_parent(
     Ok((io_directory, name.as_str().to_owned()))
 }
 
-fn stage_file(
+pub(super) fn stage_file(
     directory: &OwnedFd,
     name: &str,
     bytes: &[u8],
@@ -469,14 +469,14 @@ fn exchange_back(directory: &OwnedFd, temporary: &str, target: &str) -> Result<(
     remove_staged(directory, temporary)
 }
 
-fn remove_staged(directory: &OwnedFd, name: &str) -> Result<(), ()> {
+pub(super) fn remove_staged(directory: &OwnedFd, name: &str) -> Result<(), ()> {
     match unlinkat(directory, name, AtFlags::empty()) {
         Ok(()) | Err(Errno::NOENT) => fsync(directory).map_err(|_| ()),
         Err(_) => Err(()),
     }
 }
 
-fn open_regular(directory: &OwnedFd, name: &str) -> Result<OwnedFd, WriteDriverError> {
+pub(super) fn open_regular(directory: &OwnedFd, name: &str) -> Result<OwnedFd, WriteDriverError> {
     let descriptor = openat(
         directory,
         name,
@@ -491,7 +491,10 @@ fn open_regular(directory: &OwnedFd, name: &str) -> Result<OwnedFd, WriteDriverE
     Ok(descriptor)
 }
 
-fn read_held_bytes(held: &LinuxHeldObject, maximum: u64) -> Result<Vec<u8>, WriteDriverError> {
+pub(super) fn read_held_bytes(
+    held: &LinuxHeldObject,
+    maximum: u64,
+) -> Result<Vec<u8>, WriteDriverError> {
     held.revalidate()
         .map_err(|_| WriteDriverError::ObservationUnavailable)?;
     let bytes = read_descriptor(&held.object_descriptor, maximum)?;
@@ -500,7 +503,10 @@ fn read_held_bytes(held: &LinuxHeldObject, maximum: u64) -> Result<Vec<u8>, Writ
     Ok(bytes)
 }
 
-fn read_descriptor(descriptor: &OwnedFd, maximum: u64) -> Result<Vec<u8>, WriteDriverError> {
+pub(super) fn read_descriptor(
+    descriptor: &OwnedFd,
+    maximum: u64,
+) -> Result<Vec<u8>, WriteDriverError> {
     let stat = fstat(descriptor).map_err(|_| WriteDriverError::ObservationUnavailable)?;
     if FileType::from_raw_mode(stat.st_mode) != FileType::RegularFile
         || stat.st_nlink != 1
@@ -543,7 +549,12 @@ fn read_descriptor(descriptor: &OwnedFd, maximum: u64) -> Result<Vec<u8>, WriteD
     Ok(bytes)
 }
 
-fn temporary_name(transaction_id: &str, index: usize, purpose: &str, bytes: &[u8]) -> String {
+pub(super) fn temporary_name(
+    transaction_id: &str,
+    index: usize,
+    purpose: &str,
+    bytes: &[u8],
+) -> String {
     let mut digest = Sha256::new();
     digest.update(b"agentmage.linux.write.temporary.v1");
     digest.update((transaction_id.len() as u64).to_be_bytes());
