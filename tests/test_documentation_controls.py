@@ -61,19 +61,19 @@ class DocumentationControlTests(unittest.TestCase):
                     lock["packages"][f"node_modules/{name}"],
                 )
 
-    def test_documentation_workflow_uses_immutable_actions_and_canonical_gate(self) -> None:
+    def test_documentation_workflow_is_a_disabled_local_execution_sentinel(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         action_references = re.findall(r"^\s*uses:\s*([^\s]+)$", workflow, re.MULTILINE)
 
-        self.assertTrue(action_references)
-        for reference in action_references:
-            with self.subTest(action=reference):
-                self.assertRegex(reference, r"^[^@\s]+@[0-9a-f]{40}$")
-
+        self.assertEqual(action_references, [])
+        self.assertIn("  workflow_dispatch:\n", workflow)
+        self.assertNotIn("  push:\n", workflow)
+        self.assertNotIn("  pull_request:\n", workflow)
+        self.assertIn("    if: ${{ false }}", workflow)
         self.assertIn("permissions:\n  contents: read", workflow)
         self.assertIn("runs-on: ubuntu-24.04", workflow)
-        self.assertIn("run: npm run docs:clean-check", workflow)
-        self.assertNotRegex(workflow, r"run: npm (?:ci --ignore-scripts|run docs:check)$")
+        self.assertIn("repository-owned local gate", workflow)
+        self.assertNotIn("run: npm run docs:clean-check", workflow)
 
     def test_one_command_reproduces_the_clean_documentation_gate(self) -> None:
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))

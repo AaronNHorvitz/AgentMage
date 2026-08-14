@@ -66,6 +66,38 @@ class StatusModelTests(unittest.TestCase):
         mutated["models"][0]["enabled"] = True
         self.assertTrue(any("must remain disabled" in item for item in self.validate(mutated)))
 
+    def test_future_candidate_does_not_require_a_gemma_only_status_set(self) -> None:
+        mutated = copy.deepcopy(self.model)
+        candidate = copy.deepcopy(mutated["models"][0])
+        candidate.update(
+            {
+                "id": "eligible-candidate",
+                "verification_status": "not-run",
+                "disposition_status": "blocked",
+                "evidence_basis": [
+                    {"kind": "source", "path": "MODEL-PROVENANCE-POLICY.md"},
+                    {
+                        "kind": "blocker",
+                        "path": "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md",
+                    },
+                    {"kind": "status-assessment", "path": "ENGINEERING-AUDIT-REMEDIATION.md"},
+                ],
+            }
+        )
+        mutated["models"].append(candidate)
+
+        self.assertEqual(self.validate(mutated), [])
+
+    def test_historical_gemma_candidate_cannot_be_deleted(self) -> None:
+        mutated = copy.deepcopy(self.model)
+        mutated["models"] = [
+            item for item in mutated["models"] if item["id"] != "gemma-4-e4b-it"
+        ]
+
+        self.assertTrue(
+            any("preserve evaluated historical candidates" in item for item in self.validate(mutated))
+        )
+
     def test_current_product_cannot_claim_an_enabled_model(self) -> None:
         mutated = copy.deepcopy(self.model)
         mutated["current_product"]["enabled_models"] = ["gemma-4-e4b-it"]
