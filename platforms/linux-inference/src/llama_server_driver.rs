@@ -158,10 +158,7 @@ impl LlamaServerDriver {
     }
 
     fn verify_runtime_tree(&self) -> Result<(), ModelRuntimeFailure> {
-        let root = exact_directory(&self.config.runtime_root, 0o555)?;
-        if root.nlink() < 2 {
-            return Err(failure("model.llama-driver.runtime-root-invalid", false));
-        }
+        exact_directory(&self.config.runtime_root, 0o555)?;
         for (relative, bytes, digest) in RUNTIME_FILES {
             exact_file(&self.config.runtime_root.join(relative), *bytes, digest)?;
         }
@@ -841,6 +838,7 @@ fn failure(code: &str, dependency: bool) -> ModelRuntimeFailure {
 mod tests {
     use std::fs;
     use std::io::{Read, Write};
+    use std::os::unix::fs::PermissionsExt;
     use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -850,8 +848,8 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::{
-        Endpoint, UnixHttpClient, launch_arguments, parse_http_response, plain_text,
-        valid_socket_path,
+        Endpoint, UnixHttpClient, exact_directory, launch_arguments, parse_http_response,
+        plain_text, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -968,6 +966,14 @@ mod tests {
         )));
         let oversized = format!("/{}/llama-server.sock", "a".repeat(100));
         assert!(!valid_socket_path(Path::new(&oversized)));
+    }
+
+    #[test]
+    fn exact_directory_does_not_assume_filesystem_link_count_semantics() {
+        let directory = TestDirectory::new();
+        fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o555))
+            .expect("read-only directory");
+        exact_directory(&directory.0, 0o555).expect("exact directory");
     }
 
     #[test]
