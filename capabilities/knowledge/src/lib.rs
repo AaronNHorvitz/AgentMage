@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
+mod authority;
 mod domain;
 mod index;
 mod lifecycle;
@@ -10,6 +11,10 @@ mod plain_folder;
 mod schema;
 mod store;
 
+pub use authority::{
+    KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
+    verify_data_dictionary,
+};
 pub use domain::{
     KnowledgeError, KnowledgeField, KnowledgeLink, KnowledgeLinkKind, KnowledgePrivacy,
     KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention,

@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::{
-    KnowledgeError, KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind,
-    KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
-    knowledge_schemas, validate_record,
+    KnowledgeError, KnowledgePrivacy, KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind,
+    KnowledgeRecordSummary, KnowledgeRetention, KnowledgeRetentionKind, KnowledgeStore,
+    KnowledgeWriteKind, KnowledgeWritePreview, knowledge_schemas, validate_record,
 };
 
 const MAX_NOTE_BYTES: usize = 4 * 1024 * 1024;
@@ -56,6 +56,10 @@ pub struct PlainFolderLayout {
     pub link_close: String,
     /// Stable identifier prefix required by this schema generation.
     pub identifier_prefix: String,
+    /// Configurable default privacy for newly drafted records.
+    pub default_privacy: KnowledgePrivacy,
+    /// Configurable default retention for newly drafted records.
+    pub default_retention: KnowledgeRetention,
     /// Explicit per-kind path templates.
     pub kind_paths: Vec<KnowledgeKindPathTemplate>,
 }
@@ -71,6 +75,11 @@ impl PlainFolderLayout {
             link_open: "[[".to_owned(),
             link_close: "]]".to_owned(),
             identifier_prefix: "knowledge-".to_owned(),
+            default_privacy: KnowledgePrivacy::Private,
+            default_retention: KnowledgeRetention {
+                kind: KnowledgeRetentionKind::UntilSupersededOrDeleted,
+                expires_at: None,
+            },
             kind_paths: knowledge_schemas()
                 .iter()
                 .map(|schema| KnowledgeKindPathTemplate {
@@ -96,6 +105,8 @@ impl PlainFolderLayout {
                 ("[[", "]]") | ("<", ">")
             )
             || self.identifier_prefix != "knowledge-"
+            || self.default_privacy == KnowledgePrivacy::HighlyRestricted
+            || !valid_retention_template(&self.default_retention)
             || self.kind_paths.len() != knowledge_schemas().len()
         {
             return Err(KnowledgeError::InvalidTemplate);
@@ -137,6 +148,18 @@ impl PlainFolderLayout {
         components.push(filename);
         WorkspacePath::new(self.workspace_id.clone(), components)
             .map_err(|_| KnowledgeError::InvalidTemplate)
+    }
+}
+
+fn valid_retention_template(retention: &KnowledgeRetention) -> bool {
+    match retention.kind {
+        KnowledgeRetentionKind::UntilExpiration => retention
+            .expires_at
+            .as_deref()
+            .is_some_and(|value| value.len() >= 20 && value.len() <= 64 && value.ends_with('Z')),
+        KnowledgeRetentionKind::UntilSupersededOrDeleted | KnowledgeRetentionKind::UserHold => {
+            retention.expires_at.is_none()
+        }
     }
 }
 
@@ -534,6 +557,11 @@ mod tests {
         layout.link_close = ">".to_owned();
         layout.kind_paths[0].folder_components = vec!["custom people".to_owned()];
         layout.kind_paths[0].filename = KnowledgeFilenameTemplate::KindAndRecordId;
+        layout.default_privacy = KnowledgePrivacy::Ordinary;
+        layout.default_retention = KnowledgeRetention {
+            kind: KnowledgeRetentionKind::UserHold,
+            expires_at: None,
+        };
         layout.validate().expect("layout");
         let path = layout
             .proposed_path(&record("knowledge-person-001", KnowledgeRecordKind::Person))
