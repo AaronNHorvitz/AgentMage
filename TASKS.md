@@ -2425,40 +2425,42 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 31.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 31.1.1.1** (legacy `S-026-I01`): Implement working, episodic, semantic, procedural, and preference memory types with workspace, project, conversation, source, sensitivity, confidence, and expiry namespaces.
-  - [ ] **Sub-task 31.1.1.2** (legacy `S-026-I02`): Implement the memory-candidate pipeline for evidence checks, secret detection, confidence, retention, user policy, and promotion.
-  - [ ] **Sub-task 31.1.1.3** (legacy `S-026-I03`): Create `MEMORY.md` as a compact linked index and per-topic Markdown memory records with shared tags and wiki links.
-  - [ ] **Sub-task 31.1.1.4** (legacy `S-026-I04`): Create bounded `WORKING.md` with complete-load limits and end-of-task compaction into reviewed durable candidates.
-  - [ ] **Sub-task 31.1.1.5** (legacy `S-026-I05`): Implement selective long-term loading by tag, link, source, relevance, and context budget.
-  - [ ] **Sub-task 31.1.1.6** (legacy `S-026-I06`): Implement contradiction preservation, supersession, correction, decay, inspection, deletion, and last-verification state.
+  - [x] **Sub-task 31.1.1.1** (legacy `S-026-I01`): Implement working, episodic, semantic, procedural, and preference memory types with workspace, project, conversation, source, sensitivity, confidence, and expiry namespaces.
+  - [x] **Sub-task 31.1.1.2** (legacy `S-026-I02`): Implement the memory-candidate pipeline for evidence checks, secret detection, confidence, retention, user policy, and promotion.
+  - [x] **Sub-task 31.1.1.3** (legacy `S-026-I03`): Create `MEMORY.md` as a compact linked index and per-topic Markdown memory records with shared tags and wiki links.
+  - [x] **Sub-task 31.1.1.4** (legacy `S-026-I04`): Create bounded `WORKING.md` with complete-load limits and end-of-task compaction into reviewed durable candidates.
+  - [x] **Sub-task 31.1.1.5** (legacy `S-026-I05`): Implement selective long-term loading by tag, link, source, relevance, and context budget.
+  - [x] **Sub-task 31.1.1.6** (legacy `S-026-I06`): Implement contradiction preservation, supersession, correction, decay, inspection, deletion, and last-verification state.
   - [ ] **Sub-task 31.1.1.7** (legacy `S-026-I07`): Implement encrypted versioned export and import without machine-specific paths or secrets.
   - [ ] **Sub-task 31.1.1.8** (legacy `S-026-I08`): Test project isolation, stale summaries, interrupted writes, corrupt indexes, backup restore, and migration between machines.
 
 - [ ] **Task 31.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 31.1.2.1:** Memory schemas and candidate-policy engine.
-  - [ ] **Sub-task 31.1.2.2:** Human-readable memory templates and lint.
+  - [x] **Sub-task 31.1.2.1:** Memory schemas and candidate-policy engine.
+  - [x] **Sub-task 31.1.2.2:** Human-readable memory templates and lint.
   - [ ] **Sub-task 31.1.2.3:** Memory inspection, correction, supersession, export, and deletion interfaces.
   - [ ] **Sub-task 31.1.2.4:** Recovery and isolation test bundle.
 
 - [ ] **Task 31.1.3 - Verify and close the story**
-  - [ ] **Sub-task 31.1.3.1:** `S-026-UT01` classifies candidate facts as temporary context, durable fact, preference, procedure, unresolved claim, contradiction, or prohibited content; assert source requirements and confidence/state rules.
+  - [x] **Sub-task 31.1.3.1:** `S-026-UT01` classifies candidate facts as temporary context, durable fact, preference, procedure, unresolved claim, contradiction, or prohibited content; assert source requirements and confidence/state rules.
   - [ ] **Sub-task 31.1.3.2:** `S-026-UT02` exercises approve, reject, edit, supersede, correct, export, expire, hold, and delete operations; assert linked indexes/views update and history remains bounded and attributable.
-  - [ ] **Sub-task 31.1.3.3:** `S-026-ST01` attempts secret capture, inferred-sensitive memory, cross-person/project leakage, prompt-based self-promotion, and source-free durable claims; assert no automatic durable memory.
+  - [x] **Sub-task 31.1.3.3:** `S-026-ST01` attempts secret capture, inferred-sensitive memory, cross-person/project leakage, prompt-based self-promotion, and source-free durable claims; assert no automatic durable memory.
   - [ ] **Sub-task 31.1.3.4:** `S-026-RT01` interrupts memory-file and index updates, restores backups, and resolves simultaneous edits; assert valid Markdown, no lost user text, exact conflict preservation, and deterministic rebuild.
   - [ ] **Sub-task 31.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010`, `SR-AI-003`/`SR-AI-007`/`SR-AI-008`, `SR-CIV-001` through `SR-CIV-005`; retain candidate decisions, canary scans, lifecycle receipts, conflict files, and recovery hashes.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 31.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no durable memory exists without a visible source-backed candidate and the required user/policy decision; the model cannot remember, correct, or delete facts on its own authority.
+- [x] **Story AC 31.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no durable memory exists without a visible source-backed candidate and the required user/policy decision; the model cannot remember, correct, or delete facts on its own authority.
 - [ ] **Story AC 31.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a user can inspect, search, correct, supersede, export, and delete every memory item and trace it to source, decision, date, scope, and current status.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 31.AC1:** No unsupported model assertion can become durable memory.
-- [ ] **Sprint AC 31.AC2:** Secrets and restricted content cannot enter Markdown memory.
-- [ ] **Sprint AC 31.AC3:** Memory retrieval explains source, reason, last verification, sensitivity, and supersession.
-- [ ] **Sprint AC 31.AC4:** Unrelated workspace or project memory never enters a task.
+- [x] **Sprint AC 31.AC1:** No unsupported model assertion can become durable memory.
+- [x] **Sprint AC 31.AC2:** Secrets and restricted content cannot enter Markdown memory.
+- [x] **Sprint AC 31.AC3:** Memory retrieval explains source, reason, last verification, sensitivity, and supersession.
+- [x] **Sprint AC 31.AC4:** Unrelated workspace or project memory never enters a task.
 - [ ] **Sprint AC 31.AC5:** Export, import, backup, and restore preserve evidence identities without credentials or machine-specific authority.
+
+**Local evidence:** Implementation commits `8bb6776`, `4ed2609`, and `c08f002`, evidence definition commit `d4cd4d2`, and retained report [`artifacts/sprints/sprint-31/local-evidence-report.json`](artifacts/sprints/sprint-31/local-evidence-report.json) complete the locally executable source-backed candidate, explicit-decision, contradiction, lifecycle, Markdown-preview, bounded working-memory, compaction, selective-loading, isolation, and adversarial scope. Sub-tasks `31.1.1.7`, `31.1.1.8`, `31.1.2.3`, `31.1.2.4`, `31.1.3.2`, `31.1.3.4`, and `31.1.3.5`, Story AC `31.1.AC2`, Sprint AC `31.AC5`, the parent task/story boxes, and this sprint remain open because encrypted export/import and installed file recovery/migration evidence are absent, independent Sprint 31 review is absent, and upstream Sprint 30 is blocked.
 
 **Gate decision:** Sprint 31 is PASS only when Story 31.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 32 - Conversation Search and Branching
