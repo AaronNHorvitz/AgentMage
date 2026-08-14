@@ -78,11 +78,12 @@ pub use ids::{
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, ExactModelProfile, FamilyCodecIdentity,
-    HardwareEnvelope, ModelArtifact, ModelCapability, ModelCapabilityState, ModelClientSchemas,
-    ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState, ModelMessage,
-    ModelMessageRole, ModelModality, ModelProposalKind, ModelResourceReport, ModelRole,
-    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelToolCallCandidate, ModelTransformation,
+    HardwareEnvelope, LocalModelRuntime, ModelArtifact, ModelCapability, ModelCapabilityState,
+    ModelClientSchemas, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
+    ModelLoadReceipt, ModelManifestObservation, ModelMessage, ModelMessageRole, ModelModality,
+    ModelProposalKind, ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind,
+    ModelStreamSink, ModelToolCallCandidate, ModelTransformation, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 pub use network::{

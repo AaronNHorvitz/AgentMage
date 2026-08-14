@@ -1,14 +1,16 @@
 //! Candidate-neutral model profile, runtime, stream, and proposal contracts.
 
 use crate::{
-    ContextPacketId, ContractError, ContractPayload, CorrelationId, ModelAdapterId, ModelCodecId,
-    ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId, ModelStreamId,
-    PlatformArchitecture, PlatformFamily, ProposalId, SchemaReference, SessionId, TaskId,
-    ToolCallId, ToolCatalogId, ToolId,
+    CancellationSignal, ContextPacketId, ContractError, ContractPayload, CorrelationId,
+    ModelAdapterId, ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId,
+    ModelStreamId, PlatformArchitecture, PlatformFamily, ProposalId, SchemaReference, SessionId,
+    TaskId, ToolCallId, ToolCatalogId, ToolId,
 };
 
 /// Functional role for which a model profile may be evaluated independently.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelRole {
     /// Conversational response and explanation.
@@ -28,7 +30,9 @@ pub enum ModelRole {
 }
 
 /// Input or output modality declared by an exact profile.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelModality {
     /// UTF-8 text.
@@ -389,6 +393,112 @@ pub struct RuntimeIsolationObservation {
     pub observation_sha256: String,
 }
 
+/// Runtime observation used by the kernel to compare an exact manifest tuple.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelManifestObservation {
+    /// Exact profile identity observed by the adapter.
+    pub profile_id: ModelProfileId,
+    /// Exact canonical manifest digest observed by the adapter.
+    pub manifest_sha256: String,
+    /// Exact artifact digest observed before load.
+    pub artifact_sha256: String,
+    /// Exact tokenizer digest observed before load.
+    pub tokenizer_sha256: String,
+    /// Exact template digest observed before load.
+    pub template_sha256: String,
+    /// Exact codec digest observed before load.
+    pub codec_sha256: String,
+    /// Exact runtime identity serving the request.
+    pub runtime: ModelRuntimeIdentity,
+}
+
+/// Content-free result of loading one exact profile.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelLoadReceipt {
+    /// Exact profile identity loaded.
+    pub profile_id: ModelProfileId,
+    /// Exact manifest digest loaded.
+    pub manifest_sha256: String,
+    /// Exact adapter identity that loaded it.
+    pub adapter_id: ModelAdapterId,
+    /// Logical load duration in milliseconds.
+    pub elapsed_ms: u64,
+    /// Content-free isolation observation after load.
+    pub isolation: RuntimeIsolationObservation,
+}
+
+/// Content-free result of unloading one exact profile.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelUnloadReceipt {
+    /// Exact profile identity unloaded.
+    pub profile_id: ModelProfileId,
+    /// Exact adapter identity that unloaded it.
+    pub adapter_id: ModelAdapterId,
+    /// Whether no profile remains loaded.
+    pub empty: bool,
+    /// Logical unload duration in milliseconds.
+    pub elapsed_ms: u64,
+}
+
+/// Sink for sequential inert response fragments.
+pub trait ModelStreamSink {
+    /// Accepts one fragment after adapter-side parsing and before proposal validation.
+    fn accept(&mut self, fragment: StreamedModelFragment) -> Result<(), ModelRuntimeFailure>;
+}
+
+/// Candidate-neutral local runtime contract implemented by every adapter.
+///
+/// This interface carries no workspace handle, tool implementation, grant,
+/// credential, network destination, automatic-selection method, or completion
+/// authority. Returned records remain untrusted observations until the kernel
+/// validates them against the exact admitted tuple.
+pub trait LocalModelRuntime {
+    /// Returns the immutable adapter identity.
+    fn identity(&self) -> &ModelRuntimeIdentity;
+
+    /// Observes the exact manifest tuple before load without changing state.
+    fn verify_manifest(
+        &self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure>;
+
+    /// Loads exactly one previously admitted profile.
+    fn load(
+        &mut self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure>;
+
+    /// Unloads exactly the named profile.
+    fn unload(
+        &mut self,
+        profile_id: &ModelProfileId,
+    ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure>;
+
+    /// Returns a content-free health observation.
+    fn health(&self) -> ModelHealth;
+
+    /// Counts one exact context packet using the selected profile tokenizer.
+    fn count_tokens(
+        &self,
+        packet: &ModelContextPacket,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure>;
+
+    /// Runs one bounded request and emits inert sequential fragments.
+    fn stream(
+        &mut self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+        cancellation: Option<&CancellationSignal>,
+        sink: &mut dyn ModelStreamSink,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure>;
+
+    /// Reports content-free bounded resource accounting.
+    fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure>;
+}
+
 /// One bounded message in an exact model context packet.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -617,7 +727,7 @@ pub struct ModelRuntimeFailure {
     pub dependency_recovery_required: bool,
     /// Optional shared contract error.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
-    pub contract_error: Option<ContractError>,
+    pub contract_error: Option<Box<ContractError>>,
 }
 
 /// Closed schema references exchanged by a model runtime client.

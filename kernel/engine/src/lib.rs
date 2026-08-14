@@ -27,6 +27,8 @@ pub mod claim_evidence;
 pub mod configuration;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Candidate-neutral exact-profile admission and local runtime orchestration.
+pub mod model_runtime;
 /// Encrypted canonical operational state and crash recovery.
 pub mod operational_store;
 /// Deterministic pre-persistence classification, minimization, and receipts.
