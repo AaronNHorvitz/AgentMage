@@ -5,8 +5,8 @@
     {
       "evidence_id": "model_policy",
       "path": "MODEL-PROVENANCE-POLICY.md",
-      "sha256": "7559cecd79b4f3faea70083148abe4ffe21ac9633374d414ce33ec64a9dd4ba2",
-      "size": 8758,
+      "sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75",
+      "size": 18295,
       "supports": [
         "RV-13"
       ]
@@ -25,7 +25,7 @@
     {
       "evidence_id": "e4b_source_admission",
       "path": "model-profiles/candidates/gemma-4-e4b/source-admission.json",
-      "sha256": "f2e8f8b5adc19e97a6abc8b0857f9deea3dd99db088de5d81e77daf906fbe92b",
+      "sha256": "c640d77e17392e5de7b460a2f1b6ed4a0bedfa60400a05fe347b7c359646f885",
       "size": 5931,
       "supports": [
         "RV-13"
@@ -43,7 +43,7 @@
     {
       "evidence_id": "e4b_decision",
       "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
-      "sha256": "314f38594ed955234d8516067a827b575d3b3fd81292bdd9c1191688c178464c",
+      "sha256": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
       "size": 17210,
       "supports": [
         "RV-13",
@@ -54,7 +54,7 @@
     {
       "evidence_id": "fallback_source_admission",
       "path": "model-profiles/candidates/gemma-4-12b-unified/source-admission.json",
-      "sha256": "7077b0a388f274578b7683062179838730f6be992e70f71a846debfa4493236b",
+      "sha256": "18858de6974a8cf47b18371a9cc93e83be6b7563e005996da1546acfe4a0822d",
       "size": 6204,
       "supports": [
         "RV-13"
@@ -72,7 +72,7 @@
     {
       "evidence_id": "fallback_evaluation_plan",
       "path": "model-profiles/candidates/gemma-4-12b-unified/evaluation-plan.json",
-      "sha256": "196761b5f10e41ea46224c1737147f82eaf33fa72b7f96772bbed05080fec61c",
+      "sha256": "4f5e5a4bf8d4184bffbf8ac3690acf1df640f6a1e2a098ec7dbfa7030331716b",
       "size": 1459,
       "supports": [
         "RV-13",
@@ -82,7 +82,7 @@
     {
       "evidence_id": "fallback_decision",
       "path": "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
-      "sha256": "1677d071acb79f569ddbe74c5f219ed74c6ea36c8a7c00b1c1411e733b89574a",
+      "sha256": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
       "size": 17393,
       "supports": [
         "RV-13",
@@ -129,7 +129,7 @@
     {
       "evidence_id": "substitution_manifest",
       "path": "artifacts/sprints/sprint-0/story-0.3-substitution/evidence-manifest.json",
-      "sha256": "8e6db13916defe5826588c79af410948d3d1c833cdb2943513f0a425f70ada71",
+      "sha256": "2c09292ee828617a64b24a568941ca317d5ddf18decc81f50a30cb755b00c6a0",
       "size": 736,
       "supports": [
         "RV-13"
@@ -147,5 +147,5 @@
   ],
   "release_signature_claim": false,
   "schema_version": 1,
-  "verification_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
+  "verification_revision": "04ca65d87948336bf4ee0c399d4f0f581f9bba83"
 }
