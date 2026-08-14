@@ -55,10 +55,24 @@ fn exact_muse_import_scan_load_unload_and_evidence_activation() {
         },
     );
     assert!(preflight.blockers.is_empty(), "{:?}", preflight.blockers);
-    let imported = import_local_model(&profile, &preflight, &source, &store, || false)
-        .expect("exact local import");
-    assert_eq!(imported.disposition, ModelImportDisposition::VerifiedStaged);
-    let verified_name = imported.retained_name.expect("verified staging name");
+    let reuse_verified = std::env::var_os("AGENTMAGE_MUSE_REUSE_VERIFIED").as_deref()
+        == Some(std::ffi::OsStr::new("1"));
+    let (verified_name, copied_bytes) = if reuse_verified {
+        let name = format!(".verified-import-{}.gguf", profile.artifact.sha256);
+        assert!(
+            store.join(&name).is_file(),
+            "verified retry input is absent"
+        );
+        (name, 0)
+    } else {
+        let imported = import_local_model(&profile, &preflight, &source, &store, || false)
+            .expect("exact local import");
+        assert_eq!(imported.disposition, ModelImportDisposition::VerifiedStaged);
+        (
+            imported.retained_name.expect("verified staging name"),
+            imported.copied_bytes,
+        )
+    };
     let verified_path = store.join(&verified_name);
     let socket_path = socket_root.join("llama-server.sock");
     let identity = profile.runtime.clone();
@@ -97,6 +111,6 @@ fn exact_muse_import_scan_load_unload_and_evidence_activation() {
     assert!(!activated.network_available);
     println!(
         "MUSE_LIVE_INSTALL_PASS generation={} copied_bytes={} retries=0",
-        activated.generation, imported.copied_bytes
+        activated.generation, copied_bytes
     );
 }
