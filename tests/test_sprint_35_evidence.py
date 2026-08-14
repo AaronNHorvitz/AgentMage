@@ -9,7 +9,13 @@ from scripts import sprint_35_evidence as evidence
 
 def commands() -> list[dict[str, object]]:
     return [
-        {"id": identifier, "argv": list(argv), "exit_code": 0, "output_sha256": "a" * 64}
+        {
+            "id": identifier,
+            "argv": list(argv),
+            "exit_code": 0,
+            "output_sha256": "a" * 64,
+            "blocking_skip_count": 0 if identifier == "write-approval-tests" else None,
+        }
         for identifier, argv in evidence.COMMANDS
     ]
 
@@ -60,6 +66,7 @@ class Sprint35EvidenceTests(unittest.TestCase):
     def test_command_security_environment_and_source_mutations_fail(self) -> None:
         mutations = (
             lambda value: value["commands"][0].update({"exit_code": 1}),
+            lambda value: value["commands"][0].update({"blocking_skip_count": 1}),
             lambda value: value["commands"].pop(),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["environment"].pop("rustc"),

@@ -17,6 +17,9 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-35/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
+IGNORED_TESTS: Final = re.compile(
+    rb"test result: (?:ok|FAILED)\. \d+ passed; \d+ failed; (\d+) ignored;"
+)
 SOURCE_PATHS: Final = (
     "kernel/engine/src/write_approval.rs",
     "kernel/engine/src/grants.rs",
@@ -28,6 +31,12 @@ SOURCE_PATHS: Final = (
     "tests/test_sprint_35_evidence.py",
 )
 COMMANDS: Final = (
+    (
+        "write-approval-tests",
+        (
+            "cargo", "test", "-p", "agentmage-kernel-engine", "write_approval", "--locked",
+        ),
+    ),
     ("kernel-tests", ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked")),
     (
         "kernel-clippy",
@@ -122,15 +131,26 @@ def run_commands() -> list[dict[str, Any]]:
                 capture_output=True, timeout=1800,
             )
             code, output = result.returncode, result.stdout + result.stderr
+        blocking_skip_count = None
+        if identifier == "write-approval-tests":
+            matches = IGNORED_TESTS.findall(output)
+            blocking_skip_count = sum(int(value) for value in matches) if matches else -1
         records.append({
             "id": identifier, "argv": list(argv), "exit_code": code,
-            "output_sha256": digest(output),
+            "output_sha256": digest(output), "blocking_skip_count": blocking_skip_count,
         })
     return records
 
 
 def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
-    local_pass = all(item["exit_code"] == 0 for item in commands)
+    issue_local = next(
+        (item for item in commands if item["id"] == "write-approval-tests"), None
+    )
+    local_pass = (
+        all(item["exit_code"] == 0 for item in commands)
+        and issue_local is not None
+        and issue_local.get("blocking_skip_count") == 0
+    )
     return {
         "schema_version": 1,
         "record_type": "sprint_35_local_evidence",
@@ -144,6 +164,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "exact_preimage_shadow_and_preview_suite": local_pass,
             "grant_and_stale_invalidation_suite": local_pass,
             "complete_local_product_and_docs_gates": local_pass,
+            "issue_local_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_34_gate": False,
             "independent_transaction_review": False,
         },
@@ -180,6 +201,17 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         for item in commands
     ):
         failures.append("command result invalid")
+    issue_local = next(
+        (item for item in commands if item.get("id") == "write-approval-tests"), None
+    )
+    if issue_local is None or issue_local.get("blocking_skip_count") != 0:
+        failures.append("issue-local skipped, suppressed, or unavailable check")
+    if any(
+        item.get("blocking_skip_count") is not None
+        for item in commands
+        if item.get("id") != "write-approval-tests"
+    ):
+        failures.append("supporting command skip count must remain not-applicable")
     expected_summary = {
         "local_exact_preimage_approval_contract_passed": True,
         "sprint_status": "BLOCKED",
@@ -192,6 +224,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     if report.get("summary") != expected_summary:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
+    if verification.get("issue_local_blocking_skip_count") != 0:
+        failures.append("issue-local blocking skip summary invalid")
     for field in ("upstream_sprint_34_gate", "independent_transaction_review"):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
