@@ -11,6 +11,7 @@ mod sandbox;
 mod secret_service;
 mod security_controls;
 mod strict_local;
+mod write_transaction;
 
 pub use configuration_store::{
     LinuxConfigurationEffectDriver, LinuxConfigurationEffectOutput,
@@ -62,6 +63,7 @@ pub use strict_local::{
     LinuxStrictLocalRoot, LinuxStrictLocalRootError, LinuxStrictLocalRootErrorKind,
     LinuxStrictLocalRootInspector, classify_linux_filesystem_magic,
 };
+pub use write_transaction::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits};
 
 use std::fmt;
 use std::fs;
