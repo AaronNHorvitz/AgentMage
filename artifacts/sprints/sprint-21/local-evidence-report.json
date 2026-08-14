@@ -1,0 +1,150 @@
+{
+  "blockers": [
+    {
+      "code": "PRODUCTION-ANSWER-LEDGER-NOT-INTEGRATED",
+      "owner": "21.1.3.4"
+    },
+    {
+      "code": "PRODUCTION-HELD-FILE-RESOLUTION-NOT-INTEGRATED",
+      "owner": "21.1.3.2"
+    },
+    {
+      "code": "ENCRYPTED-DURABLE-ANCHOR-STORAGE-NOT-INTEGRATED",
+      "owner": "21.1.3.5"
+    },
+    {
+      "code": "CLOCK-ANOMALY-EVENT-EVIDENCE-NOT-IMPLEMENTED",
+      "owner": "21.1.3.5"
+    },
+    {
+      "code": "NATIVE-PLATFORM-EVIDENCE-NOT-RETAINED",
+      "owner": "21.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-21-REVIEW-NOT-RETAINED",
+      "owner": "21.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "evidence_reconciliation::tests",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "reconciliation-tests",
+      "output_sha256": "3a1a6ba86dcc2761913367b00660537678029019e895c70cb6535ebdf4479a9a"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "reconciliation-clippy",
+      "output_sha256": "8490ad012c56874917033b5323b645384c5b690449290c132b6650da793efbd0"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_21_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "implemented_contracts": {
+    "ambient_filesystem_access": false,
+    "citation_freshness_states": 3,
+    "claim_level_audit_rendering": true,
+    "complete_answer_claim_coverage": true,
+    "completion_authority": false,
+    "exact_source_identity_dimensions": 6,
+    "external_hmac_sha256_anchor": true,
+    "integrity_key_stored_in_ledger": false,
+    "network_authority": false,
+    "receipt_chain": true,
+    "safe_content_free_projection": true
+  },
+  "record_type": "sprint_21_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-TST-010"
+  ],
+  "source_revision": "8c92757fc5651c3e2d73226b35c63f8b286d5d36",
+  "source_sha256": {
+    "docs/architecture/citation-and-receipt-integrity.md": "afe00f7c9a7f4e299764f90f0776ed06e2fce4ec37e95f80f712338167b6337c",
+    "docs/verification/sprint-21-local-results.md": "b023789f08b794cf13bd5c1d96c5a26ea046d45c5623a0d0d71da3dcde8da4e9",
+    "kernel/engine/src/authority.rs": "23a23c378f7ae4dbdd3ecc0949679bb4b472b3fb13efb51d9bc7b9bed8071fc1",
+    "kernel/engine/src/evidence_reconciliation.rs": "25e0f0af506aeb3da4dce2b87369b2c2cad6f6da90b9793360f1edbad4519b3a",
+    "kernel/engine/src/evidence_state.rs": "1fa2a47b565162b21dcee24b30f96b06bbbd29ef9cacb9997bc9064b6c2ed6c0",
+    "kernel/engine/src/lib.rs": "3b36e039b67a030a35cebf5b8d74d32fe14067c33cb945885e0d1c1317ca451f",
+    "scripts/sprint_21_evidence.py": "b70d55d69a167813eb211f951daeae15bc53d0c208beae0808c049251481d5c7",
+    "tests/test_sprint_21_evidence.py": "fa3e45f1747c68fcc21680687f144b368fe4daf31e4b320c3536b93622548267"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "answer_ledger_matrix": true,
+    "citation_resolution_matrix": true,
+    "clock_anomaly_matrix": false,
+    "durable_anchor_integration": false,
+    "independent_review": false,
+    "production_held_file_integration": false,
+    "receipt_tamper_matrix": true,
+    "safe_projection_scan": true
+  }
+}
