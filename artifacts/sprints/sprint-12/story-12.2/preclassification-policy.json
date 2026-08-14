@@ -1,0 +1,105 @@
+{
+  "artifact_id": "task-12-2-2-2-preclassification-policy",
+  "case_ids": [
+    "PRE-01",
+    "PRE-02",
+    "PRE-03",
+    "PRE-04",
+    "PRE-05",
+    "PRE-06"
+  ],
+  "claims": {
+    "classifier_executions": 0,
+    "clearance_authority_methods": 0,
+    "clearance_public_constructors": 0,
+    "deterministic_denial_reason_count": 14,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "ordered_static_check_count": 4,
+    "ordered_typed_fact_check_count": 9,
+    "platform_executions": 0,
+    "release_support": false,
+    "semantic_calls_after_deterministic_denial": 0,
+    "tool_executions": 0,
+    "total_ordered_check_count": 13
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This task evaluates typed supplied facts; platform-specific secret, path, executable-content, destination, repository, credential, and network collectors remain later adapter work.",
+    "The clearance is not authority. Advisory restriction and escalation enforcement begins in Task 12.2.2.3.",
+    "Tests use synthetic content-free facts with no model, classifier, tool, worker, platform effect, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "b150564c4ad6b36d9ca66e3c9b8e6e1cfaccf5b6",
+  "sources": [
+    {
+      "bytes": 2329,
+      "path": "docs/verification/task-12-2-2-2-preclassification-policy-results.md",
+      "sha256": "e58d546318d770934277cd0edcfec775eed755bd029b4d816adc2a37b93de7f4"
+    },
+    {
+      "bytes": 29255,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "ea41d05be09816ad47e6450be254492542ce6cb82abedf1d433fb7f30617c30f"
+    },
+    {
+      "bytes": 22513,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "d47e3a174e7566537a706105a016bc7e7960882ad1e83f29cb971cdc5997b829"
+    },
+    {
+      "bytes": 3016,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6d194ee9d83ce6cf9021bc3a067dd4dd28a27fa3d65016dfab03b0a6764c9662"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3753,
+      "path": "scripts/preclassification_policy_evidence.py",
+      "sha256": "6ccaccca14b48c273ac571d841c4a1114be1be3672c3db78600c3e47b3bd583a"
+    },
+    {
+      "bytes": 3273,
+      "path": "tests/test_preclassification_policy_evidence.py",
+      "sha256": "7e7e7164c1636c02eaf87d8374a373cfc011f17f4e5e86f9e5c2104620356387"
+    }
+  ],
+  "status": "pass-preclassification-policy",
+  "task_ids": [
+    "12.2.2.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "90922bcdd3f875ef17fe54557f3ce8b28b3a481f7413bf4d9142529b3010a1a8",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "804bf77bddf01f82925ae1d7dd6e2ff04eab80f4c2302a98230ecd7d5f63aaef",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
