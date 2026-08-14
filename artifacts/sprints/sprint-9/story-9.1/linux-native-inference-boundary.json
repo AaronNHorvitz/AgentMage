@@ -42,14 +42,14 @@
   },
   "packages": [
     {
-      "bytes": 642115,
+      "bytes": 651387,
       "format": "rpm",
-      "sha256": "638c06c369b02e3655848222a272bb1e998e3bd65f42020db69e989ad794a916"
+      "sha256": "cca688222618d5374b66b15e7acc94f86a46d98dc30fd70f010760a7f569949a"
     },
     {
-      "bytes": 1262224,
+      "bytes": 1273790,
       "format": "deb",
-      "sha256": "404212b4b2ede2da52f8fa3b676dfdbf919f9f86e6c3673159c6023e6d8e8557"
+      "sha256": "94f17a84cc4ba6a31aa508a86f327a9848956c816ad9478b66d989430a5263a5"
     },
     {
       "bytes": 15193,
@@ -83,12 +83,12 @@
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
+  "source_revision": "b7fee3d9d4bfd6325392c92bb96778caeee1fa7d",
   "sources": [
     {
-      "bytes": 13090,
+      "bytes": 13115,
       "path": "Cargo.lock",
-      "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "bytes": 1452,
@@ -96,9 +96,9 @@
       "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
     },
     {
-      "bytes": 5660,
+      "bytes": 5966,
       "path": "architecture/build-contract.json",
-      "sha256": "5a5eba1da34bd0e14ae45d1cf01564f36ef3ecbf8f8761e1fa738dce93c3e3e7"
+      "sha256": "2ef37fb693f63e511c213c443d8745c9607c7a31ee444d6d38f6d6ffdffcb232"
     },
     {
       "bytes": 4044,
@@ -106,9 +106,9 @@
       "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
     },
     {
-      "bytes": 4844,
+      "bytes": 4870,
       "path": "architecture/module-inventory.json",
-      "sha256": "6024c1207cc28ae1ab71d62883cc39a948a82d6001e66cbb9d5b9d5a143a7138"
+      "sha256": "0c4f651ab29e30a9592c814926658d8596f289fc8584a9c1f8d78c0e4ff55fc8"
     },
     {
       "bytes": 6915,
@@ -156,14 +156,14 @@
       "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
     },
     {
-      "bytes": 79839,
+      "bytes": 81374,
       "path": "IMPLEMENTATION-PLAN.md",
-      "sha256": "8b16e955dd06f4231f56e09b78c8ff4e5c00b997b3e65a40af2e894a82d0d602"
+      "sha256": "5eadf6e30e1d247a5aabd66f555cc10cdddedecec2e2814479f143ddfd57a0be"
     },
     {
-      "bytes": 20858,
+      "bytes": 23557,
       "path": "package.json",
-      "sha256": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
+      "sha256": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
     },
     {
       "bytes": 3169,
@@ -196,9 +196,9 @@
       "sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
     },
     {
-      "bytes": 739,
+      "bytes": 820,
       "path": "platforms/linux-inference/Cargo.toml",
-      "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
+      "sha256": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9"
     },
     {
       "bytes": 3081,
@@ -206,9 +206,9 @@
       "sha256": "0888a85ea12c726e795be68477660ede385b292affe6a50d16c7996ce00b924f"
     },
     {
-      "bytes": 8503,
+      "bytes": 10013,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "cd9b74efbacd1083c0178cf4308b6258945c5dfa736f4c5bf0dc11c30a3ac283"
+      "sha256": "217781dfac5151ac95334134e3eb5f45c6a0d24aa7bebdeea28d1005975eb51c"
     },
     {
       "bytes": 574,
@@ -236,9 +236,9 @@
       "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
     },
     {
-      "bytes": 4843,
+      "bytes": 6127,
       "path": "platforms/linux-inference/tests/process_boundary.rs",
-      "sha256": "891b06ea3c3fe8a6d228405d5a4bfccbeb9d7222f18d73fe43981f8ee9eeddfc"
+      "sha256": "99809033b45a2c64d3d8c541cb84c02f00e76378570ba6986c944b6b870d7c0b"
     },
     {
       "bytes": 1046,
@@ -246,9 +246,9 @@
       "sha256": "e54f7c2ecbb6b511e955bdd542e0ffa53eca3823e7ec679f7f934702139fc1ae"
     },
     {
-      "bytes": 29243,
+      "bytes": 30510,
       "path": "platforms/linux/src/platform.rs",
-      "sha256": "e6bb80fbbb715d36cd182423fabd60b45ee05fedf4db5c6bdf67836a470d71ab"
+      "sha256": "db383150be5ce3111b36fd18c55a8390e181c62fce43d1de810e7e2aa1eeec59"
     },
     {
       "bytes": 1253,
@@ -256,14 +256,14 @@
       "sha256": "88685f3cddd2cbef9d45922c616c14f09a2790640fe287ad07375ba534903af1"
     },
     {
-      "bytes": 14277,
+      "bytes": 14369,
       "path": "scripts/build_contract.py",
-      "sha256": "3e277b3007b024fba14d00d43999ec297b4361f156700262995bf1c76384631d"
+      "sha256": "9c3b7e2adb71ecb237afe0cc12c9109e7358ea3e461fb4e52b2c2e3469227ee1"
     },
     {
-      "bytes": 8935,
+      "bytes": 9322,
       "path": "scripts/dependency_classes.py",
-      "sha256": "5579b1e210f394220fb78f39513e6b0cbeaa3a43e531d03f23cfa810bc4b2c7d"
+      "sha256": "7a907b25363d3a65f215a3b0c7bfbf909e2490d9fe6ac1be7c4d8175e70ed343"
     },
     {
       "bytes": 10189,
@@ -271,9 +271,9 @@
       "sha256": "c103e9c1c840370753d9229d716da45dfcdc043a4eeda917446bdeae73810fcd"
     },
     {
-      "bytes": 20221,
+      "bytes": 20303,
       "path": "scripts/linux_inference_boundary_evidence.py",
-      "sha256": "f1d51cc9de86d246854432165d6c39834f1dd7f1cdbf885c2f5bb63eea2f22a8"
+      "sha256": "439e7b17c2c351818da635d8b4c8f5c7d9db838e3ebd98ec58404f3feb9c87bc"
     },
     {
       "bytes": 6529,
@@ -308,17 +308,17 @@
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "0ee0e2c773fbfeccfa11e3fb1358c479750717d2ca2648b8720a7f93930ac656"
+      "sha256": "f7a0ddfce6c7887a3ca2908fe73fffb9368fe6c8fd26f726cba458d92c157f1a"
     },
     {
-      "bytes": 394816,
+      "bytes": 395040,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "ddc5f928e29c3cbd9782b53bfaeb7aafb2d4f24046c9893d6af9eed96629c48e"
+      "sha256": "976398bd54cf3809c8d7bcca51b025dfb22f9e28ea13508ff5d21aead46ebfa2"
     },
     {
-      "bytes": 410747,
+      "bytes": 410971,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "bfe03a7ed6d8e4964379788e08d0b8df39b97f1d6afc7fdd994c6f41511fe924"
+      "sha256": "da8158299a3e2b41cae7ce0cc09716e4625c93e4dcf583d8d0667f29b1780a92"
     },
     {
       "bytes": 4437,
