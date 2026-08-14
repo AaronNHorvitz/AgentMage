@@ -27,6 +27,8 @@ pub mod claim_evidence;
 pub mod configuration;
 /// Deterministic bounded context, checked summaries, checkpoints, and drift gates.
 pub mod context_management;
+/// Separately keyed private conversation archives and controlled lifecycle operations.
+pub mod conversation_archive;
 /// Encrypted canonical conversation records and immutable turn timelines.
 pub mod conversation_library;
 /// Kernel-owned redacted local doctor report construction.
