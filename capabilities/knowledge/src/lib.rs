@@ -6,6 +6,7 @@ mod authority;
 mod domain;
 mod index;
 mod lifecycle;
+mod markdown_write;
 mod memory;
 mod memory_lifecycle;
 mod memory_working;
@@ -36,6 +37,11 @@ pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
     preview_migration, preview_restore, verify_backup,
+};
+pub use markdown_write::{
+    MarkdownDocument, MarkdownEdit, MarkdownElement, MarkdownElementKind, MarkdownFidelityWarning,
+    MarkdownLineEnding, MarkdownSourceRange, MarkdownUpdatePreview, MarkdownUpdateRequest,
+    MarkdownWriteError, preview_markdown_update,
 };
 pub use memory::{
     MemoryCandidate, MemoryCandidateClass, MemoryCandidateDecision, MemoryError, MemoryId,
