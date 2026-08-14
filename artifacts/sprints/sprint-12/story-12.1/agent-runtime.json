@@ -1,0 +1,111 @@
+{
+  "artifact_id": "s-012-i01-bounded-agent-runtime",
+  "case_ids": [
+    "AR-01",
+    "AR-02",
+    "AR-03",
+    "AR-04",
+    "AR-05",
+    "AR-06",
+    "AR-07",
+    "AR-08"
+  ],
+  "claims": {
+    "action_proposal_grants_authority": false,
+    "completion_requires_current_evidence": true,
+    "external_network_used": false,
+    "focused_case_count": 8,
+    "loop_phase_count": 5,
+    "manual_fuzzing_executed": false,
+    "metered_resource_count": 6,
+    "model_enabled_in_fixture": false,
+    "model_invocations": 0,
+    "persistent_runtime_state_implemented": false,
+    "release_support": false,
+    "tool_executions": 0,
+    "typed_review_outcome_count": 6
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This is an in-process deterministic runtime boundary; persisted terminal-state and restart reconciliation remain Story 12.2 work.",
+    "Plan history, one-active-step transitions, progress/status events, new-user-message handling, and cancellation transcripts remain later Story 12.1 tasks.",
+    "No production tool, model, worker, interface, platform, package, or release workflow is exercised or claimed.",
+    "Manual fuzzing remains deferred and is not represented by the deterministic tests."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "a4b85e5c847f9d64c4c6a805c28049d191d2d10f",
+  "sources": [
+    {
+      "bytes": 3177,
+      "path": "docs/verification/s-012-i01-agent-runtime-results.md",
+      "sha256": "96611d43a02ca377d30280f83bb85fc4bfefec4740286b717ce5858413f6aafb"
+    },
+    {
+      "bytes": 31427,
+      "path": "kernel/engine/src/agent_runtime.rs",
+      "sha256": "8ea8bb4a21a75851c526fa3d15a2bd3826d92fd9d7a0ff0ec370b1599e14ab42"
+    },
+    {
+      "bytes": 131822,
+      "path": "kernel/engine/src/configuration.rs",
+      "sha256": "0bb3c80f3400172896b2b53681e23ccd91836c70ee7afb94da1be28fc01d179d"
+    },
+    {
+      "bytes": 24476,
+      "path": "kernel/engine/src/run_control.rs",
+      "sha256": "54e43a2e1c3082b71062c734fa843d4730a7767bd05ef7f990b38f1490f5eb5a"
+    },
+    {
+      "bytes": 48415,
+      "path": "kernel/engine/src/work_packet.rs",
+      "sha256": "579547244132d5db8f824ec94f9c841daa7c574034c7b8a5f5b339947c7da36e"
+    },
+    {
+      "bytes": 2081,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "5c19de943b3c1b2d1fd1a02b1ca4db7205cbce37ce4c26fa79084e3567bc14f2"
+    },
+    {
+      "bytes": 9598,
+      "path": "scripts/agent_runtime_evidence.py",
+      "sha256": "78a5e5d15359cd8ff6d44caf43bf511fa6031ed542b7e025e3d307452ca1bc7b"
+    },
+    {
+      "bytes": 3377,
+      "path": "tests/test_agent_runtime_evidence.py",
+      "sha256": "7d42c50e3149090ef14661cbed5ec849641bfbfbcb403af2c196d2cadc083a2d"
+    }
+  ],
+  "status": "pass-current-in-process-non-executing-boundary",
+  "task_ids": [
+    "12.1.1.1",
+    "S-012-I01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "4e76bf29481b1cd341a1d7e570a167a6407440ff48b45fe63ca331678e11bdc8",
+      "exit_code": 0,
+      "expected_marker_sha256": "51e73292f5c7c582fbc8d10344142c295e3227e354b7e50266a7f8eda9c467e4",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "f16344538d21689ec51b20721ff7e85baa20a07f95dd0680270b985542ad3bef",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
