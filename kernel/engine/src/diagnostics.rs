@@ -291,4 +291,66 @@ mod tests {
             assert_eq!(report.items[0].state, state);
         }
     }
+
+    #[test]
+    fn one_hundred_complete_partial_missing_corrupt_stale_and_unsupported_fixtures_reconcile() {
+        let states = [
+            DiagnosticState::Healthy,
+            DiagnosticState::Degraded,
+            DiagnosticState::Blocked,
+            DiagnosticState::Unavailable,
+            DiagnosticState::Quarantined,
+            DiagnosticState::Unsupported,
+        ];
+        for fixture in 0..100 {
+            let mut observations = Vec::new();
+            for (index, component) in DiagnosticComponent::ALL.into_iter().enumerate() {
+                if (fixture + index) % 11 == 0 {
+                    continue;
+                }
+                let mut value = observation(component, states[(fixture + index) % states.len()]);
+                value.stale = (fixture + index) % 13 == 0;
+                observations.push(value);
+            }
+            let first = build_doctor_report(observations.clone()).expect("fixture report");
+            let second = build_doctor_report(observations).expect("repeat fixture report");
+            assert_eq!(first, second, "fixture {fixture}");
+            assert_eq!(first.items.len(), 13, "fixture {fixture}");
+            assert!(first.items.iter().all(|item| !item.reason_code.is_empty()));
+            assert!(
+                first
+                    .items
+                    .iter()
+                    .all(|item| !item.remediation_code.is_empty())
+            );
+        }
+    }
+
+    #[test]
+    fn prohibited_raw_sources_are_not_members_of_the_closed_observation_schema() {
+        for field in [
+            "prompt",
+            "file_content",
+            "credential",
+            "private_key",
+            "environment_value",
+            "absolute_path",
+            "hostname",
+            "username",
+            "device_identifier",
+        ] {
+            let candidate = serde_json::json!({
+                "component": "package",
+                "state": "healthy",
+                "reason_code": "diagnostic.fixture.observed",
+                "identity_sha256": null,
+                "stale": false,
+                (field): "UNIQUE-CANARY-MUST-NOT-PASS"
+            });
+            assert!(
+                serde_json::from_value::<DiagnosticObservation>(candidate).is_err(),
+                "{field}"
+            );
+        }
+    }
 }
