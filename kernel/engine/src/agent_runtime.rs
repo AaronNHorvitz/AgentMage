@@ -416,12 +416,14 @@ mod tests {
     use super::{
         AgentDirective, AgentLoopPhase, AgentReviewOutcome, AgentRuntime, AgentRuntimeError,
     };
+    use crate::agent_progress::{AgentProgressError, PlanProgressController};
     use crate::configuration::ConfigurationManager;
+    use crate::run_control::{RunControlError, RunStopReason};
     use agentmage_kernel_contracts::{
         Action, ActionId, ActionKind, ActionState, AuthorityClass, BudgetLimit, BudgetResource,
         CONTRACT_SCHEMA_VERSION, CompletionEvidence, DataSensitivity, EvidenceId, EvidenceKind,
-        EvidenceReference, PlanId, RollbackPlan, StopCondition, StopConditionKind, TaskId,
-        WorkPacket, WorkPacketId, WorkPacketState,
+        EvidenceReference, PlanId, PlanStepId, PlanStepState, RollbackPlan, StopCondition,
+        StopConditionKind, TaskId, WorkPacket, WorkPacketId, WorkPacketState,
     };
 
     const PROFILE: &[u8] = include_bytes!("../../../configuration/profiles/synthetic-test.json");
@@ -810,5 +812,301 @@ mod tests {
                 crate::run_control::RunControlError::InvalidPacket { .. }
             ))
         ));
+    }
+
+    #[derive(Clone, Copy)]
+    enum S012Operation {
+        Observe,
+        Plan,
+        Act,
+        Review,
+    }
+
+    impl S012Operation {
+        const ALL: [Self; 4] = [Self::Observe, Self::Plan, Self::Act, Self::Review];
+
+        const fn required_phase(self) -> AgentLoopPhase {
+            match self {
+                Self::Observe => AgentLoopPhase::Observe,
+                Self::Plan => AgentLoopPhase::Plan,
+                Self::Act => AgentLoopPhase::Act,
+                Self::Review => AgentLoopPhase::Review,
+            }
+        }
+    }
+
+    fn s012_runtime_at(phase: AgentLoopPhase) -> AgentRuntime {
+        let mut runtime = runtime_with(packet());
+        if phase == AgentLoopPhase::Observe {
+            return runtime;
+        }
+        runtime.observe(0, 0).expect("observe reaches plan");
+        if phase == AgentLoopPhase::Plan {
+            return runtime;
+        }
+        runtime.plan().expect("plan reaches act");
+        if phase == AgentLoopPhase::Act {
+            return runtime;
+        }
+        let proposal = action(&runtime, ActionKind::DeterministicTool);
+        runtime.act(&proposal).expect("act reaches review");
+        if phase == AgentLoopPhase::Review {
+            return runtime;
+        }
+        runtime
+            .signal(StopConditionKind::Cancelled)
+            .expect("review may stop");
+        runtime
+    }
+
+    fn s012_exercise(
+        runtime: &mut AgentRuntime,
+        operation: S012Operation,
+    ) -> Result<AgentDirective, AgentRuntimeError> {
+        match operation {
+            S012Operation::Observe => runtime.observe(0, 0),
+            S012Operation::Plan => runtime.plan(),
+            S012Operation::Act => {
+                let proposal = if runtime.current_plan().is_some() {
+                    action(runtime, ActionKind::DeterministicTool)
+                } else {
+                    Action {
+                        schema_version: CONTRACT_SCHEMA_VERSION,
+                        action_id: ActionId::from_raw("action-runtime-0001"),
+                        task_id: runtime.task_id().clone(),
+                        plan_step_id: Some(PlanStepId::from_raw("unavailable-step")),
+                        kind: ActionKind::DeterministicTool,
+                        description: "Synthetic phase probe".to_owned(),
+                        expected_effects: vec!["descriptive-only".to_owned()],
+                        state: ActionState::Proposed,
+                    }
+                };
+                runtime.act(&proposal)
+            }
+            S012Operation::Review => runtime.review(
+                &ActionId::from_raw("action-runtime-0001"),
+                AgentReviewOutcome::Progress,
+                0,
+                0,
+            ),
+        }
+    }
+
+    #[test]
+    fn s_012_ut01_covers_every_legal_and_illegal_loop_transition() {
+        let phases = [
+            AgentLoopPhase::Observe,
+            AgentLoopPhase::Plan,
+            AgentLoopPhase::Act,
+            AgentLoopPhase::Review,
+            AgentLoopPhase::Stopped,
+        ];
+        for phase in phases {
+            for operation in S012Operation::ALL {
+                let mut runtime = s012_runtime_at(phase);
+                let result = s012_exercise(&mut runtime, operation);
+                if phase == operation.required_phase() {
+                    let expected = match operation {
+                        S012Operation::Observe => AgentLoopPhase::Plan,
+                        S012Operation::Plan => AgentLoopPhase::Act,
+                        S012Operation::Act => AgentLoopPhase::Review,
+                        S012Operation::Review => AgentLoopPhase::Observe,
+                    };
+                    assert!(result.is_ok(), "legal phase transition must succeed");
+                    assert_eq!(runtime.phase(), expected);
+                } else {
+                    assert!(matches!(
+                        result,
+                        Err(AgentRuntimeError::PhaseMismatch {
+                            expected,
+                            actual
+                        }) if expected == operation.required_phase() && actual == phase
+                    ));
+                    assert_eq!(runtime.phase(), phase);
+                }
+            }
+        }
+
+        for phase in phases[..4].iter().copied() {
+            let mut runtime = s012_runtime_at(phase);
+            assert!(matches!(
+                runtime.signal(StopConditionKind::Cancelled),
+                Ok(AgentDirective::Stop {
+                    reason: RunStopReason::Condition(StopConditionKind::Cancelled)
+                })
+            ));
+            assert_eq!(runtime.phase(), AgentLoopPhase::Stopped);
+        }
+        let mut stopped = s012_runtime_at(AgentLoopPhase::Stopped);
+        assert!(matches!(
+            stopped.signal(StopConditionKind::PolicyDenied),
+            Ok(AgentDirective::Stop {
+                reason: RunStopReason::Condition(StopConditionKind::Cancelled)
+            })
+        ));
+        assert_eq!(stopped.phase(), AgentLoopPhase::Stopped);
+    }
+
+    #[test]
+    fn s_012_ut01_rejects_empty_and_oversized_objectives_deterministically() {
+        for objective in [String::new(), "x".repeat(4_097)] {
+            let mut candidate = packet();
+            candidate.objective = objective;
+            let make_error = || {
+                let configuration = ConfigurationManager::default()
+                    .load_bytes(PROFILE)
+                    .expect("configuration fixture");
+                AgentRuntime::new(configuration, candidate.clone())
+                    .err()
+                    .expect("invalid objective fails")
+            };
+            let first = make_error();
+            let second = make_error();
+            assert_eq!(first, second);
+            assert!(matches!(
+                first,
+                AgentRuntimeError::RunControl(RunControlError::InvalidPacket { ref issues })
+                    if issues.iter().any(|issue|
+                        issue.code == "packet.text.invalid"
+                            && issue.field_path == ["objective".to_owned()]
+                    )
+            ));
+        }
+    }
+
+    #[test]
+    fn s_012_ut01_plan_revisions_advance_once_and_fail_without_mutation() {
+        let runtime = planned_runtime();
+        let plan = runtime.current_plan().expect("plan exists").clone();
+        assert_eq!(plan.revision, 1);
+        let step_id = plan.steps[0].plan_step_id.clone();
+        let mut progress = PlanProgressController::new(plan).expect("plan is valid");
+        assert_eq!(
+            progress
+                .transition_step(&step_id, PlanStepState::Ready)
+                .expect("proposed step becomes ready")
+                .revision,
+            2
+        );
+        assert_eq!(
+            progress
+                .transition_step(&step_id, PlanStepState::Running)
+                .expect("ready step begins")
+                .revision,
+            3
+        );
+        assert_eq!(
+            progress.transition_step(&step_id, PlanStepState::Ready),
+            Err(AgentProgressError::StepTransitionInvalid)
+        );
+        assert_eq!(progress.current().revision, 3);
+        assert_eq!(progress.revisions().len(), 3);
+    }
+
+    #[test]
+    fn s_012_ut01_budget_boundary_is_inclusive_and_overage_is_sticky() {
+        let mut bounded = packet();
+        bounded
+            .budgets
+            .iter_mut()
+            .find(|budget| budget.resource == BudgetResource::InputBytes)
+            .expect("input budget")
+            .limit = 4;
+        let mut exact = runtime_with(bounded.clone());
+        assert_eq!(exact.observe(4, 0), Ok(AgentDirective::Plan));
+        assert_eq!(exact.usage(BudgetResource::InputBytes), Some(4));
+
+        let mut exceeded = runtime_with(bounded);
+        assert!(matches!(
+            exceeded.observe(5, 0),
+            Ok(AgentDirective::Stop {
+                reason: RunStopReason::BudgetExceeded {
+                    resource: BudgetResource::InputBytes,
+                    limit: 4,
+                    attempted_total: 5
+                }
+            })
+        ));
+        assert_eq!(exceeded.usage(BudgetResource::InputBytes), Some(0));
+        assert_eq!(exceeded.phase(), AgentLoopPhase::Stopped);
+        assert!(matches!(
+            exceeded.signal(StopConditionKind::Error),
+            Ok(AgentDirective::Stop {
+                reason: RunStopReason::BudgetExceeded {
+                    resource: BudgetResource::InputBytes,
+                    limit: 4,
+                    attempted_total: 5
+                }
+            })
+        ));
+    }
+
+    #[test]
+    fn s_012_ut01_stop_conditions_and_completion_claims_are_typed() {
+        for condition in [
+            StopConditionKind::UserDecisionRequired,
+            StopConditionKind::PolicyDenied,
+            StopConditionKind::Error,
+            StopConditionKind::Cancelled,
+            StopConditionKind::UncertainResult,
+        ] {
+            let mut runtime = runtime_with(packet());
+            assert_eq!(
+                runtime.signal(condition),
+                Ok(AgentDirective::Stop {
+                    reason: RunStopReason::Condition(condition)
+                })
+            );
+        }
+        let prohibited = [
+            (
+                StopConditionKind::AcceptanceSatisfied,
+                RunControlError::DirectCompletionSignalProhibited,
+            ),
+            (
+                StopConditionKind::BudgetExhausted,
+                RunControlError::DirectBudgetSignalProhibited,
+            ),
+            (
+                StopConditionKind::DeadlineReached,
+                RunControlError::ConditionNotDeclared {
+                    condition: StopConditionKind::DeadlineReached,
+                },
+            ),
+        ];
+        for (condition, expected) in prohibited {
+            let mut runtime = runtime_with(packet());
+            assert_eq!(
+                runtime.signal(condition),
+                Err(AgentRuntimeError::RunControl(expected))
+            );
+            assert_eq!(runtime.phase(), AgentLoopPhase::Observe);
+        }
+
+        let source = packet();
+        let mut runtime = runtime_with(source.clone());
+        let mut stale = completion(source.clone());
+        stale.revision = source.revision;
+        assert_eq!(
+            runtime.accept_completion(&stale),
+            Err(AgentRuntimeError::RunControl(
+                RunControlError::CompletionRevisionNotNewer
+            ))
+        );
+        let mut unsupported = completion(source.clone());
+        unsupported.completion_evidence.clear();
+        assert!(matches!(
+            runtime.accept_completion(&unsupported),
+            Err(AgentRuntimeError::RunControl(
+                RunControlError::CompletionRejected { .. }
+            ))
+        ));
+        assert_eq!(
+            runtime.accept_completion(&completion(source)),
+            Ok(AgentDirective::Stop {
+                reason: RunStopReason::Condition(StopConditionKind::AcceptanceSatisfied)
+            })
+        );
+        assert_eq!(runtime.phase(), AgentLoopPhase::Stopped);
     }
 }
