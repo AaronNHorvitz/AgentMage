@@ -2481,38 +2481,47 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 32.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 32.1.1.1** (legacy `S-027-I01`): Store sensitivity-labeled conversation identity, title, local date fields, workspace, project, model, status, parent, current turn, attachments by reference, grants, receipts, and checkpoints in canonical SQLite.
-  - [ ] **Sub-task 32.1.1.2** (legacy `S-027-I02`): Implement filter, full-text search, timeline, read-only history, relationship view, rename, pin, archive, tag, retention, and approval-gated deletion.
-  - [ ] **Sub-task 32.1.1.3** (legacy `S-027-I03`): Resume the latest checkpoint in place and branch from an exact historical turn without rewriting the original.
-  - [ ] **Sub-task 32.1.1.4** (legacy `S-027-I04`): Compare current and recorded files, instructions, repository, model, and permissions before resume.
-  - [ ] **Sub-task 32.1.1.5** (legacy `S-027-I05`): Preserve citation IDs, receipt IDs, source hashes, and original evidence through compaction and branching.
+- [x] **Task 32.1.1 - Implement the bounded story**
+  - [x] **Sub-task 32.1.1.1** (legacy `S-027-I01`): Store sensitivity-labeled conversation identity, title, local date fields, workspace, project, model, status, parent, current turn, attachments by reference, grants, receipts, and checkpoints in canonical SQLite.
+  - [x] **Sub-task 32.1.1.2** (legacy `S-027-I02`): Implement filter, full-text search, timeline, read-only history, relationship view, rename, pin, archive, tag, retention, and approval-gated deletion.
+  - [x] **Sub-task 32.1.1.3** (legacy `S-027-I03`): Resume the latest checkpoint in place and branch from an exact historical turn without rewriting the original.
+  - [x] **Sub-task 32.1.1.4** (legacy `S-027-I04`): Compare current and recorded files, instructions, repository, model, and permissions before resume.
+  - [x] **Sub-task 32.1.1.5** (legacy `S-027-I05`): Preserve citation IDs, receipt IDs, source hashes, and original evidence through compaction and branching.
 
-- [ ] **Task 32.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 32.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 32.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 32.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 32.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 32.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 32.1.3 - Verify and close the story**
-  - [ ] **Sub-task 32.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 32.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 32.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 32.1.3.4 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-007`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-003` through `SR-CIV-005`, `SR-OPS-003`; retain archive integrity tests, branch graphs, disclosure previews, canary reports, and deletion/recovery evidence.
+- [x] **Task 32.1.3 - Verify and close the story**
+  - [x] **Sub-task 32.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 32.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 32.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 32.1.3.4 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-007`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-003` through `SR-CIV-005`, `SR-OPS-003`; retain archive integrity tests, branch graphs, disclosure previews, canary reports, and deletion/recovery evidence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 32.1.AC1:** Given the approved dependencies and source requirements for `S-027-I01`, `S-027-I02`, `S-027-I03`, `S-027-I04`, and `S-027-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 32.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-027-I01`, `S-027-I02`, `S-027-I03`, `S-027-I04`, and `S-027-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 32.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 32.1.AC1:** Given the approved dependencies and source requirements for `S-027-I01`, `S-027-I02`, `S-027-I03`, `S-027-I04`, and `S-027-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 32.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-027-I01`, `S-027-I02`, `S-027-I03`, `S-027-I04`, and `S-027-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 32.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 32.AC1:** Every numbered implementation sub-task in Story 32.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 32.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 32.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 32.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 32.AC1:** Every numbered implementation sub-task in Story 32.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 32.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 32.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 32.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 32.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 32 is PASS only when Story 32.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** The bounded implementation, tests, and
+recomputable local evidence are complete in commits `27b900f`, `afb7de4`,
+`7d638da`, `599e9d7`, `d75a053`, `6723b74`, `6d35080`, and `fbf975e`. The
+retained [Sprint 32 evidence report](artifacts/sprints/sprint-32/local-evidence-report.json)
+records a passing local conversation contract with network access and release
+approval disabled. Sprint 32 remains **BLOCKED** because Sprint 31 is not yet a
+passing upstream dependency and the required independent Sprint 32 review is
+absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
 ### [ ] Sprint 33 - Private Archives and Evidence Bundles
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
