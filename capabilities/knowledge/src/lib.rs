@@ -6,6 +6,8 @@ mod authority;
 mod domain;
 mod index;
 mod lifecycle;
+mod memory;
+mod memory_lifecycle;
 mod obsidian;
 mod obsidian_index;
 mod operations;
@@ -30,6 +32,15 @@ pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
     preview_migration, preview_restore, verify_backup,
+};
+pub use memory::{
+    MemoryCandidate, MemoryCandidateClass, MemoryCandidateDecision, MemoryError, MemoryId,
+    MemoryItem, MemoryItemStatus, MemoryScope, MemoryType, UserMemoryDecision,
+    evaluate_memory_candidate, resolve_memory_candidate,
+};
+pub use memory_lifecycle::{
+    MemoryCatalog, MemoryCatalogSummary, MemoryLifecycleReceipt, MemoryMarkdownBundle,
+    MemoryMarkdownFile, MemoryTransitionKind,
 };
 pub use obsidian::{
     ObsidianAttachment, ObsidianBacklink, ObsidianBlockReference, ObsidianCallout,
