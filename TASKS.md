@@ -2207,35 +2207,37 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 27.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 27.1.1.1** (legacy `S-023-I01`): Implement deterministic Markdown discovery with ignored folders, stable ordering, Unicode paths, spaces, and symlink boundaries.
-  - [ ] **Sub-task 27.1.1.2** (legacy `S-023-I02`): Parse frontmatter, headings, tasks, wiki links, aliases, backlinks, timestamps, and source line numbers while excluding code fences.
-  - [ ] **Sub-task 27.1.1.3** (legacy `S-023-I03`): Fail closed on malformed frontmatter and report ambiguous or unresolved links.
-  - [ ] **Sub-task 27.1.1.4** (legacy `S-023-I04`): Require an explicitly selected local vault root through the same workspace and path protections as every file tool.
-  - [ ] **Sub-task 27.1.1.5** (legacy `S-023-I05`): Refuse strict-local vault roots in detected cloud-synchronized or remote locations.
+  - [x] **Sub-task 27.1.1.1** (legacy `S-023-I01`): Implement deterministic Markdown discovery with ignored folders, stable ordering, Unicode paths, spaces, and symlink boundaries.
+  - [x] **Sub-task 27.1.1.2** (legacy `S-023-I02`): Parse frontmatter, headings, tasks, wiki links, aliases, backlinks, timestamps, and source line numbers while excluding code fences.
+  - [x] **Sub-task 27.1.1.3** (legacy `S-023-I03`): Fail closed on malformed frontmatter and report ambiguous or unresolved links.
+  - [x] **Sub-task 27.1.1.4** (legacy `S-023-I04`): Require an explicitly selected local vault root through the same workspace and path protections as every file tool.
+  - [x] **Sub-task 27.1.1.5** (legacy `S-023-I05`): Refuse strict-local vault roots in detected cloud-synchronized or remote locations.
 
 - [ ] **Task 27.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 27.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 27.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+  - [x] **Sub-task 27.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 27.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 27.1.3 - Verify and close the story**
-  - [ ] **Sub-task 27.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 27.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 27.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 27.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 27.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 27.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 27.1.3.4 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 27.1.AC1:** Given the approved dependencies and source requirements for `S-023-I01`, `S-023-I02`, `S-023-I03`, `S-023-I04`, and `S-023-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 27.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-023-I01`, `S-023-I02`, `S-023-I03`, `S-023-I04`, and `S-023-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 27.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 27.1.AC1:** Given the approved dependencies and source requirements for `S-023-I01`, `S-023-I02`, `S-023-I03`, `S-023-I04`, and `S-023-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 27.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-023-I01`, `S-023-I02`, `S-023-I03`, `S-023-I04`, and `S-023-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 27.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 27.AC1:** Every numbered implementation sub-task in Story 27.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 27.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 27.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 27.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 27.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 27.AC1:** Every numbered implementation sub-task in Story 27.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 27.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 27.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 27.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 27.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+
+**Local evidence:** Commit `e5974e0`, evidence definition `bc71680`, and retained report [`artifacts/sprints/sprint-27/local-evidence-report.json`](artifacts/sprints/sprint-27/local-evidence-report.json) complete the locally executable parser scope. Sub-task `27.1.3.4`, the parent task/story boxes, and this sprint remain open because Sprint 26 is blocked, independent Sprint 27 review is absent, and the combined legacy security item requires Sprint 28 index-transaction evidence.
 
 **Gate decision:** Sprint 27 is PASS only when Story 27.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 28 - Vault Indexing, Links, and Recovery
