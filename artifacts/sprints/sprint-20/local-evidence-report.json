@@ -1,0 +1,155 @@
+{
+  "blockers": [
+    {
+      "code": "PRODUCTION-ANSWER-CLAIM-COMPOSITION-NOT-INTEGRATED",
+      "owner": "20.1.3.2"
+    },
+    {
+      "code": "LIVE-CITATION-RESOLUTION-NOT-IMPLEMENTED",
+      "owner": "20.1.3.4"
+    },
+    {
+      "code": "DURABLE-RECEIPT-CHAIN-NOT-IMPLEMENTED",
+      "owner": "20.1.3.4"
+    },
+    {
+      "code": "KEYED-INTEGRITY-ANCHOR-NOT-IMPLEMENTED",
+      "owner": "20.1.3.4"
+    },
+    {
+      "code": "CLOCK-ANOMALY-EVIDENCE-NOT-IMPLEMENTED",
+      "owner": "20.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-20-REVIEW-NOT-RETAINED",
+      "owner": "20.1.3.3"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "evidence_state::tests",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "evidence-state-tests",
+      "output_sha256": "a5fcb9006615dfefb075e65a90a3286cf6a3f96ebf215949c4fcd93bff464b29"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "evidence-state-clippy",
+      "output_sha256": "32153ed39d2ab431334d8bd6b9efb7cd4ed6b0a1a000e2e6411dac7956f87beb"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_20_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-script-tests",
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "implemented_contracts": {
+    "assignment_authority": false,
+    "completion_authority": false,
+    "derived_requires_observed_inputs": true,
+    "derived_requires_registered_method": true,
+    "filesystem_authority": false,
+    "inferred_requires_citations": true,
+    "inferred_requires_exact_model_runtime_manifest": true,
+    "material_claim_state_count": 4,
+    "model_confidence_is_evidence_state": false,
+    "network_authority": false,
+    "observed_requires_authorized_observe_receipt": true,
+    "observed_requires_exact_source_identity": true,
+    "process_authority": false,
+    "unknown_blocked_reason_count": 8
+  },
+  "record_type": "sprint_20_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-TST-010"
+  ],
+  "source_revision": "fad6ff7578294c52ae692fbc1badea8f089a6ead",
+  "source_sha256": {
+    "docs/architecture/evidence-state-assignment.md": "3f3c771cb86076d813dd440c3c00c9eaa0d89630c0bfc98499577a718d98cb4e",
+    "docs/verification/sprint-20-local-results.md": "eab578b2c1c2b9d46f49944cccc4bcc114a187c12067ddbe899d3f0cb287d9c4",
+    "kernel/contracts/src/claim.rs": "8ac9b5f8b4c5e2a53e7e6059abf0e39cb11727aba0ab692f32f52bbcb2ecb6e2",
+    "kernel/contracts/src/lib.rs": "d35c7e1ed523d47aff0161a84bc630111bc02d984de22968e652834623dec783",
+    "kernel/contracts/src/serialization.rs": "d6cca6f3ea9978451cc8ce3f3e1b263cacf490e245d8abf7afd1b36d6c9b3d44",
+    "kernel/engine/src/authority.rs": "6fb142404571cc6479705cb13f4e5b777e46a1b5cbcf61fc38af79b6e28f2de6",
+    "kernel/engine/src/evidence_state.rs": "6f28d7e657259096db187119644d9fc6f22b8b0f8de42c5d4c850b7be2cfd7f2",
+    "kernel/engine/src/lib.rs": "0b10df7f3b662f2392aa4fa275c0b1cfd20e78a4507bb5397fc4e3c16462bb78",
+    "scripts/sprint_20_evidence.py": "3b9e50239d16acd8c3b8516495da7dd786b7b5aa74ab24e5c014898f280920cd",
+    "tests/test_sprint_20_evidence.py": "890f270cdad813ced8fa4dafc70140824460058ade30947042934399f68532b3"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "authority_side_effect_absence": true,
+    "citation_resolver_output": false,
+    "dependency_failure_and_cancellation_matrix": true,
+    "independent_review": false,
+    "invalid_prohibited_boundary_matrix": true,
+    "model_confidence_injection_rejected": true,
+    "positive_state_matrix": true,
+    "receipt_chain_verification": false
+  }
+}
