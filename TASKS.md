@@ -1213,31 +1213,31 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 13.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 13.1.1.1** (legacy `S-013-I01`): Implement `LocalModelRuntime` load, unload, health, token count, streaming, cancellation, resource reporting, manifest verification, and zero-network contracts.
-  - [ ] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Preserve the rejected Gemma 4 E4B feasibility record and define the candidate-neutral exact-profile manifest under `MODEL-PROVENANCE-POLICY.md`, including identity, publisher/control, lineage, license, artifacts, transformations, tokenizer, template, family codec, hashes/digests, runtime, quantization, modalities, context, decoding, platform, hardware/driver envelope, policy, evaluation, lifecycle state, and resources.
+  - [x] **Sub-task 13.1.1.1** (legacy `S-013-I01`): Implement `LocalModelRuntime` load, unload, health, token count, streaming, cancellation, resource reporting, manifest verification, and zero-network contracts.
+  - [x] **Sub-task 13.1.1.2** (legacy `S-013-I02`): Preserve the rejected Gemma 4 E4B feasibility record and define the candidate-neutral exact-profile manifest under `MODEL-PROVENANCE-POLICY.md`, including identity, publisher/control, lineage, license, artifacts, transformations, tokenizer, template, family codec, hashes/digests, runtime, quantization, modalities, context, decoding, platform, hardware/driver envelope, policy, evaluation, lifecycle state, and resources.
   - [ ] **Sub-task 13.1.1.3** (legacy `S-013-I03`): Implement the signed native `llama.cpp` Metal adapter for the Mac reference path.
-  - [ ] **Sub-task 13.1.1.4** (legacy `S-013-I04`): Implement native `llama.cpp` as the approved Linux reference adapter and Docker Model Runner as a separately gated compatibility adapter behind the same contract.
-  - [ ] **Sub-task 13.1.1.5** (legacy `S-013-I05`): Implement candidate-neutral client, message, capability, role, context-packet, model-run, streamed-fragment, closed proposal, tool-call, tool-result, terminal-claim, and correlation schemas.
-  - [ ] **Sub-task 13.1.1.6** (legacy `S-013-I06`): Implement model health, complete closed-proposal validation, bounded plain-text advisory fallback, bounded retry, cancellation, and inert malformed/partial/stale/replayed-response reporting.
-  - [ ] **Sub-task 13.1.1.7** (legacy `S-013-I07`): Prohibit unapproved model families, changed manifests, cloud fallback, arbitrary endpoints, and automatic model switching.
+  - [x] **Sub-task 13.1.1.4** (legacy `S-013-I04`): Implement native `llama.cpp` as the approved Linux reference adapter and Docker Model Runner as a separately gated compatibility adapter behind the same contract.
+  - [x] **Sub-task 13.1.1.5** (legacy `S-013-I05`): Implement candidate-neutral client, message, capability, role, context-packet, model-run, streamed-fragment, closed proposal, tool-call, tool-result, terminal-claim, and correlation schemas.
+  - [x] **Sub-task 13.1.1.6** (legacy `S-013-I06`): Implement model health, complete closed-proposal validation, bounded plain-text advisory fallback, bounded retry, cancellation, and inert malformed/partial/stale/replayed-response reporting.
+  - [x] **Sub-task 13.1.1.7** (legacy `S-013-I07`): Prohibit unapproved model families, changed manifests, cloud fallback, arbitrary endpoints, and automatic model switching.
 
 - [ ] **Task 13.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 13.1.2.1:** Candidate-neutral profile schema, preserved E4B rejected-evidence reference, and fake exact-profile catalog entries.
+  - [x] **Sub-task 13.1.2.1:** Candidate-neutral profile schema, preserved E4B rejected-evidence reference, and fake exact-profile catalog entries.
   - [ ] **Sub-task 13.1.2.2:** macOS and Linux runtime adapter implementations.
-  - [ ] **Sub-task 13.1.2.3:** Runtime conformance and offline response reports.
-  - [ ] **Sub-task 13.1.2.4:** Family-codec contract, closed proposal schema, capability/limitation record, and exact comparison manifest.
+  - [x] **Sub-task 13.1.2.3:** Runtime conformance and offline response reports.
+  - [x] **Sub-task 13.1.2.4:** Family-codec contract, closed proposal schema, capability/limitation record, and exact comparison manifest.
 
 - [ ] **Task 13.1.3 - Verify and close the story**
-  - [ ] **Sub-task 13.1.3.1:** `S-013-UT01` validates every exact-profile field, hash, digest, architecture, quantization, license, transformation, limit, codec, decoding, hardware/driver, and platform relation; assert any mismatch quarantines the profile and cannot be merged with another tuple.
+  - [x] **Sub-task 13.1.3.1:** `S-013-UT01` validates every exact-profile field, hash, digest, architecture, quantization, license, transformation, limit, codec, decoding, hardware/driver, and platform relation; assert any mismatch quarantines the profile and cannot be merged with another tuple.
   - [ ] **Sub-task 13.1.3.2:** `S-013-UT02` runs identical protocol vectors against deterministic fake Muse, Gemma, malformed, delayed, cancelled, crashed, resource-exhausted, replayed, and false-completion codecs plus fake/macOS/Linux runtime adapters; assert typed parity and inert rejection before authority.
-  - [ ] **Sub-task 13.1.3.3:** `S-013-ST01` attempts runtime access to files, tools, grants, credentials, environment, unrelated sockets, and raw workspace content; assert zero authority and bounded process termination.
-  - [ ] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call corpus under separately named quality and diagnostic-repeatability profiles; assert schema validity, grounding, uncertainty, repeated-trial statistics, negative results, and tuple differences are reported without a universal determinism claim.
+  - [x] **Sub-task 13.1.3.3:** `S-013-ST01` attempts runtime access to files, tools, grants, credentials, environment, unrelated sockets, and raw workspace content; assert zero authority and bounded process termination.
+  - [x] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call corpus under separately named quality and diagnostic-repeatability profiles; assert schema validity, grounding, uncertainty, repeated-trial statistics, negative results, and tuple differences are reported without a universal determinism claim.
   - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Complete `AT-MODEL-003` and the contract portion of `AT-MODEL-005`; map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-016`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, transformation provenance, codec vectors, adapter traces, evaluations, and independent decoder review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.1.AC1:** Given any candidate profile, when load or inference is requested, then only its exact admitted artifact, tokenizer, template, codec, runtime, context, decoding, platform, and hardware tuple is eligible; every silent change triggers quarantine and security-impact review.
-- [ ] **Story AC 13.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then runtime adapters are interchangeable at the kernel contract while platform, performance, quality, and limitation evidence remains separately attributable.
+- [x] **Story AC 13.1.AC1:** Given any candidate profile, when load or inference is requested, then only its exact admitted artifact, tokenizer, template, codec, runtime, context, decoding, platform, and hardware tuple is eligible; every silent change triggers quarantine and security-impact review.
+- [x] **Story AC 13.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then runtime adapters are interchangeable at the kernel contract while platform, performance, quality, and limitation evidence remains separately attributable.
 
 #### [ ] Story 13.2 - Cross-Adapter Model Parity and No-Fallback Gate
 
@@ -1245,22 +1245,22 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 13.2.1 - Establish parity and admission gates**
-  - [ ] **Sub-task 13.2.1.1:** Use the versioned Story 0.3 corpus and explicit context/output/resource settings for every enabled adapter; record adapter-specific prompt template or tool-call transformations without changing the shared contract.
-  - [ ] **Sub-task 13.2.1.2:** Compare schema validity, tool-call recovery, grounding, citations, uncertainty, cancellation latency, context behavior, output limits, memory, throughput, and repeated-run variance against one published threshold set.
-  - [ ] **Sub-task 13.2.1.3:** Quarantine an adapter that fails identity, isolation, contract, quality, or resource thresholds while leaving other approved adapters and the user's selected profile unchanged.
-  - [ ] **Sub-task 13.2.1.4:** Preserve the rejected E4B and 12B records, keep every candidate disabled until it independently passes complete exact-profile admission, and provide no automatic fallback path between profiles or adapters.
+- [x] **Task 13.2.1 - Establish parity and admission gates**
+  - [x] **Sub-task 13.2.1.1:** Use the versioned Story 0.3 corpus and explicit context/output/resource settings for every enabled adapter; record adapter-specific prompt template or tool-call transformations without changing the shared contract.
+  - [x] **Sub-task 13.2.1.2:** Compare schema validity, tool-call recovery, grounding, citations, uncertainty, cancellation latency, context behavior, output limits, memory, throughput, and repeated-run variance against one published threshold set.
+  - [x] **Sub-task 13.2.1.3:** Quarantine an adapter that fails identity, isolation, contract, quality, or resource thresholds while leaving other approved adapters and the user's selected profile unchanged.
+  - [x] **Sub-task 13.2.1.4:** Preserve the rejected E4B and 12B records, keep every candidate disabled until it independently passes complete exact-profile admission, and provide no automatic fallback path between profiles or adapters.
 
 - [ ] **Task 13.2.2 - Verify and close the story**
   - [ ] **Sub-task 13.2.2.1:** Run matched native/Docker corpus trials with one changed model hash, image digest, template, context setting, decoding setting, and runtime build at a time; assert incomparable or unapproved results cannot be merged or enabled.
-  - [ ] **Sub-task 13.2.2.2:** Force each adapter below every threshold and make the selected profile unavailable; assert a visible blocked result with no automatic adapter, model, frontier, or cloud fallback.
+  - [x] **Sub-task 13.2.2.2:** Force each adapter below every threshold and make the selected profile unavailable; assert a visible blocked result with no automatic adapter, model, frontier, or cloud fallback.
   - [ ] **Sub-task 13.2.2.3 - Product security evidence:** Complete `RV-13` and the first `RV-14` contract run; map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-006`, `SR-AI-010` through `SR-AI-016`, and `SR-TST-006`; retain matched manifests, raw corpus results, parity calculations, quarantine receipts, negative results, and no-fallback state.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 13.2.AC1:** Given the same approved model profile and fixed corpus, when each adapter runs, then all meet the same blocking contract and quality thresholds while measurable platform differences remain separately attributable.
-- [ ] **Story AC 13.2.AC2:** Given any adapter, model, manifest, or threshold failure, when selection is attempted, then AgentMage stops visibly and preserves the current task without automatically selecting another local or remote model.
-- [ ] **Story AC 13.2.AC3:** Given a proposed fallback enablement, when reviewers inspect it, then a separate complete admission record, platform results, hardware-fit evidence, and accepted decision exist before the profile is selectable.
+- [x] **Story AC 13.2.AC2:** Given any adapter, model, manifest, or threshold failure, when selection is attempted, then AgentMage stops visibly and preserves the current task without automatically selecting another local or remote model.
+- [x] **Story AC 13.2.AC3:** Given a proposed fallback enablement, when reviewers inspect it, then a separate complete admission record, platform results, hardware-fit evidence, and accepted decision exist before the profile is selectable.
 
 #### [ ] Story 13.3 - Isolated Muse-First Text Profile Spike
 
@@ -1268,43 +1268,45 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 13.3.1 - Freeze the exact Muse evaluation tuple**
-  - [ ] **Sub-task 13.3.1.1:** Verify first-party Muse Glimmer identity, release, license/use terms, origin, lineage, text artifact, tokenizer, template, reasoning controls, native llama.cpp compatibility, transformations, hashes, and known limitations without claiming support.
-  - [ ] **Sub-task 13.3.1.2:** Define one Fedora text-only profile with a pinned native llama.cpp build, one active model, one inference slot, zero egress, no vision, no speculative draft, synthetic data, and bounded 8k context before separately measured 16k or 32k profiles.
-  - [ ] **Sub-task 13.3.1.3:** Implement the Muse family codec only at the model edge and prove the kernel, agent state, tool schemas, verifier, and capability packs contain no Muse-specific branch.
-  - [ ] **Sub-task 13.3.1.4:** Define separate first-party-recommended quality and diagnostic-repeatability profiles, including exact sampler order, seed, slot, context, runtime, driver, hardware, prompt, tool, grader, and corpus identities.
+- [x] **Task 13.3.1 - Freeze the exact Muse evaluation tuple**
+  - [x] **Sub-task 13.3.1.1:** Verify first-party Muse Glimmer identity, release, license/use terms, origin, lineage, text artifact, tokenizer, template, reasoning controls, native llama.cpp compatibility, transformations, hashes, and known limitations without claiming support.
+  - [x] **Sub-task 13.3.1.2:** Define one Fedora text-only profile with a pinned native llama.cpp build, one active model, one inference slot, zero egress, no vision, no speculative draft, synthetic data, and bounded 8k context before separately measured 16k or 32k profiles.
+  - [x] **Sub-task 13.3.1.3:** Implement the Muse family codec only at the model edge and prove the kernel, agent state, tool schemas, verifier, and capability packs contain no Muse-specific branch.
+  - [x] **Sub-task 13.3.1.4:** Define separate first-party-recommended quality and diagnostic-repeatability profiles, including exact sampler order, seed, slot, context, runtime, driver, hardware, prompt, tool, grader, and corpus identities.
 
-- [ ] **Task 13.3.2 - Execute isolated preflight and evidence runs**
-  - [ ] **Sub-task 13.3.2.1:** Run artifact, license, provenance, runtime-build, hardware-memory, disk, acceleration, context, and zero-egress preflight before loading the profile; record `BLOCKED` or `BLOCKED-HARDWARE` instead of bypassing a failed prerequisite.
-  - [ ] **Sub-task 13.3.2.2:** Run closed-proposal, plain-text, streaming, stop-token, malformed-output, cancellation, crash, timeout, memory-pressure, prompt-injection, authority, false-completion, and unload fixtures using synthetic content only.
-  - [ ] **Sub-task 13.3.2.3:** Repeat quality and diagnostic profiles independently; retain pass-at-one, pass-at-k, pass-to-the-k, variance, confidence interval, invalid-proposal, false-completion, latency, memory, and intervention results without merging incomparable tuples.
-  - [ ] **Sub-task 13.3.2.4:** Produce a truthful early `PASS-EVALUATION`, `BLOCKED`, `BLOCKED-HARDWARE`, or `REJECTED` evidence disposition that activates nothing and records every re-review trigger.
+- [x] **Task 13.3.2 - Execute isolated preflight and evidence runs**
+  - [x] **Sub-task 13.3.2.1:** Run artifact, license, provenance, runtime-build, hardware-memory, disk, acceleration, context, and zero-egress preflight before loading the profile; record `BLOCKED` or `BLOCKED-HARDWARE` instead of bypassing a failed prerequisite.
+  - [x] **Sub-task 13.3.2.2:** Run closed-proposal, plain-text, streaming, stop-token, malformed-output, cancellation, crash, timeout, memory-pressure, prompt-injection, authority, false-completion, and unload fixtures using synthetic content only.
+  - [x] **Sub-task 13.3.2.3:** Repeat quality and diagnostic profiles independently; retain pass-at-one, pass-at-k, pass-to-the-k, variance, confidence interval, invalid-proposal, false-completion, latency, memory, and intervention results without merging incomparable tuples.
+  - [x] **Sub-task 13.3.2.4:** Produce a truthful early `PASS-EVALUATION`, `BLOCKED`, `BLOCKED-HARDWARE`, or `REJECTED` evidence disposition that activates nothing and records every re-review trigger.
 
 - [ ] **Task 13.3.3 - Verify and close the story**
-  - [ ] **Sub-task 13.3.3.1:** `D027-S13-MUSE-CODEC` mutates tokenizer, template, reasoning flag, message boundary, end token, tool envelope, stream split, unknown field, trailing bytes, and proposal identity; require inert rejection or exact decoding with no authority change.
-  - [ ] **Sub-task 13.3.3.2:** `D027-S13-MUSE-ISOLATION` probes workspace, environment, credentials, grants, tools, sockets, network, sibling processes, and persistent files; require zero access and bounded termination.
-  - [ ] **Sub-task 13.3.3.3:** `D027-S13-MUSE-REPEAT` reruns both profiles while changing one tuple field at a time; require separate reports, visible incomparability, and no universal determinism language.
+  - [x] **Sub-task 13.3.3.1:** `D027-S13-MUSE-CODEC` mutates tokenizer, template, reasoning flag, message boundary, end token, tool envelope, stream split, unknown field, trailing bytes, and proposal identity; require inert rejection or exact decoding with no authority change.
+  - [x] **Sub-task 13.3.3.2:** `D027-S13-MUSE-ISOLATION` probes workspace, environment, credentials, grants, tools, sockets, network, sibling processes, and persistent files; require zero access and bounded termination.
+  - [x] **Sub-task 13.3.3.3:** `D027-S13-MUSE-REPEAT` reruns both profiles while changing one tuple field at a time; require separate reports, visible incomparability, and no universal determinism language.
   - [ ] **Sub-task 13.3.3.4 - Product security evidence:** Extend `AT-MODEL-003`, `AT-MODEL-005`, `RV-13`, `RV-14`, and the early Muse portion of `RV-41`; map `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`; retain first-party sources, exact manifests, preflight, packet capture, raw trials, resource traces, codec vectors, and disposition.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.3.AC1:** Given the exact Muse text profile, when the isolated spike runs, then the model receives only bounded synthetic context and inference resources and receives no workspace, tool, grant, credential, connector, shell, or network authority.
-- [ ] **Story AC 13.3.AC2:** Given any missing, incompatible, unsupported, under-resourced, or failed evidence class, when the spike is classified, then it yields a truthful non-pass state without activation, substitution, or a family-wide conclusion.
-- [ ] **Story AC 13.3.AC3:** Given quality and diagnostic-repeatability trials, when results are reported, then every tuple and statistical limitation is visible and no repeated token result is represented as universal determinism.
+- [x] **Story AC 13.3.AC1:** Given the exact Muse text profile, when the isolated spike runs, then the model receives only bounded synthetic context and inference resources and receives no workspace, tool, grant, credential, connector, shell, or network authority.
+- [x] **Story AC 13.3.AC2:** Given any missing, incompatible, unsupported, under-resourced, or failed evidence class, when the spike is classified, then it yields a truthful non-pass state without activation, substitution, or a family-wide conclusion.
+- [x] **Story AC 13.3.AC3:** Given quality and diagnostic-repeatability trials, when results are reported, then every tuple and statistical limitation is visible and no repeated token result is represented as universal determinism.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 13.AC1:** `AT-MODEL-003` and the applicable historical `AT-MODEL-001` contract evidence pass; unavailable platform-specific activation remains visibly blocked rather than borrowed.
-- [ ] **Sprint AC 13.AC2:** Every response identifies the selected local model and verified runtime.
-- [ ] **Sprint AC 13.AC3:** Manifest, tokenizer, artifact, runtime, lineage, or license mismatch prevents load.
-- [ ] **Sprint AC 13.AC4:** Cancellation unloads or stops work cleanly without corrupting session state.
-- [ ] **Sprint AC 13.AC5:** No adapter gives the model tools, grants, workspace access, credentials, or network authority.
-- [ ] **Sprint AC 13.AC6:** Deterministic fake Muse, Gemma, malformed, delayed, cancelled, crashed, exhausted, replayed, and false-completion adapters cover every closed proposal and runtime state before a real profile is considered.
-- [ ] **Sprint AC 13.AC7:** The isolated Muse 8k text profile has one exact truthful evidence disposition; no result activates a model or becomes evidence for vision, speculative decoding, larger context, Docker, Windows, or macOS.
-- [ ] **Sprint AC 13.AC8:** `AT-MODEL-005` keeps quality and diagnostic-repeatability evidence separate and rejects every unrecorded tuple change.
-- [ ] **Sprint AC 13.AC9:** Kernel and capability dependency checks contain no Muse-, Gemma-, or other family-specific branch.
+- [x] **Sprint AC 13.AC1:** `AT-MODEL-003` and the applicable historical `AT-MODEL-001` contract evidence pass; unavailable platform-specific activation remains visibly blocked rather than borrowed.
+- [x] **Sprint AC 13.AC2:** Every response identifies the selected local model and verified runtime.
+- [x] **Sprint AC 13.AC3:** Manifest, tokenizer, artifact, runtime, lineage, or license mismatch prevents load.
+- [x] **Sprint AC 13.AC4:** Cancellation unloads or stops work cleanly without corrupting session state.
+- [x] **Sprint AC 13.AC5:** No adapter gives the model tools, grants, workspace access, credentials, or network authority.
+- [x] **Sprint AC 13.AC6:** Deterministic fake Muse, Gemma, malformed, delayed, cancelled, crashed, exhausted, replayed, and false-completion adapters cover every closed proposal and runtime state before a real profile is considered.
+- [x] **Sprint AC 13.AC7:** The isolated Muse 8k text profile has one exact truthful evidence disposition; no result activates a model or becomes evidence for vision, speculative decoding, larger context, Docker, Windows, or macOS.
+- [x] **Sprint AC 13.AC8:** `AT-MODEL-005` keeps quality and diagnostic-repeatability evidence separate and rejects every unrecorded tuple change.
+- [x] **Sprint AC 13.AC9:** Kernel and capability dependency checks contain no Muse-, Gemma-, or other family-specific branch.
 
 **Gate decision:** Sprint 13 is PASS only when Stories 13.1 through 13.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-004`, `AM-MDL-006`, `AT-MODEL-003`, `AT-MODEL-005`, applicable preserved historical requirements, and the Universal Story Definition of Done are complete with current evidence. A truthful Muse non-pass may close the evidence task but enables no profile. Otherwise the sprint is BLOCKED.
+
+**Current gate result:** BLOCKED with all currently executable local contract and exact Muse evaluation work complete. The remaining blockers are the native macOS adapter and execution evidence, matched live Docker/macOS parity, and separate packet-capture/product-security closure. Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`, remains disabled, and triggers no fallback.
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

@@ -5,21 +5,31 @@ adapter process. It depends only on AgentMage's shared contracts and has no
 kernel-engine, workspace, tool, grant, credential, connector, or model-artifact
 dependency.
 
-The current executable implements only an exact self-check and a fail-closed
-inactive state. It does not load a model, perform inference, open a listener, or
-accept ambient configuration. The candidate-neutral model runtime, codecs,
-profiles, streaming, cancellation, and resource protocol remain owned by Sprint
-13. Consequently, packaging this boundary does not enable a model or make a
-runtime-support claim.
+The package now implements the candidate-neutral runtime contract, an exact
+native `llama.cpp` driver, closed family-codec boundary, streamed inference,
+cancellation, resource reporting, model acquisition, and atomic activation
+primitives. The packaged command remains fail closed and accepts no ambient
+inference arguments; the operational path is available only through the typed,
+authenticated private boundary. This implementation does not by itself enable
+a model or make a release-support claim.
 
-The native Linux package profile is
+The exact Muse Glimmer Fedora evaluation tuple uses the separately pinned
+`llama.cpp` b10423 runtime profile and remains disabled. Isolated lifecycle,
+sandboxed streaming, and cancellation evidence passed, while the early quality
+profile produced no valid closed proposals and is therefore rejected for
+ordinary activation. The equal response hashes observed under the diagnostic
+profile apply only to that recorded tuple and are not a universal determinism
+claim.
+
+The preserved native Linux package profile is
 [`llama-cpp-b10333-linux-x86_64.json`](../../model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json).
 It derives one deterministic CPU-library-only package from an exact upstream
 archive and excludes every upstream executable, server, RPC surface, download
 surface, Vulkan backend, and model artifact. The Rust contract binds that exact
 package to a private standard-user model-store identity, one authenticated
 kernel endpoint, one inference slot, zero swap, and bounded cgroup inputs. These
-are preconditions for later runtime work, not an inference or release claim.
+are retained preconditions from the earlier package-boundary stage, not an
+inference or release claim for that profile.
 
 The optional Linux Docker compatibility profile is
 [`docker-model-runner-v1.2.6-linux-x86_64.json`](../../model-profiles/runtimes/docker-model-runner-v1.2.6-linux-x86_64.json).
