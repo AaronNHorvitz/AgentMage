@@ -1,0 +1,104 @@
+{
+  "checks": [
+    {
+      "code": "source-archive-exact",
+      "id": "source-archive",
+      "result": "PASS"
+    },
+    {
+      "code": "package-rebuild-exact",
+      "id": "deterministic-rebuild",
+      "result": "PASS"
+    },
+    {
+      "code": "package-members-exact",
+      "id": "package-closure",
+      "result": "PASS"
+    },
+    {
+      "code": "prohibited-entrypoints-absent",
+      "id": "prohibited-entrypoints",
+      "result": "PASS"
+    },
+    {
+      "code": "unprivileged-extraction-pass",
+      "id": "unprivileged-extraction",
+      "result": "PASS"
+    },
+    {
+      "code": "binary-identity-exact",
+      "id": "binary-self-check",
+      "result": "PASS"
+    }
+  ],
+  "disposition": {
+    "adapter_implemented": false,
+    "automatic_fallback": false,
+    "enabled_models": 0,
+    "inference_implemented": false,
+    "release_approval": false,
+    "status": "PACKAGE-VERIFIED-NOT-ADMITTED"
+  },
+  "file_modes": {
+    "LICENSE.llama.cpp": 292,
+    "bin": 365,
+    "bin/llama-server": 365,
+    "lib": 365,
+    "lib/libggml-base.so": 511,
+    "lib/libggml-base.so.0": 511,
+    "lib/libggml-base.so.0.19.0": 292,
+    "lib/libggml-cpu-x64.so": 292,
+    "lib/libggml-vulkan.so": 292,
+    "lib/libggml.so": 511,
+    "lib/libggml.so.0": 511,
+    "lib/libggml.so.0.19.0": 292,
+    "lib/libllama-common.so": 511,
+    "lib/libllama-common.so.0": 511,
+    "lib/libllama-common.so.0.1.0": 292,
+    "lib/libllama-server-impl.so": 292,
+    "lib/libllama.so": 511,
+    "lib/libllama.so.0": 511,
+    "lib/libllama.so.0.1.0": 292,
+    "lib/libmtmd.so": 511,
+    "lib/libmtmd.so.0": 511,
+    "lib/libmtmd.so.0.1.0": 292,
+    "runtime-manifest.json": 292
+  },
+  "limitations": [
+    "No model artifact was present or loaded.",
+    "The self-check did not start a listener or inference request.",
+    "Package verification is not adapter, zero-egress, model-quality, or release evidence."
+  ],
+  "member_count": 21,
+  "package": {
+    "enabled_models": 0,
+    "entrypoints": [
+      "bin/llama-server"
+    ],
+    "inference_implemented": false,
+    "package_bytes": 25449086,
+    "package_id": "agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64",
+    "package_sha256": "f63793c42e6a2ffd9ff450f70ee09827663654aab698206e2d42a89dec7f15cb",
+    "release_approval": false,
+    "source_commit": "a94d563ed801d1da1b8c2432946de07d0231bb3d",
+    "source_profile_sha256": "dc8909677972c33a0c5ea98516d871c453575a315ae3afb8d4038123e78fb28f"
+  },
+  "profile_path": "model-profiles/runtimes/llama-cpp-b10423-muse-linux-x86_64.json",
+  "profile_sha256": "dc8909677972c33a0c5ea98516d871c453575a315ae3afb8d4038123e78fb28f",
+  "prohibited_entrypoints": [],
+  "record_type": "muse_native_runtime_package_evidence",
+  "schema_version": 1,
+  "self_check": {
+    "exit_code": 0,
+    "listener_started": false,
+    "model_loaded": false,
+    "operation": "version-only",
+    "reported_identity": "version: 0.1.0-dev (build 10423, commit a94d563ed)\nbuilt with GNU 11.4.0 for Linux x86_64"
+  },
+  "source_archive": {
+    "bytes": 32989764,
+    "sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+    "source_commit": "a94d563ed801d1da1b8c2432946de07d0231bb3d"
+  },
+  "source_revision": "ec7eb9d8"
+}
