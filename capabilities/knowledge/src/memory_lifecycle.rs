@@ -14,10 +14,14 @@ const MAX_ITEMS: usize = 100_000;
 pub enum MemoryTransitionKind {
     /// Add an already decided candidate result.
     Insert,
+    /// Edit through a new replacement identity while retaining the original.
+    Edit,
     /// Replace a current fact while retaining the original.
     Supersede,
     /// Correct a current fact while retaining the original.
     Correct,
+    /// Lower confidence through an explicit evidence-bound policy decision.
+    Decay,
     /// Place an explicit user hold.
     Hold,
     /// Apply an exact expiry policy.
@@ -144,6 +148,23 @@ impl MemoryCatalog {
         )
     }
 
+    /// Edits one approved item through an independently approved replacement identity.
+    pub fn edit(
+        &mut self,
+        current_id: &MemoryId,
+        replacement: MemoryItem,
+        decision_sha256: String,
+        decided_at: String,
+    ) -> Result<MemoryLifecycleReceipt, MemoryError> {
+        self.replace(
+            MemoryTransitionKind::Edit,
+            current_id,
+            replacement,
+            decision_sha256,
+            decided_at,
+        )
+    }
+
     /// Corrects one approved current item with another approved exact item.
     pub fn correct(
         &mut self,
@@ -158,6 +179,38 @@ impl MemoryCatalog {
             replacement,
             decision_sha256,
             decided_at,
+        )
+    }
+
+    /// Lowers confidence without changing content, source evidence, or identity.
+    pub fn decay_confidence(
+        &mut self,
+        memory_id: &MemoryId,
+        new_confidence_bps: u32,
+        decision_sha256: String,
+        decided_at: String,
+    ) -> Result<MemoryLifecycleReceipt, MemoryError> {
+        validate_decision(&decision_sha256, &decided_at)?;
+        self.publish(
+            MemoryTransitionKind::Decay,
+            memory_id.clone(),
+            None,
+            decision_sha256.clone(),
+            |next| {
+                let item = next.get_mut(memory_id).ok_or(MemoryError::NotFound)?;
+                if !matches!(
+                    item.status,
+                    MemoryItemStatus::Approved | MemoryItemStatus::Hold
+                ) || new_confidence_bps >= item.confidence_bps
+                {
+                    return Err(MemoryError::InvalidTransition);
+                }
+                item.confidence_bps = new_confidence_bps;
+                item.last_verified_at = decided_at.clone();
+                item.decided_at = decided_at;
+                item.decision_sha256 = decision_sha256;
+                Ok(())
+            },
         )
     }
 
@@ -802,5 +855,64 @@ mod tests {
         );
         assert!(!first.write_enabled);
         assert_eq!(first.bundle_sha256.len(), 64);
+    }
+
+    #[test]
+    fn edit_uses_a_new_identity_and_confidence_decay_can_only_decrease() {
+        let original = item("memory-edit-original", "Original text.", None);
+        let original_id = original.memory_id.clone();
+        let mut catalog = MemoryCatalog::new();
+        catalog.insert(original).expect("insert succeeds");
+        let decay = catalog
+            .decay_confidence(
+                &original_id,
+                8_000,
+                "c".repeat(64),
+                "2026-08-14T12:02:00Z".to_owned(),
+            )
+            .expect("decay succeeds");
+        assert_eq!(decay.transition, MemoryTransitionKind::Decay);
+        assert_eq!(
+            catalog
+                .get(&original_id)
+                .expect("original present")
+                .confidence_bps,
+            8_000
+        );
+        let before_increase = catalog.inspect();
+        assert_eq!(
+            catalog.decay_confidence(
+                &original_id,
+                9_000,
+                "d".repeat(64),
+                "2026-08-14T12:03:00Z".to_owned(),
+            ),
+            Err(MemoryError::InvalidTransition)
+        );
+        assert_eq!(catalog.inspect(), before_increase);
+
+        let replacement = item("memory-edit-replacement", "Edited text.", None);
+        let replacement_id = replacement.memory_id.clone();
+        let edit = catalog
+            .edit(
+                &original_id,
+                replacement,
+                "e".repeat(64),
+                "2026-08-14T12:04:00Z".to_owned(),
+            )
+            .expect("edit succeeds");
+        assert_eq!(edit.transition, MemoryTransitionKind::Edit);
+        assert_eq!(
+            catalog.get(&original_id).expect("original retained").status,
+            MemoryItemStatus::Superseded
+        );
+        assert_eq!(
+            catalog
+                .get(&replacement_id)
+                .expect("replacement present")
+                .content
+                .as_deref(),
+            Some("Edited text.")
+        );
     }
 }
