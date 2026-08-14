@@ -469,7 +469,7 @@ def check_cross_document_contract(failures: list[str]) -> None:
                 failures.append(f"{relative}: missing policy reference: {linked_file}")
 
     tasks = read("TASKS.md")
-    sprint_count = len(re.findall(r"^### \[ \] Sprint \d+", tasks, re.MULTILINE))
+    sprint_count = len(re.findall(r"^### \[[ xX]\] Sprint \d+", tasks, re.MULTILINE))
     if sprint_count != 169:
         failures.append(f"TASKS.md: expected 169 sprint headings, found {sprint_count}")
 

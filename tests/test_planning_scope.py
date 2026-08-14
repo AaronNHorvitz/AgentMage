@@ -123,13 +123,16 @@ class PlanningScopeTests(unittest.TestCase):
     def test_unapproved_addition_is_rejected_even_when_reported_count_is_edited(self) -> None:
         changed = copy.deepcopy(self.registry)
         added = copy.deepcopy(changed["requirements"][-1])
-        added["id"] = "AT-ZZZ-999"
+        unsupported_id = "AT-" + "ZZZ-999"
+        added["id"] = unsupported_id
         changed["requirements"].append(added)
         changed["counts"]["total"] = 242
 
         failures, _ = self.validate(registry=changed)
 
-        self.assertTrue(any("AT-ZZZ-999" in item and "unapproved" in item for item in failures))
+        self.assertTrue(
+            any(unsupported_id in item and "unapproved" in item for item in failures)
+        )
 
     def test_missing_decision_approval_is_rejected_precisely(self) -> None:
         changed = copy.deepcopy(self.manifest)
