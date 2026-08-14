@@ -40,6 +40,8 @@ pub enum DescriptiveArtifactKind {
     ClaimRecord,
     /// Captured session environment or provenance record.
     SessionRecord,
+    /// Repository or workspace instruction provenance and trust record.
+    InstructionRecord,
 }
 
 /// Claimed producer of one descriptive authority-escalation attempt.
@@ -107,6 +109,11 @@ mod sealed {
     impl Sealed for crate::attachment::AttachmentMetadata {}
     impl Sealed for crate::attachment::ResolvedAttachment {}
     impl Sealed for crate::session_environment::SessionEnvironmentCapture {}
+    impl Sealed for crate::instruction_provenance::InstructionDiscoveryRecord {}
+    impl Sealed for crate::instruction_provenance::InstructionReadRecord {}
+    impl Sealed for crate::instruction_provenance::InstructionTrustDecision {}
+    impl Sealed for crate::instruction_provenance::InstructionEvidenceLedger {}
+    impl Sealed for crate::instruction_provenance::EffectiveGuidance {}
     impl Sealed for crate::task_classification::TaskClassification {}
 }
 
@@ -156,6 +163,13 @@ impl_non_authoritative!(ClaimRecord =>
     ClaimBoundFinalResponse,
 );
 impl_non_authoritative!(SessionRecord => crate::session_environment::SessionEnvironmentCapture);
+impl_non_authoritative!(InstructionRecord =>
+    crate::instruction_provenance::InstructionDiscoveryRecord,
+    crate::instruction_provenance::InstructionReadRecord,
+    crate::instruction_provenance::InstructionTrustDecision,
+    crate::instruction_provenance::InstructionEvidenceLedger,
+    crate::instruction_provenance::EffectiveGuidance,
+);
 impl_non_authoritative!(SessionRecord =>
     crate::attachment::AttachmentMetadata,
     crate::attachment::ResolvedAttachment,

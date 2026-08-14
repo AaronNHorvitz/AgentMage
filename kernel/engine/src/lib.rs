@@ -29,6 +29,8 @@ pub mod configuration;
 pub mod diagnostics;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
+pub mod instruction_provenance;
 pub mod model_codec;
 pub mod model_response;
 /// Candidate-neutral exact-profile admission and local runtime orchestration.
