@@ -46,7 +46,7 @@ class KernelContractFixtureTests(unittest.TestCase):
 
     def test_invalid_fixture_mutations_are_deterministic_and_closed(self) -> None:
         task = {
-            "schema_version": 1,
+            "schema_version": 2,
             "task_id": "task-0001",
             "session_id": "session-0001",
             "objective": "fixture",
@@ -58,10 +58,10 @@ class KernelContractFixtureTests(unittest.TestCase):
         first = invalid_fixtures(encoded)
         second = invalid_fixtures(encoded)
         self.assertEqual(first, second)
-        self.assertEqual(len(first), 7)
-        self.assertNotIn(b"objective", first["task.v1.missing-field.json"])
-        self.assertIn(b"capability_grant", first["task.v1.unknown-field.json"])
-        self.assertTrue(first["task.v1.trailing-value.json"].endswith(b"[]"))
+        self.assertEqual(len(first), 8)
+        self.assertNotIn(b"objective", first["task.v2.missing-field.json"])
+        self.assertIn(b"capability_grant", first["task.v2.unknown-field.json"])
+        self.assertTrue(first["task.v2.trailing-value.json"].endswith(b"[]"))
 
 
 if __name__ == "__main__":

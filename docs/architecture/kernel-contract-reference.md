@@ -1,6 +1,6 @@
 # Kernel Contract Reference
 
-This reference describes wire schema version `1` of the unpublished
+This reference describes wire schema version `2` of the unpublished
 `agentmage-kernel-contracts` source package. The reviewed package is
 [`agentmage-kernel-contracts-0.0.0.crate`](../../artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate),
 whose identity and verification result are recorded in the
@@ -8,12 +8,12 @@ whose identity and verification result are recorded in the
 artifact.
 
 The reproducible wire examples are published in the
-[`version 1 fixture manifest`](../../fixtures/contracts/v1/manifest.json), with
+[`version 2 fixture manifest`](../../fixtures/contracts/v2/manifest.json), with
 version rejection and parser behavior recorded in the
-[`compatibility record`](../../fixtures/contracts/compatibility.json). Each
+[`compatibility record`](../../fixtures/contracts/compatibility-v2.json). Each
 fixture is hash-bound in the manifest and verified against the frozen package.
 
-Cargo package version `0.0.0` and wire schema version `1` are separate
+Cargo package version `0.0.0` and wire schema version `2` are separate
 identities. This is a source-contract review package, not a supported product
 release or a crates.io publication. Linux source-package verification has
 passed locally. macOS packaging, build, and execution remain `blocked-macos`.
@@ -53,11 +53,11 @@ ordinary inert text.
 
 ## Wire Rules
 
-| Rule | Schema version 1 behavior |
+| Rule | Schema version 2 behavior |
 |---|---|
 | Encoding | UTF-8 JSON, one complete top-level value |
 | Maximum encoded size | `MAX_CONTRACT_JSON_BYTES`, exactly 1,048,576 bytes |
-| Supported version | `CONTRACT_SCHEMA_VERSION`, exactly `1` |
+| Supported version | `CONTRACT_SCHEMA_VERSION`, exactly `2` |
 | Object shape | All structs are closed; unknown and duplicate fields fail |
 | Required fields | Every declared field is required, including fields whose value may be `null` |
 | Optional values | Rust `Option<T>` is encoded as a present value or JSON `null` |
@@ -66,7 +66,7 @@ ordinary inert text.
 | Byte vectors | JSON arrays of unsigned integer byte values |
 | Integer widths | The declared Rust width applies; overflow fails parsing |
 | Sequence order | Preserved and semantically significant unless a type says otherwise |
-| Maps | No map-valued field is exposed by the version 1 contract family |
+| Maps | No map-valued field is exposed by the version 2 contract family |
 | Canonical output | Compact JSON in Rust declaration order and sequence order |
 | Trailing content | Rejected, including a second JSON value |
 
@@ -92,7 +92,7 @@ values are not copied into the message.
 | `contract.field.duplicate` | `validation` | An object repeats a field |
 | `contract.value.unsupported` | `validation` | An enum wire value is not supported |
 | `contract.parse.data` | `validation` | A value has the wrong closed-schema shape or range |
-| `contract.version.unsupported` | `validation` | `schema_version` is not exactly `1` |
+| `contract.version.unsupported` | `validation` | `schema_version` is not exactly `2` |
 
 Parser errors use `RetryDisposition::AfterCorrection`. An unsupported version
 identifies `schema_version` in `field_path`; parse errors otherwise avoid
@@ -242,7 +242,7 @@ content-addressed evidence, not filesystem authority.
 `Receipt` binds `ReceiptId`, sequence, correlation, session, task, action,
 optional tool call, `OperationOutcome`, operation digest, evidence, optional
 error, previous and current receipt-chain digests, and occurrence time. Schema
-version 1 defines the record shape only; canonical receipt hashing and durable
+version 2 defines the record shape only; canonical receipt hashing and durable
 append-only persistence are delivered by later stories.
 
 ### Cancellation and Failures
@@ -271,14 +271,15 @@ the first signal observed by a token remains stable.
 
 ## Versioned Top-Level Types
 
-The following 15 types implement `VersionedContract` and may be passed directly
+The following 33 types implement `VersionedContract` and may be passed directly
 to `from_json` or `to_canonical_json`:
 
 | Domain | Top-level types |
 |---|---|
-| Work | `Task`, `WorkPacket`, `Plan`, `Action` |
-| Model | `Prompt` |
-| Approval and authority | `ApprovalRequest`, `CapabilityGrant` |
+| Work and agent lifecycle | `Task`, `WorkPacket`, `Plan`, `Action`, `AgentProposal`, `AgentRestartSnapshot` |
+| Classification and verification | `DataSensitivityAssessment`, `ActionRiskAssessment`, `ModelCapabilityAssessment`, `DeterministicPolicyFacts`, `AdvisoryClassifierResult`, `ReclassificationRequest`, `VerifierCandidate` |
+| Model | `Prompt`, `EncodedModelContext`, `ExactModelProfile`, `ModelContextPacket`, `ModelRunRequest`, `ModelRunResult`, `StreamedModelFragment`, `ModelProposalWireCandidate`, `ClosedModelProposal` |
+| Approval and authority | `ApprovalRequest`, `CapabilityGrant`, `AuthorityTransactionRecord` |
 | Tool | `ToolDefinition`, `ToolCall`, `ToolResult` |
 | Evidence | `EvidenceReference`, `Receipt` |
 | Failure | `ContractError`, `CancellationSignal`, `BoundaryFailure` |
@@ -289,7 +290,7 @@ implement `VersionedContract`.
 
 ## Compatibility
 
-Version `1` accepts only exact version `1` input. It has no best-effort forward
+Version `2` accepts only exact version `2` input. It has no best-effort forward
 compatibility, field aliases, implicit defaults, enum fallback, or unknown-field
 retention. A client must stop on an unsupported version rather than stripping
 or guessing fields.
@@ -317,14 +318,14 @@ does not silently relabel an existing package artifact.
 9. Preserve task, correlation, error, cancellation, and route context across
    boundaries.
 10. Reproduce the success fixtures in the
-    [`version 1 manifest`](../../fixtures/contracts/v1/manifest.json) and the
+    [`version 2 manifest`](../../fixtures/contracts/v2/manifest.json) and the
     failure behavior in the
-    [`compatibility record`](../../fixtures/contracts/compatibility.json)
+    [`compatibility record`](../../fixtures/contracts/compatibility-v2.json)
     before claiming schema compatibility.
 
 ## Public Symbol Index
 
-The package exports 120 public symbols. The index is grouped by source family so
+The package exports 249 public symbols. The index is grouped by source family so
 an implementation can distinguish wire types from helpers and identifiers.
 
 - Approval: `ApprovalRequest`.
@@ -368,6 +369,45 @@ an implementation can distinguish wire types from helpers and identifiers.
 - Tool: `OperationOutcome`, `RequiredGrantTemplate`, `StateChange`, `ToolCall`,
   `ToolDefinition`, `ToolResult`, `ToolRiskLevel`.
 - Diagnostic identity: `COMPONENT_ID`.
+- Schema-v2 agent, classification, reasoning, transaction, and model additions:
+  `ActionRisk`, `ActionRiskAssessment`, `AdvisoryClassifierDisposition`,
+  `AdvisoryClassifierResult`, `AdvisoryClassifierStatus`, `AgentFinalResponse`,
+  `AgentFinalState`, `AgentProgressEvent`, `AgentProgressKind`, `AgentStateKind`,
+  `AgentStateTransition`, `AgentStatusKind`, `AgentStatusResponse`, `ApprovalId`,
+  `AssumptionRecord`, `AssumptionRisk`, `AssumptionStatus`, `AuthorityClass`,
+  `AuthorityTransactionId`, `AuthorityTransactionRecord`, `AuthorityTransactionState`,
+  `AutonomyLevel`, `BudgetState`, `ClaimAssertion`, `ClaimBoundFinalResponse`,
+  `ClaimEvidence`, `ClaimEvidenceRole`, `ClaimStatus`, `ClarificationImpact`,
+  `ClarificationQuestion`, `ClarificationState`, `ClassificationBoundary`,
+  `ClosedModelProposal`, `ContextBudget`, `ContextPacketId`, `ContradictionRecord`,
+  `CredentialClass`, `DataSensitivityAssessment`, `DecodingProfile`,
+  `DeterministicPolicyFacts`, `DisclosureClass`, `EncodedModelContext`,
+  `ExactAuthorityState`, `ExactModelProfile`, `FamilyCodecIdentity`,
+  `GrantTargetError`, `HardwareEnvelope`, `HypothesisRecord`, `HypothesisStatus`,
+  `IndependentVerificationRequest`, `IndependentVerificationResult`,
+  `LocalModelRuntime`, `MaterialClaim`, `MaterialClaimKind`, `ModelAdapterId`,
+  `ModelArtifact`, `ModelCancellationProbe`, `ModelCapability`,
+  `ModelCapabilityAssessment`, `ModelCapabilityRole`, `ModelCapabilityState`,
+  `ModelCapabilityStatus`, `ModelClientSchemas`, `ModelCodecId`,
+  `ModelContextPacket`, `ModelFamilyCodec`, `ModelHealth`, `ModelHealthState`,
+  `ModelLifecycleState`, `ModelLoadReceipt`, `ModelManifestId`,
+  `ModelManifestObservation`, `ModelMessage`, `ModelMessageId`, `ModelMessageRole`,
+  `ModelModality`, `ModelProfileId`, `ModelProposalKind`,
+  `ModelProposalWireCandidate`, `ModelResourceReport`, `ModelRole`, `ModelRunId`,
+  `ModelRunRequest`, `ModelRunResult`, `ModelRunTerminalState`,
+  `ModelRuntimeFailure`, `ModelRuntimeIdentity`, `ModelRuntimeKind`,
+  `ModelStreamId`, `ModelStreamSink`, `ModelToolCallCandidate`,
+  `ModelToolCallWireCandidate`, `ModelTransformation`, `ModelUnloadReceipt`,
+  `NetworkRequirement`, `OPERATION_TAXONOMY_VERSION`, `OperationAttemptId`,
+  `OperationTaxonomyError`, `PathScopeState`, `PolicyDestinationClass`, `PolicyId`,
+  `PolicySourceClass`, `PostconditionId`, `PostconditionResult`, `ProblemFact`,
+  `ProblemFrame`, `ProposalId`, `ReclassificationContentKind`,
+  `ReclassificationRequest`, `RepositorySnapshotId`, `RepositoryState`,
+  `RuntimeIsolationObservation`, `StaticPolicyCheck`, `StaticPolicyCheckKind`,
+  `StaticPolicyCheckState`, `StreamedModelFragment`, `TokenCountResult`,
+  `ToolCatalogId`, `UserMessageDisposition`, `UserMessageIntent`,
+  `VerificationDisposition`, `VerifiedMaterialClaim`, `VerifierCandidate`,
+  `VerifierDisposition`, `VerifierId`, `VerifierRecordId`, and `VerifierSource`.
 
 ## Scope Limits
 

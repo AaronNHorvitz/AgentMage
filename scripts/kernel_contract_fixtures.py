@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and verify golden wire and compatibility fixtures for contract schema v1."""
+"""Build and verify golden wire and compatibility fixtures for contract schema v2."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = ROOT / "fixtures/contracts"
-VALID_ROOT = FIXTURE_ROOT / "v1/valid"
-COMPATIBILITY_ROOT = FIXTURE_ROOT / "compatibility"
-MANIFEST_PATH = FIXTURE_ROOT / "v1/manifest.json"
-COMPATIBILITY_PATH = FIXTURE_ROOT / "compatibility.json"
+VALID_ROOT = FIXTURE_ROOT / "v2/valid"
+COMPATIBILITY_ROOT = FIXTURE_ROOT / "compatibility/v2"
+MANIFEST_PATH = FIXTURE_ROOT / "v2/manifest.json"
+COMPATIBILITY_PATH = FIXTURE_ROOT / "compatibility-v2.json"
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json"
 EMIT_SOURCE = "kernel/contracts/tests/contract_family.rs"
 VERIFY_SOURCE = "fixtures/contracts/fixture_verifier.rs"
@@ -54,13 +54,28 @@ EXPECTED_VALID_NAMES = (
 )
 INVALID_EXPECTATIONS = {
     "task.v0.unsupported.json": "contract.version.unsupported",
-    "task.v2.unsupported.json": "contract.version.unsupported",
-    "task.v1.missing-field.json": "contract.field.missing",
-    "task.v1.unknown-field.json": "contract.field.unknown",
-    "task.v1.duplicate-field.json": "contract.field.duplicate",
-    "task.v1.malformed.json": "contract.parse.eof",
-    "task.v1.trailing-value.json": "contract.parse.syntax",
+    "task.v1.unsupported.json": "contract.version.unsupported",
+    "task.v2.missing-field.json": "contract.field.missing",
+    "task.v2.unknown-field.json": "contract.field.unknown",
+    "task.v2.duplicate-field.json": "contract.field.duplicate",
+    "task.v2.malformed.json": "contract.parse.eof",
+    "task.v2.trailing-value.json": "contract.parse.syntax",
+    "task.v3.unsupported.json": "contract.version.unsupported",
 }
+LEGACY_RETAINED_PATHS = (
+    "compatibility.json",
+    *(f"compatibility/{name}" for name in (
+        "task.v0.unsupported.json",
+        "task.v1.duplicate-field.json",
+        "task.v1.malformed.json",
+        "task.v1.missing-field.json",
+        "task.v1.trailing-value.json",
+        "task.v1.unknown-field.json",
+        "task.v2.unsupported.json",
+    )),
+    "v1/manifest.json",
+    *(f"v1/valid/{name}.json" for name in EXPECTED_VALID_NAMES),
+)
 MARKER = "AGENTMAGE_CONTRACT_FIXTURES="
 
 
@@ -192,25 +207,27 @@ def invalid_fixtures(task: bytes) -> dict[str, bytes]:
         parsed = json.loads(task)
     except json.JSONDecodeError as error:
         raise FixtureValidationError("canonical task fixture is malformed") from error
-    if not isinstance(parsed, dict) or parsed.get("schema_version") != 1:
+    if not isinstance(parsed, dict) or parsed.get("schema_version") != 2:
         raise FixtureValidationError("canonical task fixture identity is invalid")
 
     def compact(value: Any) -> bytes:
         return json.dumps(value, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
 
     version_zero = {**parsed, "schema_version": 0}
-    version_two = {**parsed, "schema_version": 2}
+    version_one = {**parsed, "schema_version": 1}
+    version_three = {**parsed, "schema_version": 3}
     missing = dict(parsed)
     missing.pop("objective")
     unknown = {**parsed, "capability_grant": {"claimed": True}}
     return {
         "task.v0.unsupported.json": compact(version_zero),
-        "task.v2.unsupported.json": compact(version_two),
-        "task.v1.missing-field.json": compact(missing),
-        "task.v1.unknown-field.json": compact(unknown),
-        "task.v1.duplicate-field.json": task[:-1] + b',"status":"ready"}',
-        "task.v1.malformed.json": task[:-1],
-        "task.v1.trailing-value.json": task + b"[]",
+        "task.v1.unsupported.json": compact(version_one),
+        "task.v2.missing-field.json": compact(missing),
+        "task.v2.unknown-field.json": compact(unknown),
+        "task.v2.duplicate-field.json": task[:-1] + b',"status":"ready"}',
+        "task.v2.malformed.json": task[:-1],
+        "task.v2.trailing-value.json": task + b"[]",
+        "task.v3.unsupported.json": compact(version_three),
     }
 
 
@@ -218,16 +235,16 @@ def compatibility_record() -> dict[str, Any]:
     return {
         "schema_version": 1,
         "record_type": "kernel-contract-compatibility",
-        "current_wire_version": 1,
-        "supported_wire_versions": [1],
+        "current_wire_version": 2,
+        "supported_wire_versions": [2],
         "cargo_package_version": "0.0.0",
-        "older_version_disposition": {"version": 0, "status": "rejected"},
-        "newer_version_disposition": {"version": 2, "status": "rejected"},
+        "older_version_disposition": {"version": 1, "status": "rejected"},
+        "newer_version_disposition": {"version": 3, "status": "rejected"},
         "unknown_fields": "rejected",
         "duplicate_fields": "rejected",
         "missing_fields": "rejected",
         "trailing_values": "rejected",
-        "canonical_bytes": "stable-for-exact-schema-v1-values",
+        "canonical_bytes": "stable-for-exact-schema-v2-values",
         "automatic_migration": "none",
         "positive_authority_path": "absent",
         "macos_status": "blocked-macos",
@@ -248,14 +265,14 @@ def manifest(
     )
     return {
         "schema_version": 1,
-        "fixture_set": "kernel-contracts-v1",
+        "fixture_set": "kernel-contracts-v2",
         "generator_revision": revision,
         "frozen_package_sha256": package_report["package"]["sha256"],
-        "contract_schema_version": 1,
+        "contract_schema_version": 2,
         "valid_fixtures": [
             {
                 "contract": name,
-                "path": f"fixtures/contracts/v1/valid/{name}.json",
+                "path": f"fixtures/contracts/v2/valid/{name}.json",
                 "sha256": sha256_bytes(content),
                 "size_bytes": len(content),
             }
@@ -263,7 +280,7 @@ def manifest(
         ],
         "invalid_fixtures": [
             {
-                "path": f"fixtures/contracts/compatibility/{name}",
+                "path": f"fixtures/contracts/compatibility/v2/{name}",
                 "expected_error_code": INVALID_EXPECTATIONS[name],
                 "sha256": sha256_bytes(content),
                 "size_bytes": len(content),
@@ -276,7 +293,7 @@ def manifest(
             "persisted": False,
         },
         "compatibility_record": {
-            "path": "fixtures/contracts/compatibility.json",
+            "path": "fixtures/contracts/compatibility-v2.json",
             "sha256": sha256_bytes(compatibility_bytes),
         },
     }
@@ -330,10 +347,10 @@ def expected_outputs(revision: str) -> tuple[dict[str, bytes], dict[str, Any]]:
     compatibility_bytes = canonical_json(compatibility_record())
     fixture_manifest = manifest(revision, valid, invalid, compatibility_bytes)
     outputs = {
-        **{f"v1/valid/{name}.json": content for name, content in valid.items()},
-        **{f"compatibility/{name}": content for name, content in invalid.items()},
-        "compatibility.json": compatibility_bytes,
-        "v1/manifest.json": canonical_json(fixture_manifest),
+        **{f"v2/valid/{name}.json": content for name, content in valid.items()},
+        **{f"compatibility/v2/{name}": content for name, content in invalid.items()},
+        "compatibility-v2.json": compatibility_bytes,
+        "v2/manifest.json": canonical_json(fixture_manifest),
     }
     source_records = [
         {"path": relative, "sha256": sha256_bytes(git_file(revision, relative))}
@@ -346,7 +363,7 @@ def expected_outputs(revision: str) -> tuple[dict[str, bytes], dict[str, Any]]:
         "status": "pass-linux-golden-corpus",
         "generator_revision": revision,
         "generator_sources": source_records,
-        "manifest_sha256": sha256_bytes(outputs["v1/manifest.json"]),
+        "manifest_sha256": sha256_bytes(outputs["v2/manifest.json"]),
         "valid_fixture_count": len(valid),
         "invalid_fixture_count": len(invalid),
         "generated_oversized_case_count": 1,
@@ -361,8 +378,9 @@ def expected_outputs(revision: str) -> tuple[dict[str, bytes], dict[str, Any]]:
             "macos_implementation_claim": "none",
         },
         "limitations": [
-            "Only wire schema version 1 is supported.",
-            "Version 0 and version 2 fixtures prove rejection, not migration support.",
+            "Only wire schema version 2 is supported by the current package.",
+            "The preserved v1 corpus is historical evidence and is not accepted by schema v2.",
+            "Versions 0, 1, and 3 prove rejection, not migration support.",
             "The oversized case is generated in memory and is not retained as a 1 MiB file.",
             "No macOS execution evidence or positive authority path is claimed.",
         ],
@@ -395,7 +413,7 @@ def check_outputs() -> None:
             raise FixtureValidationError(f"cannot read fixture {relative}: {error}") from error
         if actual != expected:
             raise FixtureValidationError(f"golden fixture is stale or mutated: {relative}")
-    expected_paths = set(outputs)
+    expected_paths = set(outputs) | set(LEGACY_RETAINED_PATHS)
     actual_paths = {
         path.relative_to(FIXTURE_ROOT).as_posix()
         for path in FIXTURE_ROOT.rglob("*")

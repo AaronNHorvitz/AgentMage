@@ -10,7 +10,7 @@ fn verify<T>(root: &Path, name: &str)
 where
     T: VersionedContract,
 {
-    let path = root.join("v1/valid").join(format!("{name}.json"));
+    let path = root.join("v2/valid").join(format!("{name}.json"));
     let bytes = fs::read(path).expect("golden fixture must be readable");
     let value = from_json::<T>(&bytes).expect("golden fixture must parse");
     assert_eq!(
@@ -42,14 +42,15 @@ fn every_valid_and_compatibility_fixture_matches_the_public_contract() {
 
     for (name, expected_code) in [
         ("task.v0.unsupported.json", "contract.version.unsupported"),
-        ("task.v2.unsupported.json", "contract.version.unsupported"),
-        ("task.v1.missing-field.json", "contract.field.missing"),
-        ("task.v1.unknown-field.json", "contract.field.unknown"),
-        ("task.v1.duplicate-field.json", "contract.field.duplicate"),
-        ("task.v1.malformed.json", "contract.parse.eof"),
-        ("task.v1.trailing-value.json", "contract.parse.syntax"),
+        ("task.v1.unsupported.json", "contract.version.unsupported"),
+        ("task.v2.missing-field.json", "contract.field.missing"),
+        ("task.v2.unknown-field.json", "contract.field.unknown"),
+        ("task.v2.duplicate-field.json", "contract.field.duplicate"),
+        ("task.v2.malformed.json", "contract.parse.eof"),
+        ("task.v2.trailing-value.json", "contract.parse.syntax"),
+        ("task.v3.unsupported.json", "contract.version.unsupported"),
     ] {
-        let bytes = fs::read(root.join("compatibility").join(name))
+        let bytes = fs::read(root.join("compatibility/v2").join(name))
             .expect("compatibility fixture must be readable");
         let error = from_json::<Task>(&bytes).expect_err("compatibility fixture must fail");
         assert_eq!(error.code, expected_code, "fixture: {name}");

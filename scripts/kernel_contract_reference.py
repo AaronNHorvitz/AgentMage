@@ -144,7 +144,7 @@ def package_reference_inputs() -> tuple[
     exports = exported_symbols(lib_source)
     versioned = versioned_contracts(serialization_source)
     error_codes = boundary_error_codes(serialization_source)
-    if len(exports) != 120 or len(versioned) != 15 or len(error_codes) != 11:
+    if len(exports) != 249 or len(versioned) != 33 or len(error_codes) != 11:
         raise ReferenceValidationError("frozen package API counts are unexpected")
     return files, exports, versioned, error_codes
 
@@ -255,8 +255,8 @@ def build_report(reference_revision: str, root: Path = ROOT) -> dict[str, Any]:
             "macos_implementation_claim": "none",
         },
         "limitations": [
-            "The reference describes frozen wire schema version 1, not a product release.",
-            "The published golden fixtures cover wire schema version 1 only.",
+            "The reference describes frozen wire schema version 2, not a product release.",
+            "The current golden fixtures cover the core schema version 2 contract family.",
             "No macOS build or execution evidence is claimed.",
             "CapabilityGrant is a wire contract; this package performs no policy validation, atomic consumption, or execution.",
         ],
