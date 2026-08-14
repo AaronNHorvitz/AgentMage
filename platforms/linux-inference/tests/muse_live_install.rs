@@ -6,8 +6,9 @@ use std::time::Duration;
 use agentmage_kernel_contracts::{ExactModelProfile, PlatformFamily, RuntimeIsolationObservation};
 use agentmage_platform_linux_inference::{
     LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig, ModelAcquisitionHost,
-    ModelActivationDisposition, ModelImportDisposition, NativeModelInstallVerifier,
-    activate_verified_model, import_local_model, preflight_model_acquisition,
+    ModelActivationDisposition, ModelImportDisposition, NativeModelDriver,
+    NativeModelInstallVerifier, activate_verified_model, import_local_model,
+    preflight_model_acquisition,
 };
 
 fn required_path(name: &str) -> PathBuf {
@@ -32,6 +33,33 @@ fn muse_profile() -> ExactModelProfile {
             .clone(),
     )
     .expect("exact profile")
+}
+
+#[test]
+#[ignore = "hashes the exact 16.7 GB Muse artifact through the native driver"]
+fn exact_muse_driver_manifest_diagnostic() {
+    let store = required_path("AGENTMAGE_MUSE_STORE");
+    let runtime_root = required_path("AGENTMAGE_MUSE_RUNTIME_ROOT");
+    let socket_root = required_path("AGENTMAGE_MUSE_SOCKET_ROOT");
+    let profile = muse_profile();
+    let verified_path = store.join(format!(".verified-import-{}.gguf", profile.artifact.sha256));
+    let driver = LlamaServerDriver::new(
+        LlamaServerDriverConfig::new(
+            runtime_root,
+            verified_path,
+            socket_root.join("llama-server.sock"),
+            profile.runtime.clone(),
+            Duration::from_secs(600),
+        )
+        .expect("exact driver configuration"),
+    );
+    match driver.verify_manifest(&profile) {
+        Ok(observation) => {
+            assert_eq!(observation.profile_id, profile.profile_id);
+            println!("MUSE_DRIVER_MANIFEST_PASS");
+        }
+        Err(error) => panic!("native driver manifest failure: {}", error.code),
+    }
 }
 
 #[test]
