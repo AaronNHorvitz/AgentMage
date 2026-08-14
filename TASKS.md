@@ -1844,28 +1844,28 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 22.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 22.1.1.1** (legacy `S-020-I01`): Implement context budgeting for instructions, newest request, active objective, plan step, corrections, approvals, blockers, evidence, memory, and expected output.
-  - [ ] **Sub-task 22.1.1.2** (legacy `S-020-I02`): Deduplicate low-value context before removing authoritative evidence.
-  - [ ] **Sub-task 22.1.1.3** (legacy `S-020-I03`): Implement checked summaries that preserve paths, errors, identifiers, commands, decisions, unresolved questions, citation IDs, and receipt IDs.
-  - [ ] **Sub-task 22.1.1.4** (legacy `S-020-I04`): Keep summaries separate from source evidence and reopen original sources when stale, disputed, or insufficient.
-  - [ ] **Sub-task 22.1.1.5** (legacy `S-020-I05`): Create safe-boundary checkpoints with objective, plan, next action, workspace, repository, branch, permission, instructions, model, evidence, and blockers.
-  - [ ] **Sub-task 22.1.1.6** (legacy `S-020-I06`): Commit action state, consumed grant, receipt, evidence pointer, and next checkpoint atomically.
-  - [ ] **Sub-task 22.1.1.7** (legacy `S-020-I07`): Revalidate workspace, file, instruction, branch, map, citation, model, permission, and policy drift before resuming.
-  - [ ] **Sub-task 22.1.1.8** (legacy `S-020-I08`): Provide explicit continue, restart, or cancel when material drift is detected.
+- [x] **Task 22.1.1 - Implement the bounded story**
+  - [x] **Sub-task 22.1.1.1** (legacy `S-020-I01`): Implement context budgeting for instructions, newest request, active objective, plan step, corrections, approvals, blockers, evidence, memory, and expected output.
+  - [x] **Sub-task 22.1.1.2** (legacy `S-020-I02`): Deduplicate low-value context before removing authoritative evidence.
+  - [x] **Sub-task 22.1.1.3** (legacy `S-020-I03`): Implement checked summaries that preserve paths, errors, identifiers, commands, decisions, unresolved questions, citation IDs, and receipt IDs.
+  - [x] **Sub-task 22.1.1.4** (legacy `S-020-I04`): Keep summaries separate from source evidence and reopen original sources when stale, disputed, or insufficient.
+  - [x] **Sub-task 22.1.1.5** (legacy `S-020-I05`): Create safe-boundary checkpoints with objective, plan, next action, workspace, repository, branch, permission, instructions, model, evidence, and blockers.
+  - [x] **Sub-task 22.1.1.6** (legacy `S-020-I06`): Commit action state, consumed grant, receipt, evidence pointer, and next checkpoint atomically.
+  - [x] **Sub-task 22.1.1.7** (legacy `S-020-I07`): Revalidate workspace, file, instruction, branch, map, citation, model, permission, and policy drift before resuming.
+  - [x] **Sub-task 22.1.1.8** (legacy `S-020-I08`): Provide explicit continue, restart, or cancel when material drift is detected.
 
-- [ ] **Task 22.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 22.1.2.1:** Context manager and summary schema.
-  - [ ] **Sub-task 22.1.2.2:** Atomic checkpoint and resume state machine.
-  - [ ] **Sub-task 22.1.2.3:** Context-debug view with sensitivity-labeled inputs.
-  - [ ] **Sub-task 22.1.2.4:** Crash-point, maximum-context, and drift test results.
+- [x] **Task 22.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 22.1.2.1:** Context manager and summary schema.
+  - [x] **Sub-task 22.1.2.2:** Atomic checkpoint and resume state machine.
+  - [x] **Sub-task 22.1.2.3:** Context-debug view with sensitivity-labeled inputs.
+  - [x] **Sub-task 22.1.2.4:** Crash-point, maximum-context, and drift test results.
 
 - [ ] **Task 22.1.3 - Verify and close the story**
-  - [ ] **Sub-task 22.1.3.1:** `S-020-UT01` composes context at empty, nominal, maximum, and over-limit sizes with conflicting/stale/denied evidence; assert deterministic priority, bounded excerpts, visible omissions, and no secret canary.
-  - [ ] **Sub-task 22.1.3.2:** `S-020-UT02` validates checkpoint schemas and legal resume transitions with missing, stale, corrupt, future-version, mismatched-workspace, and mismatched-policy state; assert safe refusal or explicit recovery.
-  - [ ] **Sub-task 22.1.3.3:** `S-020-RT01` injects crashes before and after each checkpoint and tool terminal state across at least 100 resumes; assert no completed operation repeats and no pending operation is claimed complete.
-  - [ ] **Sub-task 22.1.3.4:** `S-020-IT01` resumes long fixture sessions after model/runtime/configuration/repository changes; assert impact is surfaced, evidence is invalidated where needed, and original intent/revision history remains inspectable.
-  - [ ] **Sub-task 22.1.3.5 - Product security evidence:** Map `SR-DAT-002`/`SR-DAT-003`, `SR-AI-008` through `SR-AI-010`, `SR-OPS-003`, `SR-TST-005`/`SR-TST-006`; retain checkpoint hashes, crash matrix, context manifests, canary scans, and resume comparisons.
+  - [x] **Sub-task 22.1.3.1:** `S-020-UT01` composes context at empty, nominal, maximum, and over-limit sizes with conflicting/stale/denied evidence; assert deterministic priority, bounded excerpts, visible omissions, and no secret canary.
+  - [x] **Sub-task 22.1.3.2:** `S-020-UT02` validates checkpoint schemas and legal resume transitions with missing, stale, corrupt, future-version, mismatched-workspace, and mismatched-policy state; assert safe refusal or explicit recovery.
+  - [ ] **Sub-task 22.1.3.3:** `S-020-RT01` injects crashes before and after each checkpoint and tool terminal state across at least 100 resumes; assert no completed operation repeats and no pending operation is claimed complete. Partial local evidence: the deterministic subprocess campaign completed 126 before/after persistence-boundary exits, including the session-checkpoint boundary, and focused terminal-effect failure/reopen tests repeat no worker launch; a 100-run native tool-terminal matrix remains open.
+  - [ ] **Sub-task 22.1.3.4:** `S-020-IT01` resumes long fixture sessions after model/runtime/configuration/repository changes; assert impact is surfaced, evidence is invalidated where needed, and original intent/revision history remains inspectable. Partial local evidence: all nine drift dimensions, exact checkpoint history, and 100 repeated no-drift comparisons pass in the platform-neutral core; production long-session and actual model/runtime/configuration/repository integration remain open.
+  - [ ] **Sub-task 22.1.3.5 - Product security evidence:** Map `SR-DAT-002`/`SR-DAT-003`, `SR-AI-008` through `SR-AI-010`, `SR-OPS-003`, `SR-TST-005`/`SR-TST-006`; retain checkpoint hashes, crash matrix, context manifests, canary scans, and resume comparisons. Partial local evidence: source-bound checkpoint hashes, context accounting, restricted-canary exclusion, atomic rollback, 126 crash runs, and drift comparisons are retained; the product-wide canary sweep, native-platform evidence, and independent review remain open.
 
 ##### Story Acceptance Criteria
 
@@ -1875,10 +1875,10 @@ claims.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 22.AC1:** `AT-CRASH-001` and `AT-RESUME-001` pass.
-- [ ] **Sprint AC 22.AC2:** Forced termination never repeats a completed operation.
-- [ ] **Sprint AC 22.AC3:** Material drift is detected before another action.
-- [ ] **Sprint AC 22.AC4:** Context condensation preserves the active request, correction, evidence references, and next safe action.
-- [ ] **Sprint AC 22.AC5:** Ephemeral mode leaves no persisted session record.
+- [ ] **Sprint AC 22.AC2:** Forced termination never repeats a completed operation. Partial local evidence: 126 deterministic before/after store-boundary exits and focused terminal-effect recovery repeat no completed operation; the required native 100-run tool-terminal matrix remains open.
+- [x] **Sprint AC 22.AC3:** Material drift is detected before another action.
+- [x] **Sprint AC 22.AC4:** Context condensation preserves the active request, correction, evidence references, and next safe action.
+- [ ] **Sprint AC 22.AC5:** Ephemeral mode leaves no persisted session record. Partial local evidence: ephemeral checkpoints are rejected before SQLCipher publication and leave generation and checkpoint rows unchanged; production session lifecycle integration remains open.
 
 **Gate decision:** Sprint 22 is PASS only when Story 22.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
