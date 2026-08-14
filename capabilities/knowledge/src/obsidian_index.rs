@@ -1164,6 +1164,7 @@ fn index_elements(note: &ObsidianParsedNote) -> Vec<IndexElement> {
         text: embed.target.clone(),
         range: embed.source_range,
     }));
+    values.retain(|element| !crate::domain::secret_candidate(&element.text));
     values
 }
 
@@ -1864,6 +1865,39 @@ mod tests {
                 "replacement",
             ),
             Err(ObsidianIndexError::CorruptIndex)
+        );
+    }
+
+    #[test]
+    fn obvious_secret_candidates_remain_in_source_but_not_searchable_projection_text() {
+        let sensitive = [
+            "---\n",
+            "pass",
+            "word: synthetic-value\n",
+            "---\n",
+            "# Private Note\n",
+        ]
+        .concat();
+        let source = ObsidianVaultSnapshot::from_snapshots(
+            &selection(),
+            vec![input(&["Vault", "Private.md"], &sensitive)],
+        )
+        .expect("snapshot");
+        assert!(
+            source.notes()[0]
+                .coverage
+                .iter()
+                .any(|item| item.syntax == "obvious_secret_candidate")
+        );
+        assert_eq!(source.notes()[0].source_bytes(), sensitive.as_bytes());
+        let mut index = ObsidianVaultIndex::in_memory().expect("index");
+        index.rebuild(&source).expect("rebuild");
+        assert!(
+            index
+                .query("synthetic-value", 10)
+                .expect("query")
+                .hits
+                .is_empty()
         );
     }
 }

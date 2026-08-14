@@ -571,7 +571,7 @@ fn parse_note(
             .then_with(|| left.key.cmp(&right.key))
             .then_with(|| left.value.cmp(&right.value))
     });
-    let properties = frontmatter
+    let properties: Vec<ObsidianProperty> = frontmatter
         .iter()
         .map(|(key, value)| {
             let line_number = frontmatter_lines.get(key).copied().unwrap_or(1);
@@ -615,7 +615,21 @@ fn parse_note(
     let mut wiki_links = Vec::new();
     let mut callouts = Vec::new();
     let mut blocks = Vec::new();
-    let mut coverage = Vec::new();
+    let mut coverage = properties
+        .iter()
+        .filter(|property| {
+            crate::domain::secret_candidate(&format!(
+                "{}={}",
+                property.key,
+                property.values.join(",")
+            ))
+        })
+        .map(|property| ObsidianCoverageItem {
+            syntax: "obvious_secret_candidate".to_owned(),
+            supported: false,
+            source_range: property.source_range,
+        })
+        .collect::<Vec<_>>();
     let mut fence: Option<(u8, usize)> = None;
     for (index, line) in lines.iter().enumerate().skip(body_start) {
         let line_number = u32::try_from(index + 1).map_err(|_| ObsidianError::ResourceLimit)?;
@@ -1013,6 +1027,13 @@ fn parse_block_reference(line: &str, line_number: u32) -> Option<ObsidianBlockRe
 
 fn parse_unsupported_coverage(line: &str, line_number: u32) -> Vec<ObsidianCoverageItem> {
     let mut items = Vec::new();
+    if crate::domain::secret_candidate(line) {
+        items.push(ObsidianCoverageItem {
+            syntax: "obvious_secret_candidate".to_owned(),
+            supported: false,
+            source_range: source_line_range(line_number, line),
+        });
+    }
     for (needle, syntax) in [
         (concat!("![](http", "://"), "remote_markdown_embed"),
         (concat!("![](https", "://"), "remote_markdown_embed"),

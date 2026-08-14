@@ -394,7 +394,7 @@ fn valid_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-fn secret_candidate(value: &str) -> bool {
+pub(crate) fn secret_candidate(value: &str) -> bool {
     let lower = value.to_ascii_lowercase();
     if lower.contains("-----begin private key-----")
         || lower.contains("-----begin openssh private key-----")
