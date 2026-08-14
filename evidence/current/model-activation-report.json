@@ -40,7 +40,7 @@
     },
     {
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "48eb3b23d28d11d2d0e272863f39c9c8f26c0b681d53609e444fb7124311f118"
+      "sha256": "b3f6c06dd5e6fad168301c8bcb77bbcfe4bc524ed5fbfb70cf070c9325c34de4"
     }
   ],
   "report_id": "agentmage-current-model-activation-v1",
