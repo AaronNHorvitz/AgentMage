@@ -2206,22 +2206,22 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 27.1.1 - Implement the bounded story**
+- [x] **Task 27.1.1 - Implement the bounded story**
   - [x] **Sub-task 27.1.1.1** (legacy `S-023-I01`): Implement deterministic Markdown discovery with ignored folders, stable ordering, Unicode paths, spaces, and symlink boundaries.
   - [x] **Sub-task 27.1.1.2** (legacy `S-023-I02`): Parse frontmatter, headings, tasks, wiki links, aliases, backlinks, timestamps, and source line numbers while excluding code fences.
   - [x] **Sub-task 27.1.1.3** (legacy `S-023-I03`): Fail closed on malformed frontmatter and report ambiguous or unresolved links.
   - [x] **Sub-task 27.1.1.4** (legacy `S-023-I04`): Require an explicitly selected local vault root through the same workspace and path protections as every file tool.
   - [x] **Sub-task 27.1.1.5** (legacy `S-023-I05`): Refuse strict-local vault roots in detected cloud-synchronized or remote locations.
 
-- [ ] **Task 27.1.2 - Produce reviewable artifacts**
+- [x] **Task 27.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 27.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
   - [x] **Sub-task 27.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 27.1.3 - Verify and close the story**
+- [x] **Task 27.1.3 - Verify and close the story**
   - [x] **Sub-task 27.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [x] **Sub-task 27.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
   - [x] **Sub-task 27.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 27.1.3.4 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof.
+  - [x] **Sub-task 27.1.3.4 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof.
 
 ##### Story Acceptance Criteria
 
@@ -2237,7 +2237,7 @@ claims.
 - [x] **Sprint AC 27.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [x] **Sprint AC 27.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Local evidence:** Commit `e5974e0`, evidence definition `bc71680`, and retained report [`artifacts/sprints/sprint-27/local-evidence-report.json`](artifacts/sprints/sprint-27/local-evidence-report.json) complete the locally executable parser scope. Sub-task `27.1.3.4`, the parent task/story boxes, and this sprint remain open because Sprint 26 is blocked, independent Sprint 27 review is absent, and the combined legacy security item requires Sprint 28 index-transaction evidence.
+**Local evidence:** Commit `e5974e0`, evidence definition `bc71680`, retained Sprint 27 report [`artifacts/sprints/sprint-27/local-evidence-report.json`](artifacts/sprints/sprint-27/local-evidence-report.json), and Sprint 28 transaction/no-Obsidian report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json) complete the locally executable parser and combined legacy security-evidence scope. The parent story and this sprint remain open because Sprint 26 is blocked and independent Sprint 27 review is absent.
 
 **Gate decision:** Sprint 27 is PASS only when Story 27.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 28 - Vault Indexing, Links, and Recovery
@@ -2259,36 +2259,38 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 28.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 28.1.1.1** (legacy `S-023-I06`): Keep index, memory, conversation state, temporary text, and hidden agent records outside the vault.
-  - [ ] **Sub-task 28.1.1.2** (legacy `S-023-I07`): Implement current-versus-historical classification, special current-note readers, bounded queries, relationship traversal, and stale-index detection.
-  - [ ] **Sub-task 28.1.1.3** (legacy `S-023-I08`): Preserve raw meeting-note sections and produce per-file previews for all later note changes.
+  - [x] **Sub-task 28.1.1.1** (legacy `S-023-I06`): Keep index, memory, conversation state, temporary text, and hidden agent records outside the vault.
+  - [x] **Sub-task 28.1.1.2** (legacy `S-023-I07`): Implement current-versus-historical classification, special current-note readers, bounded queries, relationship traversal, and stale-index detection.
+  - [x] **Sub-task 28.1.1.3** (legacy `S-023-I08`): Preserve raw meeting-note sections and produce per-file previews for all later note changes.
   - [ ] **Sub-task 28.1.1.4** (legacy `S-023-I09`): Implement a local watcher that updates only the disposable index and emits access receipts.
 
-- [ ] **Task 28.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 28.1.2.1:** Obsidian adapter and index schema.
-  - [ ] **Sub-task 28.1.2.2:** Synthetic vault corpus with links, aliases, tasks, conflicts, and malformed notes.
-  - [ ] **Sub-task 28.1.2.3:** Vault access and no-Obsidian proof receipts.
-  - [ ] **Sub-task 28.1.2.4:** Index rebuild and stale-update results.
+- [x] **Task 28.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 28.1.2.1:** Obsidian adapter and index schema.
+  - [x] **Sub-task 28.1.2.2:** Synthetic vault corpus with links, aliases, tasks, conflicts, and malformed notes.
+  - [x] **Sub-task 28.1.2.3:** Vault access and no-Obsidian proof receipts.
+  - [x] **Sub-task 28.1.2.4:** Index rebuild and stale-update results.
 
 - [ ] **Task 28.1.3 - Verify and close the story**
-  - [ ] **Sub-task 28.1.3.1:** `S-023-UT01` parses frontmatter, headings, blocks, links, embeds, aliases, tags, tasks, properties, callouts, attachments, and malformed variants; assert exact source ranges and graceful unsupported syntax.
-  - [ ] **Sub-task 28.1.3.2:** `S-023-UT02` resolves valid, missing, ambiguous, renamed, aliased, case-colliding, Unicode-colliding, and cyclic links; assert deterministic graph state and visible conflicts.
-  - [ ] **Sub-task 28.1.3.3:** `S-023-ST01` seeds plugins/config/workspace files, scripts, URI schemes, remote embeds, prompt injections, secrets, and out-of-vault links; assert no execution, Obsidian automation, network use, or authority change.
-  - [ ] **Sub-task 28.1.3.4:** `S-023-RT01` interrupts full rebuild and incremental update, then changes/deletes notes during indexing; assert atomic index publication, stale detection, and source-file invariance.
+  - [x] **Sub-task 28.1.3.1:** `S-023-UT01` parses frontmatter, headings, blocks, links, embeds, aliases, tags, tasks, properties, callouts, attachments, and malformed variants; assert exact source ranges and graceful unsupported syntax.
+  - [x] **Sub-task 28.1.3.2:** `S-023-UT02` resolves valid, missing, ambiguous, renamed, aliased, case-colliding, Unicode-colliding, and cyclic links; assert deterministic graph state and visible conflicts.
+  - [x] **Sub-task 28.1.3.3:** `S-023-ST01` seeds plugins/config/workspace files, scripts, URI schemes, remote embeds, prompt injections, secrets, and out-of-vault links; assert no execution, Obsidian automation, network use, or authority change.
+  - [x] **Sub-task 28.1.3.4:** `S-023-RT01` interrupts full rebuild and incremental update, then changes/deletes notes during indexing; assert atomic index publication, stale detection, and source-file invariance.
   - [ ] **Sub-task 28.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 28.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then agentMage reads only the explicitly approved vault through its own bounded parser/indexer; Obsidian need not be installed, launched, configured, or automated.
-- [ ] **Story AC 28.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every indexed element resolves to vault identity, relative path, source range, content hash, parser version, and freshness; unsupported material remains visible in coverage.
+- [x] **Story AC 28.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then agentMage reads only the explicitly approved vault through its own bounded parser/indexer; Obsidian need not be installed, launched, configured, or automated.
+- [x] **Story AC 28.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every indexed element resolves to vault identity, relative path, source range, content hash, parser version, and freshness; unsupported material remains visible in coverage.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 28.AC1:** The synthetic mini-vault parses to exact expected records and source lines.
-- [ ] **Sprint AC 28.AC2:** Code-fence content never creates false tasks or links.
-- [ ] **Sprint AC 28.AC3:** Obsidian absent from the machine does not remove any supported capability.
-- [ ] **Sprint AC 28.AC4:** Vault reads produce no user-file mutation and no external process or network access.
-- [ ] **Sprint AC 28.AC5:** Plain-folder and Obsidian adapters pass the same knowledge-domain contract tests.
+- [x] **Sprint AC 28.AC1:** The synthetic mini-vault parses to exact expected records and source lines.
+- [x] **Sprint AC 28.AC2:** Code-fence content never creates false tasks or links.
+- [x] **Sprint AC 28.AC3:** Obsidian absent from the machine does not remove any supported capability.
+- [x] **Sprint AC 28.AC4:** Vault reads produce no user-file mutation and no external process or network access.
+- [x] **Sprint AC 28.AC5:** Plain-folder and Obsidian adapters pass the same knowledge-domain contract tests.
+
+**Local evidence:** Implementation commits `22fb9ad`, `7705f50`, and `58b4beb`, evidence definition `e97eedc`, and retained report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json) complete the locally executable parser, index, recovery, watcher-processing, preview, receipt, and adapter-conformance scope. Sub-tasks `28.1.1.4` and `28.1.3.5`, the parent task/story boxes, and this sprint remain open because no operating-system filesystem watcher adapter or independent Sprint 28 review exists and upstream Sprint 27 is blocked.
 
 **Gate decision:** Sprint 28 is PASS only when Story 28.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 29 - Deterministic Knowledge Retrieval
