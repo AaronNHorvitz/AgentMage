@@ -1587,41 +1587,43 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 17.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 17.1.1.1** (legacy `S-017-I01`): Implement read-only status, branch, upstream, branch list, log, diff, staged diff, show, worktree list, object, ref, dirty-tree, and untracked-file inspection.
+  - [x] **Sub-task 17.1.1.1** (legacy `S-017-I01`): Implement read-only status, branch, upstream, branch list, log, diff, staged diff, show, worktree list, object, ref, dirty-tree, and untracked-file inspection.
   - [ ] **Sub-task 17.1.1.2** (legacy `S-017-I02`): Enforce bounded counts, bytes, object types, and parser errors through the sandboxed tool protocol.
   - [ ] **Sub-task 17.1.1.3** (legacy `S-017-I03`): Implement workspace, repository, project-document, and hierarchical instruction discovery.
-  - [ ] **Sub-task 17.1.1.4** (legacy `S-017-I04`): Treat every repository instruction, comment, issue, generated file, tool result, and document as untrusted data by default.
-  - [ ] **Sub-task 17.1.1.5** (legacy `S-017-I05`): Implement optional non-authority guidance trust with source, hash, scope, precedence, conflict, and user decision.
-  - [ ] **Sub-task 17.1.1.6** (legacy `S-017-I06`): Record files discovered versus files actually read and warn when evidence or instructions become stale.
-  - [ ] **Sub-task 17.1.1.7** (legacy `S-017-I07`): Prohibit Git mutation, hooks, arbitrary repository commands, executable configuration, and automatic package installation.
+  - [x] **Sub-task 17.1.1.4** (legacy `S-017-I04`): Treat every repository instruction, comment, issue, generated file, tool result, and document as untrusted data by default.
+  - [x] **Sub-task 17.1.1.5** (legacy `S-017-I05`): Implement optional non-authority guidance trust with source, hash, scope, precedence, conflict, and user decision.
+  - [x] **Sub-task 17.1.1.6** (legacy `S-017-I06`): Record files discovered versus files actually read and warn when evidence or instructions become stale.
+  - [x] **Sub-task 17.1.1.7** (legacy `S-017-I07`): Prohibit Git mutation, hooks, arbitrary repository commands, executable configuration, and automatic package installation.
 
-- [ ] **Task 17.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 17.1.2.1:** Read-only Git tool pack.
-  - [ ] **Sub-task 17.1.2.2:** Instruction provenance and trust-decision records.
-  - [ ] **Sub-task 17.1.2.3:** Git invariance and injection test corpus.
-  - [ ] **Sub-task 17.1.2.4:** Workspace manifest and evidence ledger.
+- [x] **Task 17.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 17.1.2.1:** Read-only Git tool pack.
+  - [x] **Sub-task 17.1.2.2:** Instruction provenance and trust-decision records.
+  - [x] **Sub-task 17.1.2.3:** Git invariance and injection test corpus.
+  - [x] **Sub-task 17.1.2.4:** Workspace manifest and evidence ledger.
 
 - [ ] **Task 17.1.3 - Verify and close the story**
   - [ ] **Sub-task 17.1.3.1:** `S-017-UT01` compares status, diff, log, show, branch, tag, ignore, and metadata results with pinned Git fixture expectations; assert bounded output and no repository mutation.
   - [ ] **Sub-task 17.1.3.2:** `S-017-ST01` places instructions in filenames, source, comments, docs, diffs, commits, branches, tags, submodules, hooks, attributes, config, and model output; assert all remain cited untrusted data.
   - [ ] **Sub-task 17.1.3.3:** `S-017-ST02` seeds hooks, filters, pagers, aliases, credential helpers, unsafe directories, replacement objects, and remote URLs; assert no execution, credential access, or network contact.
-  - [ ] **Sub-task 17.1.3.4:** `S-017-IT01` snapshots every byte and relevant metadata before and after full Git inspection; assert invariance except separately authorized operational receipts.
+  - [x] **Sub-task 17.1.3.4:** `S-017-IT01` snapshots every byte and relevant metadata before and after full Git inspection; assert invariance except separately authorized operational receipts.
   - [ ] **Sub-task 17.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-AI-005`, `SR-AI-008`, `SR-NET-001`, `SR-TST-002`/`SR-TST-004`; retain injection matrix, environment hardening results, before/after hashes, and evidence ledger.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 17.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then hosted or local repository content cannot change policy, tools, grants, trusted instructions, completion criteria, or evidence state.
+- [x] **Story AC 17.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then hosted or local repository content cannot change policy, tools, grants, trusted instructions, completion criteria, or evidence state.
 - [ ] **Story AC 17.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every Git fact identifies repository, worktree, revision, command-equivalent operation, path/range where applicable, truncation, and freshness.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 17.AC1:** `AT-GIT-001`, `AT-INJ-001`, and `AT-INS-001` pass.
 - [ ] **Sprint AC 17.AC2:** Clean, dirty, detached, untracked, renamed, and malformed fixture repositories return exact expected evidence.
-- [ ] **Sprint AC 17.AC3:** Workspace tree, index, refs, and object set are identical before and after inspection.
-- [ ] **Sprint AC 17.AC4:** No workspace content can alter policy, grant authority, root scope, tool availability, current user intent, transfer policy, or completion status.
-- [ ] **Sprint AC 17.AC5:** Trusted guidance can narrow behavior but can never grant authority.
+- [x] **Sprint AC 17.AC3:** Workspace tree, index, refs, and object set are identical before and after inspection.
+- [x] **Sprint AC 17.AC4:** No workspace content can alter policy, grant authority, root scope, tool availability, current user intent, transfer policy, or completion status.
+- [x] **Sprint AC 17.AC5:** Trusted guidance can narrow behavior but can never grant authority.
 
 **Gate decision:** Sprint 17 is PASS only when Story 17.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current gate result:** BLOCKED with the thirteen-operation Git plan and parser, local disposable-repository invariance corpus, twenty-class default-untrusted instruction ledger, explicit narrowing-only trust decisions, stale/conflict stops, and 200-case injection matrix passing. Remaining blockers are the sealed production repository projection and packaged Git helper/runtime inside the platform worker, real workspace/repository/project/hierarchical discovery, exact pinned Git result expectations across every required fixture, the complete hostile Git configuration and source-placement matrix, live network and prohibited-read canaries, deferred manual parser fuzzing, independent review, and native macOS implementation and evidence.
 ### [ ] Sprint 18 - Pinned Repository Structure
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
