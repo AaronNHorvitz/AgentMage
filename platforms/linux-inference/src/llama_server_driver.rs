@@ -1,9 +1,11 @@
 //! Exact `llama-server` process and private Unix-socket transport driver.
 
+use std::cell::RefCell;
+use std::ffi::OsString;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::fs::MetadataExt;
+use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -28,6 +30,34 @@ const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
 const MAX_COMPLETION_BYTES: usize = 16 * 1024 * 1024;
 const EXPECTED_CONTEXT_TOKENS: u32 = 8192;
 const MAX_UNIX_SOCKET_PATH_BYTES: usize = 107;
+const BWRAP_PATH: &str = "/usr/bin/bwrap";
+const BWRAP_SHA256: &str = "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc";
+const NVIDIA_SMI_PATH: &str = "/usr/bin/nvidia-smi";
+const NVIDIA_SMI_SHA256: &str = "915f6e333651d7bf03252e605743ae1d5cf1587d85f436a25aa5ff6c462cd982";
+const GUEST_RUNTIME_ROOT: &str = "/runtime";
+const GUEST_MODEL_PATH: &str = "/model/model.gguf";
+const GUEST_SOCKET_ROOT: &str = "/run/agentmage";
+const GUEST_SOCKET_PATH: &str = "/run/agentmage/llama-server.sock";
+const SANDBOX_READ_ONLY_DIRECTORIES: &[&str] = &[
+    "/usr/lib64",
+    "/usr/share/vulkan",
+    "/usr/share/glvnd",
+    "/usr/share/nvidia",
+    "/etc/vulkan",
+    "/etc/glvnd",
+    "/etc/nvidia",
+    "/sys",
+    "/proc/driver/nvidia",
+];
+const SANDBOX_DEVICE_PATHS: &[&str] = &[
+    "/dev/dri",
+    "/dev/nvidia0",
+    "/dev/nvidiactl",
+    "/dev/nvidia-uvm",
+    "/dev/nvidia-uvm-tools",
+    "/dev/nvidia-modeset",
+    "/dev/nvidia-caps",
+];
 const EXPECTED_SERVER_SHA256: &str =
     "f7c93f0de9fed7b596e68557bd4d42a084204027f87d61c893777908e4c62bfe";
 
@@ -136,15 +166,58 @@ struct LoadedRuntime {
     token_counter: String,
     decoding: DecodingProfile,
     child: Child,
+    runtime_pid: u32,
     loaded_at: Instant,
     input_tokens: u32,
     output_tokens: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct FileSnapshot {
+    device: u64,
+    inode: u64,
+    mode: u32,
+    owner: u32,
+    group: u32,
+    links: u64,
+    bytes: u64,
+    modified_seconds: i64,
+    modified_nanoseconds: i64,
+    changed_seconds: i64,
+    changed_nanoseconds: i64,
+}
+
+impl FileSnapshot {
+    fn from_metadata(metadata: &fs::Metadata) -> Self {
+        Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            mode: metadata.mode(),
+            owner: metadata.uid(),
+            group: metadata.gid(),
+            links: metadata.nlink(),
+            bytes: metadata.size(),
+            modified_seconds: metadata.mtime(),
+            modified_nanoseconds: metadata.mtime_nsec(),
+            changed_seconds: metadata.ctime(),
+            changed_nanoseconds: metadata.ctime_nsec(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct VerifiedModel {
+    profile_id: ModelProfileId,
+    manifest_sha256: String,
+    artifact_sha256: String,
+    snapshot: FileSnapshot,
 }
 
 /// Exact native `llama-server` driver used behind `LinuxNativeModelAdapter`.
 pub struct LlamaServerDriver {
     config: LlamaServerDriverConfig,
     loaded: Option<LoadedRuntime>,
+    verified_model: RefCell<Option<VerifiedModel>>,
 }
 
 impl LlamaServerDriver {
@@ -154,6 +227,7 @@ impl LlamaServerDriver {
         Self {
             config,
             loaded: None,
+            verified_model: RefCell::new(None),
         }
     }
 
@@ -175,12 +249,29 @@ impl LlamaServerDriver {
         Ok(())
     }
 
+    fn verify_sandbox_dependencies(&self) -> Result<(), ModelRuntimeFailure> {
+        exact_root_owned_file(Path::new(BWRAP_PATH), BWRAP_SHA256)?;
+        exact_root_owned_file(Path::new(NVIDIA_SMI_PATH), NVIDIA_SMI_SHA256)?;
+        for path in SANDBOX_READ_ONLY_DIRECTORIES {
+            exact_root_owned_directory(Path::new(path))?;
+        }
+        for path in SANDBOX_DEVICE_PATHS {
+            exact_root_owned_device_or_directory(Path::new(path))?;
+        }
+        Ok(())
+    }
+
     fn verify_model(&self, profile: &ExactModelProfile) -> Result<(), ModelRuntimeFailure> {
-        exact_file(
-            &self.config.model_path,
-            profile.artifact.bytes,
-            &profile.artifact.sha256,
-        )?;
+        let metadata = fs::symlink_metadata(&self.config.model_path)
+            .map_err(|_| failure("model.llama-driver.file-unavailable", false))?;
+        if !metadata.is_file()
+            || metadata.file_type().is_symlink()
+            || metadata.nlink() != 1
+            || metadata.len() != profile.artifact.bytes
+            || metadata.mode() & 0o777 != 0o600
+        {
+            return Err(failure("model.llama-driver.file-identity", false));
+        }
         let parent = self
             .config
             .model_path
@@ -191,6 +282,41 @@ impl LlamaServerDriver {
         if !metadata.is_dir() || metadata.mode() & 0o077 != 0 {
             return Err(failure("model.llama-driver.model-parent-public", false));
         }
+        let before = FileSnapshot::from_metadata(
+            &fs::symlink_metadata(&self.config.model_path)
+                .map_err(|_| failure("model.llama-driver.file-unavailable", false))?,
+        );
+        if self.verified_model.borrow().as_ref()
+            == Some(&VerifiedModel {
+                profile_id: profile.profile_id.clone(),
+                manifest_sha256: profile.manifest_sha256.clone(),
+                artifact_sha256: profile.artifact.sha256.clone(),
+                snapshot: before,
+            })
+        {
+            return Ok(());
+        }
+        if sha256_file(&self.config.model_path)? != profile.artifact.sha256 {
+            *self.verified_model.borrow_mut() = None;
+            return Err(failure("model.llama-driver.file-identity", false));
+        }
+        let after = FileSnapshot::from_metadata(
+            &fs::symlink_metadata(&self.config.model_path)
+                .map_err(|_| failure("model.llama-driver.file-unavailable", false))?,
+        );
+        if before != after {
+            *self.verified_model.borrow_mut() = None;
+            return Err(failure(
+                "model.llama-driver.file-changed-during-hash",
+                false,
+            ));
+        }
+        *self.verified_model.borrow_mut() = Some(VerifiedModel {
+            profile_id: profile.profile_id.clone(),
+            manifest_sha256: profile.manifest_sha256.clone(),
+            artifact_sha256: profile.artifact.sha256.clone(),
+            snapshot: after,
+        });
         Ok(())
     }
 
@@ -223,20 +349,28 @@ impl LlamaServerDriver {
         let Some(mut loaded) = self.loaded.take() else {
             return Err(failure("model.llama-driver.not-loaded", false));
         };
-        let elapsed = loaded
-            .loaded_at
-            .elapsed()
-            .as_millis()
-            .min(u128::from(u64::MAX)) as u64;
+        let started = Instant::now();
         let _ = loaded.child.kill();
         loaded
             .child
             .wait()
             .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?;
+        if loaded.runtime_pid != 0 {
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists()
+                && Instant::now() < deadline
+            {
+                thread::sleep(Duration::from_millis(10));
+            }
+            if Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists() {
+                return Err(failure("model.llama-driver.descendant-reap-failed", true));
+            }
+        }
         if self.config.socket_path.exists() {
             fs::remove_file(&self.config.socket_path)
                 .map_err(|_| failure("model.llama-driver.socket-cleanup-failed", true))?;
         }
+        let elapsed = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
         Ok((loaded.profile_id, elapsed))
     }
 }
@@ -294,27 +428,26 @@ impl NativeModelDriver for LlamaServerDriver {
         if self.config.socket_path.exists() {
             return Err(failure("model.llama-driver.socket-exists", false));
         }
-        let server = self.config.runtime_root.join("bin/llama-server");
-        let library = self.config.runtime_root.join("lib");
-        let socket = self
-            .config
-            .socket_path
-            .to_str()
-            .ok_or_else(|| failure("model.llama-driver.socket-path-invalid", false))?;
-        let model = self
-            .config
-            .model_path
-            .to_str()
-            .ok_or_else(|| failure("model.llama-driver.model-path-invalid", false))?;
-        let child = Command::new(server)
-            .args(launch_arguments(model, profile.profile_id.as_str(), socket))
+        self.verify_sandbox_dependencies()?;
+        let mut command = Command::new(BWRAP_PATH);
+        command
+            .args(sandbox_arguments(
+                &self.config.runtime_root,
+                &self.config.model_path,
+                socket_parent,
+            ))
+            .arg("--")
+            .arg(format!("{GUEST_RUNTIME_ROOT}/bin/llama-server"))
+            .args(launch_arguments(
+                GUEST_MODEL_PATH,
+                profile.profile_id.as_str(),
+                GUEST_SOCKET_PATH,
+            ))
             .env_clear()
-            .env("LD_LIBRARY_PATH", &library)
-            .env("PATH", "/usr/bin:/bin")
-            .current_dir(&library)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stderr(Stdio::null());
+        let child = command
             .spawn()
             .map_err(|_| failure("model.llama-driver.process-start-failed", true))?;
         self.loaded = Some(LoadedRuntime {
@@ -323,6 +456,7 @@ impl NativeModelDriver for LlamaServerDriver {
             token_counter: profile.context.token_counter.clone(),
             decoding: profile.decoding.clone(),
             child,
+            runtime_pid: 0,
             loaded_at: Instant::now(),
             input_tokens: 0,
             output_tokens: 0,
@@ -331,6 +465,30 @@ impl NativeModelDriver for LlamaServerDriver {
             let _ = self.stop_loaded();
             return Err(error);
         }
+        let finalized = (|| {
+            fs::set_permissions(&self.config.socket_path, fs::Permissions::from_mode(0o600))
+                .map_err(|_| failure("model.llama-driver.socket-mode-failed", true))?;
+            let supervisor_pid = self
+                .loaded
+                .as_ref()
+                .expect("loaded state retained")
+                .child
+                .id();
+            let runtime_pid = exact_runtime_descendant(supervisor_pid)?;
+            verify_live_sandbox(runtime_pid, &self.config.socket_path)?;
+            Ok(runtime_pid)
+        })();
+        let runtime_pid = match finalized {
+            Ok(runtime_pid) => runtime_pid,
+            Err(error) => {
+                let _ = self.stop_loaded();
+                return Err(error);
+            }
+        };
+        self.loaded
+            .as_mut()
+            .expect("loaded state retained")
+            .runtime_pid = runtime_pid;
         Ok(ModelLoadReceipt {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
@@ -461,6 +619,8 @@ impl NativeModelDriver for LlamaServerDriver {
         let loaded = self.loaded.as_mut().expect("loaded state retained");
         loaded.input_tokens = loaded.input_tokens.saturating_add(0);
         loaded.output_tokens = loaded.output_tokens.saturating_add(completion.tokens);
+        let resident_memory_bytes = resident_memory_bytes(loaded.runtime_pid);
+        let accelerator_memory_bytes = accelerator_memory_bytes(loaded.runtime_pid)?;
         Ok(ModelRunResult {
             schema_version: CONTRACT_SCHEMA_VERSION,
             model_run_id: request.model_run_id.clone(),
@@ -475,8 +635,8 @@ impl NativeModelDriver for LlamaServerDriver {
                 adapter_id: self.config.identity.adapter_id.clone(),
                 profile_id: request.profile_id.clone(),
                 model_run_id: Some(request.model_run_id.clone()),
-                resident_memory_bytes: resident_memory_bytes(loaded.child.id()),
-                accelerator_memory_bytes: 0,
+                resident_memory_bytes,
+                accelerator_memory_bytes,
                 input_tokens: loaded.input_tokens,
                 output_tokens: completion.tokens,
                 elapsed_ms: started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
@@ -489,12 +649,13 @@ impl NativeModelDriver for LlamaServerDriver {
             .loaded
             .as_ref()
             .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
+        let accelerator_memory_bytes = accelerator_memory_bytes(loaded.runtime_pid)?;
         Ok(ModelResourceReport {
             adapter_id: self.config.identity.adapter_id.clone(),
             profile_id: loaded.profile_id.clone(),
             model_run_id: None,
-            resident_memory_bytes: resident_memory_bytes(loaded.child.id()),
-            accelerator_memory_bytes: 0,
+            resident_memory_bytes: resident_memory_bytes(loaded.runtime_pid),
+            accelerator_memory_bytes,
             input_tokens: loaded.input_tokens,
             output_tokens: loaded.output_tokens,
             elapsed_ms: loaded
@@ -525,6 +686,76 @@ fn launch_arguments<'a>(model: &'a str, profile_id: &'a str, socket: &'a str) ->
         "--jinja",
         "--no-context-shift",
     ]
+}
+
+fn sandbox_arguments(runtime_root: &Path, model_path: &Path, socket_root: &Path) -> Vec<OsString> {
+    let mut arguments = [
+        "--unshare-all",
+        "--unshare-user",
+        "--disable-userns",
+        "--new-session",
+        "--die-with-parent",
+        "--clearenv",
+        "--cap-drop",
+        "ALL",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--tmpfs",
+        "/tmp",
+        "--dir",
+        GUEST_RUNTIME_ROOT,
+        "--dir",
+        "/model",
+        "--dir",
+        "/run",
+        "--dir",
+        GUEST_SOCKET_ROOT,
+        "--dir",
+        "/usr",
+        "--dir",
+        "/usr/share",
+        "--dir",
+        "/etc",
+        "--dir",
+        "/proc/driver",
+        "--ro-bind",
+    ]
+    .into_iter()
+    .map(OsString::from)
+    .collect::<Vec<_>>();
+    arguments.push(runtime_root.as_os_str().to_owned());
+    arguments.push(OsString::from(GUEST_RUNTIME_ROOT));
+    arguments.push(OsString::from("--ro-bind"));
+    arguments.push(model_path.as_os_str().to_owned());
+    arguments.push(OsString::from(GUEST_MODEL_PATH));
+    arguments.push(OsString::from("--bind"));
+    arguments.push(socket_root.as_os_str().to_owned());
+    arguments.push(OsString::from(GUEST_SOCKET_ROOT));
+    for path in SANDBOX_READ_ONLY_DIRECTORIES {
+        arguments.push(OsString::from("--ro-bind"));
+        arguments.push(OsString::from(path));
+        arguments.push(OsString::from(path));
+    }
+    arguments.extend(["--symlink", "usr/lib64", "/lib64"].map(OsString::from));
+    for path in SANDBOX_DEVICE_PATHS {
+        arguments.push(OsString::from("--dev-bind"));
+        arguments.push(OsString::from(path));
+        arguments.push(OsString::from(path));
+    }
+    for (name, value) in [
+        ("LD_LIBRARY_PATH", "/runtime/lib:/usr/lib64"),
+        ("PATH", "/runtime/bin"),
+        ("HOME", "/nonexistent"),
+        ("TMPDIR", "/tmp"),
+        ("XDG_RUNTIME_DIR", "/tmp"),
+        ("LANG", "C"),
+    ] {
+        arguments.extend(["--setenv", name, value].map(OsString::from));
+    }
+    arguments.extend(["--chdir", "/runtime/lib"].map(OsString::from));
+    arguments
 }
 
 struct Completion {
@@ -750,6 +981,172 @@ fn parse_http_response(response: &[u8]) -> Result<Vec<u8>, ModelRuntimeFailure> 
     Ok(body.to_vec())
 }
 
+fn exact_root_owned_file(path: &Path, digest: &str) -> Result<(), ModelRuntimeFailure> {
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|_| failure("model.llama-driver.sandbox-file-unavailable", false))?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != 0
+        || metadata.nlink() != 1
+        || metadata.mode() & 0o022 != 0
+        || sha256_file(path)? != digest
+    {
+        return Err(failure("model.llama-driver.sandbox-file-identity", false));
+    }
+    Ok(())
+}
+
+fn exact_root_owned_directory(path: &Path) -> Result<(), ModelRuntimeFailure> {
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|_| failure("model.llama-driver.sandbox-directory-unavailable", false))?;
+    if !metadata.is_dir()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != 0
+        || metadata.mode() & 0o022 != 0
+    {
+        return Err(failure(
+            "model.llama-driver.sandbox-directory-identity",
+            false,
+        ));
+    }
+    Ok(())
+}
+
+fn exact_root_owned_device_or_directory(path: &Path) -> Result<(), ModelRuntimeFailure> {
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|_| failure("model.llama-driver.sandbox-device-unavailable", false))?;
+    if metadata.file_type().is_symlink()
+        || metadata.uid() != 0
+        || (!metadata.is_dir() && !metadata.file_type().is_char_device())
+    {
+        return Err(failure("model.llama-driver.sandbox-device-identity", false));
+    }
+    Ok(())
+}
+
+fn process_parent(pid: u32) -> Option<u32> {
+    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    let (_, suffix) = stat.rsplit_once(") ")?;
+    suffix.split_whitespace().nth(1)?.parse().ok()
+}
+
+fn descendant_of(mut pid: u32, ancestor: u32) -> bool {
+    for _ in 0..32 {
+        let Some(parent) = process_parent(pid) else {
+            return false;
+        };
+        if parent == ancestor {
+            return true;
+        }
+        if parent <= 1 || parent == pid {
+            return false;
+        }
+        pid = parent;
+    }
+    false
+}
+
+fn exact_runtime_descendant(supervisor_pid: u32) -> Result<u32, ModelRuntimeFailure> {
+    let mut matches = Vec::new();
+    let entries = fs::read_dir("/proc")
+        .map_err(|_| failure("model.llama-driver.process-observation-failed", true))?;
+    for entry in entries.flatten() {
+        let Some(pid) = entry
+            .file_name()
+            .to_str()
+            .and_then(|value| value.parse::<u32>().ok())
+        else {
+            continue;
+        };
+        if !descendant_of(pid, supervisor_pid) {
+            continue;
+        }
+        if fs::read_link(format!("/proc/{pid}/exe")).ok().as_deref()
+            == Some(Path::new("/runtime/bin/llama-server"))
+        {
+            matches.push(pid);
+        }
+    }
+    if matches.len() != 1 {
+        return Err(failure("model.llama-driver.runtime-process-identity", true));
+    }
+    Ok(matches[0])
+}
+
+fn status_value<'a>(status: &'a str, key: &str) -> Option<&'a str> {
+    status
+        .lines()
+        .find_map(|line| line.strip_prefix(key).map(str::trim))
+}
+
+fn verify_live_sandbox(pid: u32, socket_path: &Path) -> Result<(), ModelRuntimeFailure> {
+    let namespace = |process: &str, name: &str| fs::read_link(format!("/proc/{process}/ns/{name}"));
+    for name in ["mnt", "net", "pid", "user", "ipc", "uts"] {
+        let runtime = namespace(&pid.to_string(), name)
+            .map_err(|_| failure("model.llama-driver.namespace-unavailable", true))?;
+        let current = namespace("self", name)
+            .map_err(|_| failure("model.llama-driver.namespace-unavailable", true))?;
+        if runtime == current {
+            return Err(failure("model.llama-driver.namespace-not-isolated", false));
+        }
+    }
+    let status = fs::read_to_string(format!("/proc/{pid}/status"))
+        .map_err(|_| failure("model.llama-driver.status-unavailable", true))?;
+    if status_value(&status, "NoNewPrivs:") != Some("1")
+        || status_value(&status, "CapEff:") != Some("0000000000000000")
+    {
+        return Err(failure(
+            "model.llama-driver.privilege-isolation-failed",
+            false,
+        ));
+    }
+    let environment = fs::read(format!("/proc/{pid}/environ"))
+        .map_err(|_| failure("model.llama-driver.environment-unavailable", true))?;
+    let mut variables = environment
+        .split(|byte| *byte == 0)
+        .filter(|value| !value.is_empty())
+        .map(Vec::from)
+        .collect::<Vec<_>>();
+    variables.sort();
+    let mut expected = [
+        b"HOME=/nonexistent".to_vec(),
+        b"LANG=C".to_vec(),
+        b"LD_LIBRARY_PATH=/runtime/lib:/usr/lib64".to_vec(),
+        b"PATH=/runtime/bin".to_vec(),
+        b"PWD=/runtime/lib".to_vec(),
+        b"TMPDIR=/tmp".to_vec(),
+        b"XDG_RUNTIME_DIR=/tmp".to_vec(),
+    ];
+    expected.sort();
+    if variables != expected.to_vec() {
+        return Err(failure("model.llama-driver.environment-not-closed", false));
+    }
+    for prohibited in ["home", "var/home", "root", "workspace"] {
+        if Path::new(&format!("/proc/{pid}/root/{prohibited}")).exists() {
+            return Err(failure("model.llama-driver.host-path-visible", false));
+        }
+    }
+    let interfaces = fs::read_to_string(format!("/proc/{pid}/net/dev"))
+        .map_err(|_| failure("model.llama-driver.network-observation-failed", true))?;
+    let names = interfaces
+        .lines()
+        .skip(2)
+        .filter_map(|line| line.split_once(':').map(|(name, _)| name.trim()))
+        .collect::<Vec<_>>();
+    if !names.is_empty() && names != ["lo"] {
+        return Err(failure(
+            "model.llama-driver.network-interface-visible",
+            false,
+        ));
+    }
+    let socket = fs::symlink_metadata(socket_path)
+        .map_err(|_| failure("model.llama-driver.socket-unavailable", true))?;
+    if !socket.file_type().is_socket() || socket.mode() & 0o777 != 0o600 || socket.nlink() != 1 {
+        return Err(failure("model.llama-driver.socket-identity-invalid", false));
+    }
+    Ok(())
+}
+
 fn exact_directory(path: &Path, mode: u32) -> Result<fs::Metadata, ModelRuntimeFailure> {
     let metadata = fs::symlink_metadata(path)
         .map_err(|_| failure("model.llama-driver.directory-unavailable", false))?;
@@ -825,6 +1222,60 @@ fn resident_memory_bytes(pid: u32) -> u64 {
         .map_or(0, |pages| pages.saturating_mul(4096))
 }
 
+fn accelerator_memory_bytes(pid: u32) -> Result<u64, ModelRuntimeFailure> {
+    let output = Command::new(NVIDIA_SMI_PATH)
+        .args([
+            "--query-compute-apps=pid,used_gpu_memory",
+            "--format=csv,noheader,nounits",
+        ])
+        .env_clear()
+        .env("PATH", "/usr/bin:/bin")
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|_| failure("model.llama-driver.accelerator-observation-failed", true))?;
+    if !output.status.success() || !output.stderr.is_empty() || output.stdout.len() > 64 * 1024 {
+        return Err(failure(
+            "model.llama-driver.accelerator-observation-invalid",
+            true,
+        ));
+    }
+    parse_accelerator_memory(&output.stdout, pid)
+}
+
+fn parse_accelerator_memory(bytes: &[u8], pid: u32) -> Result<u64, ModelRuntimeFailure> {
+    let text = std::str::from_utf8(bytes)
+        .map_err(|_| failure("model.llama-driver.accelerator-observation-invalid", true))?;
+    let mut matches = Vec::new();
+    for line in text.lines().filter(|line| !line.trim().is_empty()) {
+        let Some((candidate, memory)) = line.split_once(',') else {
+            return Err(failure(
+                "model.llama-driver.accelerator-observation-invalid",
+                true,
+            ));
+        };
+        let candidate = candidate
+            .trim()
+            .parse::<u32>()
+            .map_err(|_| failure("model.llama-driver.accelerator-observation-invalid", true))?;
+        let memory = memory
+            .trim()
+            .parse::<u64>()
+            .map_err(|_| failure("model.llama-driver.accelerator-observation-invalid", true))?;
+        if candidate == pid {
+            matches.push(memory);
+        }
+    }
+    if matches.len() != 1 || matches[0] == 0 {
+        return Err(failure(
+            "model.llama-driver.accelerator-process-missing",
+            true,
+        ));
+    }
+    matches[0]
+        .checked_mul(1024 * 1024)
+        .ok_or_else(|| failure("model.llama-driver.accelerator-memory-overflow", false))
+}
+
 fn failure(code: &str, dependency: bool) -> ModelRuntimeFailure {
     ModelRuntimeFailure {
         code: code.to_owned(),
@@ -848,8 +1299,10 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::{
-        Endpoint, UnixHttpClient, exact_directory, launch_arguments, parse_http_response,
-        plain_text, valid_socket_path,
+        Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH,
+        GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient,
+        exact_directory, launch_arguments, parse_accelerator_memory, parse_http_response,
+        plain_text, sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -957,6 +1410,65 @@ mod tests {
     }
 
     #[test]
+    fn sandbox_tuple_exposes_only_runtime_model_gpu_support_and_private_socket() {
+        let arguments = sandbox_arguments(
+            Path::new("/trusted/runtime"),
+            Path::new("/private/model.gguf"),
+            Path::new("/run/user/1000/private"),
+        );
+        let values = arguments
+            .iter()
+            .map(|value| value.to_str().expect("UTF-8 fixture"))
+            .collect::<Vec<_>>();
+        for required in [
+            "--unshare-all",
+            "--unshare-user",
+            "--disable-userns",
+            "--new-session",
+            "--die-with-parent",
+            "--clearenv",
+            "--cap-drop",
+            "ALL",
+            GUEST_RUNTIME_ROOT,
+            GUEST_MODEL_PATH,
+            GUEST_SOCKET_ROOT,
+            "/trusted/runtime",
+            "/private/model.gguf",
+            "/run/user/1000/private",
+        ] {
+            assert!(values.contains(&required), "missing {required}");
+        }
+        for required in SANDBOX_READ_ONLY_DIRECTORIES
+            .iter()
+            .chain(SANDBOX_DEVICE_PATHS)
+        {
+            assert!(values.contains(required));
+        }
+        for prohibited in [
+            "--share-net",
+            "/home",
+            "/var/home",
+            "/workspace",
+            "/root",
+            "--ro-bind-try",
+            "--dev-bind-try",
+        ] {
+            assert!(!values.contains(&prohibited), "admitted {prohibited}");
+        }
+        assert_eq!(
+            launch_arguments(GUEST_MODEL_PATH, "profile", GUEST_SOCKET_PATH)[0..6],
+            [
+                "--model",
+                GUEST_MODEL_PATH,
+                "--alias",
+                "profile",
+                "--host",
+                GUEST_SOCKET_PATH
+            ]
+        );
+    }
+
+    #[test]
     fn unix_socket_path_is_fixed_name_and_bounded_by_linux_address_limit() {
         assert!(valid_socket_path(Path::new(
             "/run/user/1000/am/llama-server.sock"
@@ -974,6 +1486,50 @@ mod tests {
         fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o555))
             .expect("read-only directory");
         exact_directory(&directory.0, 0o555).expect("exact directory");
+    }
+
+    #[test]
+    fn verified_file_snapshot_detects_inode_mode_and_link_drift() {
+        let directory = TestDirectory::new();
+        let path = directory.0.join("artifact");
+        fs::write(&path, b"fixture").expect("fixture");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).expect("private fixture");
+        let original = FileSnapshot::from_metadata(&fs::symlink_metadata(&path).expect("metadata"));
+
+        let link = directory.0.join("artifact-link");
+        fs::hard_link(&path, &link).expect("hard link");
+        let linked = FileSnapshot::from_metadata(&fs::symlink_metadata(&path).expect("metadata"));
+        assert_ne!(linked, original);
+        fs::remove_file(link).expect("remove fixture link");
+
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o400)).expect("mode change");
+        let changed_mode =
+            FileSnapshot::from_metadata(&fs::symlink_metadata(&path).expect("metadata"));
+        assert_ne!(changed_mode, original);
+
+        let replacement = directory.0.join("replacement");
+        fs::write(&replacement, b"fixture").expect("replacement");
+        fs::rename(&replacement, &path).expect("replace fixture");
+        let replaced = FileSnapshot::from_metadata(&fs::symlink_metadata(&path).expect("metadata"));
+        assert_ne!(replaced.inode, original.inode);
+    }
+
+    #[test]
+    fn accelerator_observation_is_exact_bounded_and_process_specific() {
+        assert_eq!(
+            parse_accelerator_memory(b"10, 512\n42, 15622\n", 42).expect("exact process"),
+            15_622 * 1024 * 1024
+        );
+        for value in [
+            b"10, 512\n".as_slice(),
+            b"42, 0\n".as_slice(),
+            b"42, 1\n42, 2\n".as_slice(),
+            b"42, value\n".as_slice(),
+            b"42 1\n".as_slice(),
+            b"\xff\n".as_slice(),
+        ] {
+            assert!(parse_accelerator_memory(value, 42).is_err());
+        }
     }
 
     #[test]
