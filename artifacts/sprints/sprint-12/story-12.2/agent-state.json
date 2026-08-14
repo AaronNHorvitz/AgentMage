@@ -1,0 +1,116 @@
+{
+  "artifact_id": "task-12-2-1-1-agent-state",
+  "case_ids": [
+    "AST-01",
+    "AST-02",
+    "AST-03",
+    "AST-04",
+    "AST-05",
+    "AST-06"
+  ],
+  "claims": {
+    "active_state_count": 8,
+    "contract_test_count": 1,
+    "engine_test_count": 6,
+    "external_network_used": false,
+    "legal_transition_count": 52,
+    "manual_fuzzing_executed": false,
+    "maximum_retained_transitions": 4096,
+    "model_executions": 0,
+    "ordinary_success_routes": 0,
+    "platform_executions": 0,
+    "release_support": false,
+    "state_pair_count": 289,
+    "success_state_count": 2,
+    "terminal_state_count": 9,
+    "tool_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This task defines in-memory shared contracts and controller behavior; durable store integration begins in later Story 12.2 tasks.",
+    "Proposal identity, ceilings, verifier records, restart reconciliation, deterministic policy, and advisory classification remain separate sub-tasks.",
+    "No model, tool, grant, worker, platform effect, private user data, or external network operation is used.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "3aa94459a24362af1d8e091b018e177f80be2aa7",
+  "sources": [
+    {
+      "bytes": 2074,
+      "path": "docs/verification/task-12-2-1-1-agent-state-results.md",
+      "sha256": "2e1a7749262ee0797eaa3343ea9e69dd3eb3bb0ab05f0c616e64a9dc40bdfe16"
+    },
+    {
+      "bytes": 4603,
+      "path": "kernel/contracts/src/agent_state.rs",
+      "sha256": "04f8652b7d4bfd72fc456f6d9e085b9fd87704550046dcf9e8548abe0752a90f"
+    },
+    {
+      "bytes": 4259,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "72d7236fd260d11974f28bae8a991f3d66a558c7943ff89b93e5b0ab589c757f"
+    },
+    {
+      "bytes": 10664,
+      "path": "kernel/engine/src/agent_state.rs",
+      "sha256": "b03b05339f294686f58918bd9708f7b05ef23408263e4fabb8eb4c808149d3ad"
+    },
+    {
+      "bytes": 2809,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "9a075f563d3e1231eace6877a87a1f443ce336bdafd4bc19a5be4ef4b7d4f7f9"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3468,
+      "path": "scripts/agent_state_evidence.py",
+      "sha256": "c6bdafa777252be7a46d8a8a9585c708259be6ec1caf20bb10d266b2bc9ea77f"
+    },
+    {
+      "bytes": 3090,
+      "path": "tests/test_agent_state_evidence.py",
+      "sha256": "23388b0278e2d50dd511de14dabff67f158b9eb9b986e63007b025f9c3aaadd0"
+    }
+  ],
+  "status": "pass-agent-state-transition-contract",
+  "task_ids": [
+    "12.2.1.1"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "e6e3c484b79a1f4f396bc4b5add6cbdcdd0d679d189234206040f4d8292a0113",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "1a4cb7c3757aea683e1af63f7b4a01cb57ef530eaf388de06350a26e4e3de2a4",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "6abd2ab047690569c9adcf239e9e8ec6677f0f40fd6c896c42c637a8f373a8f8",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
