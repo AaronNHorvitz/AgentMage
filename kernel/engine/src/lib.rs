@@ -35,6 +35,8 @@ pub mod evidence_reconciliation;
 pub mod evidence_state;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
+/// Deterministic local-only manual handoff construction and denial.
+pub mod handoff;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
 pub mod model_codec;

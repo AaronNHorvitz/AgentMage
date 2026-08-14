@@ -17,6 +17,7 @@ mod diagnostics;
 mod display_link;
 mod evidence;
 mod grant;
+mod handoff;
 mod ids;
 mod model;
 mod model_discovery;
@@ -83,6 +84,11 @@ pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use grant::{
     CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
     GrantTargetError,
+};
+pub use handoff::{
+    HandoffDestinationClass, HandoffDisclosureEntry, HandoffDraft, HandoffEntryDisposition,
+    HandoffEntryKind, HandoffPacketManifest, HandoffProhibitedAction, HandoffReview,
+    HandoffSensitivity, LocalHandoffOutcome, LocalHandoffReceipt, RenderedHandoff,
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
