@@ -780,9 +780,11 @@ mod tests {
         }
     }
 
+    type ResourceMutation = (ModelResourceKind, fn(&mut ModelResourceObservation));
+
     #[test]
     fn every_resource_limit_is_inclusive_independent_and_sticky() {
-        let mutations: [(ModelResourceKind, fn(&mut ModelResourceObservation)); 9] = [
+        let mutations: [ResourceMutation; 9] = [
             (ModelResourceKind::ResidentMemory, |value| {
                 value.resident_memory_bytes = 11
             }),
