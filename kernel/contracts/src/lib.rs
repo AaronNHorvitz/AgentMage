@@ -5,6 +5,7 @@
 mod agent;
 mod approval;
 mod boundary;
+mod claim;
 mod common;
 mod display_link;
 mod evidence;
@@ -29,6 +30,10 @@ pub use agent::{
 pub use approval::ApprovalRequest;
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
+};
+pub use claim::{
+    ClaimBoundFinalResponse, ClaimEvidence, ClaimEvidenceRole, MaterialClaim, MaterialClaimKind,
+    VerifiedMaterialClaim,
 };
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,

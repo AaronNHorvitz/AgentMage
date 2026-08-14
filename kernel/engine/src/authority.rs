@@ -1,11 +1,11 @@
 //! Sealed classification and fail-closed rejection of descriptive authority candidates.
 
 use agentmage_kernel_contracts::{
-    Action, ActorId, ApprovalRequest, AssumptionRecord, ClaimAssertion, ClarificationQuestion,
-    ContractError, ContradictionRecord, ErrorCategory, ErrorId, HypothesisRecord,
-    IndependentVerificationRequest, IndependentVerificationResult, Plan, ProblemFact, ProblemFrame,
-    Prompt, RequiredGrantTemplate, RetryDisposition, SessionId, Task, TaskId, ToolDefinition,
-    WorkPacket,
+    Action, ActorId, ApprovalRequest, AssumptionRecord, ClaimAssertion, ClaimBoundFinalResponse,
+    ClarificationQuestion, ContractError, ContradictionRecord, ErrorCategory, ErrorId,
+    HypothesisRecord, IndependentVerificationRequest, IndependentVerificationResult, MaterialClaim,
+    Plan, ProblemFact, ProblemFrame, Prompt, RequiredGrantTemplate, RetryDisposition, SessionId,
+    Task, TaskId, ToolDefinition, VerifiedMaterialClaim, WorkPacket,
 };
 
 use crate::task_classification::TaskClassification;
@@ -36,6 +36,8 @@ pub enum DescriptiveArtifactKind {
     TaskClassification,
     /// Concise reasoning or independent-verification record.
     ReasoningRecord,
+    /// Proposed or verified material-claim record.
+    ClaimRecord,
 }
 
 /// Claimed producer of one descriptive authority-escalation attempt.
@@ -97,6 +99,9 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::ClarificationQuestion {}
     impl Sealed for agentmage_kernel_contracts::IndependentVerificationRequest {}
     impl Sealed for agentmage_kernel_contracts::IndependentVerificationResult {}
+    impl Sealed for agentmage_kernel_contracts::MaterialClaim {}
+    impl Sealed for agentmage_kernel_contracts::VerifiedMaterialClaim {}
+    impl Sealed for agentmage_kernel_contracts::ClaimBoundFinalResponse {}
     impl Sealed for crate::task_classification::TaskClassification {}
 }
 
@@ -139,6 +144,11 @@ impl_non_authoritative!(ReasoningRecord =>
     ClarificationQuestion,
     IndependentVerificationRequest,
     IndependentVerificationResult,
+);
+impl_non_authoritative!(ClaimRecord =>
+    MaterialClaim,
+    VerifiedMaterialClaim,
+    ClaimBoundFinalResponse,
 );
 
 /// Typed result produced when a descriptive artifact is offered as execution authority.
@@ -321,6 +331,9 @@ mod tests {
         assert_sealed::<agentmage_kernel_contracts::ClarificationQuestion>();
         assert_sealed::<agentmage_kernel_contracts::IndependentVerificationRequest>();
         assert_sealed::<agentmage_kernel_contracts::IndependentVerificationResult>();
+        assert_sealed::<agentmage_kernel_contracts::MaterialClaim>();
+        assert_sealed::<agentmage_kernel_contracts::VerifiedMaterialClaim>();
+        assert_sealed::<agentmage_kernel_contracts::ClaimBoundFinalResponse>();
     }
 
     #[test]

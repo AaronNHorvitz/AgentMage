@@ -12,6 +12,8 @@ pub mod approval;
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
 pub mod authority_transaction;
+/// Deterministic material-claim proof and truthful final-response construction.
+pub mod claim_evidence;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 /// Kernel-only session and operation grant issuance.
