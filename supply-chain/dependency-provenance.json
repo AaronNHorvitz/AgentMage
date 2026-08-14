@@ -47,7 +47,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "afbd5c0f6e354f6bc4fed85734ac44a180282d880aa58f394cb62f652270be3c"
+          "content": "a9fdd22512f43461e8727fa434063d75b5c8198e1cc9b14fc21751bb9afd6857"
         }
       ],
       "integrity": null,
@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "36ca817230bb91bfbf144ff0dec9015c53f56be9a52e42274ca43f93d9596b74"
+          "content": "4ba7cb4d28715d634683c5f8c53208dcbf02447948cce0aa1b6f88661fd398b0"
         }
       ],
       "integrity": null,
@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "3f2a383bc07cec6537edca9e4ce3852d095cb5c2aa4af18dc023e2ea22fb9594"
+          "content": "df2d76505d87dc2a6ff767832ccfe50756b3dfd445e33cbeb557fb46110165ab"
         }
       ],
       "integrity": null,
@@ -107,7 +107,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "4e2f6fe6212e739ea796b1b6b59fd64b3c3dec8bad079288b053bda9f2d6347d"
+          "content": "b28d07962df3b8a843edcef58db3d3e1e3c0254147df27997942d745fb2d22a3"
         }
       ],
       "integrity": null,
@@ -1227,7 +1227,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
+          "content": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
         }
       ],
       "integrity": null,
@@ -8721,6 +8721,8 @@
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:rustix@1.1.4",
         "cargo:seccompiler@0.5.0",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0",
         "cargo:zeroize@1.9.0"
       ]
@@ -11356,10 +11358,10 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665",
+    "Cargo.lock": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af",
     "Cargo.toml": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1",
+    "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",

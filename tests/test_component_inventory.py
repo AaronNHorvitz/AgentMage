@@ -93,7 +93,7 @@ class ComponentInventoryTests(unittest.TestCase):
         self.assertEqual(docker["package_id"], "docker-model-plugin")
         self.assertRegex(docker["profile_sha256"], r"^[0-9a-f]{64}$")
         self.assertRegex(docker["guard_profile_sha256"], r"^[0-9a-f]{64}$")
-        self.assertEqual(docker["preflight_contract_version"], 2)
+        self.assertEqual(docker["preflight_contract_version"], 3)
         self.assertRegex(docker["model_manifest_sha256"], r"^[0-9a-f]{64}$")
         self.assertFalse(docker["docker_engine_directly_tested"])
         self.assertTrue(
