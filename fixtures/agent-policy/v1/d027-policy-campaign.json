@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "campaign_id": "D027-S12-POLICY",
+  "generator": {
+    "algorithm": "lcg64-wrapping",
+    "seed_decimal": 228867283377901,
+    "multiplier": 6364136223846793005,
+    "increment": 1442695040888963407,
+    "sample_modulus": 10000
+  },
+  "mutation_count": 5120,
+  "mutations_per_dimension": 320,
+  "dimensions": [
+    "actor",
+    "session",
+    "task",
+    "autonomy",
+    "operation",
+    "source",
+    "destination",
+    "path",
+    "repository_state",
+    "credential",
+    "label",
+    "reversibility",
+    "network",
+    "disclosure",
+    "budget",
+    "authority"
+  ],
+  "repeat_evaluations_per_mutation": 2,
+  "required_outcome": "identical_clearance_or_first_denial",
+  "private_user_data": false,
+  "external_network": false
+}
