@@ -1,0 +1,114 @@
+{
+  "artifact_id": "task-12-2-4-4-d027-s12-restart",
+  "case_ids": [
+    "D027-RESTART-01",
+    "D027-RESTART-02",
+    "D027-RESTART-03",
+    "D027-RESTART-04",
+    "D027-RESTART-05",
+    "D027-RESTART-06"
+  ],
+  "claims": {
+    "authority_fault_point_count": 6,
+    "duplicate_effect_count": 0,
+    "duplicate_receipt_count": 0,
+    "encrypted_authority_recovery_count": 6,
+    "external_network_used": false,
+    "false_success_count": 0,
+    "focused_case_count": 6,
+    "grant_replay_count": 0,
+    "legal_state_edge_count": 52,
+    "manual_fuzzing_executed": false,
+    "release_support": false,
+    "state_interruption_position_count": 104,
+    "verifier_disposition_count": 2,
+    "verifier_interruption_position_count": 4
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Agent-state snapshots are exercised as typed restart records; direct storage of the complete agent snapshot remains a later operational integration.",
+    "Authority transaction cases do use the encrypted local operational store, but no production model, provider, platform worker, or external service.",
+    "No private user data or external network operation is used.",
+    "Cross-platform packaging, release acceptance, and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "bb513217622176704aa67785ab718b1fc1df3880",
+  "sources": [
+    {
+      "bytes": 2294,
+      "path": "docs/verification/task-12-2-4-4-d027-restart-results.md",
+      "sha256": "01d7b8fd56087d05556d19e1705d641180130ecd7fe72ff7994980bae7dfd6fe"
+    },
+    {
+      "bytes": 1553,
+      "path": "fixtures/agent-policy/v1/d027-restart-campaign.json",
+      "sha256": "726d9c492f589de7fcc307cb6074c37d5b6c80a4e5118ed50c87fe487470b250"
+    },
+    {
+      "bytes": 32564,
+      "path": "kernel/engine/src/agent_restart.rs",
+      "sha256": "1ae3c43dad00d7d9f1f71e24873adc9dcfc55d3053c958ef354595de985c0779"
+    },
+    {
+      "bytes": 18188,
+      "path": "kernel/engine/src/agent_verifier.rs",
+      "sha256": "e62de3e2fca3b34af3cbda8f40dc6a2d8428968c32df1d3f6a1a83cc72c37613"
+    },
+    {
+      "bytes": 81662,
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "d24ab72f58847c5a9c7c1b3227a346fe988590ed3b71aa721e102a0536010d1c"
+    },
+    {
+      "bytes": 181401,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "83bf97c9248dd989793d4a0ea1077632a2e60f48223b470731c7794a26b7c211"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4649,
+      "path": "scripts/d027_s12_restart_evidence.py",
+      "sha256": "6836cadc85d3dd6fe321ce9ea0207e5e8fc5ee87aec41633d7f585a649d03fef"
+    },
+    {
+      "bytes": 3828,
+      "path": "tests/test_d027_s12_restart_evidence.py",
+      "sha256": "27ca76637f9d968d3636768b35e75460c478f37e033f752f27bc45f911a0c67b"
+    }
+  ],
+  "status": "pass-d027-s12-restart",
+  "task_ids": [
+    "12.2.4.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "1af605ca778688d62b50c69a393d5db14101792fc1495cbe23b16c29844b7115",
+      "exit_code": 0,
+      "expected_marker_sha256": "b1c449edd05803bbd7288857d0b7b076e44cf29a49efb0273ffdfc23e74b0956",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "daf33b6ce4e716d97efc8f743002877318fc730a4dd1a03d75becbc74d3cfdf7",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
