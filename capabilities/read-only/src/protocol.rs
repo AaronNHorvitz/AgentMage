@@ -912,7 +912,7 @@ mod tests {
     use super::{
         MAX_READ_ONLY_CALL_DEPTH, NeverCancelled, ReadOnlyCancellation, ReadOnlyEncoding,
         ReadOnlyItem, ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest, SnapshotEntry,
-        SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
+        SnapshotEntryKind, WorkspaceSnapshot, execute_read_only, validate_read_only_request,
     };
     use crate::ReadOnlyToolKind;
 
@@ -1100,6 +1100,101 @@ mod tests {
             run(ReadOnlyToolKind::ReadText, &tiny).outcome,
             ReadOnlyOutcome::Denied
         );
+    }
+
+    #[test]
+    fn every_tool_rejects_the_complete_schema_failure_matrix_before_execution() {
+        struct CountCancellation(AtomicUsize);
+
+        impl ReadOnlyCancellation for CountCancellation {
+            fn is_cancelled(&self) -> bool {
+                self.0.fetch_add(1, Ordering::SeqCst);
+                false
+            }
+        }
+
+        for kind in ReadOnlyToolKind::ALL {
+            let text = matches!(
+                kind,
+                ReadOnlyToolKind::ReadText
+                    | ReadOnlyToolKind::ReadMultiple
+                    | ReadOnlyToolKind::SearchText
+            );
+            let search = matches!(
+                kind,
+                ReadOnlyToolKind::SearchFilenames | ReadOnlyToolKind::SearchText
+            );
+            let mut valid = request(
+                &[&["README.md"]],
+                if text {
+                    ReadOnlyEncoding::Utf8
+                } else {
+                    ReadOnlyEncoding::Binary
+                },
+            );
+            valid.query = search.then(|| "Alpha".to_owned());
+            let valid_bytes = serde_json::to_vec(&valid).expect("valid request");
+            assert!(
+                validate_read_only_request(kind, &valid_bytes).is_ok(),
+                "valid request rejected for {}",
+                kind.id()
+            );
+
+            let mut missing: serde_json::Value =
+                serde_json::from_slice(&valid_bytes).expect("valid value");
+            missing.as_object_mut().expect("object").remove("limits");
+            let missing = serde_json::to_vec(&missing).expect("missing JSON");
+
+            let mut extra: serde_json::Value =
+                serde_json::from_slice(&valid_bytes).expect("valid value");
+            extra["ambient_path"] = serde_json::Value::String("/etc/passwd".to_owned());
+            let extra = serde_json::to_vec(&extra).expect("extra JSON");
+
+            let valid_text = String::from_utf8(valid_bytes.clone()).expect("UTF-8 JSON");
+            let duplicate = valid_text
+                .replacen("{", "{\"schema_version\":1,", 1)
+                .into_bytes();
+
+            let mut unsupported = valid.clone();
+            unsupported.schema_version = 2;
+            let unsupported = serde_json::to_vec(&unsupported).expect("unsupported JSON");
+
+            let mut out_of_budget = valid;
+            out_of_budget.limits.output_bytes = 0;
+            let out_of_budget = serde_json::to_vec(&out_of_budget).expect("out-of-budget JSON");
+
+            for invalid in [
+                missing,
+                extra,
+                duplicate,
+                b"not-json".to_vec(),
+                vec![b'x'; 64 * 1024 + 1],
+                unsupported,
+                out_of_budget,
+            ] {
+                assert!(
+                    validate_read_only_request(kind, &invalid).is_err(),
+                    "invalid request admitted for {}",
+                    kind.id()
+                );
+                let cancellation = CountCancellation(AtomicUsize::new(0));
+                let result = execute_read_only(kind, &invalid, &snapshot(), &cancellation);
+                assert!(
+                    matches!(
+                        result.outcome,
+                        ReadOnlyOutcome::Malformed | ReadOnlyOutcome::Denied
+                    ),
+                    "invalid outcome drift for {}",
+                    kind.id()
+                );
+                assert_eq!(
+                    cancellation.0.load(Ordering::SeqCst),
+                    0,
+                    "invalid request reached execution for {}",
+                    kind.id()
+                );
+            }
+        }
     }
 
     struct CancelsAfter(AtomicUsize);

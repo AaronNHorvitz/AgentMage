@@ -267,5 +267,15 @@ mod tests {
             read_only_tool_kind(&ToolId::from_raw(ReadOnlyToolKind::ReadText.id()), "2.0.0"),
             None
         );
+        for kind in ReadOnlyToolKind::ALL {
+            assert_eq!(
+                read_only_tool_kind(&ToolId::from_raw(kind.id()), "0.9.0"),
+                None
+            );
+            assert_eq!(
+                read_only_tool_kind(&ToolId::from_raw(kind.id()), "1.0.1"),
+                None
+            );
+        }
     }
 }
