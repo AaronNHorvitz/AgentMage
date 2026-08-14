@@ -22,7 +22,7 @@
     "shared_contract": "verified",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
+  "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -40,7 +40,7 @@
     },
     {
       "path": "kernel/contracts/src/path.rs",
-      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+      "sha256": "32134f7e4ba693009f9fbfc8741ea22f4744081e4b0e78a02431728237aee4ea"
     },
     {
       "path": "kernel/contracts/tests/path_corpus.rs",

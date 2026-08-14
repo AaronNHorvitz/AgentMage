@@ -21,21 +21,21 @@
     "macos": "blocked-macos",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
+  "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/path-authority-contract.md",
-      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+      "sha256": "de4283149ea9b2ad6faf0e5abfe52d0076de97dd85020b78e93aa6d9d2977747"
     },
     {
       "path": "kernel/contracts/src/path.rs",
-      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+      "sha256": "32134f7e4ba693009f9fbfc8741ea22f4744081e4b0e78a02431728237aee4ea"
     },
     {
       "path": "kernel/contracts/src/platform_path.rs",
-      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62"
+      "sha256": "0cff7fe61ab00464882b1dfc3a8be15e862bcd0ce0ee8bc1b4fff878fa1d03e1"
     },
     {
       "path": "kernel/contracts/src/display_link.rs",
@@ -43,11 +43,11 @@
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "e692a2fd0b88f8af2505446fa2c8fde4794e8c17175ed609582b6307f12f19ea"
+      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "669ad2faa862b71e171819ced145e31ac606c293787946e42981f82462ad0ca5"
+      "sha256": "8025ebf7da4896d6e25db1b813dbc4d8e3396c57555f16c84b44286d8e99eaa5"
     },
     {
       "path": "scripts/path_contract_artifact.py",
