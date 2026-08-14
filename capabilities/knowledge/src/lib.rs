@@ -8,6 +8,7 @@ mod index;
 mod lifecycle;
 mod memory;
 mod memory_lifecycle;
+mod memory_working;
 mod obsidian;
 mod obsidian_index;
 mod operations;
@@ -41,6 +42,10 @@ pub use memory::{
 pub use memory_lifecycle::{
     MemoryCatalog, MemoryCatalogSummary, MemoryLifecycleReceipt, MemoryMarkdownBundle,
     MemoryMarkdownFile, MemoryTransitionKind,
+};
+pub use memory_working::{
+    MemoryLoadHit, MemoryLoadQuery, MemoryLoadReason, MemoryLoadResult, WorkingCompactionPreview,
+    WorkingCompactionProposal, WorkingMemory, WorkingMemoryPreview, select_memory,
 };
 pub use obsidian::{
     ObsidianAttachment, ObsidianBacklink, ObsidianBlockReference, ObsidianCallout,

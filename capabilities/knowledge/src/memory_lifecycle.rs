@@ -280,6 +280,12 @@ impl MemoryCatalog {
         self.items.get(memory_id)
     }
 
+    /// Returns a stable cloned snapshot for bounded retrieval and export preparation.
+    #[must_use]
+    pub fn items(&self) -> Vec<MemoryItem> {
+        self.items.values().cloned().collect()
+    }
+
     /// Renders portable deterministic Markdown previews without applying them.
     pub fn preview_markdown(&self) -> Result<MemoryMarkdownBundle, MemoryError> {
         let mut topics = Vec::new();
