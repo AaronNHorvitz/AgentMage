@@ -25,6 +25,8 @@ pub mod authority_transaction;
 pub mod claim_evidence;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Kernel-owned redacted local doctor report construction.
+pub mod diagnostics;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 pub mod model_codec;

@@ -12,6 +12,7 @@ mod boundary;
 mod claim;
 mod classification;
 mod common;
+mod diagnostics;
 mod display_link;
 mod evidence;
 mod grant;
@@ -59,6 +60,9 @@ pub use classification::{
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,
     SchemaReference, ValidationIssue, ValidationSeverity,
+};
+pub use diagnostics::{
+    DiagnosticComponent, DiagnosticItem, DiagnosticObservation, DiagnosticState, DoctorReport,
 };
 pub use display_link::{
     DisplayFileLink, DisplayLinkError, DisplayLinkErrorKind, MAX_DISPLAY_FILE_URI_BYTES,
