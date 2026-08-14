@@ -43,11 +43,7 @@ def build_report(archive: Path, package: Path, source_revision: str) -> dict[str
         if extraction.returncode != 0:
             raise runtime.MuseRuntimeError("muse-runtime.evidence-extraction-failed")
         runtime_root = root / profile["package"]["relative_install_root"]
-        environment = {
-            "GGML_BACKEND_PATH": str(runtime_root / "lib/libggml-vulkan.so"),
-            "LD_LIBRARY_PATH": str(runtime_root / "lib"),
-            "PATH": "/usr/bin:/bin",
-        }
+        environment = {"LD_LIBRARY_PATH": str(runtime_root / "lib"), "PATH": "/usr/bin:/bin"}
         process = subprocess.run(
             [str(runtime_root / "bin/llama-server"), "--version"],
             check=False,
@@ -55,6 +51,7 @@ def build_report(archive: Path, package: Path, source_revision: str) -> dict[str
             text=True,
             timeout=10,
             env=environment,
+            cwd=runtime_root / "lib",
         )
         version_output = "\n".join(part.strip() for part in (process.stdout, process.stderr) if part.strip())
         file_modes = {

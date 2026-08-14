@@ -299,7 +299,6 @@ impl NativeModelDriver for LlamaServerDriver {
         }
         let server = self.config.runtime_root.join("bin/llama-server");
         let library = self.config.runtime_root.join("lib");
-        let backend = library.join("libggml-vulkan.so");
         let socket = self
             .config
             .socket_path
@@ -314,9 +313,8 @@ impl NativeModelDriver for LlamaServerDriver {
             .args(launch_arguments(model, profile.profile_id.as_str(), socket))
             .env_clear()
             .env("LD_LIBRARY_PATH", &library)
-            .env("GGML_BACKEND_PATH", backend)
             .env("PATH", "/usr/bin:/bin")
-            .current_dir(&self.config.runtime_root)
+            .current_dir(&library)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
