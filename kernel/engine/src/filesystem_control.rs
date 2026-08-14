@@ -3483,6 +3483,7 @@ mod tests {
     #[test]
     fn approval_mutations_cannot_issue_filesystem_authority() {
         type DecisionMutation = Box<dyn Fn(&mut FilesystemApprovalDecision)>;
+        type PlanMutation = Box<dyn Fn(&mut FilesystemPlan)>;
 
         let (mut issuer, plan, preview) = write_approval_fixture();
         let mut changed_preview = preview.clone();
@@ -3507,6 +3508,69 @@ mod tests {
                 &changed_plan,
                 &preview,
                 &approval_decision(&preview, false),
+                grant_request(),
+            ),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let write_plan_mutations: Vec<PlanMutation> = vec![
+            Box::new(|value| value.operations[1].source_path = Some("src/other.txt".to_owned())),
+            Box::new(|value| {
+                value.operations[0].destination_path = Some("new/other.txt".to_owned())
+            }),
+        ];
+        for mutate in write_plan_mutations {
+            let (mut issuer, plan, preview) = write_approval_fixture();
+            let mut changed_plan = plan.clone();
+            mutate(&mut changed_plan);
+            assert_eq!(
+                issue_filesystem_grant(
+                    &mut issuer,
+                    &changed_plan,
+                    &preview,
+                    &approval_decision(&preview, false),
+                    grant_request(),
+                ),
+                Err(FilesystemPlanError::InvalidInput)
+            );
+        }
+
+        let (mut issuer, parent) = parent_with_issuer();
+        let patch_operation = FilesystemOperationDraft::ExactPatch {
+            operation_id: "operation-patch".to_owned(),
+            source: source(
+                &["src", "patch.txt"],
+                b"alpha\nbeta\ngamma\n",
+                ExistingWorkDisposition::Clean,
+            ),
+            patch_json: patch("beta\n", "changed\n"),
+            expected_postimage_sha256: hex_sha256(b"alpha\nchanged\ngamma\n"),
+        };
+        let plan = build_filesystem_plan(&parent, request(vec![patch_operation]))
+            .expect("patch approval plan");
+        let preview = render_filesystem_preview(&plan).expect("patch approval preview");
+        let mut changed_plan = plan.clone();
+        changed_plan.operations[0].structured_patch_sha256 = Some("c".repeat(64));
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &changed_plan,
+                &preview,
+                &approval_decision(&preview, false),
+                grant_request(),
+            ),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let (mut issuer, plan, preview) = delete_approval_fixture();
+        let mut changed_plan = plan.clone();
+        changed_plan.operations[0].destination_path = Some("trash/other.txt".to_owned());
+        assert_eq!(
+            issue_filesystem_grant(
+                &mut issuer,
+                &changed_plan,
+                &preview,
+                &approval_decision(&preview, true),
                 grant_request(),
             ),
             Err(FilesystemPlanError::InvalidInput)
