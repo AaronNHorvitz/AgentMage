@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "corpus_id": "agentmage-agent-policy-failure-corpus-v1",
+  "content_class": "synthetic_content_free",
+  "cases": [
+    {
+      "case_id": "APF-001",
+      "category": "restart",
+      "setup": "A restored non-terminal controller has not consumed an exact reconciliation permit.",
+      "trigger": "An ordinary or verified-completion transition is requested after process restart.",
+      "expected_disposition": "transition_locked_until_reconciled",
+      "prohibited_outcomes": [
+        "transition_before_reconciliation",
+        "duplicate_effect",
+        "success"
+      ],
+      "source_contract": "kernel/engine/src/agent_restart.rs",
+      "source_test": "task_12_2_1_5_exact_reconciliation_unlocks_one_restored_controller",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+        "sha256": "2a0504349e7674bc7e8e6a3257ca1963747fcfa010fe1b211855f51715c0a6d7"
+      }
+    },
+    {
+      "case_id": "APF-002",
+      "category": "uncertain_effect",
+      "setup": "A persisted authority transaction is launched or reconciling, or uncertainty is explicit.",
+      "trigger": "Restart reconciliation evaluates current authority, grant, and receipt state.",
+      "expected_disposition": "blocked_uncertain_effect",
+      "prohibited_outcomes": [
+        "resume",
+        "duplicate_effect",
+        "success"
+      ],
+      "source_contract": "kernel/engine/src/agent_restart.rs",
+      "source_test": "task_12_2_1_5_launched_reconciling_or_uncertain_effects_never_resume",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+        "sha256": "2a0504349e7674bc7e8e6a3257ca1963747fcfa010fe1b211855f51715c0a6d7"
+      }
+    },
+    {
+      "case_id": "APF-003",
+      "category": "consumed_grant",
+      "setup": "A consumed grant lacks an exact completed transaction and matching terminal receipt chain.",
+      "trigger": "Restart reconciliation attempts to admit the persisted grant state.",
+      "expected_disposition": "reject_grant_replay",
+      "prohibited_outcomes": [
+        "grant_reuse",
+        "duplicate_effect",
+        "success"
+      ],
+      "source_contract": "kernel/engine/src/agent_restart.rs",
+      "source_test": "task_12_2_1_5_pending_or_consumed_authority_blocks_resume",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+        "sha256": "2a0504349e7674bc7e8e6a3257ca1963747fcfa010fe1b211855f51715c0a6d7"
+      }
+    },
+    {
+      "case_id": "APF-004",
+      "category": "false_completion",
+      "setup": "Completion evidence comes from model prose, confidence, self-review, a model judge, or a classifier.",
+      "trigger": "The verifier registry evaluates the candidate completion source.",
+      "expected_disposition": "reject_non_deterministic_completion",
+      "prohibited_outcomes": [
+        "success",
+        "verified_no_op",
+        "completion_proof"
+      ],
+      "source_contract": "kernel/engine/src/agent_verifier.rs",
+      "source_test": "task_12_2_1_4_all_advisory_sources_are_inert_completion_evidence",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+        "sha256": "202d7160d1887305973cf3abfd4536fbc2db49894a37994f0092062d8cdc603a"
+      }
+    },
+    {
+      "case_id": "APF-005",
+      "category": "classifier_disagreement",
+      "setup": "Multiple advisory classifier results disagree materially for the same cleared fact set.",
+      "trigger": "The deterministic classifier-failure mapper evaluates disagreement.",
+      "expected_disposition": "require_user_decision",
+      "prohibited_outcomes": [
+        "authority_widening",
+        "execution",
+        "success"
+      ],
+      "source_contract": "kernel/engine/src/advisory_policy.rs",
+      "source_test": "task_12_2_2_4_every_incomplete_state_has_one_exact_safe_action",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/classifier-failure.json",
+        "sha256": "788706de755e0e0c1faaf06b3fc7a6e9af60235500f63b48acdaa9f0c8351539"
+      }
+    },
+    {
+      "case_id": "APF-006",
+      "category": "no_progress",
+      "setup": "The repeated-no-progress counter is exactly at its configured inclusive ceiling.",
+      "trigger": "One additional no-progress observation is submitted.",
+      "expected_disposition": "terminal_stalled",
+      "prohibited_outcomes": [
+        "continued_execution",
+        "terminal_exhausted",
+        "success"
+      ],
+      "source_contract": "kernel/engine/src/agent_ceiling.rs",
+      "source_test": "task_12_2_1_3_no_progress_stalls_and_other_exhaustion_is_exact",
+      "evidence": {
+        "path": "artifacts/sprints/sprint-12/story-12.2/agent-ceilings.json",
+        "sha256": "f748a94bda390e93e032a8d88a47622ec0d4544be9b93b76a0e78eb4eea8c873"
+      }
+    }
+  ]
+}
