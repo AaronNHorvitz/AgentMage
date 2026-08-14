@@ -1135,6 +1135,18 @@ mod tests {
             ),
             Err(WriteApprovalError::ApprovalMismatch)
         );
+        let mut cancelled = decision(&preview);
+        cancelled.user_confirmed = false;
+        assert_eq!(
+            issue_write_grant(
+                &mut issuer,
+                &change_set,
+                &preview,
+                &cancelled,
+                grant_request(),
+            ),
+            Err(WriteApprovalError::ApprovalMismatch)
+        );
         let mut broader_verification = decision(&preview);
         broader_verification
             .permitted_verification
