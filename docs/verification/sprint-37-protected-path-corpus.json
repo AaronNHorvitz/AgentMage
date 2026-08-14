@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {"id": "protected-git", "class": "protected_path", "candidate": ".git/config", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-agent-instructions", "class": "protected_path", "candidate": "AGENTS.md", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-handoff", "class": "protected_path", "candidate": "PROJECT_HANDOFF.md", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-memory", "class": "protected_path", "candidate": "MEMORY.md", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-environment", "class": "protected_path", "candidate": ".env.production", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-private-key", "class": "protected_path", "candidate": "identity.pem", "expected": "filesystem.plan.protected_path"},
+    {"id": "protected-source-records", "class": "protected_path", "candidate": "source-records/item.md", "expected": "filesystem.plan.protected_path"},
+    {"id": "unrelated-modified", "class": "ownership", "candidate": "src/dirty.txt", "expected": "filesystem.plan.unrelated_existing_work"},
+    {"id": "excluded-scope", "class": "scope", "candidate": "private/item.txt", "expected": "filesystem.plan.scope_denied"},
+    {"id": "stale-preimage", "class": "preimage", "candidate": "src/stale.txt", "expected": "filesystem.plan.preimage_mismatch"},
+    {"id": "existing-destination", "class": "collision", "candidate": "new/existing.txt", "expected": "filesystem.plan.destination_collision"},
+    {"id": "ascii-case-collision", "class": "collision", "candidate": "new/Readme.md", "expected": "filesystem.plan.destination_collision"},
+    {"id": "unicode-case-collision", "class": "collision", "candidate": "new/resume-accented.md", "expected": "filesystem.plan.destination_collision"},
+    {"id": "symbolic-link", "class": "native_object", "candidate": "new/created.txt", "expected": "filesystem.transaction.observation_failed"},
+    {"id": "hard-link", "class": "native_object", "candidate": "src/copy.txt", "expected": "filesystem.transaction.observation_failed"},
+    {"id": "resource-limit", "class": "limit", "candidate": "transaction", "expected": "filesystem.driver.apply_failed"},
+    {"id": "cancel-before-consume", "class": "cancellation", "candidate": "transaction", "expected": "filesystem.transaction.preapply_denied"},
+    {"id": "trash-without-confirmation", "class": "approval", "candidate": "trash/obsolete.txt", "expected": "filesystem.approval.decision_mismatch"}
+  ],
+  "record_type": "sprint_37_protected_path_collision_corpus",
+  "schema_version": 1
+}
