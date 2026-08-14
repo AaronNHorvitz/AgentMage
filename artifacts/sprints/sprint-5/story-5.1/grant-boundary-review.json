@@ -27,7 +27,7 @@
     "macOS implementation and execution evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "00c734988677cccc0fc211b6eac9a73781f4f765",
+  "reference_revision": "522f1141bdf4a1b54b9c299304a9d26310843fc1",
   "release_claim": "none",
   "review_type": "independent-automated-boundary-review",
   "reviewer_identity": "agentmage-grant-boundary-review-v1",
@@ -95,7 +95,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-      "sha256": "1056c27ee6b409a43697d6b34b3c29d41459032de3445f7fe3475f2cdde12936"
+      "sha256": "5dfa245406b6a3258107cf1a33a37dd0377525e63fe2055c3f5fbef0e01a8def"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
@@ -164,8 +164,8 @@
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-      "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
-      "sha256": "1056c27ee6b409a43697d6b34b3c29d41459032de3445f7fe3475f2cdde12936"
+      "reference_revision": "b7aae292cf9ffe05eb08bfacbc7ef190c0eb488e",
+      "sha256": "5dfa245406b6a3258107cf1a33a37dd0377525e63fe2055c3f5fbef0e01a8def"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
