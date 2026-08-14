@@ -16,11 +16,26 @@
         "test",
         "-p",
         "agentmage-kernel-engine",
+        "write_approval",
         "--locked"
       ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-approval-tests",
+      "output_sha256": "f9a029b77de38a7bd50522632b516c5ed39334ffdd773b16b7572ef6fdb5a490"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "06294a4acee8e94991cb0543cdeb148087d9ec38b99cc9fa9658e3d2e3d37249"
+      "output_sha256": "88081101352c3016b3edfdf84ca3fa2f27322b314fd95e95b25669fb726c76c0"
     },
     {
       "argv": [
@@ -34,9 +49,10 @@
         "-D",
         "warnings"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "7e0117ad9a8f89eb0fe32d99f1c3cdd50b2ebf0c3b0e01c1d89f963facd4117e"
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
     },
     {
       "argv": [
@@ -46,9 +62,10 @@
         "agentmage-kernel-contracts",
         "--locked"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "f75787aa1ce3395155939d7995b827c91d1f3fe80355cc3b618a97344ea7dd70"
+      "output_sha256": "dab493d85e6e71ca265265657f74bf744901f2b9a709bee5a0e3e38ec3f4fbac"
     },
     {
       "argv": [
@@ -56,9 +73,10 @@
         "run",
         "product:check"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "519008e7f9ab6031999ceb036ce32990976bd3669ed8ae0385a96459138f2998"
+      "output_sha256": "3f76cf4190082e8ca62fe5fbb07406db65d1148f994a40b21e5d54bd141ed037"
     },
     {
       "argv": [
@@ -66,15 +84,17 @@
         "run",
         "docs:check"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "50c19e39481656f077f2f774398b8fc7b9bec17dca933166dd755274184c5837"
+      "output_sha256": "7ce3df5c4618ae852c09feb1da1ebd89c69a0736e9940696acbcba7056aed6f3"
     },
     {
       "argv": [
         "python3",
         "scripts/module_inventory.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "module-inventory",
       "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
@@ -84,6 +104,7 @@
         "python3",
         "scripts/dependency_rules.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "dependency-rules",
       "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
@@ -93,6 +114,7 @@
         "python3",
         "scripts/effect_boundary.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "effect-boundary",
       "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
@@ -102,6 +124,7 @@
         "python3",
         "scripts/build_contract.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "build-contract",
       "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
@@ -111,6 +134,7 @@
         "python3",
         "scripts/strict_local_source_audit.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "strict-local-source",
       "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
@@ -120,6 +144,7 @@
         "python3",
         "scripts/supply_chain.py"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "supply-chain",
       "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
@@ -131,6 +156,7 @@
         "unittest",
         "tests.test_sprint_35_evidence"
       ],
+      "blocking_skip_count": null,
       "exit_code": 0,
       "id": "evidence-tests",
       "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
@@ -180,7 +206,7 @@
     "SR-TST-011",
     "SR-TST-012"
   ],
-  "source_revision": "90ec3d620ff47a7e856ed7b1e8a979cac76ca6fe",
+  "source_revision": "89cd9eaecdf8810537b4cfc94239dd8d184dfe1b",
   "source_sha256": {
     "docs/architecture/exact-preimage-write-approval.md": "115bf060778ec0f03a1034986f79ac87164a104c27e8b4953aaf746302636bcb",
     "docs/verification/sprint-35-local-results.md": "cf9a0d193e1cd868df67cfaf9f66e2baf4e05a0704793af98f84d9ac8a77717a",
@@ -188,8 +214,8 @@
     "kernel/engine/src/grants.rs": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c",
     "kernel/engine/src/lib.rs": "db9bc701b0ab4845807cd59e8987d7d97558fa078766c42658b96abe6636eff5",
     "kernel/engine/src/write_approval.rs": "5b77913ff0ee12432aaf1e3dab4c8ecdda9fb5615e19f3c21add88f1adb043ef",
-    "scripts/sprint_35_evidence.py": "72a852b18078aee8ad19ab871cdea1aa3aac08d997fe4d856729b62e1a14fd6c",
-    "tests/test_sprint_35_evidence.py": "e41d676012a94f674f8977c6d09605993c6f6670a718020f1b1dfc946c2899a5"
+    "scripts/sprint_35_evidence.py": "04fe1be5afa91038b2bc85711229bb62edc5a020b4a1dbd0a8bc50c22569a566",
+    "tests/test_sprint_35_evidence.py": "932551b480dcaba582e7ba81b900e48f7f960976754c20200a0e5ebfb685c6a3"
   },
   "summary": {
     "independent_review_passed": false,
@@ -205,6 +231,7 @@
     "exact_preimage_shadow_and_preview_suite": true,
     "grant_and_stale_invalidation_suite": true,
     "independent_transaction_review": false,
+    "issue_local_blocking_skip_count": 0,
     "upstream_sprint_34_gate": false
   }
 }
