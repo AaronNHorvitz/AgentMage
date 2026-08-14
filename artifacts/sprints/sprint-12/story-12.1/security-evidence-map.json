@@ -1,0 +1,316 @@
+{
+  "artifact_id": "story-12-1-product-security-evidence-map",
+  "external_network_used": false,
+  "limitations": [
+    "The map closes Story 12.1 evidence organization and does not mark any requirement complete for a product release.",
+    "Production model and tool execution, durable restart, live UI, cross-platform packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "mappings": [
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/agent-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/task-classification.json",
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json"
+      ],
+      "remaining": "Grant-mediated production execution and release composition.",
+      "requirement_id": "SR-ACC-001"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/agent-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/agent-progress.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json"
+      ],
+      "remaining": "Live user-decision UI and end-to-end handoff denial.",
+      "requirement_id": "SR-ACC-007"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/task-classification.json",
+        "artifacts/sprints/sprint-12/story-12.1/reasoning-verification.json",
+        "artifacts/sprints/sprint-12/story-12.1/material-claims.json"
+      ],
+      "remaining": "Production model and rendered-UI evaluation.",
+      "requirement_id": "SR-AI-003"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/agent-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json"
+      ],
+      "remaining": "End-to-end consequential action matrix.",
+      "requirement_id": "SR-AI-004"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json"
+      ],
+      "remaining": "Complete direct and indirect injection corpus.",
+      "requirement_id": "SR-AI-005"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/runtime-fixtures.json",
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json",
+        "artifacts/sprints/sprint-12/story-12.1/reasoning-mode-equivalence.json"
+      ],
+      "remaining": "Production model and runtime reliability thresholds.",
+      "requirement_id": "SR-AI-006"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/reasoning-verification.json",
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json"
+      ],
+      "remaining": "Live UI rendering and broader semantic corpus.",
+      "requirement_id": "SR-AI-007"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/session-environment.json",
+        "artifacts/sprints/sprint-12/story-12.1/attachment-resolution.json",
+        "artifacts/sprints/sprint-12/story-12.1/material-claims.json"
+      ],
+      "remaining": "End-to-end secret-canary and adjacent-workspace campaign.",
+      "requirement_id": "SR-AI-008"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/agent-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/deterministic-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/cancellation-recovery.json"
+      ],
+      "remaining": "Complete OS process, memory, CPU or GPU, disk, and concurrency campaign.",
+      "requirement_id": "SR-AI-009"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/session-environment.json",
+        "artifacts/sprints/sprint-12/story-12.1/material-claims.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-schemas.json"
+      ],
+      "remaining": "Production inference provenance and durable audit integration.",
+      "requirement_id": "SR-AI-010"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/reasoning-mode-equivalence.json",
+        "artifacts/sprints/sprint-12/story-12.1/reasoning-verification.json",
+        "artifacts/sprints/sprint-12/story-12.1/material-claims.json"
+      ],
+      "remaining": "Versioned factual and coding evaluation at release thresholds.",
+      "requirement_id": "SR-AI-011"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/runtime-schemas.json",
+        "artifacts/sprints/sprint-12/story-12.1/agent-progress.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json"
+      ],
+      "remaining": "Complete durable product audit-event registry and store.",
+      "requirement_id": "SR-OPS-001"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json",
+        "artifacts/sprints/sprint-12/story-12.1/deterministic-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-schemas.json"
+      ],
+      "remaining": "Every input family across production boundaries.",
+      "requirement_id": "SR-TST-004"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/cancellation-recovery.json",
+        "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json"
+      ],
+      "remaining": "At least 100 durable crash-resume trials around every transition.",
+      "requirement_id": "SR-TST-005"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.1/deterministic-runtime.json",
+        "artifacts/sprints/sprint-12/story-12.1/cancellation-recovery.json"
+      ],
+      "remaining": "Full platform resource-governance and responsiveness campaign.",
+      "requirement_id": "SR-TST-006"
+    }
+  ],
+  "private_user_data_used": false,
+  "requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-007",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-AI-006",
+    "SR-AI-007",
+    "SR-AI-008",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-OPS-001",
+    "SR-TST-004",
+    "SR-TST-005",
+    "SR-TST-006"
+  ],
+  "schema_version": 1,
+  "source_revision": "4e0acaaef044b2154df4291ddddae36e9babe129",
+  "sources": [
+    {
+      "bytes": 3627,
+      "path": "docs/verification/task-12-1-3-5-product-security-evidence.md",
+      "sha256": "c9354144a472f5af1c1311032daf8a3133a1f44bb503ea418499a29e4f158ffc"
+    },
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 14075,
+      "path": "scripts/story_12_1_security_evidence.py",
+      "sha256": "d32193d49f8ef669e5c70ebab7c9b0fa1fb1c6fb9908b51acadead85b012d58d"
+    },
+    {
+      "bytes": 3825,
+      "path": "tests/test_story_12_1_security_evidence.py",
+      "sha256": "3195eacd7f39d64c09e2492b1f616dea3eaced125c2b03a628bd76a649be7882"
+    },
+    {
+      "bytes": 3844,
+      "path": "artifacts/sprints/sprint-12/story-12.1/agent-progress.json",
+      "sha256": "5a75b55faf65d83d4b4e4e0fbdefcbbae7d9dbce2796193c29957bc060841962"
+    },
+    {
+      "bytes": 3866,
+      "path": "artifacts/sprints/sprint-12/story-12.1/agent-runtime.json",
+      "sha256": "60668ec6b43b2f796b1435d085c9f832f10d8e53ab321e965557dc99050e0fd2"
+    },
+    {
+      "bytes": 3877,
+      "path": "artifacts/sprints/sprint-12/story-12.1/attachment-resolution.json",
+      "sha256": "c68c26a9492f0152ab7c2075223f4287090a04a0e0e73a0c7fc935a46667b030"
+    },
+    {
+      "bytes": 3394,
+      "path": "artifacts/sprints/sprint-12/story-12.1/cancellation-recovery.json",
+      "sha256": "68dd14a5bb280df2a38e344516eefccc0e0608075e07101cf9c8a605485db7fb"
+    },
+    {
+      "bytes": 3476,
+      "path": "artifacts/sprints/sprint-12/story-12.1/deterministic-runtime.json",
+      "sha256": "44c2d5c1b081a183699315f2d54d86d48e69014e7d05bf450c2debeb5173487a"
+    },
+    {
+      "bytes": 3579,
+      "path": "artifacts/sprints/sprint-12/story-12.1/hostile-model-candidates.json",
+      "sha256": "d0c109e5c3d93c89c20f173723885fd712b165a205ef11bebf0d6d107fa4c514"
+    },
+    {
+      "bytes": 4028,
+      "path": "artifacts/sprints/sprint-12/story-12.1/material-claims.json",
+      "sha256": "2f2d713e95cc0be67e8d658e546c4f1c3f6d74ec1bdc01e662896f1c325ecc1f"
+    },
+    {
+      "bytes": 3673,
+      "path": "artifacts/sprints/sprint-12/story-12.1/reasoning-mode-equivalence.json",
+      "sha256": "daeb04aa2e8b3e8a23a0526e3c70c72904c0979b372ed14b7d8887e1d8edd39f"
+    },
+    {
+      "bytes": 4160,
+      "path": "artifacts/sprints/sprint-12/story-12.1/reasoning-verification.json",
+      "sha256": "9be543b3a987bd4c5dcedac2a7b7bf203a8f3a2b74eee6c90fec5c28f802ba19"
+    },
+    {
+      "bytes": 3993,
+      "path": "artifacts/sprints/sprint-12/story-12.1/runtime-fixtures.json",
+      "sha256": "6c7cdb8335b74ce209e1fe3bbbbb9de71dd9144d69b17e00015dd056e1315e01"
+    },
+    {
+      "bytes": 4135,
+      "path": "artifacts/sprints/sprint-12/story-12.1/runtime-schemas.json",
+      "sha256": "2dd190387d88038d517cf474464f266630effa7ea308a268de4047e9edbf6bbb"
+    },
+    {
+      "bytes": 3559,
+      "path": "artifacts/sprints/sprint-12/story-12.1/runtime-transcripts.json",
+      "sha256": "27c7ebebbf5313ecc211078bb8b55bc4a38f2a9a0c375cd6c4abad87b13dd033"
+    },
+    {
+      "bytes": 3953,
+      "path": "artifacts/sprints/sprint-12/story-12.1/session-environment.json",
+      "sha256": "169de34406fa87a401c2f84a60d01860d6a5223ff6b9cc9193eb62e15460139f"
+    },
+    {
+      "bytes": 3739,
+      "path": "artifacts/sprints/sprint-12/story-12.1/task-classification.json",
+      "sha256": "dd050c72751a240c8675056e9d8d34f26e202939a8d1a6376cd35d48d1591a09"
+    }
+  ],
+  "status": "pass-story-scope-security-mapping",
+  "task_ids": [
+    "12.1.3.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "50e2dc8283569ceae42b9f136dbd4705951236706388cff8776823bccbd0dc7a",
+      "exit_code": 0,
+      "expected_marker_sha256": "2335d43928a58faa2c4f017a727e1c867e1233789c150f875b4589b7f042ebd9",
+      "status": "pass"
+    },
+    {
+      "command_id": "8e07d25bdec0836a3ff71623c789ef40cf2bc47fc03ece03bfdbf6736bc79778",
+      "exit_code": 0,
+      "expected_marker_sha256": "a26aec65377d45a652e2d1ecfac8cd73219e5ba674516471c265579c7a598a7f",
+      "status": "pass"
+    },
+    {
+      "command_id": "7b36e7b537ed9beef61034f4f858345f25e33abb531fd39989449df8500cc488",
+      "exit_code": 0,
+      "expected_marker_sha256": "25a952d0fad76a4ddf7db44a8b1541f800b4b52f968699543391588817e741cb",
+      "status": "pass"
+    },
+    {
+      "command_id": "5f5eac3132b17e1ae850565f450eca5e6177307ce09a75779e2b94114eee5b61",
+      "exit_code": 0,
+      "expected_marker_sha256": "62e9770985ea4efacff2c34bd475ba9fd86651d8535c0b3c4d3faa5ee1ce656b",
+      "status": "pass"
+    },
+    {
+      "command_id": "e463ced50369ad6518f3cb14cfdc7d24782544994c0d56f86068eedcdc87f23d",
+      "exit_code": 0,
+      "expected_marker_sha256": "d7bd45df1dcd6280df035857978d04ce922a7bf8029b371530d7f938a547cfc2",
+      "status": "pass"
+    },
+    {
+      "command_id": "95cbf6837ab227467d78d54fb2275e93547dfd30254571c26d63bdfe81dafc84",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
