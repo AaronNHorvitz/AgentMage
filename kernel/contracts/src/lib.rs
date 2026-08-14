@@ -81,11 +81,11 @@ pub use model::{
     FamilyCodecIdentity, HardwareEnvelope, LocalModelRuntime, ModelArtifact, ModelCapability,
     ModelCapabilityState, ModelClientSchemas, ModelContextPacket, ModelFamilyCodec, ModelHealth,
     ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation,
-    ModelMessage, ModelMessageRole, ModelModality, ModelProposalKind, ModelResourceReport,
-    ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink, ModelToolCallCandidate,
-    ModelTransformation, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
-    TokenCountResult,
+    ModelMessage, ModelMessageRole, ModelModality, ModelProposalKind, ModelProposalWireCandidate,
+    ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink,
+    ModelToolCallCandidate, ModelToolCallWireCandidate, ModelTransformation, ModelUnloadReceipt,
+    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,

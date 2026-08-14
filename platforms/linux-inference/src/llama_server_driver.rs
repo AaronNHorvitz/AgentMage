@@ -13,12 +13,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, CancellationSignal, ClosedModelProposal, DecodingProfile,
-    EncodedModelContext, ExactModelProfile, ModelHealth, ModelHealthState, ModelLoadReceipt,
-    ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamId,
-    ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
-    TokenCountResult, from_json,
+    CONTRACT_SCHEMA_VERSION, CancellationSignal, DecodingProfile, EncodedModelContext,
+    ExactModelProfile, ModelHealth, ModelHealthState, ModelLoadReceipt, ModelManifestObservation,
+    ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamId, ModelStreamSink, ModelUnloadReceipt,
+    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -592,7 +591,6 @@ impl NativeModelDriver for LlamaServerDriver {
                 bytes: b"cancelled".to_vec(),
                 tokens: 0,
                 terminal_state: ModelRunTerminalState::Cancelled,
-                proposal: None,
                 failure: Some(failure("model.llama-driver.cancelled", false)),
             }
         } else {
@@ -629,7 +627,7 @@ impl NativeModelDriver for LlamaServerDriver {
             terminal_state: completion.terminal_state,
             fragment_count: 1,
             response_sha256,
-            proposal: completion.proposal,
+            proposal: None,
             failure: completion.failure,
             resources: ModelResourceReport {
                 adapter_id: self.config.identity.adapter_id.clone(),
@@ -762,7 +760,6 @@ struct Completion {
     bytes: Vec<u8>,
     tokens: u32,
     terminal_state: ModelRunTerminalState,
-    proposal: Option<ClosedModelProposal>,
     failure: Option<ModelRuntimeFailure>,
 }
 
@@ -886,26 +883,27 @@ impl UnixHttpClient {
         if tokens > max_output_tokens {
             return Err(failure("model.llama-driver.completion-token-limit", false));
         }
-        match from_json::<ClosedModelProposal>(&content) {
-            Ok(proposal) => Ok(Completion {
+        match content
+            .iter()
+            .copied()
+            .find(|byte| !byte.is_ascii_whitespace())
+        {
+            Some(b'{') | Some(b'[') => Ok(Completion {
                 bytes: content,
                 tokens,
                 terminal_state: ModelRunTerminalState::Proposed,
-                proposal: Some(proposal),
                 failure: None,
             }),
-            Err(_) if plain_text(&content) => Ok(Completion {
+            _ if plain_text(&content) => Ok(Completion {
                 bytes: content,
                 tokens,
                 terminal_state: ModelRunTerminalState::AdvisoryText,
-                proposal: None,
                 failure: None,
             }),
-            Err(_) => Ok(Completion {
+            _ => Ok(Completion {
                 bytes: content,
                 tokens,
                 terminal_state: ModelRunTerminalState::Rejected,
-                proposal: None,
                 failure: Some(failure("model.llama-driver.completion-rejected", false)),
             }),
         }
@@ -1556,7 +1554,6 @@ mod tests {
             completion.terminal_state,
             ModelRunTerminalState::AdvisoryText
         );
-        assert!(completion.proposal.is_none());
         let body = request
             .windows(4)
             .position(|window| window == b"\r\n\r\n")
@@ -1586,11 +1583,10 @@ mod tests {
             exchange(response(json!({"content": "{}", "tokens": []})), |client| {
                 client
                     .completion(b"encoded context", 8, 1000, &decoding)
-                    .expect("closed rejection")
+                    .expect("structured candidate")
             });
-        assert_eq!(completion.terminal_state, ModelRunTerminalState::Rejected);
-        assert!(completion.proposal.is_none());
-        assert!(completion.failure.is_some());
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Proposed);
+        assert!(completion.failure.is_none());
     }
 
     #[test]

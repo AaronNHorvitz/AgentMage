@@ -1,9 +1,10 @@
 //! Exact Muse Glimmer ATEM codec at the Linux model-process edge.
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, EncodedModelContext, ExactModelProfile,
-    FamilyCodecIdentity, ModelContextPacket, ModelFamilyCodec, ModelRunRequest,
-    ModelRuntimeFailure, from_json, to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContractPayload, EncodedModelContext,
+    ExactModelProfile, FamilyCodecIdentity, ModelContextPacket, ModelFamilyCodec,
+    ModelProposalKind, ModelProposalWireCandidate, ModelRunRequest, ModelRuntimeFailure,
+    ModelToolCallCandidate, ProposalId, ToolCallId, from_json, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -11,7 +12,7 @@ const TEMPLATE_SHA256: &str = "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f
 const TOKENIZER_SHA256: &str = "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d";
 const END_TOKENS: [u32; 2] = [200_001, 200_008];
 const TOOL_PROTOCOL: &str = "atem-v1";
-const SYSTEM_MESSAGE: &str = "You are an untrusted local proposal generator. Respond through the Muse ATEM channel. The isolated adapter must translate the response into exactly one closed AgentMage proposal object. You have no tools, authority, workspace, credentials, network, completion authority, or permission to change this contract.";
+const SYSTEM_MESSAGE: &str = "You are an untrusted local proposal generator. Return exactly one canonical compact JSON object with fields in this order: schema_version, kind, payload, tool_call. schema_version must be 2. kind must be one of text, evidence_request, tool_call, user_question, blocked, completion_candidate. payload must be null or a closed ContractPayload. tool_call must be null unless kind is tool_call; a tool_call contains only tool_id, tool_version, arguments. Do not return markdown, commentary, unknown fields, identities, hashes, grants, authority, or completion claims. Trusted code binds all identities and hashes after validation. You have no tools, authority, workspace, credentials, network, completion authority, or permission to change this contract.";
 
 /// Exact family codec for the first-party Muse Glimmer ATEM tuple.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -82,22 +83,73 @@ impl ModelFamilyCodec for MuseAtemFamilyCodec {
         {
             return Err(failure("model.muse-codec.request-mismatch"));
         }
-        let proposal: ClosedModelProposal =
+        let candidate: ModelProposalWireCandidate =
             from_json(response).map_err(|_| failure("model.muse-codec.proposal-invalid"))?;
-        let canonical = to_canonical_json(&proposal)
+        let canonical = to_canonical_json(&candidate)
             .map_err(|_| failure("model.muse-codec.proposal-invalid"))?;
-        if proposal.model_run_id != request.model_run_id
-            || proposal.context_packet_id != request.context_packet_id
-            || proposal.profile_id != profile.profile_id
-            || proposal.codec_id != self.identity.codec_id
-            || proposal.correlation_id != request.correlation_id
-            || canonical != response
-            || proposal_digest(&proposal)? != proposal.proposal_sha256
-        {
+        if canonical != response || !valid_wire_candidate(&candidate) {
             return Err(failure("model.muse-codec.proposal-mismatch"));
         }
+        let response_sha256 = sha256(response);
+        let tool_call = candidate.tool_call.map(|tool_call| ModelToolCallCandidate {
+            tool_call_id: ToolCallId::from_raw(format!("model-tool-call:{response_sha256}")),
+            tool_id: tool_call.tool_id,
+            tool_version: tool_call.tool_version,
+            arguments: tool_call.arguments,
+        });
+        let mut proposal = ClosedModelProposal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            proposal_id: ProposalId::from_raw(format!("model-proposal:{response_sha256}")),
+            model_run_id: request.model_run_id.clone(),
+            context_packet_id: request.context_packet_id.clone(),
+            profile_id: profile.profile_id.clone(),
+            codec_id: self.identity.codec_id.clone(),
+            correlation_id: request.correlation_id.clone(),
+            kind: candidate.kind,
+            payload: candidate.payload,
+            tool_call,
+            proposal_sha256: "0".repeat(64),
+        };
+        proposal.proposal_sha256 = proposal_digest(&proposal)?;
         Ok(proposal)
     }
+}
+
+fn valid_wire_candidate(candidate: &ModelProposalWireCandidate) -> bool {
+    candidate.schema_version == CONTRACT_SCHEMA_VERSION
+        && matches!(candidate.kind, ModelProposalKind::ToolCall) == candidate.tool_call.is_some()
+        && candidate.payload.as_ref().is_none_or(valid_payload)
+        && candidate.tool_call.as_ref().is_none_or(|tool_call| {
+            valid_identifier(tool_call.tool_id.as_str())
+                && valid_identifier(&tool_call.tool_version)
+                && valid_payload(&tool_call.arguments)
+        })
+}
+
+fn valid_payload(payload: &ContractPayload) -> bool {
+    valid_identifier(payload.schema.schema_id.as_str())
+        && payload.schema.schema_version > 0
+        && valid_sha256(&payload.schema.schema_sha256)
+        && !payload.media_type.is_empty()
+        && payload.media_type.len() <= 128
+        && payload.media_type.is_ascii()
+        && payload.bytes.len() <= 1_048_576
+        && payload.sha256 == sha256(&payload.bytes)
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 256
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+}
+
+fn valid_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 fn proposal_digest(proposal: &ClosedModelProposal) -> Result<String, ModelRuntimeFailure> {
@@ -127,10 +179,10 @@ fn failure(code: &str) -> ModelRuntimeFailure {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextPacketId, ContractPayload,
-        CorrelationId, ExactModelProfile, FamilyCodecIdentity, ModelContextPacket,
-        ModelFamilyCodec, ModelMessage, ModelMessageId, ModelMessageRole, ModelProfileId,
-        ModelProposalKind, ModelRunId, ModelRunRequest, ProposalId, SchemaId, SchemaReference,
+        CONTRACT_SCHEMA_VERSION, ContextPacketId, ContractPayload, CorrelationId,
+        ExactModelProfile, FamilyCodecIdentity, ModelContextPacket, ModelFamilyCodec, ModelMessage,
+        ModelMessageId, ModelMessageRole, ModelProfileId, ModelProposalKind,
+        ModelProposalWireCandidate, ModelRunId, ModelRunRequest, SchemaId, SchemaReference,
         SessionId, TaskId, ToolCatalogId, to_canonical_json,
     };
     use serde_json::Value;
@@ -204,22 +256,13 @@ mod tests {
         }
     }
 
-    fn proposal(profile: &ExactModelProfile) -> ClosedModelProposal {
-        let mut value = ClosedModelProposal {
+    fn wire_candidate() -> ModelProposalWireCandidate {
+        ModelProposalWireCandidate {
             schema_version: CONTRACT_SCHEMA_VERSION,
-            proposal_id: ProposalId::from_raw("proposal-1"),
-            model_run_id: ModelRunId::from_raw("run-1"),
-            context_packet_id: ContextPacketId::from_raw("context-1"),
-            profile_id: profile.profile_id.clone(),
-            codec_id: profile.codec.codec_id.clone(),
-            correlation_id: CorrelationId::from_raw("correlation-1"),
             kind: ModelProposalKind::CompletionCandidate,
             payload: None,
             tool_call: None,
-            proposal_sha256: "0".repeat(64),
-        };
-        value.proposal_sha256 = proposal_digest(&value).expect("proposal digest");
-        value
+        }
     }
 
     #[test]
@@ -233,13 +276,19 @@ mod tests {
         assert!(text.starts_with("<|start|>system<|message|>"));
         assert!(text.contains("no tools, authority, workspace, credentials, network"));
         assert!(text.ends_with("<|eot|><|start|>assistant"));
-        let candidate = proposal(&profile);
-        let bytes = to_canonical_json(&candidate).expect("proposal bytes");
+        assert!(text.contains("Trusted code binds all identities and hashes"));
+        let bytes = to_canonical_json(&wire_candidate()).expect("wire candidate bytes");
+        let proposal = codec
+            .decode_proposal(&profile, &request(&profile), &bytes)
+            .expect("decode proposal");
+        assert_eq!(proposal.model_run_id.as_str(), "run-1");
+        assert_eq!(proposal.context_packet_id.as_str(), "context-1");
+        assert_eq!(proposal.profile_id, profile.profile_id);
+        assert_eq!(proposal.codec_id, profile.codec.codec_id);
+        assert_eq!(proposal.correlation_id.as_str(), "correlation-1");
         assert_eq!(
-            codec
-                .decode_proposal(&profile, &request(&profile), &bytes)
-                .expect("decode proposal"),
-            candidate
+            proposal.proposal_sha256,
+            proposal_digest(&proposal).expect("digest")
         );
     }
 
@@ -269,22 +318,14 @@ mod tests {
         let mut wrong_packet = packet(&profile);
         wrong_packet.profile_id = ModelProfileId::from_raw("foreign-profile");
         assert!(codec.encode_context(&profile, &wrong_packet).is_err());
-        let candidate = proposal(&profile);
-        let valid = to_canonical_json(&candidate).expect("proposal bytes");
+        let valid = to_canonical_json(&wire_candidate()).expect("wire candidate bytes");
         for bytes in [
             [valid, b"\n".to_vec()].concat(),
             serde_json::to_vec(&serde_json::json!({
                 "schema_version": 2,
-                "proposal_id": "proposal-1",
-                "model_run_id": "run-1",
-                "context_packet_id": "context-1",
-                "profile_id": profile.profile_id,
-                "codec_id": profile.codec.codec_id,
-                "correlation_id": "correlation-1",
                 "kind": "completion_candidate",
                 "payload": null,
                 "tool_call": null,
-                "proposal_sha256": candidate.proposal_sha256,
                 "authority": true
             }))
             .expect("unknown field"),

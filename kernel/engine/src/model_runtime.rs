@@ -308,7 +308,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             .encode_context(&self.admitted.profile, packet)
             .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
         let mut capture = StreamCapture::new(request);
-        let result = self
+        let mut result = self
             .runtime
             .stream(request, &context, cancellation, &mut capture)
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
@@ -321,9 +321,10 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
                 .codec
                 .decode_proposal(&self.admitted.profile, request, &capture.bytes)
                 .map_err(|_| ModelRuntimeGateError::ResultMismatch)?;
-            if result.proposal.as_ref() != Some(&decoded) {
+            if result.proposal.is_some() {
                 return Err(ModelRuntimeGateError::ResultMismatch);
             }
+            result.proposal = Some(decoded);
         } else if result.terminal_state == ModelRunTerminalState::AdvisoryText
             && !crate::model_response::plain_text_advisory(&capture.bytes)
         {
@@ -708,17 +709,17 @@ fn runtime_failure(code: &str) -> ModelRuntimeFailure {
 mod tests {
     use agentmage_kernel_contracts::{
         BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
-        CancellationSignal, ClosedModelProposal, ContextBudget, ContextPacketId, CorrelationId,
-        DecodingProfile, EncodedModelContext, ExactModelProfile, FamilyCodecIdentity,
-        HardwareEnvelope, LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability,
-        ModelCapabilityState, ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState,
-        ModelLifecycleState, ModelLoadReceipt, ModelManifestId, ModelManifestObservation,
-        ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
-        ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId, ModelRunRequest,
-        ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-        ModelRuntimeKind, ModelStreamId, ModelStreamSink, ModelTransformation, ModelUnloadReceipt,
-        PlatformArchitecture, PlatformFamily, ProposalId, RuntimeIsolationObservation, SessionId,
-        StreamedModelFragment, TaskId, TokenCountResult, ToolCatalogId,
+        CancellationSignal, ContextBudget, ContextPacketId, CorrelationId, DecodingProfile,
+        EncodedModelContext, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
+        LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability, ModelCapabilityState,
+        ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
+        ModelLoadReceipt, ModelManifestId, ModelManifestObservation, ModelMessage, ModelMessageId,
+        ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport,
+        ModelRole, ModelRunId, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+        ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId,
+        ModelStreamSink, ModelTransformation, ModelUnloadReceipt, PlatformArchitecture,
+        PlatformFamily, RuntimeIsolationObservation, SessionId, StreamedModelFragment, TaskId,
+        TokenCountResult, ToolCatalogId,
     };
 
     use super::{
@@ -744,7 +745,6 @@ mod tests {
     #[derive(Clone)]
     struct FakeRuntime {
         identity: ModelRuntimeIdentity,
-        codec_id: ModelCodecId,
         token_counter: String,
         loaded: Option<ModelProfileId>,
         manifest_drift: bool,
@@ -756,7 +756,6 @@ mod tests {
         fn new(profile: &ExactModelProfile) -> Self {
             Self {
                 identity: profile.runtime.clone(),
-                codec_id: profile.codec.codec_id.clone(),
                 token_counter: profile.context.token_counter.clone(),
                 loaded: None,
                 manifest_drift: false,
@@ -865,23 +864,18 @@ mod tests {
             if self.scenario == FakeScenario::Cancelled && cancellation.is_none() {
                 return Err(runtime_failure("fixture.cancellation-missing"));
             }
-            let mut proposal = ClosedModelProposal {
+            let candidate = agentmage_kernel_contracts::ModelProposalWireCandidate {
                 schema_version: CONTRACT_SCHEMA_VERSION,
-                proposal_id: ProposalId::from_raw("proposal-1"),
-                model_run_id: request.model_run_id.clone(),
-                context_packet_id: request.context_packet_id.clone(),
-                profile_id: request.profile_id.clone(),
-                codec_id: self.codec_id.clone(),
-                correlation_id: request.correlation_id.clone(),
                 kind: ModelProposalKind::CompletionCandidate,
                 payload: None,
                 tool_call: None,
-                proposal_sha256: "0".repeat(64),
             };
-            proposal.proposal_sha256 =
-                crate::model_codec::proposal_digest(&proposal).expect("fixture digest");
-            let bytes = agentmage_kernel_contracts::to_canonical_json(&proposal)
-                .expect("fixture proposal bytes");
+            let bytes = if self.scenario == FakeScenario::FalseCompletion {
+                b"{\"schema_version\":2,\"kind\":\"completion_candidate\"}".to_vec()
+            } else {
+                agentmage_kernel_contracts::to_canonical_json(&candidate)
+                    .expect("fixture candidate bytes")
+            };
             let response_sha256 = sha256_hex(&bytes);
             let stream_id = ModelStreamId::from_raw("stream-1");
             sink.accept(StreamedModelFragment {
@@ -903,7 +897,7 @@ mod tests {
                 terminal: true,
             })?;
             let (terminal_state, proposal, failure) = match self.scenario {
-                FakeScenario::Happy => (ModelRunTerminalState::Proposed, Some(proposal), None),
+                FakeScenario::Happy => (ModelRunTerminalState::Proposed, None, None),
                 FakeScenario::FalseCompletion => (ModelRunTerminalState::Proposed, None, None),
                 FakeScenario::Delayed => (
                     ModelRunTerminalState::TimedOut,

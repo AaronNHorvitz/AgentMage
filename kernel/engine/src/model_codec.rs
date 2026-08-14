@@ -1,9 +1,10 @@
 //! Candidate-neutral family-codec boundary for exact context and proposal bytes.
 
 use agentmage_kernel_contracts::{
-    ClosedModelProposal, EncodedModelContext, ExactModelProfile, FamilyCodecIdentity,
-    ModelContextPacket, ModelFamilyCodec, ModelRunRequest, ModelRuntimeFailure, from_json,
-    to_canonical_json,
+    ClosedModelProposal, ContractPayload, EncodedModelContext, ExactModelProfile,
+    FamilyCodecIdentity, ModelContextPacket, ModelFamilyCodec, ModelProposalKind,
+    ModelProposalWireCandidate, ModelRunRequest, ModelRuntimeFailure, ModelToolCallCandidate,
+    ProposalId, ToolCallId, from_json, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -63,22 +64,73 @@ impl ModelFamilyCodec for ClosedJsonFamilyCodec {
         {
             return Err(failure("model.codec.request-mismatch", None));
         }
-        let proposal: ClosedModelProposal = from_json(response)
+        let candidate: ModelProposalWireCandidate = from_json(response)
             .map_err(|error| failure("model.codec.proposal-invalid", Some(error)))?;
-        let canonical = to_canonical_json(&proposal)
+        let canonical = to_canonical_json(&candidate)
             .map_err(|error| failure("model.codec.proposal-invalid", Some(error)))?;
-        if proposal.model_run_id != request.model_run_id
-            || proposal.context_packet_id != request.context_packet_id
-            || proposal.profile_id != profile.profile_id
-            || proposal.codec_id != self.identity.codec_id
-            || proposal.correlation_id != request.correlation_id
-            || canonical != response
-            || proposal_digest(&proposal)? != proposal.proposal_sha256
-        {
+        if canonical != response || !valid_wire_candidate(&candidate) {
             return Err(failure("model.codec.proposal-mismatch", None));
         }
+        let response_sha256 = sha256(response);
+        let tool_call = candidate.tool_call.map(|tool_call| ModelToolCallCandidate {
+            tool_call_id: ToolCallId::from_raw(format!("model-tool-call:{response_sha256}")),
+            tool_id: tool_call.tool_id,
+            tool_version: tool_call.tool_version,
+            arguments: tool_call.arguments,
+        });
+        let mut proposal = ClosedModelProposal {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            proposal_id: ProposalId::from_raw(format!("model-proposal:{response_sha256}")),
+            model_run_id: request.model_run_id.clone(),
+            context_packet_id: request.context_packet_id.clone(),
+            profile_id: profile.profile_id.clone(),
+            codec_id: self.identity.codec_id.clone(),
+            correlation_id: request.correlation_id.clone(),
+            kind: candidate.kind,
+            payload: candidate.payload,
+            tool_call,
+            proposal_sha256: "0".repeat(64),
+        };
+        proposal.proposal_sha256 = proposal_digest(&proposal)?;
         Ok(proposal)
     }
+}
+
+fn valid_wire_candidate(candidate: &ModelProposalWireCandidate) -> bool {
+    candidate.schema_version == agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION
+        && matches!(candidate.kind, ModelProposalKind::ToolCall) == candidate.tool_call.is_some()
+        && candidate.payload.as_ref().is_none_or(valid_payload)
+        && candidate.tool_call.as_ref().is_none_or(|tool_call| {
+            valid_identifier(tool_call.tool_id.as_str())
+                && valid_identifier(&tool_call.tool_version)
+                && valid_payload(&tool_call.arguments)
+        })
+}
+
+fn valid_payload(payload: &ContractPayload) -> bool {
+    valid_identifier(payload.schema.schema_id.as_str())
+        && payload.schema.schema_version > 0
+        && valid_sha256(&payload.schema.schema_sha256)
+        && !payload.media_type.is_empty()
+        && payload.media_type.len() <= 128
+        && payload.media_type.is_ascii()
+        && payload.bytes.len() <= 1_048_576
+        && payload.sha256 == sha256(&payload.bytes)
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 256
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+}
+
+fn valid_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 /// Computes the closed proposal digest over a zeroed digest-field preimage.
@@ -117,9 +169,9 @@ pub(crate) mod tests_support {
         HardwareEnvelope, ModelAdapterId, ModelArtifact, ModelCapability, ModelCapabilityState,
         ModelCodecId, ModelContextPacket, ModelFamilyCodec, ModelLifecycleState, ModelManifestId,
         ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
-        ModelProposalKind, ModelRole, ModelRunId, ModelRunRequest, ModelRuntimeIdentity,
-        ModelRuntimeKind, PlatformArchitecture, PlatformFamily, ProposalId, SchemaId,
-        SchemaReference, SessionId, TaskId, ToolCatalogId, to_canonical_json,
+        ModelProposalKind, ModelProposalWireCandidate, ModelRole, ModelRunId, ModelRunRequest,
+        ModelRuntimeIdentity, ModelRuntimeKind, PlatformArchitecture, PlatformFamily, ProposalId,
+        SchemaId, SchemaReference, SessionId, TaskId, ToolCatalogId, to_canonical_json,
     };
 
     use super::{ClosedJsonFamilyCodec, proposal_digest};
@@ -272,6 +324,15 @@ pub(crate) mod tests_support {
         value
     }
 
+    pub(crate) fn wire_candidate() -> ModelProposalWireCandidate {
+        ModelProposalWireCandidate {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            kind: ModelProposalKind::CompletionCandidate,
+            payload: None,
+            tool_call: None,
+        }
+    }
+
     #[test]
     fn fake_muse_and_gemma_use_the_same_closed_codec_contract() {
         for family in ["muse", "gemma"] {
@@ -281,13 +342,19 @@ pub(crate) mod tests_support {
                 .encode_context(&profile, &packet(&profile))
                 .expect("encode");
             assert_eq!(encoded.codec_id, profile.codec.codec_id);
-            let candidate = proposal(&profile);
-            let bytes = to_canonical_json(&candidate).expect("proposal bytes");
+            let bytes = to_canonical_json(&wire_candidate()).expect("wire candidate bytes");
+            let proposal = codec
+                .decode_proposal(&profile, &request(&profile), &bytes)
+                .expect("decode");
+            assert_eq!(proposal.model_run_id.as_str(), "run-1");
+            assert_eq!(proposal.context_packet_id.as_str(), "context-1");
+            assert_eq!(proposal.profile_id, profile.profile_id);
+            assert_eq!(proposal.codec_id, profile.codec.codec_id);
+            assert_eq!(proposal.correlation_id.as_str(), "correlation-1");
+            assert_eq!(proposal.kind, ModelProposalKind::CompletionCandidate);
             assert_eq!(
-                codec
-                    .decode_proposal(&profile, &request(&profile), &bytes)
-                    .expect("decode"),
-                candidate
+                proposal.proposal_sha256,
+                proposal_digest(&proposal).expect("digest")
             );
         }
     }
@@ -297,12 +364,7 @@ pub(crate) mod tests_support {
         let profile = profile("muse");
         let codec = ClosedJsonFamilyCodec::new(profile.codec.clone());
         let request = request(&profile);
-        let valid = proposal(&profile);
-        let mut stale = valid.clone();
-        stale.model_run_id = ModelRunId::from_raw("stale-run");
-        stale.proposal_sha256 = proposal_digest(&stale).expect("digest");
-        let mut changed_hash = valid.clone();
-        changed_hash.proposal_sha256 = SHA.to_owned();
+        let valid = wire_candidate();
         for bytes in [
             b"{".to_vec(),
             [
@@ -312,8 +374,14 @@ pub(crate) mod tests_support {
             .concat(),
             serde_json::to_vec(&serde_json::json!({"schema_version": 2, "grant": true}))
                 .expect("authority bytes"),
-            to_canonical_json(&stale).expect("stale"),
-            to_canonical_json(&changed_hash).expect("changed hash"),
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version": 2,
+                "kind": "tool_call",
+                "payload": null,
+                "tool_call": null
+            }))
+            .expect("missing tool call"),
+            to_canonical_json(&proposal(&profile)).expect("forged trusted fields"),
         ] {
             assert!(codec.decode_proposal(&profile, &request, &bytes).is_err());
         }
@@ -325,7 +393,7 @@ pub(crate) mod tests_support {
         let foreign = profile("gemma");
         let codec = ClosedJsonFamilyCodec::new(selected.codec.clone());
         assert!(codec.encode_context(&foreign, &packet(&foreign)).is_err());
-        let bytes = to_canonical_json(&proposal(&foreign)).expect("foreign");
+        let bytes = to_canonical_json(&wire_candidate()).expect("foreign candidate");
         assert!(
             codec
                 .decode_proposal(&foreign, &request(&foreign), &bytes)

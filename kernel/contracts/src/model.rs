@@ -101,7 +101,7 @@ pub enum ModelHealthState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelRunTerminalState {
-    /// A complete closed proposal was returned for kernel validation.
+    /// Structured candidate bytes were returned and closed by kernel validation.
     Proposed,
     /// Bounded plain text was returned without a closed proposal.
     AdvisoryText,
@@ -641,6 +641,38 @@ pub struct ModelToolCallCandidate {
     /// Exact frozen tool identity.
     pub tool_id: ToolId,
     /// Exact frozen tool version.
+    pub tool_version: String,
+    /// Schema-bound candidate arguments.
+    pub arguments: ContractPayload,
+}
+
+/// Closed model-origin wire candidate before trusted identity binding.
+///
+/// A model can describe only an inert proposal class, optional typed payload,
+/// and optional tool request. The family codec, never the model, creates the
+/// proposal, run, context, profile, codec, correlation, and digest bindings.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelProposalWireCandidate {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Closed proposal class.
+    pub kind: ModelProposalKind,
+    /// Optional schema-bound proposal payload.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub payload: Option<ContractPayload>,
+    /// Optional model-origin tool request without a trusted call identity.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub tool_call: Option<ModelToolCallWireCandidate>,
+}
+
+/// Inert model-origin wire candidate for one typed tool request.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelToolCallWireCandidate {
+    /// Exact frozen tool identity requested by the model.
+    pub tool_id: ToolId,
+    /// Exact frozen tool version requested by the model.
     pub tool_version: String,
     /// Schema-bound candidate arguments.
     pub arguments: ContractPayload,

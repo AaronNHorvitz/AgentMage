@@ -60,6 +60,7 @@ impl_versioned_contract!(
     crate::ModelRunRequest,
     crate::ModelRunResult,
     crate::StreamedModelFragment,
+    crate::ModelProposalWireCandidate,
     crate::ClosedModelProposal,
     crate::Plan,
     crate::Prompt,
