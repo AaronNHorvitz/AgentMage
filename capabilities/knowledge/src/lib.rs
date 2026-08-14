@@ -6,6 +6,7 @@ mod authority;
 mod domain;
 mod index;
 mod lifecycle;
+mod obsidian;
 mod operations;
 mod plain_folder;
 mod schema;
@@ -25,6 +26,12 @@ pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
     preview_migration, preview_restore, verify_backup,
+};
+pub use obsidian::{
+    ObsidianBacklink, ObsidianEntryKind, ObsidianError, ObsidianFrontmatterValue, ObsidianHeading,
+    ObsidianLinkIssue, ObsidianLinkIssueKind, ObsidianNoteInput, ObsidianParsedNote,
+    ObsidianResolvedLink, ObsidianTask, ObsidianTimestamp, ObsidianVaultSelection,
+    ObsidianVaultSnapshot,
 };
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
