@@ -1793,24 +1793,24 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 21.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 21.1.1.1** (legacy `S-019-I06`): Implement source resolution against path, hash, range or structured identity, observation point, and current file identity.
-  - [ ] **Sub-task 21.1.1.2** (legacy `S-019-I07`): Mark changed or missing evidence stale before reuse.
-  - [ ] **Sub-task 21.1.1.3** (legacy `S-019-I08`): Implement answer-claim ledgers, reason-code dictionaries, safe evidence projection, conflict handling, and claim-level audit rendering.
-  - [ ] **Sub-task 21.1.1.4** (legacy `S-019-I09`): Implement append-only receipting with chained hashes and a keyed integrity anchor outside the ledger.
+- [x] **Task 21.1.1 - Implement the bounded story**
+  - [x] **Sub-task 21.1.1.1** (legacy `S-019-I06`): Implement source resolution against path, hash, range or structured identity, observation point, and current file identity.
+  - [x] **Sub-task 21.1.1.2** (legacy `S-019-I07`): Mark changed or missing evidence stale before reuse.
+  - [x] **Sub-task 21.1.1.3** (legacy `S-019-I08`): Implement answer-claim ledgers, reason-code dictionaries, safe evidence projection, conflict handling, and claim-level audit rendering.
+  - [x] **Sub-task 21.1.1.4** (legacy `S-019-I09`): Implement append-only receipting with chained hashes and a keyed integrity anchor outside the ledger.
 
-- [ ] **Task 21.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 21.1.2.1:** Evidence and citation schemas.
-  - [ ] **Sub-task 21.1.2.2:** Deterministic method registry.
-  - [ ] **Sub-task 21.1.2.3:** Answer-claim ledger and audit renderer.
-  - [ ] **Sub-task 21.1.2.4:** Stale, conflicting, denied, and false-completion fixtures.
+- [x] **Task 21.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 21.1.2.1:** Evidence and citation schemas.
+  - [x] **Sub-task 21.1.2.2:** Deterministic method registry.
+  - [x] **Sub-task 21.1.2.3:** Answer-claim ledger and audit renderer.
+  - [x] **Sub-task 21.1.2.4:** Stale, conflicting, denied, and false-completion fixtures.
 
 - [ ] **Task 21.1.3 - Verify and close the story**
-  - [ ] **Sub-task 21.1.3.1:** `S-019-UT01` classifies labeled observed, derived, inferred, unknown, denied, stale, and conflicting claims; assert exact state, method, source, freshness, and limitation fields.
-  - [ ] **Sub-task 21.1.3.2:** `S-019-UT02` resolves citations across rename, revision change, Unicode, truncation, stale cache, unavailable source, and changed preimage; assert current targets resolve and stale targets remain visibly stale.
-  - [ ] **Sub-task 21.1.3.3:** `S-019-ST01` injects unsupported model claims, fabricated citations, tampered/reordered/removed receipts, and false success results; assert rejection or explicit inference/unknown state and tamper detection.
-  - [ ] **Sub-task 21.1.3.4:** `S-019-IT01` recomputes every deterministic result and answer ledger from cited fixture bytes; assert equal values, complete material-claim coverage, and no uncited factual promotion.
-  - [ ] **Sub-task 21.1.3.5 - Product security evidence:** Map `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-AI-011`, `SR-OPS-001` through `SR-OPS-005`, `SR-TST-010`; retain labeled classification results, citation resolver output, receipt-chain verification, and recomputation report.
+  - [x] **Sub-task 21.1.3.1:** `S-019-UT01` classifies labeled observed, derived, inferred, unknown, denied, stale, and conflicting claims; assert exact state, method, source, freshness, and limitation fields.
+  - [ ] **Sub-task 21.1.3.2:** `S-019-UT02` resolves citations across rename, revision change, Unicode, truncation, stale cache, unavailable source, and changed preimage; assert current targets resolve and stale targets remain visibly stale. Partial local evidence: caller-held current, renamed, revision-changed, Unicode, truncated, unavailable, and changed-preimage identities pass; production held-file resolution and persistent-cache integration remain open.
+  - [ ] **Sub-task 21.1.3.3:** `S-019-ST01` injects unsupported model claims, fabricated citations, tampered/reordered/removed receipts, and false success results; assert rejection or explicit inference/unknown state and tamper detection. Partial local evidence: model-manifest, fabricated-citation, omitted/reordered claim, altered/removed/reordered receipt, duplicate-attempt, and wrong-key cases pass; production model-output and host receipt integration remain open.
+  - [ ] **Sub-task 21.1.3.4:** `S-019-IT01` recomputes every deterministic result and answer ledger from cited fixture bytes; assert equal values, complete material-claim coverage, and no uncited factual promotion. Partial local evidence: answer-ledger identities, citations, ordering, digest, safe projection, and audit rendering recompute; production deterministic result values are not yet recomputed from held source bytes.
+  - [ ] **Sub-task 21.1.3.5 - Product security evidence:** Map `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-AI-011`, `SR-OPS-001` through `SR-OPS-005`, `SR-TST-010`; retain labeled classification results, citation resolver output, receipt-chain verification, and recomputation report. Partial local evidence: source-bound classification, resolution, ledger, projection, and HMAC receipt-chain results are retained; durable anchor storage, clock-anomaly events, native-platform evidence, and independent review remain open.
 
 ##### Story Acceptance Criteria
 
@@ -1822,8 +1822,8 @@ claims.
 - [ ] **Sprint AC 21.AC1:** `AT-EVD-001`, `AT-EVD-002`, and `AT-EVD-003` pass.
 - [ ] **Sprint AC 21.AC2:** Every tool attempt has exactly one receipt.
 - [ ] **Sprint AC 21.AC3:** Every file-grounded claim resolves to the observed source identity.
-- [ ] **Sprint AC 21.AC4:** Every derivation identifies its method and observed inputs.
-- [ ] **Sprint AC 21.AC5:** Changed evidence becomes stale and cannot be silently resolved to replacement content.
+- [x] **Sprint AC 21.AC4:** Every derivation identifies its method and observed inputs.
+- [x] **Sprint AC 21.AC5:** Changed evidence becomes stale and cannot be silently resolved to replacement content.
 
 **Gate decision:** Sprint 21 is PASS only when Story 21.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 22 - Context Management and Crash-Safe Resume
