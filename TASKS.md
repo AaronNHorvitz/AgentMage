@@ -1643,15 +1643,15 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 18.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 18.1.1.1** (legacy `S-018-I01`): Declare and pin the v0.1 Tree-sitter language and grammar set.
-  - [ ] **Sub-task 18.1.1.2** (legacy `S-018-I02`): Build policy-aware and `.gitignore`-aware inventory with tracked state, language, type, size, content hash, branch, and commit identity.
-  - [ ] **Sub-task 18.1.1.3** (legacy `S-018-I03`): Extract parser-backed modules, symbols, definitions, imports, and only reliable relationship edges.
-  - [ ] **Sub-task 18.1.1.4** (legacy `S-018-I04`): Store an incremental cache keyed by workspace, path, content hash, Git identity, grammar, parser, and policy versions.
-  - [ ] **Sub-task 18.1.1.5** (legacy `S-018-I05`): Invalidate changed records before retrieval or citation.
+  - [x] **Sub-task 18.1.1.1** (legacy `S-018-I01`): Declare and pin the v0.1 Tree-sitter language and grammar set.
+  - [ ] **Sub-task 18.1.1.2** (legacy `S-018-I02`): Build policy-aware and `.gitignore`-aware inventory with tracked state, language, type, size, content hash, branch, and commit identity. Partial platform-neutral core: the immutable input and deterministic map retain Git state, supported language, size, content hash, branch or detached state, commit, policy, freshness, and visible exclusion states; the approved host does not yet collect and hold the complete live `.gitignore` and product-policy projection.
+  - [x] **Sub-task 18.1.1.3** (legacy `S-018-I03`): Extract parser-backed modules, symbols, definitions, imports, and only reliable relationship edges.
+  - [ ] **Sub-task 18.1.1.4** (legacy `S-018-I04`): Store an incremental cache keyed by workspace, path, content hash, Git identity, grammar, parser, and policy versions. Partial platform-neutral core: a disposable in-memory SQLite cache binds all declared validity dimensions through the workspace-bound path and exact key; encrypted operational-store persistence, migration, retention, and host lifecycle integration remain open.
+  - [ ] **Sub-task 18.1.1.5** (legacy `S-018-I05`): Invalidate changed records before retrieval or citation. Partial platform-neutral core: exact-key misses, integrity verification, and atomic `invalidate_except` behavior pass locally; production host orchestration does not yet prove invalidation before every retrieval and citation.
 
-- [ ] **Task 18.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 18.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 18.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 18.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 18.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 18.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 18.1.3 - Verify and close the story**
   - [ ] **Sub-task 18.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
@@ -1669,9 +1669,9 @@ claims.
 
 - [ ] **Sprint AC 18.AC1:** Every numbered implementation sub-task in Story 18.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 18.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 18.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 18.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 18.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 18.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 18.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 18.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 18 is PASS only when Story 18.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 19 - Repository Map Coverage and Source Resolution
