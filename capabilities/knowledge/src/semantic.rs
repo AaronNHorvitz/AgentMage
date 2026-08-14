@@ -880,10 +880,10 @@ mod tests {
     use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath, WorkspaceScopePath};
 
     use super::{
-        LocalSemanticIndex, SemanticActivation, SemanticAdmissionReceipt, SemanticChunkInput,
-        SemanticError, SemanticField, SemanticModelManifest, SemanticModelRole, SemanticOptIn,
-        SemanticProfileState, SemanticRuntime, SemanticScopeEntry, SemanticStorageProtection,
-        SemanticVectorInput, chunk_digest, digest_json,
+        LocalSemanticIndex, MAX_CHUNK_BYTES, SemanticActivation, SemanticAdmissionReceipt,
+        SemanticChunkInput, SemanticError, SemanticField, SemanticModelManifest, SemanticModelRole,
+        SemanticOptIn, SemanticProfileState, SemanticRuntime, SemanticScopeEntry,
+        SemanticStorageProtection, SemanticVectorInput, chunk_digest, digest_json,
     };
     use crate::ObsidianSourceRange;
 
@@ -1174,6 +1174,17 @@ mod tests {
             Err(SemanticError::VectorMismatch)
         );
         assert_eq!(index.query(&[1, 2], 1), Err(SemanticError::InvalidInput));
+        assert_eq!(index.inspect(), before);
+
+        let mut oversized = alpha.clone();
+        oversized.text = "x".repeat(MAX_CHUNK_BYTES + 1);
+        assert_eq!(
+            index.rebuild(
+                std::slice::from_ref(&oversized),
+                &[vector(&oversized, [i16::MAX, i16::MAX, i16::MAX])],
+            ),
+            Err(SemanticError::InvalidInput)
+        );
         assert_eq!(index.inspect(), before);
     }
 
