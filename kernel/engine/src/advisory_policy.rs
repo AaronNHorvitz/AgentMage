@@ -627,4 +627,114 @@ mod tests {
         assert_eq!(first.action(), ClassifierFailureAction::Blocked);
         assert_eq!(first.fact_set_sha256(), clearance.fact_set_sha256());
     }
+
+    #[test]
+    fn d027_s12_classifier_1280_outputs_never_broaden_authority_or_complete() {
+        const OUTPUT_CLASS_COUNT: usize = 10;
+        const OUTPUTS_PER_CLASS: usize = 128;
+        const OUTPUT_COUNT: usize = OUTPUT_CLASS_COUNT * OUTPUTS_PER_CLASS;
+
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let mut class_counts = [0_usize; OUTPUT_CLASS_COUNT];
+        let mut parser_rejections = 0_usize;
+        let mut failure_decisions = 0_usize;
+        let mut restrictive_decisions = 0_usize;
+
+        for index in 0..OUTPUT_COUNT {
+            let output_class = index % OUTPUT_CLASS_COUNT;
+            class_counts[output_class] += 1;
+            let mut candidate = result(
+                clearance.fact_set_sha256(),
+                AdvisoryClassifierStatus::Complete,
+                Vec::new(),
+            );
+            candidate.classifier_run_id = ModelRunId::from_raw(format!("classifier-{index:04}"));
+            candidate.confidence_basis_points =
+                Some(u16::try_from((index * 97) % 10_001).expect("bounded confidence fits u16"));
+
+            match output_class {
+                0 => {
+                    let encoded = String::from_utf8(
+                        to_canonical_json(&candidate).expect("candidate serializes"),
+                    )
+                    .expect("canonical JSON is UTF-8");
+                    let field = ["allow", "approved", "safe", "authorized"][index % 4];
+                    let hostile = encoded.replacen('{', &format!("{{\"{field}\":true,"), 1);
+                    assert!(from_json::<AdvisoryClassifierResult>(hostile.as_bytes()).is_err());
+                    parser_rejections += 1;
+                }
+                1..=7 => {
+                    candidate.status = [
+                        AdvisoryClassifierStatus::LowConfidence,
+                        AdvisoryClassifierStatus::Disagreement,
+                        AdvisoryClassifierStatus::Truncated,
+                        AdvisoryClassifierStatus::TimedOut,
+                        AdvisoryClassifierStatus::Malformed,
+                        AdvisoryClassifierStatus::Unavailable,
+                        AdvisoryClassifierStatus::OutOfDistribution,
+                    ][output_class - 1];
+                    candidate.dispositions = vec![AdvisoryClassifierDisposition::Escalate];
+                    let decision = AdvisoryPolicyGate::map_failure(&clearance, &candidate)
+                        .expect("failure has one deterministic safe action");
+                    let expected = match candidate.status {
+                        AdvisoryClassifierStatus::LowConfidence => ClassifierFailureAction::Narrow,
+                        AdvisoryClassifierStatus::Disagreement => {
+                            ClassifierFailureAction::UserDecision
+                        }
+                        AdvisoryClassifierStatus::OutOfDistribution => {
+                            ClassifierFailureAction::Isolate
+                        }
+                        AdvisoryClassifierStatus::Truncated
+                        | AdvisoryClassifierStatus::Unavailable
+                        | AdvisoryClassifierStatus::TimedOut
+                        | AdvisoryClassifierStatus::Malformed => ClassifierFailureAction::Blocked,
+                        AdvisoryClassifierStatus::Complete => unreachable!("failure class only"),
+                    };
+                    assert_eq!(decision.action(), expected);
+                    failure_decisions += 1;
+                }
+                8 => {
+                    let encoded = String::from_utf8(
+                        to_canonical_json(&candidate).expect("candidate serializes"),
+                    )
+                    .expect("canonical JSON is UTF-8");
+                    let field = [
+                        "grant",
+                        "operation",
+                        "destination",
+                        "model_profile_id",
+                        "execute",
+                        "completion",
+                    ][index % 6];
+                    let hostile = encoded.replacen('{', &format!("{{\"{field}\":true,"), 1);
+                    assert!(from_json::<AdvisoryClassifierResult>(hostile.as_bytes()).is_err());
+                    parser_rejections += 1;
+                }
+                9 => {
+                    candidate.dispositions = vec![
+                        AdvisoryClassifierDisposition::Deny,
+                        AdvisoryClassifierDisposition::Narrow,
+                        AdvisoryClassifierDisposition::Redact,
+                        AdvisoryClassifierDisposition::Isolate,
+                        AdvisoryClassifierDisposition::Escalate,
+                    ];
+                    let decision = AdvisoryPolicyGate::apply(&clearance, &candidate)
+                        .expect("complete restrictive result");
+                    assert_eq!(decision.dispositions(), candidate.dispositions);
+                    assert_eq!(decision.fact_set_sha256(), clearance.fact_set_sha256());
+                    restrictive_decisions += 1;
+                }
+                _ => unreachable!("output class is reduced modulo 10"),
+            }
+        }
+
+        assert_eq!(class_counts, [OUTPUTS_PER_CLASS; OUTPUT_CLASS_COUNT]);
+        assert_eq!(parser_rejections, 256);
+        assert_eq!(failure_decisions, 896);
+        assert_eq!(restrictive_decisions, 128);
+        assert_eq!(
+            parser_rejections + failure_decisions + restrictive_decisions,
+            OUTPUT_COUNT
+        );
+    }
 }
