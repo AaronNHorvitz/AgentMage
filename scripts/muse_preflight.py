@@ -20,7 +20,7 @@ except ModuleNotFoundError:  # Direct script execution adds scripts/, not the re
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
-OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.3/muse-preflight-v2.json"
+OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.3/muse-preflight-v3.json"
 MODEL_BYTES: Final = 16_756_683_904
 MODEL_SHA256: Final = "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e"
 RUNTIME_BYTES: Final = 32_989_764
