@@ -1,0 +1,182 @@
+{
+  "blockers": [
+    {
+      "code": "INSTALLER-PROCESS-PROTOCOL-INACTIVE",
+      "owner": "14.1",
+      "reason": "The packaged one-shot process accepts only --self-check; local import, bounded download, activation, rollback, and cleanup are not yet wired to a closed end-user process protocol."
+    },
+    {
+      "code": "MODEL-REVIEW-UI-NOT-IMPLEMENTED",
+      "owner": "14.1",
+      "reason": "Exact review data exists, but no preflight and license-review screen exists."
+    },
+    {
+      "code": "PRODUCTION-SIGNING-NOT-AVAILABLE",
+      "owner": "14.1",
+      "reason": "Deterministic signable packages exist; no approved external production signing identity exists."
+    },
+    {
+      "code": "LIVE-ACQUISITION-CAPTURE-NOT-PERFORMED",
+      "owner": "14.1",
+      "reason": "The isolated capture harness is proven, but it has not observed a real model acquisition lifecycle."
+    },
+    {
+      "code": "REFERENCE-PLATFORM-EVIDENCE-INCOMPLETE",
+      "owner": "14.1",
+      "reason": "Native macOS installer/importer and clean package lifecycle evidence remain unavailable."
+    },
+    {
+      "code": "EXACT-ARTIFACT-PROFILES-NOT-ADMITTED",
+      "owner": "14.2",
+      "reason": "The complete repository-revision inventory is frozen, but every candidate remains blocked until exact artifact bytes, digests, runtime, context, and working-set facts are separately admitted."
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "installer-runtime-contracts",
+      "output_sha256": "068e6c0f036f3c649b0b56eb666e5830406c8cb5641afab6c13a8841a22e0560"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "tests.test_package_candidate",
+        "tests.test_package_lifecycle",
+        "tests.test_linux_package_lifecycle_evidence",
+        "tests.test_linux_docker_prerequisite_evidence"
+      ],
+      "exit_code": 0,
+      "id": "installer-package-contracts",
+      "output_sha256": "ea57a1768c572b4d377004773000e3b70e0c490da94bd4dfc3ff6b13b006904b"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "tests.test_model_candidate_inventory"
+      ],
+      "exit_code": 0,
+      "id": "candidate-inventory-contracts",
+      "output_sha256": "667e20b3716b92a1c5684b7d1a271ffd03eab25311d0e7214ae1bb94527c184b"
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/model_candidate_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "candidate-inventory-validation",
+      "output_sha256": "75edf71ea1b1983434ddae61c006ecaba6bfff429ea38617f8438dc2374fd18a"
+    }
+  ],
+  "evidence_sha256": {
+    "artifacts/sprints/sprint-10/story-10.1/firewall-packet-capture.json": "7090793a26390da2851b986e332346e195fc1b01ecdfc33d60c3b81f56e665fc",
+    "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json": "fa9760ecdde5942995829cdb4bd1c0ad26f393209230679cbfbc81fea9245338",
+    "model-profiles/catalogs/2026-08-14/candidate-inventory.json": "e21c0ef3a44b0d11320071f09b81b3d4c1475a462c5e20f7ef070fc5eeca2ecd",
+    "model-profiles/catalogs/2026-08-14/candidate-role-suite-matrix.json": "52f49ebdb687701441579ee6a63535adc0d5730d06af7b51ab92fdf214230166",
+    "model-profiles/catalogs/2026-08-14/first-party-source-snapshot.json": "4068826fe76237630233ff44b792860900c8d0ebdc28e7e3a16a0219cf7c4af1"
+  },
+  "evidence_state": {
+    "authorized_acquisitions": 0,
+    "capture_observed_product_acquisition": false,
+    "enabled_models": 0,
+    "frozen_source_entries": 416,
+    "google_source_entries": 412,
+    "inventory_dispositions": {
+      "BLOCKED": 415,
+      "BLOCKED-HARDWARE": 0,
+      "CANDIDATE": 0,
+      "INELIGIBLE": 1,
+      "REJECTED": 0
+    },
+    "inventory_validation_failures": [],
+    "isolated_capture_harness_passed": true,
+    "meta_source_entries": 4,
+    "normalized_entries": 416,
+    "packaged_installer_modes": [
+      493
+    ],
+    "packaged_installer_records": 2,
+    "role_matrix_entries": 416
+  },
+  "record_type": "sprint_14_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": {
+    "14.1": [
+      "SR-PLT-008",
+      "SR-NET-005",
+      "SR-NET-006",
+      "SR-NET-007",
+      "SR-SUP-003",
+      "SR-SUP-006",
+      "SR-SUP-007",
+      "SR-SUP-008",
+      "SR-TST-007",
+      "RV-07"
+    ],
+    "14.2": [
+      "SR-MGM-001",
+      "SR-MGM-004",
+      "SR-MGM-005",
+      "SR-AI-015",
+      "RV-41"
+    ]
+  },
+  "source_revision": "56b8fb586dedff10120cba0829e7be26c201c32f",
+  "source_sha256": {
+    "platforms/linux-inference/src/model_acquisition.rs": "43f5b04075f722975a1462c1911dd9a53d211dc81c5577a4440deef8956c68c2",
+    "platforms/linux-inference/src/model_download.rs": "a5dc4aa5cf40aa43483ef1234f7a78728014e90d474ad2f29d643ef8a379a3ee",
+    "platforms/linux-inference/src/model_install_lifecycle.rs": "2e4aa2349dd53bf7d4d793d6236ddc46773c7cdfe96575c67c8fabf97d1c8c2e",
+    "platforms/linux-inference/src/model_install_verifier.rs": "d1b2d61af29c3865e34c0913edc941c5f9c7fed4041ca74be6076d3de717553a",
+    "platforms/linux-inference/src/model_installer_process.rs": "ba57ea1d24d89fb30a7ae430fc04d76c757e4ac36ca342c37105eb4c6e1a0594",
+    "platforms/linux-inference/tests/process_boundary.rs": "99809033b45a2c64d3d8c541cb84c02f00e76378570ba6986c944b6b870d7c0b",
+    "scripts/model_candidate_inventory.py": "b96087dc12d4ff7d63ed3a65b29b1e1131b3a81428e4065d429e51ad2f912370",
+    "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
+    "scripts/package_lifecycle.py": "c5c257192b0bea2a6671457725a757e6b7637fd178dce83e6f785a4aa84e4de8",
+    "scripts/sprint_14_evidence.py": "661d347607fdeff3d5bf5346c205ca395e16fc9a5c5a6b4f4ddb3ea2873ff95a",
+    "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
+    "tests/test_sprint_14_evidence.py": "51a76280df267eb82d7838cbef9257938a032b0f83257a4a0d30cc68f9045fde"
+  },
+  "stories": [
+    {
+      "atomic_lifecycle_contract_implemented": true,
+      "bounded_download_contract_implemented": true,
+      "end_user_process_protocol_active": false,
+      "installer_packaged": true,
+      "live_acquisition_capture": false,
+      "local_import_contract_implemented": true,
+      "macos_evidence": false,
+      "preflight_contract_implemented": true,
+      "production_package_signed": false,
+      "review_ui_implemented": false,
+      "status": "PASS-LOCAL-LIBRARY-BLOCKED-PROCESS-AND-PLATFORMS",
+      "story_id": "14.1"
+    },
+    {
+      "exact_artifact_profiles_admitted": false,
+      "intake_mutations_passed": true,
+      "reference_machine_preflight_complete": false,
+      "role_matrix_reconciled": true,
+      "source_population_reconciled": true,
+      "status": "PASS-SOURCE-INVENTORY-BLOCKED-EXACT-ARTIFACT-PREFLIGHT",
+      "story_id": "14.2"
+    }
+  ],
+  "summary": {
+    "automatic_fallback": false,
+    "local_contract_passed": true,
+    "product_activation": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  }
+}
