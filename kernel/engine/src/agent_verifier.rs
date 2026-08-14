@@ -415,4 +415,42 @@ mod tests {
             Err(VerifierError::PostconditionUnverified)
         );
     }
+
+    #[test]
+    fn d027_s12_restart_verifier_proof_loss_never_creates_false_success() {
+        let registry = VerifierRegistry::new(context()).expect("valid registry");
+        for (disposition, terminal) in [
+            (VerifierDisposition::Success, AgentStateKind::Success),
+            (VerifierDisposition::NoOp, AgentStateKind::NoOp),
+        ] {
+            let mut controller = verification_controller();
+            {
+                let _proof_before_crash = registry
+                    .verify(&candidate(disposition))
+                    .expect("deterministic proof");
+                assert_eq!(controller.current(), AgentStateKind::Verification);
+            }
+
+            let before = controller.clone();
+            assert_eq!(
+                controller.transition(terminal),
+                Err(AgentStateError::VerifierRequired)
+            );
+            assert_eq!(controller, before);
+
+            let proof_after_restart = registry
+                .verify(&candidate(disposition))
+                .expect("fresh deterministic proof");
+            controller
+                .complete(&proof_after_restart)
+                .expect("verified completion");
+            assert_eq!(controller.current(), terminal);
+            let completed = controller.clone();
+            assert_eq!(
+                controller.transition(AgentStateKind::Proposal),
+                Err(AgentStateError::IllegalTransition)
+            );
+            assert_eq!(controller, completed);
+        }
+    }
 }

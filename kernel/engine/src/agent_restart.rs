@@ -357,7 +357,7 @@ mod tests {
     use super::{
         RestartExpectation, RestartReconciler, RestartReconciliationError, receipt_digest,
     };
-    use crate::agent_state::{AgentStateController, AgentStateError};
+    use crate::agent_state::{AgentStateController, AgentStateError, legal_transition};
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AgentRestartSnapshot, AgentStateKind, ApprovalId,
         AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
@@ -662,5 +662,108 @@ mod tests {
             wrong.transition(AgentStateKind::Approval),
             Err(AgentStateError::RestartRequired)
         );
+    }
+
+    #[test]
+    fn d027_s12_restart_before_and_after_every_state_edge_reconciles_exactly() {
+        const STATES: [AgentStateKind; 17] = [
+            AgentStateKind::Observation,
+            AgentStateKind::Proposal,
+            AgentStateKind::Validation,
+            AgentStateKind::Clarification,
+            AgentStateKind::Approval,
+            AgentStateKind::Execution,
+            AgentStateKind::Verification,
+            AgentStateKind::Checkpoint,
+            AgentStateKind::Success,
+            AgentStateKind::NoOp,
+            AgentStateKind::Blocked,
+            AgentStateKind::Declined,
+            AgentStateKind::Stalled,
+            AgentStateKind::Exhausted,
+            AgentStateKind::Uncertain,
+            AgentStateKind::Cancelled,
+            AgentStateKind::Failed,
+        ];
+        let mut before_interruptions = 0_u64;
+        let mut after_interruptions = 0_u64;
+        let mut edge_index = 0_u64;
+
+        for from in STATES.into_iter().filter(|state| !state.is_terminal()) {
+            for to in STATES {
+                if !legal_transition(from, to) {
+                    continue;
+                }
+                edge_index += 1;
+                let revision = 100 + edge_index * 2;
+                let mut before_expectation = expectation();
+                before_expectation.agent_state = from;
+                before_expectation.agent_state_revision = revision;
+                let mut before_snapshot = snapshot();
+                before_snapshot.agent_state = from;
+                before_snapshot.agent_state_revision = revision;
+                let before_reconciler =
+                    RestartReconciler::new(before_expectation).expect("before expectation");
+                let permit = before_reconciler
+                    .reconcile(&before_snapshot)
+                    .expect("before state reconciles");
+                let mut controller =
+                    AgentStateController::restore(from, revision).expect("active source restores");
+                assert_eq!(
+                    controller.transition(to),
+                    Err(AgentStateError::RestartRequired)
+                );
+                controller
+                    .resume_after_restart(permit)
+                    .expect("before permit matches");
+                if to.is_success() {
+                    assert_eq!(
+                        controller.transition(to),
+                        Err(AgentStateError::VerifierRequired)
+                    );
+                    assert_eq!(controller.current(), from);
+                } else {
+                    controller
+                        .transition(to)
+                        .expect("ordinary edge after resume");
+                    assert_eq!(controller.current(), to);
+                }
+                before_interruptions += 1;
+
+                let after_revision = revision + 1;
+                if to.is_terminal() {
+                    assert_eq!(
+                        AgentStateController::restore(to, after_revision),
+                        Err(AgentStateError::InvalidRestoredState)
+                    );
+                    for next in STATES {
+                        assert!(!legal_transition(to, next));
+                    }
+                } else {
+                    let mut after_expectation = expectation();
+                    after_expectation.agent_state = to;
+                    after_expectation.agent_state_revision = after_revision;
+                    let mut after_snapshot = snapshot();
+                    after_snapshot.agent_state = to;
+                    after_snapshot.agent_state_revision = after_revision;
+                    let after_reconciler =
+                        RestartReconciler::new(after_expectation).expect("after expectation");
+                    let after_permit = after_reconciler
+                        .reconcile(&after_snapshot)
+                        .expect("after state reconciles");
+                    let mut restored = AgentStateController::restore(to, after_revision)
+                        .expect("active destination restores");
+                    restored
+                        .resume_after_restart(after_permit)
+                        .expect("after permit matches");
+                    assert_eq!(restored.current(), to);
+                }
+                after_interruptions += 1;
+            }
+        }
+
+        assert_eq!(edge_index, 52);
+        assert_eq!(before_interruptions, 52);
+        assert_eq!(after_interruptions, 52);
     }
 }

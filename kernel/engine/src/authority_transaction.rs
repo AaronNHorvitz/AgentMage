@@ -2137,6 +2137,13 @@ mod tests {
     }
 
     #[test]
+    fn d027_s12_restart_grant_worker_receipt_and_terminal_boundaries_reconcile() {
+        every_crash_boundary_recovers_without_replay_or_hidden_effects();
+        encrypted_restart_recovery_never_replays_and_publishes_one_receipt();
+        receipt_sequence_is_hash_chained_and_terminal_recovery_is_idempotent();
+    }
+
+    #[test]
     fn consumed_permit_launches_only_for_the_exact_held_authorization_and_object() {
         for (held, expected_outcome, expected_launches) in [
             (
