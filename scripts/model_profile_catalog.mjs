@@ -124,7 +124,7 @@ function museProfile(mode) {
     runtime_support_sha256: sha256(
       "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json",
     ),
-    codec_sha256: sha256("kernel/engine/src/model_codec.rs"),
+    codec_sha256: sha256("platforms/linux-inference/src/muse_atem_codec.rs"),
     decoding: diagnostic
       ? { sampler_order: ["greedy"], temperature: 0, top_p: 1, top_k: 1, seed: 42 }
       : { sampler_order: ["top_k", "top_p", "temperature"], temperature: 1, top_p: 0.95, top_k: 64, seed: 0 },
@@ -157,7 +157,7 @@ function museProfile(mode) {
     codec: {
       codec_id: "muse-glimmer-atem-closed-proposal-v1",
       codec_version: "1.0.0",
-      codec_sha256: sha256("kernel/engine/src/model_codec.rs"),
+      codec_sha256: sha256("platforms/linux-inference/src/muse_atem_codec.rs"),
       tokenizer: "meta-models/Muse-Glimmer-30B tokenizer",
       tokenizer_sha256: "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
       template: "meta-models/Muse-Glimmer-30B ATEM chat template",

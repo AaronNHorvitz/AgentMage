@@ -15,12 +15,13 @@ from typing import Any, Final
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
-OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract.json"
+OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json"
 PACKAGE: Final = ROOT / "release-output/agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64.tar.gz"
 SOURCE_PATHS: Final = (
     "kernel/contracts/src/model.rs",
     "platforms/linux-inference/src/native_model_adapter.rs",
     "platforms/linux-inference/src/llama_server_driver.rs",
+    "platforms/linux-inference/src/muse_atem_codec.rs",
     "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json",
     "model-profiles/runtimes/llama-cpp-b10423-muse-linux-x86_64.json",
     "model-profiles/exact-profile-catalog.json",
