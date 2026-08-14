@@ -198,26 +198,46 @@ impl EffectAuthorization<'_> {
     /// Reports whether this one-target permit exactly names a continuously held object.
     #[must_use]
     pub fn authorizes_held_object(&self, held: &impl HeldWorkspaceObject) -> bool {
-        let [target] = self.targets else {
-            return false;
-        };
-        if !target.matches_held_object(held)
-            || self
-                .excluded_targets
-                .iter()
-                .any(|excluded| excluded.contains(target))
-        {
+        self.authorizes_held_objects(std::slice::from_ref(held))
+    }
+
+    /// Reports whether every ordered target names one exact continuously held object.
+    #[must_use]
+    pub fn authorizes_held_objects<T: HeldWorkspaceObject>(&self, held: &[T]) -> bool {
+        if held.is_empty() || self.targets.len() != held.len() {
             return false;
         }
-        match target.preimage() {
-            Some(_) => {
-                let [preimage] = self.preimages else {
+        let mut expected_preimages = 0_usize;
+        for (index, (target, object)) in self.targets.iter().zip(held).enumerate() {
+            if !target.matches_held_object(object)
+                || self
+                    .excluded_targets
+                    .iter()
+                    .any(|excluded| excluded.contains(target))
+            {
+                return false;
+            }
+            if target.preimage().is_some() {
+                let Ok(index) = u32::try_from(index) else {
                     return false;
                 };
-                preimage.matches_target(0, target)
+                if self
+                    .preimages
+                    .iter()
+                    .filter(|preimage| preimage.target_index == index)
+                    .count()
+                    != 1
+                    || !self
+                        .preimages
+                        .iter()
+                        .any(|preimage| preimage.matches_target(index, target))
+                {
+                    return false;
+                }
+                expected_preimages += 1;
             }
-            None => self.preimages.is_empty(),
         }
+        self.preimages.len() == expected_preimages
     }
 }
 
