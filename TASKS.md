@@ -1416,30 +1416,30 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 15.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 15.1.1.1** (legacy `S-015-I01`): Implement one typed redacted doctor-data provider for model, runtime, hardware fit, offline state, sandbox, helper, workspace grant, capability versions, repository-map health, encrypted store, receipt sequence, and recovery.
-  - [ ] **Sub-task 15.1.1.2** (legacy `S-015-I02`): Implement deterministic-first task dispatch and explicit user model selection.
-  - [ ] **Sub-task 15.1.1.3** (legacy `S-015-I03`): Record task class, deterministic operations, model choice, validation outcome, latency, resources, and acceptance result without changing routing.
+  - [x] **Sub-task 15.1.1.1** (legacy `S-015-I01`): Implement one typed redacted doctor-data provider for model, runtime, hardware fit, offline state, sandbox, helper, workspace grant, capability versions, repository-map health, encrypted store, receipt sequence, and recovery.
+  - [x] **Sub-task 15.1.1.2** (legacy `S-015-I02`): Implement deterministic-first task dispatch and explicit user model selection.
+  - [x] **Sub-task 15.1.1.3** (legacy `S-015-I03`): Record task class, deterministic operations, model choice, validation outcome, latency, resources, and acceptance result without changing routing.
   - [ ] **Sub-task 15.1.1.4** (legacy `S-015-I04`): Implement visible model identity, digest, runtime, context, tool limits, vision limits, and resource status in every session.
   - [ ] **Sub-task 15.1.1.5** (legacy `S-015-I05`): Implement safe load and unload with one large active model by default and bounded resource-pressure handling.
-  - [ ] **Sub-task 15.1.1.6** (legacy `S-015-I06`): Redact secrets, prompts, private excerpts, environment values, and unrelated absolute paths from diagnostics and exports.
-  - [ ] **Sub-task 15.1.1.7** (legacy `S-015-I07`): Record later-profile and router data without enabling automatic fallback, ensembles, or frontier transfer.
+  - [x] **Sub-task 15.1.1.6** (legacy `S-015-I06`): Redact secrets, prompts, private excerpts, environment values, and unrelated absolute paths from diagnostics and exports.
+  - [x] **Sub-task 15.1.1.7** (legacy `S-015-I07`): Record later-profile and router data without enabling automatic fallback, ensembles, or frontier transfer.
 
-- [ ] **Task 15.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 15.1.2.1:** Local and exportable diagnostics report.
-  - [ ] **Sub-task 15.1.2.2:** Manual selection and deterministic-first routing receipts.
-  - [ ] **Sub-task 15.1.2.3:** Resource-monitor and remediation fixtures.
-  - [ ] **Sub-task 15.1.2.4:** Benchmark-record schema.
+- [x] **Task 15.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 15.1.2.1:** Local and exportable diagnostics report.
+  - [x] **Sub-task 15.1.2.2:** Manual selection and deterministic-first routing receipts.
+  - [x] **Sub-task 15.1.2.3:** Resource-monitor and remediation fixtures.
+  - [x] **Sub-task 15.1.2.4:** Benchmark-record schema.
 
 - [ ] **Task 15.1.3 - Verify and close the story**
-  - [ ] **Sub-task 15.1.3.1:** `S-015-UT01` renders diagnostics from complete, partial, missing, corrupt, stale, and unsupported manifests; assert precise available/degraded/blocked states with no secret or private-content disclosure.
-  - [ ] **Sub-task 15.1.3.2:** `S-015-UT02` tests manual model selection, deterministic-first routing, and attempted automatic substitution; assert only the selected verified profile runs and every change is receipted.
+  - [x] **Sub-task 15.1.3.1:** `S-015-UT01` renders diagnostics from complete, partial, missing, corrupt, stale, and unsupported manifests; assert precise available/degraded/blocked states with no secret or private-content disclosure.
+  - [x] **Sub-task 15.1.3.2:** `S-015-UT02` tests manual model selection, deterministic-first routing, and attempted automatic substitution; assert only the selected verified profile runs and every change is receipted.
   - [ ] **Sub-task 15.1.3.3:** `S-015-ST01` exceeds memory, CPU/GPU time, context, output, concurrency, disk, and process limits independently and together; assert cancellation, child cleanup, responsive UI, and no authority change.
-  - [ ] **Sub-task 15.1.3.4:** `S-015-IT01` reruns pinned benchmarks with identical and changed hardware/runtime/configuration identities; assert comparable runs are reproducible and incomparable runs are labeled rather than merged.
+  - [x] **Sub-task 15.1.3.4:** `S-015-IT01` reruns pinned benchmarks with identical and changed hardware/runtime/configuration identities; assert comparable runs are reproducible and incomparable runs are labeled rather than merged.
   - [ ] **Sub-task 15.1.3.5 - Product security evidence:** Map `SR-GOV-004`, `SR-PLT-010`, `SR-AI-006`, `SR-AI-009`, `SR-AI-013`, `SR-OPS-009`, `SR-TST-006`, and `RV-13`/`RV-16`; retain diagnostics, selection receipts, limit traces, benchmark manifests, and redaction scan.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 15.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can determine exact package, platform, model, runtime, policy, capability, sandbox, storage, and offline status from one redacted local report.
+- [x] **Story AC 15.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can determine exact package, platform, model, runtime, policy, capability, sandbox, storage, and offline status from one redacted local report.
 - [ ] **Story AC 15.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then resource pressure degrades or stops only the affected operation; it cannot trigger cloud fallback, model switching, unbounded retries, or hidden capability changes.
 
 #### [ ] Story 15.2 - Native Chat Doctor and Safe Diagnostic Export
@@ -1448,23 +1448,23 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 15.2.1 - Implement the diagnostic surfaces**
-  - [ ] **Sub-task 15.2.1.1:** Add a native Chat request that renders the typed doctor result with healthy, degraded, blocked, unavailable, quarantined, and unsupported states plus local remediation.
-  - [ ] **Sub-task 15.2.1.2:** Keep the command-line diagnostic harness non-user-facing in v0.1 and constrain it to automated/reviewer testing through the same typed provider; do not create a second chat interface.
-  - [ ] **Sub-task 15.2.1.3:** Add an explicit local preview before writing a diagnostic export, showing included fields, redactions, sensitivity, destination, hash, and retention; require a one-use grant for the export write.
-  - [ ] **Sub-task 15.2.1.4:** Ensure diagnostics never test health by contacting the internet and never include raw prompts, file contents, credentials, keys, environment values, unrelated paths, hostnames, usernames, or stable device identifiers.
+- [x] **Task 15.2.1 - Implement the diagnostic surfaces**
+  - [x] **Sub-task 15.2.1.1:** Add a native Chat request that renders the typed doctor result with healthy, degraded, blocked, unavailable, quarantined, and unsupported states plus local remediation.
+  - [x] **Sub-task 15.2.1.2:** Keep the command-line diagnostic harness non-user-facing in v0.1 and constrain it to automated/reviewer testing through the same typed provider; do not create a second chat interface.
+  - [x] **Sub-task 15.2.1.3:** Add an explicit local preview before writing a diagnostic export, showing included fields, redactions, sensitivity, destination, hash, and retention; require a one-use grant for the export write.
+  - [x] **Sub-task 15.2.1.4:** Ensure diagnostics never test health by contacting the internet and never include raw prompts, file contents, credentials, keys, environment values, unrelated paths, hostnames, usernames, or stable device identifiers.
 
 - [ ] **Task 15.2.2 - Verify and close the story**
   - [ ] **Sub-task 15.2.2.1:** Render every diagnostic state in native Chat using keyboard-only and screen-reader navigation; assert stable status names, actionable remediation, cancellation, and no layout-dependent meaning.
   - [ ] **Sub-task 15.2.2.2:** Inject unique canaries into every prohibited source and compare Chat, harness, logs, receipts, and exported diagnostics; assert zero canary disclosure and identical non-sensitive status semantics.
-  - [ ] **Sub-task 15.2.2.3:** Attempt export without approval, to an ungranted/cloud-synchronized path, with stale preview, after cancellation, and after a crash; assert no unauthorized or partial artifact remains.
+  - [x] **Sub-task 15.2.2.3:** Attempt export without approval, to an ungranted/cloud-synchronized path, with stale preview, after cancellation, and after a crash; assert no unauthorized or partial artifact remains.
   - [ ] **Sub-task 15.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-16`, `RV-18`, and `RV-20`; map `SR-GOV-001`, `SR-DAT-002`/`SR-DAT-003`, `SR-OPS-003`, `SR-CIV-006` through `SR-CIV-009`; retain state fixtures, Chat snapshots/accessibility output, canary scans, export previews, and cleanup results.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 15.2.AC1:** Given any supported or failed local state, when the user asks for diagnostics in native Chat, then the response accurately names the state and remediation without requiring a terminal or network connection.
+- [x] **Story AC 15.2.AC1:** Given any supported or failed local state, when the user asks for diagnostics in native Chat, then the response accurately names the state and remediation without requiring a terminal or network connection.
 - [ ] **Story AC 15.2.AC2:** Given prohibited data in every potential source, when Chat, internal harness, logs, and export paths are exercised, then none of that data appears and equivalent non-sensitive results reconcile.
-- [ ] **Story AC 15.2.AC3:** Given an export request, when preview, grant, destination, or lifecycle validation fails, then no diagnostic file is written or retained.
+- [x] **Story AC 15.2.AC3:** Given an export request, when preview, grant, destination, or lifecycle validation fails, then no diagnostic file is written or retained.
 
 #### [ ] Story 15.3 - Muse-First and Complete Gemma Role-Matrix Evaluation
 
@@ -1473,43 +1473,45 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 15.3.1 - Freeze comparable evaluation profiles**
-  - [ ] **Sub-task 15.3.1.1:** Freeze the AgentMage repository, planning, coding, tool, grounding, citation, uncertainty, false-completion, injection, context, cancellation, resource, safety-classification, embedding/retrieval, multimodal, and specialist corpora with role applicability and deterministic graders.
+  - [x] **Sub-task 15.3.1.1:** Freeze the AgentMage repository, planning, coding, tool, grounding, citation, uncertainty, false-completion, injection, context, cancellation, resource, safety-classification, embedding/retrieval, multimodal, and specialist corpora with role applicability and deterministic graders.
   - [ ] **Sub-task 15.3.1.2:** Deeply evaluate the exact Muse Glimmer text profile first and evaluate every feasible eligible official first-party Gemma profile only against its assigned roles; retain `BLOCKED-HARDWARE`, `BLOCKED`, `REJECTED`, failed, and not-applicable results.
   - [ ] **Sub-task 15.3.1.3:** Run comparable generative candidates with the same platform, AgentMage harness, fixtures, context policy, tool schemas, budgets, graders, and resource collection wherever possible; label every differing tuple instead of normalizing it away.
   - [ ] **Sub-task 15.3.1.4:** Run every quality profile and diagnostic-repeatability profile separately and retain pass-at-one, pass-at-k, pass-to-the-k, confidence intervals, variance, invalid-proposal rate, false-completion rate, latency, memory, thermal behavior where measured, and user-intervention rate.
 
-- [ ] **Task 15.3.2 - Produce manual-selection evidence**
-  - [ ] **Sub-task 15.3.2.1:** Produce an exact candidate-role-capability matrix that distinguishes measured pass, measured failure, blocked, blocked-hardware, rejected, stale, incomparable, unknown, and not-applicable states.
-  - [ ] **Sub-task 15.3.2.2:** Define admission thresholds per role, negative-control behavior, minimum repeated trials, statistical reporting, evidence expiry, and re-review triggers without pre-selecting a winning family.
-  - [ ] **Sub-task 15.3.2.3:** Admit only exact profiles that independently satisfy every provenance, policy, hardware, runtime, security, role-quality, resource, and platform gate; keep all others unselectable.
-  - [ ] **Sub-task 15.3.2.4:** Keep initial product selection manual, one large model and one inference slot by default, with no hidden fallback, ensemble, classifier routing, self-confidence routing, or frontier transfer.
+- [x] **Task 15.3.2 - Produce manual-selection evidence**
+  - [x] **Sub-task 15.3.2.1:** Produce an exact candidate-role-capability matrix that distinguishes measured pass, measured failure, blocked, blocked-hardware, rejected, stale, incomparable, unknown, and not-applicable states.
+  - [x] **Sub-task 15.3.2.2:** Define admission thresholds per role, negative-control behavior, minimum repeated trials, statistical reporting, evidence expiry, and re-review triggers without pre-selecting a winning family.
+  - [x] **Sub-task 15.3.2.3:** Admit only exact profiles that independently satisfy every provenance, policy, hardware, runtime, security, role-quality, resource, and platform gate; keep all others unselectable.
+  - [x] **Sub-task 15.3.2.4:** Keep initial product selection manual, one large model and one inference slot by default, with no hidden fallback, ensemble, classifier routing, self-confidence routing, or frontier transfer.
 
 - [ ] **Task 15.3.3 - Verify and close the story**
-  - [ ] **Sub-task 15.3.3.1:** `D027-S15-COMPARISON` reruns comparable Muse/Gemma profiles with one tuple difference at a time; require exact comparability labels and no merged or borrowed result.
-  - [ ] **Sub-task 15.3.3.2:** `D027-S15-ROLE-MATRIX` independently recomputes every inventory row, role, applicable suite, result, exclusion, statistic, and admission state from raw evidence; require 100% reconciliation.
-  - [ ] **Sub-task 15.3.3.3:** `D027-S15-SELECTION` request unavailable, blocked, rejected, stale, wrong-role, under-resourced, and differently configured profiles plus automatic substitution; require visible refusal and preservation of the current task.
-  - [ ] **Sub-task 15.3.3.4:** `D027-S15-CLAIMS` seed universal-determinism, family-wide, support, hardware-fit, winner, and hidden-failure claims unsupported by raw results; require claim-lint failure and blocked evidence publication.
+  - [x] **Sub-task 15.3.3.1:** `D027-S15-COMPARISON` reruns comparable Muse/Gemma profiles with one tuple difference at a time; require exact comparability labels and no merged or borrowed result.
+  - [x] **Sub-task 15.3.3.2:** `D027-S15-ROLE-MATRIX` independently recomputes every inventory row, role, applicable suite, result, exclusion, statistic, and admission state from raw evidence; require 100% reconciliation.
+  - [x] **Sub-task 15.3.3.3:** `D027-S15-SELECTION` request unavailable, blocked, rejected, stale, wrong-role, under-resourced, and differently configured profiles plus automatic substitution; require visible refusal and preservation of the current task.
+  - [x] **Sub-task 15.3.3.4:** `D027-S15-CLAIMS` seed universal-determinism, family-wide, support, hardware-fit, winner, and hidden-failure claims unsupported by raw results; require claim-lint failure and blocked evidence publication.
   - [ ] **Sub-task 15.3.3.5 - Product security evidence:** Complete `AT-MODEL-004`, `AT-MODEL-005`, extended `RV-14`, and early `RV-41`; map `SR-AI-006`, `SR-AI-010`, `SR-AI-011`, `SR-AI-013`, `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`, `SR-MGM-005`; retain frozen corpora, exact tuples, raw trials, graders, statistics, resource traces, role matrix, admission decisions, and claim-lint output.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 15.3.AC1:** Given the frozen candidate inventory and role suites, when evaluation closes, then every eligible official first-party Gemma profile and the exact Muse profile has a complete attributable result, visible non-pass, or exact not-applicable reason.
-- [ ] **Story AC 15.3.AC2:** Given two candidate results, when they are compared, then only matching tuples are treated as comparable and every artifact, codec, runtime, context, decoding, platform, hardware, driver, tool, grader, and corpus difference remains visible.
-- [ ] **Story AC 15.3.AC3:** Given any candidate result or model request, when ordinary selection is computed, then only an exact independently admitted profile is available, selection remains manual, and no family name, classifier, confidence value, or failure causes an automatic switch.
-- [ ] **Story AC 15.3.AC4:** Given repeated diagnostic output, when documentation or diagnostics describe it, then the claim is limited to the exact observed tuple and does not imply universal determinism.
+- [x] **Story AC 15.3.AC1:** Given the frozen candidate inventory and role suites, when evaluation closes, then every eligible official first-party Gemma profile and the exact Muse profile has a complete attributable result, visible non-pass, or exact not-applicable reason.
+- [x] **Story AC 15.3.AC2:** Given two candidate results, when they are compared, then only matching tuples are treated as comparable and every artifact, codec, runtime, context, decoding, platform, hardware, driver, tool, grader, and corpus difference remains visible.
+- [x] **Story AC 15.3.AC3:** Given any candidate result or model request, when ordinary selection is computed, then only an exact independently admitted profile is available, selection remains manual, and no family name, classifier, confidence value, or failure causes an automatic switch.
+- [x] **Story AC 15.3.AC4:** Given repeated diagnostic output, when documentation or diagnostics describe it, then the claim is limited to the exact observed tuple and does not imply universal determinism.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 15.AC1:** `AT-DIA-001`, `AT-ROUTE-001`, `AT-MODEL-004`, and `AT-MODEL-005` pass.
-- [ ] **Sprint AC 15.AC2:** Diagnostics accurately distinguish healthy, degraded, missing, mismatched, quarantined, offline, and unrecoverable states.
-- [ ] **Sprint AC 15.AC3:** No diagnostic output contains a secret or unrelated private path.
-- [ ] **Sprint AC 15.AC4:** Applicable deterministic operations always precede model inference.
-- [ ] **Sprint AC 15.AC5:** No task causes an automatic model switch, external call, or frontier transfer.
-- [ ] **Sprint AC 15.AC6:** The Muse-first deep report and complete eligible official first-party Gemma role matrix reconcile to raw evidence with no omitted candidate, role escalation, hidden non-pass, or borrowed profile result.
-- [ ] **Sprint AC 15.AC7:** Only exact admitted profiles are manually selectable; one large model and one inference slot remain the initial default.
-- [ ] **Sprint AC 15.AC8:** Quality and diagnostic-repeatability results, statistics, claims, and limitations remain separate and attributable.
+- [x] **Sprint AC 15.AC2:** Diagnostics accurately distinguish healthy, degraded, missing, mismatched, quarantined, offline, and unrecoverable states.
+- [x] **Sprint AC 15.AC3:** No diagnostic output contains a secret or unrelated private path.
+- [x] **Sprint AC 15.AC4:** Applicable deterministic operations always precede model inference.
+- [x] **Sprint AC 15.AC5:** No task causes an automatic model switch, external call, or frontier transfer.
+- [x] **Sprint AC 15.AC6:** The Muse-first deep report and complete eligible official first-party Gemma role matrix reconcile to raw evidence with no omitted candidate, role escalation, hidden non-pass, or borrowed profile result.
+- [x] **Sprint AC 15.AC7:** Only exact admitted profiles are manually selectable; one large model and one inference slot remain the initial default.
+- [x] **Sprint AC 15.AC8:** Quality and diagnostic-repeatability results, statistics, claims, and limitations remain separate and attributable.
 
 **Gate decision:** Sprint 15 is PASS only when Stories 15.1 through 15.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-005`, `AM-MDL-006`, `AT-MODEL-004`, `AT-MODEL-005`, and the Universal Story Definition of Done are complete with current evidence. A candidate may remain non-pass, but missing or hidden required evidence blocks the sprint. Otherwise it is BLOCKED.
+
+**Current gate result:** BLOCKED with all currently executable local diagnostic, export, selection, routing, resource-decision, comparability, claim-lint, and source-matrix contracts passing. The retained [`local-evidence-report.json`](artifacts/sprints/sprint-15/local-evidence-report.json) records zero enabled models, one rejected exact Muse tuple, 415 blocked and one ineligible source candidate, no automatic fallback, and one inference slot. Remaining blockers are native Chat model-picker/session wiring, OS worker termination from resource pressure, full durable-surface canary reconciliation, native accessibility/macOS evidence, and exact artifact-level Gemma evaluation and admission.
 ### [ ] Sprint 16 - Sandboxed Read-Only Tool Protocol
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
