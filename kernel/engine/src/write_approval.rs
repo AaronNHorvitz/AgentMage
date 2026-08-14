@@ -253,6 +253,24 @@ impl ShadowWriteOperation {
     pub fn operation_sha256(&self) -> &str {
         &self.operation_sha256
     }
+
+    /// Returns the closed syntax contract used for the postimage.
+    #[must_use]
+    pub const fn syntax(&self) -> WriteSyntax {
+        self.syntax
+    }
+
+    /// Returns the exact postimage line-ending contract.
+    #[must_use]
+    pub const fn line_endings(&self) -> WriteLineEndings {
+        self.line_endings
+    }
+
+    /// Reports whether repository evidence classified the target as generated.
+    #[must_use]
+    pub const fn generated_file(&self) -> bool {
+        self.generated_file
+    }
 }
 
 /// Validated shadow change set that has no file-write authority.

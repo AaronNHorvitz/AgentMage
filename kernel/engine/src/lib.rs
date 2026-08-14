@@ -83,6 +83,8 @@ pub mod tooling;
 pub mod work_packet;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
+/// Grant-consuming atomic write coordination, receipts, restoration, and rollback proposals.
+pub mod write_transaction;
 
 #[cfg(test)]
 mod s012_it01;
