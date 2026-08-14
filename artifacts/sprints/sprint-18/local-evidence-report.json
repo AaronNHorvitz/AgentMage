@@ -1,0 +1,231 @@
+{
+  "blockers": [
+    {
+      "code": "PACKAGED-REPOSITORY-MAP-WORKER-NOT-INTEGRATED",
+      "owner": "18.1.1.2"
+    },
+    {
+      "code": "LIVE-GITIGNORE-POLICY-PROJECTION-NOT-INTEGRATED",
+      "owner": "18.1.1.2"
+    },
+    {
+      "code": "ENCRYPTED-PERSISTENT-MAP-CACHE-NOT-INTEGRATED",
+      "owner": "18.1.1.4"
+    },
+    {
+      "code": "HOST-CANCELLATION-AND-FAILURE-MATRIX-INCOMPLETE",
+      "owner": "18.1.3.1"
+    },
+    {
+      "code": "NATIVE-PLATFORM-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "18.1.3.2"
+    },
+    {
+      "code": "MANUAL-PARSER-FUZZING-DEFERRED",
+      "owner": "18.1.3.3"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-18-REVIEW-NOT-RETAINED",
+      "owner": "18.1.3.3"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "repository-map-tests",
+      "output_sha256": "614a2f4d6d97981525a98701987e2061cc9db53c231ddce3bc0c22462e7faed3"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "repository-map-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "grammar_bom": {
+    "grammar_set_sha256": "f24d6d3e951d79dcf3e7f37d84a8413706d9f9b3dd7ebe49671b3ccb6e290902",
+    "grammars": [
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-rust",
+        "crate_version": "0.24.2",
+        "descriptor_sha256": "dbb18c0ae1ad8389ebebfad5984f25fd2af3fbd6a3a84086353303f72bd206b8",
+        "language": "rust",
+        "node_types_sha256": "4b73a1248978340336100db455bf0731c23f9190568c9ae62265fa4a80a327d5",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-rust"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-python",
+        "crate_version": "0.25.0",
+        "descriptor_sha256": "94371af62103a1a4b314d7a6d280de13832b0997976c51d76429bb6f006fec49",
+        "language": "python",
+        "node_types_sha256": "a2456847bea3adff5b2222b2f7b03a870159470d8908622204e6eb29ee2fe45e",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-python"
+      },
+      {
+        "abi_version": 14,
+        "crate_name": "tree-sitter-typescript",
+        "crate_version": "0.23.2",
+        "descriptor_sha256": "ebbcd6c2f9ceb7b6a63583d80b92b586ffa9f735d435006214eca9721c2163c1",
+        "language": "type_script",
+        "node_types_sha256": "c790a733fc756b54d4e54dceeb7d2d51e40d8b57136e70277753a75804cce3e3",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-typescript"
+      },
+      {
+        "abi_version": 14,
+        "crate_name": "tree-sitter-typescript",
+        "crate_version": "0.23.2",
+        "descriptor_sha256": "213a283836596fd23613545876f6992b276748dd3d16945bb02118d17a98f6cd",
+        "language": "tsx",
+        "node_types_sha256": "78b5789145286799a27a0a7ecc36cc1bcb151f94ec7fa631b248459867010c8c",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-typescript"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-javascript",
+        "crate_version": "0.25.0",
+        "descriptor_sha256": "13f3425b2ebc6e07811ea59f08b749518c0af5facb39ac1db8fa08f3896f850c",
+        "language": "java_script",
+        "node_types_sha256": "188a8baa97018edaf63bf7ece372c07bc0d74d1301004bc8f211eb7dee5a6e70",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/tree-sitter/tree-sitter-javascript"
+      },
+      {
+        "abi_version": 15,
+        "crate_name": "tree-sitter-swift",
+        "crate_version": "0.7.3",
+        "descriptor_sha256": "67a2f8ba9b3da1c987057dbce1e382fa3c4333c9a03fcae03da5fafd470c848e",
+        "language": "swift",
+        "node_types_sha256": "62e0d3bf83969c7c3e783bb377117b370749584fbfe7e1f4926ce4cda629c5d4",
+        "parser_version": "0.26.12",
+        "repository": "https://github.com/alex-pinkus/tree-sitter-swift"
+      }
+    ],
+    "schema_version": 1
+  },
+  "implemented_contracts": {
+    "cache_key_dimensions": 6,
+    "excluded_content_admitted": false,
+    "filesystem_authority": false,
+    "maximum_source_bytes": 4194304,
+    "maximum_structural_items": 10000,
+    "network_authority": false,
+    "parser_runtime_version": "0.26.12",
+    "process_authority": false,
+    "reliable_relationship_kinds": 1,
+    "supported_language_dialects": 6
+  },
+  "platform_evidence": {
+    "linux_encrypted_persistent_cache": false,
+    "linux_packaged_worker": false,
+    "local_pure_core": true,
+    "macos_native_map": false,
+    "windows_native_map": false
+  },
+  "record_type": "sprint_18_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-OPS-001",
+    "SR-TST-002",
+    "SR-TST-004"
+  ],
+  "source_revision": "6fdad0ba37d77d53005c137f3b65bea4acc473f2",
+  "source_sha256": {
+    "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
+    "capabilities/repository-map/examples/grammar_bom.rs": "123202ad7a9892fa807b0f9f42e4245d212c0672c8fd24278fb51c13ffe1bf51",
+    "capabilities/repository-map/src/cache.rs": "ca8bd64c3bf82fd39f86e7bb983e0fd4f539e67de0cc43a51af05aa0208168ea",
+    "capabilities/repository-map/src/grammar.rs": "e8df63ec31d02e9caa64c70c6352fa93d219cba2302d1bca41285e853d1b0ea0",
+    "capabilities/repository-map/src/inventory.rs": "c8371da532129cb57442d4a8d8f9eecf40a52a875ddd5d21768017a821d04ab7",
+    "capabilities/repository-map/src/lib.rs": "cfbf84874b510749c1509b38a97ceb1b1590b1328ff855d7e96c05eab8e8698e",
+    "capabilities/repository-map/src/parser.rs": "631efb016760264876747c38578e2bf07409534011f45bbaad53d76a16bcac84",
+    "docs/architecture/pinned-repository-map.md": "12a6a3644980b122904b1c7ace848309bd6d9de9c58b39a597d3c99485ada20a",
+    "docs/verification/sprint-18-local-results.md": "10f18b6c99663d63c1a2021f73bce6e98cc3175ea4812a654561149a3b571cb7",
+    "scripts/sprint_18_evidence.py": "321d61c611c6860cd512e0bd98b9d1f642b47e9e4aba74bca0c53eb6eb404a39",
+    "tests/test_sprint_18_evidence.py": "e973878de402070ae7378606277a97a35594258cc7cdbe356028a3581562057c"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "deterministic_inventory": true,
+    "exact_cache_invalidation": true,
+    "grammar_identity": true,
+    "independent_review": false,
+    "manual_parser_fuzzing": false,
+    "parser_range_and_hash_integrity": true
+  }
+}
