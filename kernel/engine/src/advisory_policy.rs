@@ -19,6 +19,49 @@ pub enum AdvisoryPolicyError {
     ClearanceMismatch,
     /// Result is incomplete or unavailable and requires failure mapping.
     ClassifierNotComplete,
+    /// A complete result was incorrectly submitted to the failure mapper.
+    FailureMappingNotApplicable,
+}
+
+/// Deterministic safe action for an incomplete or unavailable advisory classifier.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ClassifierFailureAction {
+    /// Narrow the existing deterministic boundary.
+    Narrow,
+    /// Isolate content or processing before another boundary.
+    Isolate,
+    /// Require an explicit user decision.
+    UserDecision,
+    /// Enter the named `BLOCKED` non-success state.
+    Blocked,
+}
+
+/// Content-free failure decision bound to one exact deterministic fact set.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ClassifierFailureDecision {
+    status: AdvisoryClassifierStatus,
+    action: ClassifierFailureAction,
+    fact_set_sha256: String,
+}
+
+impl ClassifierFailureDecision {
+    /// Returns the exact incomplete classifier state.
+    #[must_use]
+    pub const fn status(&self) -> AdvisoryClassifierStatus {
+        self.status
+    }
+
+    /// Returns the deterministic narrower, user-decision, or blocked action.
+    #[must_use]
+    pub const fn action(&self) -> ClassifierFailureAction {
+        self.action
+    }
+
+    /// Returns the exact deterministic fact-set digest that remains authoritative.
+    #[must_use]
+    pub fn fact_set_sha256(&self) -> &str {
+        &self.fact_set_sha256
+    }
 }
 
 /// Non-authoritative normalized restrictions layered over deterministic clearance.
@@ -78,6 +121,38 @@ impl AdvisoryPolicyGate {
             classifier_run_id: result.classifier_run_id.as_str().to_owned(),
             fact_set_sha256: clearance.fact_set_sha256().to_owned(),
             dispositions,
+        })
+    }
+
+    /// Maps one incomplete or unavailable classifier state to a safe deterministic action.
+    pub fn map_failure(
+        clearance: &PreclassificationClearance,
+        result: &AdvisoryClassifierResult,
+    ) -> Result<ClassifierFailureDecision, AdvisoryPolicyError> {
+        validate_result(result)?;
+        if !clearance.matches_advisory_identity(
+            &result.task_id,
+            result.action_id.as_ref(),
+            &result.input_sha256,
+        ) {
+            return Err(AdvisoryPolicyError::ClearanceMismatch);
+        }
+        let action = match result.status {
+            AdvisoryClassifierStatus::Complete => {
+                return Err(AdvisoryPolicyError::FailureMappingNotApplicable);
+            }
+            AdvisoryClassifierStatus::LowConfidence => ClassifierFailureAction::Narrow,
+            AdvisoryClassifierStatus::Disagreement => ClassifierFailureAction::UserDecision,
+            AdvisoryClassifierStatus::OutOfDistribution => ClassifierFailureAction::Isolate,
+            AdvisoryClassifierStatus::Truncated
+            | AdvisoryClassifierStatus::Unavailable
+            | AdvisoryClassifierStatus::TimedOut
+            | AdvisoryClassifierStatus::Malformed => ClassifierFailureAction::Blocked,
+        };
+        Ok(ClassifierFailureDecision {
+            status: result.status,
+            action,
+            fact_set_sha256: clearance.fact_set_sha256().to_owned(),
         })
     }
 }
@@ -140,7 +215,7 @@ fn valid_sha256(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{AdvisoryPolicyError, AdvisoryPolicyGate};
+    use super::{AdvisoryPolicyError, AdvisoryPolicyGate, ClassifierFailureAction};
     use crate::preclassification_policy::PreclassificationPolicyGate;
     use agentmage_kernel_contracts::{
         ActionId, ActionRisk, AdvisoryClassifierDisposition, AdvisoryClassifierResult,
@@ -410,5 +485,146 @@ mod tests {
         denied_facts.static_checks[0].state = StaticPolicyCheckState::Detected;
         assert!(PreclassificationPolicyGate::evaluate(&denied_facts).is_err());
         assert_eq!(candidate.classifier_run_id.as_str(), "classifier-0001");
+    }
+
+    #[test]
+    fn task_12_2_2_4_every_incomplete_state_has_one_exact_safe_action() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let cases = [
+            (
+                AdvisoryClassifierStatus::LowConfidence,
+                ClassifierFailureAction::Narrow,
+            ),
+            (
+                AdvisoryClassifierStatus::Truncated,
+                ClassifierFailureAction::Blocked,
+            ),
+            (
+                AdvisoryClassifierStatus::Disagreement,
+                ClassifierFailureAction::UserDecision,
+            ),
+            (
+                AdvisoryClassifierStatus::Unavailable,
+                ClassifierFailureAction::Blocked,
+            ),
+            (
+                AdvisoryClassifierStatus::OutOfDistribution,
+                ClassifierFailureAction::Isolate,
+            ),
+            (
+                AdvisoryClassifierStatus::TimedOut,
+                ClassifierFailureAction::Blocked,
+            ),
+            (
+                AdvisoryClassifierStatus::Malformed,
+                ClassifierFailureAction::Blocked,
+            ),
+        ];
+        for (status, expected) in cases {
+            let decision = AdvisoryPolicyGate::map_failure(
+                &clearance,
+                &result(clearance.fact_set_sha256(), status, Vec::new()),
+            )
+            .expect("failure maps");
+            assert_eq!(decision.status(), status);
+            assert_eq!(decision.action(), expected);
+            assert_eq!(decision.fact_set_sha256(), clearance.fact_set_sha256());
+        }
+    }
+
+    #[test]
+    fn task_12_2_2_4_failure_mapping_requires_exact_clearance_identity() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let mut task = result(
+            clearance.fact_set_sha256(),
+            AdvisoryClassifierStatus::Unavailable,
+            Vec::new(),
+        );
+        task.task_id = TaskId::from_raw("task-other");
+        assert_eq!(
+            AdvisoryPolicyGate::map_failure(&clearance, &task),
+            Err(AdvisoryPolicyError::ClearanceMismatch)
+        );
+        let stale = result(SHA256, AdvisoryClassifierStatus::Unavailable, Vec::new());
+        assert_eq!(
+            AdvisoryPolicyGate::map_failure(&clearance, &stale),
+            Err(AdvisoryPolicyError::ClearanceMismatch)
+        );
+    }
+
+    #[test]
+    fn task_12_2_2_4_complete_results_cannot_enter_failure_mapping() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let complete = result(
+            clearance.fact_set_sha256(),
+            AdvisoryClassifierStatus::Complete,
+            Vec::new(),
+        );
+        assert_eq!(
+            AdvisoryPolicyGate::map_failure(&clearance, &complete),
+            Err(AdvisoryPolicyError::FailureMappingNotApplicable)
+        );
+        assert!(AdvisoryPolicyGate::apply(&clearance, &complete).is_ok());
+    }
+
+    #[test]
+    fn task_12_2_2_4_confidence_never_changes_failure_mapping() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let mut low = result(
+            clearance.fact_set_sha256(),
+            AdvisoryClassifierStatus::LowConfidence,
+            Vec::new(),
+        );
+        low.confidence_basis_points = Some(0);
+        let mut high = low.clone();
+        high.confidence_basis_points = Some(10_000);
+        assert_eq!(
+            AdvisoryPolicyGate::map_failure(&clearance, &low),
+            AdvisoryPolicyGate::map_failure(&clearance, &high)
+        );
+        high.confidence_basis_points = Some(10_001);
+        assert_eq!(
+            AdvisoryPolicyGate::map_failure(&clearance, &high),
+            Err(AdvisoryPolicyError::InvalidResult)
+        );
+    }
+
+    #[test]
+    fn task_12_2_2_4_classifier_dispositions_cannot_weaken_failure_action() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        for dispositions in [
+            Vec::new(),
+            vec![AdvisoryClassifierDisposition::Narrow],
+            vec![
+                AdvisoryClassifierDisposition::Deny,
+                AdvisoryClassifierDisposition::Escalate,
+            ],
+        ] {
+            let decision = AdvisoryPolicyGate::map_failure(
+                &clearance,
+                &result(
+                    clearance.fact_set_sha256(),
+                    AdvisoryClassifierStatus::TimedOut,
+                    dispositions,
+                ),
+            )
+            .expect("timeout maps");
+            assert_eq!(decision.action(), ClassifierFailureAction::Blocked);
+        }
+    }
+
+    #[test]
+    fn task_12_2_2_4_failure_decisions_are_reproducible_and_non_authoritative() {
+        let clearance = PreclassificationPolicyGate::evaluate(&facts()).expect("clearance");
+        let unavailable = result(
+            clearance.fact_set_sha256(),
+            AdvisoryClassifierStatus::Unavailable,
+            Vec::new(),
+        );
+        let first = AdvisoryPolicyGate::map_failure(&clearance, &unavailable).expect("maps");
+        let repeated = AdvisoryPolicyGate::map_failure(&clearance, &unavailable).expect("maps");
+        assert_eq!(first, repeated);
+        assert_eq!(first.action(), ClassifierFailureAction::Blocked);
+        assert_eq!(first.fact_set_sha256(), clearance.fact_set_sha256());
     }
 }
