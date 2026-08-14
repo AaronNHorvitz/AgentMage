@@ -46,6 +46,8 @@ pub mod tooling;
 pub mod work_packet;
 
 #[cfg(test)]
+mod s012_ut02;
+#[cfg(test)]
 mod test_target;
 
 /// Stable component identity used by diagnostics and build verification.
