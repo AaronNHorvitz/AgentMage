@@ -107,7 +107,7 @@ fn failure(
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests_support {
     use agentmage_kernel_contracts::{
         CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextBudget, ContextPacketId,
         ContractPayload, CorrelationId, DecodingProfile, ExactModelProfile, FamilyCodecIdentity,
@@ -123,7 +123,7 @@ mod tests {
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-    fn profile(family: &str) -> ExactModelProfile {
+    pub(crate) fn profile(family: &str) -> ExactModelProfile {
         let codec = FamilyCodecIdentity {
             codec_id: ModelCodecId::from_raw(format!("fixture-{family}-codec")),
             codec_version: "1".to_owned(),
@@ -236,7 +236,7 @@ mod tests {
         }
     }
 
-    fn request(profile: &ExactModelProfile) -> ModelRunRequest {
+    pub(crate) fn request(profile: &ExactModelProfile) -> ModelRunRequest {
         ModelRunRequest {
             schema_version: CONTRACT_SCHEMA_VERSION,
             model_run_id: ModelRunId::from_raw("run-1"),
@@ -251,7 +251,7 @@ mod tests {
         }
     }
 
-    fn proposal(profile: &ExactModelProfile) -> ClosedModelProposal {
+    pub(crate) fn proposal(profile: &ExactModelProfile) -> ClosedModelProposal {
         let mut value = ClosedModelProposal {
             schema_version: CONTRACT_SCHEMA_VERSION,
             proposal_id: ProposalId::from_raw("proposal-1"),
