@@ -15,7 +15,7 @@
         "sha256": "6600f0e599cb96c4ac2c31852a8045ba740ad0fbb5b22300ec29e8e615d86ae9",
         "tree": "b3880a80ebdaca8c854c262d9cb50c2103eb13ac"
       },
-      "artifact_current": true,
+      "artifact_current": false,
       "claims": [
         "AT-ARCH-001"
       ],
@@ -40,7 +40,7 @@
         "sha256": "8bc8a4c1c398c68effd89438a0b11db2f4d7f5a01f9176b926529d28beea0f7f",
         "tree": "b3880a80ebdaca8c854c262d9cb50c2103eb13ac"
       },
-      "artifact_current": true,
+      "artifact_current": false,
       "claims": [
         "AT-AUTH-001"
       ],
@@ -65,7 +65,7 @@
         "sha256": "1733c9c5472bffd95ccace242f179864ef65f40b28280ed4649e3f9f8a1e8a19",
         "tree": "b12383b18debfeb93f958bdb46c1c030c97ae9ea"
       },
-      "artifact_current": true,
+      "artifact_current": false,
       "claims": [
         "AT-CFG-001"
       ],
