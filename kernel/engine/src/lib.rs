@@ -39,6 +39,8 @@ pub mod evidence_bundle;
 pub mod evidence_reconciliation;
 /// Deterministic assignment of explicit evidence states to material claims.
 pub mod evidence_state;
+/// Authority-free controlled filesystem plans, structured patches, and exact previews.
+pub mod filesystem_control;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.
