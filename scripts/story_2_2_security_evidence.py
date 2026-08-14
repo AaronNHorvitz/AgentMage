@@ -73,8 +73,8 @@ MAPPINGS = {
             "fuzzing/toolchain-policy.json",
             "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
         ],
-        "demonstrated": "The registry inventories the FFI boundary class, currently discovers zero active FFI boundaries, and requires sanitizers plus focused fuzz ownership when one appears.",
-        "remaining": "Every future unsafe block, FFI edge, native library, privilege, and entitlement still requires concrete inventory, justification, review, and product-boundary fuzz evidence.",
+        "demonstrated": "The registry inventories the FFI boundary class, records the Windows native-identity FFI edge, and requires focused ownership plus the deferred final sanitizer and fuzz campaign.",
+        "remaining": "The recorded Windows edge and every future unsafe block, FFI edge, native library, privilege, and entitlement still require concrete justification, review, and product-boundary fuzz evidence before release.",
     },
     "SR-TST-002": {
         "story_contribution": "foundation-established",
@@ -264,7 +264,7 @@ def validate_protocol(value: Any, root: Path = ROOT) -> list[str]:
     observations = value.get("observations", {})
     if observations != {
         "registered_target_count": 12,
-        "active_ffi_boundary_count": 0,
+        "active_ffi_boundary_count": 1,
         "owner_gate_count": 13,
         "seeded_non_pass_result_count": 6,
         "minimized_reproducer_count": 6,
