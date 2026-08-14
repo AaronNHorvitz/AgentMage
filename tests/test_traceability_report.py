@@ -78,8 +78,12 @@ class TraceabilityReportTests(unittest.TestCase):
         report = build_traceability_report()
         records = {record["id"]: record for record in report["requirements"]}
         normative_count = sum(len(record["normative_statements"]) for record in records.values())
+        normative_map = json.loads(DEFAULT_NORMATIVE_MAP.read_text(encoding="utf-8"))
+        expected_reverse_links = sum(
+            len(mapping["requirement_ids"]) for mapping in normative_map["mappings"]
+        )
 
-        self.assertGreaterEqual(normative_count, 26)
+        self.assertEqual(normative_count, expected_reverse_links)
         self.assertTrue(records["AM-KRN-001"]["normative_statements"])
         for record in records.values():
             if record["normative_statements"]:

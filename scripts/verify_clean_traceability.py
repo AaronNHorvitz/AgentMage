@@ -19,6 +19,7 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 OFFLINE_COMMANDS: Final = (
     ("python3", "scripts/requirement_registry.py", "--check"),
     ("python3", "scripts/additions_only.py"),
+    ("python3", "scripts/planning_scope.py"),
     ("python3", "scripts/policy_expectations.py", "--check"),
     ("python3", "scripts/security_references.py"),
     ("python3", "scripts/traceability_report.py", "--check"),
