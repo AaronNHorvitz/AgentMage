@@ -1,0 +1,215 @@
+{
+  "blockers": [
+    {
+      "code": "CANONICAL-SESSION-HANDOFF-COMPOSITION-ABSENT",
+      "owner": "24.1.1.1"
+    },
+    {
+      "code": "INSTALLED-VSCODE-HANDOFF-EVIDENCE-ABSENT",
+      "owner": "24.2.2.3"
+    },
+    {
+      "code": "LINUX-ACCESSIBILITY-EVIDENCE-ABSENT",
+      "owner": "24.2.2.4"
+    },
+    {
+      "code": "WINDOWS-ACCESSIBILITY-EVIDENCE-ABSENT",
+      "owner": "24.2.2.4"
+    },
+    {
+      "code": "MACOS-ACCESSIBILITY-EVIDENCE-ABSENT",
+      "owner": "24.2.2.4"
+    },
+    {
+      "code": "LIVE-HANDOFF-ZERO-EGRESS-EVIDENCE-ABSENT",
+      "owner": "24.1.3.2"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-24-REVIEW-ABSENT",
+      "owner": "24.1.3.4"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "handoff",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "kernel-handoff-tests",
+      "output_sha256": "762c7fb49ff0843a40b37fbffb08b24ca804cafc9d4737df30fc394b0bc0df2a"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "handoff",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "host-handoff-tests",
+      "output_sha256": "67ecfe6ad94d469dee09dcc0e5b1c3f4d629b30b734d433670234f1392bfad80"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "test",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "exit_code": 0,
+      "id": "vscode-tests",
+      "output_sha256": "a7dd5effc642eb0e0187befb209a2bbf6ae51872fe29463da385f7bb67331f34"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "lint",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "exit_code": 0,
+      "id": "vscode-lint",
+      "output_sha256": "834d29c3498ed4d5345501478c486f7e9422a2a85768661c726f0be217f8c936"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "18e2889408a903ee372ea7a08213fb8f8431d6f2c2f0423dd71aba678eb8f6e4"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_24_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "authenticated_local_transport": true,
+    "automatic_external_delivery": false,
+    "clipboard_or_interface_control": false,
+    "codex_invocation": false,
+    "complete_disclosure_schema": true,
+    "content_addressed_packet_contract": true,
+    "explicit_non_public_acknowledgment": true,
+    "independent_extension_digest_verification": true,
+    "pre_render_source_policy_redaction_revalidation": true,
+    "production_session_composition": false,
+    "prohibited_action_local_receipts": true,
+    "secret_hidden_unrelated_content_denial": true
+  },
+  "record_type": "sprint_24_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-NET-002",
+    "SR-AI-004",
+    "SR-AI-008",
+    "SR-AI-010",
+    "SR-OPS-001",
+    "SR-OPS-003",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-009"
+  ],
+  "source_revision": "f77028930cab3a66a96e70964936fb00187a153c",
+  "source_sha256": {
+    "docs/architecture/local-codex-handoff-boundary.md": "1f2febcc71b1fe46dbd2fc7e3f22ea4fece28c862a4208148455785c5e970433",
+    "docs/verification/sprint-24-local-results.md": "10e71585f027f7ccbcac861d78f5c9c31c44b08c4cb5b5de630e073151527255",
+    "kernel/contracts/src/handoff.rs": "fd01abf54a47a5bbcd65159546255328c8dbe9bd3abdd048f471c39d5add3d2d",
+    "kernel/engine/src/handoff.rs": "b20008e507719c2c42d348636f2ae8579d1dbad38e40031d86c83dc01d2c53b8",
+    "kernel/engine/src/lib.rs": "691b54d6a112234fe69fd3889e66a7580b667dc1968fdd2acac368c89ff096bd",
+    "scripts/sprint_24_evidence.py": "22f6a91c35a2f7c06a2af2b963655855c1d4f6fa9f97e09420b70c28962ffa76",
+    "security/strict-local-source-policy.json": "b7a5046c9d433547b7226861d2566854ce3b454d19f4f61ce276b58f1c498053",
+    "shells/host/src/linux_read.rs": "69cd5f43256ea49ed1b822033cf95b818a70bd9c3a5d8dd8efa4b0de19bf37b3",
+    "shells/host/src/protocol.rs": "06ea5e0fe9ae3f67b559ce05b7ca57c9a76eeb0a3d16af9df9a254ed99a7ae3c",
+    "shells/vscode/src/extension.ts": "bdf2f2e33dcafe86646871664dfec6252ab652be9202f338a59140727417877a",
+    "shells/vscode/src/handoff.ts": "b34dd83e815c4aa45c0ebbe86872babcdf5489dd828cae0124093f54ebba363f",
+    "shells/vscode/src/host_bootstrap.ts": "b9ed58dc7fc0a0f3a015e899f6b9d1df315c1f20ed27db2ba27a6b20c5e00ced",
+    "shells/vscode/src/host_bridge.ts": "18890ccf77db9a6ea477676021697a38d6433fbdd88b76aba89880032ca44bbb",
+    "shells/vscode/src/provider.ts": "5ed8347a15ee80deb137f981724d099fcf3d62c3fbd37a43c773bc64d49749eb",
+    "shells/vscode/test/handoff.test.ts": "0e3c9a9ae9ce75d46618a89037c081ac608ae632b01620271dc752ff6b4728d8",
+    "shells/vscode/test/host_bridge.test.ts": "2502a3249e0a34c94690de2f8c9e5bbcc1d4327e89e583cd598b1095e98c6406",
+    "shells/vscode/test/provider.test.ts": "81e769b4231d2ae3298c7c42a35d8de074229dbd345333b145242ea8abeb0920",
+    "tests/test_sprint_24_evidence.py": "4a78b7d6b0cc758d2fe02ad942d01bd89141fb1b6731a473ba1b34d538ce9c88"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "authenticated_host_transport": true,
+    "canonical_production_session_composition": false,
+    "complete_product_local_gate": true,
+    "exact_disclosure_and_packet_matrix": true,
+    "independent_extension_digest_checks": true,
+    "independent_review": false,
+    "installed_native_vscode_workflow": false,
+    "linux_native_accessibility": false,
+    "live_handoff_zero_egress_observation": false,
+    "macos_native_accessibility": false,
+    "prohibited_action_receipt_matrix": true,
+    "secret_redaction_and_injection_matrix": true,
+    "source_policy_and_expiry_drift_matrix": true,
+    "windows_native_accessibility": false
+  }
+}
