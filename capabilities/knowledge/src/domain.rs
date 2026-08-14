@@ -219,6 +219,16 @@ pub enum KnowledgeError {
     InvalidLink,
     /// Evidence closure is malformed, duplicated, or out of bounds.
     InvalidEvidence,
+    /// Plain-folder layout or naming template is malformed.
+    InvalidTemplate,
+    /// A supplied knowledge path or entry kind is prohibited.
+    InvalidPath,
+    /// Canonical Markdown is malformed, non-canonical, or unsupported.
+    InvalidMarkdown,
+    /// Supplied bytes do not match their expected digest.
+    ContentDrift,
+    /// Stable identity or canonical path is duplicated.
+    DuplicateRecord,
 }
 
 impl KnowledgeError {
@@ -234,6 +244,11 @@ impl KnowledgeError {
             Self::PersistenceDenied => "knowledge.persistence.denied",
             Self::InvalidLink => "knowledge.link.invalid",
             Self::InvalidEvidence => "knowledge.evidence.invalid",
+            Self::InvalidTemplate => "knowledge.template.invalid",
+            Self::InvalidPath => "knowledge.path.invalid",
+            Self::InvalidMarkdown => "knowledge.markdown.invalid",
+            Self::ContentDrift => "knowledge.content.drift",
+            Self::DuplicateRecord => "knowledge.record.duplicate",
         }
     }
 }

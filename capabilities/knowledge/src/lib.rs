@@ -3,6 +3,7 @@
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
 mod domain;
+mod plain_folder;
 mod schema;
 mod store;
 
@@ -10,6 +11,11 @@ pub use domain::{
     KnowledgeError, KnowledgeField, KnowledgeLink, KnowledgeLinkKind, KnowledgePrivacy,
     KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention,
     KnowledgeRetentionKind, validate_record,
+};
+pub use plain_folder::{
+    KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
+    PlainFolderKnowledgeStore, PlainFolderLayout, PlainFolderNoteInput, parse_canonical_markdown,
+    render_canonical_markdown,
 };
 pub use schema::{
     KnowledgeRecordSchema, knowledge_schema, knowledge_schemas, verify_schema_registry,
