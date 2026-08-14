@@ -1,0 +1,304 @@
+{
+  "artifact_id": "story-12-2-product-security-evidence-map",
+  "external_network_used": false,
+  "limitations": [
+    "This map closes Story 12.2 evidence organization and acceptance execution; it does not mark any security requirement complete for a product release.",
+    "Acceptance tests use deterministic synthetic records; production models, learned classifiers, platform workers, provider adapters, and live UI remain later integration and release gates.",
+    "Complete agent-snapshot storage, full prompt-injection coverage, and the product audit-event registry remain later owning-sprint work.",
+    "Cross-platform packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "mappings": [
+    {
+      "contribution": "pass-synthetic-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-state.json",
+        "artifacts/sprints/sprint-12/story-12.2/agent-failure-corpus.json",
+        "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json"
+      ],
+      "remaining": "Complete agent-snapshot storage, production adapters, and release rerun.",
+      "requirement_id": "AT-AGENT-001"
+    },
+    {
+      "contribution": "pass-synthetic-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-policy.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json",
+        "artifacts/sprints/sprint-12/story-12.2/policy-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/reclassification.json"
+      ],
+      "remaining": "Live fact collectors, production classifier, and release rerun.",
+      "requirement_id": "AT-CLASS-001"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/agent-contract-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json"
+      ],
+      "remaining": "Complete production effect composition.",
+      "requirement_id": "SR-ACC-001"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/policy-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-state.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json"
+      ],
+      "remaining": "Production model and rendered-UI evaluation.",
+      "requirement_id": "SR-AI-003"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json",
+        "artifacts/sprints/sprint-12/story-12.2/agent-failure-corpus.json"
+      ],
+      "remaining": "Complete direct and indirect prompt-injection corpus.",
+      "requirement_id": "SR-AI-005"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/classifier-failure.json",
+        "artifacts/sprints/sprint-12/story-12.2/agent-contract-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/agent-failure-corpus.json"
+      ],
+      "remaining": "Live UI rendering and broader semantic corpus.",
+      "requirement_id": "SR-AI-007"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/agent-contract-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/policy-reference.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json"
+      ],
+      "remaining": "Full candidate-neutral codec and production runtime corpus.",
+      "requirement_id": "SR-AI-015"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-policy.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json",
+        "artifacts/sprints/sprint-12/story-12.2/reclassification.json"
+      ],
+      "remaining": "Live fact collectors and production classifier rerun.",
+      "requirement_id": "SR-AI-017"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-state.json",
+        "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+        "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json"
+      ],
+      "remaining": "Complete agent-snapshot storage and product-loop integration.",
+      "requirement_id": "SR-AI-018"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json",
+        "artifacts/sprints/sprint-12/story-12.2/agent-failure-corpus.json"
+      ],
+      "remaining": "Complete durable product audit-event registry.",
+      "requirement_id": "SR-OPS-001"
+    },
+    {
+      "contribution": "demonstrated-agent-state-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-state.json",
+        "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json"
+      ],
+      "remaining": "Remaining model, checkpoint, shutdown, and release recovery fixtures.",
+      "requirement_id": "RV-17"
+    }
+  ],
+  "private_user_data_used": false,
+  "requirement_ids": [
+    "AT-AGENT-001",
+    "AT-CLASS-001",
+    "SR-ACC-001",
+    "SR-AI-003",
+    "SR-AI-005",
+    "SR-AI-007",
+    "SR-AI-015",
+    "SR-AI-017",
+    "SR-AI-018",
+    "SR-OPS-001",
+    "RV-17"
+  ],
+  "schema_version": 1,
+  "source_revision": "cb8791e795b7c0392c1f510c2b1cb96e289da44a",
+  "sources": [
+    {
+      "bytes": 4119,
+      "path": "docs/verification/task-12-2-4-5-product-security-evidence.md",
+      "sha256": "9988caba3843bfd12548f9daa3251749af6e26a83d62c98e4160d2014fd1aa9e"
+    },
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 359500,
+      "path": "Agent-Scaffolding-Inventory.md",
+      "sha256": "2e11848e3d92222b88edb0d570858997889eabc66984ad11b81414d90df6f884"
+    },
+    {
+      "bytes": 33814,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "19f14f0a0e3b12237bc2fc22353c6341ceeda001eb1d35d9e913192f76edc7b2"
+    },
+    {
+      "bytes": 15093,
+      "path": "scripts/story_12_2_security_evidence.py",
+      "sha256": "ae8fd876caf8fa0edd313853c4859cff0ce24647b6944f264c061208c1226cf6"
+    },
+    {
+      "bytes": 4005,
+      "path": "tests/test_story_12_2_security_evidence.py",
+      "sha256": "a44ad8ff645fab2cffda0b43321ca8c49d109219a28bb580b2bbd0d4bfb17858"
+    },
+    {
+      "bytes": 761,
+      "path": "fixtures/agent-policy/v1/d027-policy-campaign.json",
+      "sha256": "89a41babf181f551f8b0d5e978f0f3d2d3bd29601b525e78a79107340157bd02"
+    },
+    {
+      "bytes": 784,
+      "path": "fixtures/agent-policy/v1/d027-classifier-campaign.json",
+      "sha256": "91255c3490b1135e767cff0b68454a6acf231cd5f9625dcbd5057a4ebd8d0b26"
+    },
+    {
+      "bytes": 1553,
+      "path": "fixtures/agent-policy/v1/d027-restart-campaign.json",
+      "sha256": "726d9c492f589de7fcc307cb6074c37d5b6c80a4e5118ed50c87fe487470b250"
+    },
+    {
+      "bytes": 4361,
+      "path": "artifacts/sprints/sprint-12/story-12.2/agent-contract-reference.json",
+      "sha256": "9c78fc6e36f14ff7250f59de39b236756640b94b85b62b77aed572e51117d570"
+    },
+    {
+      "bytes": 4237,
+      "path": "artifacts/sprints/sprint-12/story-12.2/policy-reference.json",
+      "sha256": "0f516f166c16f7919b317689c8798bb12f9fe74d4898d23dc18c758452ec0762"
+    },
+    {
+      "bytes": 4929,
+      "path": "artifacts/sprints/sprint-12/story-12.2/agent-failure-corpus.json",
+      "sha256": "54f9aa19fb1414968cc25a26b2a415334dab308df92b59658ee48ed2cda47d0a"
+    },
+    {
+      "bytes": 3833,
+      "path": "artifacts/sprints/sprint-12/story-12.2/d027-s12-state.json",
+      "sha256": "b9bd035fd3fd3a7515c29d2bc54440375d4819d43bd1bfb1f659d9808e8fabfa"
+    },
+    {
+      "bytes": 3371,
+      "path": "artifacts/sprints/sprint-12/story-12.2/d027-s12-policy.json",
+      "sha256": "09ac04461450d19c0a1d4dc1c2941d800057f0cc031696a6e8be5d5eaacd9d7c"
+    },
+    {
+      "bytes": 3614,
+      "path": "artifacts/sprints/sprint-12/story-12.2/d027-s12-classifier.json",
+      "sha256": "eddab7100b8b40b7a15bbd4766193ce1a2e6b29a3231a1c9f9516d1f6fa51c2e"
+    },
+    {
+      "bytes": 4082,
+      "path": "artifacts/sprints/sprint-12/story-12.2/d027-s12-restart.json",
+      "sha256": "0afda9ab1359dab9da4cfff780c145f6a9e7a9b75f72c6261f42f414af36e94f"
+    },
+    {
+      "bytes": 4687,
+      "path": "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+      "sha256": "202d7160d1887305973cf3abfd4536fbc2db49894a37994f0092062d8cdc603a"
+    },
+    {
+      "bytes": 4678,
+      "path": "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+      "sha256": "2a0504349e7674bc7e8e6a3257ca1963747fcfa010fe1b211855f51715c0a6d7"
+    },
+    {
+      "bytes": 3816,
+      "path": "artifacts/sprints/sprint-12/story-12.2/preclassification-policy.json",
+      "sha256": "197aa262a16ba3d60dfa514150c669e6b42cdd88243f24f4d584eac2d0006a3a"
+    },
+    {
+      "bytes": 4037,
+      "path": "artifacts/sprints/sprint-12/story-12.2/advisory-policy.json",
+      "sha256": "539827f4aad6df4de3efdfc2d35806775a8ae81569098ab17c9397d096194f03"
+    },
+    {
+      "bytes": 3800,
+      "path": "artifacts/sprints/sprint-12/story-12.2/classifier-failure.json",
+      "sha256": "788706de755e0e0c1faaf06b3fc7a6e9af60235500f63b48acdaa9f0c8351539"
+    },
+    {
+      "bytes": 4435,
+      "path": "artifacts/sprints/sprint-12/story-12.2/reclassification.json",
+      "sha256": "eabd1d089dc4bc8c568d390c49da699de4f12b66dc6f4496a433f302778d2c41"
+    }
+  ],
+  "status": "pass-story-scope-security-mapping",
+  "task_ids": [
+    "12.2.4.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "798832d21ff1c7cb6a2eeb6f291c8c601638da7539b75d8fc47f67e7cd091c33",
+      "exit_code": 0,
+      "expected_marker_sha256": "bed75bd449509d0fff481a86ccf17341b734cb859d61e270351a7db3bf7b8a4e",
+      "status": "pass"
+    },
+    {
+      "command_id": "d64ecd0eb33716ae91375ddd6d606f55b25db97d87ef47fae7116ca35129464e",
+      "exit_code": 0,
+      "expected_marker_sha256": "a1ba1bccc0dea0eccc8f8fac73c37face086e0a9d047fdb1abd3fcd96e1c8430",
+      "status": "pass"
+    },
+    {
+      "command_id": "5e086e34237e4b2c9b9fca3bfab67b3c82fa962b6630b06c14eb148eb194d488",
+      "exit_code": 0,
+      "expected_marker_sha256": "6a8b855aa4bfe2d6f5c0e02b047fb727306f8e8157738ee411a42161f3a21d45",
+      "status": "pass"
+    },
+    {
+      "command_id": "44f76bafe1670e6bb8a9496ec77776f54548c85b9516b68c8aac55fb589a0031",
+      "exit_code": 0,
+      "expected_marker_sha256": "748560f5d7feb965675b72957808bb9441260334015b669a9275f69187410f5b",
+      "status": "pass"
+    },
+    {
+      "command_id": "95f5cad62ad054da6bf0fd3326f3e641306f0e9d1e05c04013208046a3e6d532",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "fdb6e7c62777d9d4f03cc787ca26c6403bec274ae61fd2ed3ee9843299b5b245",
+      "exit_code": 0,
+      "expected_marker_sha256": "26fced2a0722eea8c90db6724eaa54e9b970b92df2a4ccd38f2fcfe01a5108e0",
+      "status": "pass"
+    },
+    {
+      "command_id": "7a257bd81f841adcdcfd74883b95248f40baaaf9ee5d496806c3c132269afa9e",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
