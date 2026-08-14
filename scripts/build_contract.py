@@ -35,7 +35,7 @@ EXPECTED_MEMBERS = {
 EXPECTED_CARGO_PACKAGES = {
     "capabilities/read-only": (
         "agentmage-capability-read-only",
-        {"agentmage-kernel-contracts"},
+        {"agentmage-kernel-contracts", "serde", "serde_json", "sha2"},
     ),
     "kernel/contracts": (
         "agentmage-kernel-contracts",
@@ -60,6 +60,7 @@ EXPECTED_CARGO_PACKAGES = {
             "agentmage-kernel-engine",
             "rustix",
             "seccompiler",
+            "serde_json",
             "sha2",
             "zeroize",
         },

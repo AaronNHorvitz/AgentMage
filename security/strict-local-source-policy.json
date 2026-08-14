@@ -1,5 +1,8 @@
 {
   "allowed_external_uris": {
+    "capabilities/read-only/src/catalog.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
+    ],
     "kernel/contracts/src/display_link.rs": [
       "https://example.test/x"
     ],
@@ -11,16 +14,19 @@
     ],
     "platforms/linux-inference/src/docker_live_collector.rs": [
       "http://example.invalid"
+    ],
+    "shells/host/src/protocol.rs": [
+      "https://example.invalid/health"
     ]
   },
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
     "Cargo.toml": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86",
-    "capabilities/read-only/Cargo.toml": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a",
+    "capabilities/read-only/Cargo.toml": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
     "kernel/engine/Cargo.toml": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2",
     "platforms/linux-inference/Cargo.toml": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9",
-    "platforms/linux/Cargo.toml": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac",
+    "platforms/linux/Cargo.toml": "1f72f4c8a1b4fd868a0b0fb26336d04826a50b21f1e99b24d4f7ebab4a8ac25b",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
     "shells/host/Cargo.toml": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
