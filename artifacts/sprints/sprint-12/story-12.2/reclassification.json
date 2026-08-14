@@ -1,0 +1,124 @@
+{
+  "artifact_id": "task-12-2-2-5-reclassification",
+  "case_ids": [
+    "RCL-01",
+    "RCL-02",
+    "RCL-03",
+    "RCL-04",
+    "RCL-05",
+    "RCL-06"
+  ],
+  "claims": {
+    "advisory_restriction_count": 5,
+    "allowed_crossings_per_permit": 1,
+    "classifier_runtime_executions": 0,
+    "directed_distinct_boundary_pair_count": 56,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "platform_executions": 0,
+    "reclassification_content_kind_count": 10,
+    "release_support": false,
+    "restricted_network_crossings": 0,
+    "tool_executions": 0,
+    "trust_boundary_count": 8
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This task proves the kernel reclassification contract with typed synthetic observations; production adapters must supply current content and revision evidence at their owning later sprints.",
+    "Materializing redacted, narrowed, or isolated replacement content requires a new observation and remains later product integration.",
+    "No model, classifier runtime, tool, worker, platform effect, private user data, or external network operation is used.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "a7342906cbba3c00dcd9f4459a048c44dea219f5",
+  "sources": [
+    {
+      "bytes": 2308,
+      "path": "docs/verification/task-12-2-2-5-reclassification-results.md",
+      "sha256": "ae34b1594f696e35230a095b8e3704125fa0cf219118cbd780a738a2ca3d1fea"
+    },
+    {
+      "bytes": 31956,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "bd0962442f2b690a815685212addc985701845faaf7cc4798eda9ebf1a9d2925"
+    },
+    {
+      "bytes": 5292,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "2391ff836a31e8734101363d011af0444397cd6e92925e9862d95e95301601a0"
+    },
+    {
+      "bytes": 10739,
+      "path": "kernel/contracts/src/serialization.rs",
+      "sha256": "925db40124e9c6c23d797e370c72af53789450fbb0c3f338ce28f3661c02d556"
+    },
+    {
+      "bytes": 23289,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "af8a5bb3d28947b53a1e63d051a3ed5d639971a4671ae8d742690f579b707bda"
+    },
+    {
+      "bytes": 24156,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "c30eb9b332c7a11a3776562e7ec7232b1f5884de68a910690942e6224a253ff6"
+    },
+    {
+      "bytes": 23373,
+      "path": "kernel/engine/src/reclassification.rs",
+      "sha256": "200365a8992488a1f6d953176a8aac7c74a99cbd35a8aac0ea8a46dc6740a1e9"
+    },
+    {
+      "bytes": 3209,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "3586d2820cdecba6a320a6faed6c16dab7197e7cf470b56ff5a54d986fe33c43"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3961,
+      "path": "scripts/reclassification_evidence.py",
+      "sha256": "b90dc17da34b2c349ac9fa0d527203aecc9b30cf85f6c6ac45afa46194c0e5ef"
+    },
+    {
+      "bytes": 3245,
+      "path": "tests/test_reclassification_evidence.py",
+      "sha256": "0c111953c9daa37bfee7943f343846d6276504a728b11bab70dbdf0005884616"
+    }
+  ],
+  "status": "pass-continuous-reclassification",
+  "task_ids": [
+    "12.2.2.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "026ea1952ae81a8caa91356d19fa091b94d57a23709a9adc17a60a6b8db9355e",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "0b23f1c770e26c1c7e3c1d61a0d201d58f2e0c81c42f37385f6594f90343bd33",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
