@@ -2602,25 +2602,25 @@ AC 33.AC5, and the sprint therefore remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 34.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 34.1.1.1** (legacy `S-028-I01`): Implement task identity, owner, project, source, evidence, dependencies, status, blocker, next action, priority, duplicate detection, and deferred views.
-  - [ ] **Sub-task 34.1.1.2** (legacy `S-028-I02`): Implement evidence-required task transitions and source links to canonical records.
-  - [ ] **Sub-task 34.1.1.3** (legacy `S-028-I03`): Define declarative skill records with identity, source, hash, signer or provenance, license, version, compatibility, purpose, files, requested scope, and trust state.
-  - [ ] **Sub-task 34.1.1.4** (legacy `S-028-I04`): Load only prompts, schemas, examples, and templates; give declarative skills no filesystem, shell, secret, network, connector, or approval authority.
-  - [ ] **Sub-task 34.1.1.5** (legacy `S-028-I05`): Implement visible instruction precedence, conflict reporting, bounded context contribution, and skill-influence receipts.
-  - [ ] **Sub-task 34.1.1.6** (legacy `S-028-I06`): Implement read-only Daily Setup, Daily Briefing, Issue Intake, Handoff, Meeting Cleanup, Repository Learning, Plain-Workspace Steward, and Obsidian Vault Steward skills.
-  - [ ] **Sub-task 34.1.1.7** (legacy `S-028-I07`): Run malicious instruction, hidden-tool, path-expansion, injection, excessive-context, and conflicting-policy skill fixtures.
-  - [ ] **Sub-task 34.1.1.8** (legacy `S-028-I08`): Publish knowledge, vault, memory, conversation, retrieval, privacy, task, and skill guides.
+- [x] **Task 34.1.1 - Implement the bounded story**
+  - [x] **Sub-task 34.1.1.1** (legacy `S-028-I01`): Implement task identity, owner, project, source, evidence, dependencies, status, blocker, next action, priority, duplicate detection, and deferred views.
+  - [x] **Sub-task 34.1.1.2** (legacy `S-028-I02`): Implement evidence-required task transitions and source links to canonical records.
+  - [x] **Sub-task 34.1.1.3** (legacy `S-028-I03`): Define declarative skill records with identity, source, hash, signer or provenance, license, version, compatibility, purpose, files, requested scope, and trust state.
+  - [x] **Sub-task 34.1.1.4** (legacy `S-028-I04`): Load only prompts, schemas, examples, and templates; give declarative skills no filesystem, shell, secret, network, connector, or approval authority.
+  - [x] **Sub-task 34.1.1.5** (legacy `S-028-I05`): Implement visible instruction precedence, conflict reporting, bounded context contribution, and skill-influence receipts.
+  - [x] **Sub-task 34.1.1.6** (legacy `S-028-I06`): Implement read-only Daily Setup, Daily Briefing, Issue Intake, Handoff, Meeting Cleanup, Repository Learning, Plain-Workspace Steward, and Obsidian Vault Steward skills.
+  - [x] **Sub-task 34.1.1.7** (legacy `S-028-I07`): Run malicious instruction, hidden-tool, path-expansion, injection, excessive-context, and conflicting-policy skill fixtures.
+  - [x] **Sub-task 34.1.1.8** (legacy `S-028-I08`): Publish knowledge, vault, memory, conversation, retrieval, privacy, task, and skill guides.
 
-- [ ] **Task 34.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 34.1.2.1:** Knowledge task store and views.
-  - [ ] **Sub-task 34.1.2.2:** Declarative skill registry and initial skill pack.
-  - [ ] **Sub-task 34.1.2.3:** v0.2 acceptance and migration bundle.
-  - [ ] **Sub-task 34.1.2.4:** v0.2 capability matrix, limitations, and release notes.
+- [x] **Task 34.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 34.1.2.1:** Knowledge task store and views.
+  - [x] **Sub-task 34.1.2.2:** Declarative skill registry and initial skill pack.
+  - [x] **Sub-task 34.1.2.3:** v0.2 acceptance and migration bundle.
+  - [x] **Sub-task 34.1.2.4:** v0.2 capability matrix, limitations, and release notes.
 
 - [ ] **Task 34.1.3 - Verify and close the story**
-  - [ ] **Sub-task 34.1.3.1:** `S-028-UT01` validates task and declarative-skill schemas with unknown capabilities, hidden instructions, executable content, unbounded inputs, vague completion, and unsupported versions; assert disabled status.
-  - [ ] **Sub-task 34.1.3.2:** `S-028-ST01` attempts skill-based grant creation, tool registration, network access, code execution, workspace expansion, memory promotion, and write behavior; assert declarative skills remain authority-free.
+  - [x] **Sub-task 34.1.3.1:** `S-028-UT01` validates task and declarative-skill schemas with unknown capabilities, hidden instructions, executable content, unbounded inputs, vague completion, and unsupported versions; assert disabled status.
+  - [x] **Sub-task 34.1.3.2:** `S-028-ST01` attempts skill-based grant creation, tool registration, network access, code execution, workspace expansion, memory promotion, and write behavior; assert declarative skills remain authority-free.
   - [ ] **Sub-task 34.1.3.3:** `S-028-IT01` completes every promoted knowledge workflow through native Chat and CLI-compatible kernel contracts using lexical and approved optional semantic paths; assert evidence parity and source-file invariance.
   - [ ] **Sub-task 34.1.3.4:** `S-028-AT01` upgrades v0.1 data, runs clean/offline/privacy/recovery/accessibility suites on each platform, then downgrades or rolls back; assert no canonical knowledge loss or hidden capability.
   - [ ] **Sub-task 34.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain skill manifests, workflow traces, cross-interface comparisons, migration/rollback results, and signed release decision.
@@ -2632,13 +2632,26 @@ AC 33.AC5, and the sprint therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 34.AC1:** Plain-folder and Obsidian workflows pass identical canonical-record and task acceptance suites.
-- [ ] **Sprint AC 34.AC2:** Optional semantic retrieval remains local, opt-in, deletable, and non-authoritative.
-- [ ] **Sprint AC 34.AC3:** Skills cannot grant tools, relax policy, expand roots, or execute code.
-- [ ] **Sprint AC 34.AC4:** Every v0.2 user-file operation remains read-only.
+- [x] **Sprint AC 34.AC1:** Plain-folder and Obsidian workflows pass identical canonical-record and task acceptance suites.
+- [x] **Sprint AC 34.AC2:** Optional semantic retrieval remains local, opt-in, deletable, and non-authoritative.
+- [x] **Sprint AC 34.AC3:** Skills cannot grant tools, relax policy, expand roots, or execute code.
+- [x] **Sprint AC 34.AC4:** Every v0.2 user-file operation remains read-only.
 - [ ] **Sprint AC 34.AC5:** `G-V0.2` closes only when knowledge, retrieval, memory, task, privacy, backup, recovery, and documentation gates pass.
 
 **Gate decision:** Sprint 34 is PASS only when Story 34.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** Canonical task projections, evidence-required
+unapplied transition previews, authority-free declarative skills, eight built-in read-only
+workflows, and the v0.2 guide and draft release-document set are implemented in commits
+`9030915`, `9614159`, `760f6f8`, and `7603898`. The retained
+[Sprint 34 evidence report](artifacts/sprints/sprint-34/local-evidence-report.json) in
+`c7f496d` records passing local capability, hostile-fixture, product, documentation,
+strict-local, dependency, and supply-chain gates. Sprint 34 remains **BLOCKED** because
+Sprint 33 is not yet a passing upstream dependency, native Chat and CLI end-to-end
+acceptance is absent, supported-platform v0.1 migration and rollback evidence is absent,
+and no independent signed v0.2 release decision exists. Task 34.1.3, its three open
+sub-tasks, both story criteria, Sprint AC 34.AC5, the story, and the sprint therefore
+remain open.
 
 ## [ ] Epic 3 - v0.3 - Controlled Writes
 
