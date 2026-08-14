@@ -671,8 +671,9 @@ fn runtime_failure(code: &str) -> ModelRuntimeFailure {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextBudget, ContextPacketId,
-        CorrelationId, DecodingProfile, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
+        BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+        CancellationSignal, ClosedModelProposal, ContextBudget, ContextPacketId, CorrelationId,
+        DecodingProfile, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
         LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCapability, ModelCapabilityState,
         ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState,
         ModelLoadReceipt, ModelManifestId, ModelManifestObservation, ModelMessage, ModelMessageId,
@@ -686,28 +687,44 @@ mod tests {
 
     use super::{
         LocalModelController, ModelAdmissionCatalog, ModelRuntimeGateError, ModelUsePurpose,
-        sha256_hex,
+        runtime_failure, sha256_hex,
     };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum FakeScenario {
+        Happy,
+        Malformed,
+        Delayed,
+        Cancelled,
+        Crashed,
+        ResourceExhausted,
+        Replay,
+        FalseCompletion,
+    }
+
     #[derive(Clone)]
     struct FakeRuntime {
         identity: ModelRuntimeIdentity,
+        codec_id: ModelCodecId,
+        token_counter: String,
         loaded: Option<ModelProfileId>,
         manifest_drift: bool,
         isolation_drift: bool,
-        stream_replay: bool,
+        scenario: FakeScenario,
     }
 
     impl FakeRuntime {
-        fn new(identity: ModelRuntimeIdentity) -> Self {
+        fn new(profile: &ExactModelProfile) -> Self {
             Self {
-                identity,
+                identity: profile.runtime.clone(),
+                codec_id: profile.codec.codec_id.clone(),
+                token_counter: profile.context.token_counter.clone(),
                 loaded: None,
                 manifest_drift: false,
                 isolation_drift: false,
-                stream_replay: false,
+                scenario: FakeScenario::Happy,
             }
         }
     }
@@ -793,7 +810,7 @@ mod tests {
                 profile_id: packet.profile_id.clone(),
                 context_packet_id: packet.context_packet_id.clone(),
                 tokens: packet.input_tokens,
-                counter: "fixture-counter-v1".to_owned(),
+                counter: self.token_counter.clone(),
                 packet_sha256: packet.packet_sha256.clone(),
             })
         }
@@ -802,9 +819,15 @@ mod tests {
             &mut self,
             request: &ModelRunRequest,
             _packet: &ModelContextPacket,
-            _cancellation: Option<&agentmage_kernel_contracts::CancellationSignal>,
+            cancellation: Option<&CancellationSignal>,
             sink: &mut dyn ModelStreamSink,
         ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+            if self.scenario == FakeScenario::Crashed {
+                return Err(runtime_failure("fixture.runtime-crashed"));
+            }
+            if self.scenario == FakeScenario::Cancelled && cancellation.is_none() {
+                return Err(runtime_failure("fixture.cancellation-missing"));
+            }
             let bytes = b"fixture".to_vec();
             let stream_id = ModelStreamId::from_raw("stream-1");
             sink.accept(StreamedModelFragment {
@@ -812,8 +835,16 @@ mod tests {
                 stream_id: stream_id.clone(),
                 model_run_id: request.model_run_id.clone(),
                 correlation_id: request.correlation_id.clone(),
-                sequence: if self.stream_replay { 1 } else { 0 },
-                sha256: sha256_hex(&bytes),
+                sequence: if self.scenario == FakeScenario::Replay {
+                    1
+                } else {
+                    0
+                },
+                sha256: if self.scenario == FakeScenario::Malformed {
+                    "invalid".to_owned()
+                } else {
+                    sha256_hex(&bytes)
+                },
                 bytes,
                 terminal: true,
             })?;
@@ -823,23 +854,45 @@ mod tests {
                 model_run_id: request.model_run_id.clone(),
                 context_packet_id: request.context_packet_id.clone(),
                 profile_id: request.profile_id.clone(),
-                codec_id: ModelCodecId::from_raw("fixture-codec"),
+                codec_id: self.codec_id.clone(),
                 correlation_id: request.correlation_id.clone(),
                 kind: ModelProposalKind::CompletionCandidate,
                 payload: None,
                 tool_call: None,
                 proposal_sha256: SHA.to_owned(),
             };
+            let (terminal_state, proposal, failure) = match self.scenario {
+                FakeScenario::Happy => (ModelRunTerminalState::Proposed, Some(proposal), None),
+                FakeScenario::FalseCompletion => (ModelRunTerminalState::Proposed, None, None),
+                FakeScenario::Delayed => (
+                    ModelRunTerminalState::TimedOut,
+                    None,
+                    Some(runtime_failure("fixture.timed-out")),
+                ),
+                FakeScenario::Cancelled => (
+                    ModelRunTerminalState::Cancelled,
+                    None,
+                    Some(runtime_failure("fixture.cancelled")),
+                ),
+                FakeScenario::ResourceExhausted => (
+                    ModelRunTerminalState::ResourceExhausted,
+                    None,
+                    Some(runtime_failure("fixture.resource-exhausted")),
+                ),
+                FakeScenario::Malformed | FakeScenario::Crashed | FakeScenario::Replay => {
+                    unreachable!("scenario returns before result construction")
+                }
+            };
             Ok(ModelRunResult {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 model_run_id: request.model_run_id.clone(),
                 stream_id,
                 correlation_id: request.correlation_id.clone(),
-                terminal_state: ModelRunTerminalState::Proposed,
+                terminal_state,
                 fragment_count: 1,
                 response_sha256: SHA.to_owned(),
-                proposal: Some(proposal),
-                failure: None,
+                proposal,
+                failure,
                 resources: ModelResourceReport {
                     adapter_id: self.identity.adapter_id.clone(),
                     profile_id: request.profile_id.clone(),
@@ -961,6 +1014,19 @@ mod tests {
         }
     }
 
+    fn family_profile(family: &str) -> ExactModelProfile {
+        let mut value = profile();
+        value.profile_id = ModelProfileId::from_raw(format!("fixture-{family}-profile"));
+        value.manifest_id = ModelManifestId::from_raw(format!("fixture-{family}-manifest"));
+        value.display_name = format!("Fixture {family} profile");
+        value.family = format!("deterministic_fake_{family}");
+        value.codec.codec_id = ModelCodecId::from_raw(format!("fixture-{family}-codec"));
+        value.codec.tokenizer = format!("fixture-{family}-tokenizer");
+        value.codec.template = format!("fixture-{family}-template");
+        value.runtime.adapter_id = ModelAdapterId::from_raw(format!("fixture-{family}-adapter"));
+        value
+    }
+
     fn packet(profile: &ExactModelProfile) -> ModelContextPacket {
         ModelContextPacket {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -1005,6 +1071,17 @@ mod tests {
         }
     }
 
+    fn cancellation() -> CancellationSignal {
+        CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("cancel-1"),
+            correlation_id: CorrelationId::from_raw("correlation-1"),
+            task_id: TaskId::from_raw("task-1"),
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Shell,
+        }
+    }
+
     #[test]
     fn exact_fake_profile_runs_full_contract_without_authority_or_fallback() {
         let profile = profile();
@@ -1013,8 +1090,7 @@ mod tests {
             .admit(&profile, ModelUsePurpose::ContractTest)
             .expect("admitted");
         let mut controller =
-            LocalModelController::new(FakeRuntime::new(profile.runtime.clone()), admitted)
-                .expect("controller");
+            LocalModelController::new(FakeRuntime::new(&profile), admitted).expect("controller");
 
         controller.load().expect("load");
         assert_eq!(
@@ -1090,7 +1166,7 @@ mod tests {
             let admitted = catalog
                 .admit(&profile, ModelUsePurpose::ContractTest)
                 .expect("admitted");
-            let mut fake = FakeRuntime::new(profile.runtime.clone());
+            let mut fake = FakeRuntime::new(&profile);
             fake.manifest_drift = manifest_drift;
             fake.isolation_drift = isolation_drift;
             let mut controller = LocalModelController::new(fake, admitted).expect("controller");
@@ -1100,8 +1176,8 @@ mod tests {
         let admitted = catalog
             .admit(&profile, ModelUsePurpose::ContractTest)
             .expect("admitted");
-        let mut fake = FakeRuntime::new(profile.runtime.clone());
-        fake.stream_replay = true;
+        let mut fake = FakeRuntime::new(&profile);
+        fake.scenario = FakeScenario::Replay;
         let mut controller = LocalModelController::new(fake, admitted).expect("controller");
         controller.load().expect("load");
         assert_eq!(
@@ -1115,6 +1191,61 @@ mod tests {
             controller.count_tokens(&wrong_packet),
             Err(ModelRuntimeGateError::RequestMismatch)
         );
+    }
+
+    #[test]
+    fn fake_muse_and_gemma_cover_every_runtime_terminal_and_hostile_response_state() {
+        for family in ["muse", "gemma"] {
+            for (scenario, expected) in [
+                (FakeScenario::Happy, Ok(ModelRunTerminalState::Proposed)),
+                (FakeScenario::Delayed, Ok(ModelRunTerminalState::TimedOut)),
+                (
+                    FakeScenario::Cancelled,
+                    Ok(ModelRunTerminalState::Cancelled),
+                ),
+                (
+                    FakeScenario::ResourceExhausted,
+                    Ok(ModelRunTerminalState::ResourceExhausted),
+                ),
+                (
+                    FakeScenario::Malformed,
+                    Err(ModelRuntimeGateError::RuntimeFailure),
+                ),
+                (
+                    FakeScenario::Crashed,
+                    Err(ModelRuntimeGateError::RuntimeFailure),
+                ),
+                (
+                    FakeScenario::Replay,
+                    Err(ModelRuntimeGateError::RuntimeFailure),
+                ),
+                (
+                    FakeScenario::FalseCompletion,
+                    Err(ModelRuntimeGateError::ResultMismatch),
+                ),
+            ] {
+                let profile = family_profile(family);
+                let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+                    .expect("catalog")
+                    .admit(&profile, ModelUsePurpose::ContractTest)
+                    .expect("admitted");
+                let mut fake = FakeRuntime::new(&profile);
+                fake.scenario = scenario;
+                let mut controller = LocalModelController::new(fake, admitted).expect("controller");
+                controller.load().expect("load");
+                let packet = packet(&profile);
+                let signal = cancellation();
+                let observed = controller
+                    .stream(
+                        &request(&profile),
+                        &packet,
+                        (scenario == FakeScenario::Cancelled).then_some(&signal),
+                    )
+                    .map(|result| result.terminal_state);
+                assert_eq!(observed, expected, "family={family} scenario={scenario:?}");
+                assert!(controller.unload().expect("unload").empty);
+            }
+        }
     }
 
     #[test]
