@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/capability.schema.json",
+  "title": "AgentMage capability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role",
+    "state",
+    "evaluation_profile",
+    "result_sha256",
+    "limitations"
+  ],
+  "properties": {
+    "role": {
+      "enum": [
+        "dialogue",
+        "coding_planner",
+        "tool_selection",
+        "safety_classification",
+        "embedding",
+        "reranking",
+        "multimodal"
+      ]
+    },
+    "state": {
+      "enum": [
+        "not_evaluated",
+        "blocked",
+        "failed",
+        "passed",
+        "not_applicable"
+      ]
+    },
+    "evaluation_profile": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "result_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "minItems": 0,
+      "maxItems": 64
+    }
+  }
+}

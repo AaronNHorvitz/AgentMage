@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/run-request.schema.json",
+  "title": "AgentMage run-request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "model_run_id",
+    "correlation_id",
+    "context_packet_id",
+    "profile_id",
+    "manifest_sha256",
+    "adapter_id",
+    "decoding_profile_id",
+    "max_output_tokens",
+    "timeout_ms"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "model_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "context_packet_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "adapter_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "decoding_profile_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "max_output_tokens": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

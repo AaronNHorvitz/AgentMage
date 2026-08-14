@@ -1,0 +1,1003 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/terminal-claim.schema.json",
+  "title": "AgentMage terminal-claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "model_run_id",
+    "stream_id",
+    "correlation_id",
+    "terminal_state",
+    "fragment_count",
+    "response_sha256",
+    "proposal",
+    "failure",
+    "resources"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "model_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "stream_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "terminal_state": {
+      "enum": [
+        "proposed",
+        "advisory_text",
+        "cancelled",
+        "timed_out",
+        "resource_exhausted",
+        "failed",
+        "rejected"
+      ]
+    },
+    "fragment_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "response_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "proposal": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "proposal_id",
+            "model_run_id",
+            "context_packet_id",
+            "profile_id",
+            "codec_id",
+            "correlation_id",
+            "kind",
+            "payload",
+            "tool_call",
+            "proposal_sha256"
+          ],
+          "properties": {
+            "schema_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "proposal_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "model_run_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "context_packet_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "profile_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "codec_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "correlation_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "kind": {
+              "enum": [
+                "text",
+                "evidence_request",
+                "tool_call",
+                "user_question",
+                "blocked",
+                "completion_candidate"
+              ]
+            },
+            "payload": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "schema",
+                    "media_type",
+                    "bytes",
+                    "sha256"
+                  ],
+                  "properties": {
+                    "schema": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schema_id",
+                        "schema_version",
+                        "schema_sha256"
+                      ],
+                      "properties": {
+                        "schema_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                        },
+                        "schema_version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "schema_sha256": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        }
+                      }
+                    },
+                    "media_type": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "bytes": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "minItems": 0,
+                      "maxItems": 1048576
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tool_call": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "tool_call_id",
+                    "tool_id",
+                    "tool_version",
+                    "arguments"
+                  ],
+                  "properties": {
+                    "tool_call_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                    },
+                    "tool_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                    },
+                    "tool_version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "arguments": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schema",
+                        "media_type",
+                        "bytes",
+                        "sha256"
+                      ],
+                      "properties": {
+                        "schema": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_id",
+                            "schema_version",
+                            "schema_sha256"
+                          ],
+                          "properties": {
+                            "schema_id": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                            },
+                            "schema_version": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "schema_sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        },
+                        "media_type": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "bytes": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          },
+                          "minItems": 0,
+                          "maxItems": 1048576
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "proposal_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "tool_call"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "tool_call": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "tool_call_id",
+                      "tool_id",
+                      "tool_version",
+                      "arguments"
+                    ],
+                    "properties": {
+                      "tool_call_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "tool_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "tool_version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "arguments": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "schema",
+                          "media_type",
+                          "bytes",
+                          "sha256"
+                        ],
+                        "properties": {
+                          "schema": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "schema_id",
+                              "schema_version",
+                              "schema_sha256"
+                            ],
+                            "properties": {
+                              "schema_id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                              },
+                              "schema_version": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "schema_sha256": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            }
+                          },
+                          "media_type": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "bytes": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            },
+                            "minItems": 0,
+                            "maxItems": 1048576
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "tool_call": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "failure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "retryable_after_correction",
+            "dependency_recovery_required",
+            "contract_error"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "retryable_after_correction": {
+              "type": "boolean"
+            },
+            "dependency_recovery_required": {
+              "type": "boolean"
+            },
+            "contract_error": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "schema_version",
+                    "error_id",
+                    "code",
+                    "category",
+                    "message",
+                    "field_path",
+                    "retry",
+                    "caused_by"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "error_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "category": {
+                      "enum": [
+                        "validation",
+                        "policy",
+                        "dependency",
+                        "resource",
+                        "cancellation",
+                        "timeout",
+                        "uncertain",
+                        "internal"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "maxLength": 1024
+                    },
+                    "field_path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      "minItems": 0,
+                      "maxItems": 64
+                    },
+                    "retry": {
+                      "enum": [
+                        "never",
+                        "after_correction",
+                        "after_dependency_recovery",
+                        "after_user_decision"
+                      ]
+                    },
+                    "caused_by": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter_id",
+        "profile_id",
+        "model_run_id",
+        "resident_memory_bytes",
+        "accelerator_memory_bytes",
+        "input_tokens",
+        "output_tokens",
+        "elapsed_ms"
+      ],
+      "properties": {
+        "adapter_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "profile_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "model_run_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resident_memory_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accelerator_memory_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "terminal_state": {
+            "const": "proposed"
+          }
+        },
+        "required": [
+          "terminal_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proposal": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "proposal_id",
+              "model_run_id",
+              "context_packet_id",
+              "profile_id",
+              "codec_id",
+              "correlation_id",
+              "kind",
+              "payload",
+              "tool_call",
+              "proposal_sha256"
+            ],
+            "properties": {
+              "schema_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "proposal_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "model_run_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "context_packet_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "profile_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "codec_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "correlation_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "kind": {
+                "enum": [
+                  "text",
+                  "evidence_request",
+                  "tool_call",
+                  "user_question",
+                  "blocked",
+                  "completion_candidate"
+                ]
+              },
+              "payload": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema",
+                      "media_type",
+                      "bytes",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "schema": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "schema_id",
+                          "schema_version",
+                          "schema_sha256"
+                        ],
+                        "properties": {
+                          "schema_id": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                          },
+                          "schema_version": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "schema_sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        }
+                      },
+                      "media_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "bytes": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "minItems": 0,
+                        "maxItems": 1048576
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tool_call": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "tool_call_id",
+                      "tool_id",
+                      "tool_version",
+                      "arguments"
+                    ],
+                    "properties": {
+                      "tool_call_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "tool_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "tool_version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "arguments": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "schema",
+                          "media_type",
+                          "bytes",
+                          "sha256"
+                        ],
+                        "properties": {
+                          "schema": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "schema_id",
+                              "schema_version",
+                              "schema_sha256"
+                            ],
+                            "properties": {
+                              "schema_id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                              },
+                              "schema_version": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "schema_sha256": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            }
+                          },
+                          "media_type": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "bytes": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            },
+                            "minItems": 0,
+                            "maxItems": 1048576
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "proposal_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "tool_call"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "tool_call": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "tool_call_id",
+                        "tool_id",
+                        "tool_version",
+                        "arguments"
+                      ],
+                      "properties": {
+                        "tool_call_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                        },
+                        "tool_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                        },
+                        "tool_version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "arguments": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema",
+                            "media_type",
+                            "bytes",
+                            "sha256"
+                          ],
+                          "properties": {
+                            "schema": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "schema_id",
+                                "schema_version",
+                                "schema_sha256"
+                              ],
+                              "properties": {
+                                "schema_id": {
+                                  "type": "string",
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                                },
+                                "schema_version": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                },
+                                "schema_sha256": {
+                                  "type": "string",
+                                  "pattern": "^[0-9a-f]{64}$"
+                                }
+                              }
+                            },
+                            "media_type": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "bytes": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              },
+                              "minItems": 0,
+                              "maxItems": 1048576
+                            },
+                            "sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "tool_call": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "failure": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "proposal": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "terminal_state": {
+            "enum": [
+              "failed",
+              "rejected",
+              "resource_exhausted"
+            ]
+          }
+        },
+        "required": [
+          "terminal_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "retryable_after_correction",
+              "dependency_recovery_required",
+              "contract_error"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "retryable_after_correction": {
+                "type": "boolean"
+              },
+              "dependency_recovery_required": {
+                "type": "boolean"
+              },
+              "contract_error": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema_version",
+                      "error_id",
+                      "code",
+                      "category",
+                      "message",
+                      "field_path",
+                      "retry",
+                      "caused_by"
+                    ],
+                    "properties": {
+                      "schema_version": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "error_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "category": {
+                        "enum": [
+                          "validation",
+                          "policy",
+                          "dependency",
+                          "resource",
+                          "cancellation",
+                          "timeout",
+                          "uncertain",
+                          "internal"
+                        ]
+                      },
+                      "message": {
+                        "type": "string",
+                        "maxLength": 1024
+                      },
+                      "field_path": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 128
+                        },
+                        "minItems": 0,
+                        "maxItems": 64
+                      },
+                      "retry": {
+                        "enum": [
+                          "never",
+                          "after_correction",
+                          "after_dependency_recovery",
+                          "after_user_decision"
+                        ]
+                      },
+                      "caused_by": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

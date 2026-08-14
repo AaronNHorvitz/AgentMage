@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/context-packet.schema.json",
+  "title": "AgentMage context-packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "context_packet_id",
+    "session_id",
+    "task_id",
+    "profile_id",
+    "manifest_sha256",
+    "tool_catalog_id",
+    "messages",
+    "input_bytes",
+    "input_tokens",
+    "packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "context_packet_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "tool_catalog_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message_id",
+          "role",
+          "content"
+        ],
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "role": {
+            "enum": [
+              "system",
+              "user",
+              "assistant",
+              "tool"
+            ]
+          },
+          "content": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "media_type",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_id",
+                  "schema_version",
+                  "schema_sha256"
+                ],
+                "properties": {
+                  "schema_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                  },
+                  "schema_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "schema_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "media_type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "bytes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "minItems": 0,
+                "maxItems": 1048576
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 4096
+    },
+    "input_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

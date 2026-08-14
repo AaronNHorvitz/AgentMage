@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/closed-proposal.schema.json",
+  "title": "AgentMage closed-proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "model_run_id",
+    "context_packet_id",
+    "profile_id",
+    "codec_id",
+    "correlation_id",
+    "kind",
+    "payload",
+    "tool_call",
+    "proposal_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "model_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "context_packet_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "codec_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "kind": {
+      "enum": [
+        "text",
+        "evidence_request",
+        "tool_call",
+        "user_question",
+        "blocked",
+        "completion_candidate"
+      ]
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "media_type",
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema_id",
+                "schema_version",
+                "schema_sha256"
+              ],
+              "properties": {
+                "schema_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                "schema_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "schema_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "media_type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "minItems": 0,
+              "maxItems": 1048576
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tool_call": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool_call_id",
+            "tool_id",
+            "tool_version",
+            "arguments"
+          ],
+          "properties": {
+            "tool_call_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "tool_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "tool_version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "media_type",
+                "bytes",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "schema_id",
+                    "schema_version",
+                    "schema_sha256"
+                  ],
+                  "properties": {
+                    "schema_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                    },
+                    "schema_version": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "schema_sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                "media_type": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "bytes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "minItems": 0,
+                  "maxItems": 1048576
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "proposal_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "tool_call"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "tool_call": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tool_call_id",
+              "tool_id",
+              "tool_version",
+              "arguments"
+            ],
+            "properties": {
+              "tool_call_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "tool_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "tool_version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "arguments": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema",
+                  "media_type",
+                  "bytes",
+                  "sha256"
+                ],
+                "properties": {
+                  "schema": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema_id",
+                      "schema_version",
+                      "schema_sha256"
+                    ],
+                    "properties": {
+                      "schema_id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                      },
+                      "schema_version": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "schema_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "media_type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "bytes": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "minItems": 0,
+                    "maxItems": 1048576
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "tool_call": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

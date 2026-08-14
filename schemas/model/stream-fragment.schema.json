@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/stream-fragment.schema.json",
+  "title": "AgentMage stream-fragment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "stream_id",
+    "model_run_id",
+    "correlation_id",
+    "sequence",
+    "bytes",
+    "sha256",
+    "terminal"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stream_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "model_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 1,
+      "maxItems": 33554432
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "terminal": {
+      "type": "boolean"
+    }
+  }
+}

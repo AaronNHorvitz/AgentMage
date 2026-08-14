@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/model/tool-result.schema.json",
+  "title": "AgentMage tool-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tool_call_id",
+    "correlation_id",
+    "outcome",
+    "output",
+    "validation_issues",
+    "evidence",
+    "error",
+    "elapsed_ms",
+    "state_change"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "outcome": {
+      "enum": [
+        "succeeded",
+        "denied",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "uncertain"
+      ]
+    },
+    "output": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "media_type",
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema_id",
+                "schema_version",
+                "schema_sha256"
+              ],
+              "properties": {
+                "schema_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                "schema_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "schema_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "media_type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "minItems": 0,
+              "maxItems": 1048576
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "validation_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "severity",
+          "field_path",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning"
+            ]
+          },
+          "field_path": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "evidence_kind",
+          "sha256",
+          "source_component"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "evidence_kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "source_component": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "error_id",
+            "code",
+            "category",
+            "message",
+            "field_path",
+            "retry",
+            "caused_by"
+          ],
+          "properties": {
+            "schema_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "error_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "category": {
+              "enum": [
+                "validation",
+                "policy",
+                "dependency",
+                "resource",
+                "cancellation",
+                "timeout",
+                "uncertain",
+                "internal"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 1024
+            },
+            "field_path": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "minItems": 0,
+              "maxItems": 64
+            },
+            "retry": {
+              "enum": [
+                "never",
+                "after_correction",
+                "after_dependency_recovery",
+                "after_user_decision"
+              ]
+            },
+            "caused_by": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "elapsed_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "state_change": {
+      "enum": [
+        "not_changed",
+        "changed",
+        "uncertain"
+      ]
+    }
+  }
+}

@@ -734,6 +734,12 @@ pub struct ModelRuntimeFailure {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelClientSchemas {
+    /// Exact model-profile schema.
+    pub model_profile: SchemaReference,
+    /// Bounded model-message schema.
+    pub message: SchemaReference,
+    /// Role-specific capability schema.
+    pub capability: SchemaReference,
     /// Context-packet schema.
     pub context_packet: SchemaReference,
     /// Run-request schema.
@@ -742,8 +748,16 @@ pub struct ModelClientSchemas {
     pub stream_fragment: SchemaReference,
     /// Closed-proposal schema.
     pub proposal: SchemaReference,
+    /// Inert model-origin tool-call schema.
+    pub tool_call: SchemaReference,
+    /// Existing kernel-owned tool-result schema supplied as model context.
+    pub tool_result: SchemaReference,
     /// Run-result schema.
     pub run_result: SchemaReference,
+    /// Terminal-claim schema, which must resolve to the closed run-result contract.
+    pub terminal_claim: SchemaReference,
+    /// Shared correlation-identity schema.
+    pub correlation: SchemaReference,
 }
 
 #[cfg(test)]
