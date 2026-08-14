@@ -56,6 +56,27 @@ define_identifier!(PlanId, "Stable identity for one task plan.");
 define_identifier!(PlanStepId, "Stable identity for one plan step.");
 define_identifier!(PromptId, "Stable identity for one assembled model prompt.");
 define_identifier!(
+    ProposalId,
+    "Stable identity for one model proposal candidate."
+);
+define_identifier!(ModelRunId, "Stable identity for one bounded model run.");
+define_identifier!(
+    ContextPacketId,
+    "Stable identity for one bounded context packet."
+);
+define_identifier!(
+    RepositorySnapshotId,
+    "Stable identity for one repository snapshot."
+);
+define_identifier!(
+    ToolCatalogId,
+    "Stable identity for one frozen tool catalog."
+);
+define_identifier!(
+    PolicyId,
+    "Stable identity for one deterministic policy revision."
+);
+define_identifier!(
     ActionId,
     "Stable identity for one proposed or executed action."
 );

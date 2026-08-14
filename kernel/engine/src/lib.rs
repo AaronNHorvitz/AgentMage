@@ -4,6 +4,7 @@
 
 /// One-active-step plan history, progress, interruption, and response validation.
 pub mod agent_progress;
+pub mod agent_proposal;
 /// Bounded single-agent observe, plan, action-proposal, and review control loop.
 pub mod agent_runtime;
 pub mod agent_state;

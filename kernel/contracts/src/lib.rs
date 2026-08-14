@@ -3,6 +3,7 @@
 //! Interface-independent contracts shared across AgentMage components.
 
 mod agent;
+mod agent_proposal;
 mod agent_state;
 mod approval;
 mod boundary;
@@ -28,6 +29,7 @@ pub use agent::{
     AgentFinalResponse, AgentFinalState, AgentProgressEvent, AgentProgressKind, AgentStatusKind,
     AgentStatusResponse, UserMessageDisposition, UserMessageIntent,
 };
+pub use agent_proposal::AgentProposal;
 pub use agent_state::{AgentStateKind, AgentStateTransition};
 pub use approval::ApprovalRequest;
 pub use boundary::{
@@ -51,9 +53,10 @@ pub use grant::{
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
-    CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, OperationAttemptId, PlanId,
-    PlanStepId, PromptId, ReceiptId, SchemaId, SessionId, TaskId, ToolCallId, ToolId, WorkPacketId,
-    WorkspaceAuthorizationId, WorkspaceId,
+    ContextPacketId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelRunId,
+    OperationAttemptId, PlanId, PlanStepId, PolicyId, PromptId, ProposalId, ReceiptId,
+    RepositorySnapshotId, SchemaId, SessionId, TaskId, ToolCallId, ToolCatalogId, ToolId,
+    WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,
