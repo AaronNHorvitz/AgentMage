@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "campaign_id": "D027-S12-RESTART",
+  "state_transition_coverage": {
+    "legal_edges": 52,
+    "positions_per_edge": [
+      "before",
+      "after"
+    ],
+    "interruption_positions": 104
+  },
+  "authority_fault_points": [
+    {
+      "fault": "prepared_stored",
+      "boundary": "after transaction prepare and before grant consumption"
+    },
+    {
+      "fault": "grant_consumed",
+      "boundary": "after grant consumption and before attempt recording"
+    },
+    {
+      "fault": "attempt_recorded",
+      "boundary": "after attempt recording and before launch commitment"
+    },
+    {
+      "fault": "launch_boundary_committed",
+      "boundary": "after launch commitment and before worker execution"
+    },
+    {
+      "fault": "worker_returned",
+      "boundary": "after worker return and before result reconciliation"
+    },
+    {
+      "fault": "result_reconciled",
+      "boundary": "after result reconciliation and before terminal receipt publication"
+    }
+  ],
+  "terminal_after_boundary": "idempotent terminal receipt recovery",
+  "verifier_dispositions": [
+    "SUCCESS",
+    "NO_OP"
+  ],
+  "verifier_positions_per_disposition": [
+    "before proof application",
+    "after verified terminal transition"
+  ],
+  "required_outcomes": {
+    "exact_reconciliation": true,
+    "grant_replay": 0,
+    "duplicate_effect": 0,
+    "duplicate_receipt": 0,
+    "false_success": 0
+  },
+  "persistence": "encrypted operational store for authority transitions",
+  "private_user_data": false,
+  "external_network": false
+}
