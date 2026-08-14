@@ -33,6 +33,8 @@ pub mod persistence;
 pub mod platform_startup;
 /// Deterministic deny-first capability-grant policy evaluation.
 pub mod policy;
+/// Deterministic static and typed-fact checks before advisory classification.
+pub mod preclassification_policy;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
 /// Bounded concise reasoning records and deterministic verification gates.
