@@ -35,7 +35,7 @@ COMMAND_SPECS: Final = (
             "operational_store::tests",
             "--locked",
         ),
-        "11 passed; 0 failed",
+        "23 passed; 0 failed",
     ),
     (
         (
@@ -45,7 +45,7 @@ COMMAND_SPECS: Final = (
             "agentmage-kernel-engine",
             "--locked",
         ),
-        "111 passed; 0 failed",
+        "273 passed; 0 failed",
     ),
     (
         (
@@ -107,7 +107,7 @@ LIMITATIONS: Final = [
 ]
 REQUIRED_SOURCE_FRAGMENTS: Final = (
     "claim_exclusive_writer(&connection)?;\n    verify_runtime_configuration(&connection)?;\n    migrate(&connection)?;",
-    "transaction_with_behavior(TransactionBehavior::Immediate)",
+    "let transaction = connection\n        .transaction_with_behavior(TransactionBehavior::Immediate)",
     "INSERT INTO checkpoints(generation, state_sha256) VALUES (?1, ?2)",
     "PRAGMA foreign_keys = ON;",
     "PRAGMA synchronous = FULL;",

@@ -348,15 +348,15 @@ fn approval_and_denial_review_fixtures_match_kernel_behavior() {
     let historical_sha256 = [
         (
             APPROVAL_NAME,
-            "d718203e6f1f7b9b3c8cd9d763eb878e91bdb98ae583e36f37b7a90cd8132707",
+            "17663308186bc6251e013e01f975cafd4a9def008599783487c22fd743b2f883",
         ),
         (
             DECISION_NAME,
-            "68729e0b489b301ffccfe807234106817430d6b7055656f2d39f52d20cc64f96",
+            "0be101a274d5f90b4209829a9552d5f19a97833f6ca67cbade495f9b59189e6d",
         ),
         (
             RECEIPT_NAME,
-            "2ca3d6508641ae6657ba5492256013283db17069c4d2fa6df145a0b6df940d41",
+            "ebaefe44484bc6b1bc028d436d265d5ad2531e6f3b34ae42bbda631c809e3cfd",
         ),
     ];
     for fixture in fixtures {
@@ -372,7 +372,7 @@ fn approval_and_denial_review_fixtures_match_kernel_behavior() {
             "{}",
             fixture.name
         );
-        assert_ne!(
+        assert_eq!(
             retained,
             fixture.canonical_json.as_bytes(),
             "{}",

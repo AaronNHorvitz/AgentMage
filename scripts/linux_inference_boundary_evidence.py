@@ -120,6 +120,7 @@ EXPECTED_BINARIES = [
         "path": "src/docker_topology_collector_main.rs",
     },
     {"name": "agentmage-native-inference", "path": "src/main.rs"},
+    {"name": "agentmage-model-installer", "path": "src/model_installer_main.rs"},
 ]
 FORBIDDEN_COMPILE_REFERENCES = (
     "agentmage_capability_read_only",

@@ -46,7 +46,7 @@ STORE_FRAGMENTS: Final = (
 SECRET_FRAGMENTS: Final = (
     'const OPERATIONAL_STORE_KEY_PURPOSE: &str = "operational-store-key-v1";',
     ".env_clear()",
-    ".stdin(if input.is_some() {",
+    ".stdin(if input_expected {",
     "pub struct LinuxOperationalStoreKeyProvider {",
     "with_decoded_operational_store_key(encoded, operation)",
     "fn destroy_key_and_verify_absent(&mut self)",
@@ -60,8 +60,8 @@ LIFECYCLE_FRAGMENTS: Final = (
     '"linux.operational-key.rotation-unavailable"',
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "20 passed; 0 failed"),
-    (("cargo", "test", "-p", "agentmage-platform-linux", "secret_service", "--locked"), "5 passed; 0 failed; 3 ignored"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "23 passed; 0 failed"),
+    (("cargo", "test", "-p", "agentmage-platform-linux", "secret_service", "--locked"), "7 passed; 0 failed; 3 ignored"),
     (("cargo", "test", "-p", "agentmage-platform-linux", "lifecycle", "--locked"), "2 passed; 0 failed"),
     (("python3", "-m", "unittest", "tests.test_secret_backup_format_evidence"), "Ran 4 tests"),
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),

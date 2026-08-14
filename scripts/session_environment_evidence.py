@@ -54,7 +54,7 @@ SOURCE_FRAGMENTS: Final = {
     ),
     "kernel/engine/src/authority.rs": (
         "SessionRecord,",
-        "impl_non_authoritative!(SessionRecord =>",
+        "impl_non_authoritative!(SessionRecord => crate::session_environment::SessionEnvironmentCapture);",
     ),
     "kernel/engine/src/lib.rs": ("pub mod session_environment;",),
 }

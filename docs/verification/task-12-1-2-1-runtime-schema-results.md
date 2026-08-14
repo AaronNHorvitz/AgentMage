@@ -28,8 +28,9 @@ Focused cases closed: **5 of 5**.
   machine. They do not add a second runtime implementation.
 - JSON Schema validation does not execute a model, tool, platform adapter, or
   state transition.
-- Status, interruption, final-response, session-environment, and later
-  persisted terminal-result schemas remain their assigned artifacts and tasks.
+- Status, interruption, final-response, and later persisted terminal-result
+  schemas remain their assigned artifacts and tasks. The separately evidenced
+  session-environment schema is outside this task's two-schema claim.
 - Canonical fixture digests are synthetic review values; this task is not a
   release-signing or package-attestation claim.
 - Cross-platform execution, packaging, release acceptance, and manual fuzzing

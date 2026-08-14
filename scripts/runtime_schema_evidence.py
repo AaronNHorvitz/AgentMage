@@ -62,7 +62,7 @@ SOURCE_FRAGMENTS: Final = {
         "export function validateRuntimeFixtures()",
     ),
     "tests/test_planning_schemas.mjs": (
-        "single-agent state-machine and event fixtures satisfy closed schemas",
+        "runtime state event and environment fixtures satisfy closed schemas",
         "runtime schemas reject missing and unknown fields",
         "state-machine schema rejects phase edge and authority drift",
         "progress events enforce sequence revision step identity and content-free shape",
@@ -70,7 +70,7 @@ SOURCE_FRAGMENTS: Final = {
     ),
 }
 COMMAND_SPECS: Final = (
-    (("npm", "run", "schemas:validate"), "2 runtime record(s)."),
+    (("npm", "run", "schemas:validate"), "3 runtime record(s)."),
     (
         ("node", "--test", "tests/test_planning_schemas.mjs"),
         "unknown runtime record types fail explicitly",
@@ -101,7 +101,7 @@ CLAIMS: Final = {
 LIMITATIONS: Final = [
     "The schemas are formal review artifacts for current Rust behavior and do not add a second runtime implementation.",
     "Validation executes no model, tool, platform adapter, or state transition.",
-    "Status, interruption, final-response, session-environment, and persisted terminal-result schemas remain later work.",
+    "Status, interruption, final-response, and persisted terminal-result schemas remain later work; the separately evidenced session-environment schema is outside this task's two-schema claim.",
     "Fixture digests are synthetic review values; no release-signing or package-attestation claim is made.",
     "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates.",
 ]

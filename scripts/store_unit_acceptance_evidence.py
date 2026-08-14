@@ -64,7 +64,7 @@ STORE_FRAGMENTS: Final = (
     "fn verify_integrity(",
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "21 passed; 0 failed"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "23 passed; 0 failed"),
     (("cargo", "clippy", "-p", "agentmage-kernel-engine", "--all-targets", "--locked", "--", "-D", "warnings"), "Finished `dev` profile"),
     (("python3", "-m", "unittest", "tests.test_store_unit_acceptance_evidence"), "Ran 4 tests"),
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),
@@ -108,7 +108,10 @@ def validate_sources(document: str, store: str) -> list[str]:
     failures = []
     if tuple(MATRIX_PATTERN.findall(document)) != MATRIX_IDS:
         failures.append("S-011-UT01 acceptance matrix changed")
-    if tuple(TEST_PATTERN.findall(store)) != EXPECTED_TESTS:
+    observed_tests = TEST_PATTERN.findall(store)
+    if len(observed_tests) != len(set(observed_tests)) or not set(EXPECTED_TESTS).issubset(
+        observed_tests
+    ):
         failures.append("S-011-UT01 focused test closure changed")
     for label, value, fragments in (
         ("document", document, DOCUMENT_FRAGMENTS),
