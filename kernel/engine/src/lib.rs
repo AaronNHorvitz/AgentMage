@@ -25,6 +25,8 @@ pub mod authority_transaction;
 pub mod claim_evidence;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+/// Deterministic bounded context, checked summaries, checkpoints, and drift gates.
+pub mod context_management;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
 /// Fresh citation resolution, complete answer ledgers, and keyed receipt integrity.

@@ -89,6 +89,14 @@ define_identifier!(
     "Stable identity for one bounded context packet."
 );
 define_identifier!(
+    ContextSummaryId,
+    "Stable identity for one checked context summary."
+);
+define_identifier!(
+    SessionCheckpointId,
+    "Stable identity for one safe-boundary session checkpoint."
+);
+define_identifier!(
     RepositorySnapshotId,
     "Stable identity for one repository snapshot."
 );

@@ -12,6 +12,7 @@ mod boundary;
 mod claim;
 mod classification;
 mod common;
+mod context;
 mod diagnostics;
 mod display_link;
 mod evidence;
@@ -65,6 +66,12 @@ pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,
     SchemaReference, ValidationIssue, ValidationSeverity,
 };
+pub use context::{
+    CheckedContextSummary, CheckedSummaryState, CheckpointFileIdentity, ComposedContextPacket,
+    ContextAdmission, ContextItemAccounting, ContextItemCandidate, ContextItemKind,
+    ContextOmissionReason, ContextSensitivity, ResumeDriftDecision, ResumeDriftDimension,
+    SessionCheckpoint,
+};
 pub use diagnostics::{
     DiagnosticComponent, DiagnosticItem, DiagnosticObservation, DiagnosticState, DoctorReport,
 };
@@ -78,11 +85,12 @@ pub use grant::{
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
-    ContextPacketId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelAdapterId,
-    ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId, ModelStreamId,
-    OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
-    ReceiptId, RepositorySnapshotId, SchemaId, SessionId, TaskId, ToolCallId, ToolCatalogId,
-    ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
+    ContextPacketId, ContextSummaryId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
+    ModelAdapterId, ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId,
+    ModelStreamId, OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId,
+    ProposalId, ReceiptId, RepositorySnapshotId, SchemaId, SessionCheckpointId, SessionId, TaskId,
+    ToolCallId, ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId,
+    WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
