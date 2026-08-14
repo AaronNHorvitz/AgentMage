@@ -28,6 +28,8 @@ pub mod propagation;
 pub mod run_control;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
+/// Deterministic descriptive task intent, complexity, and risk classification.
+pub mod task_classification;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
 /// Bounded work-packet validation, revision history, and plan adaptation.

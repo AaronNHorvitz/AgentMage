@@ -5,6 +5,8 @@ use agentmage_kernel_contracts::{
     RequiredGrantTemplate, RetryDisposition, SessionId, Task, TaskId, ToolDefinition, WorkPacket,
 };
 
+use crate::task_classification::TaskClassification;
+
 /// Closed class of artifact that may describe work but never authorize it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -27,6 +29,8 @@ pub enum DescriptiveArtifactKind {
     ToolDefinition,
     /// Non-authoritative future-grant requirement template.
     RequiredGrantTemplate,
+    /// Deterministic descriptive task classification.
+    TaskClassification,
 }
 
 /// Claimed producer of one descriptive authority-escalation attempt.
@@ -79,6 +83,7 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::Prompt {}
     impl Sealed for agentmage_kernel_contracts::ToolDefinition {}
     impl Sealed for agentmage_kernel_contracts::RequiredGrantTemplate {}
+    impl Sealed for crate::task_classification::TaskClassification {}
 }
 
 /// Sealed marker for an artifact that can never satisfy an authority boundary.
@@ -109,6 +114,7 @@ impl_non_authoritative!(ApprovalRequest => ApprovalRequest);
 impl_non_authoritative!(Prompt => Prompt);
 impl_non_authoritative!(ToolDefinition => ToolDefinition);
 impl_non_authoritative!(RequiredGrantTemplate => RequiredGrantTemplate);
+impl_non_authoritative!(TaskClassification => TaskClassification);
 
 /// Typed result produced when a descriptive artifact is offered as execution authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
