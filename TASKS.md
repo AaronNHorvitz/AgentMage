@@ -2150,40 +2150,42 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 26.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 26.1.1.1** (legacy `S-022-I01`): Define the `KnowledgeStore` interface and canonical schemas for people, organizations, projects, meetings, tasks, decisions, commitments, documents, correspondence, deadlines, approvals, risks, questions, and handoffs.
-  - [ ] **Sub-task 26.1.1.2** (legacy `S-022-I02`): Implement a plain-folder Markdown adapter with configurable folder, filename, frontmatter, tag, link, identifier, privacy, and retention templates.
-  - [ ] **Sub-task 26.1.1.3** (legacy `S-022-I03`): Preserve stable identifiers across note rename, move, index rebuild, export, restore, and conversation resume.
-  - [ ] **Sub-task 26.1.1.4** (legacy `S-022-I04`): Implement atomic Markdown create and update previews without making writes available until the v0.3 grant path exists.
-  - [ ] **Sub-task 26.1.1.5** (legacy `S-022-I05`): Build a disposable SQLite knowledge index that can be deleted and rebuilt without changing canonical Markdown.
-  - [ ] **Sub-task 26.1.1.6** (legacy `S-022-I06`): Implement relationship links, duplicate detection, import validation, workspace dashboard generation, and explicit JSON Lines export.
-  - [ ] **Sub-task 26.1.1.7** (legacy `S-022-I07`): Implement plain-folder backup, integrity, restore, and migration dry runs.
-  - [ ] **Sub-task 26.1.1.8** (legacy `S-022-I08`): Prove operational records never depend on Markdown and knowledge records never become co-authoritative in operational SQLite.
+  - [x] **Sub-task 26.1.1.1** (legacy `S-022-I01`): Define the `KnowledgeStore` interface and canonical schemas for people, organizations, projects, meetings, tasks, decisions, commitments, documents, correspondence, deadlines, approvals, risks, questions, and handoffs.
+  - [x] **Sub-task 26.1.1.2** (legacy `S-022-I02`): Implement a plain-folder Markdown adapter with configurable folder, filename, frontmatter, tag, link, identifier, privacy, and retention templates.
+  - [x] **Sub-task 26.1.1.3** (legacy `S-022-I03`): Preserve stable identifiers across note rename, move, index rebuild, export, restore, and conversation resume.
+  - [x] **Sub-task 26.1.1.4** (legacy `S-022-I04`): Implement atomic Markdown create and update previews without making writes available until the v0.3 grant path exists.
+  - [x] **Sub-task 26.1.1.5** (legacy `S-022-I05`): Build a disposable SQLite knowledge index that can be deleted and rebuilt without changing canonical Markdown.
+  - [x] **Sub-task 26.1.1.6** (legacy `S-022-I06`): Implement relationship links, duplicate detection, import validation, workspace dashboard generation, and explicit JSON Lines export.
+  - [x] **Sub-task 26.1.1.7** (legacy `S-022-I07`): Implement plain-folder backup, integrity, restore, and migration dry runs.
+  - [x] **Sub-task 26.1.1.8** (legacy `S-022-I08`): Prove operational records never depend on Markdown and knowledge records never become co-authoritative in operational SQLite.
 
 - [ ] **Task 26.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 26.1.2.1:** Versioned knowledge-domain schemas.
-  - [ ] **Sub-task 26.1.2.2:** Plain-folder adapter and regenerable index.
-  - [ ] **Sub-task 26.1.2.3:** Canonical-authority boundary tests.
-  - [ ] **Sub-task 26.1.2.4:** Knowledge backup, restore, and migration report.
+  - [x] **Sub-task 26.1.2.1:** Versioned knowledge-domain schemas.
+  - [x] **Sub-task 26.1.2.2:** Plain-folder adapter and regenerable index.
+  - [x] **Sub-task 26.1.2.3:** Canonical-authority boundary tests.
+  - [x] **Sub-task 26.1.2.4:** Knowledge backup, restore, and migration report.
 
 - [ ] **Task 26.1.3 - Verify and close the story**
-  - [ ] **Sub-task 26.1.3.1:** `S-022-UT01` classifies canonical Markdown, derived index, operational state, cache, export, and temporary data; assert exactly one owner, storage rule, retention rule, and rebuild path per field.
-  - [ ] **Sub-task 26.1.3.2:** `S-022-UT02` mutates or deletes derived indexes and operational records; assert canonical user files remain unchanged and every derived view rebuilds from approved sources.
-  - [ ] **Sub-task 26.1.3.3:** `S-022-ST01` introduces symlinks, cloud-synced roots, adjacent folders, hidden files, secrets, conflicting identities, and malicious note content; assert bounded scope, classification, and non-authority.
-  - [ ] **Sub-task 26.1.3.4:** `S-022-RT01` backs up, migrates, restores, and deletes synthetic knowledge across schema versions; assert canonical identity, links, provenance, retention, and index regeneration.
+  - [x] **Sub-task 26.1.3.1:** `S-022-UT01` classifies canonical Markdown, derived index, operational state, cache, export, and temporary data; assert exactly one owner, storage rule, retention rule, and rebuild path per field.
+  - [x] **Sub-task 26.1.3.2:** `S-022-UT02` mutates or deletes derived indexes and operational records; assert canonical user files remain unchanged and every derived view rebuilds from approved sources.
+  - [x] **Sub-task 26.1.3.3:** `S-022-ST01` introduces symlinks, cloud-synced roots, adjacent folders, hidden files, secrets, conflicting identities, and malicious note content; assert bounded scope, classification, and non-authority.
+  - [x] **Sub-task 26.1.3.4:** `S-022-RT01` backs up, migrates, restores, and deletes synthetic knowledge across schema versions; assert canonical identity, links, provenance, retention, and index regeneration.
   - [ ] **Sub-task 26.1.3.5 - Product security evidence:** Map `SR-GOV-006`, `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-001` through `SR-CIV-005`; retain data dictionary, authority tests, rebuild hashes, lifecycle results, and privacy/records decision placeholders.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 26.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then human knowledge authority is inspectable user-owned Markdown; SQLite and indexes never silently become the source of truth for a human fact.
-- [ ] **Story AC 26.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every stored or derived knowledge field has purpose, classification, minimization, encryption, retention, correction, export, deletion, and recovery behavior.
+- [x] **Story AC 26.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then human knowledge authority is inspectable user-owned Markdown; SQLite and indexes never silently become the source of truth for a human fact.
+- [x] **Story AC 26.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every stored or derived knowledge field has purpose, classification, minimization, encryption, retention, correction, export, deletion, and recovery behavior.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 26.AC1:** Deleting the knowledge index changes no canonical record.
-- [ ] **Sprint AC 26.AC2:** Rebuilding the index reproduces all expected identifiers, links, metadata, and hashes.
-- [ ] **Sprint AC 26.AC3:** Operational startup succeeds without Markdown knowledge and knowledge browsing succeeds without operational export files.
-- [ ] **Sprint AC 26.AC4:** Duplicate, malformed, conflicting, private, and restricted records are detected before import.
-- [ ] **Sprint AC 26.AC5:** The capability remains read-only against user files until `G-V0.3`.
+- [x] **Sprint AC 26.AC1:** Deleting the knowledge index changes no canonical record.
+- [x] **Sprint AC 26.AC2:** Rebuilding the index reproduces all expected identifiers, links, metadata, and hashes.
+- [x] **Sprint AC 26.AC3:** Operational startup succeeds without Markdown knowledge and knowledge browsing succeeds without operational export files.
+- [x] **Sprint AC 26.AC4:** Duplicate, malformed, conflicting, private, and restricted records are detected before import.
+- [x] **Sprint AC 26.AC5:** The capability remains read-only against user files until `G-V0.3`.
+
+**Local evidence:** Commits `62a5661` through `8657c45`, `f823a0c`, `2cb70b6`, and retained report [`artifacts/sprints/sprint-26/local-evidence-report.json`](artifacts/sprints/sprint-26/local-evidence-report.json) complete the locally executable implementation and verification scope. Sub-task `26.1.3.5`, the parent task/story boxes, and this sprint remain open because `G-V0.1`, independent privacy and records decisions, independent Sprint 26 review, and supported-package integration are not complete.
 
 **Gate decision:** Sprint 26 is PASS only when Story 26.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 27 - Obsidian Note Parsing
