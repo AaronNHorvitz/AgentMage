@@ -28,7 +28,13 @@
     "asset_size": 32989764,
     "download_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10423/llama-b10423-bin-ubuntu-vulkan-x64.tar.gz",
     "backend": "Vulkan",
-    "package_status": "NOT_BUILT_NOT_ADMITTED",
+    "package_profile_path": "model-profiles/runtimes/llama-cpp-b10423-muse-linux-x86_64.json",
+    "package_profile_sha256": "dc8909677972c33a0c5ea98516d871c453575a315ae3afb8d4038123e78fb28f",
+    "package_sha256": "f63793c42e6a2ffd9ff450f70ee09827663654aab698206e2d42a89dec7f15cb",
+    "package_size": 25449086,
+    "package_status": "LOCALLY_BUILT_HASH_VERIFIED_NOT_ADMITTED",
+    "unprivileged_extraction_verified": true,
+    "version_self_check_verified": true,
     "adapter_status": "NOT_IMPLEMENTED",
     "enabled": false
   },
@@ -45,7 +51,7 @@
   },
   "decision": {
     "status": "BLOCKED",
-    "reason": "The candidate runtime is source- and release-pinned but has not been packaged, isolated, or exercised through AgentMage.",
+    "reason": "The candidate runtime package is exact and locally verified but has not been adapter-conformance or isolation tested through AgentMage.",
     "activation": false,
     "fallback": false
   }
