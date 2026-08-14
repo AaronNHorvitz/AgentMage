@@ -304,7 +304,7 @@ def validate_report(
         criteria[0].get("prohibited_observed_edge_count") != 0
         or criteria[0].get("runtime_boundary_trace_count") != 5
         or criteria[0].get("product_wide_acceptance_claim") != "none"
-        or criteria[1].get("persisted_invalid_fixture_count") != 7
+        or criteria[1].get("persisted_invalid_fixture_count") != 8
         or criteria[1].get("generated_oversized_case_count") != 1
         or criteria[1].get("compatibility_rejection") != "pass"
         or criteria[2].get("valid_fixture_count") != 15

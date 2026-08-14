@@ -36,6 +36,9 @@ class Sprint4GateTests(unittest.TestCase):
                 for item in report["acceptance_criteria"]
             )
         )
+        self.assertEqual(
+            report["acceptance_criteria"][1]["persisted_invalid_fixture_count"], 8
+        )
 
     def test_story_gate_preserves_the_macos_blocker(self) -> None:
         story = build_report()["story_gates"][0]
@@ -67,13 +70,15 @@ class Sprint4GateTests(unittest.TestCase):
         report = build_report()
         criterion = copy.deepcopy(report)
         criterion["acceptance_criteria"][0]["prohibited_observed_edge_count"] = 1
+        fixture_count = copy.deepcopy(report)
+        fixture_count["acceptance_criteria"][1]["persisted_invalid_fixture_count"] = 7
         dispatch = copy.deepcopy(report)
         dispatch["acceptance_criteria"][4]["positive_dispatch_path_available"] = True
         story = copy.deepcopy(report)
         story["story_gates"][0]["status"] = "pass"
         blocker = copy.deepcopy(report)
         blocker["summary"]["blocking_controls"] = []
-        for changed in (criterion, dispatch, story, blocker):
+        for changed in (criterion, fixture_count, dispatch, story, blocker):
             with self.subTest(changed=changed):
                 self.assertTrue(validate_report(changed, verify_current=False))
 
