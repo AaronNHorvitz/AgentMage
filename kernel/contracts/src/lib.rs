@@ -10,6 +10,7 @@ mod agent_verifier;
 mod approval;
 mod boundary;
 mod claim;
+mod classification;
 mod common;
 mod display_link;
 mod evidence;
@@ -44,6 +45,14 @@ pub use boundary::{
 pub use claim::{
     ClaimBoundFinalResponse, ClaimEvidence, ClaimEvidenceRole, MaterialClaim, MaterialClaimKind,
     VerifiedMaterialClaim,
+};
+pub use classification::{
+    ActionRisk, ActionRiskAssessment, AdvisoryClassifierDisposition, AdvisoryClassifierResult,
+    AdvisoryClassifierStatus, AutonomyLevel, BudgetState, CredentialClass,
+    DataSensitivityAssessment, DeterministicPolicyFacts, DisclosureClass, ExactAuthorityState,
+    ModelCapabilityAssessment, ModelCapabilityRole, ModelCapabilityStatus, NetworkRequirement,
+    PathScopeState, PolicyDestinationClass, PolicySourceClass, RepositoryState, StaticPolicyCheck,
+    StaticPolicyCheckKind, StaticPolicyCheckState,
 };
 pub use common::{
     CONTRACT_SCHEMA_VERSION, ContractError, ContractPayload, ErrorCategory, RetryDisposition,
