@@ -15,7 +15,7 @@ class DependencyInjectionTests(unittest.TestCase):
         self.assertEqual(check_report(), [])
 
     def test_all_prohibited_compile_edges_are_injected(self) -> None:
-        self.assertEqual(len(prohibited_compile_edges()), 32)
+        self.assertEqual(len(prohibited_compile_edges()), 58)
         observed = {(item["source"], item["target"]) for item in self.report["cases"]}
         self.assertEqual(observed, set(prohibited_compile_edges()))
 

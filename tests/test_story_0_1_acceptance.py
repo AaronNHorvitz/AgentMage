@@ -98,8 +98,14 @@ class Story01AcceptanceTests(unittest.TestCase):
             record for record in report["requirements"]
             if record["kind"] == "product_requirement" and record["release"] == "v0.1"
         ]
+        expected_ids = {
+            record["id"]
+            for record in self.registry["requirements"]
+            if record["kind"] == "product_requirement" and record["release"] == "v0.1"
+        }
 
-        self.assertEqual(len(records), 27)
+        self.assertEqual({record["id"] for record in records}, expected_ids)
+        self.assertEqual(len(records), 33)
         for record in records:
             with self.subTest(requirement=record["id"]):
                 self.assertTrue(record["source"]["heading"])
@@ -108,7 +114,10 @@ class Story01AcceptanceTests(unittest.TestCase):
                 self.assertTrue(record["acceptance_tests"])
                 self.assertEqual(record["exclusion"]["state"], "not_excluded")
                 self.assertEqual(record["status"], "planned")
-                self.assertEqual(record["evidence"]["status"], "not_yet_produced")
+                self.assertEqual(record["evidence"]["status"], "absent")
+                self.assertEqual(
+                    record["evidence"]["absence_disposition"], "missing-required"
+                )
                 self.assertTrue(record["evidence"]["expected_roots"])
 
     def test_ac3_every_public_reference_is_current_or_approved_and_never_overclaims(self) -> None:

@@ -35,10 +35,14 @@ class Story02AcceptanceTests(unittest.TestCase):
             package["scripts"]["docs:clean-check"],
             "npm ci --ignore-scripts && npm run docs:check",
         )
-        self.assertIn("run: npm run docs:clean-check", workflow)
+        self.assertIn("if: ${{ false }}", workflow)
+        self.assertNotIn("run: npm run docs:clean-check", workflow)
         self.assertIn("npm run docs:clean-check", readme)
         self.assertEqual(identity["gate_command"], "npm run docs:clean-check")
         self.assertEqual(identity["gate_script"], package["scripts"]["docs:clean-check"])
+        self.assertEqual(identity["execution_mode"], "local-only-no-runner-sentinel")
+        self.assertTrue(identity["sentinel_job_disabled"])
+        self.assertTrue(identity["manual_trigger_only"])
         self.assertTrue(identity["actions_immutable"])
         self.assertEqual(raw["summary"]["failed"], 0)
         self.assertEqual(raw["summary"]["skipped"], 0)
@@ -67,9 +71,9 @@ class Story02AcceptanceTests(unittest.TestCase):
         self.assertIn("## Reporting a Vulnerability", security)
         self.assertIn("signed release manifest", security)
         self.assertIn("## 5. Required Admission Record", provenance)
-        for evidence_field in ("License", "Runtime", "Decision"):
+        for evidence_field in ("License", "Runtime and codec", "Decision"):
             self.assertIn(f"| {evidence_field} |", provenance)
-        self.assertIn("## 8. Reviewer Evidence", runtime)
+        self.assertIn("## 9. Reviewer Evidence", runtime)
         for required_field in (
             "components",
             "model_profiles",

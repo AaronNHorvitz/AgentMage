@@ -109,11 +109,7 @@ class EffectBoundaryTests(unittest.TestCase):
 
     def test_socket_listener_export_is_rejected(self) -> None:
         relative = Path("platforms/linux/src/lib.rs")
-        source = self.source(str(relative)).replace(
-            "    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity,\n",
-            "    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity, PrivateUnixListener,\n",
-            1,
-        )
+        source = self.source(str(relative)) + "\npub use ipc::PrivateUnixListener;\n"
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn(
             "private Unix listener is exported from the Linux adapter", failures

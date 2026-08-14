@@ -75,6 +75,26 @@ class ArtifactScannerTests(unittest.TestCase):
         self.assertTrue(findings)
         self.assertNotIn(value, str(findings))
 
+    def test_defensive_docker_socket_comparison_is_not_privilege_assumption(self) -> None:
+        findings = scan_text(
+            'if mount.source == "/var/run/docker.sock" { reject(); }',
+            "source",
+            "synthetic/defensive.rs",
+        )
+        self.assertNotIn(
+            "privileged-assumption", {item["category"] for item in findings}
+        )
+
+    def test_configured_docker_socket_is_privilege_assumption(self) -> None:
+        findings = scan_text(
+            'const DOCKER_SOCKET: &str = "/var/run/docker.sock";',
+            "source",
+            "synthetic/configured.rs",
+        )
+        self.assertIn(
+            "privileged-assumption", {item["category"] for item in findings}
+        )
+
     def test_missing_seed_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.report)
         mutated["seeded_cases"].pop()

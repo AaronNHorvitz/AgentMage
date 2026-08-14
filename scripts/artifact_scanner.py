@@ -60,7 +60,7 @@ PRIVILEGED_ASSUMPTIONS = (
     re.compile(r"\bsudo\s+"),
     re.compile(r"\bpkexec\b"),
     re.compile(r"\bCAP_SYS_ADMIN\b"),
-    re.compile(r"/var/run/docker\.sock"),
+    re.compile(r'(?<!== )"/var/run/docker\.sock"'),
     re.compile(r"\bgeteuid\s*\(\s*\)\s*==\s*0"),
 )
 BINARY_MAGICS = (
