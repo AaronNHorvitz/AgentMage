@@ -2369,39 +2369,41 @@ claims.
 
 - [ ] **Task 30.1.1 - Implement the bounded story**
   - [ ] **Sub-task 30.1.1.1** (legacy `S-025-I01`): Select an approved, manifest-pinned, non-prohibited-origin local embedding and reranking profile through the full model policy.
-  - [ ] **Sub-task 30.1.1.2** (legacy `S-025-I02`): Require per-workspace opt-in with an exact included-root and file preview.
-  - [ ] **Sub-task 30.1.1.3** (legacy `S-025-I03`): Keep embedding, reranking, index, and excerpt data on the workstation and prohibit source upload or remote services.
-  - [ ] **Sub-task 30.1.1.4** (legacy `S-025-I04`): Key index records by content hash, source range, branch, model manifest, tokenizer, chunker, index schema, and policy.
-  - [ ] **Sub-task 30.1.1.5** (legacy `S-025-I05`): Preserve source ranges from chunking through retrieval and answer assembly.
-  - [ ] **Sub-task 30.1.1.6** (legacy `S-025-I06`): Implement deterministic invalidation, lexical fallback, storage classification, encryption or explicit storage tradeoff, and orphan cleanup.
-  - [ ] **Sub-task 30.1.1.7** (legacy `S-025-I07`): Implement inspect, delete, and complete rebuild controls that prove deleted content is no longer retrievable.
+  - [x] **Sub-task 30.1.1.2** (legacy `S-025-I02`): Require per-workspace opt-in with an exact included-root and file preview.
+  - [x] **Sub-task 30.1.1.3** (legacy `S-025-I03`): Keep embedding, reranking, index, and excerpt data on the workstation and prohibit source upload or remote services.
+  - [x] **Sub-task 30.1.1.4** (legacy `S-025-I04`): Key index records by content hash, source range, branch, model manifest, tokenizer, chunker, index schema, and policy.
+  - [x] **Sub-task 30.1.1.5** (legacy `S-025-I05`): Preserve source ranges from chunking through retrieval and answer assembly.
+  - [x] **Sub-task 30.1.1.6** (legacy `S-025-I06`): Implement deterministic invalidation, lexical fallback, storage classification, encryption or explicit storage tradeoff, and orphan cleanup.
+  - [x] **Sub-task 30.1.1.7** (legacy `S-025-I07`): Implement inspect, delete, and complete rebuild controls that prove deleted content is no longer retrievable.
   - [ ] **Sub-task 30.1.1.8** (legacy `S-025-I08`): Compare structural-only, lexical, semantic, and hybrid retrieval on the same corpus and budgets.
 
 - [ ] **Task 30.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 30.1.2.1:** Approved embedding and reranking manifests.
-  - [ ] **Sub-task 30.1.2.2:** Opt-in scope and storage disclosures.
-  - [ ] **Sub-task 30.1.2.3:** Semantic index lifecycle implementation.
+  - [x] **Sub-task 30.1.2.2:** Opt-in scope and storage disclosures.
+  - [x] **Sub-task 30.1.2.3:** Semantic index lifecycle implementation.
   - [ ] **Sub-task 30.1.2.4:** Comparative retrieval benchmark report.
 
 - [ ] **Task 30.1.3 - Verify and close the story**
-  - [ ] **Sub-task 30.1.3.1:** `S-025-UT01` validates embedding/reranker manifests, scope, hashes, dimensions, tokenizer, index schema, and compatibility; assert unapproved or changed components remain unavailable.
-  - [ ] **Sub-task 30.1.3.2:** `S-025-UT02` embeds only approved bounded text and tests add/change/delete/rebuild/migration paths; assert no unrelated fields, secrets, or stale vectors remain.
-  - [ ] **Sub-task 30.1.3.3:** `S-025-ST01` attacks embeddings with instruction content, adversarial tokens, poisoned neighbors, oversized notes, resource exhaustion, and cross-workspace canaries; assert no authority or data-boundary change.
+  - [x] **Sub-task 30.1.3.1:** `S-025-UT01` validates embedding/reranker manifests, scope, hashes, dimensions, tokenizer, index schema, and compatibility; assert unapproved or changed components remain unavailable.
+  - [x] **Sub-task 30.1.3.2:** `S-025-UT02` embeds only approved bounded text and tests add/change/delete/rebuild/migration paths; assert no unrelated fields, secrets, or stale vectors remain.
+  - [x] **Sub-task 30.1.3.3:** `S-025-ST01` attacks embeddings with instruction content, adversarial tokens, poisoned neighbors, oversized notes, resource exhaustion, and cross-workspace canaries; assert no authority or data-boundary change.
   - [ ] **Sub-task 30.1.3.4:** `S-025-AT01` compares lexical-only, semantic-only, and combined retrieval on the same labeled corpus, hardware, limits, and metric code; assert all gains, regressions, latency, memory, and uncertainty failures are reported.
   - [ ] **Sub-task 30.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-SUP-007`/`SR-SUP-008`, `SR-AI-006` through `SR-AI-013`, `SR-TST-006`; retain model manifests, opt-in receipt, vector lifecycle scans, benchmark code/raw scores, and decision record.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 30.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then semantic retrieval is disabled by default and can be enabled only after exact disclosure of local model, indexed fields, storage, resources, retention, deletion, and measured benefit.
-- [ ] **Story AC 30.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then combined retrieval must exceed the approved improvement threshold without violating grounding/privacy/resource thresholds; otherwise deterministic retrieval remains the release behavior.
+- [x] **Story AC 30.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then semantic retrieval is disabled by default and can be enabled only after exact disclosure of local model, indexed fields, storage, resources, retention, deletion, and measured benefit.
+- [x] **Story AC 30.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then combined retrieval must exceed the approved improvement threshold without violating grounding/privacy/resource thresholds; otherwise deterministic retrieval remains the release behavior.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 30.AC1:** Semantic retrieval improves a declared concept-or-prose task set without reducing citation correctness.
-- [ ] **Sprint AC 30.AC2:** Structural and lexical retrieval remain primary for code symbols and remain a complete fallback.
-- [ ] **Sprint AC 30.AC3:** Model, tokenizer, chunker, source, branch, or policy changes invalidate affected records.
-- [ ] **Sprint AC 30.AC4:** Index deletion and rebuild are complete, inspectable, and local.
-- [ ] **Sprint AC 30.AC5:** Remote embedding, reranking, indexing, and upload attempts are rejected and receipted.
+- [x] **Sprint AC 30.AC2:** Structural and lexical retrieval remain primary for code symbols and remain a complete fallback.
+- [x] **Sprint AC 30.AC3:** Model, tokenizer, chunker, source, branch, or policy changes invalidate affected records.
+- [x] **Sprint AC 30.AC4:** Index deletion and rebuild are complete, inspectable, and local.
+- [x] **Sprint AC 30.AC5:** Remote embedding, reranking, indexing, and upload attempts are rejected and receipted.
+
+**Local evidence:** Implementation commits `07a4ad4`, `0e8c2cb`, `81c9417`, and `400244c`, evidence definition commits `59e558c` and `818eee6`, and retained report [`artifacts/sprints/sprint-30/local-evidence-report.json`](artifacts/sprints/sprint-30/local-evidence-report.json) complete the locally executable admission, opt-in, local index lifecycle, fixed-point query, invalidation, deletion/rebuild, remote-rejection, adversarial, and four-mode threshold-contract scope. Sub-tasks `30.1.1.1`, `30.1.1.8`, `30.1.2.1`, `30.1.2.4`, `30.1.3.4`, and `30.1.3.5`, Sprint AC `30.AC1`, the parent task/story boxes, and this sprint remain open because no real semantic profile, runtime-generated corpus vectors, real-hardware benchmark, application integration, or independent review exists and upstream Sprint 29 is blocked.
 
 **Gate decision:** Sprint 30 is PASS only when Story 30.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 31 - Rolling Memory and Human-Readable Memory Files
