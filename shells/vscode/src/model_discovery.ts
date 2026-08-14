@@ -46,6 +46,8 @@ export interface ModelPickerEntry {
     | "native_llama_cpp"
     | "docker_model_runner"
     | "macos_metal_llama_cpp";
+  readonly runtime_contract_version: number;
+  readonly runtime_build: string;
   readonly runtime_sha256: string;
   readonly platform:
     "deterministic_fake" | "fedora" | "ubuntu" | "mac_os_apple_silicon";
@@ -54,7 +56,11 @@ export interface ModelPickerEntry {
   readonly max_context_tokens: number;
   readonly max_input_bytes: number;
   readonly max_messages: number;
+  readonly context_sha256: string;
   readonly max_output_tokens: number;
+  readonly decoding_sha256: string;
+  readonly hardware_sha256: string;
+  readonly policy_sha256: string;
   readonly tool_calling: boolean;
   readonly capabilities: readonly ModelPickerCapability[];
   readonly lifecycle: ModelLifecycleState;
@@ -265,9 +271,10 @@ export function renderModelManagementReport(
       `- Selection: ${selection}; explicit user decision ${entry.requires_user_decision ? "required" : "not required"}`,
       `- Exact profile: \`${entry.profile_id}\``,
       `- Manifest: \`${entry.manifest_sha256}\``,
-      `- Runtime: \`${entry.runtime_adapter_id}\` (${label(entry.runtime_kind)}, ${entry.platform}/${entry.architecture}, ${shortHash(entry.runtime_sha256)})`,
+      `- Runtime: \`${entry.runtime_adapter_id}\` contract ${entry.runtime_contract_version.toString()} (${label(entry.runtime_kind)}, ${entry.platform}/${entry.architecture}, ${entry.runtime_sha256})`,
       `- State: lifecycle ${label(entry.lifecycle)}; health ${label(entry.runtime_health)}; activation ${label(entry.activation)}; compatibility ${label(entry.compatibility)}; support ${label(entry.support)}`,
       `- Limits: ${entry.max_context_tokens.toLocaleString("en-US")} context tokens; ${entry.max_output_tokens.toLocaleString("en-US")} output tokens; ${entry.max_messages.toString()} messages`,
+      `- Bound evidence: context ${shortHash(entry.context_sha256)}; decoding ${shortHash(entry.decoding_sha256)}; hardware ${shortHash(entry.hardware_sha256)}; policy ${shortHash(entry.policy_sha256)}`,
       `- Modalities: ${entry.modalities.map(label).join(", ")}`,
       `- Roles: ${entry.capabilities.map((item) => `${label(item.role)} (${label(item.state)})`).join(", ")}`,
       `- Tool selection: ${entry.tool_calling ? "available" : "unavailable"}`,
@@ -287,10 +294,13 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     "codec_id",
     "codec_sha256",
     "compatibility",
+    "context_sha256",
+    "decoding_sha256",
     "display_name",
     "disposition",
     "entry_sha256",
     "family",
+    "hardware_sha256",
     "lifecycle",
     "limitations",
     "manifest_sha256",
@@ -300,9 +310,12 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     "max_output_tokens",
     "modalities",
     "platform",
+    "policy_sha256",
     "profile_id",
     "requires_user_decision",
     "runtime_adapter_id",
+    "runtime_build",
+    "runtime_contract_version",
     "runtime_health",
     "runtime_kind",
     "runtime_sha256",
@@ -336,6 +349,8 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
       "docker_model_runner",
       "macos_metal_llama_cpp",
     ] as const) ||
+    !positiveInteger(value.runtime_contract_version) ||
+    !text(value.runtime_build) ||
     !sha(value.runtime_sha256) ||
     !oneOf(value.platform, [
       "deterministic_fake",
@@ -348,7 +363,11 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     !positiveInteger(value.max_context_tokens) ||
     !positiveInteger(value.max_input_bytes) ||
     !positiveInteger(value.max_messages) ||
+    !sha(value.context_sha256) ||
     !positiveInteger(value.max_output_tokens) ||
+    !sha(value.decoding_sha256) ||
+    !sha(value.hardware_sha256) ||
+    !sha(value.policy_sha256) ||
     typeof value.tool_calling !== "boolean" ||
     capabilities.length === 0 ||
     !oneOf(value.lifecycle, LIFECYCLE_STATES) ||
@@ -429,8 +448,9 @@ function tooltip(entry: ModelPickerEntry): string {
     entry.limitations.length === 0 ? "none" : entry.limitations.join(", ");
   return [
     `Exact profile: ${entry.profile_id}`,
-    `Runtime: ${entry.runtime_adapter_id} (${entry.runtime_kind})`,
+    `Runtime: ${entry.runtime_adapter_id} contract ${entry.runtime_contract_version.toString()} (${entry.runtime_kind}, ${entry.runtime_sha256})`,
     `Manifest: ${entry.manifest_sha256}`,
+    `Bound evidence: context ${entry.context_sha256}; decoding ${entry.decoding_sha256}; hardware ${entry.hardware_sha256}; policy ${entry.policy_sha256}`,
     `Roles: ${roles || "none"}`,
     `Limits: ${entry.max_context_tokens.toString()} context / ${entry.max_output_tokens.toString()} output tokens`,
     `Support: ${entry.support}; limitations: ${limitations}`,

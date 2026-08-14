@@ -95,6 +95,10 @@ pub struct ModelPickerEntry {
     pub runtime_adapter_id: ModelAdapterId,
     /// Runtime implementation family.
     pub runtime_kind: ModelRuntimeKind,
+    /// Exact runtime contract version.
+    pub runtime_contract_version: u16,
+    /// Exact runtime build or image identity.
+    pub runtime_build: String,
     /// Exact runtime build digest.
     pub runtime_sha256: String,
     /// Runtime platform.
@@ -109,8 +113,16 @@ pub struct ModelPickerEntry {
     pub max_input_bytes: u64,
     /// Exact maximum messages.
     pub max_messages: u32,
+    /// Digest of the complete context and token-accounting tuple.
+    pub context_sha256: String,
     /// Exact maximum output tokens.
     pub max_output_tokens: u32,
+    /// Digest of the complete decoding and sampler tuple.
+    pub decoding_sha256: String,
+    /// Digest of the complete ordered hardware-envelope set.
+    pub hardware_sha256: String,
+    /// Exact governing policy digest.
+    pub policy_sha256: String,
     /// Whether an admitted role supports typed tool selection.
     pub tool_calling: bool,
     /// Role-specific capability records.

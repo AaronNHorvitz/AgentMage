@@ -190,6 +190,9 @@ fn project_candidate(
     }
 
     let profile = candidate.profile;
+    let context_sha256 = digest(&profile.context)?;
+    let decoding_sha256 = digest(&profile.decoding)?;
+    let hardware_sha256 = digest(&profile.hardware)?;
     let selectable = matches!(
         profile.lifecycle,
         ModelLifecycleState::Approved | ModelLifecycleState::Degraded
@@ -201,6 +204,7 @@ fn project_candidate(
             ModelSupportState::Supported | ModelSupportState::Limited
         )
         && candidate.policy_current
+        && candidate.requires_user_decision
         && candidate.runtime_health.state == ModelHealthState::Ready
         && profile
             .capabilities
@@ -286,6 +290,8 @@ fn project_candidate(
         template_sha256: profile.codec.template_sha256,
         runtime_adapter_id: profile.runtime.adapter_id,
         runtime_kind: profile.runtime.kind,
+        runtime_contract_version: profile.runtime.contract_version,
+        runtime_build: profile.runtime.runtime_build,
         runtime_sha256: profile.runtime.runtime_sha256,
         platform: profile.runtime.platform,
         architecture: profile.runtime.architecture,
@@ -293,7 +299,11 @@ fn project_candidate(
         max_context_tokens: profile.context.max_context_tokens,
         max_input_bytes: profile.context.max_input_bytes,
         max_messages: profile.context.max_messages,
+        context_sha256,
         max_output_tokens: profile.decoding.max_output_tokens,
+        decoding_sha256,
+        hardware_sha256,
+        policy_sha256: profile.policy_sha256,
         tool_calling,
         capabilities,
         lifecycle: profile.lifecycle,
@@ -332,6 +342,8 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         template_sha256: &'a str,
         runtime_adapter_id: &'a agentmage_kernel_contracts::ModelAdapterId,
         runtime_kind: agentmage_kernel_contracts::ModelRuntimeKind,
+        runtime_contract_version: u16,
+        runtime_build: &'a str,
         runtime_sha256: &'a str,
         platform: agentmage_kernel_contracts::PlatformFamily,
         architecture: agentmage_kernel_contracts::PlatformArchitecture,
@@ -339,7 +351,11 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         max_context_tokens: u32,
         max_input_bytes: u64,
         max_messages: u32,
+        context_sha256: &'a str,
         max_output_tokens: u32,
+        decoding_sha256: &'a str,
+        hardware_sha256: &'a str,
+        policy_sha256: &'a str,
         tool_calling: bool,
         capabilities: &'a [ModelPickerCapability],
         lifecycle: ModelLifecycleState,
@@ -363,6 +379,8 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         template_sha256: &entry.template_sha256,
         runtime_adapter_id: &entry.runtime_adapter_id,
         runtime_kind: entry.runtime_kind,
+        runtime_contract_version: entry.runtime_contract_version,
+        runtime_build: &entry.runtime_build,
         runtime_sha256: &entry.runtime_sha256,
         platform: entry.platform,
         architecture: entry.architecture,
@@ -370,7 +388,11 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         max_context_tokens: entry.max_context_tokens,
         max_input_bytes: entry.max_input_bytes,
         max_messages: entry.max_messages,
+        context_sha256: &entry.context_sha256,
         max_output_tokens: entry.max_output_tokens,
+        decoding_sha256: &entry.decoding_sha256,
+        hardware_sha256: &entry.hardware_sha256,
+        policy_sha256: &entry.policy_sha256,
         tool_calling: entry.tool_calling,
         capabilities: &entry.capabilities,
         lifecycle: entry.lifecycle,
@@ -467,6 +489,8 @@ fn valid_entry(entry: &ModelPickerEntry) -> bool {
         && valid_sha256(&entry.tokenizer_sha256)
         && valid_sha256(&entry.template_sha256)
         && valid_identifier(entry.runtime_adapter_id.as_str())
+        && entry.runtime_contract_version > 0
+        && valid_text(&entry.runtime_build)
         && valid_sha256(&entry.runtime_sha256)
         && !entry.modalities.is_empty()
         && entry
@@ -476,7 +500,11 @@ fn valid_entry(entry: &ModelPickerEntry) -> bool {
         && entry.max_context_tokens > 0
         && entry.max_input_bytes > 0
         && entry.max_messages > 0
+        && valid_sha256(&entry.context_sha256)
         && entry.max_output_tokens > 0
+        && valid_sha256(&entry.decoding_sha256)
+        && valid_sha256(&entry.hardware_sha256)
+        && valid_sha256(&entry.policy_sha256)
         && !entry.capabilities.is_empty()
         && entry.capabilities.iter().all(|capability| {
             roles.insert(capability.role)
@@ -522,6 +550,7 @@ mod tests {
     use super::*;
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    type CandidateMutation = Box<dyn Fn(&mut ModelDiscoveryCandidate)>;
 
     fn profile(id: &str, family: &str) -> ExactModelProfile {
         ExactModelProfile {
@@ -678,7 +707,7 @@ mod tests {
             );
         }
 
-        let mutations: Vec<Box<dyn Fn(&mut ModelDiscoveryCandidate)>> = vec![
+        let mutations: Vec<CandidateMutation> = vec![
             Box::new(|value| value.activation = ModelActivationState::Blocked),
             Box::new(|value| value.activation = ModelActivationState::Stale),
             Box::new(|value| value.compatibility = ModelCompatibilityState::Incompatible),
@@ -719,6 +748,42 @@ mod tests {
             snapshot(vec![value]).entries[0].disposition,
             ModelPickerDisposition::ManagementOnly
         );
+    }
+
+    #[test]
+    fn every_exact_profile_evidence_mutation_invalidates_selection() {
+        let original = snapshot(vec![candidate("selected", "muse")]);
+        let selected = original.entries[0].clone();
+        let mutations: Vec<CandidateMutation> = vec![
+            Box::new(|value| value.profile.family = "changed-family".to_owned()),
+            Box::new(|value| value.profile.display_name = "Changed profile".to_owned()),
+            Box::new(|value| value.profile.artifact.sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.codec.tokenizer_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.codec.template_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.codec.codec_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.runtime.runtime_build = "changed-runtime".to_owned()),
+            Box::new(|value| value.profile.runtime.runtime_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.context.token_counter_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.decoding.seed += 1),
+            Box::new(|value| value.profile.hardware[0].driver_constraint = "changed".to_owned()),
+            Box::new(|value| value.profile.policy_sha256 = "b".repeat(64)),
+            Box::new(|value| value.activation = ModelActivationState::Stale),
+            Box::new(|value| value.support = ModelSupportState::Stale),
+        ];
+
+        for mutate in mutations {
+            let mut changed = candidate("selected", "muse");
+            mutate(&mut changed);
+            let current = snapshot(vec![changed]);
+            let result = revalidate_model_selection(
+                selected.profile_id.clone(),
+                selected.entry_sha256.clone(),
+                &current,
+            )
+            .expect("closed revalidation result");
+            assert!(!result.admitted);
+            assert_eq!(result.result_code, "model.selection.profile-changed");
+        }
     }
 
     #[test]

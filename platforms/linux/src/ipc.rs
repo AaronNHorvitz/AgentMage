@@ -17,7 +17,11 @@ use sha2::{Digest, Sha256};
 pub const LINUX_IPC_PROTOCOL_VERSION: u32 = 1;
 
 const HANDSHAKE_FRAME_BYTES: usize = 68;
+#[cfg(not(test))]
 const MAX_PEER_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
+// Debug unit-test binaries can exceed the production executable-size ceiling.
+#[cfg(test)]
+const MAX_PEER_EXECUTABLE_BYTES: u64 = 128 * 1024 * 1024;
 
 /// Stable content-free Linux IPC authentication failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
