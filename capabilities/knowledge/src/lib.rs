@@ -71,8 +71,9 @@ pub use semantic::{
     LocalSemanticIndex, SemanticActivation, SemanticAdmissionReceipt, SemanticChunkInput,
     SemanticError, SemanticField, SemanticIndexHit, SemanticIndexKey, SemanticIndexReport,
     SemanticIndexSummary, SemanticLifecycleReceipt, SemanticModelManifest, SemanticModelRole,
-    SemanticOptIn, SemanticProfileState, SemanticRuntime, SemanticScopeEntry,
-    SemanticStorageProtection, SemanticVectorInput,
+    SemanticOptIn, SemanticProfileState, SemanticRemoteOperation, SemanticRemoteRejectionReceipt,
+    SemanticRuntime, SemanticScopeEntry, SemanticStorageProtection, SemanticVectorInput,
+    reject_remote_semantic_attempt,
 };
 pub use semantic_benchmark::{
     RetrievalBenchmarkCase, RetrievalBenchmarkError, RetrievalBenchmarkMetrics,

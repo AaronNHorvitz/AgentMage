@@ -84,6 +84,34 @@ pub enum SemanticStorageProtection {
     ExplicitUnencryptedAcceptance,
 }
 
+/// Closed prohibited remote semantic operation class.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SemanticRemoteOperation {
+    /// Remote embedding generation.
+    Embedding,
+    /// Remote candidate reranking.
+    Reranking,
+    /// Remote semantic indexing.
+    Indexing,
+    /// Upload of source text or excerpts.
+    SourceUpload,
+}
+
+/// Content-free proof that a remote semantic attempt was rejected before network use.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SemanticRemoteRejectionReceipt {
+    /// Closed prohibited operation.
+    pub operation: SemanticRemoteOperation,
+    /// Digest of the proposed destination identity; no endpoint text is retained.
+    pub destination_sha256: String,
+    /// Fixed true rejection marker.
+    pub rejected: bool,
+    /// Fixed false network-use marker.
+    pub network_used: bool,
+    /// Fixed false source-upload marker.
+    pub source_uploaded: bool,
+}
+
 /// Exact model, tokenizer, lineage, license, runtime, and resource manifest.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SemanticModelManifest {
@@ -340,6 +368,23 @@ pub enum SemanticError {
     ResourceLimit,
     /// A vector was missing, duplicated, or bound to the wrong chunk.
     VectorMismatch,
+}
+
+/// Rejects and receipts a prohibited remote semantic operation without network authority.
+pub fn reject_remote_semantic_attempt(
+    operation: SemanticRemoteOperation,
+    destination_sha256: String,
+) -> Result<SemanticRemoteRejectionReceipt, SemanticError> {
+    if !valid_sha256(&destination_sha256) {
+        return Err(SemanticError::InvalidInput);
+    }
+    Ok(SemanticRemoteRejectionReceipt {
+        operation,
+        destination_sha256,
+        rejected: true,
+        network_used: false,
+        source_uploaded: false,
+    })
 }
 
 impl SemanticActivation {
@@ -882,8 +927,9 @@ mod tests {
     use super::{
         LocalSemanticIndex, MAX_CHUNK_BYTES, SemanticActivation, SemanticAdmissionReceipt,
         SemanticChunkInput, SemanticError, SemanticField, SemanticModelManifest, SemanticModelRole,
-        SemanticOptIn, SemanticProfileState, SemanticRuntime, SemanticScopeEntry,
-        SemanticStorageProtection, SemanticVectorInput, chunk_digest, digest_json,
+        SemanticOptIn, SemanticProfileState, SemanticRemoteOperation, SemanticRuntime,
+        SemanticScopeEntry, SemanticStorageProtection, SemanticVectorInput, chunk_digest,
+        digest_json, reject_remote_semantic_attempt,
     };
     use crate::ObsidianSourceRange;
 
@@ -1252,5 +1298,29 @@ mod tests {
 
         let fields = BTreeSet::<SemanticField>::new();
         assert!(fields.is_empty(), "empty field fixture remains explicit");
+    }
+
+    #[test]
+    fn every_remote_semantic_operation_is_rejected_and_receipted_before_network_use() {
+        for operation in [
+            SemanticRemoteOperation::Embedding,
+            SemanticRemoteOperation::Reranking,
+            SemanticRemoteOperation::Indexing,
+            SemanticRemoteOperation::SourceUpload,
+        ] {
+            let receipt = reject_remote_semantic_attempt(operation, "7".repeat(64))
+                .expect("rejection receipt succeeds");
+            assert_eq!(receipt.operation, operation);
+            assert!(receipt.rejected);
+            assert!(!receipt.network_used);
+            assert!(!receipt.source_uploaded);
+        }
+        assert_eq!(
+            reject_remote_semantic_attempt(
+                SemanticRemoteOperation::Embedding,
+                "endpoint".to_owned(),
+            ),
+            Err(SemanticError::InvalidInput)
+        );
     }
 }
