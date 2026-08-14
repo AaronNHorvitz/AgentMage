@@ -1,0 +1,111 @@
+{
+  "artifact_id": "s-012-i04-reasoning-verification",
+  "case_ids": [
+    "RVF-01",
+    "RVF-02",
+    "RVF-03",
+    "RVF-04",
+    "RVF-05"
+  ],
+  "claims": {
+    "assumption_and_hypothesis_lifecycles_implemented": true,
+    "compact_problem_frame_implemented": true,
+    "exact_completion_claim_proof_implemented": false,
+    "exact_key_contradiction_detection_implemented": true,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "independent_verification_contract_implemented": true,
+    "manual_fuzzing_executed": false,
+    "material_clarification_gate_implemented": true,
+    "natural_language_contradiction_detection_implemented": false,
+    "persistent_reasoning_implemented": false,
+    "private_chain_of_thought_field_count": 0,
+    "reasoning_authority_admitted_count": 0,
+    "release_support": false,
+    "tool_or_model_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "Contradiction detection compares exact typed claim keys and canonical values; natural-language semantic contradiction discovery remains later work.",
+    "The ledger is in memory only; persistence, restart reconstruction, UI presentation, and session integration remain later work.",
+    "Independent verification is structural and uses supplied evidence; no local model, cross-model review, tool, or platform worker runs.",
+    "Exact material-claim proof remains Sub-task 12.1.1.5.",
+    "Manual fuzzing remains deferred and is not represented by these deterministic tests."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "8c5f7d7e389e5c818a433bcffe6aafb802a52efe",
+  "sources": [
+    {
+      "bytes": 2786,
+      "path": "docs/verification/s-012-i04-reasoning-verification-results.md",
+      "sha256": "60a7d54d93c4dfc67569cc33436cd7ff0b4023ae1f8c8fff5949ecb09233b4b7"
+    },
+    {
+      "bytes": 9028,
+      "path": "kernel/contracts/src/reasoning.rs",
+      "sha256": "7c7587867f5606cec90fb10b8c617f79337c890b297f58f1faf605ec2e3a0784"
+    },
+    {
+      "bytes": 4026,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "3555b901e6d90d4a293c0ef96227c0d577d220437b0566b32672d5a0f636bfbe"
+    },
+    {
+      "bytes": 26355,
+      "path": "kernel/engine/src/reasoning.rs",
+      "sha256": "000297e07a82568f18ca2800f23d9ac9dd58fce491f470f2288e5a881288a5ba"
+    },
+    {
+      "bytes": 15975,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "1e8c71b35d8d3e6e928fe1d009732a6f365b610ef5648ac42defbc47e6e506f2"
+    },
+    {
+      "bytes": 2392,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "94964800fb81259f5d94961bb78c4d57c176a1746720c9dd64b68508461fe15f"
+    },
+    {
+      "bytes": 10483,
+      "path": "scripts/reasoning_verification_evidence.py",
+      "sha256": "a9977f28c1584db19e07ff3b00e66acd687793ce820c18fa995389ab7c978673"
+    },
+    {
+      "bytes": 3612,
+      "path": "tests/test_reasoning_verification_evidence.py",
+      "sha256": "e0e26e74dc15e29f9fe7eecba0ae763c499f5a8ac995fe69d802fba7af107fb3"
+    }
+  ],
+  "status": "pass-bounded-deterministic-reasoning-records",
+  "task_ids": [
+    "12.1.1.4",
+    "S-012-I04"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "2e1150561765cbc26aa90c39f4c1647a7be6813e75a44fb586f0fc7020be81bb",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "4722a11087481dcbcd220f16608cbc35716ad3f0bbeb9e5c5751d4c9dc0a145b",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
