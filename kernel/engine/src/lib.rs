@@ -8,6 +8,8 @@ pub mod agent_progress;
 pub mod agent_runtime;
 /// Deterministic non-authoritative approval-display construction.
 pub mod approval;
+/// Metadata-only attachment classification and exact workspace path resolution.
+pub mod attachment;
 /// Sealed classification and denial of descriptive artifacts as authority.
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
