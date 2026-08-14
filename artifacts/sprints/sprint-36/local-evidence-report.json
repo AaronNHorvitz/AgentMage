@@ -34,7 +34,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-transaction-tests",
-      "output_sha256": "2119973c6363bbbc8e0fee098120b3f90258901cc6404b5894b19ecf7a5b1169"
+      "output_sha256": "fe034c9f07609f14b382850f669c3178bc7e8c9bc64d662500f7f115d13e9723"
     },
     {
       "argv": [
@@ -47,7 +47,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "9e6c3d21db2287f21fd72b4674f5927bf808ec28410edec771efe9649a60dc86"
+      "output_sha256": "ba69790fbc391adfb1d127b882e4cb5d3079db4958d9bb3129dec973517c583e"
     },
     {
       "argv": [
@@ -64,7 +64,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "a1017fbf7101db10090ca404c053d33955ed5c1962bc48b3be17bfb713aa655a"
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
     },
     {
       "argv": [
@@ -77,7 +77,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "001e4577ef937b2230b6a03cfcff375617846bc2eea4304f3a679935750a64d1"
+      "output_sha256": "7bc711babc8823b098894cb5fb94310c9b81f4312c0b87ad250becca49f51097"
     },
     {
       "argv": [
@@ -88,7 +88,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "ccad2eba3f42e28eaa2721cf3ae2c89dd5502ad6a10c2accd5bc504c26c036a4"
+      "output_sha256": "36d81f28f617d97385f2254e637d2395cb033098249d36f78796a58eb2915ba1"
     },
     {
       "argv": [
@@ -99,7 +99,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "8131783c28b4a81b0c4e87cb8ed17f569643f0c39d01b877a80d9134e710ac26"
+      "output_sha256": "8be6bdf59e585386339c76f727c25e40b5009206e28e5944939e621a100e9542"
     },
     {
       "argv": [
@@ -222,7 +222,7 @@
     "SR-TST-011",
     "SR-TST-012"
   ],
-  "source_revision": "a8e9a02d53b0c27d830b593a253fe0a5465e08e0",
+  "source_revision": "ce13c394d87fad924827192198eb0efe6d700f38",
   "source_sha256": {
     "docs/architecture/atomic-write-transaction-and-rollback.md": "15507e1e6f98ce44cc76c529f35f405b9df108d4902d14c3090f18ed5a17c117",
     "docs/verification/sprint-36-local-results.md": "6a01c971d862a8887036d026c8089e5b888317cd4cd4677fd3d08ff76f19a22c",
