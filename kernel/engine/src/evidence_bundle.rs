@@ -92,6 +92,10 @@ pub struct EvidenceExcerptSelection {
     pub disposition: EvidenceExcerptDisposition,
     /// Stable policy codes explaining a redaction; empty only for included ranges.
     pub redaction_codes: Vec<String>,
+    /// Explicit user decision that this exact range may be represented in the preview.
+    pub user_approved: bool,
+    /// Explicit reviewer decision that the range is related to the bundle purpose.
+    pub related: bool,
 }
 
 /// One user-visible claim and its closed evidence state.
@@ -447,6 +451,12 @@ fn resolve_excerpts(
             .iter()
             .find(|turn| turn.turn_id == selection.turn_id)
             .ok_or(EvidenceBundleError::NotFound)?;
+        if !selection.user_approved
+            || !selection.related
+            || turn.role == ConversationTurnRole::System
+        {
+            return Err(EvidenceBundleError::ProhibitedContent);
+        }
         let text = turn
             .text
             .as_deref()
@@ -466,8 +476,7 @@ fn resolve_excerpts(
         let source = &text[start..end];
         let excerpt = match selection.disposition {
             EvidenceExcerptDisposition::Include => {
-                if turn.role == ConversationTurnRole::System
-                    || turn.sensitivity == DataSensitivity::Restricted
+                if turn.sensitivity == DataSensitivity::Restricted
                     || !selection.redaction_codes.is_empty()
                 {
                     return Err(EvidenceBundleError::ProhibitedContent);
@@ -909,6 +918,8 @@ mod tests {
                     end_byte: SAFE_TEXT.len() as u64,
                     disposition: EvidenceExcerptDisposition::Include,
                     redaction_codes: Vec::new(),
+                    user_approved: true,
+                    related: true,
                 },
                 EvidenceExcerptSelection {
                     turn_id: ConversationTurnId::from_raw("turn-bundle-2"),
@@ -916,6 +927,8 @@ mod tests {
                     end_byte: SECRET_TEXT.len() as u64,
                     disposition: EvidenceExcerptDisposition::Redact,
                     redaction_codes: vec!["credential.removed".to_owned()],
+                    user_approved: true,
+                    related: true,
                 },
             ],
             exclusions: vec![
@@ -1033,6 +1046,8 @@ mod tests {
                 end_byte: text_len as u64,
                 disposition: EvidenceExcerptDisposition::Include,
                 redaction_codes: Vec::new(),
+                user_approved: true,
+                related: true,
             }];
             candidate.claims[0].citation_ids.clear();
             assert_eq!(
@@ -1044,6 +1059,23 @@ mod tests {
                     )
                     .expect_err("prohibited disclosure must fail"),
                 expected
+            );
+        }
+        for mutate in [
+            |selection: &mut EvidenceExcerptSelection| selection.user_approved = false,
+            |selection: &mut EvidenceExcerptSelection| selection.related = false,
+        ] {
+            let mut candidate = base.clone();
+            mutate(&mut candidate.excerpts[0]);
+            assert_eq!(
+                store
+                    .preview_evidence_bundle(
+                        &candidate,
+                        "preview-unapproved".to_owned(),
+                        CREATED + 100,
+                    )
+                    .expect_err("unapproved or unrelated content must fail"),
+                EvidenceBundleError::ProhibitedContent
             );
         }
         drop(store);
