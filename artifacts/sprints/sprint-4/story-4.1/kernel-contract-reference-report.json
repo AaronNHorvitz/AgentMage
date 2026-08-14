@@ -176,11 +176,11 @@
     "macos_implementation_claim": "none",
     "macos_reference": "blocked-macos"
   },
-  "reference_revision": "76076d89d5de11a298d5dc0df9d3d59f6bc29896",
+  "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
   "reference_sources": [
     {
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "5bc03c45d8855551679c93838bf232645b409ceb7a7fd7c95ca5ab8912921324"
+      "sha256": "fd5661c33a1a6e884f219efbfcdfa4f90113219b8f496be47b5ce5d9c4ecf81a"
     },
     {
       "path": "scripts/kernel_contract_reference.py",
