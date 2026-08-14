@@ -86,7 +86,7 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             "## 4. Origin and Lineage Rule",
             "## 5. Required Admission Record",
             "## 6. Runtime Parity",
-            "## 7. Initial and Fallback Profiles",
+            "## 7. Muse-First, Multi-Model Candidate Strategy",
             "## 8. Re-Review Triggers",
         ):
             self.assertIn(heading, policy)
@@ -96,7 +96,7 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             "License",
             "Artifacts",
             "Transformation",
-            "Runtime",
+            "Runtime and codec",
             "Resources",
             "Quality",
             "Security",
@@ -112,9 +112,9 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             "pinned by immutable OCI digest",
             "pinned by GGUF and supporting-file hashes",
             "same approved model profile",
-            "initial candidate, not a pre-approved dependency",
-            "named fallback candidate",
-            "AgentMage never switches to it automatically",
+            "Priority is not approval.",
+            "The current state remains zero enabled models.",
+            "No cached approval, user preference, compatibility alias, or successful prior run overrides a re-review trigger.",
             "vulnerability, compromise, revocation",
             "Admission expires and the profile is disabled or quarantined",
         ):
@@ -132,8 +132,9 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             "### Fedora and Ubuntu",
             "## 5. Local IPC and Socket Inventory",
             "## 6. Lifecycle",
-            "## 7. Runtime Parity Gate",
-            "## 8. Reviewer Evidence",
+            "## 7. Proposal, Classification, and Completion Boundary",
+            "## 8. Runtime Parity and Evaluation Gate",
+            "## 9. Reviewer Evidence",
         ):
             self.assertIn(heading, boundaries)
         for process in (
@@ -150,7 +151,7 @@ class PublicPolicyBaselineTests(unittest.TestCase):
         for connection in (
             "VS Code extension to bridge/kernel",
             "Kernel to tool worker",
-            "Kernel to native model adapter",
+            "Kernel to candidate-neutral model adapter",
             "Kernel adapter to Docker Model Runner",
         ):
             self.assertIn(f"| {connection} |", boundaries)
@@ -161,7 +162,7 @@ class PublicPolicyBaselineTests(unittest.TestCase):
             "remains `BLOCKED` unless",
             "Offline startup verifies package, platform, policy, workspace, storage",
             "No AgentMage process silently persists as a system-wide daemon",
-            "Neither adapter may borrow another adapter's result",
+            "Neither adapter, candidate, family, context, or decoding profile may borrow",
         ):
             with self.subTest(boundary=required_boundary):
                 self.assertIn(required_boundary, boundaries)
