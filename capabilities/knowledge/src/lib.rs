@@ -4,6 +4,7 @@
 
 mod domain;
 mod index;
+mod lifecycle;
 mod operations;
 mod plain_folder;
 mod schema;
@@ -15,6 +16,11 @@ pub use domain::{
     KnowledgeRetentionKind, validate_record,
 };
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
+pub use lifecycle::{
+    KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
+    KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
+    preview_migration, preview_restore, verify_backup,
+};
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
     KnowledgeImportReport, KnowledgeRelationship, build_dashboard, build_json_lines_export,
