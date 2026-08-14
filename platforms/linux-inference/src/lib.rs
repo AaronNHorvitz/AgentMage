@@ -18,6 +18,7 @@ mod docker_preflight;
 mod docker_runtime;
 mod docker_topology_collector;
 mod llama_server_driver;
+mod model_acquisition;
 mod muse_atem_codec;
 mod native_model_adapter;
 mod native_runtime;
@@ -57,6 +58,10 @@ pub use docker_topology_collector::{
 };
 
 pub use llama_server_driver::{LlamaServerDriver, LlamaServerDriverConfig};
+pub use model_acquisition::{
+    ModelAcquisitionBlocker, ModelAcquisitionDisposition, ModelAcquisitionHost,
+    ModelAcquisitionPreflight, ModelAcquisitionReview, preflight_model_acquisition,
+};
 pub use muse_atem_codec::MuseAtemFamilyCodec;
 pub use native_model_adapter::{LinuxNativeModelAdapter, NativeModelDriver};
 pub use native_runtime::{
