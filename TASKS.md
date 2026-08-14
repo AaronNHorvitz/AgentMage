@@ -1692,24 +1692,24 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 19.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 19.1.1.1** (legacy `S-018-I06`): Produce coverage counts for discovered, parsed, searched, skipped, excluded, unsupported, failed, and truncated files and budgets.
-  - [ ] **Sub-task 19.1.1.2** (legacy `S-018-I07`): Render token-bounded maps that prioritize named targets, entry points, direct neighborhoods, tests, and configuration.
-  - [ ] **Sub-task 19.1.1.3** (legacy `S-018-I08`): Resolve every structural record to workspace-relative path, content hash, source range, parser identity, and Git identity.
-  - [ ] **Sub-task 19.1.1.4** (legacy `S-018-I09`): Fall back to inventory and lexical search for unsupported languages with an explicit Unknown/Blocked limitation.
+- [x] **Task 19.1.1 - Implement the bounded story**
+  - [x] **Sub-task 19.1.1.1** (legacy `S-018-I06`): Produce coverage counts for discovered, parsed, searched, skipped, excluded, unsupported, failed, and truncated files and budgets.
+  - [x] **Sub-task 19.1.1.2** (legacy `S-018-I07`): Render token-bounded maps that prioritize named targets, entry points, direct neighborhoods, tests, and configuration.
+  - [x] **Sub-task 19.1.1.3** (legacy `S-018-I08`): Resolve every structural record to workspace-relative path, content hash, source range, parser identity, and Git identity.
+  - [x] **Sub-task 19.1.1.4** (legacy `S-018-I09`): Fall back to inventory and lexical search for unsupported languages with an explicit Unknown/Blocked limitation.
 
-- [ ] **Task 19.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 19.1.2.1:** Repository-map schema, cache, renderer, and coverage report.
-  - [ ] **Sub-task 19.1.2.2:** Pinned parser and grammar manifest.
-  - [ ] **Sub-task 19.1.2.3:** Golden map hashes and source-resolution fixtures.
-  - [ ] **Sub-task 19.1.2.4:** Read-only invariance report.
+- [x] **Task 19.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 19.1.2.1:** Repository-map schema, cache, renderer, and coverage report.
+  - [x] **Sub-task 19.1.2.2:** Pinned parser and grammar manifest.
+  - [x] **Sub-task 19.1.2.3:** Golden map hashes and source-resolution fixtures.
+  - [x] **Sub-task 19.1.2.4:** Read-only invariance report.
 
 - [ ] **Task 19.1.3 - Verify and close the story**
-  - [ ] **Sub-task 19.1.3.1:** `S-018-UT01` maps empty, small, nested, ignored, generated, vendored, binary, unsupported-language, malformed, and limit-exceeding repositories; assert deterministic nodes, edges, ordering, and visible omissions.
-  - [ ] **Sub-task 19.1.3.2:** `S-018-UT02` changes one file, parser version, grammar hash, ignore rule, revision, and configuration at a time; assert only correctly dependent cache entries invalidate.
-  - [ ] **Sub-task 19.1.3.3:** `S-018-ST01` supplies parser crashes, hostile encodings, enormous files, recursive links, name collisions, and source injections; assert bounded fallback, no execution, and `Unknown/Blocked` rather than invented structure.
-  - [ ] **Sub-task 19.1.3.4:** `S-018-IT01` resolves every rendered architecture claim back to exact revision/file/range/parser evidence and compares pre/post workspace hashes; assert complete citations and read-only invariance.
-  - [ ] **Sub-task 19.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-TST-002`, `SR-TST-004`, and `SR-OPS-001`; retain parser BOM, map hashes, invalidation traces, coverage ledger, and source-resolution results.
+  - [x] **Sub-task 19.1.3.1:** `S-018-UT01` maps empty, small, nested, ignored, generated, vendored, binary, unsupported-language, malformed, and limit-exceeding repositories; assert deterministic nodes, edges, ordering, and visible omissions.
+  - [x] **Sub-task 19.1.3.2:** `S-018-UT02` changes one file, parser version, grammar hash, ignore rule, revision, and configuration at a time; assert only correctly dependent cache entries invalidate.
+  - [ ] **Sub-task 19.1.3.3:** `S-018-ST01` supplies parser crashes, hostile encodings, enormous files, recursive links, name collisions, and source injections; assert bounded fallback, no execution, and `Unknown/Blocked` rather than invented structure. Partial local evidence: hostile encodings, oversized sources, recursive links, duplicate symbol names, source injections, bounded fallback, and zero product effects pass; the packaged-worker parser-process crash and cancellation matrix remains open.
+  - [x] **Sub-task 19.1.3.4:** `S-018-IT01` resolves every rendered architecture claim back to exact revision/file/range/parser evidence and compares pre/post workspace hashes; assert complete citations and read-only invariance.
+  - [x] **Sub-task 19.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-TST-002`, `SR-TST-004`, and `SR-OPS-001`; retain parser BOM, map hashes, invalidation traces, coverage ledger, and source-resolution results.
 
 ##### Story Acceptance Criteria
 
@@ -1719,10 +1719,10 @@ claims.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 19.AC1:** `AT-REP-001` passes exactly.
-- [ ] **Sprint AC 19.AC2:** Repeated unchanged runs are byte-identical.
+- [x] **Sprint AC 19.AC2:** Repeated unchanged runs are byte-identical.
 - [ ] **Sprint AC 19.AC3:** Changed files, Git identity, parser, grammar, or policy invalidate only affected records before citation.
-- [ ] **Sprint AC 19.AC4:** Unsupported or failed relationships are omitted or visibly Unknown/Blocked, never fabricated.
-- [ ] **Sprint AC 19.AC5:** Mapping leaves workspace files, metadata, Git index, refs, objects, and instructions unchanged.
+- [x] **Sprint AC 19.AC4:** Unsupported or failed relationships are omitted or visibly Unknown/Blocked, never fabricated.
+- [x] **Sprint AC 19.AC5:** Mapping leaves workspace files, metadata, Git index, refs, objects, and instructions unchanged.
 
 **Gate decision:** Sprint 19 is PASS only when Story 19.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 20 - Evidence-State Assignment
