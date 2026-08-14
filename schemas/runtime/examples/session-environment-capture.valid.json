@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage-session-environment-v1",
+  "session_id": "session-0001",
+  "captured_at_utc": "2026-08-13T20:00:00Z",
+  "local_date": "2026-08-13",
+  "timezone_id": "America/Chicago",
+  "current_directory": {
+    "workspace_id": "workspace-0001",
+    "components": ["src"]
+  },
+  "workspace_roots": [
+    {
+      "workspace_id": "workspace-0001",
+      "components": []
+    }
+  ],
+  "active_workspace_id": "workspace-0001",
+  "repository": {
+    "workspace_id": "workspace-0001",
+    "root": {
+      "workspace_id": "workspace-0001",
+      "components": []
+    },
+    "repository_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "head": {
+      "kind": "branch",
+      "value": "agent/session-capture"
+    }
+  },
+  "attachments": [
+    {
+      "attachment_id": "attachment-0001",
+      "source_id": "vscode-chat-attachment",
+      "object_id": "object-attachment-0001",
+      "byte_len": 42,
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_revision": "capture-0001"
+    }
+  ],
+  "platform_family": "fedora",
+  "platform_architecture": "x86_64",
+  "os_build_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "toolchain_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "vscode_build_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "package_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "permission_profile_id": "safe-default-v1",
+  "model_profile_id": "fake-model-v1",
+  "model_enabled": false,
+  "configuration_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+  "capture_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+  "authority": "descriptive-only"
+}

@@ -344,15 +344,16 @@ test("unknown testing record types fail explicitly", () => {
   );
 });
 
-test("single-agent state-machine and event fixtures satisfy closed schemas", () => {
+test("runtime state event and environment fixtures satisfy closed schemas", () => {
   const results = validateRuntimeFixtures();
   assert.deepEqual(RUNTIME_RECORD_TYPES, [
     "single-agent-state-machine",
     "agent-progress-event",
+    "session-environment-capture",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true],
+    [true, true, true],
   );
 });
 
@@ -441,6 +442,59 @@ test("progress events enforce sequence revision step identity and content-free s
     assert.equal(
       validateRuntimeRecord("agent-progress-event", changed, runtimeValidators)
         .valid,
+      false,
+    );
+  }
+});
+
+test("session environment schema rejects syntax bounds variants and authority drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/session-environment-capture.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const cases = [];
+  const fractionalTimestamp = structuredClone(source);
+  fractionalTimestamp.captured_at_utc = "2026-08-13T20:00:00.001Z";
+  cases.push(fractionalTimestamp);
+  const invalidTimezone = structuredClone(source);
+  invalidTimezone.timezone_id = "America//Chicago";
+  cases.push(invalidTimezone);
+  const nonRootWorkspace = structuredClone(source);
+  nonRootWorkspace.workspace_roots[0].components = ["src"];
+  cases.push(nonRootWorkspace);
+  const traversal = structuredClone(source);
+  traversal.current_directory.components = [".."];
+  cases.push(traversal);
+  const shortHead = structuredClone(source);
+  shortHead.repository.head_commit = "c".repeat(39);
+  cases.push(shortHead);
+  const detachedWithValue = structuredClone(source);
+  detachedWithValue.repository.head = { kind: "detached", value: "unexpected" };
+  cases.push(detachedWithValue);
+  const oversizedAttachment = structuredClone(source);
+  oversizedAttachment.attachments[0].byte_len = 1099511627777;
+  cases.push(oversizedAttachment);
+  const digestCase = structuredClone(source);
+  digestCase.capture_sha256 = "A".repeat(64);
+  cases.push(digestCase);
+  const platform = structuredClone(source);
+  platform.platform_family = "windows";
+  cases.push(platform);
+  const authority = structuredClone(source);
+  authority.authority = "model-authorized";
+  cases.push(authority);
+  for (const changed of cases) {
+    assert.equal(
+      validateRuntimeRecord(
+        "session-environment-capture",
+        changed,
+        runtimeValidators,
+      ).valid,
       false,
     );
   }

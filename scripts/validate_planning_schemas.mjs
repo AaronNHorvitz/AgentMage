@@ -53,6 +53,7 @@ export const CONFIGURATION_REVIEW_TYPES = Object.freeze([
 export const RUNTIME_RECORD_TYPES = Object.freeze([
   "single-agent-state-machine",
   "agent-progress-event",
+  "session-environment-capture",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
