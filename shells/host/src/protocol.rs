@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use agentmage_capability_read_only::ReadOnlyResult;
-use agentmage_kernel_contracts::DoctorReport;
+use agentmage_kernel_contracts::{DoctorReport, ModelPickerSnapshot, ModelSelectionRevalidation};
 
 /// Version of the Phase 9 host protocol.
 pub const HOST_PROTOCOL_VERSION: u16 = 1;
@@ -69,6 +69,24 @@ impl HostProtocolError {
 #[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRequest {
+    /// Return the current content-free exact-profile picker projection.
+    DiscoverModels {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+    },
+    /// Revalidate one exact displayed profile immediately before any use.
+    RevalidateModel {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact user-selected profile identity.
+        profile_id: String,
+        /// Digest of the exact picker entry shown to the user.
+        expected_entry_sha256: String,
+    },
     /// Return one redacted local doctor report without contacting the network.
     Doctor {
         /// Protocol schema version.
@@ -182,6 +200,21 @@ pub enum HostRequest {
 impl HostRequest {
     fn validate(&self) -> Result<(), HostProtocolError> {
         let (version, request_id) = match self {
+            Self::DiscoverModels {
+                schema_version,
+                request_id,
+            } => (*schema_version, request_id),
+            Self::RevalidateModel {
+                schema_version,
+                request_id,
+                profile_id,
+                expected_entry_sha256,
+            } => {
+                if !valid_identifier(profile_id) || !valid_sha256(expected_entry_sha256) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
             Self::Doctor {
                 schema_version,
                 request_id,
@@ -336,6 +369,24 @@ pub struct ReceiptSummary {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostResponse {
+    /// Current exact-profile discovery result from trusted host composition.
+    ModelsDiscovered {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Signed-catalog-bound content-free picker projection.
+        snapshot: ModelPickerSnapshot,
+    },
+    /// Current exact-profile selection revalidation result.
+    ModelRevalidated {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Kernel-computed exact-entry result with no fallback.
+        revalidation: ModelSelectionRevalidation,
+    },
     /// One typed redacted local doctor report.
     DoctorCompleted {
         /// Protocol schema version.
@@ -607,6 +658,43 @@ mod tests {
         assert!(matches!(
             parse_request(&serde_json::to_vec(&prohibited).expect("request JSON")),
             Err(HostProtocolError::Malformed)
+        ));
+    }
+
+    #[test]
+    fn model_discovery_and_revalidation_requests_are_closed() {
+        let discovery = json!({
+            "kind": "discover_models",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-models-0001"
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&discovery).expect("request JSON")),
+            Ok(HostRequest::DiscoverModels { .. })
+        ));
+
+        let revalidation = json!({
+            "kind": "revalidate_model",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-models-0002",
+            "profile_id": "exact-profile-0001",
+            "expected_entry_sha256": "a".repeat(64)
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&revalidation).expect("request JSON")),
+            Ok(HostRequest::RevalidateModel { .. })
+        ));
+        let mut hidden_fallback = revalidation.clone();
+        hidden_fallback["fallback_profile_id"] = json!("other-profile");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&hidden_fallback).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
+        let mut invalid_digest = revalidation;
+        invalid_digest["expected_entry_sha256"] = json!("mutable-tag");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&invalid_digest).expect("request JSON")),
+            Err(HostProtocolError::InvalidValue)
         ));
     }
 

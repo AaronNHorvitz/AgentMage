@@ -13,15 +13,18 @@ use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
     ContractPayload, CorrelationId, DataSensitivity, DiagnosticComponent, DiagnosticObservation,
     DiagnosticState, DoctorReport, GrantId, GrantNonce, GrantOperation, GrantPreimage,
-    GrantSideEffect, GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding,
-    OperationOutcome, PathResolutionIntent, Receipt, SessionId, TaskId, ToolCall, ToolCallId,
-    ToolDefinition, ToolId, ValidationIssue, ValidationSeverity, WorkspaceAuthorizationId,
-    WorkspaceId, WorkspacePath, WorkspaceScopePath,
+    GrantSideEffect, GrantTarget, HeldWorkspaceObject, ModelPickerSnapshot, ModelProfileId,
+    OperationAttemptId, OperationBinding, OperationOutcome, PathResolutionIntent, Receipt,
+    SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId, ValidationIssue,
+    ValidationSeverity, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
 };
 use agentmage_kernel_engine::approval::{render_approval_request, verify_approval_request};
 use agentmage_kernel_engine::authority_transaction::AuthorityTransactionRequest;
 use agentmage_kernel_engine::diagnostics::build_doctor_report;
 use agentmage_kernel_engine::grants::{DerivedOperationGrantRequest, SessionReadGrantRequest};
+use agentmage_kernel_engine::model_discovery::{
+    revalidate_model_selection, verify_model_picker_snapshot,
+};
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_kernel_engine::policy::{
     PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
@@ -75,6 +78,10 @@ pub enum LinuxReadError {
     OutputDenied,
     /// The reviewed diagnostic export failed closed.
     DiagnosticExport(DiagnosticExportError),
+    /// No trusted current model-picker snapshot is installed.
+    ModelDiscoveryUnavailable,
+    /// A model-picker snapshot or selection revalidation was invalid.
+    ModelDiscoveryInvalid,
 }
 
 /// Stable content-free failure while serving an authenticated host frame.
@@ -110,6 +117,8 @@ impl LinuxReadError {
             Self::WorkerFailed => "host.read.worker_failed",
             Self::OutputDenied => "host.read.output_denied",
             Self::DiagnosticExport(error) => error.code(),
+            Self::ModelDiscoveryUnavailable => "host.model-discovery.unavailable",
+            Self::ModelDiscoveryInvalid => "host.model-discovery.invalid",
         }
     }
 }
@@ -237,6 +246,7 @@ where
     pending_tools: BTreeMap<String, PendingLinuxTool>,
     attempt_guard: ToolAttemptGuard,
     diagnostic_exports: DiagnosticExportWorkflow,
+    model_picker: Option<ModelPickerSnapshot>,
 }
 
 impl<'platform, I, C> LinuxReadWorkflow<'platform, I, C>
@@ -269,6 +279,7 @@ where
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
+            model_picker: None,
         })
     }
 
@@ -314,7 +325,19 @@ where
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
+            model_picker: None,
         })
+    }
+
+    /// Replaces the transport snapshot after trusted activation refreshes it.
+    pub fn replace_model_picker_snapshot(
+        &mut self,
+        snapshot: ModelPickerSnapshot,
+    ) -> Result<(), LinuxReadError> {
+        verify_model_picker_snapshot(&snapshot)
+            .map_err(|_| LinuxReadError::ModelDiscoveryInvalid)?;
+        self.model_picker = Some(snapshot);
+        Ok(())
     }
 
     /// Handles one already parsed request from an authenticated local channel.
@@ -322,6 +345,12 @@ where
     pub fn handle(&mut self, request: HostRequest) -> HostResponse {
         let request_id = request_id(&request).to_owned();
         let result = match request {
+            HostRequest::DiscoverModels { .. } => self.discover_models(&request_id),
+            HostRequest::RevalidateModel {
+                profile_id,
+                expected_entry_sha256,
+                ..
+            } => self.revalidate_model(&request_id, profile_id, expected_entry_sha256),
             HostRequest::Doctor { .. } => self.doctor(&request_id),
             HostRequest::PreviewDiagnosticExport { destination, .. } => {
                 self.preview_diagnostic_export(&request_id, Path::new(&destination))
@@ -384,6 +413,43 @@ where
             request_id,
             code: error.code().to_owned(),
             receipt: None,
+        })
+    }
+
+    fn discover_models(&self, request_id: &str) -> Result<HostResponse, LinuxReadError> {
+        let snapshot = self
+            .model_picker
+            .as_ref()
+            .ok_or(LinuxReadError::ModelDiscoveryUnavailable)?;
+        verify_model_picker_snapshot(snapshot)
+            .map_err(|_| LinuxReadError::ModelDiscoveryInvalid)?;
+        Ok(HostResponse::ModelsDiscovered {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            snapshot: snapshot.clone(),
+        })
+    }
+
+    fn revalidate_model(
+        &self,
+        request_id: &str,
+        profile_id: String,
+        expected_entry_sha256: String,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let snapshot = self
+            .model_picker
+            .as_ref()
+            .ok_or(LinuxReadError::ModelDiscoveryUnavailable)?;
+        let revalidation = revalidate_model_selection(
+            ModelProfileId::from_raw(profile_id),
+            expected_entry_sha256,
+            snapshot,
+        )
+        .map_err(|_| LinuxReadError::ModelDiscoveryInvalid)?;
+        Ok(HostResponse::ModelRevalidated {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            revalidation,
         })
     }
 
@@ -1451,7 +1517,9 @@ fn receipt_summary(receipt: &Receipt) -> ReceiptSummary {
 
 fn request_id(request: &HostRequest) -> &str {
     match request {
-        HostRequest::Doctor { request_id, .. }
+        HostRequest::DiscoverModels { request_id, .. }
+        | HostRequest::RevalidateModel { request_id, .. }
+        | HostRequest::Doctor { request_id, .. }
         | HostRequest::PreviewDiagnosticExport { request_id, .. }
         | HostRequest::ApproveDiagnosticExport { request_id, .. }
         | HostRequest::CancelDiagnosticExport { request_id, .. }
@@ -1537,6 +1605,7 @@ mod tests {
         ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
     };
     use agentmage_kernel_contracts::{ActorId, SessionId};
+    use agentmage_kernel_engine::model_discovery::build_model_picker_snapshot;
     use agentmage_kernel_engine::operational_store::{
         OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
@@ -1767,6 +1836,59 @@ mod tests {
         );
         let encoded = serde_json::to_string(&report).expect("report JSON");
         assert!(!encoded.contains(state.to_string_lossy().as_ref()));
+        std::fs::remove_dir_all(state).expect("remove state");
+    }
+
+    #[test]
+    fn model_picker_transport_is_unavailable_until_verified_and_never_falls_back() {
+        let state = temp_root("model-picker");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        let mut workflow = workflow(&state, &[]);
+        let unavailable = workflow.handle(HostRequest::DiscoverModels {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-models-0001".to_owned(),
+        });
+        assert!(matches!(
+            unavailable,
+            HostResponse::Denied { ref code, .. }
+                if code == "host.model-discovery.unavailable"
+        ));
+
+        let snapshot = build_model_picker_snapshot("a".repeat(64), true, 10, Vec::new())
+            .expect("empty verified projection");
+        workflow
+            .replace_model_picker_snapshot(snapshot.clone())
+            .expect("valid snapshot");
+        let discovered = workflow.handle(HostRequest::DiscoverModels {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-models-0002".to_owned(),
+        });
+        assert!(matches!(
+            discovered,
+            HostResponse::ModelsDiscovered { snapshot: ref actual, .. }
+                if actual == &snapshot
+        ));
+
+        let revalidated = workflow.handle(HostRequest::RevalidateModel {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-models-0003".to_owned(),
+            profile_id: "removed-profile".to_owned(),
+            expected_entry_sha256: "b".repeat(64),
+        });
+        assert!(matches!(
+            revalidated,
+            HostResponse::ModelRevalidated { revalidation, .. }
+                if !revalidation.admitted
+                    && revalidation.profile_id.as_str() == "removed-profile"
+                    && revalidation.result_code == "model.selection.profile-unavailable"
+        ));
+
+        let mut tampered = snapshot;
+        tampered.snapshot_sha256 = "c".repeat(64);
+        assert_eq!(
+            workflow.replace_model_picker_snapshot(tampered),
+            Err(LinuxReadError::ModelDiscoveryInvalid)
+        );
         std::fs::remove_dir_all(state).expect("remove state");
     }
 
