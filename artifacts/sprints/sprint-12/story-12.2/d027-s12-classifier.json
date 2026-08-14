@@ -1,0 +1,103 @@
+{
+  "artifact_id": "task-12-2-4-3-d027-s12-classifier",
+  "case_ids": [
+    "D027-CLASS-01",
+    "D027-CLASS-02",
+    "D027-CLASS-03",
+    "D027-CLASS-04",
+    "D027-CLASS-05"
+  ],
+  "claims": {
+    "allow_like_parser_rejection_count": 128,
+    "authority_field_parser_rejection_count": 128,
+    "broader_authority_count": 0,
+    "classifier_output_count": 1280,
+    "completion_count": 0,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "output_class_count": 10,
+    "outputs_per_class": 128,
+    "release_support": false,
+    "restrictive_decision_count": 128,
+    "safe_failure_decision_count": 896
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The campaign uses synthetic classifier records and does not run a production model or learned classifier.",
+    "It proves the typed in-process advisory boundary, not platform execution, provider integration, or cross-platform packaging.",
+    "No private user data or external network operation is used.",
+    "Release acceptance and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "2b74fae8305af3c776c4d3e4c43d70ddd5654441",
+  "sources": [
+    {
+      "bytes": 1747,
+      "path": "docs/verification/task-12-2-4-3-d027-classifier-results.md",
+      "sha256": "87c999e1d1b925ccdefd7ec6fcc63baab72dec480190ca393d65cf36a9d7e83c"
+    },
+    {
+      "bytes": 784,
+      "path": "fixtures/agent-policy/v1/d027-classifier-campaign.json",
+      "sha256": "91255c3490b1135e767cff0b68454a6acf231cd5f9625dcbd5057a4ebd8d0b26"
+    },
+    {
+      "bytes": 31956,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "bd0962442f2b690a815685212addc985701845faaf7cc4798eda9ebf1a9d2925"
+    },
+    {
+      "bytes": 29744,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "3fdeb027ea6bb7124b8ba1f180b11522d14f06101294db92dd36016ff101f7e3"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4161,
+      "path": "scripts/d027_s12_classifier_evidence.py",
+      "sha256": "bd379c30e08164f8a3f7a2d7a4708a8dbefbb97a9cc04b875da25a6398342b6f"
+    },
+    {
+      "bytes": 3888,
+      "path": "tests/test_d027_s12_classifier_evidence.py",
+      "sha256": "3624a90e4c0ec8c8eb96804d8d219cb6488b433d5b04808b8f4a3a3efa22277b"
+    }
+  ],
+  "status": "pass-d027-s12-classifier",
+  "task_ids": [
+    "12.2.4.3"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "b4f1e3215ab9e2deae3d70f24151706d047733eaaf8a191cd384bff9adb57358",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "14c29fea0bc3e04060f549bcbff14bafbe72bebf2e92a65fba8b71cb4984e2ca",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
