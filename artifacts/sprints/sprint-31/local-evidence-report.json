@@ -1,0 +1,197 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-30-BLOCKED",
+      "owner": "30.1"
+    },
+    {
+      "code": "ENCRYPTED-MEMORY-EXPORT-IMPORT-ABSENT",
+      "owner": "31.1.1.7"
+    },
+    {
+      "code": "PROTECTED-MEMORY-FILE-RECOVERY-ABSENT",
+      "owner": "31.1.1.8"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-31-REVIEW-ABSENT",
+      "owner": "31.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "ceaab6b75c0d9d5ee6f250c343fc0454586d5b08c0a48d982a4ef4f07132f901"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "96a067b4c6e9195326f033d19a3ca6f30b034692ebde3a2da05a28eba3868a8a"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "93523ffe8ca7f26da970b98152d0443496f6e712d4897bbf7b677e461b3c399d"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_31_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "atomic_edit_supersede_correct_decay_hold_expire_delete": true,
+    "bounded_complete_working_markdown_preview": true,
+    "closed_memory_types_and_namespaces": true,
+    "compaction_to_review_candidates_only": true,
+    "contradiction_preservation_and_no_automatic_promotion": true,
+    "durable_memory_file_write": false,
+    "encrypted_versioned_export_import": false,
+    "explicit_human_approve_reject_decisions": true,
+    "installed_file_recovery_and_machine_migration": false,
+    "portable_memory_and_topic_markdown_previews": true,
+    "secret_restricted_and_inferred_sensitive_denial": true,
+    "selective_scoped_explainable_loading": true,
+    "source_backed_candidate_policy": true
+  },
+  "record_type": "sprint_31_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-010",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-008",
+    "SR-CIV-001",
+    "SR-CIV-002",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005"
+  ],
+  "source_revision": "d4cd4d2ed60b42b95955ccce9bf84f4855ac93a1",
+  "source_sha256": {
+    "capabilities/knowledge/src/lib.rs": "0059046289744deecd2e77806e1c2a3ede3ec185d4395d00ee7c65110aa6a760",
+    "capabilities/knowledge/src/memory.rs": "f880bf3998de8d97cb8e6e0484126985173f186c52da900f82da46f7b8ae8c92",
+    "capabilities/knowledge/src/memory_lifecycle.rs": "92dfbea45ccdd359a11dd94a6ff4e79ae43d457fe4ce2ddac5cf900ff6b4898d",
+    "capabilities/knowledge/src/memory_working.rs": "6d2c6a50a157d38fb56805796ddbc6ce650ce26cc08a4434a49c3e750d68ebf7",
+    "docs/architecture/source-backed-memory-boundary.md": "301100082c867ea194b8f7daf3a3097fdbe96de08c478b266fa2feaecb6bfd78",
+    "docs/verification/sprint-31-local-results.md": "e56ca1fa2bf1a235bd23437f7c370b9607805de99d0b05f835574ba4d6949e51",
+    "scripts/sprint_31_evidence.py": "8a1ce8ba1682510e335c302ce87933e2580ee7059f92e8032463eb35439cabd2",
+    "tests/test_sprint_31_evidence.py": "952ddfe8a60c32cc4c8aa71141df072d5d68360fb5db8028eb8b2954cd0a8ba8"
+  },
+  "summary": {
+    "automatic_memory_promotion": false,
+    "durable_file_write_enabled": false,
+    "encrypted_export_import_available": false,
+    "local_memory_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "candidate_policy_and_lifecycle_suite": true,
+    "complete_local_product_and_docs_gates": true,
+    "encrypted_memory_export_import": false,
+    "independent_review": false,
+    "portable_no_write_markdown_preview_suite": true,
+    "protected_file_recovery_and_migration": false,
+    "upstream_sprint_30_gate": false,
+    "working_compaction_and_selective_loading_suite": true
+  }
+}
