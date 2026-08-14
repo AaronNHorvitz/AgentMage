@@ -46,6 +46,8 @@ pub mod tooling;
 pub mod work_packet;
 
 #[cfg(test)]
+mod s012_it01;
+#[cfg(test)]
 mod s012_rt01;
 #[cfg(test)]
 mod s012_ut02;
