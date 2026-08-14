@@ -737,4 +737,103 @@ mod tests {
             OUTPUT_COUNT
         );
     }
+
+    #[test]
+    fn d027_s12_classification_context_remains_deterministic_and_bounded() {
+        let baseline_facts = facts();
+        let baseline_clearance =
+            PreclassificationPolicyGate::evaluate(&baseline_facts).expect("baseline clearance");
+
+        for risk in [
+            ActionRisk::Minimal,
+            ActionRisk::Controlled,
+            ActionRisk::Elevated,
+            ActionRisk::Critical,
+        ] {
+            let mut candidate = baseline_facts.clone();
+            candidate.action_risk = risk;
+            let first = PreclassificationPolicyGate::evaluate(&candidate);
+            let repeated = PreclassificationPolicyGate::evaluate(&candidate);
+            assert_eq!(first, repeated);
+            assert_eq!(first.is_ok(), risk == ActionRisk::Minimal);
+        }
+
+        for role in [
+            ModelCapabilityRole::CodeGeneration,
+            ModelCapabilityRole::ToolSelection,
+            ModelCapabilityRole::AdvisoryClassification,
+            ModelCapabilityRole::Embedding,
+            ModelCapabilityRole::Multimodal,
+            ModelCapabilityRole::Specialist,
+            ModelCapabilityRole::LegacyCompatibility,
+        ] {
+            for status in [
+                ModelCapabilityStatus::MeasuredSupported,
+                ModelCapabilityStatus::MeasuredUnsupported,
+                ModelCapabilityStatus::Blocked,
+                ModelCapabilityStatus::Unknown,
+            ] {
+                let mut candidate = baseline_facts.clone();
+                candidate.model_capability_role = role;
+                candidate.model_capability_status = status;
+                let result = PreclassificationPolicyGate::evaluate(&candidate);
+                assert_eq!(
+                    result.is_ok(),
+                    status == ModelCapabilityStatus::MeasuredSupported
+                );
+                assert_eq!(result, PreclassificationPolicyGate::evaluate(&candidate));
+            }
+        }
+
+        let value: serde_json::Value =
+            serde_json::from_slice(&to_canonical_json(&baseline_facts).expect("facts serialize"))
+                .expect("facts JSON");
+        let serde_json::Value::Object(fields) = value else {
+            panic!("facts must serialize as an object");
+        };
+        let reordered = format!(
+            "{{{}}}",
+            fields
+                .iter()
+                .rev()
+                .map(|(name, value)| format!(
+                    "{}:{}",
+                    serde_json::to_string(name).expect("field name"),
+                    serde_json::to_string(value).expect("field value")
+                ))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+        let reordered_facts =
+            from_json::<DeterministicPolicyFacts>(reordered.as_bytes()).expect("reordered facts");
+        assert_eq!(reordered_facts, baseline_facts);
+        assert_eq!(
+            PreclassificationPolicyGate::evaluate(&reordered_facts),
+            Ok(baseline_clearance)
+        );
+
+        let mut baseline_result = result(
+            PreclassificationPolicyGate::evaluate(&baseline_facts)
+                .expect("clearance")
+                .fact_set_sha256(),
+            AdvisoryClassifierStatus::Complete,
+            vec![AdvisoryClassifierDisposition::Narrow],
+        );
+        baseline_result.rationale_sha256 = "1".repeat(64);
+        let baseline_decision = AdvisoryPolicyGate::apply(
+            &PreclassificationPolicyGate::evaluate(&baseline_facts).expect("clearance"),
+            &baseline_result,
+        )
+        .expect("baseline advisory");
+        for marker in ['2', '3', '4', '5'] {
+            let mut explained = baseline_result.clone();
+            explained.rationale_sha256 = marker.to_string().repeat(64);
+            let decision = AdvisoryPolicyGate::apply(
+                &PreclassificationPolicyGate::evaluate(&baseline_facts).expect("clearance"),
+                &explained,
+            )
+            .expect("changed explanation");
+            assert_eq!(decision, baseline_decision);
+        }
+    }
 }
