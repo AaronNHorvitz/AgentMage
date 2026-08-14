@@ -4,41 +4,41 @@
   "files": [
     {
       "path": "control-map.json",
-      "sha256": "c26dc51e42d8a205ff68b1ee097063c11cb062549ff727e973dfb34e8b989fee",
+      "sha256": "9083e21c989e236b28c5614cae6338c04f5d99fd35330579dd0a58a52c956304",
       "size": 2228
     },
     {
       "path": "decision-record.json",
-      "sha256": "425accaf1f08df5bbf774e4acf27e4c8739d2dad7cd43c6a59c784da6d233d32",
+      "sha256": "d01fad578e1f7bf06f35001a3612d0d6282d0687807b148febd6012578273227",
       "size": 475
     },
     {
       "path": "policy-hashes.json",
-      "sha256": "f1c7e99258f8e96867cf7bf1e2a37a2ed0d0f1a1f9ffb52febc07bc0a7ec676f",
-      "size": 2278
+      "sha256": "16e427a2b4435059f7ad93c665526bb75664e53020bce770c9d4cb21f74bf52a",
+      "size": 2281
     },
     {
       "path": "raw-checker-output.json",
-      "sha256": "e6f77602261395bb6e3ff166f7de5cf173d2b75b04e0a123600a4d2f8408aecb",
-      "size": 4017
+      "sha256": "576405e162cc03cbae53d201329f997112b99140e1622ba92954c1200f64c0c1",
+      "size": 4019
     },
     {
       "path": "reviewer-disposition.json",
-      "sha256": "76f9dfac801fcf590a55034075b2df7470b1909a096549970a4d332e25d264b2",
+      "sha256": "1bb050e6602844babf46fc71c3a4d04b1bcd2da6ece687f6757ea4acd635dd4b",
       "size": 727
     },
     {
       "path": "summary.md",
-      "sha256": "133e6efa39e09d69ad97a9e84923c1e97814745511f2d70cf9d9945d603a58ae",
+      "sha256": "7a0357f62c5b06322e2daf381ecae6cef386f40b95a745f96a3a1df83368f37e",
       "size": 700
     },
     {
       "path": "workflow-identity.json",
-      "sha256": "769a32357f32c71f57a72ad61805f11afe6c79f2b66682f04e879309a1186e76",
-      "size": 724
+      "sha256": "3bbd046d498331bf251886a00630ca61e3ca926532f17a15daa8d2185bd2a37b",
+      "size": 782
     }
   ],
   "schema_version": 1,
   "scope": "Story 0.2 public policy and documentation controls",
-  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
+  "source_revision": "bc41538071d71ad0b45899a5a06accf74dd07a0a"
 }

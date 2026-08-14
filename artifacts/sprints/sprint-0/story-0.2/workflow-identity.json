@@ -1,19 +1,21 @@
 {
-  "actions": [
-    "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
-    "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
-  ],
+  "actions": [],
   "actions_immutable": true,
+  "automatic_triggers_absent": true,
+  "execution_mode": "local-only-no-runner-sentinel",
   "gate_command": "npm run docs:clean-check",
   "gate_script": "npm ci --ignore-scripts && npm run docs:check",
   "install_command": "npm ci --ignore-scripts",
   "lockfile_sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
+  "manual_trigger_only": true,
   "path": ".github/workflows/documentation.yml",
   "permissions": {
     "contents": "read"
   },
   "runner": "ubuntu-24.04",
   "schema_version": 1,
-  "sha256": "1c7d1cc7504a0a426d15ccc5a21fe77f0e016d75ffeabb7f853ccdb6ca2fd54b",
-  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
+  "sentinel_job_disabled": true,
+  "sha256": "c0456a3d12842785d17ec287494209e56cac93e565199de5fc9cd94cecb750b1",
+  "source_revision": "bc41538071d71ad0b45899a5a06accf74dd07a0a",
+  "third_party_actions_absent": true
 }

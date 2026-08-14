@@ -7,18 +7,18 @@
     },
     {
       "path": "SECURITY.md",
-      "sha256": "91f3d99ba8dc4e2fb0f09e644c6c7ecf4ac1122305e06140c1664d9e65ed2fcc",
-      "size": 5012
+      "sha256": "b51a261676b86f51458421f087e1738d431dee321a2c168e5b3ee4c07c3dff8d",
+      "size": 5629
     },
     {
       "path": "MODEL-PROVENANCE-POLICY.md",
-      "sha256": "7559cecd79b4f3faea70083148abe4ffe21ac9633374d414ce33ec64a9dd4ba2",
-      "size": 8758
+      "sha256": "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75",
+      "size": 18295
     },
     {
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "7fc9f4e737847a27cd98bad6766eacecf5331319a593ac5b98ca69759020576e",
-      "size": 16031
+      "sha256": "5cfc656282d85dbda58d16d2b170d6e0c1ce297af27f0d0aa588a63ec45fd6be",
+      "size": 37719
     },
     {
       "path": "docs/decisions/0001-product-security-and-runtime-baseline.md",
@@ -27,38 +27,38 @@
     },
     {
       "path": "README.md",
-      "sha256": "93e990a8aee23af1620f292d91324e0c00f49249c52c968079dfd0ed0f789675",
-      "size": 23019
+      "sha256": "fec5c1496148efa2f853ca420e25398d79d32345a2426776d08c93a68d8054d8",
+      "size": 41166
     },
     {
       "path": "PRD.md",
-      "sha256": "ff9bb34dbd0d197d48556af9dcb75d3258c969afe853012eda90164af52af061",
-      "size": 56313
+      "sha256": "f4f750a599b5d129daec29e9ed1e25a12d9ffe5dca1d76ba7b13308a78246111",
+      "size": 87111
     },
     {
       "path": "IMPLEMENTATION-PLAN.md",
-      "sha256": "93eb67a1ce4b23540fff6fda20a41f78dd1cce70d6f1b92488731efefc060a33",
-      "size": 44758
+      "sha256": "5eadf6e30e1d247a5aabd66f555cc10cdddedecec2e2814479f143ddfd57a0be",
+      "size": 81374
     },
     {
       "path": "Agent-Scaffolding-Inventory.md",
-      "sha256": "6a45cb4890cdf6069d61e93f10044e6cb41cdb1123836f65c387727032b900b3",
-      "size": 252691
+      "sha256": "2e11848e3d92222b88edb0d570858997889eabc66984ad11b81414d90df6f884",
+      "size": 359500
     },
     {
       "path": "TASKS.md",
-      "sha256": "1ffcc21b488b9121f335b13e57daf8bc794f7be309cd846eb9e12b859d47029f",
-      "size": 866466
+      "sha256": "407d8a798bf4da37dc9117bf7bd97de32b0ab044889cade51e0b68f5fd59f4cf",
+      "size": 1295425
     },
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24",
-      "size": 80205
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44",
+      "size": 136944
     },
     {
       "path": "package.json",
-      "sha256": "c2e78306b2e71d1f249e2c8069b69cead1971adc85b201372a404b182058a4fb",
-      "size": 15361
+      "sha256": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
+      "size": 23557
     },
     {
       "path": "package-lock.json",
@@ -67,10 +67,10 @@
     },
     {
       "path": ".github/workflows/documentation.yml",
-      "sha256": "1c7d1cc7504a0a426d15ccc5a21fe77f0e016d75ffeabb7f853ccdb6ca2fd54b",
-      "size": 550
+      "sha256": "c0456a3d12842785d17ec287494209e56cac93e565199de5fc9cd94cecb750b1",
+      "size": 334
     }
   ],
   "schema_version": 1,
-  "source_revision": "8deae0ffc69d596a3724784fd52991c305c2b69a"
+  "source_revision": "bc41538071d71ad0b45899a5a06accf74dd07a0a"
 }

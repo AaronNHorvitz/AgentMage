@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Source revision | `8deae0ffc69d596a3724784fd52991c305c2b69a` |
+| Source revision | `bc41538071d71ad0b45899a5a06accf74dd07a0a` |
 | Evidence date | 2026-08-10 |
 | Scope | Story 0.2 public policy and documentation controls |
 | Checker results | 5 passed, 0 failed, 0 skipped |
