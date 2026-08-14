@@ -168,6 +168,8 @@
     "model:profile-catalog:check": "node scripts/model_profile_catalog.mjs",
     "model:muse-candidate-check": "python3 scripts/muse_candidate_admission.py",
     "model:muse-preflight": "python3 scripts/muse_preflight.py",
+    "model:muse-runtime-build": "python3 scripts/muse_llama_runtime.py --archive \"$AGENTMAGE_MUSE_LLAMA_ARCHIVE\"",
+    "model:muse-runtime-check": "python3 scripts/muse_llama_runtime.py --verify-package release-output/agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64.tar.gz",
     "model:activation:build": "python3 scripts/model_activation.py --write",
     "model:activation:check": "python3 scripts/model_activation.py",
     "model:substitution-build": "python3 scripts/model_substitution.py --write --verification-revision HEAD",

@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "record_type": "linux_muse_runtime_package_profile",
+  "project": "ggml-org/llama.cpp",
+  "release": "b10423",
+  "source_commit": "a94d563ed801d1da1b8c2432946de07d0231bb3d",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "backend": "vulkan-with-x86-cpu-fallback",
+  "upstream_license": "MIT",
+  "authority": {
+    "credential": false,
+    "egress": false,
+    "grant": false,
+    "shell": false,
+    "tool": false,
+    "workspace": false
+  },
+  "listener": {
+    "kind": "private-loopback-behind-authenticated-agentmage-adapter",
+    "non_loopback_bind": false,
+    "public_reachability": false,
+    "runtime_selectable_host": false,
+    "runtime_selectable_port": false
+  },
+  "model_store": {
+    "directory_enumeration": false,
+    "directory_mode": 448,
+    "input": "kernel-held-exact-read-only-model-descriptor",
+    "path_input": false,
+    "required_owner": "invoking-standard-user",
+    "runtime_write": false
+  },
+  "package": {
+    "format": "deterministic-tar-gzip",
+    "package_id": "agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64",
+    "relative_install_root": "runtimes/agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64",
+    "manifest_destination": "runtime-manifest.json",
+    "license_destination": "LICENSE.llama.cpp",
+    "replacement": "no-overwrite"
+  },
+  "resource_ceiling": {
+    "cpu_percent": 3200,
+    "memory_bytes": 68719476736,
+    "output_bytes": 16777216,
+    "parallel_slots": 1,
+    "runtime_seconds": 3600,
+    "swap_bytes": 0,
+    "tasks": 64
+  },
+  "source_archive": {
+    "download_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10423/llama-b10423-bin-ubuntu-vulkan-x64.tar.gz",
+    "format": "tar-gzip",
+    "name": "llama-b10423-bin-ubuntu-vulkan-x64.tar.gz",
+    "root": "llama-b10423",
+    "sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+    "size_bytes": 32989764
+  },
+  "source_files": [
+    {
+      "destination": "LICENSE.llama.cpp",
+      "mode": 292,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "size_bytes": 1078,
+      "source": "llama-b10423/LICENSE",
+      "type": "file"
+    },
+    {
+      "destination": "bin/llama-server",
+      "mode": 365,
+      "sha256": "f7c93f0de9fed7b596e68557bd4d42a084204027f87d61c893777908e4c62bfe",
+      "size_bytes": 17896,
+      "source": "llama-b10423/llama-server",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-base.so",
+      "mode": 511,
+      "source": "llama-b10423/libggml-base.so",
+      "target": "libggml-base.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml-base.so.0",
+      "mode": 511,
+      "source": "llama-b10423/libggml-base.so.0",
+      "target": "libggml-base.so.0.19.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml-base.so.0.19.0",
+      "mode": 292,
+      "sha256": "c09ef1afbe033faba844ddaa41bfdd02b359036df9d7cbc94c558896d2cfa431",
+      "size_bytes": 910816,
+      "source": "llama-b10423/libggml-base.so.0.19.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-cpu-x64.so",
+      "mode": 292,
+      "sha256": "6234b3b90a03d1b27d5ca12e303e290b7060e319ffc206d828d0bfe1dee24350",
+      "size_bytes": 878128,
+      "source": "llama-b10423/libggml-cpu-x64.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml-vulkan.so",
+      "mode": 292,
+      "sha256": "5dc6de442289a361d10b703a8e96dca0aefd826fedc5a84060ff34647c538f29",
+      "size_bytes": 52926320,
+      "source": "llama-b10423/libggml-vulkan.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libggml.so",
+      "mode": 511,
+      "source": "llama-b10423/libggml.so",
+      "target": "libggml.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml.so.0",
+      "mode": 511,
+      "source": "llama-b10423/libggml.so.0",
+      "target": "libggml.so.0.19.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libggml.so.0.19.0",
+      "mode": 292,
+      "sha256": "ffd6a736ad58e2d9407ed427252520ffbd4bca8dd5de467ecb2bd446a7a3d75b",
+      "size_bytes": 54936,
+      "source": "llama-b10423/libggml.so.0.19.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libllama-common.so",
+      "mode": 511,
+      "source": "llama-b10423/libllama-common.so",
+      "target": "libllama-common.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama-common.so.0",
+      "mode": 511,
+      "source": "llama-b10423/libllama-common.so.0",
+      "target": "libllama-common.so.0.1.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama-common.so.0.1.0",
+      "mode": 292,
+      "sha256": "4a3a21572819b3d19bb2aeec098c90aa0a04bbd2b47a1f2a77e4be17f0c3dc37",
+      "size_bytes": 6250560,
+      "source": "llama-b10423/libllama-common.so.0.1.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libllama-server-impl.so",
+      "mode": 292,
+      "sha256": "0cb631d0e6d558a15605653aac3fcaa4d58b8c6f7ea382b300e18341a8034830",
+      "size_bytes": 7557544,
+      "source": "llama-b10423/libllama-server-impl.so",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libllama.so",
+      "mode": 511,
+      "source": "llama-b10423/libllama.so",
+      "target": "libllama.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama.so.0",
+      "mode": 511,
+      "source": "llama-b10423/libllama.so.0",
+      "target": "libllama.so.0.1.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libllama.so.0.1.0",
+      "mode": 292,
+      "sha256": "46d42c6f97f1ad8d1225ba43c9f475be910d0dccdc2326277a0e647e3dade4f7",
+      "size_bytes": 4220304,
+      "source": "llama-b10423/libllama.so.0.1.0",
+      "type": "file"
+    },
+    {
+      "destination": "lib/libmtmd.so",
+      "mode": 511,
+      "source": "llama-b10423/libmtmd.so",
+      "target": "libmtmd.so.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libmtmd.so.0",
+      "mode": 511,
+      "source": "llama-b10423/libmtmd.so.0",
+      "target": "libmtmd.so.0.1.0",
+      "type": "symlink"
+    },
+    {
+      "destination": "lib/libmtmd.so.0.1.0",
+      "mode": 292,
+      "sha256": "7602cc169c768fad2bea4a4263804087f1867db167471d36ee6315942119adbf",
+      "size_bytes": 1796912,
+      "source": "llama-b10423/libmtmd.so.0.1.0",
+      "type": "file"
+    }
+  ],
+  "decision": {
+    "enabled_models": 0,
+    "inference_implemented": false,
+    "release_approval": false,
+    "status": "PACKAGE_INPUT_PINNED_NOT_ACTIVATED"
+  }
+}
