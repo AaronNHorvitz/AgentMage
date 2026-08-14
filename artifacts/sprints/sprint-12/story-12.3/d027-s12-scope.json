@@ -1,0 +1,196 @@
+{
+  "artifact_id": "story-12-3-d027-s12-scope",
+  "case_ids": [
+    "D027-SCOPE-01",
+    "D027-SCOPE-02",
+    "D027-SCOPE-03",
+    "D027-SCOPE-04",
+    "D027-SCOPE-05",
+    "D027-SCOPE-06",
+    "D027-SCOPE-07",
+    "D027-SCOPE-08",
+    "D027-SCOPE-09",
+    "D027-SCOPE-10",
+    "D027-SCOPE-11",
+    "D027-SCOPE-12"
+  ],
+  "claims": {
+    "appended_requirement_count": 12,
+    "current_normative_mapping_count": 31,
+    "current_stable_requirement_count": 241,
+    "decision_0027_normative_mapping_count": 30,
+    "decision_0027_stable_requirement_count": 241,
+    "epic_count": 17,
+    "external_network_used": false,
+    "manual_fuzzing_executed": false,
+    "negative_control_count": 11,
+    "negative_control_failure_count": 11,
+    "pre_0027_normative_mapping_count": 26,
+    "pre_0027_stable_requirement_count": 229,
+    "preserved_requirement_count": 229,
+    "release_support": false,
+    "sprint_count": 169
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This campaign proves planning-integrity behavior and does not enable a model or complete a product capability.",
+    "Decision 0040's current 31st mapping remains separate from the immutable Decision 0027 30-mapping result.",
+    "Manual fuzzing remains deferred to its separately approved final campaign."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "14c10b138565141daa0a5cad6e6b082d7a992fd1",
+  "sources": [
+    {
+      "bytes": 3516,
+      "path": "docs/verification/task-12-3-d027-scope-results.md",
+      "sha256": "8690986adbd30820b718e223960ee06b67ef8527daa1b4657a647025c344f41e"
+    },
+    {
+      "bytes": 44115,
+      "path": "requirements/planning-scope-decisions.json",
+      "sha256": "4e554950511e52257789f6d7593261580430f3c5aaba1351a330bf8aa554eb79"
+    },
+    {
+      "bytes": 24132,
+      "path": "scripts/planning_scope.py",
+      "sha256": "9c72c145eed05ca3ff57cd7c074abb4681919e0b90d928880dcd161cbb60e62a"
+    },
+    {
+      "bytes": 17377,
+      "path": "scripts/status_model.py",
+      "sha256": "14b2030885760d1aabeca9f9217d91ae619541b9cc15227f02dd327c10b0eda8"
+    },
+    {
+      "bytes": 28314,
+      "path": "scripts/validate_docs.py",
+      "sha256": "ca7770ead83d21383684f5ea1eff404d33b4e88294afc1fb34520ad7b9233743"
+    },
+    {
+      "bytes": 10928,
+      "path": "scripts/verify_clean_traceability.py",
+      "sha256": "9c9e30a170ecb00ad72e8c52e582a7cc7ac00452ecce3f2baf927dbec7a6966c"
+    },
+    {
+      "bytes": 5114,
+      "path": "scripts/d027_s12_scope_evidence.py",
+      "sha256": "9a94babdcd5fb9845fbc379daf9cdef0c68035c19b8cbee4e9ffe3154d3f01ac"
+    },
+    {
+      "bytes": 7574,
+      "path": "tests/test_planning_scope.py",
+      "sha256": "64f307236c44776a74dcefa1eb69c8cfa661d9199616c787755bf6d116af1faa"
+    },
+    {
+      "bytes": 6162,
+      "path": "tests/test_status_model.py",
+      "sha256": "6de02dd4189b26dcd25d678f09b997cada29d6979c54a6df8595eac0147f7e38"
+    },
+    {
+      "bytes": 3378,
+      "path": "tests/test_clean_traceability.py",
+      "sha256": "bf0f70931eb76867bc16d9b15431cb5bf50400f18840979bf64e208dcff16d31"
+    },
+    {
+      "bytes": 7745,
+      "path": "tests/test_traceability_report.py",
+      "sha256": "c316a677ade90b4c41fae1158b20a57801a6a212c007f20684d1a6ddf4c5c6bc"
+    },
+    {
+      "bytes": 3335,
+      "path": "tests/test_d027_s12_scope_evidence.py",
+      "sha256": "0b3f79d742c65dae2bb44edb7bea3207070eeb4e5f1e4c2e0f1b8fbbc51b0752"
+    }
+  ],
+  "status": "pass-d027-s12-scope",
+  "task_ids": [
+    "12.3.1",
+    "12.3.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "dd54bd2e43d9582cf424e9a4c41cd2907ea9543183c92d4fdb299190ab9291d4",
+      "exit_code": 0,
+      "expected_marker_sha256": "6a488319f845e8a226b2571e0b9fbf5a1f2da9e528182c0cf5e0a0985a2c11cb",
+      "status": "pass"
+    },
+    {
+      "command_id": "27bda13c8b521b1c6d77e3d58fed546bb7eb02805e5b8a4674792b7d957b91cd",
+      "exit_code": 0,
+      "expected_marker_sha256": "8f480bab6d20df6942f80334872726df9c9f94c7c87ae5542a0da414e12ef117",
+      "status": "pass"
+    },
+    {
+      "command_id": "c11d3b0a862258d8d52519fad1cea7e3e2b3f84c5a7fd2427ec74d01ef02812f",
+      "exit_code": 0,
+      "expected_marker_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    },
+    {
+      "command_id": "b94b4f584443a3c30cfc18773707d75d424110788ec344b4f26349116cf09223",
+      "exit_code": 0,
+      "expected_marker_sha256": "eeab9cd4421baebf0594d54cf60b76f4521b2a1021795bc4ad8f09e29c2bae9a",
+      "status": "pass"
+    },
+    {
+      "command_id": "d768b606ce4e0cea36e20cebf4e3eca832d019e9e1e9d4890b00405effc0ff2a",
+      "exit_code": 0,
+      "expected_marker_sha256": "c3d789faa2537e9c9d9af9683b56d3af502f8d5865b775b6f949a72daf21595a",
+      "status": "pass"
+    },
+    {
+      "command_id": "0dad3d25de48ad2c967c46a34148ba951f7f985d8e31c4f6d10cb43751f84932",
+      "exit_code": 0,
+      "expected_marker_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "pass"
+    },
+    {
+      "command_id": "ab41da97c9fbf3264be2352d2e1c2c4851ea04e8433541afb69dbf978c9bae80",
+      "exit_code": 0,
+      "expected_marker_sha256": "96f6c04eae2db0d3e5574e1e792663c65272a8da3b6596fe36acb00d3cebfed0",
+      "status": "pass"
+    },
+    {
+      "command_id": "c0fa4259b49c50c189f8fc6cecfc5c01f7d44dba1d1c4b8c999d66bd582e0a32",
+      "exit_code": 0,
+      "expected_marker_sha256": "0b0979e83990c1f0647162af939df0e1a1ddd270f9e1a2e749c802615e9ebf24",
+      "status": "pass"
+    },
+    {
+      "command_id": "b8982a3df07b6bae382946f652da8a85a8cee0041375341d68e4a3905a7b691d",
+      "exit_code": 0,
+      "expected_marker_sha256": "395a3bce14bdb4e289967f87cf699a41b2a0189a3090c9c64d21294b79ea8db1",
+      "status": "pass"
+    },
+    {
+      "command_id": "1008f482b19663dc0bf27872650a8e4fb9074cb44a0e5beb776cd4c248ca848b",
+      "exit_code": 0,
+      "expected_marker_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "pass"
+    },
+    {
+      "command_id": "3923f2ba930ad8214765e7d5bbc7197c2ade56416951360024c35c46394f8b36",
+      "exit_code": 0,
+      "expected_marker_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "pass"
+    },
+    {
+      "command_id": "c5b04eed42668acf2a8638fd07db31a31abd13d6224527deda4919923c6e1023",
+      "exit_code": 0,
+      "expected_marker_sha256": "be59447778734ccf36cf770f7dd5cebe8e464d8f994611142216e2079280c88b",
+      "status": "pass"
+    },
+    {
+      "command_id": "65f61bafe0b4c4852216ce7e394b0608115af7a63681e682b7fef78f066f069a",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    }
+  ]
+}
