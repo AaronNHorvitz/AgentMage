@@ -1,9 +1,16 @@
 //! Non-acquiring model review and machine-fit preflight.
 
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
+use std::os::fd::AsRawFd;
+use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::path::{Path, PathBuf};
+
 use agentmage_kernel_contracts::{
     ExactModelProfile, ModelLifecycleState, ModelModality, ModelProfileId, ModelRuntimeIdentity,
     PlatformArchitecture, PlatformFamily,
 };
+use sha2::{Digest, Sha256};
 
 const GIB: u64 = 1024 * 1024 * 1024;
 const MAX_ARTIFACT_BYTES: u64 = 64 * GIB;
@@ -136,6 +143,81 @@ pub struct ModelAcquisitionPreflight {
     pub destination_changed: bool,
 }
 
+/// Terminal result of one local import attempt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ModelImportDisposition {
+    /// Exact verified bytes became the sole active artifact.
+    Activated,
+    /// Cancellation removed all staging bytes before activation.
+    Cancelled,
+    /// Invalid bytes were retained under a non-selectable quarantine name.
+    Quarantined,
+}
+
+/// Content-free terminal receipt for one local import attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ModelImportReceipt {
+    /// Exact profile requested by the user.
+    pub profile_id: ModelProfileId,
+    /// Exact expected artifact digest.
+    pub expected_sha256: String,
+    /// Observed digest when the complete expected byte count was read.
+    pub observed_sha256: Option<String>,
+    /// Number of source bytes copied before the terminal result.
+    pub copied_bytes: u64,
+    /// Terminal lifecycle result.
+    pub disposition: ModelImportDisposition,
+    /// Relative activated or quarantine filename, when retained.
+    pub retained_name: Option<String>,
+    /// Whether pre/post source identity remained unchanged.
+    pub source_unchanged: bool,
+    /// Importer had no workspace authority.
+    pub workspace_available: bool,
+    /// Importer had no session authority.
+    pub session_available: bool,
+    /// Importer had no inference authority.
+    pub inference_available: bool,
+    /// Importer had no tool authority.
+    pub tool_available: bool,
+}
+
+/// Stable fail-closed local-import error.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ModelImportError {
+    /// Preflight did not exactly authorize this profile.
+    PreflightMismatch,
+    /// Source is linked, executable, non-regular, missing, or changed.
+    SourceInvalid,
+    /// Private model-store identity or permissions are invalid.
+    StoreInvalid,
+    /// A staging, active, or quarantine identity already exists.
+    DestinationOccupied,
+    /// A bounded read, write, synchronization, link, or cleanup step failed.
+    Filesystem,
+}
+
+impl ModelImportError {
+    /// Returns a stable content-free error code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::PreflightMismatch => "model.import.preflight-mismatch",
+            Self::SourceInvalid => "model.import.source-invalid",
+            Self::StoreInvalid => "model.import.store-invalid",
+            Self::DestinationOccupied => "model.import.destination-occupied",
+            Self::Filesystem => "model.import.filesystem",
+        }
+    }
+}
+
+impl std::fmt::Display for ModelImportError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.code())
+    }
+}
+
+impl std::error::Error for ModelImportError {}
+
 /// Builds an exact review and evaluates machine fit without acquiring bytes.
 #[must_use]
 pub fn preflight_model_acquisition(
@@ -247,6 +329,292 @@ pub fn preflight_model_acquisition(
     }
 }
 
+/// Imports one user-selected local GGUF after exact non-acquiring preflight.
+///
+/// The source is opened read-only. The destination root must already be an
+/// owner-only directory. Activation never replaces an existing identity.
+pub fn import_local_model(
+    profile: &ExactModelProfile,
+    preflight: &ModelAcquisitionPreflight,
+    source: &Path,
+    store: &Path,
+    mut cancelled: impl FnMut() -> bool,
+) -> Result<ModelImportReceipt, ModelImportError> {
+    if preflight.disposition != ModelAcquisitionDisposition::Eligible
+        || preflight.review.profile_id != profile.profile_id
+        || preflight.review.manifest_sha256 != profile.manifest_sha256
+        || preflight.review.artifact_bytes != profile.artifact.bytes
+        || preflight.review.artifact_sha256 != profile.artifact.sha256
+        || preflight.source_opened
+        || preflight.destination_changed
+    {
+        return Err(ModelImportError::PreflightMismatch);
+    }
+    let store = open_store(store)?;
+    let before = source_identity(source)?;
+    let mut input = File::open(source).map_err(|_| ModelImportError::SourceInvalid)?;
+    if source_identity_from_metadata(
+        &input
+            .metadata()
+            .map_err(|_| ModelImportError::SourceInvalid)?,
+    )? != before
+    {
+        return Err(ModelImportError::SourceInvalid);
+    }
+    let staging_name = format!(".staging-{}.part", profile.artifact.sha256);
+    let active_name = format!("{}.gguf", profile.artifact.sha256);
+    let staging = store.held_path.join(&staging_name);
+    let active = store.held_path.join(&active_name);
+    if staging.exists() || active.exists() {
+        return Err(ModelImportError::DestinationOccupied);
+    }
+    let mut output = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&staging)
+        .map_err(|_| ModelImportError::DestinationOccupied)?;
+    let mut guard = StagingGuard::new(staging.clone());
+    let mut digest = Sha256::new();
+    let mut copied = 0_u64;
+    let mut header = [0_u8; 4];
+    let mut header_count = 0_usize;
+    let mut buffer = vec![0_u8; 4 * 1024 * 1024];
+    while copied < profile.artifact.bytes {
+        if cancelled() {
+            drop(output);
+            guard.remove()?;
+            return Ok(receipt(
+                profile,
+                None,
+                copied,
+                ModelImportDisposition::Cancelled,
+                None,
+                source_identity(source).ok().as_ref() == Some(&before),
+            ));
+        }
+        let remaining = profile.artifact.bytes - copied;
+        let limit = usize::try_from(remaining.min(buffer.len() as u64))
+            .map_err(|_| ModelImportError::Filesystem)?;
+        let count = input
+            .read(&mut buffer[..limit])
+            .map_err(|_| ModelImportError::Filesystem)?;
+        if count == 0 {
+            break;
+        }
+        if header_count < header.len() {
+            let take = (header.len() - header_count).min(count);
+            header[header_count..header_count + take].copy_from_slice(&buffer[..take]);
+            header_count += take;
+        }
+        output
+            .write_all(&buffer[..count])
+            .map_err(|_| ModelImportError::Filesystem)?;
+        digest.update(&buffer[..count]);
+        copied = copied
+            .checked_add(u64::try_from(count).map_err(|_| ModelImportError::Filesystem)?)
+            .ok_or(ModelImportError::Filesystem)?;
+    }
+    let mut trailing = [0_u8; 1];
+    let oversized = input
+        .read(&mut trailing)
+        .map_err(|_| ModelImportError::Filesystem)?
+        != 0;
+    output
+        .sync_all()
+        .map_err(|_| ModelImportError::Filesystem)?;
+    drop(output);
+    let after = source_identity(source).map_err(|_| ModelImportError::SourceInvalid)?;
+    let source_unchanged = before == after;
+    if !source_unchanged {
+        return Err(ModelImportError::SourceInvalid);
+    }
+    let observed = lowercase_hex(&digest.finalize());
+    let exact = copied == profile.artifact.bytes
+        && !oversized
+        && header_count == header.len()
+        && &header == b"GGUF"
+        && observed == profile.artifact.sha256;
+    if !exact {
+        let quarantine_name = format!(".quarantine-{}-{observed}.gguf", profile.artifact.sha256);
+        let quarantine = store.held_path.join(&quarantine_name);
+        retain_without_overwrite(&staging, &quarantine)?;
+        guard.disarm();
+        store.sync()?;
+        return Ok(receipt(
+            profile,
+            Some(observed),
+            copied,
+            ModelImportDisposition::Quarantined,
+            Some(quarantine_name),
+            true,
+        ));
+    }
+    retain_without_overwrite(&staging, &active)?;
+    guard.disarm();
+    store.sync()?;
+    Ok(receipt(
+        profile,
+        Some(observed),
+        copied,
+        ModelImportDisposition::Activated,
+        Some(active_name),
+        true,
+    ))
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct SourceIdentity {
+    device: u64,
+    inode: u64,
+    bytes: u64,
+    modified_seconds: i64,
+    modified_nanoseconds: i64,
+    changed_seconds: i64,
+    changed_nanoseconds: i64,
+}
+
+fn source_identity(path: &Path) -> Result<SourceIdentity, ModelImportError> {
+    let metadata = fs::symlink_metadata(path).map_err(|_| ModelImportError::SourceInvalid)?;
+    source_identity_from_metadata(&metadata)
+}
+
+fn source_identity_from_metadata(
+    metadata: &fs::Metadata,
+) -> Result<SourceIdentity, ModelImportError> {
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.nlink() != 1
+        || metadata.permissions().mode() & 0o111 != 0
+    {
+        return Err(ModelImportError::SourceInvalid);
+    }
+    Ok(SourceIdentity {
+        device: metadata.dev(),
+        inode: metadata.ino(),
+        bytes: metadata.len(),
+        modified_seconds: metadata.mtime(),
+        modified_nanoseconds: metadata.mtime_nsec(),
+        changed_seconds: metadata.ctime(),
+        changed_nanoseconds: metadata.ctime_nsec(),
+    })
+}
+
+struct StoreHandle {
+    directory: File,
+    held_path: PathBuf,
+}
+
+impl StoreHandle {
+    fn sync(&self) -> Result<(), ModelImportError> {
+        self.directory
+            .sync_all()
+            .map_err(|_| ModelImportError::Filesystem)
+    }
+}
+
+fn open_store(path: &Path) -> Result<StoreHandle, ModelImportError> {
+    let before = fs::symlink_metadata(path).map_err(|_| ModelImportError::StoreInvalid)?;
+    if !valid_store_metadata(&before) {
+        return Err(ModelImportError::StoreInvalid);
+    }
+    let directory = File::open(path).map_err(|_| ModelImportError::StoreInvalid)?;
+    let opened = directory
+        .metadata()
+        .map_err(|_| ModelImportError::StoreInvalid)?;
+    if !valid_store_metadata(&opened)
+        || opened.dev() != before.dev()
+        || opened.ino() != before.ino()
+    {
+        return Err(ModelImportError::StoreInvalid);
+    }
+    let held_path = PathBuf::from(format!("/proc/self/fd/{}", directory.as_raw_fd()));
+    Ok(StoreHandle {
+        directory,
+        held_path,
+    })
+}
+
+fn valid_store_metadata(metadata: &fs::Metadata) -> bool {
+    metadata.is_dir()
+        && !metadata.file_type().is_symlink()
+        && metadata.permissions().mode() & 0o777 == 0o700
+        && metadata.uid() == rustix::process::geteuid().as_raw()
+}
+
+fn retain_without_overwrite(staging: &Path, destination: &Path) -> Result<(), ModelImportError> {
+    fs::hard_link(staging, destination).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::AlreadyExists {
+            ModelImportError::DestinationOccupied
+        } else {
+            ModelImportError::Filesystem
+        }
+    })?;
+    fs::remove_file(staging).map_err(|_| ModelImportError::Filesystem)
+}
+
+fn receipt(
+    profile: &ExactModelProfile,
+    observed_sha256: Option<String>,
+    copied_bytes: u64,
+    disposition: ModelImportDisposition,
+    retained_name: Option<String>,
+    source_unchanged: bool,
+) -> ModelImportReceipt {
+    ModelImportReceipt {
+        profile_id: profile.profile_id.clone(),
+        expected_sha256: profile.artifact.sha256.clone(),
+        observed_sha256,
+        copied_bytes,
+        disposition,
+        retained_name,
+        source_unchanged,
+        workspace_available: false,
+        session_available: false,
+        inference_available: false,
+        tool_available: false,
+    }
+}
+
+struct StagingGuard {
+    path: PathBuf,
+    armed: bool,
+}
+
+impl StagingGuard {
+    const fn new(path: PathBuf) -> Self {
+        Self { path, armed: true }
+    }
+
+    fn remove(&mut self) -> Result<(), ModelImportError> {
+        fs::remove_file(&self.path).map_err(|_| ModelImportError::Filesystem)?;
+        self.armed = false;
+        Ok(())
+    }
+
+    const fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+impl Drop for StagingGuard {
+    fn drop(&mut self) {
+        if self.armed {
+            let _ = fs::remove_file(&self.path);
+        }
+    }
+}
+
+fn lowercase_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write as _;
+
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(output, "{byte:02x}");
+    }
+    output
+}
+
 fn valid_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -256,13 +624,42 @@ fn valid_sha256(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
     use agentmage_kernel_contracts::{ExactModelProfile, ModelLifecycleState, PlatformFamily};
     use serde_json::Value;
+    use sha2::Digest;
 
     use super::{
         GIB, ModelAcquisitionBlocker, ModelAcquisitionDisposition, ModelAcquisitionHost,
-        preflight_model_acquisition,
+        ModelImportDisposition, import_local_model, lowercase_hex, preflight_model_acquisition,
     };
+
+    static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+
+    struct TestDirectory(PathBuf);
+
+    impl TestDirectory {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "agentmage-model-import-{}-{}",
+                std::process::id(),
+                NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed)
+            ));
+            fs::create_dir(&path).expect("create fixture root");
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o700)).expect("private root");
+            Self(path)
+        }
+    }
+
+    impl Drop for TestDirectory {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
 
     fn profile() -> ExactModelProfile {
         let catalog: Value = serde_json::from_str(include_str!(
@@ -294,6 +691,20 @@ mod tests {
             requested_context_tokens: 8192,
             runtime: Some(profile.runtime.clone()),
         }
+    }
+
+    fn import_profile(bytes: &[u8]) -> ExactModelProfile {
+        let mut profile = profile();
+        profile.artifact.bytes = bytes.len() as u64;
+        profile.artifact.sha256 = lowercase_hex(&sha2::Sha256::digest(bytes));
+        profile
+    }
+
+    fn write_source(root: &Path, bytes: &[u8]) -> PathBuf {
+        let path = root.join("selected.gguf");
+        fs::write(&path, bytes).expect("source fixture");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).expect("source mode");
+        path
     }
 
     #[test]
@@ -386,5 +797,81 @@ mod tests {
                 ModelAcquisitionBlocker::ProvenancePolicy,
             ]
         );
+    }
+
+    #[test]
+    fn exact_local_import_activates_without_mutating_source_or_authority() {
+        let directory = TestDirectory::new();
+        let bytes = b"GGUFexact-model-fixture";
+        let source = write_source(&directory.0, bytes);
+        let store = directory.0.join("store");
+        fs::create_dir(&store).expect("store");
+        fs::set_permissions(&store, fs::Permissions::from_mode(0o700)).expect("store mode");
+        let profile = import_profile(bytes);
+        let preflight = preflight_model_acquisition(&profile, &host(&profile));
+        let before = fs::read(&source).expect("source preimage");
+        let receipt = import_local_model(&profile, &preflight, &source, &store, || false)
+            .expect("exact import");
+        assert_eq!(receipt.disposition, ModelImportDisposition::Activated);
+        assert!(receipt.source_unchanged);
+        assert!(!receipt.workspace_available);
+        assert!(!receipt.session_available);
+        assert!(!receipt.inference_available);
+        assert!(!receipt.tool_available);
+        assert_eq!(fs::read(&source).expect("source after"), before);
+        let active = store.join(receipt.retained_name.expect("active name"));
+        assert_eq!(fs::read(active).expect("active bytes"), bytes);
+        assert_eq!(fs::read_dir(store).expect("store entries").count(), 1);
+    }
+
+    #[test]
+    fn corrupt_and_oversized_inputs_quarantine_without_activation() {
+        for source_bytes in [
+            b"BAD!exact-model-fixture".to_vec(),
+            b"GGUFexact-model-fixture-extra".to_vec(),
+        ] {
+            let directory = TestDirectory::new();
+            let expected = b"GGUFexact-model-fixture";
+            let source = write_source(&directory.0, &source_bytes);
+            let store = directory.0.join("store");
+            fs::create_dir(&store).expect("store");
+            fs::set_permissions(&store, fs::Permissions::from_mode(0o700)).expect("store mode");
+            let profile = import_profile(expected);
+            let preflight = preflight_model_acquisition(&profile, &host(&profile));
+            let receipt = import_local_model(&profile, &preflight, &source, &store, || false)
+                .expect("quarantine result");
+            assert_eq!(receipt.disposition, ModelImportDisposition::Quarantined);
+            assert!(
+                receipt
+                    .retained_name
+                    .as_deref()
+                    .is_some_and(|name| name.starts_with(".quarantine-"))
+            );
+            assert_eq!(fs::read_dir(store).expect("store entries").count(), 1);
+        }
+    }
+
+    #[test]
+    fn cancellation_removes_staging_and_link_or_mode_attacks_fail_closed() {
+        let directory = TestDirectory::new();
+        let bytes = b"GGUFexact-model-fixture";
+        let source = write_source(&directory.0, bytes);
+        let store = directory.0.join("store");
+        fs::create_dir(&store).expect("store");
+        fs::set_permissions(&store, fs::Permissions::from_mode(0o700)).expect("store mode");
+        let profile = import_profile(bytes);
+        let preflight = preflight_model_acquisition(&profile, &host(&profile));
+        let receipt = import_local_model(&profile, &preflight, &source, &store, || true)
+            .expect("cancelled import");
+        assert_eq!(receipt.disposition, ModelImportDisposition::Cancelled);
+        assert_eq!(fs::read_dir(&store).expect("empty store").count(), 0);
+
+        fs::set_permissions(&source, fs::Permissions::from_mode(0o700)).expect("executable source");
+        assert!(import_local_model(&profile, &preflight, &source, &store, || false).is_err());
+        fs::set_permissions(&source, fs::Permissions::from_mode(0o600)).expect("source mode");
+        let linked = directory.0.join("linked.gguf");
+        fs::hard_link(&source, &linked).expect("hard link attack");
+        assert!(import_local_model(&profile, &preflight, &source, &store, || false).is_err());
+        assert_eq!(fs::read_dir(store).expect("empty store").count(), 0);
     }
 }

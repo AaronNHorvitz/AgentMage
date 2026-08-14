@@ -60,7 +60,8 @@ pub use docker_topology_collector::{
 pub use llama_server_driver::{LlamaServerDriver, LlamaServerDriverConfig};
 pub use model_acquisition::{
     ModelAcquisitionBlocker, ModelAcquisitionDisposition, ModelAcquisitionHost,
-    ModelAcquisitionPreflight, ModelAcquisitionReview, preflight_model_acquisition,
+    ModelAcquisitionPreflight, ModelAcquisitionReview, ModelImportDisposition, ModelImportError,
+    ModelImportReceipt, import_local_model, preflight_model_acquisition,
 };
 pub use muse_atem_codec::MuseAtemFamilyCodec;
 pub use native_model_adapter::{LinuxNativeModelAdapter, NativeModelDriver};
