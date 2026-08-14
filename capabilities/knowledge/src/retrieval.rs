@@ -1196,6 +1196,77 @@ mod tests {
             retrieve_knowledge(&oversized, &[]),
             Err(KnowledgeRetrievalError::InvalidInput)
         );
+        assert!(WorkspacePath::new(workspace(), ["..", "escape.md"]).is_err());
+    }
+
+    #[test]
+    fn empty_limits_dates_historical_supersession_and_unicode_are_explicit() {
+        let mut empty = query("unused");
+        empty.terms.clear();
+        assert_eq!(
+            retrieve_knowledge(&empty, &[]),
+            Err(KnowledgeRetrievalError::InvalidInput)
+        );
+        let mut invalid_date = query("needle");
+        invalid_date.as_of_date = "2026-02-30".to_owned();
+        assert_eq!(
+            retrieve_knowledge(&invalid_date, &[]),
+            Err(KnowledgeRetrievalError::InvalidInput)
+        );
+        let mut invalid_limit = query("needle");
+        invalid_limit.max_results = 1_001;
+        assert_eq!(
+            retrieve_knowledge(&invalid_limit, &[]),
+            Err(KnowledgeRetrievalError::InvalidInput)
+        );
+
+        let mut superseded = document(
+            "superseded.md",
+            KnowledgeSourceAuthority::CanonicalMarkdown,
+            None,
+            true,
+            vec![fragment(
+                KnowledgeSourceFragmentKind::Body,
+                "needle superseded",
+                1,
+                None,
+            )],
+        );
+        superseded.historical = true;
+        let excluded = retrieve_knowledge(&query("needle"), std::slice::from_ref(&superseded))
+            .expect("historical exclusion succeeds");
+        assert_eq!(
+            excluded.evidence_state,
+            KnowledgeEvidenceState::UnknownBlocked
+        );
+        let mut included_query = query("needle");
+        included_query.include_historical = true;
+        let included = retrieve_knowledge(&included_query, &[superseded])
+            .expect("historical inclusion succeeds");
+        assert_eq!(included.hits.len(), 1);
+
+        let unicode = document(
+            "unicode.md",
+            KnowledgeSourceAuthority::CanonicalMarkdown,
+            None,
+            true,
+            vec![fragment(
+                KnowledgeSourceFragmentKind::Body,
+                "needle caf\u{e9}",
+                1,
+                None,
+            )],
+        );
+        let composed = retrieve_knowledge(&query("caf\u{e9}"), std::slice::from_ref(&unicode))
+            .expect("composed Unicode succeeds");
+        assert_eq!(composed.hits.len(), 1);
+        let decomposed = retrieve_knowledge(&query("cafe\u{301}"), &[unicode])
+            .expect("decomposed Unicode remains literal");
+        assert!(decomposed.hits.is_empty());
+        assert_eq!(
+            decomposed.evidence_state,
+            KnowledgeEvidenceState::UnknownBlocked
+        );
     }
 
     #[test]
