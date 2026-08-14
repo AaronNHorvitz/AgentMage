@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
+use serde::de::DeserializeOwned;
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -355,12 +356,16 @@ pub fn validate_read_only_request(
     if bytes.is_empty() || bytes.len() > 64 * 1024 {
         return Err(ReadOnlyRequestError::Malformed);
     }
-    serde_json::from_slice::<ClosedJson>(bytes).map_err(|_| ReadOnlyRequestError::Malformed)?;
     let request: ReadOnlyRequest =
-        serde_json::from_slice(bytes).map_err(|_| ReadOnlyRequestError::Malformed)?;
+        parse_closed_json(bytes).map_err(|_| ReadOnlyRequestError::Malformed)?;
     valid_request(kind, &request)
         .then_some(request)
         .ok_or(ReadOnlyRequestError::Denied)
+}
+
+pub(crate) fn parse_closed_json<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, ()> {
+    serde_json::from_slice::<ClosedJson>(bytes).map_err(|_| ())?;
+    serde_json::from_slice(bytes).map_err(|_| ())
 }
 
 fn valid_request(kind: ReadOnlyToolKind, request: &ReadOnlyRequest) -> bool {

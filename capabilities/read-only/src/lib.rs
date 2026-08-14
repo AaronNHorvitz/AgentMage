@@ -6,6 +6,7 @@ use agentmage_kernel_contracts::ToolDefinition;
 
 mod catalog;
 mod protocol;
+mod worker;
 
 pub use catalog::{
     READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_ID,
@@ -19,6 +20,7 @@ pub use protocol::{
     ReadOnlyRequestError, ReadOnlyResult, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot,
     execute_read_only, validate_read_only_request,
 };
+pub use worker::{ReadOnlyWorkerError, execute_worker_payload};
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "capability-read-only";
