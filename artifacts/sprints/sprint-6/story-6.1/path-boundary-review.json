@@ -22,7 +22,7 @@
     "coverage-guided path fuzzing and sanitizer evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "617731b671df3378652f771cb94773080d155298",
+  "reference_revision": "1a68e854e82b2a53852c03b9e96ecee5aab94f1c",
   "release_claim": "none",
   "review_protocol": "RV-04",
   "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
@@ -31,31 +31,31 @@
   "sources": [
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
     },
     {
       "path": "docs/architecture/path-authority-contract.md",
-      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+      "sha256": "de4283149ea9b2ad6faf0e5abfe52d0076de97dd85020b78e93aa6d9d2977747"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "0e1e6139f3d49277052cb25a19f0a90658cba3e2a8b3263f57beccd3ace32a8d"
+      "sha256": "6dd5f55f7f506bf408516135e0dd421caab29e619f4574e8716a5b626ff5cc8e"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627"
+      "sha256": "0d8244fb334d20c0fef660eea7d1ecdf9cb067c079cbc9f11150b75f77c0dfde"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "aa0703950cfe6c8db17df1e1af2c13f6e42abfb03ef2156f0c63c03718cd19c7"
+      "sha256": "901a1b4cd461ab300de71500c1f68f1304fb25e9a050ace4cec42fda508b1f52"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521"
+      "sha256": "cbc7ebedd831680d55c34dbe96cbf960f0ebfc19b34c4d5c82f644b2649e1349"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "50d6a081d4f0a9408c2a1979638e3645cb2495b8dace89626a88981013b4d2a1"
+      "sha256": "056d41a37d3f6f3036b24b804e638799cfb397c5432c7b1bb9ca0f88d6c7b55b"
     },
     {
       "path": "scripts/path_boundary_review.py",
@@ -70,28 +70,28 @@
   "subjects": [
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
-      "sha256": "0e1e6139f3d49277052cb25a19f0a90658cba3e2a8b3263f57beccd3ace32a8d"
+      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+      "sha256": "6dd5f55f7f506bf408516135e0dd421caab29e619f4574e8716a5b626ff5cc8e"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
-      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627"
+      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+      "sha256": "0d8244fb334d20c0fef660eea7d1ecdf9cb067c079cbc9f11150b75f77c0dfde"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
-      "sha256": "aa0703950cfe6c8db17df1e1af2c13f6e42abfb03ef2156f0c63c03718cd19c7"
+      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+      "sha256": "901a1b4cd461ab300de71500c1f68f1304fb25e9a050ace4cec42fda508b1f52"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
-      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521"
+      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+      "sha256": "cbc7ebedd831680d55c34dbe96cbf960f0ebfc19b34c4d5c82f644b2649e1349"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "reference_revision": "09f344a715e66f92e841f9250c5ca9206e6086df",
-      "sha256": "50d6a081d4f0a9408c2a1979638e3645cb2495b8dace89626a88981013b4d2a1"
+      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+      "sha256": "056d41a37d3f6f3036b24b804e638799cfb397c5432c7b1bb9ca0f88d6c7b55b"
     }
   ],
   "task_id": "6.1.3.5",
