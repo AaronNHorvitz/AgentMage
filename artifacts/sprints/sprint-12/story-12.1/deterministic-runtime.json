@@ -1,0 +1,97 @@
+{
+  "artifact_id": "s-012-ut01-deterministic-runtime",
+  "case_ids": [
+    "DVR-01",
+    "DVR-02",
+    "DVR-03",
+    "DVR-04",
+    "DVR-05"
+  ],
+  "claims": {
+    "budget_boundary_case_count": 2,
+    "completion_evidence_case_count": 3,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "illegal_phase_method_pair_count": 16,
+    "illegal_plan_revision_transition_count": 1,
+    "legal_phase_method_edge_count": 4,
+    "legal_plan_revision_transition_count": 2,
+    "legal_stop_edge_count": 4,
+    "loop_phase_count": 5,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "objective_boundary_case_count": 2,
+    "phase_method_pair_count": 20,
+    "platform_executions": 0,
+    "private_user_data_records": 0,
+    "refused_stop_condition_count": 3,
+    "release_support": false,
+    "rust_test_count": 5,
+    "signaled_stop_condition_count": 5,
+    "tool_executions": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The suite exercises deterministic in-process kernel state and accounting only.",
+    "Actions remain descriptive proposals and no model, tool, grant, shell worker, platform adapter, or filesystem effect executes.",
+    "The matrix does not prove operating-system cancellation, persisted restart recovery, or UI behavior.",
+    "Fixtures are synthetic and contain no private user data or external network use.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "8d2fd2e2bc46e7d3e049ed324c4998ab3682e5c9",
+  "sources": [
+    {
+      "bytes": 2280,
+      "path": "docs/verification/s-012-ut01-deterministic-runtime-results.md",
+      "sha256": "be9167ee194383a08fa58c698fdf2bf546b29c978a7e2461cfdc84f17e9b2fcd"
+    },
+    {
+      "bytes": 42714,
+      "path": "kernel/engine/src/agent_runtime.rs",
+      "sha256": "206cc4281e3df08b1daff5baf7f052f2936b2dca621c605fc6b62d00e3acf7c1"
+    },
+    {
+      "bytes": 10235,
+      "path": "scripts/deterministic_runtime_evidence.py",
+      "sha256": "4082a5cde47ffdbf4b37ff6cf35b3e5b06aeca47758f9b6072fb8c847643ce40"
+    },
+    {
+      "bytes": 3102,
+      "path": "tests/test_deterministic_runtime_evidence.py",
+      "sha256": "d5abc2e78530a14cbc38de8baea41a234c3f52e2548ebb46d01d5e304ec0af92"
+    }
+  ],
+  "status": "pass-deterministic-runtime-boundaries",
+  "task_ids": [
+    "12.1.3.1",
+    "S-012-UT01"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "a8d67b8e7b52a4a4094ab9225c468378654b73b3de188df36b2c0930338ece38",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "ae6fe137ed94beb4497d19d7b4a28d6abbac66ff4a626f2f22e69c7a3d764553",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
