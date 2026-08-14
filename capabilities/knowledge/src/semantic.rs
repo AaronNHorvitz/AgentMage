@@ -152,6 +152,8 @@ pub struct SemanticOptIn {
     pub entries: Vec<SemanticScopeEntry>,
     /// Digest of the policy decision controlling this opt-in.
     pub policy_sha256: String,
+    /// Digest of the accepted same-profile comparative benchmark decision.
+    pub benefit_evidence_sha256: String,
     /// Explicit derived storage protection choice.
     pub storage_protection: SemanticStorageProtection,
     /// Maximum admitted source bytes.
@@ -238,6 +240,8 @@ pub struct SemanticIndexKey {
     pub index_schema_version: u16,
     /// Exact workspace opt-in policy digest.
     pub policy_sha256: String,
+    /// Digest of the complete workspace opt-in and disclosure.
+    pub opt_in_sha256: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -676,6 +680,7 @@ fn validate_opt_in(opt_in: &SemanticOptIn) -> Result<(), SemanticError> {
         || opt_in.entries.is_empty()
         || opt_in.entries.len() > MAX_SCOPE_ENTRIES
         || !valid_sha256(&opt_in.policy_sha256)
+        || !valid_sha256(&opt_in.benefit_evidence_sha256)
         || opt_in.max_source_bytes == 0
         || opt_in.max_records == 0
         || !opt_in.user_approved
@@ -772,6 +777,7 @@ fn index_key(activation: &SemanticActivation, chunk: &SemanticChunkInput) -> Sem
         chunker_id: activation.chunker_id.clone(),
         index_schema_version: activation.index_schema_version,
         policy_sha256: activation.opt_in.policy_sha256.clone(),
+        opt_in_sha256: activation.opt_in_sha256.clone(),
     }
 }
 
@@ -809,6 +815,7 @@ fn record_digest(record: &SemanticIndexRecord) -> Result<String, SemanticError> 
             &record.key.chunker_id,
             record.key.index_schema_version,
             &record.key.policy_sha256,
+            &record.key.opt_in_sha256,
         ),
         record.field,
         &record.chunk_sha256,
@@ -947,6 +954,7 @@ mod tests {
                 },
             ],
             policy_sha256: "1".repeat(64),
+            benefit_evidence_sha256: "3".repeat(64),
             storage_protection: SemanticStorageProtection::HostDiskEncryption,
             max_source_bytes: 200,
             max_records: 10,

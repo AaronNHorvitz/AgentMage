@@ -13,6 +13,7 @@ mod plain_folder;
 mod retrieval;
 mod schema;
 mod semantic;
+mod semantic_benchmark;
 mod store;
 
 pub use authority::{
@@ -72,6 +73,11 @@ pub use semantic::{
     SemanticIndexSummary, SemanticLifecycleReceipt, SemanticModelManifest, SemanticModelRole,
     SemanticOptIn, SemanticProfileState, SemanticRuntime, SemanticScopeEntry,
     SemanticStorageProtection, SemanticVectorInput,
+};
+pub use semantic_benchmark::{
+    RetrievalBenchmarkCase, RetrievalBenchmarkError, RetrievalBenchmarkMetrics,
+    RetrievalBenchmarkMode, RetrievalBenchmarkReport, RetrievalReleaseBehavior, RetrievalTaskClass,
+    SemanticBenefitThresholds, benchmark_retrieval,
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
