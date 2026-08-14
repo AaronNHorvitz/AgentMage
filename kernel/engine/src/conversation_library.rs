@@ -3,9 +3,9 @@
 use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ConversationId, ConversationRecord, ConversationStatus,
-    ConversationTurn, ConversationTurnId, DataSensitivity, WorkspaceId, from_json,
-    to_canonical_json,
+    ApprovalId, CONTRACT_SCHEMA_VERSION, ConversationId, ConversationRecord, ConversationRetention,
+    ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
+    DataSensitivity, WorkspaceId, from_json, to_canonical_json,
 };
 use rusqlite::{OptionalExtension, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -163,6 +163,106 @@ pub struct ConversationRelationships {
     pub child_conversation_ids: Vec<ConversationId>,
 }
 
+/// Closed user-visible metadata change class.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ConversationMetadataChange {
+    /// Replace the bounded title.
+    Rename(String),
+    /// Set the exact pinned state.
+    SetPinned(bool),
+    /// Move the conversation to the archived lifecycle state.
+    Archive,
+    /// Replace all tags with one stable sorted set.
+    ReplaceTags(Vec<String>),
+    /// Replace the visible retention rule.
+    SetRetention(ConversationRetention),
+}
+
+/// Closed content-free metadata change identity retained in previews and receipts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConversationMetadataChangeKind {
+    /// Title replacement.
+    Rename,
+    /// Pin-state replacement.
+    SetPinned,
+    /// Archive transition.
+    Archive,
+    /// Tag-set replacement.
+    ReplaceTags,
+    /// Retention-policy replacement.
+    SetRetention,
+}
+
+/// Exact compare-and-swap preview for one local conversation metadata change.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationChangePreview {
+    /// Stable conversation identity.
+    pub conversation_id: ConversationId,
+    /// Digest of the exact current canonical record.
+    pub expected_record_sha256: String,
+    /// Closed change class.
+    pub change_kind: ConversationMetadataChangeKind,
+    /// Complete proposed replacement shown to the user.
+    pub proposed_record: ConversationRecord,
+    /// Digest of the complete proposed canonical record.
+    pub proposed_record_sha256: String,
+    /// Digest binding identity, current state, proposed state, and change class.
+    pub preview_sha256: String,
+    /// Fixed false marker: constructing a preview performs no write.
+    pub applied: bool,
+}
+
+/// Exact deletion preview containing only identities, hashes, and record counts.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationDeletionPreview {
+    /// Stable conversation identity.
+    pub conversation_id: ConversationId,
+    /// Digest of the exact current canonical conversation record.
+    pub expected_record_sha256: String,
+    /// Number of immutable turns that would be deleted.
+    pub turn_count: u64,
+    /// Number of attachment references that would be deleted.
+    pub attachment_reference_count: u64,
+    /// Number of grant, receipt, checkpoint, citation, and source references deleted.
+    pub evidence_reference_count: u64,
+    /// Direct child branches that prevent deletion until separately handled.
+    pub blocking_child_conversation_ids: Vec<ConversationId>,
+    /// Digest of the complete preview.
+    pub preview_sha256: String,
+    /// Fixed false marker: constructing a preview performs no write.
+    pub applied: bool,
+}
+
+/// Explicit user approval bound to one exact deletion preview.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationDeletionApproval {
+    /// Stable approval identity produced by the guarded approval boundary.
+    pub approval_id: ApprovalId,
+    /// Exact deletion preview digest approved by the user.
+    pub approved_preview_sha256: String,
+    /// Digest of the explicit user decision evidence.
+    pub decision_sha256: String,
+    /// Exact trusted approval time as Unix epoch milliseconds.
+    pub approved_at_epoch_ms: u64,
+    /// Explicit confirmation marker; false approvals are inert.
+    pub user_confirmed: bool,
+}
+
+/// Content-free result of one approved canonical conversation deletion.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationDeletionReceipt {
+    /// Digest of the deleted stable conversation identity.
+    pub conversation_id_sha256: String,
+    /// Exact approved preview digest.
+    pub preview_sha256: String,
+    /// Digest of the approval identity.
+    pub approval_id_sha256: String,
+    /// Number of immutable turns deleted.
+    pub deleted_turn_count: u64,
+    /// Fixed true marker after one atomic committed deletion.
+    pub deleted: bool,
+}
+
 impl OperationalStore {
     /// Creates one canonical conversation with no turns in the encrypted store.
     pub fn create_conversation(
@@ -194,11 +294,12 @@ impl OperationalStore {
                     conversation_id, title, sensitivity, created_at_epoch_ms,
                     updated_at_epoch_ms, local_date, local_timezone, workspace_id,
                     project_id, model_profile_id, status, parent_conversation_id,
-                    branch_from_turn_id, current_turn_id, pinned, persistence_enabled,
-                    record_sha256, record_json
+                    branch_from_turn_id, current_turn_id, retention_kind,
+                    retention_expires_at_epoch_ms, retention_policy_sha256, pinned,
+                    persistence_enabled, record_sha256, record_json
                  ) VALUES (
                     ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-                    ?13, NULL, ?14, ?15, ?16, ?17
+                    ?13, NULL, ?14, ?15, ?16, ?17, ?18, ?19, ?20
                  )",
                 params![
                     conversation.conversation_id.as_str(),
@@ -220,6 +321,13 @@ impl OperationalStore {
                         .branch_from_turn_id
                         .as_ref()
                         .map(ConversationTurnId::as_str),
+                    retention_code(conversation.retention.kind),
+                    conversation
+                        .retention
+                        .expires_at_epoch_ms
+                        .map(as_sql_integer)
+                        .transpose()?,
+                    &conversation.retention.policy_sha256,
                     i64::from(conversation.pinned),
                     i64::from(conversation.persistence_enabled),
                     &record_sha256,
@@ -534,6 +642,255 @@ impl OperationalStore {
         })
     }
 
+    /// Constructs an exact metadata change preview without writing canonical state.
+    pub fn preview_conversation_change(
+        &self,
+        conversation_id: &ConversationId,
+        change: ConversationMetadataChange,
+        changed_at_epoch_ms: u64,
+        changed_local_date: String,
+    ) -> Result<ConversationChangePreview, ConversationLibraryError> {
+        let current = self
+            .conversation(conversation_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        if changed_at_epoch_ms < current.updated_at_epoch_ms
+            || !valid_local_date(&changed_local_date)
+            || changed_local_date < current.local_date
+        {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let expected_record_sha256 = canonical_record_sha256(&current)?;
+        let change_kind = metadata_change_kind(&change);
+        let mut proposed = current;
+        match change {
+            ConversationMetadataChange::Rename(title) => proposed.title = title,
+            ConversationMetadataChange::SetPinned(pinned) => proposed.pinned = pinned,
+            ConversationMetadataChange::Archive => proposed.status = ConversationStatus::Archived,
+            ConversationMetadataChange::ReplaceTags(tags) => proposed.tags = tags,
+            ConversationMetadataChange::SetRetention(retention) => {
+                proposed.retention = retention;
+            }
+        }
+        proposed.updated_at_epoch_ms = changed_at_epoch_ms;
+        proposed.local_date = changed_local_date;
+        validate_conversation(&proposed, false)?;
+        let proposed_record_sha256 = canonical_record_sha256(&proposed)?;
+        let preview_sha256 = change_preview_digest(
+            conversation_id,
+            &expected_record_sha256,
+            &proposed_record_sha256,
+            change_kind,
+        );
+        Ok(ConversationChangePreview {
+            conversation_id: conversation_id.clone(),
+            expected_record_sha256,
+            change_kind,
+            proposed_record: proposed,
+            proposed_record_sha256,
+            preview_sha256,
+            applied: false,
+        })
+    }
+
+    /// Applies one unchanged compare-and-swap metadata preview atomically.
+    pub fn apply_conversation_change(
+        &mut self,
+        preview: &ConversationChangePreview,
+    ) -> Result<ConversationMutationReceipt, ConversationLibraryError> {
+        validate_change_preview(preview)?;
+        let current = self
+            .conversation(&preview.conversation_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        if canonical_record_sha256(&current)? != preview.expected_record_sha256
+            || !same_immutable_conversation_fields(&current, &preview.proposed_record)
+        {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let proposed_json = to_canonical_json(&preview.proposed_record)
+            .map_err(|_| ConversationLibraryError::InvalidInput)?;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        let changed = transaction
+            .execute(
+                "UPDATE conversations SET
+                    title=?1, sensitivity=?2, updated_at_epoch_ms=?3, local_date=?4,
+                    model_profile_id=?5, status=?6, retention_kind=?7,
+                    retention_expires_at_epoch_ms=?8, retention_policy_sha256=?9,
+                    pinned=?10, persistence_enabled=?11, record_sha256=?12, record_json=?13
+                 WHERE conversation_id=?14 AND record_sha256=?15",
+                params![
+                    &preview.proposed_record.title,
+                    sensitivity_code(preview.proposed_record.sensitivity),
+                    as_sql_integer(preview.proposed_record.updated_at_epoch_ms)?,
+                    &preview.proposed_record.local_date,
+                    preview.proposed_record.model_profile_id.as_str(),
+                    status_code(preview.proposed_record.status),
+                    retention_code(preview.proposed_record.retention.kind),
+                    preview
+                        .proposed_record
+                        .retention
+                        .expires_at_epoch_ms
+                        .map(as_sql_integer)
+                        .transpose()?,
+                    &preview.proposed_record.retention.policy_sha256,
+                    i64::from(preview.proposed_record.pinned),
+                    i64::from(preview.proposed_record.persistence_enabled),
+                    &preview.proposed_record_sha256,
+                    &proposed_json,
+                    preview.conversation_id.as_str(),
+                    &preview.expected_record_sha256,
+                ],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if changed != 1 {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        transaction
+            .execute(
+                "DELETE FROM conversation_tags WHERE conversation_id=?1",
+                [preview.conversation_id.as_str()],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        for tag in &preview.proposed_record.tags {
+            transaction
+                .execute(
+                    "INSERT INTO conversation_tags(conversation_id, tag) VALUES (?1, ?2)",
+                    params![preview.conversation_id.as_str(), tag],
+                )
+                .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        }
+        transaction
+            .commit()
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        Ok(ConversationMutationReceipt {
+            conversation_id: preview.conversation_id.clone(),
+            turn_id: None,
+            current_ordinal: self.current_turn_ordinal(&preview.conversation_id)?,
+            conversation_sha256: preview.proposed_record_sha256.clone(),
+            turn_sha256: None,
+            encrypted_canonical_store: true,
+        })
+    }
+
+    /// Constructs an exact content-free deletion preview without changing state.
+    pub fn preview_conversation_deletion(
+        &self,
+        conversation_id: &ConversationId,
+    ) -> Result<ConversationDeletionPreview, ConversationLibraryError> {
+        let conversation = self
+            .conversation(conversation_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let relationships = self.conversation_relationships(conversation_id)?;
+        let turn_count = count_rows(
+            &self.connection,
+            "SELECT COUNT(*) FROM conversation_turns WHERE conversation_id=?1",
+            conversation_id.as_str(),
+        )?;
+        let attachment_reference_count = count_joined_rows(
+            &self.connection,
+            "conversation_turn_attachments",
+            conversation_id.as_str(),
+        )?;
+        let mut evidence_reference_count = 0_u64;
+        for table in [
+            "conversation_turn_grants",
+            "conversation_turn_receipts",
+            "conversation_turn_checkpoints",
+            "conversation_turn_citations",
+            "conversation_turn_sources",
+        ] {
+            evidence_reference_count = evidence_reference_count
+                .checked_add(count_joined_rows(
+                    &self.connection,
+                    table,
+                    conversation_id.as_str(),
+                )?)
+                .ok_or(ConversationLibraryError::IntegrityFailure)?;
+        }
+        let expected_record_sha256 = canonical_record_sha256(&conversation)?;
+        let preview_sha256 = deletion_preview_digest(
+            conversation_id,
+            &expected_record_sha256,
+            turn_count,
+            attachment_reference_count,
+            evidence_reference_count,
+            &relationships.child_conversation_ids,
+        );
+        Ok(ConversationDeletionPreview {
+            conversation_id: conversation_id.clone(),
+            expected_record_sha256,
+            turn_count,
+            attachment_reference_count,
+            evidence_reference_count,
+            blocking_child_conversation_ids: relationships.child_conversation_ids,
+            preview_sha256,
+            applied: false,
+        })
+    }
+
+    /// Applies one exact leaf-conversation deletion after separately bound user approval.
+    pub fn delete_conversation(
+        &mut self,
+        preview: &ConversationDeletionPreview,
+        approval: &ConversationDeletionApproval,
+    ) -> Result<ConversationDeletionReceipt, ConversationLibraryError> {
+        validate_deletion_preview(preview)?;
+        validate_deletion_approval(preview, approval)?;
+        if !preview.blocking_child_conversation_ids.is_empty() {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let current_preview = self.preview_conversation_deletion(&preview.conversation_id)?;
+        if &current_preview != preview {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        transaction
+            .execute(
+                "UPDATE conversations SET current_turn_id=NULL WHERE conversation_id=?1 AND record_sha256=?2",
+                params![
+                    preview.conversation_id.as_str(),
+                    &preview.expected_record_sha256,
+                ],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        let deleted_turns = transaction
+            .execute(
+                "DELETE FROM conversation_turns WHERE conversation_id=?1",
+                [preview.conversation_id.as_str()],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if deleted_turns as u64 != preview.turn_count {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let deleted_conversation = transaction
+            .execute(
+                "DELETE FROM conversations WHERE conversation_id=?1 AND record_sha256=?2",
+                params![
+                    preview.conversation_id.as_str(),
+                    &preview.expected_record_sha256,
+                ],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if deleted_conversation != 1 {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        transaction
+            .commit()
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        Ok(ConversationDeletionReceipt {
+            conversation_id_sha256: sha256(preview.conversation_id.as_str().as_bytes()),
+            preview_sha256: preview.preview_sha256.clone(),
+            approval_id_sha256: sha256(approval.approval_id.as_str().as_bytes()),
+            deleted_turn_count: preview.turn_count,
+            deleted: true,
+        })
+    }
+
     fn current_turn_ordinal(
         &self,
         conversation_id: &ConversationId,
@@ -548,6 +905,205 @@ impl OperationalStore {
             .map_err(|_| ConversationLibraryError::StorageFailed)?;
         u64::try_from(value).map_err(|_| ConversationLibraryError::IntegrityFailure)
     }
+}
+
+fn metadata_change_kind(change: &ConversationMetadataChange) -> ConversationMetadataChangeKind {
+    match change {
+        ConversationMetadataChange::Rename(_) => ConversationMetadataChangeKind::Rename,
+        ConversationMetadataChange::SetPinned(_) => ConversationMetadataChangeKind::SetPinned,
+        ConversationMetadataChange::Archive => ConversationMetadataChangeKind::Archive,
+        ConversationMetadataChange::ReplaceTags(_) => ConversationMetadataChangeKind::ReplaceTags,
+        ConversationMetadataChange::SetRetention(_) => ConversationMetadataChangeKind::SetRetention,
+    }
+}
+
+fn metadata_change_code(kind: ConversationMetadataChangeKind) -> &'static str {
+    match kind {
+        ConversationMetadataChangeKind::Rename => "rename",
+        ConversationMetadataChangeKind::SetPinned => "set_pinned",
+        ConversationMetadataChangeKind::Archive => "archive",
+        ConversationMetadataChangeKind::ReplaceTags => "replace_tags",
+        ConversationMetadataChangeKind::SetRetention => "set_retention",
+    }
+}
+
+fn canonical_record_sha256(
+    record: &ConversationRecord,
+) -> Result<String, ConversationLibraryError> {
+    to_canonical_json(record)
+        .map(|bytes| sha256(&bytes))
+        .map_err(|_| ConversationLibraryError::InvalidInput)
+}
+
+fn change_preview_digest(
+    conversation_id: &ConversationId,
+    expected_record_sha256: &str,
+    proposed_record_sha256: &str,
+    change_kind: ConversationMetadataChangeKind,
+) -> String {
+    sha256(
+        format!(
+            "conversation-change-v1\n{}\n{}\n{}\n{}\n",
+            conversation_id.as_str(),
+            expected_record_sha256,
+            proposed_record_sha256,
+            metadata_change_code(change_kind),
+        )
+        .as_bytes(),
+    )
+}
+
+fn validate_change_preview(
+    preview: &ConversationChangePreview,
+) -> Result<(), ConversationLibraryError> {
+    validate_conversation(&preview.proposed_record, false)?;
+    if preview.applied
+        || preview.proposed_record.conversation_id != preview.conversation_id
+        || !valid_sha256(&preview.expected_record_sha256)
+        || canonical_record_sha256(&preview.proposed_record)? != preview.proposed_record_sha256
+        || change_preview_digest(
+            &preview.conversation_id,
+            &preview.expected_record_sha256,
+            &preview.proposed_record_sha256,
+            preview.change_kind,
+        ) != preview.preview_sha256
+    {
+        return Err(ConversationLibraryError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn same_immutable_conversation_fields(
+    current: &ConversationRecord,
+    proposed: &ConversationRecord,
+) -> bool {
+    current.schema_version == proposed.schema_version
+        && current.conversation_id == proposed.conversation_id
+        && current.created_at_epoch_ms == proposed.created_at_epoch_ms
+        && current.local_timezone == proposed.local_timezone
+        && current.workspace_id == proposed.workspace_id
+        && current.project_id == proposed.project_id
+        && current.model_profile_id == proposed.model_profile_id
+        && current.parent_conversation_id == proposed.parent_conversation_id
+        && current.branch_from_turn_id == proposed.branch_from_turn_id
+        && current.current_turn_id == proposed.current_turn_id
+        && current.persistence_enabled == proposed.persistence_enabled
+        && current.sensitivity == proposed.sensitivity
+}
+
+fn deletion_preview_digest(
+    conversation_id: &ConversationId,
+    expected_record_sha256: &str,
+    turn_count: u64,
+    attachment_reference_count: u64,
+    evidence_reference_count: u64,
+    children: &[ConversationId],
+) -> String {
+    let mut value = format!(
+        "conversation-delete-v1\n{}\n{}\n{}\n{}\n{}\n",
+        conversation_id.as_str(),
+        expected_record_sha256,
+        turn_count,
+        attachment_reference_count,
+        evidence_reference_count,
+    );
+    for child in children {
+        writeln!(&mut value, "{}", child.as_str()).expect("writing to a String cannot fail");
+    }
+    sha256(value.as_bytes())
+}
+
+fn validate_deletion_preview(
+    preview: &ConversationDeletionPreview,
+) -> Result<(), ConversationLibraryError> {
+    if preview.applied
+        || !valid_prefixed_id(preview.conversation_id.as_str(), "conversation-")
+        || !valid_sha256(&preview.expected_record_sha256)
+        || !strict_sorted_ids(
+            preview
+                .blocking_child_conversation_ids
+                .iter()
+                .map(ConversationId::as_str),
+        )
+        || deletion_preview_digest(
+            &preview.conversation_id,
+            &preview.expected_record_sha256,
+            preview.turn_count,
+            preview.attachment_reference_count,
+            preview.evidence_reference_count,
+            &preview.blocking_child_conversation_ids,
+        ) != preview.preview_sha256
+    {
+        return Err(ConversationLibraryError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn validate_deletion_approval(
+    preview: &ConversationDeletionPreview,
+    approval: &ConversationDeletionApproval,
+) -> Result<(), ConversationLibraryError> {
+    if !approval.user_confirmed
+        || approval.approved_at_epoch_ms == 0
+        || !valid_prefixed_id(approval.approval_id.as_str(), "approval-")
+        || approval.approved_preview_sha256 != preview.preview_sha256
+        || !valid_sha256(&approval.decision_sha256)
+    {
+        return Err(ConversationLibraryError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn count_rows(
+    connection: &rusqlite::Connection,
+    sql: &str,
+    identity: &str,
+) -> Result<u64, ConversationLibraryError> {
+    let count: i64 = connection
+        .query_row(sql, [identity], |row| row.get(0))
+        .map_err(|_| ConversationLibraryError::StorageFailed)?;
+    u64::try_from(count).map_err(|_| ConversationLibraryError::IntegrityFailure)
+}
+
+fn count_joined_rows(
+    connection: &rusqlite::Connection,
+    table: &str,
+    conversation_id: &str,
+) -> Result<u64, ConversationLibraryError> {
+    let sql = match table {
+        "conversation_turn_attachments" => {
+            "SELECT COUNT(*) FROM conversation_turn_attachments AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        "conversation_turn_grants" => {
+            "SELECT COUNT(*) FROM conversation_turn_grants AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        "conversation_turn_receipts" => {
+            "SELECT COUNT(*) FROM conversation_turn_receipts AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        "conversation_turn_checkpoints" => {
+            "SELECT COUNT(*) FROM conversation_turn_checkpoints AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        "conversation_turn_citations" => {
+            "SELECT COUNT(*) FROM conversation_turn_citations AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        "conversation_turn_sources" => {
+            "SELECT COUNT(*) FROM conversation_turn_sources AS reference
+             JOIN conversation_turns AS turn ON turn.turn_id=reference.turn_id
+             WHERE turn.conversation_id=?1"
+        }
+        _ => return Err(ConversationLibraryError::InvalidInput),
+    };
+    count_rows(connection, sql, conversation_id)
 }
 
 fn validate_query(query: &ConversationQuery) -> Result<(), ConversationLibraryError> {
@@ -768,6 +1324,18 @@ fn validate_conversation(
             .is_some_and(|value| !valid_bounded_text(value, MAX_PROJECT_BYTES))
         || conversation.tags.len() > MAX_TAGS
         || !strict_unique_text(&conversation.tags, MAX_TAG_BYTES)
+        || !valid_sha256(&conversation.retention.policy_sha256)
+        || match conversation.retention.kind {
+            ConversationRetentionKind::Session | ConversationRetentionKind::UntilExpiration => {
+                conversation
+                    .retention
+                    .expires_at_epoch_ms
+                    .is_none_or(|expires| expires <= conversation.updated_at_epoch_ms)
+            }
+            ConversationRetentionKind::UserHold => {
+                conversation.retention.expires_at_epoch_ms.is_some()
+            }
+        }
         || conversation.parent_conversation_id.is_some()
             != conversation.branch_from_turn_id.is_some()
         || conversation
@@ -868,7 +1436,9 @@ fn verify_conversation_projection(
                AND local_date=?6 AND local_timezone=?7 AND workspace_id=?8
                AND project_id IS ?9 AND model_profile_id=?10 AND status=?11
                AND parent_conversation_id IS ?12 AND branch_from_turn_id IS ?13
-               AND current_turn_id IS ?14 AND pinned=?15 AND persistence_enabled=?16",
+               AND current_turn_id IS ?14 AND retention_kind=?15
+               AND retention_expires_at_epoch_ms IS ?16 AND retention_policy_sha256=?17
+               AND pinned=?18 AND persistence_enabled=?19",
             params![
                 record.conversation_id.as_str(),
                 &record.title,
@@ -893,6 +1463,13 @@ fn verify_conversation_projection(
                     .current_turn_id
                     .as_ref()
                     .map(ConversationTurnId::as_str),
+                retention_code(record.retention.kind),
+                record
+                    .retention
+                    .expires_at_epoch_ms
+                    .map(as_sql_integer)
+                    .transpose()?,
+                &record.retention.policy_sha256,
                 i64::from(record.pinned),
                 i64::from(record.persistence_enabled),
             ],
@@ -1067,6 +1644,14 @@ fn status_code(status: ConversationStatus) -> &'static str {
     }
 }
 
+fn retention_code(kind: ConversationRetentionKind) -> &'static str {
+    match kind {
+        ConversationRetentionKind::Session => "session",
+        ConversationRetentionKind::UntilExpiration => "until_expiration",
+        ConversationRetentionKind::UserHold => "user_hold",
+    }
+}
+
 fn role_code(role: agentmage_kernel_contracts::ConversationTurnRole) -> &'static str {
     match role {
         agentmage_kernel_contracts::ConversationTurnRole::System => "system",
@@ -1132,14 +1717,17 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, CloudSynchronizationMarker, ConversationAttachmentReference,
-        ConversationId, ConversationRecord, ConversationStatus, ConversationTurn,
-        ConversationTurnId, ConversationTurnRole, DataSensitivity, GrantId, ModelProfileId,
-        ReceiptId, SessionCheckpointId, StorageFilesystemClass, StrictLocalStorageObservation,
-        WorkspaceId,
+        ApprovalId, CONTRACT_SCHEMA_VERSION, CloudSynchronizationMarker,
+        ConversationAttachmentReference, ConversationId, ConversationRecord, ConversationRetention,
+        ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
+        ConversationTurnRole, DataSensitivity, GrantId, ModelProfileId, ReceiptId,
+        SessionCheckpointId, StorageFilesystemClass, StrictLocalStorageObservation, WorkspaceId,
     };
 
-    use super::{ConversationLibraryError, ConversationQuery, sha256};
+    use super::{
+        ConversationDeletionApproval, ConversationLibraryError, ConversationMetadataChange,
+        ConversationQuery, sha256,
+    };
     use crate::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
@@ -1197,6 +1785,11 @@ mod tests {
             branch_from_turn_id: None,
             current_turn_id: None,
             tags: vec!["audit".to_owned(), "local".to_owned()],
+            retention: ConversationRetention {
+                kind: ConversationRetentionKind::Session,
+                expires_at_epoch_ms: Some(1_800_086_400_000),
+                policy_sha256: "c".repeat(64),
+            },
             pinned: false,
             persistence_enabled,
         }
@@ -1522,6 +2115,199 @@ mod tests {
                 .expect("history remains readable")
                 .turns,
             Vec::new()
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn metadata_changes_are_previewed_compare_and_swap_and_retention_visible() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        let rename = store
+            .preview_conversation_change(
+                &conversation.conversation_id,
+                ConversationMetadataChange::Rename("Renamed review".to_owned()),
+                conversation.updated_at_epoch_ms + 1,
+                conversation.local_date.clone(),
+            )
+            .expect("rename previews");
+        assert!(!rename.applied);
+        assert_eq!(
+            store
+                .conversation(&conversation.conversation_id)
+                .expect("conversation reads")
+                .expect("conversation exists")
+                .title,
+            "Alpha review"
+        );
+        store
+            .apply_conversation_change(&rename)
+            .expect("rename applies");
+        assert_eq!(
+            store
+                .conversation(&conversation.conversation_id)
+                .expect("conversation reads")
+                .expect("conversation exists")
+                .title,
+            "Renamed review"
+        );
+        assert_eq!(
+            store.apply_conversation_change(&rename),
+            Err(ConversationLibraryError::Conflict)
+        );
+
+        let tags = store
+            .preview_conversation_change(
+                &conversation.conversation_id,
+                ConversationMetadataChange::ReplaceTags(vec![
+                    "branch".to_owned(),
+                    "review".to_owned(),
+                ]),
+                conversation.updated_at_epoch_ms + 2,
+                conversation.local_date.clone(),
+            )
+            .expect("tags preview");
+        store.apply_conversation_change(&tags).expect("tags apply");
+        let retention = ConversationRetention {
+            kind: ConversationRetentionKind::UserHold,
+            expires_at_epoch_ms: None,
+            policy_sha256: "d".repeat(64),
+        };
+        let hold = store
+            .preview_conversation_change(
+                &conversation.conversation_id,
+                ConversationMetadataChange::SetRetention(retention.clone()),
+                conversation.updated_at_epoch_ms + 3,
+                conversation.local_date.clone(),
+            )
+            .expect("hold previews");
+        store
+            .apply_conversation_change(&hold)
+            .expect("hold applies");
+        let pin = store
+            .preview_conversation_change(
+                &conversation.conversation_id,
+                ConversationMetadataChange::SetPinned(true),
+                conversation.updated_at_epoch_ms + 4,
+                conversation.local_date.clone(),
+            )
+            .expect("pin previews");
+        store.apply_conversation_change(&pin).expect("pin applies");
+        let archive = store
+            .preview_conversation_change(
+                &conversation.conversation_id,
+                ConversationMetadataChange::Archive,
+                conversation.updated_at_epoch_ms + 5,
+                conversation.local_date.clone(),
+            )
+            .expect("archive previews");
+        store
+            .apply_conversation_change(&archive)
+            .expect("archive applies");
+        let loaded = store
+            .conversation(&conversation.conversation_id)
+            .expect("conversation reads")
+            .expect("conversation exists");
+        assert_eq!(loaded.tags, vec!["branch", "review"]);
+        assert_eq!(loaded.retention, retention);
+        assert!(loaded.pinned);
+        assert_eq!(loaded.status, ConversationStatus::Archived);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn deletion_requires_exact_fresh_confirmation_and_removes_one_leaf_atomically() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        let first = turn(1, Some("delete only after approval"));
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let preview = store
+            .preview_conversation_deletion(&conversation.conversation_id)
+            .expect("deletion previews");
+        assert_eq!(preview.turn_count, 1);
+        assert_eq!(preview.attachment_reference_count, 1);
+        assert_eq!(preview.evidence_reference_count, 5);
+        let denied = ConversationDeletionApproval {
+            approval_id: ApprovalId::from_raw("approval-delete-1"),
+            approved_preview_sha256: preview.preview_sha256.clone(),
+            decision_sha256: "e".repeat(64),
+            approved_at_epoch_ms: 1_800_000_000_100,
+            user_confirmed: false,
+        };
+        assert_eq!(
+            store.delete_conversation(&preview, &denied),
+            Err(ConversationLibraryError::InvalidInput)
+        );
+        assert!(
+            store
+                .conversation(&conversation.conversation_id)
+                .expect("conversation reads")
+                .is_some()
+        );
+        let approval = ConversationDeletionApproval {
+            user_confirmed: true,
+            ..denied
+        };
+        let receipt = store
+            .delete_conversation(&preview, &approval)
+            .expect("approved deletion commits");
+        assert!(receipt.deleted);
+        assert_eq!(receipt.deleted_turn_count, 1);
+        assert_eq!(store.conversation(&conversation.conversation_id), Ok(None));
+        assert_eq!(store.conversation_turn(&first.turn_id), Ok(None));
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn child_branch_and_stale_preview_block_deletion_without_partial_effect() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        let first = turn(1, Some("original"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let stale = store
+            .preview_conversation_deletion(&original.conversation_id)
+            .expect("initial preview");
+        let mut branch = conversation(true);
+        branch.conversation_id = ConversationId::from_raw("conversation-child");
+        branch.parent_conversation_id = Some(original.conversation_id.clone());
+        branch.branch_from_turn_id = Some(first.turn_id);
+        store.create_conversation(&branch).expect("child creates");
+        let approval = ConversationDeletionApproval {
+            approval_id: ApprovalId::from_raw("approval-delete-parent"),
+            approved_preview_sha256: stale.preview_sha256.clone(),
+            decision_sha256: "f".repeat(64),
+            approved_at_epoch_ms: 1_800_000_000_200,
+            user_confirmed: true,
+        };
+        assert_eq!(
+            store.delete_conversation(&stale, &approval),
+            Err(ConversationLibraryError::Conflict)
+        );
+        let current = store
+            .preview_conversation_deletion(&original.conversation_id)
+            .expect("current preview");
+        assert_eq!(
+            current.blocking_child_conversation_ids,
+            vec![branch.conversation_id]
+        );
+        assert!(
+            store
+                .conversation(&original.conversation_id)
+                .expect("parent reads")
+                .is_some()
         );
         fs::remove_dir_all(directory).expect("cleanup");
     }

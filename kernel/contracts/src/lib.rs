@@ -76,8 +76,8 @@ pub use context::{
     SessionCheckpoint,
 };
 pub use conversation::{
-    ConversationAttachmentReference, ConversationRecord, ConversationStatus, ConversationTurn,
-    ConversationTurnRole,
+    ConversationAttachmentReference, ConversationRecord, ConversationRetention,
+    ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnRole,
 };
 pub use diagnostics::{
     DiagnosticComponent, DiagnosticItem, DiagnosticObservation, DiagnosticState, DoctorReport,

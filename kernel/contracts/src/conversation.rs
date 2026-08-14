@@ -35,6 +35,30 @@ pub enum ConversationTurnRole {
     Tool,
 }
 
+/// Closed visible retention class for one local conversation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConversationRetentionKind {
+    /// Retain until the exact session-policy expiration.
+    Session,
+    /// Retain until an explicit expiration selected by policy or user.
+    UntilExpiration,
+    /// Retain under an explicit user hold without automatic expiry.
+    UserHold,
+}
+
+/// Visible retention policy carried by canonical conversation metadata.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConversationRetention {
+    /// Closed retention class.
+    pub kind: ConversationRetentionKind,
+    /// Exact UTC expiration for expiring classes; absent only for a user hold.
+    pub expires_at_epoch_ms: Option<u64>,
+    /// Digest of the exact policy or explicit decision establishing this rule.
+    pub policy_sha256: String,
+}
+
 /// Content-addressed attachment identity; attachment bytes are never embedded here.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -85,6 +109,8 @@ pub struct ConversationRecord {
     pub current_turn_id: Option<ConversationTurnId>,
     /// Stable, deduplicated search tags.
     pub tags: Vec<String>,
+    /// Visible retention policy.
+    pub retention: ConversationRetention,
     /// Whether the user pinned this conversation.
     pub pinned: bool,
     /// Whether exact turn text may be retained for this conversation.
