@@ -146,8 +146,8 @@ pub struct ModelAcquisitionPreflight {
 /// Terminal result of one local import attempt.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModelImportDisposition {
-    /// Exact verified bytes became the sole active artifact.
-    Activated,
+    /// Exact verified bytes are staged but remain non-selectable.
+    VerifiedStaged,
     /// Cancellation removed all staging bytes before activation.
     Cancelled,
     /// Invalid bytes were retained under a non-selectable quarantine name.
@@ -362,10 +362,10 @@ pub fn import_local_model(
         return Err(ModelImportError::SourceInvalid);
     }
     let staging_name = format!(".staging-{}.part", profile.artifact.sha256);
-    let active_name = format!("{}.gguf", profile.artifact.sha256);
+    let verified_name = format!(".verified-import-{}.gguf", profile.artifact.sha256);
     let staging = store.held_path.join(&staging_name);
-    let active = store.held_path.join(&active_name);
-    if staging.exists() || active.exists() {
+    let verified = store.held_path.join(&verified_name);
+    if staging.exists() || verified.exists() {
         return Err(ModelImportError::DestinationOccupied);
     }
     let mut output = OpenOptions::new()
@@ -450,15 +450,15 @@ pub fn import_local_model(
             true,
         ));
     }
-    retain_without_overwrite(&staging, &active)?;
+    retain_without_overwrite(&staging, &verified)?;
     guard.disarm();
     store.sync()?;
     Ok(receipt(
         profile,
         Some(observed),
         copied,
-        ModelImportDisposition::Activated,
-        Some(active_name),
+        ModelImportDisposition::VerifiedStaged,
+        Some(verified_name),
         true,
     ))
 }
@@ -803,7 +803,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_local_import_activates_without_mutating_source_or_authority() {
+    fn exact_local_import_stages_without_activation_source_mutation_or_authority() {
         let directory = TestDirectory::new();
         let bytes = b"GGUFexact-model-fixture";
         let source = write_source(&directory.0, bytes);
@@ -815,15 +815,15 @@ mod tests {
         let before = fs::read(&source).expect("source preimage");
         let receipt = import_local_model(&profile, &preflight, &source, &store, || false)
             .expect("exact import");
-        assert_eq!(receipt.disposition, ModelImportDisposition::Activated);
+        assert_eq!(receipt.disposition, ModelImportDisposition::VerifiedStaged);
         assert!(receipt.source_unchanged);
         assert!(!receipt.workspace_available);
         assert!(!receipt.session_available);
         assert!(!receipt.inference_available);
         assert!(!receipt.tool_available);
         assert_eq!(fs::read(&source).expect("source after"), before);
-        let active = store.join(receipt.retained_name.expect("active name"));
-        assert_eq!(fs::read(active).expect("active bytes"), bytes);
+        let verified = store.join(receipt.retained_name.expect("verified name"));
+        assert_eq!(fs::read(verified).expect("verified bytes"), bytes);
         assert_eq!(fs::read_dir(store).expect("store entries").count(), 1);
     }
 
