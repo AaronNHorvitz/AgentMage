@@ -1,0 +1,83 @@
+{
+  "checks": [
+    {
+      "code": "active-manifest-exact",
+      "id": "manifest-identity",
+      "result": "PASS"
+    },
+    {
+      "code": "installed-artifact-bounded",
+      "id": "artifact-state",
+      "result": "PASS"
+    },
+    {
+      "code": "private-store-bounded",
+      "id": "store-state",
+      "result": "PASS"
+    },
+    {
+      "code": "runtime-socket-removed",
+      "id": "runtime-cleanup",
+      "result": "PASS"
+    },
+    {
+      "code": "import-scan-load-ready-unload-activate-pass",
+      "id": "lifecycle-result",
+      "result": "PASS"
+    }
+  ],
+  "disposition": {
+    "adapter_live_proven_for_exact_tuple": true,
+    "automatic_fallback": false,
+    "evidence_store_generation": 1,
+    "product_profile_enabled": false,
+    "quality_evaluated": false,
+    "release_approval": false,
+    "repeatability_evaluated": false,
+    "status": "ISOLATED-LIFECYCLE-PASS",
+    "zero_egress_observed": false
+  },
+  "execution": {
+    "copied_bytes": 0,
+    "elapsed_ms": 734040,
+    "exit_code": 0,
+    "generation": 1,
+    "retries": 0,
+    "terminal_output_sha256": "8cd3de869ce96a8854b181afbebde0a188da138dedbcb3be83d643ba29624d88",
+    "test_id": "exact_muse_import_scan_load_unload_and_evidence_activation"
+  },
+  "limitations": [
+    "The activation occurred only in an isolated evidence store and does not enable a product profile.",
+    "Network unavailability was enforced by the adapter contract but was not independently packet-captured in this run.",
+    "This lifecycle run did not evaluate inference quality or diagnostic repeatability.",
+    "The retained record contains no model bytes, prompts, private paths, credentials, or host identifier."
+  ],
+  "observations": {
+    "active_manifest_sha256": "688ce839f8dbac94d91a8cf04f9a8fb406f54b5770fe63948c827d01d6843159",
+    "artifact_links": 1,
+    "artifact_mode": 384,
+    "model_store_mode": 448,
+    "network_available_to_installer": false,
+    "session_available": false,
+    "socket_residue_names": [],
+    "socket_root_mode": 448,
+    "tool_available": false,
+    "unrelated_inference_available": false,
+    "workspace_available": false
+  },
+  "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability",
+  "record_type": "muse_isolated_live_install_evidence",
+  "schema_version": 1,
+  "source_revision": "298af65a5db83b00f7b548eb8d907622700b4ddd",
+  "tuple": {
+    "context_tokens": 8192,
+    "model_bytes": 16756683904,
+    "model_sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+    "network_egress_configured": false,
+    "parallel_slots": 1,
+    "profile_manifest_sha256": "58c7091643220e98fffd4e1da99bca27b405472caa44b9fc1bafc954d602d166",
+    "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+    "scanner_policy_sha256": "e8a3dba2b12d59bb2aab517376a18890814f5c5a17855d561ee689ef663533af",
+    "synthetic_data_only": true
+  }
+}
