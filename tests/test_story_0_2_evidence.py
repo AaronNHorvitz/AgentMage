@@ -47,11 +47,16 @@ class Story02EvidenceTests(unittest.TestCase):
             self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
             self.assertGreater(item["size"], 0)
 
-    def test_workflow_identity_is_pinned_and_uses_the_clean_gate(self) -> None:
+    def test_workflow_identity_is_disabled_and_names_the_local_clean_gate(self) -> None:
         identity = workflow_identity(ROOT, "fixture-revision")
 
         self.assertTrue(identity["actions_immutable"])
-        self.assertTrue(identity["actions"])
+        self.assertEqual(identity["actions"], [])
+        self.assertTrue(identity["third_party_actions_absent"])
+        self.assertTrue(identity["automatic_triggers_absent"])
+        self.assertTrue(identity["manual_trigger_only"])
+        self.assertTrue(identity["sentinel_job_disabled"])
+        self.assertEqual(identity["execution_mode"], "local-only-no-runner-sentinel")
         self.assertEqual(identity["permissions"], {"contents": "read"})
         self.assertEqual(identity["gate_command"], "npm run docs:clean-check")
         self.assertEqual(

@@ -151,16 +151,30 @@ def workflow_identity(checkout: Path, source_revision: str) -> dict[str, object]
     workflow = workflow_path.read_text(encoding="utf-8")
     package = load_json(checkout / "package.json")
     actions = re.findall(r"^\s*uses:\s*([^\s]+)$", workflow, re.MULTILINE)
+    prohibited_triggers = ("push:", "pull_request:", "schedule:", "workflow_run:")
     return {
         "schema_version": 1,
         "source_revision": source_revision,
         "path": ".github/workflows/documentation.yml",
         "sha256": sha256(workflow.encode("utf-8")),
+        "execution_mode": "local-only-no-runner-sentinel",
         "runner": "ubuntu-24.04",
         "permissions": {"contents": "read"},
         "actions": actions,
-        "actions_immutable": bool(actions)
-        and all(re.fullmatch(r"[^@\s]+@[0-9a-f]{40}", item) for item in actions),
+        "actions_immutable": all(
+            re.fullmatch(r"[^@\s]+@[0-9a-f]{40}", item) for item in actions
+        ),
+        "third_party_actions_absent": not actions,
+        "automatic_triggers_absent": not any(
+            re.search(rf"^\s*{re.escape(trigger)}", workflow, re.MULTILINE)
+            for trigger in prohibited_triggers
+        ),
+        "manual_trigger_only": bool(
+            re.search(r"^\s*workflow_dispatch:\s*$", workflow, re.MULTILINE)
+        ),
+        "sentinel_job_disabled": bool(
+            re.search(r"^\s*if:\s*\$\{\{\s*false\s*\}\}\s*$", workflow, re.MULTILINE)
+        ),
         "install_command": "npm ci --ignore-scripts",
         "gate_command": "npm run docs:clean-check",
         "gate_script": package["scripts"]["docs:clean-check"],
@@ -376,8 +390,18 @@ def check_bundle(output: Path = DEFAULT_OUTPUT) -> list[str]:
                 failures.append(f"policy source mismatch: {item.get('path')}")
 
         workflow = load_json(output / "workflow-identity.json")
+        if workflow.get("execution_mode") != "local-only-no-runner-sentinel":
+            failures.append("workflow execution mode is not the approved local-only sentinel")
+        if workflow.get("actions") or workflow.get("third_party_actions_absent") is not True:
+            failures.append("disabled documentation sentinel contains a third-party action")
         if workflow.get("actions_immutable") is not True:
-            failures.append("workflow actions are not immutably identified")
+            failures.append("workflow action identity rule is not satisfied")
+        if workflow.get("automatic_triggers_absent") is not True:
+            failures.append("documentation sentinel has an automatic hosted trigger")
+        if workflow.get("manual_trigger_only") is not True:
+            failures.append("documentation sentinel lacks its manual-only declaration")
+        if workflow.get("sentinel_job_disabled") is not True:
+            failures.append("documentation sentinel can allocate a hosted runner")
         if workflow.get("gate_command") != "npm run docs:clean-check":
             failures.append("workflow does not identify the canonical clean gate")
 
