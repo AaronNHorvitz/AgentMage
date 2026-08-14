@@ -777,7 +777,7 @@ fn sha256_file(path: &Path) -> Result<String, ModelRuntimeFailure> {
     let mut stream =
         fs::File::open(path).map_err(|_| failure("model.llama-driver.file-unavailable", false))?;
     let mut digest = Sha256::new();
-    let mut buffer = [0_u8; 4 * 1024 * 1024];
+    let mut buffer = vec![0_u8; 4 * 1024 * 1024];
     loop {
         let count = stream
             .read(&mut buffer)
