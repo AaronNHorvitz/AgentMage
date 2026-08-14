@@ -10,6 +10,7 @@ mod obsidian;
 mod obsidian_index;
 mod operations;
 mod plain_folder;
+mod retrieval;
 mod schema;
 mod store;
 
@@ -52,6 +53,12 @@ pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
     PlainFolderKnowledgeStore, PlainFolderLayout, PlainFolderNoteInput, parse_canonical_markdown,
     render_canonical_markdown,
+};
+pub use retrieval::{
+    KnowledgeContextEntry, KnowledgeContextQuery, KnowledgeEvidenceState, KnowledgeFileType,
+    KnowledgeFreshness, KnowledgeRetrievalError, KnowledgeRetrievalHit, KnowledgeRetrievalResult,
+    KnowledgeScoreFactor, KnowledgeSourceAuthority, KnowledgeSourceDocument,
+    KnowledgeSourceFragment, KnowledgeSourceFragmentKind, retrieve_knowledge,
 };
 pub use schema::{
     KnowledgeRecordSchema, knowledge_schema, knowledge_schemas, verify_schema_registry,
