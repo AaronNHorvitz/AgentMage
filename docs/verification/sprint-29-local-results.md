@@ -23,7 +23,9 @@
 - The synthesis envelope and deterministic renderer reject evidence-state changes, invented or
   duplicate citations, uncited nonblocked answers, and proposed prose for unknown/blocked input.
 - Query-injection strings remain literal, obvious secret candidates never enter results, and
-  unrelated-workspace canaries remain excluded.
+  unrelated-workspace canaries remain excluded. Empty and oversized queries, invalid dates and
+  limits, traversal-like paths, historical supersession, and composed/decomposed Unicode behavior
+  are explicit and covered.
 - The versioned three-question fixture corpus has exact expected top-one paths and citation sets.
   This is a contract fixture, not a claim of production retrieval quality.
 - All semantic-component flags remain false, and the strict-local audit finds no undeclared
