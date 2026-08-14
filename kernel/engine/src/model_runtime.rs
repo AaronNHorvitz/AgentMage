@@ -163,6 +163,20 @@ impl ModelAdmissionCatalog {
             purpose,
         })
     }
+
+    /// Resolves one user-named exact profile without family lookup or fallback.
+    pub fn admit_by_id(
+        &self,
+        profile_id: &ModelProfileId,
+        purpose: ModelUsePurpose,
+    ) -> Result<AdmittedModelProfile, ModelRuntimeGateError> {
+        let candidate = self
+            .profiles
+            .iter()
+            .find(|profile| profile.profile_id == *profile_id)
+            .ok_or(ModelRuntimeGateError::ProfileNotRegistered)?;
+        self.admit(candidate, purpose)
+    }
 }
 
 /// Kernel-owned proof that one complete profile matched the immutable catalog.
@@ -189,6 +203,12 @@ impl AdmittedModelProfile {
     #[must_use]
     pub const fn purpose(&self) -> ModelUsePurpose {
         self.purpose
+    }
+
+    /// Returns the complete exact admitted tuple for trusted kernel composition.
+    #[must_use]
+    pub const fn exact_profile(&self) -> &ExactModelProfile {
+        &self.profile
     }
 }
 

@@ -33,6 +33,8 @@ pub mod model_codec;
 pub mod model_response;
 /// Candidate-neutral exact-profile admission and local runtime orchestration.
 pub mod model_runtime;
+/// Explicit exact-profile selection, deterministic-first dispatch, and resource control.
+pub mod model_selection;
 /// Encrypted canonical operational state and crash recovery.
 pub mod operational_store;
 /// Deterministic pre-persistence classification, minimization, and receipts.
