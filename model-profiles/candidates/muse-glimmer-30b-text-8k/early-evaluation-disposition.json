@@ -1,0 +1,80 @@
+{
+  "decision": {
+    "automatic_fallback": false,
+    "family_wide_conclusion": false,
+    "product_activation": false,
+    "quality_profile_enabled": false,
+    "reason_code": "CLOSED-PROPOSAL-QUALITY-THRESHOLD-FAILED",
+    "release_approval": false,
+    "repeatability_profile_enabled": false,
+    "status": "REJECTED"
+  },
+  "evidence": [
+    {
+      "path": "model-profiles/candidates/muse-glimmer-30b-text-8k/source-admission.json",
+      "sha256": "45ede4eaf2e6963fb231e281de8d72bccb9c70f5c3483ededccdbc2c4939a06b"
+    },
+    {
+      "path": "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json",
+      "sha256": "b89a5580b0d5eebc25b95b5bcdebefb3797101e10055729ed269d2c44a607d97"
+    },
+    {
+      "path": "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json",
+      "sha256": "d3073ed89b2ce7467dd031181d91a4ab70a164c20b8487b82b584cc7d09f54c1"
+    },
+    {
+      "path": "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json",
+      "sha256": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18"
+    },
+    {
+      "path": "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json",
+      "sha256": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547"
+    },
+    {
+      "path": "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json",
+      "sha256": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670"
+    }
+  ],
+  "limitations": [
+    "Historical source, runtime, and preflight records remain immutable snapshots of earlier states.",
+    "The exact Fedora runtime boundary passed, but the evaluated quality profile produced zero valid closed proposals.",
+    "Five equal diagnostic response hashes apply only to the exact recorded tuple and do not establish universal determinism.",
+    "Separate packet-capture, macOS, Windows, and Docker evidence is not supplied by this record.",
+    "This rejection enables no profile and does not select a fallback model."
+  ],
+  "observed": {
+    "codec_contract_passed": true,
+    "exact_artifact_verified": true,
+    "exact_runtime_verified": true,
+    "false_completion_count": 0,
+    "isolated_lifecycle_passed": true,
+    "mid_generation_cancellation_passed": true,
+    "packet_capture_executed": false,
+    "quality_closed_proposal_count": 0,
+    "quality_pass_count": 0,
+    "quality_trial_count": 12,
+    "repeatability_trial_count": 5,
+    "repeatability_unique_response_count": 1,
+    "sandboxed_streaming_passed": true,
+    "source_and_license_recorded": true
+  },
+  "profile_ids": [
+    "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality",
+    "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability"
+  ],
+  "re_review_triggers": [
+    "model-artifact-change",
+    "runtime-build-change",
+    "tokenizer-change",
+    "template-change",
+    "codec-change",
+    "context-change",
+    "decoding-change",
+    "hardware-or-driver-change",
+    "evaluation-corpus-or-grader-change",
+    "quality-threshold-change"
+  ],
+  "record_type": "muse_early_exact_profile_disposition",
+  "schema_version": 1,
+  "source_revision": "38e8cdced92fc68fe44834cf3259f66ec1ac23b5"
+}
