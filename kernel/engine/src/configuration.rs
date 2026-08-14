@@ -365,6 +365,12 @@ impl LoadedConfiguration {
     pub fn allowed_capabilities(&self) -> &[String] {
         &self.configuration.permission.allowed_capabilities
     }
+
+    /// Reports whether this exact profile enables a model runtime.
+    #[must_use]
+    pub const fn model_enabled(&self) -> bool {
+        self.configuration.model.enabled
+    }
 }
 
 /// Classifies whether a configuration change expands or restricts effective scope.

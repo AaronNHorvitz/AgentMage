@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Bounded single-agent observe, plan, action-proposal, and review control loop.
+pub mod agent_runtime;
 /// Deterministic non-authoritative approval-display construction.
 pub mod approval;
 /// Sealed classification and denial of descriptive artifacts as authority.
