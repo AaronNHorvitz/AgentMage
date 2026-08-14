@@ -1326,22 +1326,22 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 14.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 14.1.1.1** (legacy `S-014-I01`): Implement hardware, architecture, acceleration, memory, disk, context, artifact-size, and expected-working-set preflight.
+  - [x] **Sub-task 14.1.1.1** (legacy `S-014-I01`): Implement hardware, architecture, acceleration, memory, disk, context, artifact-size, and expected-working-set preflight.
   - [ ] **Sub-task 14.1.1.2** (legacy `S-014-I02`): Display exact model identity, publisher, lineage, license, quantization, runtime requirements, and hashes before acquisition.
-  - [ ] **Sub-task 14.1.1.3** (legacy `S-014-I03`): Implement user-selected local import and separately authorized bounded download.
-  - [ ] **Sub-task 14.1.1.4** (legacy `S-014-I04`): Implement resumable staging, bounded retry, partial cleanup, cancellation, hash-failure quarantine, and incompatible-artifact refusal.
-  - [ ] **Sub-task 14.1.1.5** (legacy `S-014-I05`): Implement atomic activation, install self-test, safe load and unload, previous-version preservation, rollback, and orphan cleanup.
-  - [ ] **Sub-task 14.1.1.6** (legacy `S-014-I06`): Ensure the installer receives no workspace handle, session database, inference grant, tool authority, or unrelated secret.
-  - [ ] **Sub-task 14.1.1.7** (legacy `S-014-I07`): Prove the installer exits before strict-local normal operation begins.
+  - [x] **Sub-task 14.1.1.3** (legacy `S-014-I03`): Implement user-selected local import and separately authorized bounded download.
+  - [x] **Sub-task 14.1.1.4** (legacy `S-014-I04`): Implement resumable staging, bounded retry, partial cleanup, cancellation, hash-failure quarantine, and incompatible-artifact refusal.
+  - [x] **Sub-task 14.1.1.5** (legacy `S-014-I05`): Implement atomic activation, install self-test, safe load and unload, previous-version preservation, rollback, and orphan cleanup.
+  - [x] **Sub-task 14.1.1.6** (legacy `S-014-I06`): Ensure the installer receives no workspace handle, session database, inference grant, tool authority, or unrelated secret.
+  - [x] **Sub-task 14.1.1.7** (legacy `S-014-I07`): Prove the installer exits before strict-local normal operation begins.
 
 - [ ] **Task 14.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 14.1.2.1:** Signed installer/importer packages.
   - [ ] **Sub-task 14.1.2.2:** Preflight and license-review screens.
-  - [ ] **Sub-task 14.1.2.3:** Staging, quarantine, activation, rollback, and cleanup receipts.
-  - [ ] **Sub-task 14.1.2.4:** Complete lifecycle fixture results.
+  - [x] **Sub-task 14.1.2.3:** Staging, quarantine, activation, rollback, and cleanup receipts.
+  - [x] **Sub-task 14.1.2.4:** Complete lifecycle fixture results.
 
 - [ ] **Task 14.1.3 - Verify and close the story**
-  - [ ] **Sub-task 14.1.3.1:** `S-014-UT01` verifies preflight decisions for source host, expected identity/size/license/hash/destination, disk, architecture, and compatibility; assert ambiguous or unapproved input cannot begin acquisition.
+  - [x] **Sub-task 14.1.3.1:** `S-014-UT01` verifies preflight decisions for source host, expected identity/size/license/hash/destination, disk, architecture, and compatibility; assert ambiguous or unapproved input cannot begin acquisition.
   - [ ] **Sub-task 14.1.3.2:** `S-014-ST01` supplies redirected, truncated, oversized, substituted, malicious, wrong-license, wrong-hash, wrong-model, and executable-bearing artifacts; assert quarantine and zero activation.
   - [ ] **Sub-task 14.1.3.3:** `S-014-RT01` cancels or crashes at every download/import/stage/verify/activate/rollback/cleanup transition; assert closed sockets, bounded residue, and either prior or fully verified active model.
   - [ ] **Sub-task 14.1.3.4:** `S-014-IT01` runs installer and operational host concurrently and probes installer for workspace/session/tool/grant/inference authority; assert mutual exclusion and zero cross-boundary data access.
@@ -1360,41 +1360,43 @@ claims.
 
 - [ ] **Task 14.2.1 - Freeze and normalize first-party candidate sources**
   - [ ] **Sub-task 14.2.1.1:** Freeze the dated first-party Meta Muse and Google Gemma catalogs, retrieval identities, license/use-term sources, model cards, artifact listings, runtime documentation, and eligibility policy used for the initial inventory.
-  - [ ] **Sub-task 14.2.1.2:** Enumerate 100% of eligible official first-party Gemma entries and exact variants, including current and legacy general, coding, function/tool, safety, embedding, multimodal, specialist, research, and other published roles; record every exclusion with a named policy reason.
-  - [ ] **Sub-task 14.2.1.3:** Normalize exact developer, publisher, revision, role, source, origin, lineage, license/use terms, artifact, transformation, tokenizer, template, codec, runtime, modality, context, hardware, applicable test, lifecycle, and evidence fields without treating mutable names as identity.
-  - [ ] **Sub-task 14.2.1.4:** Admit other eligible first-party candidates into the development inventory only through the same schema and policy; direct arbitrary, mirrored, provenance-incomplete, community-converted, merged, or fine-tuned artifacts to the post-GA Experimental Model Lab unless separately admitted.
+  - [x] **Sub-task 14.2.1.2:** Enumerate 100% of eligible official first-party Gemma entries and exact variants, including current and legacy general, coding, function/tool, safety, embedding, multimodal, specialist, research, and other published roles; record every exclusion with a named policy reason.
+  - [x] **Sub-task 14.2.1.3:** Normalize exact developer, publisher, revision, role, source, origin, lineage, license/use terms, artifact, transformation, tokenizer, template, codec, runtime, modality, context, hardware, applicable test, lifecycle, and evidence fields without treating mutable names as identity.
+  - [x] **Sub-task 14.2.1.4:** Admit other eligible first-party candidates into the development inventory only through the same schema and policy; direct arbitrary, mirrored, provenance-incomplete, community-converted, merged, or fine-tuned artifacts to the post-GA Experimental Model Lab unless separately admitted.
 
 - [ ] **Task 14.2.2 - Assign role and preflight every exact profile**
-  - [ ] **Sub-task 14.2.2.1:** Assign each profile one or more explicit applicable roles and prohibit safety, embedding, translation, medical, research, interpretability, specialist, or legacy models from silently entering the coding-planner role.
+  - [x] **Sub-task 14.2.2.1:** Assign each profile one or more explicit applicable roles and prohibit safety, embedding, translation, medical, research, interpretability, specialist, or legacy models from silently entering the coding-planner role.
   - [ ] **Sub-task 14.2.2.2:** Run non-acquiring architecture, runtime, format, acceleration, disk, memory, context, modality, and expected-working-set preflight against each declared reference-machine envelope.
-  - [ ] **Sub-task 14.2.2.3:** Record `CANDIDATE`, `INELIGIBLE`, `BLOCKED`, `BLOCKED-HARDWARE`, `REJECTED`, or ready-for-isolated-evaluation evidence for every exact entry; never infer one profile's result across a family.
-  - [ ] **Sub-task 14.2.2.4:** Generate the candidate-to-role-to-suite matrix and a completeness reconciliation against the frozen source catalogs.
+  - [x] **Sub-task 14.2.2.3:** Record `CANDIDATE`, `INELIGIBLE`, `BLOCKED`, `BLOCKED-HARDWARE`, `REJECTED`, or ready-for-isolated-evaluation evidence for every exact entry; never infer one profile's result across a family.
+  - [x] **Sub-task 14.2.2.4:** Generate the candidate-to-role-to-suite matrix and a completeness reconciliation against the frozen source catalogs.
 
 - [ ] **Task 14.2.3 - Verify and close the story**
-  - [ ] **Sub-task 14.2.3.1:** `D027-S14-CATALOG` independently enumerate the frozen catalogs and diff them against the normalized inventory; require 100% exact disposition coverage with no silent omission or duplicate identity.
-  - [ ] **Sub-task 14.2.3.2:** `D027-S14-ROLE` mutate role, modality, specialization, source, lineage, license, runtime, and suite applicability; require denial of role escalation and visible conflict.
-  - [ ] **Sub-task 14.2.3.3:** `D027-S14-HARDWARE` test fit boundaries immediately below, at, and above disk, memory, acceleration, context, and runtime limits; require exact `BLOCKED-HARDWARE` rather than download, family rejection, or guessed compatibility.
-  - [ ] **Sub-task 14.2.3.4:** `D027-S14-INTAKE` submit eligible, ineligible, mirrored, community-converted, mutable, provenance-incomplete, and policy-excluded candidates; require the exact ordinary-evaluation, lab-only, blocked, or rejected path with no activation.
+  - [x] **Sub-task 14.2.3.1:** `D027-S14-CATALOG` independently enumerate the frozen catalogs and diff them against the normalized inventory; require 100% exact disposition coverage with no silent omission or duplicate identity.
+  - [x] **Sub-task 14.2.3.2:** `D027-S14-ROLE` mutate role, modality, specialization, source, lineage, license, runtime, and suite applicability; require denial of role escalation and visible conflict.
+  - [x] **Sub-task 14.2.3.3:** `D027-S14-HARDWARE` test fit boundaries immediately below, at, and above disk, memory, acceleration, context, and runtime limits; require exact `BLOCKED-HARDWARE` rather than download, family rejection, or guessed compatibility.
+  - [x] **Sub-task 14.2.3.4:** `D027-S14-INTAKE` submit eligible, ineligible, mirrored, community-converted, mutable, provenance-incomplete, and policy-excluded candidates; require the exact ordinary-evaluation, lab-only, blocked, or rejected path with no activation.
   - [ ] **Sub-task 14.2.3.5 - Product security evidence:** Complete the inventory/preflight portion of `AT-MODEL-004` and `RV-41`; map `SR-MGM-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015`; retain frozen catalogs, source hashes, normalized records, exclusion ledger, role matrix, preflight results, and completeness diff.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 14.2.AC1:** Given the pinned first-party source catalogs, when the inventory is built, then every eligible Muse and Gemma entry has one exact attributable record, role, applicability decision, preflight, and visible disposition or exclusion.
-- [ ] **Story AC 14.2.AC2:** Given a specialist, safety, embedding, legacy, or hardware-incompatible profile, when role and fit are evaluated, then it cannot silently become a coding planner, disappear from coverage, or create a family-wide conclusion.
-- [ ] **Story AC 14.2.AC3:** Given another eligible candidate, when it enters the development inventory, then it uses the same provenance, policy, profile, codec, runtime, hardware, test, and evidence contracts and receives no automatic approval or acquisition.
+- [x] **Story AC 14.2.AC1:** Given the pinned first-party source catalogs, when the inventory is built, then every eligible Muse and Gemma entry has one exact attributable record, role, applicability decision, preflight, and visible disposition or exclusion.
+- [x] **Story AC 14.2.AC2:** Given a specialist, safety, embedding, legacy, or hardware-incompatible profile, when role and fit are evaluated, then it cannot silently become a coding planner, disappear from coverage, or create a family-wide conclusion.
+- [x] **Story AC 14.2.AC3:** Given another eligible candidate, when it enters the development inventory, then it uses the same provenance, policy, profile, codec, runtime, hardware, test, and evidence contracts and receives no automatic approval or acquisition.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 14.AC1:** `AT-MODEL-002` passes on all reference platforms.
 - [ ] **Sprint AC 14.AC2:** Every corrupt, incomplete, cancelled, mismatched, incompatible, or under-resourced artifact remains unrunnable.
-- [ ] **Sprint AC 14.AC3:** Every valid artifact activates atomically and passes self-test.
-- [ ] **Sprint AC 14.AC4:** Failed acquisition leaves the previous active model intact.
-- [ ] **Sprint AC 14.AC5:** Offline startup proves no installer process or acquisition network authority remains.
-- [ ] **Sprint AC 14.AC6:** The frozen Muse and eligible official first-party Gemma catalogs reconcile 100% to exact inventory, role, applicability, preflight, and disposition records.
+- [x] **Sprint AC 14.AC3:** Every valid artifact activates atomically and passes self-test.
+- [x] **Sprint AC 14.AC4:** Failed acquisition leaves the previous active model intact.
+- [x] **Sprint AC 14.AC5:** Offline startup proves no installer process or acquisition network authority remains.
+- [x] **Sprint AC 14.AC6:** The frozen Muse and eligible official first-party Gemma catalogs reconcile 100% to exact inventory, role, applicability, preflight, and disposition records.
 - [ ] **Sprint AC 14.AC7:** Every incompatible reference-machine tuple records `BLOCKED-HARDWARE`; no candidate is silently omitted, downloaded, activated, or rejected at family scope.
-- [ ] **Sprint AC 14.AC8:** `AT-MODEL-004` inventory and preflight cases pass, including another eligible candidate and prohibited community/provenance-incomplete inputs.
+- [x] **Sprint AC 14.AC8:** `AT-MODEL-004` inventory and preflight cases pass, including another eligible candidate and prohibited community/provenance-incomplete inputs.
 
 **Gate decision:** Sprint 14 is PASS only when Stories 14.1 and 14.2, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-003`, `AM-MDL-005`, `AT-MODEL-002`, the inventory/preflight portion of `AT-MODEL-004`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current gate result:** BLOCKED with the locally executable Linux library, package, and source-inventory work complete. The retained [`local-evidence-report.json`](artifacts/sprints/sprint-14/local-evidence-report.json) reconciles 416 frozen first-party repository revisions with zero acquisition or activation authority and verifies the packaged installer, preflight, import, download, quarantine, activation, rollback, cleanup, role, intake, and mutation contracts. Remaining blockers are the inactive end-user installer process protocol, preflight/license UI, approved production signing, live product-acquisition packet capture, exact artifact/profile machine-fit admission, and native macOS evidence.
 ### [ ] Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
