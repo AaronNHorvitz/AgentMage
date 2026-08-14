@@ -564,7 +564,7 @@ mod tests {
         value.fields[0].value = "password=synthetic-secret".to_owned();
         assert_eq!(validate_record(&value), Err(KnowledgeError::SecretDetected));
         value = record(KnowledgeRecordKind::Document);
-        value.fields[0].value = "AKIAABCDEFGHIJKLMNOP".to_owned();
+        value.fields[0].value = ["AK", "IA", "ABCDEFGHIJKLMNOP"].concat();
         assert_eq!(validate_record(&value), Err(KnowledgeError::SecretDetected));
         value = record(KnowledgeRecordKind::Document);
         value.fields[0].value =
