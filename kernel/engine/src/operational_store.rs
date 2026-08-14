@@ -11,8 +11,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
-    AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState, CapabilityGrant,
-    GrantId, GrantNonce, Receipt, StrictLocalStorageObservation, from_json, to_canonical_json,
+    ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
+    CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome, Receipt,
+    SessionCheckpoint, StrictLocalStorageObservation, from_json, to_canonical_json,
 };
 use rusqlite::{
     Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior, params,
@@ -25,6 +26,7 @@ use crate::authority_transaction::{
     AuthorityTransactionCoordinator, AuthorityTransactionError, AuthorityTransactionRequest,
     EffectDriver,
 };
+use crate::context_management::{CheckpointError, verify_checkpoint};
 use crate::grants::{
     DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
 };
@@ -32,7 +34,7 @@ use crate::policy::PolicyEngine;
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
 
-const SCHEMA_VERSION: i64 = 3;
+const SCHEMA_VERSION: i64 = 4;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -103,6 +105,8 @@ const MIGRATION_2_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0002-domain-schema.sql");
 const MIGRATION_3_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0003-retention-lifecycle.sql");
+const MIGRATION_4_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0004-session-checkpoints.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -393,6 +397,8 @@ pub enum OperationalStoreError {
     ConcurrentWriter,
     /// An atomic state publication failed.
     PersistenceFailure,
+    /// A session checkpoint was malformed, ephemeral, or inconsistent with authority state.
+    CheckpointRejected,
     /// A prior persistence ambiguity requires process restart and recovery.
     Poisoned,
 }
@@ -415,6 +421,7 @@ impl OperationalStoreError {
             Self::ExportRejected => "operational_store.export.rejected",
             Self::ConcurrentWriter => "operational_store.writer.concurrent",
             Self::PersistenceFailure => "operational_store.persistence.failed",
+            Self::CheckpointRejected => "operational_store.checkpoint.rejected",
             Self::Poisoned => "operational_store.poisoned",
         }
     }
@@ -951,12 +958,13 @@ impl OperationalStore {
             AuthorityTransactionCoordinator::from_durable_parts(transaction_histories, receipts)
                 .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         let expected = authority_state_sha256(&issuer, &coordinator)?;
-        let retained: String = self
+        let (retained, retained_session_checkpoint): (String, String) = self
             .connection
             .query_row(
-                "SELECT state_sha256 FROM store_metadata WHERE singleton = 1",
+                "SELECT state_sha256, session_checkpoint_sha256
+                 FROM store_metadata WHERE singleton = 1",
                 [],
-                |row| row.get(0),
+                |row| Ok((row.get(0)?, row.get(1)?)),
             )
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         if retained == ZERO_SHA256 && self.generation == 0 {
@@ -982,8 +990,30 @@ impl OperationalStore {
         } else if retained != expected {
             return Err(OperationalStoreError::IntegrityFailure);
         }
-        verify_checkpoint_head(&self.connection, self.generation, &expected)?;
+        verify_checkpoint_head(
+            &self.connection,
+            self.generation,
+            &expected,
+            &retained_session_checkpoint,
+        )?;
+        verify_session_checkpoint_history(&self.connection, self.generation)?;
+        verify_session_checkpoint_head(&self.connection, &retained_session_checkpoint)?;
         Ok((issuer, coordinator))
+    }
+
+    /// Returns the current verified metadata-only session checkpoint, when one was published.
+    pub fn current_session_checkpoint(
+        &self,
+    ) -> Result<Option<SessionCheckpoint>, OperationalStoreError> {
+        let retained: String = self
+            .connection
+            .query_row(
+                "SELECT session_checkpoint_sha256 FROM store_metadata WHERE singleton = 1",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        load_session_checkpoint(&self.connection, &retained)
     }
 
     pub(crate) fn persist_authority(
@@ -1006,6 +1036,43 @@ impl OperationalStore {
             &state_sha256,
             issuer,
             coordinator,
+            None,
+        );
+        match result {
+            Ok(()) => {
+                self.generation = next_generation;
+                Ok(())
+            }
+            Err(error) => {
+                self.poisoned = true;
+                Err(error)
+            }
+        }
+    }
+
+    fn persist_authority_with_session_checkpoint(
+        &mut self,
+        issuer: &GrantIssuer,
+        coordinator: &AuthorityTransactionCoordinator,
+        checkpoint: &SessionCheckpoint,
+    ) -> Result<(), OperationalStoreError> {
+        if self.poisoned {
+            return Err(OperationalStoreError::Poisoned);
+        }
+        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint)?;
+        let next_generation = self
+            .generation
+            .checked_add(1)
+            .ok_or(OperationalStoreError::PersistenceFailure)?;
+        let state_sha256 = authority_state_sha256(issuer, coordinator)?;
+        let result = persist_snapshot(
+            &mut self.connection,
+            self.generation,
+            next_generation,
+            &state_sha256,
+            issuer,
+            coordinator,
+            Some(checkpoint),
         );
         match result {
             Ok(()) => {
@@ -1049,6 +1116,8 @@ pub enum DurableAuthorityError {
     Transaction(AuthorityTransactionError),
     /// The process must reopen canonical state before any further effect.
     Poisoned,
+    /// The proposed safe-boundary checkpoint failed its closed contract.
+    Checkpoint(CheckpointError),
 }
 
 impl DurableAuthorityRuntime {
@@ -1080,6 +1149,12 @@ impl DurableAuthorityRuntime {
         self.issuer.current(grant_id)
     }
 
+    /// Returns the last atomically published authority/checkpoint generation.
+    #[must_use]
+    pub const fn generation(&self) -> u64 {
+        self.store.generation()
+    }
+
     /// Returns one current canonical transaction revision.
     #[must_use]
     pub fn current_transaction(
@@ -1093,6 +1168,26 @@ impl DurableAuthorityRuntime {
     #[must_use]
     pub fn receipts(&self) -> &[Receipt] {
         self.coordinator.receipts()
+    }
+
+    /// Returns the current verified metadata-only session checkpoint, when present.
+    pub fn current_session_checkpoint(
+        &self,
+    ) -> Result<Option<SessionCheckpoint>, DurableAuthorityError> {
+        self.store
+            .current_session_checkpoint()
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Publishes a safe-boundary checkpoint with the unchanged canonical authority state.
+    pub fn checkpoint_session(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.store
+            .persist_authority_with_session_checkpoint(&self.issuer, &self.coordinator, checkpoint)
+            .map_err(|error| self.poison(error))
     }
 
     /// Issues one parent grant and publishes it atomically before returning it.
@@ -1159,6 +1254,93 @@ impl DurableAuthorityRuntime {
                     self.poisoned = true;
                 }
                 Err(DurableAuthorityError::Transaction(error))
+            }
+        }
+    }
+
+    /// Executes one effect and atomically publishes its terminal state and next checkpoint.
+    pub fn execute_effect_with_session_checkpoint<D, F>(
+        &mut self,
+        registry: &ToolRegistry,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+        mut build_checkpoint: F,
+    ) -> Result<(Receipt, SessionCheckpoint), DurableAuthorityError>
+    where
+        D: EffectDriver,
+        F: FnMut(&Receipt) -> Result<SessionCheckpoint, CheckpointError>,
+    {
+        self.ensure_usable()?;
+        let transaction_id = request.transaction_id().clone();
+        let store = &mut self.store;
+        let mut built_checkpoint = None;
+        let mut checkpoint_error = None;
+        let mut store_error = None;
+        let result = self.coordinator.execute_with_checkpoint(
+            registry,
+            &mut self.issuer,
+            policy,
+            &request,
+            driver,
+            &mut |issuer, coordinator| {
+                let is_terminal = coordinator
+                    .current(&transaction_id)
+                    .is_some_and(|record| record.state == AuthorityTransactionState::Terminal);
+                let persisted = if is_terminal {
+                    let receipt = coordinator
+                        .receipts()
+                        .iter()
+                        .find(|receipt| receipt.authority_transaction_id == transaction_id)
+                        .ok_or(OperationalStoreError::CheckpointRejected);
+                    match receipt {
+                        Ok(receipt) => match build_checkpoint(receipt) {
+                            Ok(checkpoint) => store
+                                .persist_authority_with_session_checkpoint(
+                                    issuer,
+                                    coordinator,
+                                    &checkpoint,
+                                )
+                                .map(|()| built_checkpoint = Some(checkpoint)),
+                            Err(error) => {
+                                checkpoint_error = Some(error);
+                                Err(OperationalStoreError::CheckpointRejected)
+                            }
+                        },
+                        Err(error) => Err(error),
+                    }
+                } else {
+                    store.persist_authority(issuer, coordinator)
+                };
+                persisted.map_err(|error| {
+                    store_error = Some(error);
+                    AuthorityTransactionError::PersistenceFailure
+                })
+            },
+        );
+        match result {
+            Ok(receipt) => match built_checkpoint {
+                Some(checkpoint) => Ok((receipt, checkpoint)),
+                None => {
+                    self.poisoned = true;
+                    Err(DurableAuthorityError::Store(
+                        OperationalStoreError::CheckpointRejected,
+                    ))
+                }
+            },
+            Err(_) if checkpoint_error.is_some() => {
+                self.poisoned = true;
+                Err(DurableAuthorityError::Checkpoint(
+                    checkpoint_error.expect("checked checkpoint error"),
+                ))
+            }
+            Err(error) => {
+                if let Some(error) = store_error {
+                    self.poisoned = true;
+                    Err(DurableAuthorityError::Store(error))
+                } else {
+                    Err(DurableAuthorityError::Transaction(error))
+                }
             }
         }
     }
@@ -1443,6 +1625,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 3_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 3;
+    }
+    if version == 3 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_4_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (4, ?1)",
+                [sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -1466,6 +1669,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
             (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
             (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
+            (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -1480,6 +1684,7 @@ fn persist_snapshot(
     state_sha256: &str,
     issuer: &GrantIssuer,
     coordinator: &AuthorityTransactionCoordinator,
+    session_checkpoint: Option<&SessionCheckpoint>,
 ) -> Result<(), OperationalStoreError> {
     let expected_generation = i64::try_from(expected_generation)
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
@@ -1488,11 +1693,12 @@ fn persist_snapshot(
     let transaction = connection
         .transaction_with_behavior(TransactionBehavior::Immediate)
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
-    let retained: i64 = transaction
+    let (retained, retained_session_checkpoint): (i64, String) = transaction
         .query_row(
-            "SELECT generation FROM store_metadata WHERE singleton = 1",
+            "SELECT generation, session_checkpoint_sha256
+             FROM store_metadata WHERE singleton = 1",
             [],
-            |row| row.get(0),
+            |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
     if retained != expected_generation {
@@ -1500,12 +1706,21 @@ fn persist_snapshot(
     }
     persist_grants(&transaction, issuer)?;
     persist_transactions(&transaction, coordinator)?;
+    let session_checkpoint_sha256 = session_checkpoint.map_or_else(
+        || retained_session_checkpoint.clone(),
+        |checkpoint| checkpoint.checkpoint_sha256.clone(),
+    );
     let changed = transaction
         .execute(
             "UPDATE store_metadata
-             SET generation = ?1, state_sha256 = ?2
-             WHERE singleton = 1 AND generation = ?3",
-            params![next_generation, state_sha256, expected_generation],
+             SET generation = ?1, state_sha256 = ?2, session_checkpoint_sha256 = ?3
+             WHERE singleton = 1 AND generation = ?4",
+            params![
+                next_generation,
+                state_sha256,
+                &session_checkpoint_sha256,
+                expected_generation
+            ],
         )
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
     if changed != 1 {
@@ -1513,10 +1728,29 @@ fn persist_snapshot(
     }
     transaction
         .execute(
-            "INSERT INTO checkpoints(generation, state_sha256) VALUES (?1, ?2)",
-            params![next_generation, state_sha256],
+            "INSERT INTO checkpoints(
+                 generation, state_sha256, session_checkpoint_sha256
+             ) VALUES (?1, ?2, ?3)",
+            params![next_generation, state_sha256, &session_checkpoint_sha256],
         )
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+    if let Some(checkpoint) = session_checkpoint {
+        let record_json =
+            to_canonical_json(checkpoint).map_err(|_| OperationalStoreError::CheckpointRejected)?;
+        transaction
+            .execute(
+                "INSERT INTO session_checkpoints(
+                     generation, checkpoint_id, checkpoint_sha256, record_json
+                 ) VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    next_generation,
+                    checkpoint.checkpoint_id.as_str(),
+                    &checkpoint.checkpoint_sha256,
+                    record_json
+                ],
+            )
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+    }
     transaction
         .commit()
         .map_err(|_| OperationalStoreError::PersistenceFailure)
@@ -2012,27 +2246,198 @@ fn verify_checkpoint_head(
     connection: &Connection,
     generation: u64,
     state_sha256: &str,
+    session_checkpoint_sha256: &str,
 ) -> Result<(), OperationalStoreError> {
     let expected_count = generation
         .checked_add(1)
         .ok_or(OperationalStoreError::IntegrityFailure)?;
-    let (count, maximum, retained): (i64, i64, String) = connection
-        .query_row(
-            "SELECT COUNT(*), MAX(generation),
+    let (count, maximum, retained, retained_session_checkpoint): (i64, i64, String, String) =
+        connection
+            .query_row(
+                "SELECT COUNT(*), MAX(generation),
                     COALESCE((SELECT state_sha256 FROM checkpoints
+                              WHERE generation = ?1), ''),
+                    COALESCE((SELECT session_checkpoint_sha256 FROM checkpoints
                               WHERE generation = ?1), '')
              FROM checkpoints",
-            [i64::try_from(generation).map_err(|_| OperationalStoreError::IntegrityFailure)?],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-        )
-        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+                [
+                    i64::try_from(generation)
+                        .map_err(|_| OperationalStoreError::IntegrityFailure)?,
+                ],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
     if u64::try_from(count).ok() != Some(expected_count)
         || u64::try_from(maximum).ok() != Some(generation)
         || retained != state_sha256
+        || retained_session_checkpoint != session_checkpoint_sha256
     {
         return Err(OperationalStoreError::IntegrityFailure);
     }
     Ok(())
+}
+
+fn verify_session_checkpoint_head(
+    connection: &Connection,
+    checkpoint_sha256: &str,
+) -> Result<(), OperationalStoreError> {
+    let checkpoint = load_session_checkpoint(connection, checkpoint_sha256)?;
+    if checkpoint_sha256 == ZERO_SHA256 {
+        if checkpoint.is_some() {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+        return Ok(());
+    }
+    checkpoint
+        .ok_or(OperationalStoreError::IntegrityFailure)
+        .and_then(|value| {
+            verify_checkpoint(&value).map_err(|_| OperationalStoreError::IntegrityFailure)
+        })
+}
+
+fn verify_session_checkpoint_history(
+    connection: &Connection,
+    current_generation: u64,
+) -> Result<(), OperationalStoreError> {
+    let mut statement = connection
+        .prepare(
+            "SELECT s.generation, s.checkpoint_sha256, s.record_json,
+                    c.session_checkpoint_sha256
+             FROM session_checkpoints s
+             JOIN checkpoints c ON c.generation = s.generation
+             ORDER BY s.generation",
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, Vec<u8>>(2)?,
+                row.get::<_, String>(3)?,
+            ))
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    for row in rows {
+        let (generation, retained_sha256, bytes, linked_sha256) =
+            row.map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let generation =
+            u64::try_from(generation).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let checkpoint = from_json::<SessionCheckpoint>(&bytes)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if generation == 0
+            || generation > current_generation
+            || retained_sha256 != linked_sha256
+            || checkpoint.checkpoint_sha256 != retained_sha256
+            || checkpoint.ephemeral
+            || verify_checkpoint(&checkpoint).is_err()
+        {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+    }
+    Ok(())
+}
+
+fn load_session_checkpoint(
+    connection: &Connection,
+    checkpoint_sha256: &str,
+) -> Result<Option<SessionCheckpoint>, OperationalStoreError> {
+    if checkpoint_sha256 == ZERO_SHA256 {
+        let count: i64 = connection
+            .query_row("SELECT COUNT(*) FROM session_checkpoints", [], |row| {
+                row.get(0)
+            })
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        return if count == 0 {
+            Ok(None)
+        } else {
+            Err(OperationalStoreError::IntegrityFailure)
+        };
+    }
+    if !valid_sha256_text(checkpoint_sha256) {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
+    let row: Option<(String, Vec<u8>)> = connection
+        .query_row(
+            "SELECT checkpoint_sha256, record_json
+             FROM session_checkpoints WHERE checkpoint_sha256 = ?1",
+            [checkpoint_sha256],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let Some((retained_sha256, bytes)) = row else {
+        return Err(OperationalStoreError::IntegrityFailure);
+    };
+    let checkpoint = from_json::<SessionCheckpoint>(&bytes)
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    if retained_sha256 != checkpoint.checkpoint_sha256
+        || retained_sha256 != checkpoint_sha256
+        || checkpoint.ephemeral
+    {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
+    verify_checkpoint(&checkpoint).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    Ok(Some(checkpoint))
+}
+
+fn validate_checkpoint_authority_binding(
+    issuer: &GrantIssuer,
+    coordinator: &AuthorityTransactionCoordinator,
+    checkpoint: &SessionCheckpoint,
+) -> Result<(), OperationalStoreError> {
+    verify_checkpoint(checkpoint).map_err(|_| OperationalStoreError::CheckpointRejected)?;
+    if checkpoint.ephemeral {
+        return Err(OperationalStoreError::CheckpointRejected);
+    }
+    let receipt = match (&checkpoint.receipt_id, &checkpoint.receipt_sha256) {
+        (None, None) => None,
+        (Some(receipt_id), Some(receipt_sha256)) => Some(
+            coordinator
+                .receipts()
+                .iter()
+                .find(|receipt| {
+                    &receipt.receipt_id == receipt_id && &receipt.receipt_sha256 == receipt_sha256
+                })
+                .ok_or(OperationalStoreError::CheckpointRejected)?,
+        ),
+        _ => return Err(OperationalStoreError::CheckpointRejected),
+    };
+    if let Some(receipt) = receipt {
+        if checkpoint.action_id.as_ref() != Some(&receipt.action_id)
+            || checkpoint.action_state != Some(action_state_for_outcome(receipt.outcome))
+            || checkpoint.task_id != receipt.task_id
+            || checkpoint.session_id != receipt.session_id
+        {
+            return Err(OperationalStoreError::CheckpointRejected);
+        }
+        let grant = issuer
+            .current(&receipt.grant_id)
+            .ok_or(OperationalStoreError::CheckpointRejected)?;
+        let consumed = matches!(grant.status, GrantStatus::Consumed | GrantStatus::Uncertain);
+        if consumed != checkpoint.consumed_grant_id.is_some()
+            || checkpoint
+                .consumed_grant_id
+                .as_ref()
+                .is_some_and(|grant_id| grant_id != &receipt.grant_id)
+        {
+            return Err(OperationalStoreError::CheckpointRejected);
+        }
+    } else if checkpoint.consumed_grant_id.is_some() {
+        return Err(OperationalStoreError::CheckpointRejected);
+    }
+    Ok(())
+}
+
+const fn action_state_for_outcome(outcome: OperationOutcome) -> ActionState {
+    match outcome {
+        OperationOutcome::Succeeded => ActionState::Succeeded,
+        OperationOutcome::Denied => ActionState::Denied,
+        OperationOutcome::Failed => ActionState::Failed,
+        OperationOutcome::Cancelled => ActionState::Cancelled,
+        OperationOutcome::TimedOut => ActionState::TimedOut,
+        OperationOutcome::Uncertain => ActionState::Uncertain,
+    }
 }
 
 fn authority_state_sha256(
@@ -2466,6 +2871,10 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
         sql: "SELECT session_id, 0, record_sha256 FROM sessions",
     },
     DerivedExportQuery {
+        family: "session_checkpoints",
+        sql: "SELECT checkpoint_id, generation, checkpoint_sha256 FROM session_checkpoints",
+    },
+    DerivedExportQuery {
         family: "tasks",
         sql: "SELECT task_id, 0, record_sha256 FROM tasks",
     },
@@ -2766,23 +3175,76 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        CloudSynchronizationMarker, StorageFilesystemClass, StrictLocalStorageObservation,
+        CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, CloudSynchronizationMarker, EvidenceId,
+        ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId, SessionCheckpoint,
+        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId, WorkspaceId,
     };
     use rusqlite::params;
     use serde_json::Value;
 
     use super::{
-        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, OperationalStore,
-        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
-        OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
-        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
-        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_file,
-        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
+        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL,
+        MIGRATION_4_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
+        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
+        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
+    use crate::context_management::finalize_checkpoint;
     use crate::grants::GrantIssuer;
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+
+    fn hash(byte: char) -> String {
+        byte.to_string().repeat(64)
+    }
+
+    fn session_checkpoint(ephemeral: bool) -> SessionCheckpoint {
+        finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-store-1"),
+            session_id: SessionId::from_raw("session-store-1"),
+            task_id: TaskId::from_raw("task-store-1"),
+            objective_sha256: hash('1'),
+            plan_id: PlanId::from_raw("plan-store-1"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-store-1"),
+            next_action_sha256: hash('2'),
+            workspace_id: WorkspaceId::from_raw("workspace-store-1"),
+            workspace_state_sha256: hash('3'),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("repository-store-1"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: hash('4'),
+            files: vec![CheckpointFileIdentity {
+                object_id: "file-store-1".to_owned(),
+                content_sha256: hash('5'),
+                observed_revision: "revision-1".to_owned(),
+            }],
+            instruction_sha256: hash('6'),
+            permission_profile_id: "permission-store-1".to_owned(),
+            permission_profile_sha256: hash('7'),
+            policy_id: PolicyId::from_raw("policy-store-1"),
+            policy_sha256: hash('8'),
+            model_profile_id: ModelProfileId::from_raw("model-store-1"),
+            model_manifest_sha256: hash('9'),
+            model_runtime_sha256: hash('a'),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-store-1")],
+            citation_set_sha256: hash('b'),
+            blockers: Vec::new(),
+            context_packet_sha256: hash('c'),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral,
+            checkpoint_sha256: hash('0'),
+        })
+        .expect("valid store checkpoint")
+    }
 
     struct TestKey([u8; 32]);
 
@@ -2861,6 +3323,7 @@ mod tests {
     enum SeededCrashBoundary {
         Transaction,
         Checkpoint,
+        SessionCheckpoint,
         Migration,
         KeyRetrieval,
         Backup,
@@ -2870,9 +3333,10 @@ mod tests {
     }
 
     impl SeededCrashBoundary {
-        const ALL: [Self; 8] = [
+        const ALL: [Self; 9] = [
             Self::Transaction,
             Self::Checkpoint,
+            Self::SessionCheckpoint,
             Self::Migration,
             Self::KeyRetrieval,
             Self::Backup,
@@ -2885,6 +3349,7 @@ mod tests {
             match self {
                 Self::Transaction => "transaction",
                 Self::Checkpoint => "checkpoint",
+                Self::SessionCheckpoint => "session-checkpoint",
                 Self::Migration => "migration",
                 Self::KeyRetrieval => "key-retrieval",
                 Self::Backup => "backup",
@@ -2927,7 +3392,7 @@ mod tests {
     }
 
     const SEEDED_CRASH_CHILD_EXIT: i32 = 86;
-    const SEEDED_CRASH_RUNS: u64 = 128;
+    const SEEDED_CRASH_RUNS: u64 = 126;
 
     fn observation() -> StrictLocalStorageObservation {
         StrictLocalStorageObservation {
@@ -3148,7 +3613,7 @@ mod tests {
         let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
-        assert_eq!(backup_receipt.schema_version, 3);
+        assert_eq!(backup_receipt.schema_version, 4);
         assert_eq!(backup_receipt.generation, 0);
         assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
         assert_eq!(
@@ -3582,7 +4047,7 @@ mod tests {
     }
 
     #[test]
-    fn version_three_schema_is_normalized_closed_and_relational() {
+    fn version_four_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -3617,6 +4082,7 @@ mod tests {
                 "retention",
                 "retention_events",
                 "schema_history",
+                "session_checkpoints",
                 "sessions",
                 "store_metadata",
                 "tasks",
@@ -3810,7 +4276,138 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_three_with_exact_history() {
+    fn session_checkpoint_is_atomic_hash_verified_and_current() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([70; 32]))
+            .expect("store opens");
+        let checkpoint = session_checkpoint(false);
+        store
+            .persist_authority_with_session_checkpoint(
+                &GrantIssuer::new(),
+                &AuthorityTransactionCoordinator::default(),
+                &checkpoint,
+            )
+            .expect("checkpoint publishes");
+        assert_eq!(store.generation(), 1);
+        assert_eq!(
+            store
+                .current_session_checkpoint()
+                .expect("current checkpoint"),
+            Some(checkpoint.clone())
+        );
+        let linked: (String, String) = store
+            .connection
+            .query_row(
+                "SELECT state_sha256, session_checkpoint_sha256
+                 FROM checkpoints WHERE generation = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("generation links both states");
+        assert_eq!(linked.1, checkpoint.checkpoint_sha256);
+        assert_ne!(linked.0, ZERO_SHA256);
+        drop(store);
+
+        let reopened = OperationalStore::open(&path, &observation(), &mut TestKey([70; 32]))
+            .expect("verified checkpoint reopens");
+        assert_eq!(
+            reopened
+                .current_session_checkpoint()
+                .expect("reopened checkpoint"),
+            Some(checkpoint)
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn ephemeral_and_failed_checkpoint_publication_leave_no_record() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([71; 32]))
+            .expect("store opens");
+        assert_eq!(
+            store.persist_authority_with_session_checkpoint(
+                &GrantIssuer::new(),
+                &AuthorityTransactionCoordinator::default(),
+                &session_checkpoint(true),
+            ),
+            Err(OperationalStoreError::CheckpointRejected)
+        );
+        assert_eq!(store.generation(), 0);
+        assert_eq!(
+            store.current_session_checkpoint().expect("no checkpoint"),
+            None
+        );
+
+        store
+            .connection
+            .execute_batch(
+                "CREATE TRIGGER reject_session_checkpoint
+                 BEFORE INSERT ON session_checkpoints
+                 BEGIN SELECT RAISE(ABORT, 'injected'); END;",
+            )
+            .expect("fault trigger");
+        assert_eq!(
+            store.persist_authority_with_session_checkpoint(
+                &GrantIssuer::new(),
+                &AuthorityTransactionCoordinator::default(),
+                &session_checkpoint(false),
+            ),
+            Err(OperationalStoreError::PersistenceFailure)
+        );
+        let generation: i64 = store
+            .connection
+            .query_row(
+                "SELECT generation FROM store_metadata WHERE singleton = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("generation remains readable");
+        let checkpoint_rows: i64 = store
+            .connection
+            .query_row("SELECT COUNT(*) FROM session_checkpoints", [], |row| {
+                row.get(0)
+            })
+            .expect("checkpoint count");
+        assert_eq!((generation, checkpoint_rows), (0, 0));
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn checkpoint_record_or_head_tampering_blocks_reopen() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([72; 32]))
+            .expect("store opens");
+        let checkpoint = session_checkpoint(false);
+        store
+            .persist_authority_with_session_checkpoint(
+                &GrantIssuer::new(),
+                &AuthorityTransactionCoordinator::default(),
+                &checkpoint,
+            )
+            .expect("checkpoint publishes");
+        store
+            .connection
+            .execute(
+                "UPDATE session_checkpoints SET record_json = X'7b7d' WHERE generation = 1",
+                [],
+            )
+            .expect("inject tamper");
+        drop(store);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([72; 32]))
+                .expect_err("tampered checkpoint blocks open"),
+            OperationalStoreError::IntegrityFailure
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn version_one_upgrades_through_four_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -3836,6 +4433,7 @@ mod tests {
                 (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
                 (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
                 (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
+                (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -4232,6 +4830,7 @@ mod tests {
             }
             SeededCrashBoundary::Transaction
             | SeededCrashBoundary::Checkpoint
+            | SeededCrashBoundary::SessionCheckpoint
             | SeededCrashBoundary::Backup => {
                 drop(
                     OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
@@ -4277,6 +4876,21 @@ mod tests {
                 store
                     .persist_authority(&GrantIssuer::new(), &AuthorityTransactionCoordinator::new())
                     .expect("checkpoint child commits");
+            }
+            SeededCrashBoundary::SessionCheckpoint => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("session checkpoint child opens");
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                store
+                    .persist_authority_with_session_checkpoint(
+                        &GrantIssuer::new(),
+                        &AuthorityTransactionCoordinator::new(),
+                        &session_checkpoint(false),
+                    )
+                    .expect("session checkpoint child commits");
             }
             SeededCrashBoundary::Migration => {
                 if position == SeededCrashPosition::Before {
@@ -4445,6 +5059,37 @@ mod tests {
                     .expect("checkpoint count");
                 assert_eq!((store.generation(), checkpoints), (1, 2));
             }
+            SeededCrashBoundary::SessionCheckpoint => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("session checkpoint recovery opens");
+                if store
+                    .current_session_checkpoint()
+                    .expect("checkpoint state")
+                    .is_none()
+                {
+                    store
+                        .persist_authority_with_session_checkpoint(
+                            &GrantIssuer::new(),
+                            &AuthorityTransactionCoordinator::new(),
+                            &session_checkpoint(false),
+                        )
+                        .expect("session checkpoint recovery commits once");
+                }
+                assert_eq!(
+                    store
+                        .current_session_checkpoint()
+                        .expect("current checkpoint"),
+                    Some(session_checkpoint(false))
+                );
+                let rows: i64 = store
+                    .connection
+                    .query_row("SELECT COUNT(*) FROM session_checkpoints", [], |row| {
+                        row.get(0)
+                    })
+                    .expect("session checkpoint count");
+                assert_eq!(rows, 1);
+            }
             SeededCrashBoundary::Migration => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
                     .expect("migration recovery opens");
@@ -4456,7 +5101,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 3));
+                assert_eq!((version, history), (SCHEMA_VERSION, 4));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
@@ -4596,10 +5241,11 @@ mod tests {
     fn seeded_crash_recovery_campaign_never_repeats_a_completed_transition() {
         let mut coverage = BTreeMap::new();
         for seed in 0..SEEDED_CRASH_RUNS {
+            let boundary_count = SeededCrashBoundary::ALL.len() as u64;
             let boundary = SeededCrashBoundary::ALL
-                [usize::try_from(seed % 8).expect("bounded boundary index")];
+                [usize::try_from(seed % boundary_count).expect("bounded boundary index")];
             let position = SeededCrashPosition::ALL
-                [usize::try_from((seed / 8) % 2).expect("bounded position index")];
+                [usize::try_from((seed / boundary_count) % 2).expect("bounded position index")];
             let directory = temporary_directory();
             let key = seeded_key(seed);
             prepare_seeded_crash_fixture(boundary, &directory, key);
@@ -4630,10 +5276,10 @@ mod tests {
             fs::remove_dir_all(directory).expect("seeded crash cleanup");
         }
 
-        assert_eq!(coverage.len(), 16);
+        assert_eq!(coverage.len(), 18);
         for boundary in SeededCrashBoundary::ALL {
             for position in SeededCrashPosition::ALL {
-                assert_eq!(coverage.get(&(boundary, position)), Some(&8));
+                assert_eq!(coverage.get(&(boundary, position)), Some(&7));
             }
         }
     }

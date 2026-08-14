@@ -107,6 +107,10 @@ impl AuthorityTransactionRequest {
             occurred_at,
         })
     }
+
+    pub(crate) const fn transaction_id(&self) -> &AuthorityTransactionId {
+        &self.transaction_id
+    }
 }
 
 /// Kernel-issued proof that one exact grant has been consumed for one attempt.
@@ -1220,6 +1224,7 @@ mod tests {
         FaultPoint, valid_transition,
     };
     use crate::{
+        context_management::{CheckpointError, finalize_checkpoint},
         grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest},
         operational_store::{
             DurableAuthorityRuntime, OperationalStore, OperationalStoreKeyError,
@@ -1232,11 +1237,13 @@ mod tests {
         tooling::{Tool, ToolRegistry},
     };
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId,
-        AuthorityTransactionState, CapabilityGrant, ContractPayload, CorrelationId,
-        DataSensitivity, FilePreimage, GrantId, GrantNonce, GrantOperation, GrantSideEffect,
-        GrantStatus, HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome,
-        PathPlatform, PathResolutionIntent, RequiredGrantTemplate, SchemaId, SchemaReference,
+        ActionId, ActionKind, ActionState, ActorId, AdapterInstanceId, ApprovalId,
+        AuthorityTransactionId, AuthorityTransactionState, CapabilityGrant, CheckpointFileIdentity,
+        ContractPayload, CorrelationId, DataSensitivity, EvidenceId, FilePreimage, GrantId,
+        GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, HeldWorkspaceObject,
+        ModelProfileId, OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform,
+        PathResolutionIntent, PlanId, PlanStepId, PolicyId, Receipt, RepositorySnapshotId,
+        RequiredGrantTemplate, SchemaId, SchemaReference, SessionCheckpoint, SessionCheckpointId,
         SessionId, StateChange, StorageFilesystemClass, StrictLocalStorageObservation, TaskId,
         ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId,
         WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
@@ -1552,6 +1559,58 @@ mod tests {
             result_sha256: "6".repeat(64),
             state_change: StateChange::NotChanged,
         }
+    }
+
+    fn terminal_checkpoint(receipt: &Receipt) -> SessionCheckpoint {
+        let digest = |value: char| value.to_string().repeat(64);
+        finalize_checkpoint(SessionCheckpoint {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-terminal-0001"),
+            session_id: receipt.session_id.clone(),
+            task_id: receipt.task_id.clone(),
+            objective_sha256: digest('1'),
+            plan_id: PlanId::from_raw("plan-0001"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-0001"),
+            next_action_sha256: digest('2'),
+            workspace_id: WorkspaceId::from_raw("workspace-0001"),
+            workspace_state_sha256: digest('3'),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("repository-0001"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: digest('4'),
+            files: vec![CheckpointFileIdentity {
+                object_id: "src/fixture.txt".to_owned(),
+                content_sha256: digest('5'),
+                observed_revision: "revision-1".to_owned(),
+            }],
+            instruction_sha256: digest('6'),
+            permission_profile_id: "permission-0001".to_owned(),
+            permission_profile_sha256: digest('7'),
+            policy_id: PolicyId::from_raw("policy-0001"),
+            policy_sha256: digest('8'),
+            model_profile_id: ModelProfileId::from_raw("model-0001"),
+            model_manifest_sha256: digest('9'),
+            model_runtime_sha256: digest('a'),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-0001")],
+            citation_set_sha256: digest('b'),
+            blockers: Vec::new(),
+            context_packet_sha256: digest('c'),
+            action_id: Some(receipt.action_id.clone()),
+            action_state: Some(match receipt.outcome {
+                OperationOutcome::Succeeded => ActionState::Succeeded,
+                OperationOutcome::Denied => ActionState::Denied,
+                OperationOutcome::Failed => ActionState::Failed,
+                OperationOutcome::Cancelled => ActionState::Cancelled,
+                OperationOutcome::TimedOut => ActionState::TimedOut,
+                OperationOutcome::Uncertain => ActionState::Uncertain,
+            }),
+            consumed_grant_id: Some(receipt.grant_id.clone()),
+            receipt_id: Some(receipt.receipt_id.clone()),
+            receipt_sha256: Some(receipt.receipt_sha256.clone()),
+            ephemeral: false,
+            checkpoint_sha256: digest('0'),
+        })
+        .expect("terminal checkpoint")
     }
 
     fn states(
@@ -2105,6 +2164,153 @@ mod tests {
             drop(restored);
             fs::remove_dir_all(directory).expect("cleanup");
         }
+    }
+
+    #[test]
+    fn terminal_effect_receipt_and_next_checkpoint_publish_in_one_generation() {
+        let fixture = fixture();
+        let transaction_request = request(&fixture);
+        let directory = store_directory();
+        let path = directory.join("authority.db");
+        let observation = store_observation();
+        let mut store = OperationalStore::open(&path, &observation, &mut TestStoreKey([24; 32]))
+            .expect("encrypted store opens");
+        store
+            .persist_authority(&fixture.issuer, &AuthorityTransactionCoordinator::new())
+            .expect("initial grants persist");
+        let initial_generation = store.generation();
+        drop(store);
+
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([24; 32]), 7_000)
+                .expect("runtime opens");
+        let mut driver = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        let (receipt, checkpoint) = runtime
+            .execute_effect_with_session_checkpoint(
+                &fixture.registry,
+                &fixture.policy,
+                transaction_request.clone(),
+                &mut driver,
+                |receipt| Ok(terminal_checkpoint(receipt)),
+            )
+            .expect("terminal publication succeeds");
+        assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
+        assert_eq!(driver.launches, 1);
+        assert!(runtime.generation() > initial_generation);
+        assert_eq!(
+            runtime
+                .current_session_checkpoint()
+                .expect("checkpoint readable"),
+            Some(checkpoint.clone())
+        );
+        drop(runtime);
+
+        let mut reopened =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([24; 32]), 8_000)
+                .expect("terminal generation reopens");
+        assert_eq!(reopened.receipts(), &[receipt]);
+        assert_eq!(
+            reopened
+                .current_session_checkpoint()
+                .expect("reopened checkpoint"),
+            Some(checkpoint)
+        );
+        let mut replay = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        assert!(
+            reopened
+                .execute_effect_with_session_checkpoint(
+                    &fixture.registry,
+                    &fixture.policy,
+                    transaction_request,
+                    &mut replay,
+                    |receipt| Ok(terminal_checkpoint(receipt)),
+                )
+                .is_err()
+        );
+        assert_eq!(replay.launches, 0);
+
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn failed_terminal_checkpoint_requires_restart_and_never_replays_effect() {
+        let fixture = fixture();
+        let transaction_request = request(&fixture);
+        let directory = store_directory();
+        let path = directory.join("authority.db");
+        let observation = store_observation();
+        let mut store = OperationalStore::open(&path, &observation, &mut TestStoreKey([25; 32]))
+            .expect("encrypted store opens");
+        store
+            .persist_authority(&fixture.issuer, &AuthorityTransactionCoordinator::new())
+            .expect("initial grants persist");
+        drop(store);
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([25; 32]), 7_000)
+                .expect("runtime opens");
+        let mut driver = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        assert_eq!(
+            runtime.execute_effect_with_session_checkpoint(
+                &fixture.registry,
+                &fixture.policy,
+                transaction_request.clone(),
+                &mut driver,
+                |_| Err(CheckpointError::InvalidCheckpoint),
+            ),
+            Err(crate::operational_store::DurableAuthorityError::Checkpoint(
+                CheckpointError::InvalidCheckpoint
+            ))
+        );
+        assert_eq!(driver.launches, 1);
+        assert!(matches!(
+            runtime.execute_effect(
+                &fixture.registry,
+                &fixture.policy,
+                transaction_request.clone(),
+                &mut FakeDriver::default(),
+            ),
+            Err(crate::operational_store::DurableAuthorityError::Poisoned)
+        ));
+        drop(runtime);
+
+        let mut recovered =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([25; 32]), 8_000)
+                .expect("restart reconciles terminal receipt");
+        assert_eq!(recovered.receipts().len(), 1);
+        assert_eq!(recovered.receipts()[0].outcome, OperationOutcome::Succeeded);
+        assert!(
+            recovered
+                .current_session_checkpoint()
+                .expect("no false checkpoint")
+                .is_none()
+        );
+        let mut replay = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        assert!(
+            recovered
+                .execute_effect(
+                    &fixture.registry,
+                    &fixture.policy,
+                    transaction_request,
+                    &mut replay,
+                )
+                .is_err()
+        );
+        assert_eq!(replay.launches, 0);
+        drop(recovered);
+        fs::remove_dir_all(directory).expect("cleanup");
     }
 
     #[test]
