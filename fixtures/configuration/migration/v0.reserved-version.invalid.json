@@ -118,14 +118,10 @@
       {
         "enabled": true,
         "integrity_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
-        "operation": {
-          "authority_class": "observe",
-          "operation": "workspace_read",
-          "taxonomy_version": 1
-        },
         "required_capabilities": [
           "workspace.read"
         ],
+        "side_effect_class": "read",
         "tool_id": "synthetic-read-file",
         "version": "1.0.0"
       }

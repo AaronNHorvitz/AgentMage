@@ -104,6 +104,20 @@ def migration_outputs(profile: dict[str, Any]) -> dict[str, Any]:
     for section in SECTION_NAMES:
         legacy[section].pop("schema_version")
     legacy["core"]["profile"] = legacy["core"].pop("profile_id")
+    for tool in legacy["tool"]["tools"]:
+        operation = tool.pop("operation")
+        if operation != {
+            "authority_class": "observe",
+            "operation": "workspace_read",
+            "taxonomy_version": 1,
+        }:
+            raise ValueError("synthetic legacy fixture requires exact read-only operation")
+        tool["side_effect_class"] = "read"
+
+    historical_v1 = copy.deepcopy(profile)
+    historical_v1["schema_version"] = 1
+    for section in SECTION_NAMES:
+        historical_v1[section]["schema_version"] = 1
 
     reserved = copy.deepcopy(legacy)
     reserved["core"]["schema_version"] = 0
@@ -111,8 +125,8 @@ def migration_outputs(profile: dict[str, Any]) -> dict[str, Any]:
     missing.pop("shell")
     return {
         MIGRATION_FIXTURES[0]: legacy,
-        MIGRATION_FIXTURES[1]: profile,
-        MIGRATION_FIXTURES[2]: profile,
+        MIGRATION_FIXTURES[1]: historical_v1,
+        MIGRATION_FIXTURES[2]: historical_v1,
         MIGRATION_FIXTURES[3]: reserved,
         MIGRATION_FIXTURES[4]: missing,
     }

@@ -38,11 +38,30 @@ CLIPPY_COMMAND = (
     "-D",
     "warnings",
 )
-EXPECTED_TESTS = (
-    "atomic_apply_retains_backup_and_rollback_restores_exact_identity",
+PLATFORM_TEST_COMMAND = (
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "agentmage-platform-linux",
+    "configuration_store::tests",
+    "--locked",
+)
+PLATFORM_CLIPPY_COMMAND = (
+    "cargo",
+    "clippy",
+    "--offline",
+    "-p",
+    "agentmage-platform-linux",
+    "--all-targets",
+    "--locked",
+    "--",
+    "-D",
+    "warnings",
+)
+KERNEL_EXPECTED_TESTS = (
     "diff_is_stable_redacted_and_classifies_authority_and_resource_changes",
     "every_configuration_schema_failure_class_is_stable_and_side_effect_free",
-    "invalid_candidate_and_stale_rollback_preimage_preserve_current_file",
     "loads_canonical_profile_deterministically",
     "migrates_only_version_zero_with_fixed_non_broadening_operations",
     "migration_rejects_wrong_source_ambiguous_version_and_missing_section",
@@ -52,6 +71,16 @@ EXPECTED_TESTS = (
     "rejects_unknown_duplicate_missing_unsupported_and_oversized_input",
     "safe_defaults_are_explicit_read_only_and_minimum_authority",
 )
+PLATFORM_EXPECTED_TESTS = (
+    "apply_retains_immutable_backup_and_rollback_restores_it",
+    "changed_preimage_is_preserved_and_never_overwritten",
+    "interrupted_exchange_is_verified_and_completed_without_republication",
+    "migration_and_repeatable_rollback_preserve_the_exact_legacy_preimage",
+    "migration_interruptions_select_valid_state_and_rollback_is_repeatable",
+    "strict_local_state_root_configuration_load_rejects_sync_before_read",
+    "symlink_hard_link_and_public_mode_targets_fail_closed",
+)
+EXPECTED_TESTS = tuple(sorted((*KERNEL_EXPECTED_TESTS, *PLATFORM_EXPECTED_TESTS)))
 AUTHORITY_TESTS = (
     "aggregate_diff_detects_non_capability_authority_broadening",
     "every_permission_bearing_value_is_rejected_through_every_untrusted_channel",
@@ -89,6 +118,8 @@ SOURCE_PATHS = (
     "kernel/engine/Cargo.toml",
     "kernel/engine/src/lib.rs",
     "kernel/engine/src/configuration.rs",
+    "platforms/linux/Cargo.toml",
+    "platforms/linux/src/configuration_store.rs",
     "schemas/configuration/agent-configuration.schema.json",
     "configuration/profiles/strict-local-read-only.json",
     "configuration/profiles/synthetic-test.json",
@@ -100,7 +131,10 @@ SOURCE_PATHS = (
     "scripts/configuration_loader_evidence.py",
     "tests/test_configuration_loader_evidence.py",
 )
-TEST_NAME = re.compile(r"^test configuration::tests::([a-z0-9_]+) \.\.\. ok$", re.MULTILINE)
+TEST_NAME = re.compile(
+    r"^test (?:configuration|configuration_store)::tests::([a-z0-9_]+) \.\.\. ok$",
+    re.MULTILINE,
+)
 Runner = Callable[[Sequence[str], Path], str]
 
 
@@ -151,11 +185,13 @@ def subprocess_runner(command: Sequence[str], root: Path) -> str:
 
 
 def execute_gate(root: Path = ROOT, runner: Runner = subprocess_runner) -> tuple[str, ...]:
-    test_output = runner(TEST_COMMAND, root)
-    observed = tuple(sorted(TEST_NAME.findall(test_output)))
+    kernel_output = runner(TEST_COMMAND, root)
+    platform_output = runner(PLATFORM_TEST_COMMAND, root)
+    observed = tuple(sorted(TEST_NAME.findall(kernel_output + "\n" + platform_output)))
     if observed != EXPECTED_TESTS:
         raise RuntimeError("configuration test identity closure failed")
     runner(CLIPPY_COMMAND, root)
+    runner(PLATFORM_CLIPPY_COMMAND, root)
     return observed
 
 
@@ -171,7 +207,9 @@ def build_report(executed_tests: Sequence[str], root: Path = ROOT) -> dict[str, 
         ],
         "commands": [
             {"argv": list(TEST_COMMAND), "status": "pass"},
+            {"argv": list(PLATFORM_TEST_COMMAND), "status": "pass"},
             {"argv": list(CLIPPY_COMMAND), "status": "pass"},
+            {"argv": list(PLATFORM_CLIPPY_COMMAND), "status": "pass"},
         ],
         "tests": list(executed_tests),
         "summary": {

@@ -8,6 +8,10 @@ from pathlib import Path
 from scripts.configuration_loader_evidence import (
     CLIPPY_COMMAND,
     EXPECTED_TESTS,
+    KERNEL_EXPECTED_TESTS,
+    PLATFORM_CLIPPY_COMMAND,
+    PLATFORM_EXPECTED_TESTS,
+    PLATFORM_TEST_COMMAND,
     REPORT_PATH,
     SOURCE_PATHS,
     TEST_COMMAND,
@@ -32,21 +36,34 @@ class ConfigurationLoaderEvidenceTests(unittest.TestCase):
             if command == TEST_COMMAND:
                 return "\n".join(
                     f"test configuration::tests::{name} ... ok"
-                    for name in EXPECTED_TESTS
+                    for name in KERNEL_EXPECTED_TESTS
                 )
-            if command == CLIPPY_COMMAND:
+            if command == PLATFORM_TEST_COMMAND:
+                return "\n".join(
+                    f"test configuration_store::tests::{name} ... ok"
+                    for name in PLATFORM_EXPECTED_TESTS
+                )
+            if command in (CLIPPY_COMMAND, PLATFORM_CLIPPY_COMMAND):
                 return "lint passed"
             raise AssertionError("unexpected command")
 
         self.assertEqual(execute_gate(runner=runner), EXPECTED_TESTS)
-        self.assertEqual(calls, [TEST_COMMAND, CLIPPY_COMMAND])
+        self.assertEqual(
+            calls,
+            [TEST_COMMAND, PLATFORM_TEST_COMMAND, CLIPPY_COMMAND, PLATFORM_CLIPPY_COMMAND],
+        )
 
     def test_missing_test_or_command_failure_stops_evidence_generation(self) -> None:
         def missing_test(command: tuple[str, ...], _root: Path) -> str:
             if command == TEST_COMMAND:
                 return "\n".join(
                     f"test configuration::tests::{name} ... ok"
-                    for name in EXPECTED_TESTS[:-1]
+                    for name in KERNEL_EXPECTED_TESTS[:-1]
+                )
+            if command == PLATFORM_TEST_COMMAND:
+                return "\n".join(
+                    f"test configuration_store::tests::{name} ... ok"
+                    for name in PLATFORM_EXPECTED_TESTS
                 )
             return ""
 

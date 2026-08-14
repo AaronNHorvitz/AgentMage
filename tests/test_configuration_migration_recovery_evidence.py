@@ -32,7 +32,7 @@ class ConfigurationMigrationRecoveryEvidenceTests(unittest.TestCase):
             calls.append(command)
             if command == CLIPPY_COMMAND:
                 return "lint passed"
-            return f"test configuration::tests::{EXPECTED_TEST} ... ok"
+            return f"test configuration_store::tests::{EXPECTED_TEST} ... ok"
 
         self.assertEqual(execute_gate(runner=runner), EXPECTED_TEST)
         self.assertEqual(calls, [COMMAND, CLIPPY_COMMAND])

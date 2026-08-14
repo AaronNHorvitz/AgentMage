@@ -208,19 +208,40 @@ impl LinuxConfigurationStore {
         publication_id: &str,
     ) -> Result<MigrationApplyReceipt, LinuxConfigurationError> {
         let current_file = self.read_named(TARGET_NAME)?;
-        let migration = self
-            .manager
-            .migrate_v0(&current_file.bytes)
-            .map_err(|error| LinuxConfigurationError::configuration(&error))?;
-        let previous_sha256 = sha256(&current_file.bytes);
+        let (legacy_file, migration) = match self.manager.migrate_v0(&current_file.bytes) {
+            Ok(migration) => (current_file, migration),
+            Err(error) if error.code() == "configuration-unsupported-version" => {
+                let displaced = self.read_named(&candidate_name(publication_id))?;
+                let migration = self
+                    .manager
+                    .migrate_v0(&displaced.bytes)
+                    .map_err(|failure| LinuxConfigurationError::configuration(&failure))?;
+                if current_file.bytes != migration.configuration().canonical_bytes() {
+                    return Err(LinuxConfigurationError::native(
+                        LinuxConfigurationErrorKind::Conflict,
+                    ));
+                }
+                self.publish(
+                    &displaced,
+                    migration.configuration().sha256(),
+                    migration.configuration().canonical_bytes(),
+                    publication_id,
+                )?;
+                (displaced, migration)
+            }
+            Err(error) => return Err(LinuxConfigurationError::configuration(&error)),
+        };
+        let previous_sha256 = sha256(&legacy_file.bytes);
         let migrated = migration.configuration();
-        self.retain_backup(&previous_sha256, &current_file.bytes)?;
-        self.publish(
-            &current_file,
-            migrated.sha256(),
-            migrated.canonical_bytes(),
-            publication_id,
-        )?;
+        self.retain_backup(&previous_sha256, &legacy_file.bytes)?;
+        if self.read_named(TARGET_NAME)?.bytes != migrated.canonical_bytes() {
+            self.publish(
+                &legacy_file,
+                migrated.sha256(),
+                migrated.canonical_bytes(),
+                publication_id,
+            )?;
+        }
         MigrationApplyReceipt::from_verified_storage(
             previous_sha256.clone(),
             migrated.sha256().to_owned(),
@@ -903,6 +924,90 @@ mod tests {
             )
             .expect("rollback retry succeeds");
         assert!(repeated.already_restored());
+    }
+
+    #[test]
+    fn migration_interruptions_select_valid_state_and_rollback_is_repeatable() {
+        let migrated = ConfigurationManager::default()
+            .migrate_v0(LEGACY)
+            .expect("legacy fixture migrates")
+            .configuration()
+            .canonical_bytes()
+            .to_vec();
+
+        for (index, phase) in [
+            "before-backup-published",
+            "after-backup-published",
+            "before-candidate-published",
+            "after-candidate-published",
+            "before-target-published",
+            "after-target-published",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let root = TestRoot::new(phase, LEGACY);
+            let store = root.store();
+            let publication_id = format!("{index:064x}");
+            let legacy_sha256 = sha256(LEGACY);
+            let candidate = root.path().join(super::candidate_name(&publication_id));
+
+            if index >= 1 {
+                store
+                    .retain_backup(&legacy_sha256, LEGACY)
+                    .expect("published backup is repeatable");
+            }
+            if index == 3 || index == 4 {
+                store
+                    .write_new_or_verify(&super::candidate_name(&publication_id), &migrated)
+                    .expect("candidate staging succeeds");
+            }
+            if index == 5 {
+                fs::rename(root.path().join(TARGET_NAME), &candidate)
+                    .expect("legacy target is displaced");
+                fs::write(root.path().join(TARGET_NAME), &migrated)
+                    .expect("migrated target is published");
+                fs::set_permissions(
+                    root.path().join(TARGET_NAME),
+                    fs::Permissions::from_mode(0o600),
+                )
+                .expect("published target is private");
+            }
+
+            let receipt = store
+                .migrate_v0(&publication_id)
+                .expect("interrupted migration converges");
+            assert_eq!(receipt.previous_sha256(), legacy_sha256);
+            assert_eq!(
+                store
+                    .load()
+                    .expect("migrated target loads")
+                    .canonical_bytes(),
+                migrated
+            );
+            assert!(!candidate.exists());
+
+            let first = store
+                .rollback_migration(
+                    receipt.backup_sha256(),
+                    receipt.migrated_sha256(),
+                    &format!("{:064x}", index + 16),
+                )
+                .expect("rollback succeeds");
+            assert!(!first.already_restored());
+            let repeated = store
+                .rollback_migration(
+                    receipt.backup_sha256(),
+                    receipt.migrated_sha256(),
+                    &format!("{:064x}", index + 32),
+                )
+                .expect("rollback is repeatable");
+            assert!(repeated.already_restored());
+            assert_eq!(
+                fs::read(root.path().join(TARGET_NAME)).expect("target"),
+                LEGACY
+            );
+        }
     }
 
     #[test]

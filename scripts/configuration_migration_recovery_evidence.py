@@ -32,8 +32,8 @@ COMMAND = (
     "test",
     "--offline",
     "-p",
-    "agentmage-kernel-engine",
-    f"configuration::tests::{EXPECTED_TEST}",
+    "agentmage-platform-linux",
+    f"configuration_store::tests::{EXPECTED_TEST}",
     "--locked",
     "--",
     "--exact",
@@ -43,7 +43,7 @@ CLIPPY_COMMAND = (
     "clippy",
     "--offline",
     "-p",
-    "agentmage-kernel-engine",
+    "agentmage-platform-linux",
     "--all-targets",
     "--locked",
     "--",
@@ -56,13 +56,15 @@ SOURCE_PATHS = (
     "kernel/engine/Cargo.toml",
     "kernel/engine/src/lib.rs",
     "kernel/engine/src/configuration.rs",
+    "platforms/linux/Cargo.toml",
+    "platforms/linux/src/configuration_store.rs",
     "fixtures/configuration/migration/v0.valid.json",
     "fixtures/configuration/migration/v1.expected.json",
     "scripts/configuration_migration_recovery_evidence.py",
     "tests/test_configuration_migration_recovery_evidence.py",
 )
 TEST_NAME = re.compile(
-    r"^test configuration::tests::([a-z0-9_]+) \.\.\. ok$", re.MULTILINE
+    r"^test configuration_store::tests::([a-z0-9_]+) \.\.\. ok$", re.MULTILINE
 )
 Runner = Callable[[Sequence[str], Path], str]
 
