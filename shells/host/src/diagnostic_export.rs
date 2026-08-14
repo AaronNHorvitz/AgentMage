@@ -1,13 +1,13 @@
 //! One-use reviewed local diagnostic export workflow.
 
 use std::collections::BTreeMap;
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File};
 use std::io::Write as IoWrite;
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 
 use agentmage_kernel_contracts::DoctorReport;
-use rustix::fs::{CWD, RenameFlags, renameat_with};
+use rustix::fs::{AtFlags, Mode, OFlags, linkat, openat};
 use rustix::process::getuid;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -221,11 +221,7 @@ impl DiagnosticExportWorkflow {
         {
             return Err(DiagnosticExportError::ApprovalDenied);
         }
-        publish_create_new(
-            &pending.destination,
-            &pending.payload,
-            &pending.preview.preview_id,
-        )?;
+        publish_create_new(&pending.destination, &pending.payload)?;
         Ok(DiagnosticExportReceipt {
             payload_sha256: pending.preview.payload_sha256,
             destination_sha256: pending.preview.destination_sha256,
@@ -337,34 +333,35 @@ fn synchronized_path(path: &Path) -> bool {
     })
 }
 
-fn publish_create_new(
-    destination: &Path,
-    payload: &[u8],
-    preview_id: &str,
-) -> Result<(), DiagnosticExportError> {
+fn publish_create_new(destination: &Path, payload: &[u8]) -> Result<(), DiagnosticExportError> {
     let parent = destination
         .parent()
         .ok_or(DiagnosticExportError::DestinationDenied)?;
-    let temporary = parent.join(format!(".{preview_id}.tmp"));
-    let result = (|| {
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o600)
-            .open(&temporary)
-            .map_err(|_| DiagnosticExportError::WriteFailed)?;
-        file.write_all(payload)
-            .and_then(|_| file.sync_all())
-            .map_err(|_| DiagnosticExportError::WriteFailed)?;
-        renameat_with(CWD, &temporary, CWD, destination, RenameFlags::NOREPLACE)
-            .map_err(|_| DiagnosticExportError::WriteFailed)?;
-        let _ = fs::File::open(parent).and_then(|directory| directory.sync_all());
-        Ok(())
-    })();
-    if result.is_err() {
-        let _ = fs::remove_file(&temporary);
-    }
-    result
+    let name = destination
+        .file_name()
+        .ok_or(DiagnosticExportError::DestinationDenied)?;
+    let directory = File::open(parent).map_err(|_| DiagnosticExportError::WriteFailed)?;
+    let mut anonymous = create_unnamed_file(&directory)?;
+    anonymous
+        .write_all(payload)
+        .and_then(|_| anonymous.sync_all())
+        .map_err(|_| DiagnosticExportError::WriteFailed)?;
+    linkat(&anonymous, "", &directory, name, AtFlags::EMPTY_PATH)
+        .map_err(|_| DiagnosticExportError::WriteFailed)?;
+    directory
+        .sync_all()
+        .map_err(|_| DiagnosticExportError::WriteFailed)
+}
+
+fn create_unnamed_file(directory: &File) -> Result<File, DiagnosticExportError> {
+    openat(
+        directory,
+        ".",
+        OFlags::WRONLY | OFlags::CLOEXEC | OFlags::TMPFILE,
+        Mode::from(0o600),
+    )
+    .map(File::from)
+    .map_err(|_| DiagnosticExportError::WriteFailed)
 }
 
 fn valid_identifier(value: &str) -> bool {
@@ -398,8 +395,10 @@ fn sha256_hex(value: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::io::Write;
     use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
@@ -407,7 +406,7 @@ mod tests {
     };
     use agentmage_kernel_engine::diagnostics::build_doctor_report;
 
-    use super::{DiagnosticExportError, DiagnosticExportWorkflow, sha256_hex};
+    use super::{DiagnosticExportError, DiagnosticExportWorkflow, create_unnamed_file, sha256_hex};
 
     static NEXT: AtomicU64 = AtomicU64::new(1);
 
@@ -463,6 +462,37 @@ mod tests {
             Err(DiagnosticExportError::ApprovalDenied)
         );
         fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn crash_before_publication_leaves_no_artifact() {
+        let root = directory("crash-parent");
+        let status = Command::new(std::env::current_exe().expect("test executable"))
+            .args([
+                "--exact",
+                "diagnostic_export::tests::crash_export_child",
+                "--nocapture",
+            ])
+            .env("AGENTMAGE_DIAGNOSTIC_CRASH_DIRECTORY", &root)
+            .status()
+            .expect("crash child");
+        assert!(!status.success());
+        assert_eq!(fs::read_dir(&root).expect("read directory").count(), 0);
+        fs::remove_dir(root).expect("cleanup");
+    }
+
+    #[test]
+    fn crash_export_child() {
+        let Ok(root) = std::env::var("AGENTMAGE_DIAGNOSTIC_CRASH_DIRECTORY") else {
+            return;
+        };
+        let directory = fs::File::open(root).expect("crash directory");
+        let mut anonymous = create_unnamed_file(&directory).expect("anonymous export");
+        anonymous
+            .write_all(b"partial export")
+            .expect("partial write");
+        anonymous.sync_all().expect("partial sync");
+        std::process::abort();
     }
 
     #[test]
