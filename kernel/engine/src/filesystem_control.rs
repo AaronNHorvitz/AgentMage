@@ -1,6 +1,9 @@
 //! Authority-free controlled filesystem plans, structured patches, and exact previews.
 
-use std::{collections::BTreeSet, fmt::Write as _};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::Write as _,
+};
 
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ApprovalId, CapabilityGrant, GrantClass, GrantId, GrantNonce,
@@ -11,7 +14,11 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::{
-    grants::{DerivedOperationGrantRequest, GrantIssueError, GrantIssuer},
+    grants::{
+        DerivedOperationGrantRequest, GrantConsumeError, GrantConsumptionRecord, GrantIssueError,
+        GrantIssuer,
+    },
+    policy::{PolicyEngine, PolicyEvaluationContext},
     write_approval::WriteReviewNarrative,
 };
 
@@ -566,6 +573,326 @@ pub struct FilesystemApprovalReceipt {
     pub binding_sha256: String,
 }
 
+/// Stable reason a controlled-filesystem transaction cannot produce a reconciled result.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FilesystemTransactionError {
+    /// Transaction input or a retained binding is malformed.
+    InvalidInput,
+    /// Fresh source or destination observations differ from the approved pre-state.
+    PreapplyDenied,
+    /// Current deterministic policy denied final grant consumption.
+    PolicyDenied,
+    /// The platform driver could not produce a bounded observation.
+    ObservationFailed,
+    /// The platform driver returned a malformed or contradictory report.
+    DriverReportInvalid,
+    /// Receipt hashing or lifecycle state became inconsistent.
+    ReceiptIntegrity,
+}
+
+impl FilesystemTransactionError {
+    /// Returns a stable content-free failure code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::InvalidInput => "filesystem.transaction.invalid_input",
+            Self::PreapplyDenied => "filesystem.transaction.preapply_denied",
+            Self::PolicyDenied => "filesystem.transaction.policy_denied",
+            Self::ObservationFailed => "filesystem.transaction.observation_failed",
+            Self::DriverReportInvalid => "filesystem.transaction.driver_report_invalid",
+            Self::ReceiptIntegrity => "filesystem.transaction.receipt_integrity",
+        }
+    }
+}
+
+impl From<GrantConsumeError> for FilesystemTransactionError {
+    fn from(_: GrantConsumeError) -> Self {
+        Self::PolicyDenied
+    }
+}
+
+/// One freshly held regular-file observation at a source or destination path.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObservedFilesystemEntry {
+    /// Exact held regular-file target.
+    pub target: GrantTarget,
+    /// Complete bytes read through that exact target.
+    pub bytes: Vec<u8>,
+    /// Exact observed POSIX-compatible permission bits.
+    pub mode: u32,
+}
+
+/// Fresh source, destination-parent, sibling, and destination state for one operation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemOperationObservation {
+    /// Current source entry; absent when a move or trash operation removed it.
+    pub source: Option<ObservedFilesystemEntry>,
+    /// Exact current destination parent for destination-bearing operations.
+    pub destination_parent: Option<GrantTarget>,
+    /// Complete bounded sibling names currently observed in the destination parent.
+    pub destination_sibling_names: Vec<String>,
+    /// Current destination entry, absent before every permitted operation.
+    pub destination: Option<ObservedFilesystemEntry>,
+}
+
+/// Exact per-operation lifecycle state retained in receipt order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FilesystemOperationStatus {
+    /// Exact filesystem operation exists without mutation authority.
+    Proposed,
+    /// Exact preview and single-use grant were approved.
+    Approved,
+    /// The driver reports that the approved effect occurred.
+    Applied,
+    /// Fresh observation verified the exact approved post-state.
+    Verified,
+    /// The operation or transaction failed.
+    Failed,
+    /// A fresh restoration returned the exact approved pre-state.
+    RolledBack,
+    /// An earlier failure prevented this approved operation from running.
+    Superseded,
+}
+
+impl FilesystemOperationStatus {
+    /// Every lifecycle state in stable order.
+    pub const ALL: [Self; 7] = [
+        Self::Proposed,
+        Self::Approved,
+        Self::Applied,
+        Self::Verified,
+        Self::Failed,
+        Self::RolledBack,
+        Self::Superseded,
+    ];
+
+    fn allows(self, next: Self) -> bool {
+        matches!(
+            (self, next),
+            (Self::Proposed, Self::Approved | Self::Superseded)
+                | (
+                    Self::Approved,
+                    Self::Applied | Self::Failed | Self::Superseded
+                )
+                | (Self::Applied, Self::Verified | Self::Failed)
+                | (Self::Failed, Self::RolledBack)
+        )
+    }
+}
+
+/// One hash-chained, operation-specific filesystem lifecycle receipt.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilesystemOperationReceipt {
+    /// Stable transaction identity.
+    pub transaction_id: String,
+    /// Monotonic receipt sequence within the transaction.
+    pub sequence: u32,
+    /// Stable filesystem operation identity.
+    pub operation_id: String,
+    /// Closed filesystem operation kind.
+    pub kind: FilesystemOperationKind,
+    /// Exact lifecycle state.
+    pub status: FilesystemOperationStatus,
+    /// Canonical source path when applicable.
+    pub source_path: Option<String>,
+    /// Canonical destination path when applicable.
+    pub destination_path: Option<String>,
+    /// Exact source digest, or zeroes for creation.
+    pub source_sha256: String,
+    /// Exact expected postimage digest.
+    pub postimage_sha256: String,
+    /// Exact source mode when applicable.
+    pub source_mode: Option<u32>,
+    /// Exact destination mode when applicable.
+    pub destination_mode: Option<u32>,
+    /// Exact consumed or pending single-use grant identity.
+    pub grant_id: GrantId,
+    /// Kernel-clock event time.
+    pub occurred_at_epoch_ms: u64,
+    /// Stable content-free failure code, absent outside failure transitions.
+    pub failure_code: Option<String>,
+    /// Previous receipt digest or zeroes for the first receipt.
+    pub previous_receipt_sha256: String,
+    /// Canonical digest of this receipt with this field zeroed.
+    pub receipt_sha256: String,
+}
+
+/// Terminal disposition of one controlled-filesystem transaction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FilesystemTransactionOutcome {
+    /// Every exact post-state was applied and freshly verified.
+    Committed,
+    /// The driver failed before any operation changed state.
+    FailedNoChange,
+    /// Known changes were restored to exact approved pre-state.
+    Restored,
+    /// State could not be reconciled without risking later user work.
+    Uncertain,
+}
+
+/// Descriptive post-effect check that still requires separate command authority.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilesystemVerificationRequirement {
+    /// Exact label shown before filesystem approval.
+    pub verification_id: String,
+    /// This transaction never executes the check directly.
+    pub executed: bool,
+    /// A separate command grant is mandatory.
+    pub requires_separate_command_grant: bool,
+}
+
+/// Reconciled terminal result with exact receipts and no raw file content.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemTransactionResult {
+    /// Stable transaction identity.
+    pub transaction_id: String,
+    /// Terminal disposition.
+    pub outcome: FilesystemTransactionOutcome,
+    /// Kernel proof that the exact operation grant was consumed once.
+    pub grant_consumption: GrantConsumptionRecord,
+    /// Complete hash-chained per-operation receipt history.
+    pub receipts: Vec<FilesystemOperationReceipt>,
+    /// Descriptive checks that remain separately permissioned and unexecuted.
+    pub verification_requirements: Vec<FilesystemVerificationRequirement>,
+}
+
+/// Exact transaction request supplied by the kernel-owned caller.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemTransactionRequest {
+    /// Stable transaction identity.
+    pub transaction_id: String,
+    /// Kernel-clock time for final observation and grant consumption.
+    pub now_epoch_ms: u64,
+}
+
+/// Stable platform-driver failure class retained without paths or content.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FilesystemDriverError {
+    /// Fresh source or destination observation was unavailable.
+    ObservationUnavailable,
+    /// Staging or application failed with a known unchanged or partial state.
+    ApplyFailed,
+    /// Restoration failed with a known or unknown state.
+    RestoreFailed,
+    /// The platform cannot determine whether an effect occurred.
+    Uncertain,
+}
+
+impl FilesystemDriverError {
+    /// Returns a stable content-free code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::ObservationUnavailable => "filesystem.driver.observation_unavailable",
+            Self::ApplyFailed => "filesystem.driver.apply_failed",
+            Self::RestoreFailed => "filesystem.driver.restore_failed",
+            Self::Uncertain => "filesystem.driver.uncertain",
+        }
+    }
+}
+
+/// Driver report for one ordered filesystem application attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemApplyReport {
+    /// Whether the platform claims all-or-nothing application for this attempt.
+    pub atomic: bool,
+    /// Ordered indexes known to have received their complete approved post-state.
+    pub applied_indexes: Vec<u32>,
+    /// First operation index that failed, absent for complete success or uncertainty.
+    pub failure_index: Option<u32>,
+    /// Stable content-free failure code.
+    pub failure_code: Option<String>,
+    /// Whether the driver cannot determine exact resulting state.
+    pub uncertain: bool,
+}
+
+/// Driver report for one bounded restoration attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FilesystemRestoreReport {
+    /// Ordered indexes reported restored to exact approved pre-state.
+    pub restored_indexes: Vec<u32>,
+    /// Stable content-free failure code.
+    pub failure_code: Option<String>,
+    /// Whether restoration left an indeterminate state.
+    pub uncertain: bool,
+}
+
+/// Opaque one-use authorization passed only after exact grant consumption.
+pub struct FilesystemApplyAuthorization<'transaction> {
+    transaction_id: &'transaction str,
+    consumed_grant_sha256: &'transaction str,
+    plan: &'transaction FilesystemPlan,
+}
+
+impl FilesystemApplyAuthorization<'_> {
+    /// Returns the stable transaction identity.
+    #[must_use]
+    pub const fn transaction_id(&self) -> &str {
+        self.transaction_id
+    }
+
+    /// Returns the digest of the exact consumed grant revision.
+    #[must_use]
+    pub const fn consumed_grant_sha256(&self) -> &str {
+        self.consumed_grant_sha256
+    }
+
+    /// Returns the exact approved filesystem plan.
+    #[must_use]
+    pub const fn plan(&self) -> &FilesystemPlan {
+        self.plan
+    }
+}
+
+/// Opaque restoration authorization limited to indexes known to have changed.
+pub struct FilesystemRestoreAuthorization<'transaction> {
+    transaction_id: &'transaction str,
+    plan: &'transaction FilesystemPlan,
+    restore_indexes: &'transaction [u32],
+}
+
+impl FilesystemRestoreAuthorization<'_> {
+    /// Returns the stable transaction identity.
+    #[must_use]
+    pub const fn transaction_id(&self) -> &str {
+        self.transaction_id
+    }
+
+    /// Returns the exact approved filesystem plan containing retained pre-state.
+    #[must_use]
+    pub const fn plan(&self) -> &FilesystemPlan {
+        self.plan
+    }
+
+    /// Returns only operation indexes known to require restoration.
+    #[must_use]
+    pub const fn restore_indexes(&self) -> &[u32] {
+        self.restore_indexes
+    }
+}
+
+/// Platform effect boundary for exact controlled-filesystem transactions.
+pub trait ControlledFilesystemDriver {
+    /// Freshly observes every exact source and destination without changing it.
+    fn observe(
+        &mut self,
+        plan: &FilesystemPlan,
+    ) -> Result<Vec<FilesystemOperationObservation>, FilesystemDriverError>;
+
+    /// Applies exact approved operations using consumed-grant authorization.
+    fn apply(&mut self, authorization: FilesystemApplyAuthorization<'_>) -> FilesystemApplyReport;
+
+    /// Restores exact approved pre-state using a fresh bounded authorization.
+    fn restore(
+        &mut self,
+        authorization: FilesystemRestoreAuthorization<'_>,
+    ) -> FilesystemRestoreReport;
+}
+
 /// Parses one closed JSON structured patch without accepting target or command syntax.
 pub fn parse_structured_patch_json(bytes: &[u8]) -> Result<StructuredPatch, FilesystemPlanError> {
     if bytes.is_empty() || bytes.len() > MAX_FILE_BYTES {
@@ -914,6 +1241,769 @@ fn verify_preview(
         return Err(FilesystemPlanError::ApprovalMismatch);
     }
     Ok(())
+}
+
+/// Observes, consumes, applies, verifies, and restores one exact filesystem transaction.
+pub fn execute_filesystem_transaction<D: ControlledFilesystemDriver>(
+    issuer: &mut GrantIssuer,
+    policy: &PolicyEngine,
+    plan: &FilesystemPlan,
+    approval: &FilesystemApprovalReceipt,
+    request: FilesystemTransactionRequest,
+    driver: &mut D,
+) -> Result<FilesystemTransactionResult, FilesystemTransactionError> {
+    validate_transaction_identifier(&request.transaction_id)?;
+    validate_transaction_binding(issuer, plan, approval)?;
+    let current = driver
+        .observe(plan)
+        .map_err(|_| FilesystemTransactionError::ObservationFailed)?;
+    if !observations_match_prestate(plan, &current) {
+        invalidate_filesystem_grant(issuer, &approval.grant.grant_id, request.now_epoch_ms)?;
+        return Err(FilesystemTransactionError::PreapplyDenied);
+    }
+    let context = filesystem_policy_context(&approval.grant, request.now_epoch_ms)?;
+    let consumption = issuer.consume_for_execution(&approval.grant.grant_id, policy, &context)?;
+    let mut ledger = FilesystemReceiptLedger::new(
+        &request.transaction_id,
+        plan,
+        &approval.grant.grant_id,
+        request.now_epoch_ms,
+    )?;
+    let report = driver.apply(FilesystemApplyAuthorization {
+        transaction_id: &request.transaction_id,
+        consumed_grant_sha256: &consumption.consumed_grant_sha256,
+        plan,
+    });
+    let disposition = classify_filesystem_report(plan.operations.len(), &report).unwrap_or(
+        FilesystemApplyDisposition::Uncertain {
+            failure_code: FilesystemTransactionError::DriverReportInvalid
+                .code()
+                .to_owned(),
+        },
+    );
+    let outcome = match disposition {
+        FilesystemApplyDisposition::Success => {
+            for index in 0..plan.operations.len() {
+                ledger.transition(
+                    index,
+                    FilesystemOperationStatus::Applied,
+                    None,
+                    request.now_epoch_ms,
+                )?;
+            }
+            match driver.observe(plan) {
+                Ok(poststate) if observations_match_poststate(plan, &poststate) => {
+                    for index in 0..plan.operations.len() {
+                        ledger.transition(
+                            index,
+                            FilesystemOperationStatus::Verified,
+                            None,
+                            request.now_epoch_ms,
+                        )?;
+                    }
+                    FilesystemTransactionOutcome::Committed
+                }
+                _ => restore_filesystem_after_failure(
+                    driver,
+                    plan,
+                    &request,
+                    &mut ledger,
+                    filesystem_indexes(plan.operations.len())?,
+                    "filesystem.verify.poststate_mismatch",
+                )?,
+            }
+        }
+        FilesystemApplyDisposition::KnownFailure {
+            applied_indexes,
+            failure_index,
+            failure_code,
+        } => {
+            for index in &applied_indexes {
+                let index = usize::try_from(*index)
+                    .map_err(|_| FilesystemTransactionError::DriverReportInvalid)?;
+                ledger.transition(
+                    index,
+                    FilesystemOperationStatus::Applied,
+                    None,
+                    request.now_epoch_ms,
+                )?;
+                ledger.transition(
+                    index,
+                    FilesystemOperationStatus::Failed,
+                    Some(&failure_code),
+                    request.now_epoch_ms,
+                )?;
+            }
+            let failure_index = usize::try_from(failure_index)
+                .map_err(|_| FilesystemTransactionError::DriverReportInvalid)?;
+            ledger.transition(
+                failure_index,
+                FilesystemOperationStatus::Failed,
+                Some(&failure_code),
+                request.now_epoch_ms,
+            )?;
+            for index in (failure_index + 1)..plan.operations.len() {
+                ledger.transition(
+                    index,
+                    FilesystemOperationStatus::Superseded,
+                    None,
+                    request.now_epoch_ms,
+                )?;
+            }
+            if applied_indexes.is_empty() {
+                FilesystemTransactionOutcome::FailedNoChange
+            } else {
+                restore_filesystem_after_failure(
+                    driver,
+                    plan,
+                    &request,
+                    &mut ledger,
+                    applied_indexes,
+                    &failure_code,
+                )?
+            }
+        }
+        FilesystemApplyDisposition::Uncertain { failure_code } => {
+            ledger.fail_every_nonterminal(&failure_code, request.now_epoch_ms)?;
+            FilesystemTransactionOutcome::Uncertain
+        }
+    };
+
+    if outcome == FilesystemTransactionOutcome::Uncertain {
+        issuer
+            .mark_execution_uncertain(
+                &approval.grant.grant_id,
+                &consumption.consumed_grant_sha256,
+                request.now_epoch_ms,
+            )
+            .map_err(|_| FilesystemTransactionError::ReceiptIntegrity)?;
+    }
+    let result = FilesystemTransactionResult {
+        transaction_id: request.transaction_id.clone(),
+        outcome,
+        grant_consumption: consumption,
+        receipts: ledger.receipts,
+        verification_requirements: plan
+            .permitted_verification
+            .iter()
+            .map(|verification_id| FilesystemVerificationRequirement {
+                verification_id: verification_id.clone(),
+                executed: false,
+                requires_separate_command_grant: true,
+            })
+            .collect(),
+    };
+    verify_filesystem_receipts(&result.receipts)?;
+    Ok(result)
+}
+
+/// Recomputes one complete filesystem receipt chain from retained fields.
+pub fn verify_filesystem_receipts(
+    receipts: &[FilesystemOperationReceipt],
+) -> Result<(), FilesystemTransactionError> {
+    if receipts.is_empty() {
+        return Err(FilesystemTransactionError::ReceiptIntegrity);
+    }
+    let transaction_id = receipts[0].transaction_id.as_str();
+    let grant_id = &receipts[0].grant_id;
+    let mut previous = ZERO_SHA256.to_owned();
+    let mut states = BTreeMap::<String, FilesystemOperationStatus>::new();
+    let mut identities = BTreeMap::<
+        String,
+        (
+            FilesystemOperationKind,
+            Option<String>,
+            Option<String>,
+            String,
+            String,
+            Option<u32>,
+            Option<u32>,
+        ),
+    >::new();
+    for (index, receipt) in receipts.iter().enumerate() {
+        if receipt.transaction_id != transaction_id
+            || &receipt.grant_id != grant_id
+            || receipt.sequence != u32::try_from(index + 1).unwrap_or(u32::MAX)
+            || receipt.previous_receipt_sha256 != previous
+            || !valid_sha256(&receipt.source_sha256)
+            || !valid_sha256(&receipt.postimage_sha256)
+        {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        let mut candidate = receipt.clone();
+        candidate.receipt_sha256 = ZERO_SHA256.to_owned();
+        if transaction_sha256(&candidate)? != receipt.receipt_sha256 {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        let identity = (
+            receipt.kind,
+            receipt.source_path.clone(),
+            receipt.destination_path.clone(),
+            receipt.source_sha256.clone(),
+            receipt.postimage_sha256.clone(),
+            receipt.source_mode,
+            receipt.destination_mode,
+        );
+        if identities
+            .get(&receipt.operation_id)
+            .is_some_and(|existing| existing != &identity)
+        {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        identities
+            .entry(receipt.operation_id.clone())
+            .or_insert(identity);
+        match states.get(&receipt.operation_id).copied() {
+            None if receipt.status == FilesystemOperationStatus::Proposed => {}
+            Some(current) if current.allows(receipt.status) => {}
+            _ => return Err(FilesystemTransactionError::ReceiptIntegrity),
+        }
+        if matches!(receipt.status, FilesystemOperationStatus::Failed)
+            != receipt.failure_code.is_some()
+        {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        previous = receipt.receipt_sha256.clone();
+        states.insert(receipt.operation_id.clone(), receipt.status);
+    }
+    if states.values().any(|status| {
+        !matches!(
+            status,
+            FilesystemOperationStatus::Verified
+                | FilesystemOperationStatus::Failed
+                | FilesystemOperationStatus::RolledBack
+                | FilesystemOperationStatus::Superseded
+        )
+    }) {
+        return Err(FilesystemTransactionError::ReceiptIntegrity);
+    }
+    Ok(())
+}
+
+fn validate_transaction_binding(
+    issuer: &GrantIssuer,
+    plan: &FilesystemPlan,
+    approval: &FilesystemApprovalReceipt,
+) -> Result<(), FilesystemTransactionError> {
+    verify_plan(plan).map_err(|_| FilesystemTransactionError::InvalidInput)?;
+    let expected_operation = OperationBinding::new(if plan.requires_high_risk_delete_grant {
+        GrantOperation::WorkspaceDelete
+    } else {
+        GrantOperation::WorkspaceWrite
+    });
+    let current = issuer
+        .current(&approval.grant.grant_id)
+        .ok_or(FilesystemTransactionError::InvalidInput)?;
+    let valid = current == &approval.grant
+        && current.status == GrantStatus::Issued
+        && current.operation == expected_operation
+        && current.argument_sha256 == plan.plan_sha256
+        && current.preview_sha256 == approval.preview_sha256
+        && approval.plan_sha256 == plan.plan_sha256
+        && approval.permitted_verification == plan.permitted_verification
+        && current.targets == filesystem_grant_targets(plan);
+    if !valid {
+        return Err(FilesystemTransactionError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn filesystem_grant_targets(plan: &FilesystemPlan) -> Vec<GrantTarget> {
+    let mut targets = Vec::new();
+    for item in &plan.operations {
+        for target in [item.source.as_ref(), item.destination_parent.as_ref()]
+            .into_iter()
+            .flatten()
+        {
+            if !targets.contains(target) {
+                targets.push(target.clone());
+            }
+        }
+    }
+    targets
+}
+
+fn invalidate_filesystem_grant(
+    issuer: &mut GrantIssuer,
+    grant_id: &GrantId,
+    now_epoch_ms: u64,
+) -> Result<(), FilesystemTransactionError> {
+    let current = issuer
+        .current(grant_id)
+        .ok_or(FilesystemTransactionError::InvalidInput)?;
+    let digest = issuer
+        .revision_hash(grant_id, current.revision)
+        .ok_or(FilesystemTransactionError::ReceiptIntegrity)?
+        .to_owned();
+    issuer
+        .cancel_before_execution(grant_id, &digest, now_epoch_ms)
+        .map_err(|_| FilesystemTransactionError::ReceiptIntegrity)?;
+    Ok(())
+}
+
+fn filesystem_policy_context(
+    grant: &CapabilityGrant,
+    now_epoch_ms: u64,
+) -> Result<PolicyEvaluationContext, FilesystemTransactionError> {
+    if grant.status != GrantStatus::Issued
+        || !matches!(
+            grant.operation.operation(),
+            GrantOperation::WorkspaceWrite | GrantOperation::WorkspaceDelete
+        )
+    {
+        return Err(FilesystemTransactionError::InvalidInput);
+    }
+    Ok(PolicyEvaluationContext {
+        actor_id: grant.actor_id.clone(),
+        session_id: grant.session_id.clone(),
+        task_id: grant.task_id.clone(),
+        action_id: grant
+            .action_id
+            .clone()
+            .ok_or(FilesystemTransactionError::InvalidInput)?,
+        action_kind: grant
+            .action_kind
+            .ok_or(FilesystemTransactionError::InvalidInput)?,
+        tool_id: grant
+            .tool_id
+            .clone()
+            .ok_or(FilesystemTransactionError::InvalidInput)?,
+        tool_version: grant
+            .tool_version
+            .clone()
+            .ok_or(FilesystemTransactionError::InvalidInput)?,
+        targets: grant.targets.clone(),
+        argument_sha256: grant.argument_sha256.clone(),
+        preimages: grant.preimages.clone(),
+        expected_side_effects: grant.expected_side_effects.clone(),
+        preview_sha256: grant.preview_sha256.clone(),
+        now_epoch_ms,
+        network_scope: None,
+        credential_scope: None,
+        publication_scope: None,
+    })
+}
+
+fn observations_match_prestate(
+    plan: &FilesystemPlan,
+    observations: &[FilesystemOperationObservation],
+) -> bool {
+    observations.len() == plan.operations.len()
+        && observations
+            .iter()
+            .zip(&plan.operations)
+            .all(|(observation, operation)| {
+                let source_matches = match (&operation.source, &observation.source) {
+                    (None, None) => true,
+                    (Some(expected), Some(current)) => {
+                        current.target == *expected
+                            && current.bytes == operation.source_bytes
+                            && current.mode == operation.source_mode.unwrap_or(u32::MAX)
+                            && observed_entry_is_exact(current)
+                    }
+                    _ => false,
+                };
+                let destination_matches = match &operation.destination_parent {
+                    None => {
+                        observation.destination_parent.is_none()
+                            && observation.destination_sibling_names.is_empty()
+                            && observation.destination.is_none()
+                    }
+                    Some(parent) => {
+                        observation.destination_parent.as_ref() == Some(parent)
+                            && observation.destination.is_none()
+                            && destination_is_collision_free(
+                                operation,
+                                &observation.destination_sibling_names,
+                            )
+                    }
+                };
+                source_matches && destination_matches
+            })
+}
+
+fn observations_match_poststate(
+    plan: &FilesystemPlan,
+    observations: &[FilesystemOperationObservation],
+) -> bool {
+    observations.len() == plan.operations.len()
+        && observations
+            .iter()
+            .zip(&plan.operations)
+            .all(|(observation, operation)| match operation.kind {
+                FilesystemOperationKind::Create => {
+                    observation.source.is_none()
+                        && destination_matches_postimage(operation, observation)
+                }
+                FilesystemOperationKind::ExactPatch => {
+                    observation.destination_parent.is_none()
+                        && observation.destination_sibling_names.is_empty()
+                        && observation.destination.is_none()
+                        && observation.source.as_ref().is_some_and(|source| {
+                            entry_matches_postimage(
+                                source,
+                                operation.source_path.as_deref(),
+                                operation.postimage_sha256.as_deref(),
+                                operation.destination_mode,
+                                &operation.postimage_bytes,
+                            )
+                        })
+                }
+                FilesystemOperationKind::Copy => {
+                    source_matches_approved(operation, observation.source.as_ref())
+                        && destination_matches_postimage(operation, observation)
+                }
+                FilesystemOperationKind::Move | FilesystemOperationKind::TrashDelete => {
+                    observation.source.is_none()
+                        && destination_matches_postimage(operation, observation)
+                }
+            })
+}
+
+fn source_matches_approved(
+    operation: &FilesystemOperation,
+    source: Option<&ObservedFilesystemEntry>,
+) -> bool {
+    source.is_some_and(|source| {
+        operation.source.as_ref() == Some(&source.target)
+            && source.bytes == operation.source_bytes
+            && source.mode == operation.source_mode.unwrap_or(u32::MAX)
+            && observed_entry_is_exact(source)
+    })
+}
+
+fn destination_matches_postimage(
+    operation: &FilesystemOperation,
+    observation: &FilesystemOperationObservation,
+) -> bool {
+    observation.destination_parent.as_ref() == operation.destination_parent.as_ref()
+        && observation.destination.as_ref().is_some_and(|destination| {
+            entry_matches_postimage(
+                destination,
+                operation.destination_path.as_deref(),
+                operation.postimage_sha256.as_deref(),
+                operation.destination_mode,
+                &operation.postimage_bytes,
+            )
+        })
+}
+
+fn entry_matches_postimage(
+    entry: &ObservedFilesystemEntry,
+    expected_path: Option<&str>,
+    expected_sha256: Option<&str>,
+    expected_mode: Option<u32>,
+    expected_bytes: &[u8],
+) -> bool {
+    Some(display_target_path(&entry.target).as_str()) == expected_path
+        && Some(hex_sha256(&entry.bytes).as_str()) == expected_sha256
+        && Some(entry.mode) == expected_mode
+        && entry.bytes == expected_bytes
+        && observed_entry_is_exact(entry)
+}
+
+fn observed_entry_is_exact(entry: &ObservedFilesystemEntry) -> bool {
+    entry.target.object_kind() == Some(WorkspaceObjectKind::RegularFile)
+        && entry.target.preimage().is_some_and(|preimage| {
+            preimage.byte_len() == u64::try_from(entry.bytes.len()).unwrap_or(u64::MAX)
+                && hex_bytes(preimage.content_sha256()) == hex_sha256(&entry.bytes)
+        })
+}
+
+fn destination_is_collision_free(
+    operation: &FilesystemOperation,
+    sibling_names: &[String],
+) -> bool {
+    if sibling_names.len() > MAX_SIBLING_NAMES {
+        return false;
+    }
+    let Some(candidate) = operation
+        .destination_path
+        .as_deref()
+        .and_then(|path| path.rsplit('/').next())
+    else {
+        return false;
+    };
+    let candidate_folded = candidate.to_lowercase();
+    let mut unique = BTreeSet::new();
+    sibling_names.iter().all(|sibling| {
+        !sibling.is_empty()
+            && sibling.len() <= agentmage_kernel_contracts::MAX_WORKSPACE_PATH_COMPONENT_BYTES
+            && !sibling.contains('/')
+            && !sibling.contains('\\')
+            && unique.insert(sibling)
+            && sibling.to_lowercase() != candidate_folded
+    })
+}
+
+enum FilesystemApplyDisposition {
+    Success,
+    KnownFailure {
+        applied_indexes: Vec<u32>,
+        failure_index: u32,
+        failure_code: String,
+    },
+    Uncertain {
+        failure_code: String,
+    },
+}
+
+fn classify_filesystem_report(
+    operation_count: usize,
+    report: &FilesystemApplyReport,
+) -> Result<FilesystemApplyDisposition, FilesystemTransactionError> {
+    if report.uncertain {
+        let code = report
+            .failure_code
+            .as_deref()
+            .unwrap_or(FilesystemDriverError::Uncertain.code());
+        validate_transaction_failure_code(code)?;
+        return Ok(FilesystemApplyDisposition::Uncertain {
+            failure_code: code.to_owned(),
+        });
+    }
+    let complete = filesystem_indexes(operation_count)?;
+    if report.failure_index.is_none()
+        && report.failure_code.is_none()
+        && report.applied_indexes == complete
+    {
+        return Ok(FilesystemApplyDisposition::Success);
+    }
+    let (Some(failure_index), Some(failure_code)) =
+        (report.failure_index, report.failure_code.as_deref())
+    else {
+        return Err(FilesystemTransactionError::DriverReportInvalid);
+    };
+    validate_transaction_failure_code(failure_code)?;
+    let failure = usize::try_from(failure_index)
+        .ok()
+        .filter(|index| *index < operation_count)
+        .ok_or(FilesystemTransactionError::DriverReportInvalid)?;
+    let expected_prefix = filesystem_indexes(failure)?;
+    if report.applied_indexes != expected_prefix || (report.atomic && !expected_prefix.is_empty()) {
+        return Err(FilesystemTransactionError::DriverReportInvalid);
+    }
+    Ok(FilesystemApplyDisposition::KnownFailure {
+        applied_indexes: report.applied_indexes.clone(),
+        failure_index,
+        failure_code: failure_code.to_owned(),
+    })
+}
+
+fn restore_filesystem_after_failure<D: ControlledFilesystemDriver>(
+    driver: &mut D,
+    plan: &FilesystemPlan,
+    request: &FilesystemTransactionRequest,
+    ledger: &mut FilesystemReceiptLedger<'_>,
+    indexes: Vec<u32>,
+    failure_code: &str,
+) -> Result<FilesystemTransactionOutcome, FilesystemTransactionError> {
+    for index in &indexes {
+        let index =
+            usize::try_from(*index).map_err(|_| FilesystemTransactionError::DriverReportInvalid)?;
+        if ledger.current(index) == Some(FilesystemOperationStatus::Applied) {
+            ledger.transition(
+                index,
+                FilesystemOperationStatus::Failed,
+                Some(failure_code),
+                request.now_epoch_ms,
+            )?;
+        }
+    }
+    let report = driver.restore(FilesystemRestoreAuthorization {
+        transaction_id: &request.transaction_id,
+        plan,
+        restore_indexes: &indexes,
+    });
+    if report.uncertain
+        || report.failure_code.is_some()
+        || report.restored_indexes != indexes
+        || driver
+            .observe(plan)
+            .map_or(true, |values| !observations_match_prestate(plan, &values))
+    {
+        return Ok(FilesystemTransactionOutcome::Uncertain);
+    }
+    for index in indexes {
+        ledger.transition(
+            usize::try_from(index).map_err(|_| FilesystemTransactionError::DriverReportInvalid)?,
+            FilesystemOperationStatus::RolledBack,
+            None,
+            request.now_epoch_ms,
+        )?;
+    }
+    Ok(FilesystemTransactionOutcome::Restored)
+}
+
+fn filesystem_indexes(count: usize) -> Result<Vec<u32>, FilesystemTransactionError> {
+    (0..count)
+        .map(|index| u32::try_from(index).map_err(|_| FilesystemTransactionError::InvalidInput))
+        .collect()
+}
+
+fn validate_transaction_identifier(value: &str) -> Result<(), FilesystemTransactionError> {
+    if value.is_empty()
+        || value.len() > MAX_IDENTIFIER_BYTES
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+    {
+        return Err(FilesystemTransactionError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn validate_transaction_failure_code(value: &str) -> Result<(), FilesystemTransactionError> {
+    if value.is_empty()
+        || value.len() > MAX_IDENTIFIER_BYTES
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+    {
+        return Err(FilesystemTransactionError::DriverReportInvalid);
+    }
+    Ok(())
+}
+
+fn transaction_sha256(value: &impl Serialize) -> Result<String, FilesystemTransactionError> {
+    serde_json::to_vec(value)
+        .map(|bytes| hex_sha256(&bytes))
+        .map_err(|_| FilesystemTransactionError::ReceiptIntegrity)
+}
+
+struct FilesystemReceiptLedger<'operation> {
+    transaction_id: &'operation str,
+    plan: &'operation FilesystemPlan,
+    grant_id: &'operation GrantId,
+    current: BTreeMap<usize, FilesystemOperationStatus>,
+    receipts: Vec<FilesystemOperationReceipt>,
+}
+
+impl<'operation> FilesystemReceiptLedger<'operation> {
+    fn new(
+        transaction_id: &'operation str,
+        plan: &'operation FilesystemPlan,
+        grant_id: &'operation GrantId,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<Self, FilesystemTransactionError> {
+        let mut ledger = Self {
+            transaction_id,
+            plan,
+            grant_id,
+            current: BTreeMap::new(),
+            receipts: Vec::new(),
+        };
+        for index in 0..plan.operations.len() {
+            ledger.emit(
+                index,
+                FilesystemOperationStatus::Proposed,
+                None,
+                occurred_at_epoch_ms,
+            )?;
+            ledger.transition(
+                index,
+                FilesystemOperationStatus::Approved,
+                None,
+                occurred_at_epoch_ms,
+            )?;
+        }
+        Ok(ledger)
+    }
+
+    fn current(&self, index: usize) -> Option<FilesystemOperationStatus> {
+        self.current.get(&index).copied()
+    }
+
+    fn transition(
+        &mut self,
+        index: usize,
+        status: FilesystemOperationStatus,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<(), FilesystemTransactionError> {
+        let Some(current) = self.current(index) else {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        };
+        if !current.allows(status) {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        self.emit(index, status, failure_code, occurred_at_epoch_ms)
+    }
+
+    fn fail_every_nonterminal(
+        &mut self,
+        failure_code: &str,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<(), FilesystemTransactionError> {
+        for index in 0..self.plan.operations.len() {
+            if matches!(
+                self.current(index),
+                Some(FilesystemOperationStatus::Approved | FilesystemOperationStatus::Applied)
+            ) {
+                self.emit(
+                    index,
+                    FilesystemOperationStatus::Failed,
+                    Some(failure_code),
+                    occurred_at_epoch_ms,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    fn emit(
+        &mut self,
+        index: usize,
+        status: FilesystemOperationStatus,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<(), FilesystemTransactionError> {
+        if let Some(code) = failure_code {
+            validate_transaction_failure_code(code)?;
+        }
+        if matches!(status, FilesystemOperationStatus::Failed) != failure_code.is_some() {
+            return Err(FilesystemTransactionError::ReceiptIntegrity);
+        }
+        let operation = self
+            .plan
+            .operations
+            .get(index)
+            .ok_or(FilesystemTransactionError::ReceiptIntegrity)?;
+        let previous = self
+            .receipts
+            .last()
+            .map_or(ZERO_SHA256, |receipt| receipt.receipt_sha256.as_str())
+            .to_owned();
+        let mut receipt = FilesystemOperationReceipt {
+            transaction_id: self.transaction_id.to_owned(),
+            sequence: u32::try_from(self.receipts.len() + 1)
+                .map_err(|_| FilesystemTransactionError::ReceiptIntegrity)?,
+            operation_id: operation.operation_id.clone(),
+            kind: operation.kind,
+            status,
+            source_path: operation.source_path.clone(),
+            destination_path: operation.destination_path.clone(),
+            source_sha256: operation
+                .source_sha256
+                .clone()
+                .unwrap_or_else(|| ZERO_SHA256.to_owned()),
+            postimage_sha256: operation
+                .postimage_sha256
+                .clone()
+                .ok_or(FilesystemTransactionError::ReceiptIntegrity)?,
+            source_mode: operation.source_mode,
+            destination_mode: operation.destination_mode,
+            grant_id: self.grant_id.clone(),
+            occurred_at_epoch_ms,
+            failure_code: failure_code.map(str::to_owned),
+            previous_receipt_sha256: previous,
+            receipt_sha256: ZERO_SHA256.to_owned(),
+        };
+        receipt.receipt_sha256 = transaction_sha256(&receipt)?;
+        self.current.insert(index, status);
+        self.receipts.push(receipt);
+        Ok(())
+    }
 }
 
 fn validate_operation(
@@ -1389,23 +2479,32 @@ fn hex_bytes(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle,
-        DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantTarget, PathPlatform, SessionId,
-        TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
+        DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantStatus, GrantTarget,
+        OperationBinding, PathPlatform, SessionId, TaskId, ToolId, WorkspaceAuthorizationId,
+        WorkspaceId, WorkspacePath, WorkspaceScopePath,
     };
     use serde_json::json;
     use sha2::{Digest, Sha256};
 
     use super::{
-        ExistingSourceDraft, ExistingWorkDisposition, FileClassification,
-        FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemGrantRequest,
-        FilesystemOperationDraft, FilesystemOperationKind, FilesystemPlan, FilesystemPlanError,
-        FilesystemPlanRequest, NewDestinationDraft, StructuredPatch, StructuredPatchHunk,
-        apply_structured_patch, build_filesystem_plan, hex_sha256, issue_filesystem_grant,
-        parse_structured_patch_json, render_filesystem_preview,
+        ControlledFilesystemDriver, ExistingSourceDraft, ExistingWorkDisposition,
+        FileClassification, FilesystemApplyAuthorization, FilesystemApplyReport,
+        FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemDriverError,
+        FilesystemGrantRequest, FilesystemOperationDraft, FilesystemOperationKind,
+        FilesystemOperationObservation, FilesystemOperationStatus, FilesystemPlan,
+        FilesystemPlanError, FilesystemPlanRequest, FilesystemRestoreAuthorization,
+        FilesystemRestoreReport, FilesystemTransactionError, FilesystemTransactionOutcome,
+        FilesystemTransactionRequest, NewDestinationDraft, ObservedFilesystemEntry,
+        StructuredPatch, StructuredPatchHunk, apply_structured_patch, build_filesystem_plan,
+        execute_filesystem_transaction, filesystem_indexes, hex_sha256, issue_filesystem_grant,
+        parse_structured_patch_json, render_filesystem_preview, verify_filesystem_receipts,
     };
     use crate::grants::{GrantIssuer, SessionReadGrantRequest};
+    use crate::policy::{PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding};
     use crate::write_approval::WriteReviewNarrative;
 
     #[derive(Debug)]
@@ -1433,6 +2532,12 @@ mod tests {
     }
 
     fn parent_with_issuer() -> (GrantIssuer, agentmage_kernel_contracts::CapabilityGrant) {
+        parent_with_policy("b".repeat(64))
+    }
+
+    fn parent_with_policy(
+        policy_sha256: String,
+    ) -> (GrantIssuer, agentmage_kernel_contracts::CapabilityGrant) {
         let mut issuer = GrantIssuer::new();
         let root = GrantTarget::workspace_scope(
             &FakeWorkspace,
@@ -1463,7 +2568,7 @@ mod tests {
                 nonce: GrantNonce::from_raw("nonce-parent-filesystem"),
                 maximum_derived_operations: 10,
                 preview_sha256: "a".repeat(64),
-                policy_sha256: "b".repeat(64),
+                policy_sha256,
             })
             .expect("parent");
         (issuer, parent)
@@ -1631,6 +2736,367 @@ mod tests {
         let plan = build_filesystem_plan(&parent, request(vec![operation])).expect("delete plan");
         let preview = render_filesystem_preview(&plan).expect("delete preview");
         (issuer, plan, preview)
+    }
+
+    fn rules<T: Ord>(values: impl IntoIterator<Item = T>) -> ScopeRules<T> {
+        ScopeRules {
+            allowed: values.into_iter().collect(),
+            denied: BTreeSet::new(),
+        }
+    }
+
+    struct TransactionFixture {
+        issuer: GrantIssuer,
+        policy: PolicyEngine,
+        plan: FilesystemPlan,
+        approval: super::FilesystemApprovalReceipt,
+    }
+
+    fn transaction_fixture(delete: bool) -> TransactionFixture {
+        let drafts = if delete {
+            vec![FilesystemOperationDraft::TrashDelete {
+                operation_id: "operation-trash".to_owned(),
+                source: source(
+                    &["src", "obsolete.txt"],
+                    b"obsolete\n",
+                    ExistingWorkDisposition::Clean,
+                ),
+                trash_destination: destination(&["trash"], "obsolete.txt", &[]),
+            }]
+        } else {
+            vec![
+                FilesystemOperationDraft::Create {
+                    operation_id: "operation-create".to_owned(),
+                    destination: destination(&["new"], "created.txt", &[]),
+                    content: b"created\n".to_vec(),
+                    mode: 0o600,
+                    classification: FileClassification::Documentation,
+                },
+                FilesystemOperationDraft::ExactPatch {
+                    operation_id: "operation-patch".to_owned(),
+                    source: source(
+                        &["src", "patch.txt"],
+                        b"alpha\nbeta\ngamma\n",
+                        ExistingWorkDisposition::Clean,
+                    ),
+                    patch_json: patch("beta\n", "changed\n"),
+                    expected_postimage_sha256: hex_sha256(b"alpha\nchanged\ngamma\n"),
+                },
+                FilesystemOperationDraft::Copy {
+                    operation_id: "operation-copy".to_owned(),
+                    source: source(
+                        &["src", "copy.txt"],
+                        b"copy\n",
+                        ExistingWorkDisposition::Clean,
+                    ),
+                    destination: destination(&["copies"], "copy.txt", &[]),
+                    classification: FileClassification::Data,
+                },
+                FilesystemOperationDraft::Move {
+                    operation_id: "operation-move".to_owned(),
+                    source: source(
+                        &["src", "move.txt"],
+                        b"move\n",
+                        ExistingWorkDisposition::OwnedByCurrentTask,
+                    ),
+                    destination: destination(&["moved"], "move.txt", &[]),
+                },
+            ]
+        };
+        let policy_targets = drafts
+            .iter()
+            .flat_map(|draft| match draft {
+                FilesystemOperationDraft::Create { destination, .. } => {
+                    vec![destination.parent.clone()]
+                }
+                FilesystemOperationDraft::ExactPatch { source, .. } => {
+                    vec![source.target.clone()]
+                }
+                FilesystemOperationDraft::Copy {
+                    source,
+                    destination,
+                    ..
+                }
+                | FilesystemOperationDraft::Move {
+                    source,
+                    destination,
+                    ..
+                } => vec![source.target.clone(), destination.parent.clone()],
+                FilesystemOperationDraft::TrashDelete {
+                    source,
+                    trash_destination,
+                    ..
+                } => vec![source.target.clone(), trash_destination.parent.clone()],
+            })
+            .collect::<Vec<_>>();
+        let action_id = ActionId::from_raw("action-filesystem-transaction");
+        let tool_id = ToolId::from_raw("workspace.filesystem");
+        let operation = OperationBinding::new(if delete {
+            GrantOperation::WorkspaceDelete
+        } else {
+            GrantOperation::WorkspaceWrite
+        });
+        let policy = PolicyEngine::new(PolicyDocument {
+            schema_version: 1,
+            revision: 1,
+            actors: rules([ActorId::from_raw("actor-local")]),
+            tasks: rules([TaskId::from_raw("task-filesystem")]),
+            actions: rules([action_id.clone()]),
+            tools: rules([ToolPolicyBinding {
+                tool_id: tool_id.clone(),
+                tool_version: "1.0.0".to_owned(),
+            }]),
+            operations: rules([operation]),
+            targets: rules(policy_targets),
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: ScopeRules::deny_all(),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
+        })
+        .expect("filesystem transaction policy");
+        let (mut issuer, parent) = parent_with_policy(policy.policy_sha256().to_owned());
+        let plan = build_filesystem_plan(&parent, request(drafts)).expect("transaction plan");
+        let preview = render_filesystem_preview(&plan).expect("transaction preview");
+        let approval = issue_filesystem_grant(
+            &mut issuer,
+            &plan,
+            &preview,
+            &approval_decision(&preview, delete),
+            FilesystemGrantRequest {
+                parent_grant_id: parent.grant_id,
+                grant_id: GrantId::from_raw("grant-filesystem-transaction"),
+                action_id,
+                action_kind: ActionKind::DeterministicTool,
+                tool_id,
+                tool_version: "1.0.0".to_owned(),
+                nonce: GrantNonce::from_raw("nonce-filesystem-transaction"),
+                policy_sha256: policy.policy_sha256().to_owned(),
+            },
+        )
+        .expect("filesystem transaction grant");
+        TransactionFixture {
+            issuer,
+            policy,
+            plan,
+            approval,
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    enum FilesystemDriverMode {
+        Success,
+        FailAt(usize),
+        CorruptPoststate,
+        Uncertain,
+        MalformedAtomicPartial,
+        RestoreFails,
+    }
+
+    struct MemoryFilesystemDriver {
+        observations: Vec<FilesystemOperationObservation>,
+        initial: Vec<FilesystemOperationObservation>,
+        mode: FilesystemDriverMode,
+        apply_calls: usize,
+        restore_calls: usize,
+    }
+
+    impl MemoryFilesystemDriver {
+        fn new(plan: &FilesystemPlan, mode: FilesystemDriverMode) -> Self {
+            let observations = plan
+                .operations()
+                .iter()
+                .map(|operation| FilesystemOperationObservation {
+                    source: operation.source().map(|target| ObservedFilesystemEntry {
+                        target: target.clone(),
+                        bytes: operation.source_bytes().to_vec(),
+                        mode: operation.source_mode().expect("source mode"),
+                    }),
+                    destination_parent: operation.destination_parent().cloned(),
+                    destination_sibling_names: Vec::new(),
+                    destination: None,
+                })
+                .collect::<Vec<_>>();
+            Self {
+                initial: observations.clone(),
+                observations,
+                mode,
+                apply_calls: 0,
+                restore_calls: 0,
+            }
+        }
+
+        fn observed_entry(path: &str, bytes: &[u8], mode: u32) -> ObservedFilesystemEntry {
+            let components = path.split('/').collect::<Vec<_>>();
+            ObservedFilesystemEntry {
+                target: source(&components, bytes, ExistingWorkDisposition::Clean).target,
+                bytes: bytes.to_vec(),
+                mode,
+            }
+        }
+
+        fn apply_one(&mut self, plan: &FilesystemPlan, index: usize) {
+            let operation = &plan.operations()[index];
+            match operation.kind() {
+                FilesystemOperationKind::Create => {
+                    self.observations[index].destination = Some(Self::observed_entry(
+                        operation.destination_path().expect("create destination"),
+                        operation.postimage_bytes(),
+                        operation.destination_mode().expect("create mode"),
+                    ));
+                }
+                FilesystemOperationKind::ExactPatch => {
+                    self.observations[index].source = Some(Self::observed_entry(
+                        operation.source_path().expect("patch source"),
+                        operation.postimage_bytes(),
+                        operation.destination_mode().expect("patch mode"),
+                    ));
+                }
+                FilesystemOperationKind::Copy => {
+                    self.observations[index].destination = Some(Self::observed_entry(
+                        operation.destination_path().expect("copy destination"),
+                        operation.postimage_bytes(),
+                        operation.destination_mode().expect("copy mode"),
+                    ));
+                }
+                FilesystemOperationKind::Move | FilesystemOperationKind::TrashDelete => {
+                    self.observations[index].source = None;
+                    self.observations[index].destination = Some(Self::observed_entry(
+                        operation.destination_path().expect("move destination"),
+                        operation.postimage_bytes(),
+                        operation.destination_mode().expect("move mode"),
+                    ));
+                }
+            }
+        }
+
+        fn corrupt_first_changed_entry(&mut self) {
+            let observation = &mut self.observations[0];
+            let entry = match observation.destination.as_mut() {
+                Some(destination) => destination,
+                None => observation.source.as_mut().expect("changed entry"),
+            };
+            entry.bytes.push(b'!');
+        }
+    }
+
+    impl ControlledFilesystemDriver for MemoryFilesystemDriver {
+        fn observe(
+            &mut self,
+            _plan: &FilesystemPlan,
+        ) -> Result<Vec<FilesystemOperationObservation>, FilesystemDriverError> {
+            Ok(self.observations.clone())
+        }
+
+        fn apply(
+            &mut self,
+            authorization: FilesystemApplyAuthorization<'_>,
+        ) -> FilesystemApplyReport {
+            self.apply_calls += 1;
+            assert_ne!(authorization.consumed_grant_sha256(), "0".repeat(64));
+            let plan = authorization.plan();
+            match self.mode {
+                FilesystemDriverMode::Success | FilesystemDriverMode::RestoreFails => {
+                    for index in 0..plan.operations().len() {
+                        self.apply_one(plan, index);
+                    }
+                    if matches!(self.mode, FilesystemDriverMode::RestoreFails) {
+                        self.corrupt_first_changed_entry();
+                    }
+                    FilesystemApplyReport {
+                        atomic: true,
+                        applied_indexes: filesystem_indexes(plan.operations().len())
+                            .expect("bounded indexes"),
+                        failure_index: None,
+                        failure_code: None,
+                        uncertain: false,
+                    }
+                }
+                FilesystemDriverMode::FailAt(failure) => {
+                    for index in 0..failure {
+                        self.apply_one(plan, index);
+                    }
+                    FilesystemApplyReport {
+                        atomic: false,
+                        applied_indexes: filesystem_indexes(failure).expect("bounded prefix"),
+                        failure_index: Some(u32::try_from(failure).expect("bounded failure")),
+                        failure_code: Some("filesystem.driver.injected_failure".to_owned()),
+                        uncertain: false,
+                    }
+                }
+                FilesystemDriverMode::CorruptPoststate => {
+                    for index in 0..plan.operations().len() {
+                        self.apply_one(plan, index);
+                    }
+                    self.corrupt_first_changed_entry();
+                    FilesystemApplyReport {
+                        atomic: true,
+                        applied_indexes: filesystem_indexes(plan.operations().len())
+                            .expect("bounded indexes"),
+                        failure_index: None,
+                        failure_code: None,
+                        uncertain: false,
+                    }
+                }
+                FilesystemDriverMode::Uncertain => {
+                    self.apply_one(plan, 0);
+                    FilesystemApplyReport {
+                        atomic: false,
+                        applied_indexes: Vec::new(),
+                        failure_index: None,
+                        failure_code: Some(FilesystemDriverError::Uncertain.code().to_owned()),
+                        uncertain: true,
+                    }
+                }
+                FilesystemDriverMode::MalformedAtomicPartial => FilesystemApplyReport {
+                    atomic: true,
+                    applied_indexes: vec![0],
+                    failure_index: Some(1),
+                    failure_code: Some("filesystem.driver.invalid_atomic_claim".to_owned()),
+                    uncertain: false,
+                },
+            }
+        }
+
+        fn restore(
+            &mut self,
+            authorization: FilesystemRestoreAuthorization<'_>,
+        ) -> FilesystemRestoreReport {
+            self.restore_calls += 1;
+            if matches!(self.mode, FilesystemDriverMode::RestoreFails) {
+                return FilesystemRestoreReport {
+                    restored_indexes: Vec::new(),
+                    failure_code: Some(FilesystemDriverError::RestoreFailed.code().to_owned()),
+                    uncertain: true,
+                };
+            }
+            for index in authorization.restore_indexes() {
+                let index = usize::try_from(*index).expect("bounded restore index");
+                self.observations[index] = self.initial[index].clone();
+            }
+            FilesystemRestoreReport {
+                restored_indexes: authorization.restore_indexes().to_vec(),
+                failure_code: None,
+                uncertain: false,
+            }
+        }
+    }
+
+    fn execute_transaction(
+        fixture: &mut TransactionFixture,
+        driver: &mut MemoryFilesystemDriver,
+    ) -> Result<super::FilesystemTransactionResult, FilesystemTransactionError> {
+        execute_filesystem_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.plan,
+            &fixture.approval,
+            FilesystemTransactionRequest {
+                transaction_id: "filesystem-transaction-0001".to_owned(),
+                now_epoch_ms: 4_000,
+            },
+            driver,
+        )
     }
 
     #[test]
@@ -2043,5 +3509,158 @@ mod tests {
             ),
             Err(FilesystemPlanError::GrantIssue)
         );
+    }
+
+    #[test]
+    fn controlled_filesystem_transaction_commits_every_operation_and_delete() {
+        for delete in [false, true] {
+            let mut fixture = transaction_fixture(delete);
+            let mut driver =
+                MemoryFilesystemDriver::new(&fixture.plan, FilesystemDriverMode::Success);
+            let result = execute_transaction(&mut fixture, &mut driver).expect("committed");
+            assert_eq!(result.outcome, FilesystemTransactionOutcome::Committed);
+            assert_eq!(driver.apply_calls, 1);
+            assert_eq!(driver.restore_calls, 0);
+            assert!(
+                result
+                    .receipts
+                    .iter()
+                    .filter(|receipt| receipt.status == FilesystemOperationStatus::Verified)
+                    .count()
+                    == fixture.plan.operations().len()
+            );
+            assert_eq!(
+                result.verification_requirements,
+                [super::FilesystemVerificationRequirement {
+                    verification_id: "cargo-test-filesystem-control".to_owned(),
+                    executed: false,
+                    requires_separate_command_grant: true,
+                }]
+            );
+            assert_eq!(
+                fixture
+                    .issuer
+                    .current(&fixture.approval.grant.grant_id)
+                    .map(|grant| grant.status),
+                Some(GrantStatus::Consumed)
+            );
+            verify_filesystem_receipts(&result.receipts).expect("receipt chain");
+        }
+    }
+
+    #[test]
+    fn stale_source_and_fresh_destination_collision_invalidate_before_apply() {
+        let mut stale = transaction_fixture(false);
+        let mut stale_driver =
+            MemoryFilesystemDriver::new(&stale.plan, FilesystemDriverMode::Success);
+        stale_driver.observations[1]
+            .source
+            .as_mut()
+            .expect("patch source")
+            .bytes
+            .push(b'!');
+        assert_eq!(
+            execute_transaction(&mut stale, &mut stale_driver),
+            Err(FilesystemTransactionError::PreapplyDenied)
+        );
+        assert_eq!(stale_driver.apply_calls, 0);
+        assert_eq!(
+            stale
+                .issuer
+                .current(&stale.approval.grant.grant_id)
+                .map(|grant| grant.status),
+            Some(GrantStatus::Invalidated)
+        );
+
+        let mut collision = transaction_fixture(false);
+        let mut collision_driver =
+            MemoryFilesystemDriver::new(&collision.plan, FilesystemDriverMode::Success);
+        collision_driver.observations[0]
+            .destination_sibling_names
+            .push("CREATED.TXT".to_owned());
+        assert_eq!(
+            execute_transaction(&mut collision, &mut collision_driver),
+            Err(FilesystemTransactionError::PreapplyDenied)
+        );
+        assert_eq!(collision_driver.apply_calls, 0);
+    }
+
+    #[test]
+    fn known_partial_failure_restores_exact_prestate_and_no_change_stays_failed() {
+        let mut partial = transaction_fixture(false);
+        let mut partial_driver =
+            MemoryFilesystemDriver::new(&partial.plan, FilesystemDriverMode::FailAt(2));
+        let restored = execute_transaction(&mut partial, &mut partial_driver).expect("restored");
+        assert_eq!(restored.outcome, FilesystemTransactionOutcome::Restored);
+        assert_eq!(partial_driver.restore_calls, 1);
+        assert_eq!(partial_driver.observations, partial_driver.initial);
+        assert!(restored.receipts.iter().any(|receipt| {
+            receipt.status == FilesystemOperationStatus::RolledBack
+                && receipt.kind == FilesystemOperationKind::Create
+        }));
+
+        let mut no_change = transaction_fixture(false);
+        let mut no_change_driver =
+            MemoryFilesystemDriver::new(&no_change.plan, FilesystemDriverMode::FailAt(0));
+        let failed = execute_transaction(&mut no_change, &mut no_change_driver).expect("failed");
+        assert_eq!(failed.outcome, FilesystemTransactionOutcome::FailedNoChange);
+        assert_eq!(no_change_driver.restore_calls, 0);
+        assert_eq!(no_change_driver.observations, no_change_driver.initial);
+    }
+
+    #[test]
+    fn verification_mismatch_restores_while_uncertain_states_never_replay() {
+        let mut mismatch = transaction_fixture(false);
+        let mut mismatch_driver =
+            MemoryFilesystemDriver::new(&mismatch.plan, FilesystemDriverMode::CorruptPoststate);
+        let restored = execute_transaction(&mut mismatch, &mut mismatch_driver).expect("restored");
+        assert_eq!(restored.outcome, FilesystemTransactionOutcome::Restored);
+        assert_eq!(mismatch_driver.observations, mismatch_driver.initial);
+
+        for mode in [
+            FilesystemDriverMode::Uncertain,
+            FilesystemDriverMode::MalformedAtomicPartial,
+            FilesystemDriverMode::RestoreFails,
+        ] {
+            let mut fixture = transaction_fixture(false);
+            let mut driver = MemoryFilesystemDriver::new(&fixture.plan, mode);
+            let result = execute_transaction(&mut fixture, &mut driver).expect("uncertain result");
+            assert_eq!(result.outcome, FilesystemTransactionOutcome::Uncertain);
+            assert_eq!(
+                fixture
+                    .issuer
+                    .current(&fixture.approval.grant.grant_id)
+                    .map(|grant| grant.status),
+                Some(GrantStatus::Uncertain)
+            );
+            assert_eq!(
+                execute_transaction(&mut fixture, &mut driver),
+                Err(FilesystemTransactionError::InvalidInput)
+            );
+            assert_eq!(driver.apply_calls, 1);
+        }
+    }
+
+    #[test]
+    fn filesystem_receipt_tampering_fails_closed() {
+        type ReceiptMutation = Box<dyn Fn(&mut super::FilesystemOperationReceipt)>;
+
+        let mut fixture = transaction_fixture(false);
+        let mut driver = MemoryFilesystemDriver::new(&fixture.plan, FilesystemDriverMode::Success);
+        let result = execute_transaction(&mut fixture, &mut driver).expect("committed");
+        let mutations: Vec<ReceiptMutation> = vec![
+            Box::new(|value| value.destination_path = Some("other/path".to_owned())),
+            Box::new(|value| value.postimage_sha256 = "f".repeat(64)),
+            Box::new(|value| value.destination_mode = Some(0o777)),
+            Box::new(|value| value.previous_receipt_sha256 = "f".repeat(64)),
+        ];
+        for mutate in mutations {
+            let mut receipts = result.receipts.clone();
+            mutate(&mut receipts[0]);
+            assert_eq!(
+                verify_filesystem_receipts(&receipts),
+                Err(FilesystemTransactionError::ReceiptIntegrity)
+            );
+        }
     }
 }
