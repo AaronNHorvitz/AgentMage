@@ -1,0 +1,143 @@
+{
+  "blockers": [
+    {
+      "code": "PACKAGED-LINUX-GIT-WORKER-NOT-INTEGRATED",
+      "owner": "17.1.1.2"
+    },
+    {
+      "code": "ROOT-OWNED-LINUX-WORKER-NOT-INSTALLED",
+      "owner": "17.1.3.3"
+    },
+    {
+      "code": "MACOS-GIT-WORKER-EVIDENCE-MISSING",
+      "owner": "17.1.3.1"
+    },
+    {
+      "code": "LIVE-NETWORK-OBSERVATION-INCOMPLETE",
+      "owner": "17.1.3.3"
+    },
+    {
+      "code": "MANUAL-GIT-PARSER-FUZZING-DEFERRED",
+      "owner": "17.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-17-REVIEW-NOT-RETAINED",
+      "owner": "17.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-read-only",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "read-only-git-pack",
+      "output_sha256": "f4b9fbc843c8a2228fc5ca3a5382577687fa82022647276cd8682d87fa5b417e"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "instruction-trust-kernel",
+      "output_sha256": "9666c4a3ab10d4238efad15d82660a74b04818fab88be4df72c45349aba3d0c6"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-read-only",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "git-pack-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "instruction-kernel-clippy",
+      "output_sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149"
+    }
+  ],
+  "implemented_contracts": {
+    "authority_broadening_fields": 0,
+    "fixed_git_operations": 13,
+    "git_fixture_states": 7,
+    "git_mutation_operations": 0,
+    "injection_cases": 200,
+    "instruction_source_classes": 20,
+    "narrowing_constraint_classes": 6,
+    "raw_instruction_content_in_ledger": false,
+    "stale_and_conflict_stop": true,
+    "workspace_manifest_ledger": true
+  },
+  "platform_evidence": {
+    "linux_live_network_observation": false,
+    "linux_packaged_git_worker": false,
+    "local_disposable_git_adapter": true,
+    "macos_git_worker": false
+  },
+  "record_type": "sprint_17_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-005",
+    "SR-AI-008",
+    "SR-NET-001",
+    "SR-TST-002",
+    "SR-TST-004",
+    "RV-11"
+  ],
+  "source_revision": "a2079c61b6bf0d15742001ac044bb258ec98ab05",
+  "source_sha256": {
+    "capabilities/read-only/src/git.rs": "60ff74b828fa9a24c8f7800165dde2f2953e74f81509ce654c74314447198451",
+    "capabilities/read-only/src/lib.rs": "dd6cc08daee21bf294ac91a71912872b435fa93c6c91d4afaef65dc526d1f84b",
+    "docs/architecture/read-only-git-and-instruction-trust.md": "35410a221c7c7f73cca1a0d12045ce6448fe35af5201e84836c526d0b4ebc2b2",
+    "docs/verification/sprint-17-local-results.md": "a13e7a3e9a0c2c4b7c254aaecb87c8f9c4411cdc8c166fd7d52f2bb383ae9931",
+    "kernel/engine/src/authority.rs": "ea048636f4765337ad16d0341f7bcceaa80f3be76d918455880cba78ac6e37eb",
+    "kernel/engine/src/instruction_provenance.rs": "7117d1acf7a00e7187a81a1fa34af3df043b8f734c34692e123705b80f1de107",
+    "kernel/engine/src/lib.rs": "3d6dbe32eae670e19f749694f7c5e917a5d4fcda6cc09942d2afb03145327304",
+    "scripts/sprint_17_evidence.py": "ce479d647204b480ce8e496bc059c4ec18a386900c32879ac4398c989f7b9754",
+    "tests/test_sprint_17_evidence.py": "532602d50740cbd7ae4aace299183fa0f0ea5afe1d72fc240727208c9e5e44e4"
+  },
+  "summary": {
+    "local_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED"
+  },
+  "verification_evidence": {
+    "git_invariance": true,
+    "hostile_git_configuration_canaries": true,
+    "independent_review": false,
+    "instruction_injection_matrix": true,
+    "manual_parser_fuzzing": false
+  }
+}
