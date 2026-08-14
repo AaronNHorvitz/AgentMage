@@ -32,7 +32,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "1584e0abea6daac74c7e39dd5ef10afb0ad4aca27598601d9773f5799288a6ae"
+      "output_sha256": "17a4f78f35ff7c4daf7bbd111b5d45ff4fc98b1b5b58f3393ff71f875c42f3bc"
     },
     {
       "argv": [
@@ -48,7 +48,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+      "output_sha256": "0ab18255ef4deeb171d6f33a4fc4bb3043e86bc5e3329399c4852c531b7b3f88"
     },
     {
       "argv": [
@@ -58,7 +58,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "c2a6c19724147aceefd8caa1fd93d21de2d81f5aa9c09e9e9e2847d3bf07302a"
+      "output_sha256": "e6e58464493590ba8c415d706a4b99fad7966387f020b7987ec14b67d9920b28"
     },
     {
       "argv": [
@@ -68,7 +68,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "a630856e6fc93971146829af72153533922415bc4b668c765f49138702f341ed"
+      "output_sha256": "4ce5c611d64c06e38047297b92513759a172530d9f1aa6e8ae57b9564b990608"
     },
     {
       "argv": [
@@ -150,6 +150,7 @@
     "real_approved_reranker_profile": false,
     "real_hardware_benefit_benchmark": false,
     "real_runtime_generated_vectors": false,
+    "remote_attempt_rejection_receipts": true,
     "remote_semantic_capability": false,
     "semantic_release_enabled": false,
     "source_write_authority": false,
@@ -174,14 +175,14 @@
     "SR-AI-013",
     "SR-TST-006"
   ],
-  "source_revision": "59e558cdfaefd9593fc77248d59520662b3d6d14",
+  "source_revision": "b1d22a5f18c36dac85d96a81a1dd8be00ff9446a",
   "source_sha256": {
-    "capabilities/knowledge/src/lib.rs": "cdd0000d9671b7e0f968941a84285f0febbdafec91d19f1da9f825d2dbac6b3d",
-    "capabilities/knowledge/src/semantic.rs": "4a489147fe1a5d36caf2f925d9a64afcbd11859980b2920318d5dc5a91ab0a0a",
+    "capabilities/knowledge/src/lib.rs": "3090142e2a1ecae71b284d3b63d2f49700c6722e9e63183ce8991e6a71fb16ce",
+    "capabilities/knowledge/src/semantic.rs": "07bf1e0b0aa712f141166cc92e0e7620f689cf8f4a422b2f475b66eafc70d430",
     "capabilities/knowledge/src/semantic_benchmark.rs": "3438db4f7b79158f839575f8502d21964c5b075bb74c0cac9544d32367e42ac2",
-    "docs/architecture/optional-local-semantic-retrieval.md": "bfea8d087fd41e31af8fb6e046d898916a61f21d69a0cd803cc2f3e75fc58e72",
-    "docs/verification/sprint-30-local-results.md": "f22f80712d0ae8cfe4eab59184580699a19c8217efb92ce9b2ebd41afdf359d9",
-    "scripts/sprint_30_evidence.py": "d0af65a58197a6231f3ef1e998990150a9441c6061ad1c3cc6a35c12e06d6b85",
+    "docs/architecture/optional-local-semantic-retrieval.md": "3f8e2bac70db702b35e4ad786119e67085e69c4e5463e1d747973a00fd3fcdfd",
+    "docs/verification/sprint-30-local-results.md": "08a294918ca30a36f0ec07613c44a51e274f215c10e9e3e92a019739bf71f1c0",
+    "scripts/sprint_30_evidence.py": "91adfd6f36075db05ce47997668994e8fcce9616e7854c09909c123bc5de9237",
     "tests/test_sprint_30_evidence.py": "f512573d8f55bccd60cd7564e1e0766b232c40de9b392369c0cf7dd2b8941d9c"
   },
   "summary": {
