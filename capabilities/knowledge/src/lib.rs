@@ -17,6 +17,7 @@ mod retrieval;
 mod schema;
 mod semantic;
 mod semantic_benchmark;
+mod skills;
 mod store;
 mod tasks;
 
@@ -96,6 +97,13 @@ pub use semantic_benchmark::{
     RetrievalBenchmarkCase, RetrievalBenchmarkError, RetrievalBenchmarkMetrics,
     RetrievalBenchmarkMode, RetrievalBenchmarkReport, RetrievalReleaseBehavior, RetrievalTaskClass,
     SemanticBenefitThresholds, benchmark_retrieval,
+};
+pub use skills::{
+    DeclarativeAssetKind, DeclarativeSkillAsset, DeclarativeSkillCompatibility,
+    DeclarativeSkillError, DeclarativeSkillFile, DeclarativeSkillManifest, DeclarativeSkillPackage,
+    DeclarativeSkillRegistry, DeclarativeSkillScope, DeclarativeSkillTrustState,
+    SkillAuthorityCeiling, SkillContext, SkillContextEntry, SkillInfluenceReceipt,
+    SkillInstructionConflict, compose_skill_context, seal_declarative_skill_manifest,
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
