@@ -361,7 +361,8 @@ void test("doctor renders every typed state without workspace approval", async (
   approvals.workspaceApproved = false;
   const response = await controller.respond("doctor", signal);
   assert.equal(bridge.previewCalls, 0);
-  assert.match(response.text, /AgentMage local status: \*\*Unavailable\*\*/);
+  assert.match(response.text, /# AgentMage Local Status/);
+  assert.match(response.text, /Overall status: \*\*Unavailable\*\*/);
   assert.match(response.text, /\*\*Package:\*\* Healthy/);
   assert.match(response.text, /\*\*Recovery:\*\* Unavailable/);
   assert.match(response.text, new RegExp("d{64}"));
@@ -373,7 +374,8 @@ void test("diagnostic export requires destination preview and one approval", asy
   assert.equal(bridge.diagnosticPreviewCalls, 1);
   assert.equal(bridge.diagnosticApprovalCalls, 1);
   assert.equal(bridge.diagnosticCancellationCalls, 0);
-  assert.match(response.text, /wrote the reviewed local diagnostic export/);
+  assert.match(response.text, /# Diagnostic Export Complete/);
+  assert.match(response.text, /- Status: succeeded/);
   assert.match(response.text, new RegExp("b{64}"));
 });
 
@@ -422,9 +424,45 @@ void test("one approved read renders bounded content citation and receipt", asyn
   assert.ok(response.text.includes("    const value = 1;"));
   assert.match(
     response.text,
-    /\[Open file\]\(file:\/\/\/tmp\/fixture\/src\/lib\.ts\)/,
+    /\[Open validated local file\]\(file:\/\/\/tmp\/fixture\/src\/lib\.ts\)/,
   );
   assert.ok(response.text.includes(`Receipt: \`${"b".repeat(64)}\``));
+  assert.equal(response.parts.length, 3);
+  assert.match(response.parts[0] ?? "", /# Read Complete/);
+  assert.match(response.parts[2] ?? "", /## Evidence/);
+});
+
+void test("unsafe display links never become clickable native Chat output", async () => {
+  for (const fileUri of [
+    "file:///tmp/fixture/src/lib.ts?command=run",
+    "file:///tmp/fixture/src/lib.ts#L1",
+    "file:///tmp/fixture/src/%2",
+    "file:///tmp/fixture/src/[label](command:run)",
+    "file:///tmp/fixture/src/é.ts",
+    `file:///${"a".repeat(8 * 1_024)}`,
+  ]) {
+    const current = fixture();
+    current.bridge.approveRead = (request) =>
+      Promise.resolve({
+        kind: "read_completed",
+        schema_version: 1,
+        request_id: request.request_id,
+        content: "untrusted content",
+        file_uri: fileUri,
+        receipt: {
+          receipt_id: "receipt-0001",
+          sequence: 1,
+          receipt_sha256: "b".repeat(64),
+          outcome: "succeeded",
+        },
+      });
+    const response = await current.controller.respond(
+      "read src/lib.ts",
+      current.signal,
+    );
+    assert.match(response.text, /vscode\.host\.response_invalid/);
+    assert.doesNotMatch(response.text, /\]\(file:/);
+  }
 });
 
 void test("workspace and operation denials start no approved worker", async () => {

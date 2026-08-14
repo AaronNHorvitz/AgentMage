@@ -248,6 +248,9 @@ export interface RequestIdentitySource {
 }
 
 export interface ControllerResult {
+  /** Ordered semantic response parts for native Chat streaming. */
+  readonly parts: readonly string[];
+  /** Complete response retained for non-streaming tests and thin clients. */
   readonly text: string;
 }
 
@@ -431,7 +434,10 @@ export class SecureReadController {
     cancellation: CancellationSignal,
   ): Promise<ControllerResult> {
     if (this.disposed) {
-      return result("AgentMage denied the request: `vscode.host.deactivated`.");
+      return deniedResult(
+        "vscode.host.deactivated",
+        "The local host is no longer active.",
+      );
     }
     if (prompt === "models") {
       const snapshot = await this.discoverModels(cancellation);
@@ -461,22 +467,25 @@ export class SecureReadController {
     }
     const components = parseReadCommand(prompt);
     if (components === undefined) {
-      return result(
-        "AgentMage denied the request: `vscode.read.command_invalid`.",
+      return deniedResult(
+        "vscode.read.command_invalid",
+        "The request does not match an available bounded command.",
       );
     }
     const workspace = this.workspaces.selectedLocalWorkspace();
     if (workspace === undefined) {
-      return result(
-        "AgentMage denied the request: `vscode.workspace.unavailable`.",
+      return deniedResult(
+        "vscode.workspace.unavailable",
+        "Select exactly one local file workspace before retrying.",
       );
     }
     if (cancellation.isCancellationRequested) {
       return cancelledResult();
     }
     if (!(await this.approvals.confirmWorkspace(workspace, components))) {
-      return result(
-        "AgentMage denied the request: `vscode.workspace.not_approved`.",
+      return deniedResult(
+        "vscode.workspace.not_approved",
+        "The workspace read was not approved. No file was opened.",
       );
     }
 
@@ -508,8 +517,9 @@ export class SecureReadController {
         return renderTerminal(previewResponse, previewRequestId);
       }
       if (!validPreview(previewResponse, previewRequestId, components)) {
-        return result(
-          "AgentMage denied the request: `vscode.host.preview_invalid`.",
+        return deniedResult(
+          "vscode.host.preview_invalid",
+          "The host returned an invalid read preview. No operation was approved.",
         );
       }
       previewId = previewResponse.preview_id;
@@ -522,8 +532,9 @@ export class SecureReadController {
       if (!(await this.approvals.confirmRead(previewResponse))) {
         await this.cancel(previewId);
         cancellationSent = true;
-        return result(
-          "AgentMage denied the request: `vscode.read.not_approved`.",
+        return deniedResult(
+          "vscode.read.not_approved",
+          "The exact read preview was not approved. No read was started.",
         );
       }
       if (this.disposed || cancellation.isCancellationRequested) {
@@ -554,7 +565,9 @@ export class SecureReadController {
   ): Promise<ControllerResult> {
     const destination = await this.approvals.selectDiagnosticDestination();
     if (destination === undefined) {
-      return result("AgentMage cancelled the diagnostic export.");
+      return result(
+        "# Diagnostic Export Cancelled\n\nAgentMage cancelled the diagnostic export. No destination was written.\n\n- Status: cancelled",
+      );
     }
     if (this.disposed || cancellation.isCancellationRequested) {
       return cancelledResult();
@@ -586,7 +599,9 @@ export class SecureReadController {
       await this.cancelDiagnosticExport(preview.preview_id);
       return approved
         ? cancelledResult()
-        : result("AgentMage cancelled the diagnostic export.");
+        : result(
+            "# Diagnostic Export Cancelled\n\nAgentMage cancelled the diagnostic export. No destination was written.\n\n- Status: cancelled",
+          );
     }
     this.pendingDiagnosticExports.delete(preview.preview_id);
     const approvalRequestId = this.identities.next();
@@ -687,13 +702,15 @@ function renderExportTerminal(
     response.schema_version !== HOST_PROTOCOL_VERSION ||
     response.request_id !== expectedRequestId
   ) {
-    return result(
-      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The host response did not match this request.",
     );
   }
   if (response.kind === "denied") {
-    return result(
-      `AgentMage denied the request: \`${validCode(response.code) ? response.code : "vscode.host.response_invalid"}\`.`,
+    return deniedResult(
+      validCode(response.code) ? response.code : "vscode.host.response_invalid",
+      "The local host refused the diagnostic export.",
     );
   }
   if (
@@ -704,12 +721,14 @@ function renderExportTerminal(
     !Number.isSafeInteger(response.payload_bytes) ||
     response.payload_bytes <= 0
   ) {
-    return result(
-      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The diagnostic export completion was invalid.",
     );
   }
   return result(
-    `AgentMage wrote the reviewed local diagnostic export (${response.payload_bytes.toString()} bytes). Payload: \`${response.payload_sha256}\`.`,
+    "# Diagnostic Export Complete\n\n",
+    `- Status: succeeded\n- Bytes: ${response.payload_bytes.toString()}\n- Payload: \`${response.payload_sha256}\``,
   );
 }
 
@@ -721,32 +740,41 @@ function renderDoctor(
     response.schema_version !== HOST_PROTOCOL_VERSION ||
     response.request_id !== expectedRequestId
   ) {
-    return result(
-      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The host response did not match this status request.",
     );
   }
   if (response.kind === "denied") {
-    return result(
-      `AgentMage denied the request: \`${validCode(response.code) ? response.code : "vscode.host.response_invalid"}\`.`,
+    return deniedResult(
+      validCode(response.code) ? response.code : "vscode.host.response_invalid",
+      "The local host refused the status request.",
     );
   }
   if (
     response.kind !== "doctor_completed" ||
     !validDoctorReport(response.report)
   ) {
-    return result(
-      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The local status report was invalid.",
     );
   }
   const lines = [
-    `AgentMage local status: **${stateLabel(response.report.overall_state)}**`,
+    "# AgentMage Local Status",
+    "",
+    `Overall status: **${stateLabel(response.report.overall_state)}**`,
+    "",
+    "## Components",
     "",
     ...response.report.items.map(
       (item) =>
         `- **${componentLabel(item.component)}:** ${stateLabel(item.state)} (${item.reason_code}; ${item.remediation_code})`,
     ),
     "",
-    `Report: \`${response.report.report_sha256}\``,
+    "## Evidence",
+    "",
+    `- Report: \`${response.report.report_sha256}\``,
   ];
   return result(lines.join("\n"));
 }
@@ -872,15 +900,17 @@ function renderTerminal(
     response.schema_version !== HOST_PROTOCOL_VERSION ||
     response.request_id !== expectedRequestId
   ) {
-    return result(
-      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    return deniedResult(
+      "vscode.host.response_invalid",
+      "The host response did not match this read request.",
     );
   }
   switch (response.kind) {
     case "read_completed": {
       if (!validReceipt(response.receipt) || !validFileUri(response.file_uri)) {
-        return result(
-          "AgentMage denied the request: `vscode.host.response_invalid`.",
+        return deniedResult(
+          "vscode.host.response_invalid",
+          "The read result contained an invalid receipt or display link.",
         );
       }
       const content = response.content
@@ -888,18 +918,24 @@ function renderTerminal(
         .map((line) => `    ${line}`)
         .join("\n");
       return result(
-        `${content}\n\n[Open file](${response.file_uri})\n\nReceipt: \`${response.receipt.receipt_sha256}\``,
+        "# Read Complete\n\n## Content\n\n",
+        `${content}\n\n`,
+        `## Evidence\n\n- File: [Open validated local file](${response.file_uri})\n- Outcome: succeeded\n- Receipt: \`${response.receipt.receipt_sha256}\``,
       );
     }
     case "denied":
-      return result(
-        `AgentMage denied the request: \`${validCode(response.code) ? response.code : "vscode.host.response_invalid"}\`.`,
+      return deniedResult(
+        validCode(response.code)
+          ? response.code
+          : "vscode.host.response_invalid",
+        "The local host refused the read request.",
       );
     case "cancelled":
       return cancelledResult();
     case "read_preview":
-      return result(
-        "AgentMage denied the request: `vscode.host.response_invalid`.",
+      return deniedResult(
+        "vscode.host.response_invalid",
+        "A preview cannot be accepted as a terminal read result.",
       );
   }
 }
@@ -927,7 +963,29 @@ function validCode(value: string): boolean {
 }
 
 function validFileUri(value: string): boolean {
-  return value.startsWith("file:///") && !/[\r\n<>]/u.test(value);
+  if (
+    Buffer.byteLength(value, "ascii") > 8 * 1_024 ||
+    !value.startsWith("file:///") ||
+    value.length === "file:///".length ||
+    !/^[\x20-\x7e]+$/u.test(value) ||
+    /[?#]/u.test(value)
+  ) {
+    return false;
+  }
+  for (let index = "file://".length; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === "%") {
+      if (!/^[0-9A-Fa-f]{2}$/u.test(value.slice(index + 1, index + 3))) {
+        return false;
+      }
+      index += 2;
+      continue;
+    }
+    if (character === undefined || !/[A-Za-z0-9/._~-]/u.test(character)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function sameComponents(
@@ -959,10 +1017,19 @@ function denied(requestId: string, code: string): HostReadResponse {
   };
 }
 
-function result(text: string): ControllerResult {
-  return { text };
+function result(...parts: readonly string[]): ControllerResult {
+  return { parts, text: parts.join("") };
+}
+
+function deniedResult(code: string, guidance: string): ControllerResult {
+  const renderedCode = validCode(code) ? code : "vscode.host.response_invalid";
+  return result(
+    `# Request Denied\n\n${guidance}\n\n- Status: denied\n- Code: \`${renderedCode}\``,
+  );
 }
 
 function cancelledResult(): ControllerResult {
-  return result("AgentMage cancelled the request: `vscode.read.cancelled`.");
+  return result(
+    "# Request Cancelled\n\n- Status: cancelled\n- Code: `vscode.read.cancelled`",
+  );
 }

@@ -128,12 +128,16 @@ export async function activate(
           token,
         );
         if (stopped !== undefined) {
-          progress.report(new vscode.LanguageModelTextPart(stopped.text));
+          for (const part of stopped.parts) {
+            progress.report(new vscode.LanguageModelTextPart(part));
+          }
           return;
         }
         const prompt = lastUserText(messages);
         const response = await controller.respond(prompt, token);
-        progress.report(new vscode.LanguageModelTextPart(response.text));
+        for (const part of response.parts) {
+          progress.report(new vscode.LanguageModelTextPart(part));
+        }
       },
       provideTokenCount: (_model, value) => {
         const text = typeof value === "string" ? value : requestText(value);
