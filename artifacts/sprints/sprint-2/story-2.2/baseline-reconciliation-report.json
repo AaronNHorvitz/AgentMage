@@ -23,15 +23,15 @@
   "runs": [
     {
       "allowlisted_input_count": 13,
-      "campaign_report_sha256": "27bdb5f1c89bb9d5d9591758c762930e843667d0fd134e3acf6230e06244d0a4",
+      "campaign_report_sha256": "ad387f3247ea970eb95aea5070e55c6c801f6ee4f3a2c3553f5711361ba59b67",
       "clean_root_started_empty": true,
       "fake_boundary_engine": "agentmage-bounded-fake-fuzzer",
-      "input_set_sha256": "5e6647996a96aa5e9fbf882f1622e22a2ad67106c9fde1ea107412fde0c760e2",
+      "input_set_sha256": "06019ad1ea3651820ad748d2fa66b3436e309c8b16ffe333cef1e88c902a794e",
       "inputs_unchanged": true,
       "non_pass_result_count": 6,
-      "normalized_result_set_sha256": "51341e45c3ebc7068c7eebf324251ed8f232d9ee55f936aef13f1f5ca184dde0",
+      "normalized_result_set_sha256": "5414aefbece8920cf017291237184c7e498e471d4b00078a37ad8192c24f7293",
       "product_boundary_count": 0,
-      "reconciliation_sha256": "c43a8c2951981e1a3f829f463040fd4ca1d83d42d36a053b8815fee870a49907",
+      "reconciliation_sha256": "5fc0eb48bc520dc47e3ce26194df48a3ef9576efbf7173443bd0c84db60e2d08",
       "regression_set_sha256": "5ae667e30c4ea472873cf3a6d245349393219e602e7b5e6fd9a7d1415220c575",
       "regressions": [
         {
@@ -81,7 +81,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-0560ddffb08ccc806a40",
-          "record_sha256": "f98485c1bc7ffe24b689a3105637615b0a6581b322a99ce5c74c418de170b463",
+          "record_sha256": "81ab7fb36b589b842e29445c3a18700f208b137d6e4bc082be3a1f0e885c03a0",
           "regression_path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
           "result_status": "crash",
           "sanitizer_state_sha256": "9e42ade25ca412d5a74cb87b700d7602ca9719b882eabfee8524569ccd4deb40",
@@ -108,7 +108,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-dde5442e5f569789b68f",
-          "record_sha256": "7e1f98cfd54a7e2bddc59392c2fbfd26b64b2ccbc6c1791cfcf24a065fd07588",
+          "record_sha256": "ee7edd79b9f1413ed5109ce751b078dbb09ad52a844ac53ef38a468ae36eeed9",
           "regression_path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
           "result_status": "hang",
           "sanitizer_state_sha256": "7dd7c550498687b476366bbd1b4bcc4b89561f7f536b384e3e99f5f10b12ad78",
@@ -135,7 +135,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-18063008c7e6c3494485",
-          "record_sha256": "65a416194da76d5de45db9ea0eb89cbf315d04dcb9289ada63d2d6cce98d6f75",
+          "record_sha256": "699ba16bd8eeed8a6ce31bc22092b44ca1d3d688c89991dd0151395a4a8d6c9b",
           "regression_path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
           "result_status": "resource-exhaustion",
           "sanitizer_state_sha256": "a1b820ed1c806625870e33f6fcdabbe3935d9145ba728fcc125c6f447fd1943a",
@@ -162,7 +162,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-1be200cf10c9cd7a1352",
-          "record_sha256": "f73df512f38674a0fa7bcc7765379c6dfdd7e54c31549ee4b70128da79c22470",
+          "record_sha256": "279042bbf5a895ad79f0d75d581d05192d73dce3246d9a7cdf791990a4ae7802",
           "regression_path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
           "result_status": "path-escape",
           "sanitizer_state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
@@ -189,7 +189,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-759944aa9d77d6e403db",
-          "record_sha256": "be7253044f14bdfc03413cc0e058c69ceae67ba21f771bbfc79f03ce7c806efe",
+          "record_sha256": "f9839c2e5d82a3bc6554d7df25311ad197014b20bb653bf229015f5d0234822f",
           "regression_path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
           "result_status": "secret-leak",
           "sanitizer_state_sha256": "763a7ac6cf2784dc3976e737df215e7cd6a85a5746bd3516ae342a2a78bd22f6",
@@ -216,7 +216,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-75cf1143c1264a7181fa",
-          "record_sha256": "4ebe50a98f4766913d11380af4c9ec5eb352effc29a7c1d880154f2c64744143",
+          "record_sha256": "163e05e4f84d17a8f36eb03f0a0075c92b3c12593c36ce31e2d4b130342ceaaf",
           "regression_path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
           "result_status": "authorization-bypass",
           "sanitizer_state_sha256": "b0959c04750d40ce8284f9a2d416ceff696bacd0e29ce50d51239cfd010a6e29",
@@ -235,15 +235,15 @@
     },
     {
       "allowlisted_input_count": 13,
-      "campaign_report_sha256": "27bdb5f1c89bb9d5d9591758c762930e843667d0fd134e3acf6230e06244d0a4",
+      "campaign_report_sha256": "ad387f3247ea970eb95aea5070e55c6c801f6ee4f3a2c3553f5711361ba59b67",
       "clean_root_started_empty": true,
       "fake_boundary_engine": "agentmage-bounded-fake-fuzzer",
-      "input_set_sha256": "5e6647996a96aa5e9fbf882f1622e22a2ad67106c9fde1ea107412fde0c760e2",
+      "input_set_sha256": "06019ad1ea3651820ad748d2fa66b3436e309c8b16ffe333cef1e88c902a794e",
       "inputs_unchanged": true,
       "non_pass_result_count": 6,
-      "normalized_result_set_sha256": "51341e45c3ebc7068c7eebf324251ed8f232d9ee55f936aef13f1f5ca184dde0",
+      "normalized_result_set_sha256": "5414aefbece8920cf017291237184c7e498e471d4b00078a37ad8192c24f7293",
       "product_boundary_count": 0,
-      "reconciliation_sha256": "c43a8c2951981e1a3f829f463040fd4ca1d83d42d36a053b8815fee870a49907",
+      "reconciliation_sha256": "5fc0eb48bc520dc47e3ce26194df48a3ef9576efbf7173443bd0c84db60e2d08",
       "regression_set_sha256": "5ae667e30c4ea472873cf3a6d245349393219e602e7b5e6fd9a7d1415220c575",
       "regressions": [
         {
@@ -293,7 +293,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-0560ddffb08ccc806a40",
-          "record_sha256": "f98485c1bc7ffe24b689a3105637615b0a6581b322a99ce5c74c418de170b463",
+          "record_sha256": "81ab7fb36b589b842e29445c3a18700f208b137d6e4bc082be3a1f0e885c03a0",
           "regression_path": "fuzzing/regressions/FT-MANIFEST-001/6f93481fe2c111b1c44176bfa27e6461bf26668e0c6c31fab4a32fa8a4f663e5.bin",
           "result_status": "crash",
           "sanitizer_state_sha256": "9e42ade25ca412d5a74cb87b700d7602ca9719b882eabfee8524569ccd4deb40",
@@ -320,7 +320,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-dde5442e5f569789b68f",
-          "record_sha256": "7e1f98cfd54a7e2bddc59392c2fbfd26b64b2ccbc6c1791cfcf24a065fd07588",
+          "record_sha256": "ee7edd79b9f1413ed5109ce751b078dbb09ad52a844ac53ef38a468ae36eeed9",
           "regression_path": "fuzzing/regressions/FT-IPC-001/b1432642907bf9ece49a1ea6cb8c54bebd9f1e5ca2df66bfd995cf6a7a6f73c9.bin",
           "result_status": "hang",
           "sanitizer_state_sha256": "7dd7c550498687b476366bbd1b4bcc4b89561f7f536b384e3e99f5f10b12ad78",
@@ -347,7 +347,7 @@
             "severity": "high"
           },
           "record_id": "am-fuzz-result-18063008c7e6c3494485",
-          "record_sha256": "65a416194da76d5de45db9ea0eb89cbf315d04dcb9289ada63d2d6cce98d6f75",
+          "record_sha256": "699ba16bd8eeed8a6ce31bc22092b44ca1d3d688c89991dd0151395a4a8d6c9b",
           "regression_path": "fuzzing/regressions/FT-MODEL-OUTPUT-001/1e88bb017cece80e46f2c16182e132f91161d3481388f7ab9259f783fc269ccc.bin",
           "result_status": "resource-exhaustion",
           "sanitizer_state_sha256": "a1b820ed1c806625870e33f6fcdabbe3935d9145ba728fcc125c6f447fd1943a",
@@ -374,7 +374,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-1be200cf10c9cd7a1352",
-          "record_sha256": "f73df512f38674a0fa7bcc7765379c6dfdd7e54c31549ee4b70128da79c22470",
+          "record_sha256": "279042bbf5a895ad79f0d75d581d05192d73dce3246d9a7cdf791990a4ae7802",
           "regression_path": "fuzzing/regressions/FT-PATH-001/fa08499e14d0113ba6794623f1badedcc8e9ae51cb5bafc7e14a5af1454bcfe7.bin",
           "result_status": "path-escape",
           "sanitizer_state_sha256": "96c36c04f120a7b77338ce85c43df1d859d28720b78e5b6eef9a8ff4f2bca0c9",
@@ -401,7 +401,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-759944aa9d77d6e403db",
-          "record_sha256": "be7253044f14bdfc03413cc0e058c69ceae67ba21f771bbfc79f03ce7c806efe",
+          "record_sha256": "f9839c2e5d82a3bc6554d7df25311ad197014b20bb653bf229015f5d0234822f",
           "regression_path": "fuzzing/regressions/FT-TEXT-001/e1a480b8acb07821ae78acd569b61b07eb629ab423ace44b6d4e7179fe1e9c43.bin",
           "result_status": "secret-leak",
           "sanitizer_state_sha256": "763a7ac6cf2784dc3976e737df215e7cd6a85a5746bd3516ae342a2a78bd22f6",
@@ -428,7 +428,7 @@
             "severity": "critical"
           },
           "record_id": "am-fuzz-result-75cf1143c1264a7181fa",
-          "record_sha256": "4ebe50a98f4766913d11380af4c9ec5eb352effc29a7c1d880154f2c64744143",
+          "record_sha256": "163e05e4f84d17a8f36eb03f0a0075c92b3c12593c36ce31e2d4b130342ceaaf",
           "regression_path": "fuzzing/regressions/FT-GRANT-001/7f84c8c9be1e625621626ae0cef24fb24783041fd38856ec4d255d2a2ee3541a.bin",
           "result_status": "authorization-bypass",
           "sanitizer_state_sha256": "b0959c04750d40ce8284f9a2d416ceff696bacd0e29ce50d51239cfd010a6e29",

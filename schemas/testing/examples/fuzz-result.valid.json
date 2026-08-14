@@ -11,7 +11,7 @@
   "evidence": [
     {
       "path": "fuzzing/target-registry.json",
-      "sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020"
+      "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
     },
     {
       "path": "fuzzing/toolchain-policy.json",
@@ -49,7 +49,7 @@
   },
   "product_fuzz_claim": "none",
   "record_id": "am-fuzz-result-e8cdf560641e3537004d",
-  "record_sha256": "3b290b87c9690de1adebefa281b7a899426eadee22dfaf2e06a7b610cff94382",
+  "record_sha256": "0cde05c4bcca1dde3db05add8f2a796decc7ebe06143571576c028f7a6e4038b",
   "record_type": "fuzz-result",
   "redaction": {
     "private_paths_recorded": false,
@@ -78,7 +78,7 @@
   "schema_version": 1,
   "target": {
     "boundary_class": "paths",
-    "build_sha256": "e54c0a75e0241e57ccf9a46dd1520f9295366e3b65ab4d3f6c3150b1f352b8d8",
+    "build_sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af",
     "corpus_sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75",
     "dictionary_sha256": [
       "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",
@@ -96,7 +96,7 @@
     "harness_sha256": "5d44b6a6fe6b5357e8900554bf2a838567d42d73f2c61d8cf7c7916ce9307b02",
     "platform_result_sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db",
     "policy_sha256": "a85b5658e5332ad4e757ae917e48314b2f2952467c0367983a1a05f2e1d3ff4b",
-    "registry_sha256": "612433e3efad373335c800300b513c19b12af7c66a7480b8041b5aad180dc020",
+    "registry_sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d",
     "target_id": "FT-PATH-001"
   },
   "timeout_resource_event": {
