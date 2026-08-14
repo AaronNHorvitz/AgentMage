@@ -5,9 +5,10 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
-    ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
-    WORKSPACE_FILE_READ_TOOL_ID, WORKSPACE_FILE_READ_TOOL_VERSION, validate_read_only_request,
-    workspace_file_read_definition,
+    MAX_READ_ONLY_CALL_DEPTH, ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyOutcome,
+    ReadOnlyRequest, ReadOnlyResult, ReadOnlyToolKind, WORKSPACE_FILE_READ_TOOL_ID,
+    WORKSPACE_FILE_READ_TOOL_VERSION, read_only_tool_definition, read_only_tool_kind,
+    validate_read_only_request, workspace_file_read_definition,
 };
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
@@ -26,10 +27,10 @@ use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_kernel_engine::policy::{
     PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
 };
-use agentmage_kernel_engine::tooling::{Tool, ToolRegistry};
+use agentmage_kernel_engine::tooling::{Tool, ToolAttemptGuard, ToolRegistry};
 use agentmage_platform_linux::{
     LinuxAuthenticatedIpcSession, LinuxAuthorityRuntime, LinuxHeldObject, LinuxPlatformAdapter,
-    LinuxSandboxEffectDriver, LinuxSandboxOperation, LinuxSandboxRunner,
+    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxRunner,
     resolve_linux_workspace_object, select_linux_workspace,
 };
 use rustix::rand::{GetRandomFlags, getrandom};
@@ -225,6 +226,7 @@ where
     identities: I,
     clock: C,
     pending: BTreeMap<String, PendingLinuxRead>,
+    attempt_guard: ToolAttemptGuard,
     diagnostic_exports: DiagnosticExportWorkflow,
 }
 
@@ -243,13 +245,7 @@ where
         identities: I,
         clock: C,
     ) -> Result<Self, LinuxReadError> {
-        let mut registry = ToolRegistry::new();
-        registry
-            .register_tool(Box::new(RegisteredReadTool {
-                definition: workspace_file_read_definition(),
-                kind: ReadOnlyToolKind::ReadText,
-            }))
-            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let registry = read_only_registry()?;
         Ok(Self {
             platform: LinuxReadPlatform::Verified(platform),
             authority,
@@ -260,6 +256,8 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
+                .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
         })
     }
@@ -289,13 +287,7 @@ where
         identities: I,
         clock: C,
     ) -> Result<Self, LinuxReadError> {
-        let mut registry = ToolRegistry::new();
-        registry
-            .register_tool(Box::new(RegisteredReadTool {
-                definition: workspace_file_read_definition(),
-                kind: ReadOnlyToolKind::ReadText,
-            }))
-            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let registry = read_only_registry()?;
         Ok(Self {
             platform: LinuxReadPlatform::Test(AdapterInstanceId::from_raw(
                 "linux-read-test-uninitialized",
@@ -308,6 +300,8 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
+                .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
         })
     }
@@ -706,6 +700,24 @@ where
         }
 
         let approval = pending.approval;
+        let tool_kind = read_only_tool_kind(
+            &approval.tool_call.tool_id,
+            &approval.tool_call.tool_version,
+        )
+        .ok_or(LinuxReadError::AuthorityDenied)?;
+        let validated_request =
+            validate_read_only_request(tool_kind, &approval.tool_call.arguments.bytes)
+                .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        self.attempt_guard
+            .record_attempt(&approval.tool_call, validated_request.call_depth)
+            .map_err(|_| LinuxReadError::ApprovalDenied)?;
+        let worker_input = LinuxReadOnlyToolInput::seal(
+            approval.tool_call.tool_id.as_str(),
+            approval.tool_call.tool_version.as_str(),
+            &approval.tool_call.arguments.bytes,
+            vec![pending.held],
+        )
+        .map_err(|_| LinuxReadError::WorkerFailed)?;
         self.authority
             .revalidate_root()
             .map_err(|_| LinuxReadError::AuthorityDenied)?;
@@ -786,11 +798,7 @@ where
             .ok_or(LinuxReadError::AuthorityDenied)?
             .clone();
         let runner = self.sandbox.take().ok_or(LinuxReadError::WorkerFailed)?;
-        let mut driver = LinuxSandboxEffectDriver::new(
-            runner,
-            pending.held,
-            LinuxSandboxOperation::ReadFile(operation_path),
-        );
+        let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
         let receipt_result = self.authority.authority_mut().execute_effect(
             &self.registry,
             &policy,
@@ -813,16 +821,21 @@ where
                 receipt: Some(summary),
             });
         }
-        let content = match String::from_utf8(worker_result.stdout().to_vec()) {
-            Ok(content) => content,
-            Err(_) => {
-                return Ok(HostResponse::Denied {
-                    schema_version: HOST_PROTOCOL_VERSION,
-                    request_id: request_id.to_owned(),
-                    code: LinuxReadError::OutputDenied.code().to_owned(),
-                    receipt: Some(summary),
-                });
-            }
+        let result = match serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout()) {
+            Ok(result) if result.verify(tool_kind) => result,
+            _ => return Ok(output_denial(request_id, summary)),
+        };
+        if result.outcome != ReadOnlyOutcome::Succeeded || result.items.len() != 1 {
+            return Ok(output_denial(request_id, summary));
+        }
+        let expected_path = operation_path
+            .components()
+            .iter()
+            .map(|component| component.as_str().to_owned())
+            .collect::<Vec<_>>();
+        let content = match result.items.into_iter().next() {
+            Some(ReadOnlyItem::Text { path, content, .. }) if path == expected_path => content,
+            _ => return Ok(output_denial(request_id, summary)),
         };
         Ok(HostResponse::ReadCompleted {
             schema_version: HOST_PROTOCOL_VERSION,
@@ -859,6 +872,28 @@ where
             .iter()
             .find(|receipt| receipt.authority_transaction_id.as_str() == transaction)
             .map(receipt_summary)
+    }
+}
+
+fn read_only_registry() -> Result<ToolRegistry, LinuxReadError> {
+    let mut registry = ToolRegistry::new();
+    for kind in ReadOnlyToolKind::ALL {
+        registry
+            .register_tool(Box::new(RegisteredReadTool {
+                definition: read_only_tool_definition(kind),
+                kind,
+            }))
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+    }
+    Ok(registry)
+}
+
+fn output_denial(request_id: &str, receipt: ReceiptSummary) -> HostResponse {
+    HostResponse::Denied {
+        schema_version: HOST_PROTOCOL_VERSION,
+        request_id: request_id.to_owned(),
+        code: LinuxReadError::OutputDenied.code().to_owned(),
+        receipt: Some(receipt),
     }
 }
 
@@ -1032,6 +1067,7 @@ mod tests {
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use agentmage_capability_read_only::ReadOnlyToolKind;
     use agentmage_kernel_contracts::{ActorId, SessionId};
     use agentmage_kernel_engine::operational_store::{
         OperationalStoreKeyError, OperationalStoreKeyProvider,
@@ -1043,7 +1079,7 @@ mod tests {
 
     use super::{
         HOST_PROTOCOL_VERSION, HostRequest, HostResponse, LinuxReadError, LinuxReadWorkflow,
-        ReadClock, ReadIdentitySource, ReadInstant, format_utc, preview_suffix,
+        ReadClock, ReadIdentitySource, ReadInstant, format_utc, preview_suffix, read_only_registry,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1258,6 +1294,25 @@ mod tests {
             Some("00112233445566778899aabbccddeeff")
         );
         assert_eq!(preview_suffix("preview-not-hex"), None);
+    }
+
+    #[test]
+    fn production_registry_contains_only_the_complete_closed_read_only_catalog() {
+        let registry = read_only_registry().expect("closed registry");
+        let definitions = registry.list_tools();
+        assert_eq!(definitions.len(), ReadOnlyToolKind::ALL.len());
+        for kind in ReadOnlyToolKind::ALL {
+            assert!(
+                definitions
+                    .iter()
+                    .any(|definition| definition.tool_id.as_str() == kind.id())
+            );
+        }
+        assert!(definitions.iter().all(|definition| {
+            definition.declared_effects.len() == 1
+                && definition.declared_effects[0].operation()
+                    == agentmage_kernel_contracts::GrantOperation::WorkspaceRead
+        }));
     }
 
     #[test]
