@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 //! Local host composition for the bounded AgentMage product surface.
 
+/// One-use reviewed local diagnostic export workflow.
+pub mod diagnostic_export;
+
 pub mod protocol;
 
 #[cfg(target_os = "linux")]

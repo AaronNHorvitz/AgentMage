@@ -6,6 +6,7 @@ import {
   PROVIDER_FAMILY,
   PROVIDER_MODEL_ID,
   PROVIDER_VENDOR,
+  type DiagnosticExportPreview,
   SecureReadController,
   SessionRequestIdentitySource,
   type ApprovalUi,
@@ -68,6 +69,33 @@ class VsCodeApprovalUi implements ApprovalUi {
       "Read",
     );
     return selection === "Read";
+  }
+
+  async selectDiagnosticDestination(): Promise<string | undefined> {
+    const destination = await vscode.window.showSaveDialog({
+      saveLabel: "Review Export",
+      filters: { JSON: ["json"] },
+      title: "Select a private local diagnostic export destination",
+    });
+    return destination?.scheme === "file" ? destination.fsPath : undefined;
+  }
+
+  async confirmDiagnosticExport(
+    preview: DiagnosticExportPreview,
+    destination: string,
+  ): Promise<boolean> {
+    const selection = await vscode.window.showWarningMessage(
+      [
+        `Write ${preview.payload_bytes.toString()} diagnostic bytes to ${destination}?`,
+        `Fields: ${preview.included_fields.join(", ")}.`,
+        `Redactions: ${preview.redactions.join(", ")}.`,
+        `Sensitivity: ${preview.sensitivity}. Retention: ${preview.retention}.`,
+        `Payload: ${preview.payload_sha256}.`,
+      ].join(" "),
+      { modal: true },
+      "Export",
+    );
+    return selection === "Export";
   }
 }
 

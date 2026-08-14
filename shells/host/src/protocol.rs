@@ -54,6 +54,35 @@ pub enum HostRequest {
         /// Correlation identity selected by the shell.
         request_id: String,
     },
+    /// Preview one explicit local diagnostic export destination.
+    PreviewDiagnosticExport {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// User-selected absolute local JSON destination.
+        destination: String,
+    },
+    /// Confirm one exact diagnostic export preview.
+    ApproveDiagnosticExport {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+        /// Digest of the exact preview confirmed by the user.
+        confirmation_sha256: String,
+    },
+    /// Cancel one pending diagnostic export without writing a file.
+    CancelDiagnosticExport {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+    },
     /// Resolve and hold one file, then return a non-authoritative preview.
     PreviewRead {
         /// Protocol schema version.
@@ -96,6 +125,38 @@ impl HostRequest {
                 schema_version,
                 request_id,
             } => (*schema_version, request_id),
+            Self::PreviewDiagnosticExport {
+                schema_version,
+                request_id,
+                destination,
+            } => {
+                if destination.is_empty() || destination.len() > 4_096 || destination.contains('\0')
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::ApproveDiagnosticExport {
+                schema_version,
+                request_id,
+                preview_id,
+                confirmation_sha256,
+            } => {
+                if !valid_identifier(preview_id) || !valid_sha256(confirmation_sha256) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::CancelDiagnosticExport {
+                schema_version,
+                request_id,
+                preview_id,
+            } => {
+                if !valid_identifier(preview_id) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
             Self::PreviewRead {
                 schema_version,
                 request_id,
@@ -174,6 +235,48 @@ pub enum HostResponse {
         request_id: String,
         /// Kernel-owned content-free diagnostic report.
         report: DoctorReport,
+    },
+    /// One exact non-authoritative diagnostic export preview.
+    DiagnosticExportPreview {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Opaque pending-preview identity.
+        preview_id: String,
+        /// Digest of the selected canonical destination.
+        destination_sha256: String,
+        /// Digest of the exact export bytes.
+        payload_sha256: String,
+        /// Exact export byte count.
+        payload_bytes: u64,
+        /// Stable included field families.
+        included_fields: Vec<String>,
+        /// Stable redaction families.
+        redactions: Vec<String>,
+        /// Stable sensitivity label.
+        sensitivity: String,
+        /// Stable retention instruction.
+        retention: String,
+        /// Preview expiry.
+        expires_at_epoch_ms: u64,
+        /// Digest of the complete preview confirmation.
+        confirmation_sha256: String,
+    },
+    /// One completed local diagnostic export.
+    DiagnosticExportCompleted {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Digest of the selected canonical destination.
+        destination_sha256: String,
+        /// Digest of the exact published bytes.
+        payload_sha256: String,
+        /// Exact published byte count.
+        payload_bytes: u64,
+        /// Stable terminal outcome.
+        outcome: String,
     },
     /// One exact non-authoritative read preview.
     ReadPreview {
@@ -305,6 +408,37 @@ mod tests {
         prohibited["endpoint"] = json!("https://example.invalid/health");
         assert!(matches!(
             parse_request(&serde_json::to_vec(&prohibited).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
+    }
+
+    #[test]
+    fn diagnostic_export_protocol_is_closed_and_confirmation_bound() {
+        let preview = json!({
+            "kind": "preview_diagnostic_export",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-export-0001",
+            "destination": "/var/home/user/private/doctor.json"
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&preview).expect("request JSON")),
+            Ok(HostRequest::PreviewDiagnosticExport { .. })
+        ));
+        let approval = json!({
+            "kind": "approve_diagnostic_export",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-export-0002",
+            "preview_id": "diagnostic-export-0001",
+            "confirmation_sha256": "a".repeat(64)
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&approval).expect("request JSON")),
+            Ok(HostRequest::ApproveDiagnosticExport { .. })
+        ));
+        let mut malformed = approval;
+        malformed["grant"] = json!(true);
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&malformed).expect("request JSON")),
             Err(HostProtocolError::Malformed)
         ));
     }

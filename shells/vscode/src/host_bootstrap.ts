@@ -105,6 +105,24 @@ class SupervisedHostBridge implements HostBridge {
     return this.bridge.doctor(request);
   }
 
+  previewDiagnosticExport(
+    request: Parameters<HostBridge["previewDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["previewDiagnosticExport"]> {
+    return this.bridge.previewDiagnosticExport(request);
+  }
+
+  approveDiagnosticExport(
+    request: Parameters<HostBridge["approveDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["approveDiagnosticExport"]> {
+    return this.bridge.approveDiagnosticExport(request);
+  }
+
+  cancelDiagnosticExport(
+    request: Parameters<HostBridge["cancelDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["cancelDiagnosticExport"]> {
+    return this.bridge.cancelDiagnosticExport(request);
+  }
+
   previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): ReturnType<HostBridge["previewRead"]> {

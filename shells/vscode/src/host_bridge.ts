@@ -65,6 +65,24 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     return this.safeExchange(request);
   }
 
+  previewDiagnosticExport(
+    request: Parameters<HostBridge["previewDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  approveDiagnosticExport(
+    request: Parameters<HostBridge["approveDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  cancelDiagnosticExport(
+    request: Parameters<HostBridge["cancelDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
   previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): Promise<HostReadResponse> {
@@ -107,7 +125,9 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     request: object & { readonly request_id: string },
   ): Promise<HostReadResponse> {
     return this.safeExchange(request).then((response) =>
-      response.kind === "doctor_completed"
+      response.kind === "doctor_completed" ||
+      response.kind === "diagnostic_export_preview" ||
+      response.kind === "diagnostic_export_completed"
         ? {
             kind: "denied",
             schema_version: HOST_PROTOCOL_VERSION,
@@ -303,6 +323,60 @@ function parseResponse(candidate: unknown): HostResponse {
       if (
         !validIdentifier(candidate.request_id) ||
         !validDoctorReport(candidate.report)
+      ) {
+        throw new HostBridgeFailure();
+      }
+      return candidate as unknown as HostResponse;
+    case "diagnostic_export_preview":
+      requireKeys(candidate, [
+        "confirmation_sha256",
+        "destination_sha256",
+        "expires_at_epoch_ms",
+        "included_fields",
+        "kind",
+        "payload_bytes",
+        "payload_sha256",
+        "preview_id",
+        "redactions",
+        "request_id",
+        "retention",
+        "schema_version",
+        "sensitivity",
+      ]);
+      if (
+        !validIdentifier(candidate.request_id) ||
+        !validIdentifier(candidate.preview_id) ||
+        !validSha256(candidate.destination_sha256) ||
+        !validSha256(candidate.payload_sha256) ||
+        !Number.isSafeInteger(candidate.payload_bytes) ||
+        !Array.isArray(candidate.included_fields) ||
+        !candidate.included_fields.every(validCode) ||
+        !Array.isArray(candidate.redactions) ||
+        !candidate.redactions.every(validCode) ||
+        !validCode(candidate.sensitivity) ||
+        !validCode(candidate.retention) ||
+        !Number.isSafeInteger(candidate.expires_at_epoch_ms) ||
+        !validSha256(candidate.confirmation_sha256)
+      ) {
+        throw new HostBridgeFailure();
+      }
+      return candidate as unknown as HostResponse;
+    case "diagnostic_export_completed":
+      requireKeys(candidate, [
+        "destination_sha256",
+        "kind",
+        "outcome",
+        "payload_bytes",
+        "payload_sha256",
+        "request_id",
+        "schema_version",
+      ]);
+      if (
+        !validIdentifier(candidate.request_id) ||
+        !validSha256(candidate.destination_sha256) ||
+        !validSha256(candidate.payload_sha256) ||
+        !Number.isSafeInteger(candidate.payload_bytes) ||
+        candidate.outcome !== "succeeded"
       ) {
         throw new HostBridgeFailure();
       }

@@ -50,6 +50,8 @@ class Approvals implements ApprovalUi {
   readApproved = true;
   readBarrier: Promise<void> | undefined;
   onReadConfirmation: (() => void) | undefined;
+  diagnosticDestination: string | undefined = "/tmp/private/doctor.json";
+  diagnosticApproved = true;
 
   confirmWorkspace(): Promise<boolean> {
     return Promise.resolve(this.workspaceApproved);
@@ -60,6 +62,14 @@ class Approvals implements ApprovalUi {
     await this.readBarrier;
     return this.readApproved;
   }
+
+  selectDiagnosticDestination(): Promise<string | undefined> {
+    return Promise.resolve(this.diagnosticDestination);
+  }
+
+  confirmDiagnosticExport(): Promise<boolean> {
+    return Promise.resolve(this.diagnosticApproved);
+  }
 }
 
 class Bridge implements HostBridge {
@@ -68,6 +78,9 @@ class Bridge implements HostBridge {
   cancellationCalls = 0;
   previewBarrier: Promise<void> | undefined;
   disposed = false;
+  diagnosticPreviewCalls = 0;
+  diagnosticApprovalCalls = 0;
+  diagnosticCancellationCalls = 0;
 
   doctor(
     request: Parameters<HostBridge["doctor"]>[0],
@@ -104,6 +117,53 @@ class Bridge implements HostBridge {
         })),
         report_sha256: "d".repeat(64),
       },
+    });
+  }
+
+  previewDiagnosticExport(
+    request: Parameters<HostBridge["previewDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["previewDiagnosticExport"]> {
+    this.diagnosticPreviewCalls += 1;
+    return Promise.resolve({
+      kind: "diagnostic_export_preview",
+      schema_version: 1,
+      request_id: request.request_id,
+      preview_id: "diagnostic-export-0001",
+      destination_sha256: "a".repeat(64),
+      payload_sha256: "b".repeat(64),
+      payload_bytes: 1024,
+      included_fields: ["component", "state"],
+      redactions: ["credentials", "prompts"],
+      sensitivity: "content-free-local-diagnostic",
+      retention: "user-managed-local-file",
+      expires_at_epoch_ms: 1_786_320_060_000,
+      confirmation_sha256: "c".repeat(64),
+    });
+  }
+
+  approveDiagnosticExport(
+    request: Parameters<HostBridge["approveDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["approveDiagnosticExport"]> {
+    this.diagnosticApprovalCalls += 1;
+    return Promise.resolve({
+      kind: "diagnostic_export_completed",
+      schema_version: 1,
+      request_id: request.request_id,
+      destination_sha256: "a".repeat(64),
+      payload_sha256: "b".repeat(64),
+      payload_bytes: 1024,
+      outcome: "succeeded",
+    });
+  }
+
+  cancelDiagnosticExport(
+    request: Parameters<HostBridge["cancelDiagnosticExport"]>[0],
+  ): ReturnType<HostBridge["cancelDiagnosticExport"]> {
+    this.diagnosticCancellationCalls += 1;
+    return Promise.resolve({
+      kind: "cancelled",
+      schema_version: 1,
+      request_id: request.request_id,
     });
   }
 
@@ -214,6 +274,52 @@ void test("doctor renders every typed state without workspace approval", async (
   assert.match(response.text, /\*\*Package:\*\* Healthy/);
   assert.match(response.text, /\*\*Recovery:\*\* Unavailable/);
   assert.match(response.text, new RegExp("d{64}"));
+});
+
+void test("diagnostic export requires destination preview and one approval", async () => {
+  const { controller, bridge, signal } = fixture();
+  const response = await controller.respond("export diagnostics", signal);
+  assert.equal(bridge.diagnosticPreviewCalls, 1);
+  assert.equal(bridge.diagnosticApprovalCalls, 1);
+  assert.equal(bridge.diagnosticCancellationCalls, 0);
+  assert.match(response.text, /wrote the reviewed local diagnostic export/);
+  assert.match(response.text, new RegExp("b{64}"));
+});
+
+void test("cancelled and malformed diagnostic previews never approve", async () => {
+  const first = fixture();
+  first.approvals.diagnosticApproved = false;
+  const cancelled = await first.controller.respond(
+    "export diagnostics",
+    first.signal,
+  );
+  assert.match(cancelled.text, /cancelled the diagnostic export/);
+  assert.equal(first.bridge.diagnosticApprovalCalls, 0);
+  assert.equal(first.bridge.diagnosticCancellationCalls, 1);
+
+  const second = fixture();
+  second.bridge.previewDiagnosticExport = (request) =>
+    Promise.resolve({
+      kind: "diagnostic_export_preview",
+      schema_version: 1,
+      request_id: request.request_id,
+      preview_id: "diagnostic-export-0001",
+      destination_sha256: "a".repeat(64),
+      payload_sha256: "b".repeat(64),
+      payload_bytes: 0,
+      included_fields: ["component"],
+      redactions: ["credentials"],
+      sensitivity: "content-free-local-diagnostic",
+      retention: "user-managed-local-file",
+      expires_at_epoch_ms: 1_786_320_060_000,
+      confirmation_sha256: "c".repeat(64),
+    });
+  const malformed = await second.controller.respond(
+    "export diagnostics",
+    second.signal,
+  );
+  assert.match(malformed.text, /host\.response_invalid/);
+  assert.equal(second.bridge.diagnosticApprovalCalls, 0);
 });
 
 void test("one approved read renders bounded content citation and receipt", async () => {

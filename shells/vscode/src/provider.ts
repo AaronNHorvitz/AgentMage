@@ -72,6 +72,22 @@ export interface DoctorReport {
   readonly report_sha256: string;
 }
 
+export interface DiagnosticExportPreview {
+  readonly kind: "diagnostic_export_preview";
+  readonly schema_version: 1;
+  readonly request_id: string;
+  readonly preview_id: string;
+  readonly destination_sha256: string;
+  readonly payload_sha256: string;
+  readonly payload_bytes: number;
+  readonly included_fields: readonly string[];
+  readonly redactions: readonly string[];
+  readonly sensitivity: string;
+  readonly retention: string;
+  readonly expires_at_epoch_ms: number;
+  readonly confirmation_sha256: string;
+}
+
 export type HostReadResponse =
   | ReadPreview
   | {
@@ -102,6 +118,16 @@ export type HostResponse =
       readonly schema_version: 1;
       readonly request_id: string;
       readonly report: DoctorReport;
+    }
+  | DiagnosticExportPreview
+  | {
+      readonly kind: "diagnostic_export_completed";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly destination_sha256: string;
+      readonly payload_sha256: string;
+      readonly payload_bytes: number;
+      readonly outcome: "succeeded";
     };
 
 export interface HostBridge {
@@ -109,6 +135,28 @@ export interface HostBridge {
     readonly kind: "doctor";
     readonly schema_version: 1;
     readonly request_id: string;
+  }): Promise<HostResponse>;
+
+  previewDiagnosticExport(request: {
+    readonly kind: "preview_diagnostic_export";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly destination: string;
+  }): Promise<HostResponse>;
+
+  approveDiagnosticExport(request: {
+    readonly kind: "approve_diagnostic_export";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly preview_id: string;
+    readonly confirmation_sha256: string;
+  }): Promise<HostResponse>;
+
+  cancelDiagnosticExport(request: {
+    readonly kind: "cancel_diagnostic_export";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly preview_id: string;
   }): Promise<HostResponse>;
 
   previewRead(request: {
@@ -148,6 +196,11 @@ export interface ApprovalUi {
     components: readonly string[],
   ): Promise<boolean>;
   confirmRead(preview: ReadPreview): Promise<boolean>;
+  selectDiagnosticDestination(): Promise<string | undefined>;
+  confirmDiagnosticExport(
+    preview: DiagnosticExportPreview,
+    destination: string,
+  ): Promise<boolean>;
 }
 
 export interface CancellationSubscription {
@@ -170,6 +223,30 @@ export interface ControllerResult {
 /** Inert bridge used until a verified package injects authenticated IPC. */
 export class UnavailableHostBridge implements HostBridge {
   doctor(request: Parameters<HostBridge["doctor"]>[0]): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  previewDiagnosticExport(
+    request: Parameters<HostBridge["previewDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  approveDiagnosticExport(
+    request: Parameters<HostBridge["approveDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  cancelDiagnosticExport(
+    request: Parameters<HostBridge["cancelDiagnosticExport"]>[0],
+  ): Promise<HostResponse> {
     return Promise.resolve(
       denied(request.request_id, "host.connection.unavailable"),
     );
@@ -216,6 +293,7 @@ export class SessionRequestIdentitySource implements RequestIdentitySource {
 export class SecureReadController {
   private disposed = false;
   private readonly pendingPreviews = new Set<string>();
+  private readonly pendingDiagnosticExports = new Set<string>();
 
   constructor(
     private readonly host: HostBridge,
@@ -245,6 +323,9 @@ export class SecureReadController {
         return cancelledResult();
       }
       return renderDoctor(response, requestId);
+    }
+    if (prompt === "export diagnostics") {
+      return this.exportDiagnostics(cancellation);
     }
     const components = parseReadCommand(prompt);
     if (components === undefined) {
@@ -336,6 +417,69 @@ export class SecureReadController {
     }
   }
 
+  private async exportDiagnostics(
+    cancellation: CancellationSignal,
+  ): Promise<ControllerResult> {
+    const destination = await this.approvals.selectDiagnosticDestination();
+    if (destination === undefined) {
+      return result("AgentMage cancelled the diagnostic export.");
+    }
+    if (this.disposed || cancellation.isCancellationRequested) {
+      return cancelledResult();
+    }
+    const previewRequestId = this.identities.next();
+    const response = await this.host.previewDiagnosticExport({
+      kind: "preview_diagnostic_export",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: previewRequestId,
+      destination,
+    });
+    if (
+      response.kind !== "diagnostic_export_preview" ||
+      !validDiagnosticExportPreview(response, previewRequestId)
+    ) {
+      return renderExportTerminal(response, previewRequestId);
+    }
+    const preview = response;
+    this.pendingDiagnosticExports.add(preview.preview_id);
+    if (this.disposed || cancellation.isCancellationRequested) {
+      await this.cancelDiagnosticExport(preview.preview_id);
+      return cancelledResult();
+    }
+    const approved = await this.approvals.confirmDiagnosticExport(
+      preview,
+      destination,
+    );
+    if (!approved || this.disposed || cancellation.isCancellationRequested) {
+      await this.cancelDiagnosticExport(preview.preview_id);
+      return approved
+        ? cancelledResult()
+        : result("AgentMage cancelled the diagnostic export.");
+    }
+    this.pendingDiagnosticExports.delete(preview.preview_id);
+    const approvalRequestId = this.identities.next();
+    const completed = await this.host.approveDiagnosticExport({
+      kind: "approve_diagnostic_export",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: approvalRequestId,
+      preview_id: preview.preview_id,
+      confirmation_sha256: preview.confirmation_sha256,
+    });
+    return renderExportTerminal(completed, approvalRequestId);
+  }
+
+  private async cancelDiagnosticExport(previewId: string): Promise<void> {
+    if (!this.pendingDiagnosticExports.delete(previewId)) {
+      return;
+    }
+    await this.host.cancelDiagnosticExport({
+      kind: "cancel_diagnostic_export",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: this.identities.next(),
+      preview_id: previewId,
+    });
+  }
+
   /** Cancels every unconsumed preview before closing retained bridge state. */
   async dispose(): Promise<void> {
     if (this.disposed) {
@@ -344,8 +488,10 @@ export class SecureReadController {
     this.disposed = true;
     const previews = [...this.pendingPreviews];
     this.pendingPreviews.clear();
-    await Promise.allSettled(
-      previews.map((previewId) =>
+    const diagnosticExports = [...this.pendingDiagnosticExports];
+    this.pendingDiagnosticExports.clear();
+    await Promise.allSettled([
+      ...previews.map((previewId) =>
         this.host.cancelRead({
           kind: "cancel_read",
           schema_version: HOST_PROTOCOL_VERSION,
@@ -353,7 +499,15 @@ export class SecureReadController {
           preview_id: previewId,
         }),
       ),
-    );
+      ...diagnosticExports.map((previewId) =>
+        this.host.cancelDiagnosticExport({
+          kind: "cancel_diagnostic_export",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: this.identities.next(),
+          preview_id: previewId,
+        }),
+      ),
+    ]);
     this.host.dispose();
   }
 
@@ -368,6 +522,63 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function validDiagnosticExportPreview(
+  preview: DiagnosticExportPreview,
+  requestId: string,
+): boolean {
+  return (
+    preview.schema_version === HOST_PROTOCOL_VERSION &&
+    preview.request_id === requestId &&
+    validIdentifier(preview.preview_id) &&
+    validSha256(preview.destination_sha256) &&
+    validSha256(preview.payload_sha256) &&
+    Number.isSafeInteger(preview.payload_bytes) &&
+    preview.payload_bytes > 0 &&
+    preview.included_fields.length > 0 &&
+    preview.included_fields.every(validCode) &&
+    preview.redactions.length > 0 &&
+    preview.redactions.every(validCode) &&
+    validCode(preview.sensitivity) &&
+    validCode(preview.retention) &&
+    Number.isSafeInteger(preview.expires_at_epoch_ms) &&
+    validSha256(preview.confirmation_sha256)
+  );
+}
+
+function renderExportTerminal(
+  response: HostResponse,
+  expectedRequestId: string,
+): ControllerResult {
+  if (
+    response.schema_version !== HOST_PROTOCOL_VERSION ||
+    response.request_id !== expectedRequestId
+  ) {
+    return result(
+      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    );
+  }
+  if (response.kind === "denied") {
+    return result(
+      `AgentMage denied the request: \`${validCode(response.code) ? response.code : "vscode.host.response_invalid"}\`.`,
+    );
+  }
+  if (
+    response.kind !== "diagnostic_export_completed" ||
+    response.outcome !== "succeeded" ||
+    !validSha256(response.destination_sha256) ||
+    !validSha256(response.payload_sha256) ||
+    !Number.isSafeInteger(response.payload_bytes) ||
+    response.payload_bytes <= 0
+  ) {
+    return result(
+      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    );
+  }
+  return result(
+    `AgentMage wrote the reviewed local diagnostic export (${response.payload_bytes.toString()} bytes). Payload: \`${response.payload_sha256}\`.`,
+  );
 }
 
 function renderDoctor(

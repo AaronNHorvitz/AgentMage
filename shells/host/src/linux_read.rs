@@ -10,9 +10,9 @@ use agentmage_capability_read_only::{
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
     ContractPayload, CorrelationId, DataSensitivity, DiagnosticComponent, DiagnosticObservation,
-    DiagnosticState, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect,
-    GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome,
-    Receipt, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
+    DiagnosticState, DoctorReport, GrantId, GrantNonce, GrantOperation, GrantPreimage,
+    GrantSideEffect, GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding,
+    OperationOutcome, Receipt, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
     WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
 };
 use agentmage_kernel_engine::approval::{render_approval_request, verify_approval_request};
@@ -33,6 +33,7 @@ use rustix::rand::{GetRandomFlags, getrandom};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use crate::diagnostic_export::{DiagnosticExportError, DiagnosticExportWorkflow};
 use crate::protocol::{
     HOST_PROTOCOL_VERSION, HostRequest, HostResponse, MAX_HOST_REQUEST_BYTES,
     MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response, parse_request,
@@ -68,6 +69,8 @@ pub enum LinuxReadError {
     WorkerFailed,
     /// Successful worker output was not bounded UTF-8 text.
     OutputDenied,
+    /// The reviewed diagnostic export failed closed.
+    DiagnosticExport(DiagnosticExportError),
 }
 
 /// Stable content-free failure while serving an authenticated host frame.
@@ -102,6 +105,7 @@ impl LinuxReadError {
             Self::ApprovalDenied => "host.read.approval_denied",
             Self::WorkerFailed => "host.read.worker_failed",
             Self::OutputDenied => "host.read.output_denied",
+            Self::DiagnosticExport(error) => error.code(),
         }
     }
 }
@@ -201,6 +205,7 @@ where
     identities: I,
     clock: C,
     pending: BTreeMap<String, PendingLinuxRead>,
+    diagnostic_exports: DiagnosticExportWorkflow,
 }
 
 impl<'platform, I, C> LinuxReadWorkflow<'platform, I, C>
@@ -234,6 +239,7 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            diagnostic_exports: DiagnosticExportWorkflow::new(),
         })
     }
 
@@ -280,6 +286,7 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            diagnostic_exports: DiagnosticExportWorkflow::new(),
         })
     }
 
@@ -289,6 +296,17 @@ where
         let request_id = request_id(&request).to_owned();
         let result = match request {
             HostRequest::Doctor { .. } => self.doctor(&request_id),
+            HostRequest::PreviewDiagnosticExport { destination, .. } => {
+                self.preview_diagnostic_export(&request_id, Path::new(&destination))
+            }
+            HostRequest::ApproveDiagnosticExport {
+                preview_id,
+                confirmation_sha256,
+                ..
+            } => self.approve_diagnostic_export(&request_id, &preview_id, &confirmation_sha256),
+            HostRequest::CancelDiagnosticExport { preview_id, .. } => {
+                self.cancel_diagnostic_export(&request_id, &preview_id)
+            }
             HostRequest::PreviewRead {
                 workspace_id,
                 workspace_root,
@@ -318,6 +336,14 @@ where
     }
 
     fn doctor(&self, request_id: &str) -> Result<HostResponse, LinuxReadError> {
+        Ok(HostResponse::DoctorCompleted {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            report: self.local_doctor_report()?,
+        })
+    }
+
+    fn local_doctor_report(&self) -> Result<DoctorReport, LinuxReadError> {
         let package_state = match self.platform {
             LinuxReadPlatform::Verified(_) => DiagnosticState::Healthy,
             #[cfg(test)]
@@ -367,12 +393,71 @@ where
                 "diagnostic.store.open",
             ),
         ];
-        let report =
-            build_doctor_report(observations).map_err(|_| LinuxReadError::AuthorityDenied)?;
-        Ok(HostResponse::DoctorCompleted {
+        build_doctor_report(observations).map_err(|_| LinuxReadError::AuthorityDenied)
+    }
+
+    fn preview_diagnostic_export(
+        &mut self,
+        request_id: &str,
+        destination: &Path,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        let preview_id = self.identities.next("diagnostic-export")?;
+        let report = self.local_doctor_report()?;
+        let preview = self
+            .diagnostic_exports
+            .preview(preview_id, &report, destination, now.epoch_ms)
+            .map_err(LinuxReadError::DiagnosticExport)?;
+        Ok(HostResponse::DiagnosticExportPreview {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: request_id.to_owned(),
-            report,
+            preview_id: preview.preview_id,
+            destination_sha256: preview.destination_sha256,
+            payload_sha256: preview.payload_sha256,
+            payload_bytes: preview.payload_bytes,
+            included_fields: preview.included_fields,
+            redactions: preview.redactions,
+            sensitivity: preview.sensitivity,
+            retention: preview.retention,
+            expires_at_epoch_ms: preview.expires_at_epoch_ms,
+            confirmation_sha256: preview.confirmation_sha256,
+        })
+    }
+
+    fn approve_diagnostic_export(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+        confirmation_sha256: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        let receipt = self
+            .diagnostic_exports
+            .approve(preview_id, confirmation_sha256, now.epoch_ms)
+            .map_err(LinuxReadError::DiagnosticExport)?;
+        Ok(HostResponse::DiagnosticExportCompleted {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            destination_sha256: receipt.destination_sha256,
+            payload_sha256: receipt.payload_sha256,
+            payload_bytes: receipt.payload_bytes,
+            outcome: receipt.outcome,
+        })
+    }
+
+    fn cancel_diagnostic_export(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        if !self.diagnostic_exports.cancel(preview_id) {
+            return Err(LinuxReadError::DiagnosticExport(
+                DiagnosticExportError::ApprovalDenied,
+            ));
+        }
+        Ok(HostResponse::Cancelled {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
         })
     }
 
@@ -845,6 +930,9 @@ fn receipt_summary(receipt: &Receipt) -> ReceiptSummary {
 fn request_id(request: &HostRequest) -> &str {
     match request {
         HostRequest::Doctor { request_id, .. }
+        | HostRequest::PreviewDiagnosticExport { request_id, .. }
+        | HostRequest::ApproveDiagnosticExport { request_id, .. }
+        | HostRequest::CancelDiagnosticExport { request_id, .. }
         | HostRequest::PreviewRead { request_id, .. }
         | HostRequest::ApproveRead { request_id, .. }
         | HostRequest::CancelRead { request_id, .. } => request_id,
@@ -1092,6 +1180,49 @@ mod tests {
         let encoded = serde_json::to_string(&report).expect("report JSON");
         assert!(!encoded.contains(state.to_string_lossy().as_ref()));
         std::fs::remove_dir_all(state).expect("remove state");
+    }
+
+    #[test]
+    fn diagnostic_export_preview_and_approval_use_the_authenticated_workflow() {
+        let state = temp_root("diagnostic-export-state");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        let destination_root = temp_root("diagnostic-export-destination");
+        fs::set_permissions(&destination_root, fs::Permissions::from_mode(0o700))
+            .expect("private destination");
+        let destination = destination_root.join("doctor.json");
+        let mut workflow = workflow(&state, &[100, 101]);
+        let preview = workflow.handle(HostRequest::PreviewDiagnosticExport {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-export-preview".to_owned(),
+            destination: destination.to_string_lossy().into_owned(),
+        });
+        let HostResponse::DiagnosticExportPreview {
+            preview_id,
+            confirmation_sha256,
+            payload_sha256,
+            ..
+        } = preview
+        else {
+            panic!("expected diagnostic export preview");
+        };
+        assert!(!destination.exists());
+        let completed = workflow.handle(HostRequest::ApproveDiagnosticExport {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-export-approval".to_owned(),
+            preview_id,
+            confirmation_sha256,
+        });
+        assert!(matches!(
+            completed,
+            HostResponse::DiagnosticExportCompleted {
+                ref outcome,
+                payload_sha256: ref completed_sha256,
+                ..
+            } if outcome == "succeeded" && completed_sha256 == &payload_sha256
+        ));
+        assert!(destination.exists());
+        fs::remove_dir_all(state).expect("remove state");
+        fs::remove_dir_all(destination_root).expect("remove destination");
     }
 
     #[test]

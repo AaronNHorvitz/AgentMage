@@ -81,6 +81,38 @@ void test("unknown host response fields fail closed without exposing parser deta
   }
 });
 
+void test("authenticated bridge validates the closed diagnostic export preview", async () => {
+  const fixture = await socketFixture({
+    kind: "diagnostic_export_preview",
+    schema_version: 1,
+    request_id: "request-export-0001",
+    preview_id: "diagnostic-export-0001",
+    destination_sha256: "a".repeat(64),
+    payload_sha256: "b".repeat(64),
+    payload_bytes: 512,
+    included_fields: ["component", "state"],
+    redactions: ["credentials", "prompts"],
+    sensitivity: "content-free-local-diagnostic",
+    retention: "user-managed-local-file",
+    expires_at_epoch_ms: 1_786_320_060_000,
+    confirmation_sha256: "c".repeat(64),
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.previewDiagnosticExport({
+      kind: "preview_diagnostic_export",
+      schema_version: 1,
+      request_id: "request-export-0001",
+      destination: "/var/home/user/private/doctor.json",
+    });
+    assert.equal(response.kind, "diagnostic_export_preview");
+    assert.equal(fixture.observedRequest.kind, "preview_diagnostic_export");
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
 void test("out-of-range launch identity fails before socket access", () => {
   const credentials: LinuxHostLaunchCredentials = {
     endpoint: "/tmp/agentmage-invalid.sock",
