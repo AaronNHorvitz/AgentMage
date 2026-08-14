@@ -2673,39 +2673,53 @@ remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 35.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 35.1.1.1** (legacy `S-029-I01`): Observe and hash every exact source preimage under the current read grant.
-  - [ ] **Sub-task 35.1.1.2** (legacy `S-029-I02`): Generate proposed operations into a shadow change set outside user-owned files.
-  - [ ] **Sub-task 35.1.1.3** (legacy `S-029-I03`): Validate patch applicability, syntax, paths, encoding, line endings, duplicate operations, generated-file policy, and expected postimages.
-  - [ ] **Sub-task 35.1.1.4** (legacy `S-029-I04`): Render the complete diff, rationale, files, behavior, verification plan, risks, rollback, and unverified assumptions.
-  - [ ] **Sub-task 35.1.1.5** (legacy `S-029-I05`): Issue a short-lived single-use grant bound to the exact change-set identity, files, operations, workspace, expiry, and permitted verification.
-  - [ ] **Sub-task 35.1.1.6** (legacy `S-029-I06`): Re-read every preimage immediately before apply and invalidate the grant on any mismatch.
+- [x] **Task 35.1.1 - Implement the bounded story**
+  - [x] **Sub-task 35.1.1.1** (legacy `S-029-I01`): Observe and hash every exact source preimage under the current read grant.
+  - [x] **Sub-task 35.1.1.2** (legacy `S-029-I02`): Generate proposed operations into a shadow change set outside user-owned files.
+  - [x] **Sub-task 35.1.1.3** (legacy `S-029-I03`): Validate patch applicability, syntax, paths, encoding, line endings, duplicate operations, generated-file policy, and expected postimages.
+  - [x] **Sub-task 35.1.1.4** (legacy `S-029-I04`): Render the complete diff, rationale, files, behavior, verification plan, risks, rollback, and unverified assumptions.
+  - [x] **Sub-task 35.1.1.5** (legacy `S-029-I05`): Issue a short-lived single-use grant bound to the exact change-set identity, files, operations, workspace, expiry, and permitted verification.
+  - [x] **Sub-task 35.1.1.6** (legacy `S-029-I06`): Re-read every preimage immediately before apply and invalidate the grant on any mismatch.
 
-- [ ] **Task 35.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 35.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 35.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 35.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 35.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 35.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 35.1.3 - Verify and close the story**
-  - [ ] **Sub-task 35.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 35.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 35.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 35.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 35.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 35.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 35.1.3.4 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 35.1.AC1:** Given the approved dependencies and source requirements for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 35.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 35.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 35.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 35.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 35.AC1:** Every numbered implementation sub-task in Story 35.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 35.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 35.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 35.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 35.AC1:** Every numbered implementation sub-task in Story 35.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 35.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 35.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 35.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 35.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 35 is PASS only when Story 35.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** Exact held-target observation, in-memory shadow
+change sets, deterministic validation, complete review previews, short-lived single-use
+`WorkspaceWrite` grants, and fresh stale-invalidating preapply checks are implemented in
+`37c7afd` and `3673e1b`. Architecture and verification boundaries are recorded by
+`90ec3d6`; the retained
+[Sprint 35 evidence report](artifacts/sprints/sprint-35/local-evidence-report.json) in
+`49b975e` records passing issue-local tests with zero blocking skips plus complete local
+product, documentation, strict-local, effect-boundary, dependency, and supply-chain gates.
+Target mutation, atomic application, rollback, post-write commands, generic shell, network,
+and external delivery remain disabled. Sprint 35 remains **BLOCKED** because Sprint 34 is
+not yet a passing upstream dependency and independent transaction review is absent. Task
+35.1.3, its product-security sub-task, Story AC 35.1.AC1, Sprint AC 35.AC5, the story, and
+the sprint therefore remain open.
 ### [ ] Sprint 36 - Atomic Write Application and Rollback
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
