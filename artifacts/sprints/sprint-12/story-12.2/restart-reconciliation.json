@@ -1,0 +1,128 @@
+{
+  "artifact_id": "task-12-2-1-5-restart-reconciliation",
+  "case_ids": [
+    "RST-01",
+    "RST-02",
+    "RST-03",
+    "RST-04",
+    "RST-05",
+    "RST-06"
+  ],
+  "claims": {
+    "bound_context_field_count": 8,
+    "classifier_executions": 0,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "manual_fuzzing_executed": false,
+    "maximum_authority_transactions": 1024,
+    "maximum_grants": 2048,
+    "maximum_receipts": 4096,
+    "model_executions": 0,
+    "opaque_permit_clone_implementations": 0,
+    "opaque_permit_public_constructors": 0,
+    "pending_authority_resumes": 0,
+    "platform_executions": 0,
+    "release_support": false,
+    "tool_executions": 0,
+    "uncertain_effect_resumes": 0,
+    "unresolved_consumed_grant_resumes": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This proves the in-process agent restart gate over typed persisted facts; wiring the snapshot to the encrypted operational store remains a later integration task.",
+    "Existing durable authority recovery resolves interrupted effect transactions before this gate, but the complete crash-before-and-after-every-agent-transition campaign remains Task 12.2.4.4.",
+    "Tests use synthetic authority and receipt records with no model, classifier, tool, worker, platform effect, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "7624985bea5fa93521ef4eb882b3c220f2a966a3",
+  "sources": [
+    {
+      "bytes": 2559,
+      "path": "docs/verification/task-12-2-1-5-restart-reconciliation-results.md",
+      "sha256": "fd9cbbf23b24d94e80d6d955c79f1e6516fe8f883206e8187ac5009312421709"
+    },
+    {
+      "bytes": 1546,
+      "path": "kernel/contracts/src/agent_restart.rs",
+      "sha256": "7fd6056c992b927b800c11d2c442e2044b6a0830e7c5ed870954c20e9e3175b6"
+    },
+    {
+      "bytes": 4651,
+      "path": "kernel/contracts/src/lib.rs",
+      "sha256": "1c174dd3be7ca0ac73128043b3623e0ce68d5afa0083afa68e8e3cf3b46b75ad"
+    },
+    {
+      "bytes": 10520,
+      "path": "kernel/contracts/src/serialization.rs",
+      "sha256": "1ff4ca9cf7cd5fa1ff634006361b4d70cf9272054161b80a1c1d9a0a4ad7ada5"
+    },
+    {
+      "bytes": 28019,
+      "path": "kernel/engine/src/agent_restart.rs",
+      "sha256": "c3bc84fbb30c3b7f24c8fc5a5639538fad8e0736e8b32bfa0e0f45103d444803"
+    },
+    {
+      "bytes": 12906,
+      "path": "kernel/engine/src/agent_state.rs",
+      "sha256": "90934d5e35755a622a8afd8ef33a7246231e6e58deeea21fe1cfed6f2c1ad30b"
+    },
+    {
+      "bytes": 2903,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "ff23a71cfef2b65518307a91e3c2a620fcc9fc882f98704e10d4018b10504e9a"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4274,
+      "path": "scripts/restart_reconciliation_evidence.py",
+      "sha256": "81b8f0d8c3e8bc8705d3273dc1391335bb561e5307d4a9deb028d2f98ede18b7"
+    },
+    {
+      "bytes": 3251,
+      "path": "tests/test_restart_reconciliation_evidence.py",
+      "sha256": "39e6ed821a74ea5a0d8d451c9f274ed3b629eaeed7b2f06bb689347a766eb2a9"
+    }
+  ],
+  "status": "pass-restart-reconciliation-gate",
+  "task_ids": [
+    "12.2.1.5"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "d6dd4670f18d7e559aa2b87d667a0d0399020b0b02bc19eebee2bacc8e8ebf05",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "e8ddf556141a5fba8d62325a62a243127dda5957e663f8cb1a3d0d87523f7379",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "07522a3b431d98b5e53611d77dedb486f0811e7f10b7f25117fcc6d9dd3694b4",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
