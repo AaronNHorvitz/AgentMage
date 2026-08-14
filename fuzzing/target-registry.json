@@ -7,8 +7,13 @@
     "required_boundary_class_count": 12
   },
   "ffi_discovery": {
-    "active_boundaries": [],
-    "active_boundary_count": 0,
+    "active_boundaries": [
+      {
+        "path": "platforms/windows/src/native_identity.rs",
+        "reason": "rust-ffi-token"
+      }
+    ],
+    "active_boundary_count": 1,
     "future_boundary_registration_required": true,
     "gate_on_unregistered_boundary": "block",
     "native_suffixes": [
@@ -44,7 +49,7 @@
   "private_user_data_used": false,
   "product_support_claim": "none",
   "registry_id": "agentmage-fuzz-target-registry-v1",
-  "registry_sha256": "d0255752d0234c97455d81ce301acfae173c8f81ad2a95cd3020c10d0c309b30",
+  "registry_sha256": "854695a256092b9154c31708c87fb7c8cc64ebb4e1fc3e19b54a9deea46743f2",
   "registry_version": "1.0.0",
   "schema_version": 1,
   "status": "baseline-contracts-registered",

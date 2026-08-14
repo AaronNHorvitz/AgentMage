@@ -56,9 +56,19 @@ class FuzzTargetRegistryTests(unittest.TestCase):
             )
             self.assertTrue(all(target["outcome_contract"].values()))
 
-    def test_current_tree_has_no_active_ffi_boundary(self) -> None:
-        self.assertEqual(discover_ffi_boundaries(), [])
-        self.assertEqual(build_registry()["ffi_discovery"]["active_boundary_count"], 0)
+    def test_current_tree_records_the_reviewed_ffi_boundary(self) -> None:
+        self.assertEqual(
+            discover_ffi_boundaries(),
+            [
+                {
+                    "path": "platforms/windows/src/native_identity.rs",
+                    "reason": "rust-ffi-token",
+                }
+            ],
+        )
+        discovery = build_registry()["ffi_discovery"]
+        self.assertEqual(discovery["active_boundary_count"], 1)
+        self.assertEqual(discovery["unregistered_boundary_count"], 0)
 
     def test_new_unregistered_ffi_boundary_is_detected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
