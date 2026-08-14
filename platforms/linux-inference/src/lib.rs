@@ -19,6 +19,7 @@ mod docker_runtime;
 mod docker_topology_collector;
 mod llama_server_driver;
 mod model_acquisition;
+mod model_download;
 mod muse_atem_codec;
 mod native_model_adapter;
 mod native_runtime;
@@ -62,6 +63,11 @@ pub use model_acquisition::{
     ModelAcquisitionBlocker, ModelAcquisitionDisposition, ModelAcquisitionHost,
     ModelAcquisitionPreflight, ModelAcquisitionReview, ModelImportDisposition, ModelImportError,
     ModelImportReceipt, import_local_model, preflight_model_acquisition,
+};
+pub use model_download::{
+    BoundedModelDownloadSource, ModelDownloadAuthorization, ModelDownloadDisposition,
+    ModelDownloadError, ModelDownloadIdentity, ModelDownloadReadError, ModelDownloadReceipt,
+    download_model_artifact,
 };
 pub use muse_atem_codec::MuseAtemFamilyCodec;
 pub use native_model_adapter::{LinuxNativeModelAdapter, NativeModelDriver};

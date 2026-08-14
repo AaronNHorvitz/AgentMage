@@ -500,20 +500,20 @@ fn source_identity_from_metadata(
     })
 }
 
-struct StoreHandle {
+pub(super) struct StoreHandle {
     directory: File,
-    held_path: PathBuf,
+    pub(super) held_path: PathBuf,
 }
 
 impl StoreHandle {
-    fn sync(&self) -> Result<(), ModelImportError> {
+    pub(super) fn sync(&self) -> Result<(), ModelImportError> {
         self.directory
             .sync_all()
             .map_err(|_| ModelImportError::Filesystem)
     }
 }
 
-fn open_store(path: &Path) -> Result<StoreHandle, ModelImportError> {
+pub(super) fn open_store(path: &Path) -> Result<StoreHandle, ModelImportError> {
     let before = fs::symlink_metadata(path).map_err(|_| ModelImportError::StoreInvalid)?;
     if !valid_store_metadata(&before) {
         return Err(ModelImportError::StoreInvalid);
@@ -542,7 +542,10 @@ fn valid_store_metadata(metadata: &fs::Metadata) -> bool {
         && metadata.uid() == rustix::process::geteuid().as_raw()
 }
 
-fn retain_without_overwrite(staging: &Path, destination: &Path) -> Result<(), ModelImportError> {
+pub(super) fn retain_without_overwrite(
+    staging: &Path,
+    destination: &Path,
+) -> Result<(), ModelImportError> {
     fs::hard_link(staging, destination).map_err(|error| {
         if error.kind() == std::io::ErrorKind::AlreadyExists {
             ModelImportError::DestinationOccupied
