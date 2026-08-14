@@ -31,12 +31,12 @@
       "result": "PASS"
     },
     {
-      "code": "bounded-advisory-inert",
+      "code": "bounded-streamed-inert",
       "id": "inference",
       "result": "PASS"
     },
     {
-      "code": "pre-request-cancellation-inert",
+      "code": "mid-generation-and-pre-request-inert",
       "id": "cancellation",
       "result": "PASS"
     },
@@ -55,23 +55,28 @@
     "automatic_fallback": false,
     "exact_tuple_live_inference_proven": true,
     "external_egress_enforced_by_namespace": true,
+    "mid_generation_cancellation_proven": true,
     "packet_capture_executed": false,
     "product_profile_enabled": false,
     "quality_evaluated": false,
     "release_approval": false,
     "repeatability_evaluated": false,
-    "status": "SANDBOXED-LIVE-INFERENCE-PASS"
+    "status": "SANDBOXED-LIVE-INFERENCE-PASS",
+    "streaming_response_proven": true
   },
   "execution": {
     "exit_code": 0,
-    "fragment_count": 1,
-    "input_tokens": 653,
-    "load_ms": 13440,
+    "fragment_count": 65,
+    "input_tokens": 747,
+    "load_ms": 17784,
+    "mid_generation_cancellation_fragments": 2,
+    "mid_generation_cancellation_terminal": "cancelled",
+    "mid_generation_cancellation_tokens": 1,
     "output_tokens": 64,
     "pre_request_cancellation_terminal": "cancelled",
     "raw_output_retained": false,
     "response_sha256": "c4ae618e43605dc4e3fa7faa87ccb1568080bf9275755b0425a39826505757df",
-    "run_ms": 12097,
+    "run_ms": 13936,
     "terminal_state": "advisory_text",
     "test_id": "exact_muse_sandboxed_advisory_cancellation_and_unload",
     "unload_ms": 231
@@ -79,7 +84,7 @@
   "limitations": [
     "This is one diagnostic-profile execution and is not a quality or repeatability result.",
     "The fresh network namespace had no external interface; a separate packet-capture artifact was not produced.",
-    "Cancellation was present before request dispatch; mid-generation cancellation remains separately testable.",
+    "Cancellation was exercised both after the first streamed model fragment and before request dispatch.",
     "The response digest is retained, but model output and synthetic prompt content are not retained in this artifact.",
     "The candidate remains disabled and this evidence grants no product or release admission."
   ],
@@ -104,22 +109,22 @@
     "tool_authority_available": false,
     "workspace_mounted": false
   },
-  "schema_version": 1,
-  "source_revision": "5882045cf19f0cc244edf84d519e4846505c8b25",
+  "schema_version": 2,
+  "source_revision": "d0798daa1000f2eee99fabb9a0988df5515c9221",
   "source_sha256": {
-    "kernel/contracts/src/model.rs": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
-    "kernel/engine/src/model_runtime.rs": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
-    "model-profiles/exact-profile-catalog.json": "2635e598139d82ee3a68bb943a122b3d04ec2e54a21d82f9b66d63a3b6661835",
-    "platforms/linux-inference/src/llama_server_driver.rs": "a13db213f2fe4b5b9c2f48328abff286b54642bdd313ea18a8000b73d7d5ba19",
-    "platforms/linux-inference/src/muse_atem_codec.rs": "4a63ad223eefb2dbd772ba4267449a76b93cd3dc7c9a5c8c85b5316e5b46662f",
-    "platforms/linux-inference/src/native_model_adapter.rs": "9d8c4daba38ba3ca1aad74b0207202251ce98005cb60f13201fb776d79d3e8a1",
-    "platforms/linux-inference/tests/muse_live_install.rs": "fad1b43b9b11d7ac34f89998b149c67103a1d0b44fade7ce900d2437ead64265"
+    "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
+    "kernel/engine/src/model_runtime.rs": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
+    "model-profiles/exact-profile-catalog.json": "749a9a64338914444edf918d29d8527a8595116695e3a3e662d4a18b9dc6e6b2",
+    "platforms/linux-inference/src/llama_server_driver.rs": "94f8a0c6d8466f90f342cfd06a7363588566e46e645935f4c068cc4ff702eb5c",
+    "platforms/linux-inference/src/muse_atem_codec.rs": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
+    "platforms/linux-inference/src/native_model_adapter.rs": "b9d19739d1b1bdbc54069c3a9f591ce8f4e266190f5c51b78ed5269ea858a7dc",
+    "platforms/linux-inference/tests/muse_live_install.rs": "09087f85246020f3ab4bbb44fd3ec0f36730cebde42f22dad8e2202b5a1a1a68"
   },
   "tuple": {
     "bubblewrap_sha256": "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc",
     "context_tokens": 8192,
     "decoding_profile_id": "diagnostic-repeatability-v1",
-    "manifest_sha256": "58c7091643220e98fffd4e1da99bca27b405472caa44b9fc1bafc954d602d166",
+    "manifest_sha256": "ec9537e5e7bd48001837da25d91e1ae6829c5fa7b76a1db9243613bc930aaeb9",
     "model_sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
     "nvidia_smi_sha256": "915f6e333651d7bf03252e605743ae1d5cf1587d85f436a25aa5ff6c462cd982",
     "parallel_slots": 1,
