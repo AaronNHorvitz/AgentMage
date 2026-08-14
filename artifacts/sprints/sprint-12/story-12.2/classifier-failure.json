@@ -1,0 +1,106 @@
+{
+  "artifact_id": "task-12-2-2-4-classifier-failure",
+  "case_ids": [
+    "CFL-01",
+    "CFL-02",
+    "CFL-03",
+    "CFL-04",
+    "CFL-05",
+    "CFL-06"
+  ],
+  "claims": {
+    "blocked_status_count": 4,
+    "classifier_failure_authority_methods": 0,
+    "classifier_runtime_executions": 0,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "isolate_status_count": 1,
+    "manual_fuzzing_executed": false,
+    "mapped_incomplete_status_count": 7,
+    "model_executions": 0,
+    "narrow_status_count": 1,
+    "platform_executions": 0,
+    "release_support": false,
+    "tool_executions": 0,
+    "user_decision_status_count": 1,
+    "valid_confidence_maximum": 10000,
+    "valid_confidence_minimum": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This is a typed decision contract; live UI presentation and transition into persisted BLOCKED or user-decision workflow states remain later integration work.",
+    "Task 12.2.2.5 adds reclassification triggers before successive trust boundaries.",
+    "Tests use synthetic content-free facts and classifier records with no model, classifier runtime, tool, worker, platform effect, private user data, or external network operation.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "8b2d92b15a99b585b767b53494491b206df2424b",
+  "sources": [
+    {
+      "bytes": 2161,
+      "path": "docs/verification/task-12-2-2-4-classifier-failure-results.md",
+      "sha256": "60ee97ef96bf0457700df09857950c6780105819c253e494a297217511cfac2d"
+    },
+    {
+      "bytes": 29255,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "ea41d05be09816ad47e6450be254492542ce6cb82abedf1d433fb7f30617c30f"
+    },
+    {
+      "bytes": 22979,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "ee986845df9e90e5f34b700acd3257ac75be6c92fccaa11a061949d62642f798"
+    },
+    {
+      "bytes": 24156,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "c30eb9b332c7a11a3776562e7ec7232b1f5884de68a910690942e6224a253ff6"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3661,
+      "path": "scripts/classifier_failure_evidence.py",
+      "sha256": "89cfb4dfd54b99dc91d178f5c0773625daf4d7e849899cd5f4b138d99277ed93"
+    },
+    {
+      "bytes": 3243,
+      "path": "tests/test_classifier_failure_evidence.py",
+      "sha256": "621beb03ade4bcc9d071f3b070fedc9da20f5b474b48435cb3081a36f8099308"
+    }
+  ],
+  "status": "pass-classifier-failure-mapping",
+  "task_ids": [
+    "12.2.2.4"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "1b5536959ef4d6605dfb81f57d76cb6b875c97d8fcc8f37125ce1f21fc0359d8",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "03cb3faefca445ccdd663e80edadc3069d71cde8cebe2afadacfbaa172b03d3b",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
