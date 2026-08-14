@@ -1,0 +1,118 @@
+{
+  "artifact_id": "task-12-2-3-2-policy-reference",
+  "case_ids": [
+    "POL-ART-01",
+    "POL-ART-02",
+    "POL-ART-03",
+    "POL-ART-04",
+    "POL-ART-05"
+  ],
+  "claims": {
+    "advisory_disposition_count": 5,
+    "advisory_field_count": 10,
+    "classification_boundary_count": 8,
+    "deterministic_fact_field_count": 28,
+    "directed_distinct_boundary_pair_count": 56,
+    "external_network_used": false,
+    "focused_case_count": 5,
+    "incomplete_status_count": 7,
+    "manual_fuzzing_executed": false,
+    "ordered_policy_check_count": 13,
+    "prohibited_authority_capability_count": 6,
+    "reclassification_content_kind_count": 10,
+    "release_support": false
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The reference describes completed contracts and focused deterministic tests, not live platform fact collection or production execution.",
+    "Typed redaction, narrowing, and isolation transformations remain later owning-sprint integrations.",
+    "No private user data or external network operation is used.",
+    "Cross-platform packaging, release acceptance, and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "6024a1ba4ae8f025524032d2b15d7af8549fd59a",
+  "sources": [
+    {
+      "bytes": 1744,
+      "path": "docs/verification/task-12-2-3-2-policy-reference-results.md",
+      "sha256": "2d4c132e9b2eae4aa1d4776bfa84475b8828b8196095cd0e6ed003d36b87e232"
+    },
+    {
+      "bytes": 11841,
+      "path": "docs/architecture/deterministic-and-advisory-policy-reference.md",
+      "sha256": "0e4a1be4c897d030a0d75e6f4be49721234d85ece3c9af53c862c5813bb70b47"
+    },
+    {
+      "bytes": 31956,
+      "path": "kernel/contracts/src/classification.rs",
+      "sha256": "bd0962442f2b690a815685212addc985701845faaf7cc4798eda9ebf1a9d2925"
+    },
+    {
+      "bytes": 23289,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "af8a5bb3d28947b53a1e63d051a3ed5d639971a4671ae8d742690f579b707bda"
+    },
+    {
+      "bytes": 24156,
+      "path": "kernel/engine/src/advisory_policy.rs",
+      "sha256": "c30eb9b332c7a11a3776562e7ec7232b1f5884de68a910690942e6224a253ff6"
+    },
+    {
+      "bytes": 23373,
+      "path": "kernel/engine/src/reclassification.rs",
+      "sha256": "200365a8992488a1f6d953176a8aac7c74a99cbd35a8aac0ea8a46dc6740a1e9"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4103,
+      "path": "scripts/policy_reference_evidence.py",
+      "sha256": "7f6f62276c4220c9263f50a867121a1fa0b3a81c16eb7ad26bb899128e0e58dd"
+    },
+    {
+      "bytes": 4466,
+      "path": "tests/test_policy_reference_evidence.py",
+      "sha256": "0f975fec3aadf35e358926c4949308c6e050ec41df2d36855d7478cff79b0052"
+    }
+  ],
+  "status": "pass-policy-reference",
+  "task_ids": [
+    "12.2.3.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "9f3673f9c9974e7d9ebd50d3bf9e52e15dd000314bf886fc41d9101daaea9a43",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "a8e5b6be200c00a66aa88102a24a9a1f61d7cc3b014c7b734c5f27c68e7a7eec",
+      "exit_code": 0,
+      "expected_marker_sha256": "7b28bce4800f33c6a48f65a7a673e30e2cf29ad00e85ac7502fde44c18aa0e7f",
+      "status": "pass"
+    },
+    {
+      "command_id": "1b3cfd51ecd3d7dcc28d72845b803367a99aed083430d2fda48f6ee687010630",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    },
+    {
+      "command_id": "b94b4f584443a3c30cfc18773707d75d424110788ec344b4f26349116cf09223",
+      "exit_code": 0,
+      "expected_marker_sha256": "9ea70fe7606c1c6c05d3a6cf9609301110ea8b06b51c0b7793bbca7664af9fcb",
+      "status": "pass"
+    }
+  ]
+}
