@@ -1,0 +1,511 @@
+{
+  "case_count": 12,
+  "cases": [
+    {
+      "case_id": "TRN-01",
+      "category": "status",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "status_returned",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": {
+        "active_step_id": "transcript-step-1",
+        "completed_steps": 0,
+        "plan_id": "transcript-plan",
+        "plan_revision": 3,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "running",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": false,
+          "intent": "status_query",
+          "record_type": "user_message"
+        },
+        {
+          "active_step_id": "transcript-step-1",
+          "completed_steps": 0,
+          "plan_id": "transcript-plan",
+          "plan_revision": 3,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "running",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-02",
+      "category": "interruption",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "interrupted_for_replacement",
+        "descendant_cancellation_count": 3,
+        "plan_revision_delta": 1
+      },
+      "initial_status": {
+        "active_step_id": "transcript-step-1",
+        "completed_steps": 0,
+        "plan_id": "transcript-plan",
+        "plan_revision": 3,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "running",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": true,
+          "intent": "replace_task",
+          "record_type": "user_message"
+        },
+        {
+          "propagated_to": [
+            "kernel",
+            "platform_adapter",
+            "tool"
+          ],
+          "record_type": "cancellation_signal",
+          "signal": {
+            "cancellation_id": "replace-signal",
+            "correlation_id": "replace-correlation",
+            "reason": "user_requested",
+            "requested_by": "shell",
+            "schema_version": 1,
+            "task_id": "transcript-task"
+          }
+        },
+        {
+          "disposition": "interrupted_for_replacement",
+          "record_type": "message_disposition"
+        },
+        {
+          "kind": "cancelled",
+          "plan_id": "transcript-plan",
+          "plan_revision": 4,
+          "plan_step_id": null,
+          "record_type": "progress_event",
+          "schema_version": 1,
+          "sequence": 4,
+          "task_id": "transcript-task"
+        },
+        {
+          "active_step_id": null,
+          "completed_steps": 0,
+          "plan_id": "transcript-plan",
+          "plan_revision": 4,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "cancelled",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        },
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "cancelled",
+          "summary": "Synthetic terminal result: cancelled.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "The synthetic operation was cancelled."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-03",
+      "category": "interruption",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "interrupted_for_extension",
+        "descendant_cancellation_count": 2,
+        "plan_revision_delta": 1
+      },
+      "initial_status": {
+        "active_step_id": "transcript-step-1",
+        "completed_steps": 0,
+        "plan_id": "transcript-plan",
+        "plan_revision": 3,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "running",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": true,
+          "intent": "extend_task",
+          "record_type": "user_message"
+        },
+        {
+          "propagated_to": [
+            "kernel",
+            "model"
+          ],
+          "record_type": "cancellation_signal",
+          "signal": {
+            "cancellation_id": "extend-signal",
+            "correlation_id": "extend-correlation",
+            "reason": "user_requested",
+            "requested_by": "shell",
+            "schema_version": 1,
+            "task_id": "transcript-task"
+          }
+        },
+        {
+          "disposition": "interrupted_for_extension",
+          "record_type": "message_disposition"
+        },
+        {
+          "kind": "cancelled",
+          "plan_id": "transcript-plan",
+          "plan_revision": 4,
+          "plan_step_id": null,
+          "record_type": "progress_event",
+          "schema_version": 1,
+          "sequence": 4,
+          "task_id": "transcript-task"
+        },
+        {
+          "active_step_id": null,
+          "completed_steps": 0,
+          "plan_id": "transcript-plan",
+          "plan_revision": 4,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "cancelled",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        },
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "cancelled",
+          "summary": "Synthetic terminal result: cancelled.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "The synthetic operation was cancelled."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-04",
+      "category": "refusal",
+      "expected": {
+        "admitted": false,
+        "claims_unfinished_work_succeeded": false,
+        "code": "cancellation_required",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": {
+        "active_step_id": "transcript-step-1",
+        "completed_steps": 0,
+        "plan_id": "transcript-plan",
+        "plan_revision": 3,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "running",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": false,
+          "intent": "replace_task",
+          "record_type": "user_message"
+        },
+        {
+          "code": "cancellation_required",
+          "record_type": "validation_refusal"
+        },
+        {
+          "active_step_id": "transcript-step-1",
+          "completed_steps": 0,
+          "plan_id": "transcript-plan",
+          "plan_revision": 3,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "running",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-05",
+      "category": "refusal",
+      "expected": {
+        "admitted": false,
+        "claims_unfinished_work_succeeded": false,
+        "code": "unexpected_cancellation",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": {
+        "active_step_id": "transcript-step-1",
+        "completed_steps": 0,
+        "plan_id": "transcript-plan",
+        "plan_revision": 3,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "running",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": true,
+          "intent": "status_query",
+          "record_type": "user_message"
+        },
+        {
+          "code": "unexpected_cancellation",
+          "record_type": "validation_refusal"
+        },
+        {
+          "active_step_id": "transcript-step-1",
+          "completed_steps": 0,
+          "plan_id": "transcript-plan",
+          "plan_revision": 3,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "running",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-06",
+      "category": "refusal",
+      "expected": {
+        "admitted": false,
+        "claims_unfinished_work_succeeded": false,
+        "code": "plan_not_interruptible",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": {
+        "active_step_id": null,
+        "completed_steps": 2,
+        "plan_id": "transcript-plan",
+        "plan_revision": 5,
+        "record_type": "status_response",
+        "schema_version": 1,
+        "status": "completed",
+        "task_id": "transcript-task",
+        "total_steps": 2
+      },
+      "transcript": [
+        {
+          "cancellation_supplied": true,
+          "intent": "replace_task",
+          "record_type": "user_message"
+        },
+        {
+          "code": "plan_not_interruptible",
+          "record_type": "validation_refusal"
+        },
+        {
+          "active_step_id": null,
+          "completed_steps": 2,
+          "plan_id": "transcript-plan",
+          "plan_revision": 5,
+          "record_type": "status_response",
+          "schema_version": 1,
+          "status": "completed",
+          "task_id": "transcript-task",
+          "total_steps": 2
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-07",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "completed",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [
+            {
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+              "evidence_id": "transcript-evidence-1",
+              "fragment": null,
+              "kind": "validation",
+              "object_id": "acceptance-check-1",
+              "observed_revision": "fixture-v1",
+              "schema_version": 1,
+              "source_id": "synthetic-runtime-fixture"
+            }
+          ],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "completed",
+          "summary": "Synthetic terminal result: completed.",
+          "task_id": "transcript-task",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-08",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "failed",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "failed",
+          "summary": "Synthetic terminal result: failed.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "A typed synthetic operation failed."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-09",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "blocked",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "blocked",
+          "summary": "Synthetic terminal result: blocked.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "A synthetic dependency requires a decision."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-10",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "unknown",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "unknown",
+          "summary": "Synthetic terminal result: unknown.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "Available synthetic evidence cannot establish the result."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-11",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "not_run",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "not_run",
+          "summary": "Synthetic terminal result: not_run.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "The synthetic operation was not attempted."
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "TRN-12",
+      "category": "final_response",
+      "expected": {
+        "admitted": true,
+        "claims_unfinished_work_succeeded": false,
+        "code": "cancelled",
+        "descendant_cancellation_count": 0,
+        "plan_revision_delta": 0
+      },
+      "initial_status": null,
+      "transcript": [
+        {
+          "claims_unfinished_work_succeeded": false,
+          "evidence": [],
+          "record_type": "final_response",
+          "schema_version": 1,
+          "state": "cancelled",
+          "summary": "Synthetic terminal result: cancelled.",
+          "task_id": "transcript-task",
+          "unresolved": [
+            "The synthetic operation was cancelled."
+          ]
+        }
+      ]
+    }
+  ],
+  "contract_authority": "descriptive-only",
+  "external_network_used": false,
+  "fixture_set_id": "agentmage-runtime-transcripts-v1",
+  "live_model_tool_or_platform_execution": false,
+  "private_user_data_used": false,
+  "schema_version": 1
+}
