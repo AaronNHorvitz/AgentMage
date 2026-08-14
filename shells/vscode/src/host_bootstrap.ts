@@ -99,6 +99,12 @@ class SupervisedHostBridge implements HostBridge {
     child.stderr.on("data", () => this.dispose());
   }
 
+  doctor(
+    request: Parameters<HostBridge["doctor"]>[0],
+  ): ReturnType<HostBridge["doctor"]> {
+    return this.bridge.doctor(request);
+  }
+
   previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): ReturnType<HostBridge["previewRead"]> {

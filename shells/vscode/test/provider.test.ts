@@ -69,6 +69,44 @@ class Bridge implements HostBridge {
   previewBarrier: Promise<void> | undefined;
   disposed = false;
 
+  doctor(
+    request: Parameters<HostBridge["doctor"]>[0],
+  ): ReturnType<HostBridge["doctor"]> {
+    const components = [
+      "package",
+      "platform",
+      "model",
+      "runtime",
+      "hardware_fit",
+      "offline_boundary",
+      "sandbox_helper",
+      "workspace_grant",
+      "capabilities",
+      "repository_map",
+      "encrypted_store",
+      "receipt_chain",
+      "recovery",
+    ] as const;
+    return Promise.resolve({
+      kind: "doctor_completed",
+      schema_version: 1,
+      request_id: request.request_id,
+      report: {
+        schema_version: 2,
+        report_kind: "agentmage.local-doctor.v1",
+        overall_state: "unavailable",
+        items: components.map((component) => ({
+          component,
+          state: component === "package" ? "healthy" : "unavailable",
+          reason_code: "diagnostic.fixture.observed",
+          remediation_code: "diagnostic.remediation.none",
+          identity_sha256: null,
+        })),
+        report_sha256: "d".repeat(64),
+      },
+    });
+  }
+
   async previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): Promise<HostReadResponse> {
@@ -165,6 +203,17 @@ void test("closed read grammar rejects ambient and traversal paths", () => {
   ]) {
     assert.equal(parseReadCommand(candidate), undefined, candidate);
   }
+});
+
+void test("doctor renders every typed state without workspace approval", async () => {
+  const { controller, bridge, approvals, signal } = fixture();
+  approvals.workspaceApproved = false;
+  const response = await controller.respond("doctor", signal);
+  assert.equal(bridge.previewCalls, 0);
+  assert.match(response.text, /AgentMage local status: \*\*Unavailable\*\*/);
+  assert.match(response.text, /\*\*Package:\*\* Healthy/);
+  assert.match(response.text, /\*\*Recovery:\*\* Unavailable/);
+  assert.match(response.text, new RegExp("d{64}"));
 });
 
 void test("one approved read renders bounded content citation and receipt", async () => {

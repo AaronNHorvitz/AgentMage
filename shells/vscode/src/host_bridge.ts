@@ -5,6 +5,7 @@ import {
   HOST_PROTOCOL_VERSION,
   type HostBridge,
   type HostReadResponse,
+  type HostResponse,
   type ReceiptSummary,
 } from "./provider.js";
 
@@ -60,22 +61,26 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     credentials.launchSecret.fill(0);
   }
 
+  doctor(request: Parameters<HostBridge["doctor"]>[0]): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
   previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): Promise<HostReadResponse> {
-    return this.safeExchange(request);
+    return this.safeReadExchange(request);
   }
 
   approveRead(
     request: Parameters<HostBridge["approveRead"]>[0],
   ): Promise<HostReadResponse> {
-    return this.safeExchange(request);
+    return this.safeReadExchange(request);
   }
 
   cancelRead(
     request: Parameters<HostBridge["cancelRead"]>[0],
   ): Promise<HostReadResponse> {
-    return this.safeExchange(request);
+    return this.safeReadExchange(request);
   }
 
   /** Closes the local channel and erases retained one-use secret bytes. */
@@ -89,7 +94,7 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
 
   private safeExchange(
     request: object & { readonly request_id: string },
-  ): Promise<HostReadResponse> {
+  ): Promise<HostResponse> {
     return this.serialize(() => this.exchange(request)).catch(() => ({
       kind: "denied",
       schema_version: HOST_PROTOCOL_VERSION,
@@ -98,9 +103,24 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     }));
   }
 
-  private serialize(
-    operation: () => Promise<HostReadResponse>,
+  private safeReadExchange(
+    request: object & { readonly request_id: string },
   ): Promise<HostReadResponse> {
+    return this.safeExchange(request).then((response) =>
+      response.kind === "doctor_completed"
+        ? {
+            kind: "denied",
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request.request_id,
+            code: "host.protocol.response_mismatch",
+          }
+        : response,
+    );
+  }
+
+  private serialize(
+    operation: () => Promise<HostResponse>,
+  ): Promise<HostResponse> {
     const result = this.queue.then(operation, operation);
     this.queue = result.then(
       () => undefined,
@@ -109,7 +129,7 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     return result;
   }
 
-  private async exchange(request: object): Promise<HostReadResponse> {
+  private async exchange(request: object): Promise<HostResponse> {
     await this.connect();
     const socket = this.socket;
     const reader = this.reader;
@@ -265,7 +285,7 @@ function validateCredentials(credentials: LinuxHostLaunchCredentials): void {
   }
 }
 
-function parseResponse(candidate: unknown): HostReadResponse {
+function parseResponse(candidate: unknown): HostResponse {
   if (
     !isRecord(candidate) ||
     candidate.schema_version !== HOST_PROTOCOL_VERSION
@@ -273,6 +293,20 @@ function parseResponse(candidate: unknown): HostReadResponse {
     throw new HostBridgeFailure();
   }
   switch (candidate.kind) {
+    case "doctor_completed":
+      requireKeys(candidate, [
+        "kind",
+        "report",
+        "request_id",
+        "schema_version",
+      ]);
+      if (
+        !validIdentifier(candidate.request_id) ||
+        !validDoctorReport(candidate.report)
+      ) {
+        throw new HostBridgeFailure();
+      }
+      return candidate as unknown as HostResponse;
     case "read_preview":
       requireKeys(candidate, [
         "byte_len",
@@ -342,6 +376,81 @@ function parseResponse(candidate: unknown): HostReadResponse {
   }
 }
 
+const DIAGNOSTIC_COMPONENTS = [
+  "package",
+  "platform",
+  "model",
+  "runtime",
+  "hardware_fit",
+  "offline_boundary",
+  "sandbox_helper",
+  "workspace_grant",
+  "capabilities",
+  "repository_map",
+  "encrypted_store",
+  "receipt_chain",
+  "recovery",
+] as const;
+
+const DIAGNOSTIC_STATES = [
+  "healthy",
+  "degraded",
+  "blocked",
+  "unavailable",
+  "quarantined",
+  "unsupported",
+] as const;
+
+function validDoctorReport(candidate: unknown): boolean {
+  if (!isRecord(candidate)) {
+    return false;
+  }
+  try {
+    requireKeys(candidate, [
+      "items",
+      "overall_state",
+      "report_kind",
+      "report_sha256",
+      "schema_version",
+    ]);
+  } catch {
+    return false;
+  }
+  if (
+    candidate.schema_version !== 2 ||
+    candidate.report_kind !== "agentmage.local-doctor.v1" ||
+    !DIAGNOSTIC_STATES.includes(candidate.overall_state as never) ||
+    !validSha256(candidate.report_sha256) ||
+    !Array.isArray(candidate.items) ||
+    candidate.items.length !== DIAGNOSTIC_COMPONENTS.length
+  ) {
+    return false;
+  }
+  return candidate.items.every((item, index) => {
+    if (!isRecord(item)) {
+      return false;
+    }
+    try {
+      requireKeys(item, [
+        "component",
+        "identity_sha256",
+        "reason_code",
+        "remediation_code",
+        "state",
+      ]);
+    } catch {
+      return false;
+    }
+    return (
+      item.component === DIAGNOSTIC_COMPONENTS[index] &&
+      DIAGNOSTIC_STATES.includes(item.state as never) &&
+      validCode(item.reason_code) &&
+      validCode(item.remediation_code) &&
+      (item.identity_sha256 === null || validSha256(item.identity_sha256))
+    );
+  });
+}
+
 function validReceipt(candidate: unknown): candidate is ReceiptSummary {
   if (!isRecord(candidate)) {
     return false;
@@ -394,6 +503,12 @@ function validIdentifier(candidate: unknown): candidate is string {
 
 function validSha256(candidate: unknown): candidate is string {
   return typeof candidate === "string" && /^[0-9a-f]{64}$/.test(candidate);
+}
+
+function validCode(candidate: unknown): candidate is string {
+  return (
+    typeof candidate === "string" && /^[a-z0-9._-]{1,128}$/.test(candidate)
+  );
 }
 
 function write(socket: Socket, bytes: Buffer): Promise<void> {

@@ -35,6 +35,43 @@ export interface ReceiptSummary {
     "succeeded" | "denied" | "failed" | "cancelled" | "timed_out" | "uncertain";
 }
 
+export type DiagnosticComponent =
+  | "package"
+  | "platform"
+  | "model"
+  | "runtime"
+  | "hardware_fit"
+  | "offline_boundary"
+  | "sandbox_helper"
+  | "workspace_grant"
+  | "capabilities"
+  | "repository_map"
+  | "encrypted_store"
+  | "receipt_chain"
+  | "recovery";
+
+export type DiagnosticState =
+  | "healthy"
+  | "degraded"
+  | "blocked"
+  | "unavailable"
+  | "quarantined"
+  | "unsupported";
+
+export interface DoctorReport {
+  readonly schema_version: 2;
+  readonly report_kind: "agentmage.local-doctor.v1";
+  readonly overall_state: DiagnosticState;
+  readonly items: readonly {
+    readonly component: DiagnosticComponent;
+    readonly state: DiagnosticState;
+    readonly reason_code: string;
+    readonly remediation_code: string;
+    readonly identity_sha256: string | null;
+  }[];
+  readonly report_sha256: string;
+}
+
 export type HostReadResponse =
   | ReadPreview
   | {
@@ -58,7 +95,22 @@ export type HostReadResponse =
       readonly receipt?: ReceiptSummary;
     };
 
+export type HostResponse =
+  | HostReadResponse
+  | {
+      readonly kind: "doctor_completed";
+      readonly schema_version: 1;
+      readonly request_id: string;
+      readonly report: DoctorReport;
+    };
+
 export interface HostBridge {
+  doctor(request: {
+    readonly kind: "doctor";
+    readonly schema_version: 1;
+    readonly request_id: string;
+  }): Promise<HostResponse>;
+
   previewRead(request: {
     readonly kind: "preview_read";
     readonly schema_version: 1;
@@ -117,6 +169,12 @@ export interface ControllerResult {
 
 /** Inert bridge used until a verified package injects authenticated IPC. */
 export class UnavailableHostBridge implements HostBridge {
+  doctor(request: Parameters<HostBridge["doctor"]>[0]): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
   previewRead(
     request: Parameters<HostBridge["previewRead"]>[0],
   ): Promise<HostReadResponse> {
@@ -172,6 +230,21 @@ export class SecureReadController {
   ): Promise<ControllerResult> {
     if (this.disposed) {
       return result("AgentMage denied the request: `vscode.host.deactivated`.");
+    }
+    if (prompt === "doctor") {
+      if (cancellation.isCancellationRequested) {
+        return cancelledResult();
+      }
+      const requestId = this.identities.next();
+      const response = await this.host.doctor({
+        kind: "doctor",
+        schema_version: HOST_PROTOCOL_VERSION,
+        request_id: requestId,
+      });
+      if (cancellation.isCancellationRequested) {
+        return cancelledResult();
+      }
+      return renderDoctor(response, requestId);
     }
     const components = parseReadCommand(prompt);
     if (components === undefined) {
@@ -295,6 +368,98 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function renderDoctor(
+  response: HostResponse,
+  expectedRequestId: string,
+): ControllerResult {
+  if (
+    response.schema_version !== HOST_PROTOCOL_VERSION ||
+    response.request_id !== expectedRequestId
+  ) {
+    return result(
+      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    );
+  }
+  if (response.kind === "denied") {
+    return result(
+      `AgentMage denied the request: \`${validCode(response.code) ? response.code : "vscode.host.response_invalid"}\`.`,
+    );
+  }
+  if (
+    response.kind !== "doctor_completed" ||
+    !validDoctorReport(response.report)
+  ) {
+    return result(
+      "AgentMage denied the request: `vscode.host.response_invalid`.",
+    );
+  }
+  const lines = [
+    `AgentMage local status: **${stateLabel(response.report.overall_state)}**`,
+    "",
+    ...response.report.items.map(
+      (item) =>
+        `- **${componentLabel(item.component)}:** ${stateLabel(item.state)} (${item.reason_code}; ${item.remediation_code})`,
+    ),
+    "",
+    `Report: \`${response.report.report_sha256}\``,
+  ];
+  return result(lines.join("\n"));
+}
+
+const DIAGNOSTIC_COMPONENTS: readonly DiagnosticComponent[] = [
+  "package",
+  "platform",
+  "model",
+  "runtime",
+  "hardware_fit",
+  "offline_boundary",
+  "sandbox_helper",
+  "workspace_grant",
+  "capabilities",
+  "repository_map",
+  "encrypted_store",
+  "receipt_chain",
+  "recovery",
+];
+
+const DIAGNOSTIC_STATES: readonly DiagnosticState[] = [
+  "healthy",
+  "degraded",
+  "blocked",
+  "unavailable",
+  "quarantined",
+  "unsupported",
+];
+
+function validDoctorReport(report: DoctorReport): boolean {
+  return (
+    report.schema_version === 2 &&
+    report.report_kind === "agentmage.local-doctor.v1" &&
+    DIAGNOSTIC_STATES.includes(report.overall_state) &&
+    validSha256(report.report_sha256) &&
+    report.items.length === DIAGNOSTIC_COMPONENTS.length &&
+    report.items.every(
+      (item, index) =>
+        item.component === DIAGNOSTIC_COMPONENTS[index] &&
+        DIAGNOSTIC_STATES.includes(item.state) &&
+        validCode(item.reason_code) &&
+        validCode(item.remediation_code) &&
+        (item.identity_sha256 === null || validSha256(item.identity_sha256)),
+    )
+  );
+}
+
+function componentLabel(component: DiagnosticComponent): string {
+  return component
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function stateLabel(state: DiagnosticState): string {
+  return state.charAt(0).toUpperCase() + state.slice(1);
 }
 
 /** Parses only `read <relative-path>` into already separated path components. */

@@ -9,14 +9,15 @@ use agentmage_capability_read_only::{
 };
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
-    ContractPayload, CorrelationId, DataSensitivity, GrantId, GrantNonce, GrantOperation,
-    GrantPreimage, GrantSideEffect, GrantTarget, HeldWorkspaceObject, OperationAttemptId,
-    OperationBinding, OperationOutcome, Receipt, SessionId, TaskId, ToolCall, ToolCallId,
-    ToolDefinition, ToolId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
-    WorkspaceScopePath,
+    ContractPayload, CorrelationId, DataSensitivity, DiagnosticComponent, DiagnosticObservation,
+    DiagnosticState, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect,
+    GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome,
+    Receipt, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
+    WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
 };
 use agentmage_kernel_engine::approval::{render_approval_request, verify_approval_request};
 use agentmage_kernel_engine::authority_transaction::AuthorityTransactionRequest;
+use agentmage_kernel_engine::diagnostics::build_doctor_report;
 use agentmage_kernel_engine::grants::{DerivedOperationGrantRequest, SessionReadGrantRequest};
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_kernel_engine::policy::{
@@ -287,6 +288,7 @@ where
     pub fn handle(&mut self, request: HostRequest) -> HostResponse {
         let request_id = request_id(&request).to_owned();
         let result = match request {
+            HostRequest::Doctor { .. } => self.doctor(&request_id),
             HostRequest::PreviewRead {
                 workspace_id,
                 workspace_root,
@@ -312,6 +314,65 @@ where
             request_id,
             code: error.code().to_owned(),
             receipt: None,
+        })
+    }
+
+    fn doctor(&self, request_id: &str) -> Result<HostResponse, LinuxReadError> {
+        let package_state = match self.platform {
+            LinuxReadPlatform::Verified(_) => DiagnosticState::Healthy,
+            #[cfg(test)]
+            LinuxReadPlatform::Test(_) => DiagnosticState::Degraded,
+        };
+        let observations = vec![
+            diagnostic(
+                DiagnosticComponent::Package,
+                package_state,
+                if package_state == DiagnosticState::Healthy {
+                    "diagnostic.package.verified"
+                } else {
+                    "diagnostic.package.test-boundary"
+                },
+            ),
+            diagnostic(
+                DiagnosticComponent::Platform,
+                DiagnosticState::Healthy,
+                "diagnostic.platform.verified",
+            ),
+            diagnostic(
+                DiagnosticComponent::OfflineBoundary,
+                DiagnosticState::Healthy,
+                "diagnostic.offline.enforced",
+            ),
+            diagnostic(
+                DiagnosticComponent::SandboxHelper,
+                if self.sandbox.is_some() {
+                    DiagnosticState::Healthy
+                } else {
+                    DiagnosticState::Unavailable
+                },
+                if self.sandbox.is_some() {
+                    "diagnostic.sandbox.verified"
+                } else {
+                    "diagnostic.sandbox.unavailable"
+                },
+            ),
+            diagnostic(
+                DiagnosticComponent::Capabilities,
+                DiagnosticState::Healthy,
+                "diagnostic.capabilities.host-loaded",
+            ),
+            diagnostic(
+                DiagnosticComponent::EncryptedStore,
+                DiagnosticState::Healthy,
+                "diagnostic.store.open",
+            ),
+        ];
+        let report =
+            build_doctor_report(observations).map_err(|_| LinuxReadError::AuthorityDenied)?;
+        Ok(HostResponse::DoctorCompleted {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            report,
         })
     }
 
@@ -783,9 +844,24 @@ fn receipt_summary(receipt: &Receipt) -> ReceiptSummary {
 
 fn request_id(request: &HostRequest) -> &str {
     match request {
-        HostRequest::PreviewRead { request_id, .. }
+        HostRequest::Doctor { request_id, .. }
+        | HostRequest::PreviewRead { request_id, .. }
         | HostRequest::ApproveRead { request_id, .. }
         | HostRequest::CancelRead { request_id, .. } => request_id,
+    }
+}
+
+fn diagnostic(
+    component: DiagnosticComponent,
+    state: DiagnosticState,
+    reason_code: &str,
+) -> DiagnosticObservation {
+    DiagnosticObservation {
+        component,
+        state,
+        reason_code: reason_code.to_owned(),
+        identity_sha256: None,
+        stale: false,
     }
 }
 
@@ -983,6 +1059,39 @@ mod tests {
             } => (preview_id, confirmation_sha256),
             _ => panic!("expected exact preview"),
         }
+    }
+
+    #[test]
+    fn doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable() {
+        let state = temp_root("doctor");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        let mut workflow = workflow(&state, &[]);
+        let response = workflow.handle(HostRequest::Doctor {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-doctor-0001".to_owned(),
+        });
+        let HostResponse::DoctorCompleted {
+            request_id, report, ..
+        } = response
+        else {
+            panic!("expected doctor response");
+        };
+        assert_eq!(request_id, "request-doctor-0001");
+        assert_eq!(
+            report.items.len(),
+            agentmage_kernel_contracts::DiagnosticComponent::ALL.len()
+        );
+        assert_eq!(
+            report.items[2].state,
+            agentmage_kernel_contracts::DiagnosticState::Unavailable
+        );
+        assert_eq!(
+            report.items[5].state,
+            agentmage_kernel_contracts::DiagnosticState::Healthy
+        );
+        let encoded = serde_json::to_string(&report).expect("report JSON");
+        assert!(!encoded.contains(state.to_string_lossy().as_ref()));
+        std::fs::remove_dir_all(state).expect("remove state");
     }
 
     #[test]

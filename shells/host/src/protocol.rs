@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use agentmage_kernel_contracts::DoctorReport;
+
 /// Version of the Phase 9 host protocol.
 pub const HOST_PROTOCOL_VERSION: u16 = 1;
 
@@ -45,6 +47,13 @@ impl HostProtocolError {
 #[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRequest {
+    /// Return one redacted local doctor report without contacting the network.
+    Doctor {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+    },
     /// Resolve and hold one file, then return a non-authoritative preview.
     PreviewRead {
         /// Protocol schema version.
@@ -83,6 +92,10 @@ pub enum HostRequest {
 impl HostRequest {
     fn validate(&self) -> Result<(), HostProtocolError> {
         let (version, request_id) = match self {
+            Self::Doctor {
+                schema_version,
+                request_id,
+            } => (*schema_version, request_id),
             Self::PreviewRead {
                 schema_version,
                 request_id,
@@ -153,6 +166,15 @@ pub struct ReceiptSummary {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostResponse {
+    /// One typed redacted local doctor report.
+    DoctorCompleted {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Kernel-owned content-free diagnostic report.
+        report: DoctorReport,
+    },
     /// One exact non-authoritative read preview.
     ReadPreview {
         /// Protocol schema version.
@@ -266,6 +288,25 @@ mod tests {
         let bytes = serde_json::to_vec(&preview_request()).expect("request JSON");
         let parsed = parse_request(&bytes).expect("exact request");
         assert!(matches!(parsed, HostRequest::PreviewRead { .. }));
+    }
+
+    #[test]
+    fn exact_doctor_request_round_trips_without_probe_fields() {
+        let request = json!({
+            "kind": "doctor",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-doctor-0001"
+        });
+        let parsed = parse_request(&serde_json::to_vec(&request).expect("request JSON"))
+            .expect("exact request");
+        assert!(matches!(parsed, HostRequest::Doctor { .. }));
+
+        let mut prohibited = request;
+        prohibited["endpoint"] = json!("https://example.invalid/health");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&prohibited).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
     }
 
     #[test]
