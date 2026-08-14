@@ -36,7 +36,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-diagnostics-selection-resource",
-      "output_sha256": "1a83e034690da81e4dee64341ce49e2b1062f481bba995b88039fdd68b1b6a19"
+      "output_sha256": "81dde80d17c2287efb0ff1a1fd4ed6adca3c594037414c1c24cb6c81f5a0b0cc"
     },
     {
       "argv": [
@@ -48,7 +48,7 @@
       ],
       "exit_code": 0,
       "id": "host-doctor-export",
-      "output_sha256": "24fa19f80dfc7841f6e3aa5c68824fefdd73c62c33cde7232fb36ac5cd98f3fc"
+      "output_sha256": "3bdf06d288de48a61ef54dbbea1bf1da46c1deede0371f360a88224aa5c963c7"
     },
     {
       "argv": [
@@ -59,7 +59,7 @@
       ],
       "exit_code": 0,
       "id": "native-chat",
-      "output_sha256": "f995179c965c7651f145129776c99b388b1a78779a38b10d59687a251159fff8"
+      "output_sha256": "bc2855d25030d5a924d4433fb9ddaf762d4e89575b5588777e0587e5482ece14"
     },
     {
       "argv": [
@@ -71,7 +71,7 @@
       ],
       "exit_code": 0,
       "id": "evaluation-contracts",
-      "output_sha256": "a468607329533f372ad72d9841e555a17ba2e4ca42d4f58aeeedcb3ef3a62b54"
+      "output_sha256": "b7e489f3d2da0fa5267da6fb24f540b5f2821cf0f867761c4a2d6b1948e2e8df"
     },
     {
       "argv": [
@@ -148,7 +148,7 @@
       "RV-41"
     ]
   },
-  "source_revision": "7de166e14797640d9038633b8a4f521b117a3587",
+  "source_revision": "8a58e658ccf3f72a4b006f23c7c40c76152e1ffb",
   "source_sha256": {
     "docs/verification/sprint-15-local-results.md": "c1284728ba09155599c9ed412be96917ab3dbd60ce63a329accfb615a965c901",
     "kernel/contracts/src/diagnostics.rs": "08260d209729487869a19f43e72e5c836ee567c7aaa551c31779cae9aee31d8d",
@@ -158,7 +158,7 @@
     "scripts/benchmark_contract.py": "f58631cfe90f7ed75aca1a2983c075c118fbfb74100597aac7431b05fea32889",
     "scripts/model_role_evaluation_matrix.py": "def8fcdb7f89616738089d8229697f5ab9aca5de17c36d5decf9776cf702446e",
     "scripts/sprint_15_evidence.py": "433ea2025cd727f65415f2e697b0d903f6b94b73217807b7a7008421f1a68cbb",
-    "shells/host/src/diagnostic_export.rs": "f005a64cdc4d72adb2aa6ef3d874212a8aa2b3a77d67ddc3259195cda6cac345",
+    "shells/host/src/diagnostic_export.rs": "126fa76d6410d7b27739aa2b9b834a2352b26ea96a8873b9fa07a4bc92e46d60",
     "shells/host/src/linux_read.rs": "224755dfb22a01911f522279707921f37b6967f1c4a68fcc7106f5093b79d8d4",
     "shells/host/src/protocol.rs": "4abaa2a9aefdaa30c394c90df6959981cd42cc368a07056c72884a1cc060bb85",
     "shells/vscode/src/extension.ts": "2c476d08d7f16f05507f1c3c083025c778ecf12329c94053d63c3ab0f794034f",
