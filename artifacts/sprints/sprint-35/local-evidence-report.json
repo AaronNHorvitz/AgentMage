@@ -1,0 +1,210 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-34-BLOCKED",
+      "owner": "34.1"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-35-TRANSACTION-REVIEW-ABSENT",
+      "owner": "35.1.3.4"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "kernel-tests",
+      "output_sha256": "06294a4acee8e94991cb0543cdeb148087d9ec38b99cc9fa9658e3d2e3d37249"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "kernel-clippy",
+      "output_sha256": "7e0117ad9a8f89eb0fe32d99f1c3cdd50b2ebf0c3b0e01c1d89f963facd4117e"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-contracts",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "contract-tests",
+      "output_sha256": "f75787aa1ce3395155939d7995b827c91d1f3fe80355cc3b618a97344ea7dd70"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "519008e7f9ab6031999ceb036ce32990976bd3669ed8ae0385a96459138f2998"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "50c19e39481656f077f2f774398b8fc7b9bec17dca933166dd755274184c5837"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_35_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "atomic_application": false,
+    "authority_free_in_memory_shadow_change_set": true,
+    "complete_exact_review_preview": true,
+    "current_parent_read_grant_observation": true,
+    "deterministic_shadow_validation": true,
+    "exact_held_target_preimage_binding": true,
+    "external_delivery": false,
+    "fresh_preapply_revalidation_and_stale_invalidation": true,
+    "generic_shell": false,
+    "network_access": false,
+    "post_write_command_execution": false,
+    "rollback": false,
+    "short_lived_single_use_workspace_write_grant": true,
+    "target_file_mutation": false,
+    "unchanged_parent_revision_requirement": true
+  },
+  "record_type": "sprint_35_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-DAT-002",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-005",
+    "SR-TST-011",
+    "SR-TST-012"
+  ],
+  "source_revision": "90ec3d620ff47a7e856ed7b1e8a979cac76ca6fe",
+  "source_sha256": {
+    "docs/architecture/exact-preimage-write-approval.md": "115bf060778ec0f03a1034986f79ac87164a104c27e8b4953aaf746302636bcb",
+    "docs/verification/sprint-35-local-results.md": "cf9a0d193e1cd868df67cfaf9f66e2baf4e05a0704793af98f84d9ac8a77717a",
+    "kernel/engine/src/approval.rs": "ca83dd5fb50f8267472930fc6806ceb009095f31edf87d92994cb26721bef8b3",
+    "kernel/engine/src/grants.rs": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c",
+    "kernel/engine/src/lib.rs": "db9bc701b0ab4845807cd59e8987d7d97558fa078766c42658b96abe6636eff5",
+    "kernel/engine/src/write_approval.rs": "5b77913ff0ee12432aaf1e3dab4c8ecdda9fb5615e19f3c21add88f1adb043ef",
+    "scripts/sprint_35_evidence.py": "72a852b18078aee8ad19ab871cdea1aa3aac08d997fe4d856729b62e1a14fd6c",
+    "tests/test_sprint_35_evidence.py": "e41d676012a94f674f8977c6d09605993c6f6670a718020f1b1dfc946c2899a5"
+  },
+  "summary": {
+    "independent_review_passed": false,
+    "local_exact_preimage_approval_contract_passed": true,
+    "network_access_enabled": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "target_write_enabled": false,
+    "upstream_dependency_passed": false
+  },
+  "verification_evidence": {
+    "complete_local_product_and_docs_gates": true,
+    "exact_preimage_shadow_and_preview_suite": true,
+    "grant_and_stale_invalidation_suite": true,
+    "independent_transaction_review": false,
+    "upstream_sprint_34_gate": false
+  }
+}
