@@ -73,7 +73,7 @@ pub enum MarkdownLineEnding {
 }
 
 impl MarkdownLineEnding {
-    fn bytes(self) -> &'static [u8] {
+    pub(crate) fn bytes(self) -> &'static [u8] {
         match self {
             Self::None | Self::Lf => b"\n",
             Self::CrLf => b"\r\n",
@@ -212,6 +212,12 @@ impl MarkdownDocument {
     #[must_use]
     pub fn source_sha256(&self) -> &str {
         &self.source_sha256
+    }
+
+    /// Returns the exact canonical workspace-relative path.
+    #[must_use]
+    pub const fn path(&self) -> &WorkspacePath {
+        &self.path
     }
 
     /// Returns the stable note identity when one is declared in frontmatter.

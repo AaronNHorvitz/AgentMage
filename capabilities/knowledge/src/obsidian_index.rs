@@ -8,6 +8,7 @@ use rusqlite::{Connection, Transaction, params};
 use sha2::{Digest, Sha256};
 
 use crate::{
+    KnowledgeIndexPublication, KnowledgeIndexPublicationState, MarkdownDocument,
     OBSIDIAN_PARSER_VERSION, ObsidianFrontmatterValue, ObsidianParsedNote, ObsidianSourceRange,
     ObsidianVaultSnapshot,
 };
@@ -174,6 +175,17 @@ pub struct ObsidianIndexUpdate {
     pub report: ObsidianIndexReport,
     /// Content-free access receipt.
     pub receipt: ObsidianAccessReceipt,
+}
+
+/// Result of reconciling one canonical Markdown write with the disposable index.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianPostWriteIndexResult {
+    /// Canonical-first publication decision.
+    pub state: KnowledgeIndexPublicationState,
+    /// Current projection after reconciliation.
+    pub report: ObsidianIndexReport,
+    /// Atomic index update only when a canonical commit was exact and current.
+    pub update: Option<ObsidianIndexUpdate>,
 }
 
 /// Bounded query result and receipt.
@@ -614,6 +626,71 @@ impl ObsidianVaultIndex {
         let paths = events.iter().map(|event| &event.path).collect::<Vec<_>>();
         let receipt = self.receipt(ObsidianAccessKind::WatchUpdate, &report, paths)?;
         Ok(ObsidianIndexUpdate { report, receipt })
+    }
+
+    /// Publishes a derived projection only after one exact canonical Markdown commit.
+    pub fn publish_after_canonical_write(
+        &mut self,
+        expected_revision: u64,
+        publication: &KnowledgeIndexPublication,
+        snapshot: &ObsidianVaultSnapshot,
+    ) -> Result<ObsidianPostWriteIndexResult, ObsidianIndexError> {
+        if self.revision()? != expected_revision {
+            return Err(ObsidianIndexError::Stale);
+        }
+        match publication.state {
+            KnowledgeIndexPublicationState::PreservedAfterFailure => {
+                return Ok(ObsidianPostWriteIndexResult {
+                    state: publication.state,
+                    report: self.current_report()?,
+                    update: None,
+                });
+            }
+            KnowledgeIndexPublicationState::RebuildRequired => {
+                return Err(ObsidianIndexError::Stale);
+            }
+            KnowledgeIndexPublicationState::ReadyAfterCommit => {}
+        }
+        let mutation = &publication.mutation;
+        let note = snapshot
+            .notes()
+            .iter()
+            .find(|note| &note.path == mutation.path())
+            .ok_or(ObsidianIndexError::InvalidInput)?;
+        if note.content_sha256 != mutation.proposed_source_sha256()
+            || publication.observed_source_sha256.as_deref()
+                != Some(mutation.proposed_source_sha256())
+        {
+            return Err(ObsidianIndexError::Stale);
+        }
+        let parsed = MarkdownDocument::parse(note.path.clone(), note.source_bytes().to_vec())
+            .map_err(|_| ObsidianIndexError::InvalidInput)?;
+        if parsed.stable_id() != Some(mutation.stable_id()) {
+            return Err(ObsidianIndexError::InvalidInput);
+        }
+        let key = path_key(mutation.path())?;
+        let before = self.indexed_digests()?;
+        let kind = match (
+            mutation.expected_source_sha256(),
+            before.get(&key).map(String::as_str),
+        ) {
+            (None, None) => ObsidianWatchEventKind::Created,
+            (Some(expected), Some(current)) if expected == current => {
+                ObsidianWatchEventKind::Modified
+            }
+            _ => return Err(ObsidianIndexError::Stale),
+        };
+        let event = ObsidianWatchEvent {
+            path: mutation.path().clone(),
+            kind,
+            content_sha256: Some(mutation.proposed_source_sha256().to_owned()),
+        };
+        let update = self.apply_watch_batch(expected_revision, &[event], snapshot)?;
+        Ok(ObsidianPostWriteIndexResult {
+            state: publication.state,
+            report: update.report.clone(),
+            update: Some(update),
+        })
     }
 
     /// Previews one section-body replacement while preserving every other source byte.
@@ -1564,7 +1641,11 @@ mod tests {
 
     use super::*;
     use crate::{
-        ObsidianEntryKind, ObsidianNoteInput, ObsidianVaultSelection, ObsidianVaultSnapshot,
+        CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeNamespaceSnapshot,
+        KnowledgeNoteCreateRequest, KnowledgeRecordId, KnowledgeSectionDraft,
+        KnowledgeWriteWorkflow, MarkdownLineEnding, ObsidianEntryKind, ObsidianNoteInput,
+        ObsidianVaultSelection, ObsidianVaultSnapshot, decide_index_publication,
+        preview_knowledge_note_create,
     };
 
     fn workspace() -> WorkspaceId {
@@ -1898,6 +1979,117 @@ mod tests {
                 .expect("query")
                 .hits
                 .is_empty()
+        );
+    }
+
+    #[test]
+    fn canonical_commit_publishes_once_while_failure_and_uncertainty_preserve_index() {
+        let base = ObsidianVaultSnapshot::from_snapshots(
+            &selection(),
+            vec![input(
+                &["Vault", "Existing.md"],
+                "---\nagentmage_id: knowledge-project-001\ntype: project\n---\n# Existing\n",
+            )],
+        )
+        .expect("base snapshot");
+        let mut index = ObsidianVaultIndex::in_memory().expect("index");
+        let initial = index.rebuild(&base).expect("initial");
+        let request = KnowledgeNoteCreateRequest {
+            path: path(&["Vault", "New.md"]),
+            stable_id: KnowledgeRecordId::parse("knowledge-decision-001").expect("identity"),
+            workflow: KnowledgeWriteWorkflow::Decision,
+            title: "New decision".to_owned(),
+            properties: Vec::new(),
+            sections: vec![
+                KnowledgeSectionDraft {
+                    heading: "Decision".to_owned(),
+                    body: "Use the canonical-first path.".to_owned(),
+                },
+                KnowledgeSectionDraft {
+                    heading: "Evidence".to_owned(),
+                    body: "Synthetic local fixture.".to_owned(),
+                },
+            ],
+            line_ending: MarkdownLineEnding::Lf,
+        };
+        let preview = preview_knowledge_note_create(
+            request,
+            &KnowledgeNamespaceSnapshot {
+                paths: vec![path(&["Vault", "Existing.md"])],
+                stable_ids: vec![
+                    KnowledgeRecordId::parse("knowledge-project-001").expect("identity"),
+                ],
+                link_targets: Vec::new(),
+                canonical_snapshot_sha256: initial.report.snapshot_sha256.clone(),
+                derived_index_revision: initial.report.revision,
+            },
+        )
+        .expect("preview");
+        let proposed = std::str::from_utf8(preview.proposed_markdown()).expect("utf8");
+        let after = ObsidianVaultSnapshot::from_snapshots(
+            &selection(),
+            vec![
+                input(
+                    &["Vault", "Existing.md"],
+                    "---\nagentmage_id: knowledge-project-001\ntype: project\n---\n# Existing\n",
+                ),
+                input(&["Vault", "New.md"], proposed),
+            ],
+        )
+        .expect("after snapshot");
+        let mutation = CanonicalKnowledgeMutation::from_create(&preview);
+        let committed = decide_index_publication(
+            mutation.clone(),
+            CanonicalMarkdownWriteOutcome::Committed,
+            Some(preview.proposed_source_sha256.clone()),
+        );
+        let published = index
+            .publish_after_canonical_write(initial.report.revision, &committed, &after)
+            .expect("published");
+        assert_eq!(
+            published.state,
+            KnowledgeIndexPublicationState::ReadyAfterCommit
+        );
+        assert_eq!(published.report.revision, initial.report.revision + 1);
+        assert!(published.update.is_some());
+        assert_eq!(
+            index.freshness(&after).expect("freshness"),
+            ObsidianVaultFreshness::Current
+        );
+
+        let mut failure_index = ObsidianVaultIndex::in_memory().expect("failure index");
+        let failure_initial = failure_index.rebuild(&base).expect("failure initial");
+        let failed = decide_index_publication(
+            mutation.clone(),
+            CanonicalMarkdownWriteOutcome::FailedNoChange,
+            None,
+        );
+        let preserved = failure_index
+            .publish_after_canonical_write(failure_initial.report.revision, &failed, &base)
+            .expect("preserved");
+        assert_eq!(
+            preserved.state,
+            KnowledgeIndexPublicationState::PreservedAfterFailure
+        );
+        assert_eq!(preserved.report, failure_initial.report);
+        assert!(preserved.update.is_none());
+
+        let uncertain = decide_index_publication(
+            mutation,
+            CanonicalMarkdownWriteOutcome::Uncertain,
+            Some(preview.proposed_source_sha256),
+        );
+        assert_eq!(
+            failure_index.publish_after_canonical_write(
+                failure_initial.report.revision,
+                &uncertain,
+                &after,
+            ),
+            Err(ObsidianIndexError::Stale)
+        );
+        assert_eq!(
+            failure_index.current_report().expect("retained report"),
+            failure_initial.report
         );
     }
 }

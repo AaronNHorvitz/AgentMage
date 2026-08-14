@@ -5,6 +5,7 @@
 mod authority;
 mod domain;
 mod index;
+mod knowledge_write;
 mod lifecycle;
 mod markdown_write;
 mod memory;
@@ -33,6 +34,13 @@ pub use domain::{
     KnowledgeRetentionKind, validate_record,
 };
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
+pub use knowledge_write::{
+    CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeFrontmatterProperty,
+    KnowledgeIndexPublication, KnowledgeIndexPublicationState, KnowledgeNamespaceSnapshot,
+    KnowledgeNoteCreatePreview, KnowledgeNoteCreateRequest, KnowledgeSectionDraft,
+    KnowledgeStructuralActionKind, KnowledgeStructuralActionPreview, KnowledgeWriteWorkflow,
+    decide_index_publication, preview_knowledge_note_create, preview_knowledge_structural_action,
+};
 pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
@@ -67,9 +75,9 @@ pub use obsidian::{
 pub use obsidian_index::{
     ObsidianAccessKind, ObsidianAccessReceipt, ObsidianFileChangePreview, ObsidianIndexConflict,
     ObsidianIndexConflictKind, ObsidianIndexElementKind, ObsidianIndexError, ObsidianIndexHit,
-    ObsidianIndexReport, ObsidianIndexUpdate, ObsidianPreviewResult, ObsidianQueryResult,
-    ObsidianTemporalClass, ObsidianTraversalResult, ObsidianVaultFreshness, ObsidianVaultIndex,
-    ObsidianWatchEvent, ObsidianWatchEventKind,
+    ObsidianIndexReport, ObsidianIndexUpdate, ObsidianPostWriteIndexResult, ObsidianPreviewResult,
+    ObsidianQueryResult, ObsidianTemporalClass, ObsidianTraversalResult, ObsidianVaultFreshness,
+    ObsidianVaultIndex, ObsidianWatchEvent, ObsidianWatchEventKind,
 };
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
