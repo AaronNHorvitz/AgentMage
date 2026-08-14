@@ -22,7 +22,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-approval-tests",
-      "output_sha256": "f9a029b77de38a7bd50522632b516c5ed39334ffdd773b16b7572ef6fdb5a490"
+      "output_sha256": "48d07e9397063bbd5e8743b6ef01043e5a22570efbcbbbe4e8987e19d52afe1e"
     },
     {
       "argv": [
@@ -35,7 +35,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "88081101352c3016b3edfdf84ca3fa2f27322b314fd95e95b25669fb726c76c0"
+      "output_sha256": "a202be4acdc333b00f5e387954fde05ddc462d089e7e4b24463b30e247c24883"
     },
     {
       "argv": [
@@ -65,7 +65,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "dab493d85e6e71ca265265657f74bf744901f2b9a709bee5a0e3e38ec3f4fbac"
+      "output_sha256": "2cbddbcfd104fe2b3e75c5cd850d9b4a4acd2bfb82553a2eb9cb0199efddad42"
     },
     {
       "argv": [
@@ -76,7 +76,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "3f76cf4190082e8ca62fe5fbb07406db65d1148f994a40b21e5d54bd141ed037"
+      "output_sha256": "870f07db2aeaac2dd6cbe9b5685b5469cfdcda065554aa4e3d0035287ea50b78"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "7ce3df5c4618ae852c09feb1da1ebd89c69a0736e9940696acbcba7056aed6f3"
+      "output_sha256": "114579c2d66be19d3693e43615e0463a0ca34e486966cbc87ee255344babd701"
     },
     {
       "argv": [
@@ -206,7 +206,7 @@
     "SR-TST-011",
     "SR-TST-012"
   ],
-  "source_revision": "89cd9eaecdf8810537b4cfc94239dd8d184dfe1b",
+  "source_revision": "9506ef63eb7d1277f1f8f424f8e5a319d4e8c2ea",
   "source_sha256": {
     "docs/architecture/exact-preimage-write-approval.md": "115bf060778ec0f03a1034986f79ac87164a104c27e8b4953aaf746302636bcb",
     "docs/verification/sprint-35-local-results.md": "cf9a0d193e1cd868df67cfaf9f66e2baf4e05a0704793af98f84d9ac8a77717a",
