@@ -78,10 +78,17 @@ evidence produces `Observed`. No admissible or budget-fitting evidence produces
 `UnknownBlocked`. Denied matching sources are counted without exposing their content. Obvious
 secret candidates are omitted before ranking and context assembly.
 
+The synthesis envelope copies the exact evidence state, bounded context, admissible citation set,
+and conflict keys. Deterministic rendering rejects a draft that changes the state, uses missing or
+duplicate citations, contains control characters, exceeds the answer bound, supplies an uncited
+nonblocked answer, or supplies any proposed answer for `UnknownBlocked`. The latter renders only a
+fixed no-evidence response. This is an enforceable boundary for later synthesis, not a model or a
+claim that application wiring already exists.
+
 ## Current Boundary
 
 The engine accepts complete adapter-owned source documents and returns a source-traceable result.
 It does not yet bridge raw canonical/Obsidian stores and rebuilt indexes into that contract, nor
-does it carry the result through a synthesis and final-rendering interface. Those integrations,
-upstream Sprint 28 closure, and independent Sprint 29 review remain required before the sprint can
-pass. Optional semantic retrieval remains entirely deferred to Sprint 30.
+does the application yet invoke the completed synthesis/final-rendering contract. Those
+integrations, upstream Sprint 28 closure, and independent Sprint 29 review remain required before
+the sprint can pass. Optional semantic retrieval remains entirely deferred to Sprint 30.

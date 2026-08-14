@@ -44,7 +44,7 @@ class Sprint29EvidenceTests(unittest.TestCase):
                 {"raw_and_rebuilt_index_integration": True}
             ),
             lambda value: value["verification_evidence"].update(
-                {"synthesis_and_final_rendering_integration": True}
+                {"application_synthesis_and_final_rendering_integration": True}
             ),
             lambda value: value["verification_evidence"].update({"independent_review": True}),
             lambda value: value["implemented_contracts"].update({"semantic_components_used": True}),

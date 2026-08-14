@@ -20,6 +20,8 @@
   content-bound citation.
 - Current contradictions, stale sources, denied sources, missing evidence, and exhausted context
   produce explicit states rather than inferred answers.
+- The synthesis envelope and deterministic renderer reject evidence-state changes, invented or
+  duplicate citations, uncited nonblocked answers, and proposed prose for unknown/blocked input.
 - Query-injection strings remain literal, obvious secret candidates never enter results, and
   unrelated-workspace canaries remain excluded.
 - The versioned three-question fixture corpus has exact expected top-one paths and citation sets.
@@ -30,8 +32,8 @@
 ## Open Evidence
 
 Sprint 28 remains blocked. The local retrieval core is not yet connected to both raw source stores
-and rebuilt indexes through one conformance path, and the evidence state has not yet been carried
-through a synthesis/final-rendering contract. Independent Sprint 29 review is also absent.
+and rebuilt indexes through one conformance path, and the application does not yet invoke the
+completed synthesis/final-rendering contract. Independent Sprint 29 review is also absent.
 
 Sprint 29 therefore remains blocked despite passing its locally executable deterministic
 retrieval scope. The machine-readable record is retained at
