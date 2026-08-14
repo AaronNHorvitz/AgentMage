@@ -2744,10 +2744,10 @@ the sprint therefore remain open.
   - [x] **Sub-task 36.1.1.3** (legacy `S-029-I09`): Require separately bounded grants for formatters, tests, builds, migrations, or other post-write commands.
   - [x] **Sub-task 36.1.1.4** (legacy `S-029-I10`): Implement rollback as a fresh reviewed transaction that refuses to overwrite later user changes.
 
-- [ ] **Task 36.1.2 - Produce reviewable artifacts**
+- [x] **Task 36.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 36.1.2.1:** Write-transaction state machine and schemas.
   - [x] **Sub-task 36.1.2.2:** Shadow change-set and preview format.
-  - [ ] **Sub-task 36.1.2.3:** Atomic application and restoration engine.
+  - [x] **Sub-task 36.1.2.3:** Atomic application and restoration engine.
   - [x] **Sub-task 36.1.2.4:** Stale, partial-failure, collision, uncertain-result, and rollback fixtures.
 
 - [ ] **Task 36.1.3 - Verify and close the story**
@@ -2779,13 +2779,14 @@ requirements, and fresh rollback proposal are implemented in `a588a64`. Architec
 verification boundaries are recorded by `a8e9a02`; the retained
 [Sprint 36 evidence report](artifacts/sprints/sprint-36/local-evidence-report.json) in
 `fd27587` records passing focused tests with zero blocking skips plus complete local product,
-documentation, strict-local, effect-boundary, dependency, and supply-chain gates. A native
-filesystem driver, native atomicity proof, the complete `S-029-UT02`, `S-029-ST01`, and
-`S-029-RT01` matrices, and independent transaction review remain absent. Sprint 36 remains
-**BLOCKED** because Sprint 35 is not yet a passing upstream dependency and those native and
-independent proofs are open. Task 36.1.2 and its native-engine sub-task, Task 36.1.3 and its
-remaining verification sub-tasks, both story criteria, Sprint AC 36.AC3, the story, and the
-sprint therefore remain open.
+documentation, strict-local, effect-boundary, dependency, and supply-chain gates. The native
+Linux atomic replacement driver added in `9822295` and the operation-specific Fedora driver
+added in `8cc5372` now provide the atomic application and restoration engine required by
+36.1.2.3. Complete native race, crash/durability, and operation-mutation matrices on every
+promised platform, plus independent transaction review, remain absent. Sprint 36 remains
+**BLOCKED** because Sprint 35 is not yet a passing upstream dependency and those verification
+and independent-review proofs are open. Task 36.1.3 and its remaining verification sub-tasks,
+both story criteria, Sprint AC 36.AC3, the story, and the sprint therefore remain open.
 ### [ ] Sprint 37 - File Creation, Patch, Copy, Move, and Delete Controls
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2804,28 +2805,28 @@ sprint therefore remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 37.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 37.1.1.1** (legacy `S-030-I01`): Implement new-file creation in approved roots with collision detection, staging, content preview, classification, and postimage verification.
-  - [ ] **Sub-task 37.1.1.2** (legacy `S-030-I02`): Implement exact-preimage patching with structured patch parsing and no ad hoc target replacement.
-  - [ ] **Sub-task 37.1.1.3** (legacy `S-030-I03`): Implement copy with source and destination hashes and overwrite refusal by default.
-  - [ ] **Sub-task 37.1.1.4** (legacy `S-030-I04`): Implement move with source identity, destination collision checks, atomic behavior where supported, and rollback record.
-  - [ ] **Sub-task 37.1.1.5** (legacy `S-030-I05`): Implement trash-first delete only after a separate high-risk grant and explicit target preview.
-  - [ ] **Sub-task 37.1.1.6** (legacy `S-030-I06`): Implement atomic temporary-file writes, permission preservation, post-write diff, metadata, and hash reporting.
-  - [ ] **Sub-task 37.1.1.7** (legacy `S-030-I07`): Protect instructions, handoffs, source records, secrets, Git metadata, canonical stores, and unrelated uncommitted work.
-  - [ ] **Sub-task 37.1.1.8** (legacy `S-030-I08`): Enforce file-count, byte, depth, operation-count, and output limits for each transaction.
+- [x] **Task 37.1.1 - Implement the bounded story**
+  - [x] **Sub-task 37.1.1.1** (legacy `S-030-I01`): Implement new-file creation in approved roots with collision detection, staging, content preview, classification, and postimage verification.
+  - [x] **Sub-task 37.1.1.2** (legacy `S-030-I02`): Implement exact-preimage patching with structured patch parsing and no ad hoc target replacement.
+  - [x] **Sub-task 37.1.1.3** (legacy `S-030-I03`): Implement copy with source and destination hashes and overwrite refusal by default.
+  - [x] **Sub-task 37.1.1.4** (legacy `S-030-I04`): Implement move with source identity, destination collision checks, atomic behavior where supported, and rollback record.
+  - [x] **Sub-task 37.1.1.5** (legacy `S-030-I05`): Implement trash-first delete only after a separate high-risk grant and explicit target preview.
+  - [x] **Sub-task 37.1.1.6** (legacy `S-030-I06`): Implement atomic temporary-file writes, permission preservation, post-write diff, metadata, and hash reporting.
+  - [x] **Sub-task 37.1.1.7** (legacy `S-030-I07`): Protect instructions, handoffs, source records, secrets, Git metadata, canonical stores, and unrelated uncommitted work.
+  - [x] **Sub-task 37.1.1.8** (legacy `S-030-I08`): Enforce file-count, byte, depth, operation-count, and output limits for each transaction.
 
-- [ ] **Task 37.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 37.1.2.1:** Controlled filesystem write pack.
-  - [ ] **Sub-task 37.1.2.2:** Operation-specific preview and receipt schemas.
-  - [ ] **Sub-task 37.1.2.3:** Cross-platform atomicity and metadata report.
-  - [ ] **Sub-task 37.1.2.4:** Protected-file and collision attack corpus.
+- [x] **Task 37.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 37.1.2.1:** Controlled filesystem write pack.
+  - [x] **Sub-task 37.1.2.2:** Operation-specific preview and receipt schemas.
+  - [x] **Sub-task 37.1.2.3:** Cross-platform atomicity and metadata report.
+  - [x] **Sub-task 37.1.2.4:** Protected-file and collision attack corpus.
 
 - [ ] **Task 37.1.3 - Verify and close the story**
-  - [ ] **Sub-task 37.1.3.1:** `S-030-UT01` covers create, exact patch, copy, move, and delete with empty, nominal, maximum, existing, missing, wrong-type, case/Unicode collision, and metadata variants; assert documented bytes and metadata only.
-  - [ ] **Sub-task 37.1.3.2:** `S-030-UT02` verifies operation-specific previews against canonical serialized actions; alter one source/destination/hunk/delete target/metadata field and assert approval invalidation.
-  - [ ] **Sub-task 37.1.3.3:** `S-030-ST01` targets repository control files, application state, secrets, sockets/devices, out-of-root paths, links, aliases, hard links, and files changed concurrently; assert protected-path denial and zero collateral effect.
-  - [ ] **Sub-task 37.1.3.4:** `S-030-RT01` injects disk-full, permission, interruption, process death, verification mismatch, and restoration failure on each operation; assert atomic outcome or visible blocked recovery state.
-  - [ ] **Sub-task 37.1.3.5 - Product security evidence:** Map `SR-PLT-004`, `SR-ACC-002` through `SR-ACC-006`, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain operation matrix, preview digests, filesystem snapshots, collision corpus, recovery traces, and platform comparison.
+  - [ ] **Sub-task 37.1.3.1:** `S-030-UT01` covers create, exact patch, copy, move, and delete with empty, nominal, maximum, existing, missing, wrong-type, case/Unicode collision, and metadata variants; assert documented bytes and metadata only. Partial local evidence: all five nominal primitives, zero-byte creation, collisions, stale input, links, permission preservation, configured native limits, and exact hashes pass; explicit maximum-size/count/depth and every missing/wrong-type variant remain open.
+  - [x] **Sub-task 37.1.3.2:** `S-030-UT02` verifies operation-specific previews against canonical serialized actions; alter one source/destination/hunk/delete target/metadata field and assert approval invalidation.
+  - [ ] **Sub-task 37.1.3.3:** `S-030-ST01` targets repository control files, application state, secrets, sockets/devices, out-of-root paths, links, aliases, hard links, and files changed concurrently; assert protected-path denial and zero collateral effect. Partial local evidence: protected and excluded paths, unrelated dirty work, stale sources, destination collisions, symlinks, and hard links fail closed; sockets/devices, alias variants, and the complete concurrent race matrix remain open.
+  - [ ] **Sub-task 37.1.3.4:** `S-030-RT01` injects disk-full, permission, interruption, process death, verification mismatch, and restoration failure on each operation; assert atomic outcome or visible blocked recovery state. Partial local evidence: deterministic no-change, partial failure, verification mismatch, restoration failure, cancellation, and uncertain outcomes pass; disk-full and process-death injection across every native operation remain open.
+  - [ ] **Sub-task 37.1.3.5 - Product security evidence:** Map `SR-PLT-004`, `SR-ACC-002` through `SR-ACC-006`, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain operation matrix, preview digests, filesystem snapshots, collision corpus, recovery traces, and platform comparison. Partial local evidence: the retained source-bound report maps every named requirement and retains the local/Fedora operation matrix, exact digests, collision corpus, recovery results, and truthful platform comparison; independent review, other-platform native results, complete race/crash evidence, and deferred manual fuzzing remain open.
 
 ##### Story Acceptance Criteria
 
@@ -2835,12 +2836,29 @@ sprint therefore remain open.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 37.AC1:** Every primitive passes success, denial, collision, stale-source, partial-failure, cancellation, and rollback tests.
-- [ ] **Sprint AC 37.AC2:** Unapproved overwrite and delete remain impossible.
-- [ ] **Sprint AC 37.AC3:** Atomic writes preserve unrelated content, expected permissions, encoding, and line endings.
-- [ ] **Sprint AC 37.AC4:** Source and destination hashes match every accepted operation receipt.
+- [x] **Sprint AC 37.AC2:** Unapproved overwrite and delete remain impossible.
+- [x] **Sprint AC 37.AC3:** Atomic writes preserve unrelated content, expected permissions, encoding, and line endings.
+- [x] **Sprint AC 37.AC4:** Source and destination hashes match every accepted operation receipt.
 - [ ] **Sprint AC 37.AC5:** Write workers remain bounded by operating-system isolation and exact granted paths.
 
 **Gate decision:** Sprint 37 is PASS only when Story 37.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence status (2026-08-14):** Authority-free plans, closed exact patches,
+operation-specific previews, separate write/delete approvals, single-use grants, fresh
+revalidation, create/patch/copy/move/trash execution, restoration, terminal uncertain state,
+cancellation before consumption, protected-path denial, and the Fedora native driver are
+implemented through `85eac2c`; approval-field mutation coverage is expanded in `60f452e`.
+Architecture, platform limitations, collision corpus, and the source-bound evidence runner
+are recorded in `6333dc9`. The retained
+[Sprint 37 evidence report](artifacts/sprints/sprint-37/local-evidence-report.json) records
+passing focused kernel and Fedora suites with zero blocking skips plus passing full
+kernel/Linux, strict lint, product, documentation, architecture, dependency,
+effect-boundary, build-contract, strict-local, supply-chain, and evidence-unit gates. Sprint
+37 remains **BLOCKED** because Sprint 36 is not a passing upstream dependency, complete
+native race/crash and non-Fedora platform evidence is absent, operating-system worker
+isolation is not proven, independent review is absent, and manual fuzzing remains deferred.
+Task 37.1.3, its open verification sub-tasks, both story criteria, Sprint AC 37.AC1 and
+37.AC5, the story, and the sprint therefore remain open.
 ### [ ] Sprint 38 - Controlled Markdown and Knowledge Writes
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
