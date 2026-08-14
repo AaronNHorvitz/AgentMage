@@ -116,6 +116,7 @@ mod sealed {
     impl Sealed for crate::instruction_provenance::InstructionEvidenceLedger {}
     impl Sealed for crate::instruction_provenance::EffectiveGuidance {}
     impl Sealed for crate::task_classification::TaskClassification {}
+    impl Sealed for crate::evidence_reconciliation::AnswerClaimLedger {}
 }
 
 /// Sealed marker for an artifact that can never satisfy an authority boundary.
@@ -147,6 +148,7 @@ impl_non_authoritative!(Prompt => Prompt);
 impl_non_authoritative!(ToolDefinition => ToolDefinition);
 impl_non_authoritative!(RequiredGrantTemplate => RequiredGrantTemplate);
 impl_non_authoritative!(TaskClassification => TaskClassification);
+impl_non_authoritative!(ClaimRecord => crate::evidence_reconciliation::AnswerClaimLedger);
 impl_non_authoritative!(ReasoningRecord =>
     ProblemFrame,
     ProblemFact,

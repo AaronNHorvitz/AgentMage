@@ -83,6 +83,26 @@ pub struct EvidenceStateAssigner {
     assignments: BTreeMap<String, MaterialClaimEvidenceAssignment>,
 }
 
+/// Opaque complete set of assignments admitted by one task-local validator.
+pub struct ValidatedEvidenceAssignments {
+    task_id: TaskId,
+    assignments: Vec<MaterialClaimEvidenceAssignment>,
+}
+
+impl ValidatedEvidenceAssignments {
+    /// Returns the exact owning task.
+    #[must_use]
+    pub const fn task_id(&self) -> &TaskId {
+        &self.task_id
+    }
+
+    /// Returns assignments in stable assignment-identity order.
+    #[must_use]
+    pub fn assignments(&self) -> &[MaterialClaimEvidenceAssignment] {
+        &self.assignments
+    }
+}
+
 impl EvidenceStateAssigner {
     /// Starts an empty bounded assignment ledger for one exact task.
     pub fn new(
@@ -209,6 +229,15 @@ impl EvidenceStateAssigner {
     #[must_use]
     pub fn assignment(&self, assignment_id: &str) -> Option<&MaterialClaimEvidenceAssignment> {
         self.assignments.get(assignment_id)
+    }
+
+    /// Freezes all validated assignments in stable identity order for answer-ledger composition.
+    #[must_use]
+    pub fn finalize(self) -> ValidatedEvidenceAssignments {
+        ValidatedEvidenceAssignments {
+            task_id: self.task_id,
+            assignments: self.assignments.into_values().collect(),
+        }
     }
 
     fn insert(
