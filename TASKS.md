@@ -1900,21 +1900,21 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 23.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 23.1.1.1** (legacy `S-021-I01`): Register the AgentMage language-model provider through the pinned stable Visual Studio Code API.
-  - [ ] **Sub-task 23.1.1.2** (legacy `S-021-I02`, superseded in product direction by Decision 0027): Preserve traceability to the original E4B picker requirement but discover and expose only exact currently admitted local profiles with current capabilities, limits, runtime, and limitations; require no E4B or other family as a hard-coded prerequisite.
-  - [ ] **Sub-task 23.1.1.3** (legacy `S-021-I03`): Route every request through the authenticated bridge, kernel runtime, selected model adapter, grants, and tool dispatcher.
-  - [ ] **Sub-task 23.1.1.4** (legacy `S-021-I04`): Stream text, evidence states, citations, progress, diagnostics, tool results, denials, cancellation, and failures.
-  - [ ] **Sub-task 23.1.1.5** (legacy `S-021-I05`): Render validated clickable display links and session, workspace, model, permission, tool, and offline indicators.
+  - [x] **Sub-task 23.1.1.1** (legacy `S-021-I01`): Register the AgentMage language-model provider through the pinned stable Visual Studio Code API.
+  - [ ] **Sub-task 23.1.1.2** (legacy `S-021-I02`, superseded in product direction by Decision 0027): Preserve traceability to the original E4B picker requirement but discover and expose only exact currently admitted local profiles with current capabilities, limits, runtime, and limitations; require no E4B or other family as a hard-coded prerequisite. Partial local evidence: the kernel, authenticated host transport, and TypeScript provider implement exact candidate-neutral discovery with no compiled family prerequisite; production bootstrap of a cryptographically verified catalog remains absent.
+  - [ ] **Sub-task 23.1.1.3** (legacy `S-021-I03`): Route every request through the authenticated bridge, kernel runtime, selected model adapter, grants, and tool dispatcher. Partial local evidence: discovery, revalidation, diagnostics, and approved read requests traverse the authenticated bridge and kernel-mediated host workflow; no admitted profile is connected to a production inference adapter.
+  - [ ] **Sub-task 23.1.1.4** (legacy `S-021-I04`): Stream text, evidence states, citations, progress, diagnostics, tool results, denials, cancellation, and failures. Partial local evidence: ordered structured final-result Chat parts cover text, evidence, citations, diagnostics, tool results, receipts, denials, cancellation, and failures; model-token streaming and progress output remain absent.
+  - [ ] **Sub-task 23.1.1.5** (legacy `S-021-I05`): Render validated clickable display links and session, workspace, model, permission, tool, and offline indicators. Partial local evidence: bounded local display links and exact model state are rendered; complete session, workspace, permission, tool, and offline indicators remain absent.
 
 - [ ] **Task 23.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 23.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 23.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+  - [x] **Sub-task 23.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [ ] **Sub-task 23.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Partial local evidence: the Sprint 23 report hashes the exact contract, host, extension, test, architecture, conformance, and evidence sources and maps the applicable security requirements; complete native-workflow traceability remains open.
 
 - [ ] **Task 23.1.3 - Verify and close the story**
-  - [ ] **Sub-task 23.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 23.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 23.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 23.1.3.4 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-007`, `SR-DAT-003`, `SR-OPS-001`/`SR-OPS-003`, `SR-TST-004`, and `SR-CIV-006` through `SR-CIV-009`; extend `RV-05`, `RV-08`, and `RV-18`; retain authenticated message traces, raw-interface denial tests, redaction scans, native Chat workflow output, and reviewer disposition.
+  - [ ] **Sub-task 23.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Partial local evidence: focused kernel, host, extension, link-grammar, cancellation, malformed-input, tamper, and full product tests pass; installed native Visual Studio Code and production-model cases remain open.
+  - [ ] **Sub-task 23.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: authenticated transport, hostile-network, strict-local-source, effect-boundary, and product gates pass; native platform and production inference integration remain open.
+  - [ ] **Sub-task 23.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Partial local evidence: the source-bound evidence runner recomputes local command success and preserves ten blockers with `BLOCKED` and no release approval; native skipped/unavailable work has not yet produced raw platform output.
+  - [ ] **Sub-task 23.1.3.4 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-007`, `SR-DAT-003`, `SR-OPS-001`/`SR-OPS-003`, `SR-TST-004`, and `SR-CIV-006` through `SR-CIV-009`; extend `RV-05`, `RV-08`, and `RV-18`; retain authenticated message traces, raw-interface denial tests, redaction scans, native Chat workflow output, and reviewer disposition. Partial local evidence: requirement IDs, host/parser denials, strict-local and artifact scans, source hashes, and structured shell output are retained; native Chat output and independent reviewer disposition remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -1929,10 +1929,10 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 23.2.1 - Implement accessible interaction and output**
-  - [ ] **Sub-task 23.2.1.1:** Define accessible names, roles, states, descriptions, live-status behavior, error associations, focus order, focus restoration, and keyboard operation for model selection, workspace selection, chat, citations, diagnostics, cancellation, and handoff preview.
-  - [ ] **Sub-task 23.2.1.2:** Ensure status and evidence meaning never depends only on color, icon, animation, position, hover, pointer precision, or timing; preserve content at supported zoom and reflow settings.
-  - [ ] **Sub-task 23.2.1.3:** Make generated Markdown, citations, diagnostics, limitations, receipts, and error guidance structurally navigable and understandable by screen readers.
-  - [ ] **Sub-task 23.2.1.4:** Publish a versioned accessibility conformance report that distinguishes automated passes, manual passes, failures, not-tested items, platform differences, and remediation.
+  - [x] **Sub-task 23.2.1.1:** Define accessible names, roles, states, descriptions, live-status behavior, error associations, focus order, focus restoration, and keyboard operation for model selection, workspace selection, chat, citations, diagnostics, cancellation, and handoff preview.
+  - [ ] **Sub-task 23.2.1.2:** Ensure status and evidence meaning never depends only on color, icon, animation, position, hover, pointer precision, or timing; preserve content at supported zoom and reflow settings. Partial local evidence: AgentMage-owned output uses explicit textual headings, states, limitations, receipts, and errors without color-only meaning; native zoom, reflow, focus, timing, and host-owned visuals remain untested.
+  - [ ] **Sub-task 23.2.1.3:** Make generated Markdown, citations, diagnostics, limitations, receipts, and error guidance structurally navigable and understandable by screen readers. Partial local evidence: generated output uses ordered headings, lists, links, and text parts with structural parser tests; screen-reader behavior in native Chat remains untested.
+  - [x] **Sub-task 23.2.1.4:** Publish a versioned accessibility conformance report that distinguishes automated passes, manual passes, failures, not-tested items, platform differences, and remediation.
 
 - [ ] **Task 23.2.2 - Verify and close the story**
   - [ ] **Sub-task 23.2.2.1:** Complete each core workflow by keyboard alone at supported zoom/reflow levels; assert visible focus, no trap, no clipped control, no pointer-only action, and successful cancellation/recovery.
@@ -1953,17 +1953,17 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 23.3.1 - Implement candidate-neutral discovery and display**
-  - [ ] **Sub-task 23.3.1.1:** Resolve picker entries from the current signed local catalog, exact profile state, activation record, runtime health, platform/hardware compatibility, policy, support, and limitations rather than a compiled family name or mutable tag.
-  - [ ] **Sub-task 23.3.1.2:** Display exact profile and runtime identity, role, modalities, context/output limits, tool capability, resource state, support/limitation state, and whether selection requires a new user decision without exposing private paths or secrets.
-  - [ ] **Sub-task 23.3.1.3:** Keep candidate, evaluating, quarantined, rejected, retired, incompatible, stale, and blocked profiles visible only in the appropriate management/diagnostic view and absent from ordinary selectable entries.
-  - [ ] **Sub-task 23.3.1.4:** Preserve the current task, plan, evidence, and checkpoint during explicit profile changes; require revalidation and a visible stop when the selected profile becomes unavailable, with no automatic substitution.
+  - [ ] **Sub-task 23.3.1.1:** Resolve picker entries from the current signed local catalog, exact profile state, activation record, runtime health, platform/hardware compatibility, policy, support, and limitations rather than a compiled family name or mutable tag. Partial local evidence: the exact projection and authenticated transport bind every named fact and reject an unverified-catalog input; production cryptographic catalog loading and activation bootstrap remain absent.
+  - [x] **Sub-task 23.3.1.2:** Display exact profile and runtime identity, role, modalities, context/output limits, tool capability, resource state, support/limitation state, and whether selection requires a new user decision without exposing private paths or secrets.
+  - [x] **Sub-task 23.3.1.3:** Keep candidate, evaluating, quarantined, rejected, retired, incompatible, stale, and blocked profiles visible only in the appropriate management/diagnostic view and absent from ordinary selectable entries.
+  - [ ] **Sub-task 23.3.1.4:** Preserve the current task, plan, evidence, and checkpoint during explicit profile changes; require revalidation and a visible stop when the selected profile becomes unavailable, with no automatic substitution. Partial local evidence: immediate exact-entry revalidation stops removed, changed, and blocked profiles without fallback; production task, plan, evidence, and checkpoint preservation through a profile transition remains unintegrated.
 
 - [ ] **Task 23.3.2 - Verify and close the story**
-  - [ ] **Sub-task 23.3.2.1:** `D027-S23-PICKER` enumerate zero-profile, one-profile, multiple-profile, Muse, Gemma, additional-candidate, blocked, incompatible, stale, quarantined, rejected, retired, degraded, and changed-profile fixtures; require exact ordinary selection and management visibility.
-  - [ ] **Sub-task 23.3.2.2:** `D027-S23-IDENTITY` mutate family name, display name, artifact, tokenizer, template, codec, runtime, context, decoding, hardware, policy, activation, and support state between discovery and use; require stale refusal and no launch.
-  - [ ] **Sub-task 23.3.2.3:** `D027-S23-NO-FALLBACK` remove, crash, quarantine, or exhaust the selected profile during every request phase; require preservation, one truthful terminal state, and no hidden local, Docker, frontier, or cloud switch.
+  - [x] **Sub-task 23.3.2.1:** `D027-S23-PICKER` enumerate zero-profile, one-profile, multiple-profile, Muse, Gemma, additional-candidate, blocked, incompatible, stale, quarantined, rejected, retired, degraded, and changed-profile fixtures; require exact ordinary selection and management visibility.
+  - [x] **Sub-task 23.3.2.2:** `D027-S23-IDENTITY` mutate family name, display name, artifact, tokenizer, template, codec, runtime, context, decoding, hardware, policy, activation, and support state between discovery and use; require stale refusal and no launch.
+  - [ ] **Sub-task 23.3.2.3:** `D027-S23-NO-FALLBACK` remove, crash, quarantine, or exhaust the selected profile during every request phase; require preservation, one truthful terminal state, and no hidden local, Docker, frontier, or cloud switch. Partial local evidence: removal, exact mutation, blocked lifecycle, and host snapshot tampering refuse without selecting another profile; production crash, quarantine, exhaustion, preservation, and every-request-phase coverage remain absent.
   - [ ] **Sub-task 23.3.2.4:** `D027-S23-ACCESSIBILITY` exercise picker identity, status, limitations, selection, failure, and revalidation by keyboard and supported screen readers; require no color-only or hover-only meaning.
-  - [ ] **Sub-task 23.3.2.5 - Product security evidence:** Complete `AT-VSC-003`; map `SR-AI-013`, `SR-AI-015`, `SR-MGM-001`, `SR-CIV-006` through `SR-CIV-009`; retain discovery inputs, displayed entries, stale-state traces, no-fallback receipts, redaction scans, and accessibility evidence.
+  - [ ] **Sub-task 23.3.2.5 - Product security evidence:** Complete `AT-VSC-003`; map `SR-AI-013`, `SR-AI-015`, `SR-MGM-001`, `SR-CIV-006` through `SR-CIV-009`; retain discovery inputs, displayed entries, stale-state traces, no-fallback receipts, redaction scans, and accessibility evidence. Partial local evidence: source-bound discovery fixtures, exact entries, stale-state refusals, no-substitution tests, strict-local and artifact scans, and the not-tested accessibility report are retained; native accessibility and complete lifecycle receipts remain open.
 
 ##### Story Acceptance Criteria
 
@@ -1978,7 +1978,7 @@ claims.
 - [ ] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [ ] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
-- [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix.
+- [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery and immediate revalidation; native production launch and every request-phase lifecycle evidence remain open.
 
 **Gate decision:** Sprint 23 is PASS only when Stories 23.1 through 23.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-VSC-003`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
