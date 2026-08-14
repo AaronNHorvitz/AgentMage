@@ -1,0 +1,96 @@
+{
+  "artifact_id": "task-12-2-4-2-d027-s12-policy",
+  "case_ids": [
+    "D027-POLICY-01",
+    "D027-POLICY-02",
+    "D027-POLICY-03",
+    "D027-POLICY-04"
+  ],
+  "claims": {
+    "clearance_paths_present": true,
+    "decision_drift_count": 0,
+    "denial_paths_present": true,
+    "dimension_count": 16,
+    "external_network_used": false,
+    "focused_case_count": 4,
+    "manual_fuzzing_executed": false,
+    "mutation_count": 5120,
+    "mutations_per_dimension": 320,
+    "policy_evaluation_count": 10240,
+    "release_support": false,
+    "seed_decimal": 228867283377901,
+    "semantic_classifier_calls": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The campaign uses deterministic synthetic fact records and does not collect live platform facts or invoke a semantic classifier.",
+    "It proves in-process policy reproducibility, not production execution, provider integration, or cross-platform packaging.",
+    "No private user data or external network operation is used.",
+    "Release acceptance and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "ea9f70f7783cd7ad4e7299d3b6270303f728db53",
+  "sources": [
+    {
+      "bytes": 1719,
+      "path": "docs/verification/task-12-2-4-2-d027-policy-results.md",
+      "sha256": "042ac0569b84a24145f4bd59e915a0d2baeb9a46fbd52c54becb7119d10dbcc6"
+    },
+    {
+      "bytes": 761,
+      "path": "fixtures/agent-policy/v1/d027-policy-campaign.json",
+      "sha256": "89a41babf181f551f8b0d5e978f0f3d2d3bd29601b525e78a79107340157bd02"
+    },
+    {
+      "bytes": 29826,
+      "path": "kernel/engine/src/preclassification_policy.rs",
+      "sha256": "fab9769fae73a0256f6d816462c7c2f98d0ea339b61d71071d6827ba8aa2033a"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3819,
+      "path": "scripts/d027_s12_policy_evidence.py",
+      "sha256": "4b16eaa82334bbf8007ce0e1212a243caa1c4bb5b720ec77484ce24dccac4e34"
+    },
+    {
+      "bytes": 3827,
+      "path": "tests/test_d027_s12_policy_evidence.py",
+      "sha256": "930b58b2c697b66ece04351ee64f3b94d460513a209935d6e3f8b2ad60675547"
+    }
+  ],
+  "status": "pass-d027-s12-policy",
+  "task_ids": [
+    "12.2.4.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "d4321923917fbe37caa627434b746b4da65679ebceff32ea5458c8cd596afb5a",
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    },
+    {
+      "command_id": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "8907f21d5e4547a12c51da289d97a6268b9429ab4e15ab25a4c0fc5019c674b0",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
