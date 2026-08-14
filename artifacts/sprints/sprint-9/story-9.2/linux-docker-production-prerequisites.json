@@ -31,25 +31,31 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "3d33f2823220573306f800c86a92fc0657d4231e464e597527359a000bc1e535",
+      "manifest_sha256": "433ca2ac7e50c1ff247f4afe3c3a1a5935575625b7f344c862feb1b7022b5b30",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "2032aecfbf51745becd84bdeeeff68c213ce56a050a0446210e41bf809468d5e",
-          "size": 546008
+          "sha256": "99c84b93c097a4fd2154741a40ae3c09dde4eaaa127ce7eaa19e584f20938b09",
+          "size": 560128
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "d2a64a75750443060e6cc91b0aa86115fa4607eb21132b49266245d25aab1f57",
-          "size": 1023944
+          "sha256": "b3a7177ad6727044bc844e5771475926c26b9ac99c5e69824b13c788a8e3ffff",
+          "size": 1038080
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-host",
-          "sha256": "9c1ab2810167556c233e094d684a4dea315271af61a6d5cf33af375529eaaafa",
-          "size": 902128
+          "sha256": "448d3aad31b8c52a8ca26de57c9f5506f59192450eeeafb60831e9923fd9c9ef",
+          "size": 933712
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-model-installer",
+          "sha256": "83498426678d8412f76663c96e6e7e9b72c4a0b195230c004b407fc15183d9a5",
+          "size": 453800
         },
         {
           "mode": 493,
@@ -101,25 +107,31 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "3d33f2823220573306f800c86a92fc0657d4231e464e597527359a000bc1e535",
+      "manifest_sha256": "433ca2ac7e50c1ff247f4afe3c3a1a5935575625b7f344c862feb1b7022b5b30",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "2032aecfbf51745becd84bdeeeff68c213ce56a050a0446210e41bf809468d5e",
-          "size": 546008
+          "sha256": "99c84b93c097a4fd2154741a40ae3c09dde4eaaa127ce7eaa19e584f20938b09",
+          "size": 560128
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "d2a64a75750443060e6cc91b0aa86115fa4607eb21132b49266245d25aab1f57",
-          "size": 1023944
+          "sha256": "b3a7177ad6727044bc844e5771475926c26b9ac99c5e69824b13c788a8e3ffff",
+          "size": 1038080
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-host",
-          "sha256": "9c1ab2810167556c233e094d684a4dea315271af61a6d5cf33af375529eaaafa",
-          "size": 902128
+          "sha256": "448d3aad31b8c52a8ca26de57c9f5506f59192450eeeafb60831e9923fd9c9ef",
+          "size": 933712
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-model-installer",
+          "sha256": "83498426678d8412f76663c96e6e7e9b72c4a0b195230c004b407fc15183d9a5",
+          "size": 453800
         },
         {
           "mode": 493,
@@ -185,14 +197,14 @@
   },
   "packages": {
     "deb": {
-      "bytes": 1261540,
+      "bytes": 1472090,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "a37d392118b9d7e2b3cc845dedc1b5c426ac6a2e6a0190ecaacdca5552427112"
+      "sha256": "af4154cc804b710478e76b8abbffd8491c3ab6ea6a888edf608bbb4206a92279"
     },
     "rpm": {
-      "bytes": 641924,
+      "bytes": 663062,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "ca8ea2e799659b4c07eb893f3eeadfff74a75e4ff7cfb1cb86fdbe2c06a62bb3"
+      "sha256": "24b088772c4317ea311f8b90caa084bbea8c9ceda84d0b78280a1d7c561be857"
     },
     "vsix": {
       "bytes": 15193,
@@ -203,12 +215,12 @@
   "release_claim": "none",
   "reproducible_package_rebuild": true,
   "schema_version": 1,
-  "source_revision": "c14fc166fba896a0fb52636139f18d6b0c4ad0d0",
+  "source_revision": "b545d858f174cf889888e4d3a51052680f2d8a3a",
   "sources": [
     {
-      "bytes": 13090,
+      "bytes": 13115,
       "path": "Cargo.lock",
-      "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "bytes": 1452,
@@ -256,24 +268,24 @@
       "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
     },
     {
-      "bytes": 21893,
+      "bytes": 23557,
       "path": "package.json",
-      "sha256": "581b848bfc87dad43f0094adca61890fbb0a601229aec3b78fb73a1142b5ca21"
+      "sha256": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
     },
     {
-      "bytes": 1232,
+      "bytes": 1281,
       "path": "packaging/linux/agentmage-release.spec.in",
-      "sha256": "7fab5e0148bc2eac1890cd2a03939029906f98ae15d6d8bead799b3fc2ab19d2"
+      "sha256": "28000f1500f618b4979446671b0646a41a9be35e42010c81ef1269f8beffa265"
     },
     {
-      "bytes": 1216,
+      "bytes": 1265,
       "path": "packaging/linux/agentmage.spec.in",
-      "sha256": "54233ffee4661e910b99121841cd1a9b6a5384b649e71dddac8f1c6486913e16"
+      "sha256": "611bfbfcd6100fbbebcf1858436845cd26573b18270cd425f9822cf28e50e413"
     },
     {
-      "bytes": 739,
+      "bytes": 820,
       "path": "platforms/linux-inference/Cargo.toml",
-      "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
+      "sha256": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9"
     },
     {
       "bytes": 19736,
@@ -326,9 +338,9 @@
       "sha256": "a58568d2d00cfccb1518ba4a2e24cbaaef13f44f35a56547c9c7b42423a124eb"
     },
     {
-      "bytes": 8503,
+      "bytes": 10013,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "cd9b74efbacd1083c0178cf4308b6258945c5dfa736f4c5bf0dc11c30a3ac283"
+      "sha256": "217781dfac5151ac95334134e3eb5f45c6a0d24aa7bebdeea28d1005975eb51c"
     },
     {
       "bytes": 574,
@@ -336,9 +348,9 @@
       "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
     },
     {
-      "bytes": 4843,
+      "bytes": 6127,
       "path": "platforms/linux-inference/tests/process_boundary.rs",
-      "sha256": "891b06ea3c3fe8a6d228405d5a4bfccbeb9d7222f18d73fe43981f8ee9eeddfc"
+      "sha256": "99809033b45a2c64d3d8c541cb84c02f00e76378570ba6986c944b6b870d7c0b"
     },
     {
       "bytes": 86,
@@ -351,24 +363,24 @@
       "sha256": "6ff3335f20845587fe8613a7a4445308b565d85a28e6a8b46d6c78e46c327715"
     },
     {
-      "bytes": 18152,
+      "bytes": 18159,
       "path": "scripts/linux_docker_prerequisite_evidence.py",
-      "sha256": "12c5669df12bb82142b7da8163497327816f3c9ee99459b80e79f434776c19bc"
+      "sha256": "d6eb97a2c927b14858da193b2337acdc6e6ae07dd866af40bc1f880a62dce75d"
     },
     {
-      "bytes": 20425,
+      "bytes": 20432,
       "path": "scripts/linux_package_lifecycle_evidence.py",
-      "sha256": "a1d6d51994e62448c4fad6f323be3279c913f6543113a1a8087c2e3eb2b342e4"
+      "sha256": "3d4364775916d559abeb892988a6814eff1de6cd4ccc38f08dd75b66ba60fe64"
     },
     {
-      "bytes": 18113,
+      "bytes": 18654,
       "path": "scripts/package_candidate.py",
-      "sha256": "a08521967ef53a1eef8748aaf15eb482fe26ac0cc7d67bcb2ec77514bbb8e3c9"
+      "sha256": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac"
     },
     {
-      "bytes": 38414,
+      "bytes": 39624,
       "path": "scripts/package_lifecycle.py",
-      "sha256": "e87a003efd87498efc28750c6fd1a38f32320645b80eacc041f99460e038140d"
+      "sha256": "c5c257192b0bea2a6671457725a757e6b7637fd178dce83e6f785a4aa84e4de8"
     },
     {
       "bytes": 6082,
@@ -393,22 +405,22 @@
     {
       "bytes": 4358,
       "path": "tests/test_linux_docker_prerequisite_evidence.py",
-      "sha256": "3aee9c400bee7dd3b0bda16a67fba429c1a2d5bff058fdc0830c763f03d05e3f"
+      "sha256": "4a8f7f5215f8a7f73ea0d8cfb888afef7fdf38cc0fc73b08019ce1a451000842"
     },
     {
       "bytes": 6254,
       "path": "tests/test_linux_package_lifecycle_evidence.py",
-      "sha256": "aa0fa8423e954bcacb27519916427cd67a9fd6d53cfad83587cd7451cd0f88b7"
+      "sha256": "6e7b0180690d6a49d99ec4867a2ad345c4a37a5910a5851b26ee006c717391a1"
     },
     {
-      "bytes": 9076,
+      "bytes": 9695,
       "path": "tests/test_package_candidate.py",
-      "sha256": "46a1f708bcea3f0af13b65e954feba96a917491a5c03c838597decea0865d00f"
+      "sha256": "e66f487301c38424254de25038262bab928dfc1b4e46595f93676f66a6b5c4db"
     },
     {
       "bytes": 9144,
       "path": "tests/test_package_lifecycle.py",
-      "sha256": "52985ed3b01bcf6579309c9f12652246833ab6e4320bd7ba9d9b13bb6d9c32ed"
+      "sha256": "e67fb6581531640588cc5fb628e711d9a31782c839451e649cc23a068cc2cc25"
     }
   ],
   "status": "pass-packaged-prerequisites-no-live-docker",
