@@ -5,7 +5,9 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
-    WORKSPACE_FILE_READ_TOOL_ID, WORKSPACE_FILE_READ_TOOL_VERSION, workspace_file_read_definition,
+    ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+    WORKSPACE_FILE_READ_TOOL_ID, WORKSPACE_FILE_READ_TOOL_VERSION, validate_read_only_request,
+    workspace_file_read_definition,
 };
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
@@ -13,7 +15,8 @@ use agentmage_kernel_contracts::{
     DiagnosticState, DoctorReport, GrantId, GrantNonce, GrantOperation, GrantPreimage,
     GrantSideEffect, GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding,
     OperationOutcome, Receipt, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-    WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
+    ValidationIssue, ValidationSeverity, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+    WorkspaceScopePath,
 };
 use agentmage_kernel_engine::approval::{render_approval_request, verify_approval_request};
 use agentmage_kernel_engine::authority_transaction::AuthorityTransactionRequest;
@@ -174,11 +177,28 @@ impl ReadIdentitySource for OsReadIdentitySource {
     }
 }
 
-struct RegisteredReadTool(ToolDefinition);
+struct RegisteredReadTool {
+    definition: ToolDefinition,
+    kind: ReadOnlyToolKind,
+}
 
 impl Tool for RegisteredReadTool {
     fn definition(&self) -> &ToolDefinition {
-        &self.0
+        &self.definition
+    }
+
+    fn validate_arguments(&self, arguments: &[u8]) -> Vec<ValidationIssue> {
+        validate_read_only_request(self.kind, arguments).map_or_else(
+            |error| {
+                vec![ValidationIssue {
+                    code: error.code().to_owned(),
+                    severity: ValidationSeverity::Error,
+                    field_path: vec!["arguments".to_owned()],
+                    message: "Read-only tool arguments failed closed validation".to_owned(),
+                }]
+            },
+            |_| Vec::new(),
+        )
     }
 }
 
@@ -225,9 +245,10 @@ where
     ) -> Result<Self, LinuxReadError> {
         let mut registry = ToolRegistry::new();
         registry
-            .register_tool(Box::new(RegisteredReadTool(
-                workspace_file_read_definition(),
-            )))
+            .register_tool(Box::new(RegisteredReadTool {
+                definition: workspace_file_read_definition(),
+                kind: ReadOnlyToolKind::ReadText,
+            }))
             .map_err(|_| LinuxReadError::AuthorityDenied)?;
         Ok(Self {
             platform: LinuxReadPlatform::Verified(platform),
@@ -270,9 +291,10 @@ where
     ) -> Result<Self, LinuxReadError> {
         let mut registry = ToolRegistry::new();
         registry
-            .register_tool(Box::new(RegisteredReadTool(
-                workspace_file_read_definition(),
-            )))
+            .register_tool(Box::new(RegisteredReadTool {
+                definition: workspace_file_read_definition(),
+                kind: ReadOnlyToolKind::ReadText,
+            }))
             .map_err(|_| LinuxReadError::AuthorityDenied)?;
         Ok(Self {
             platform: LinuxReadPlatform::Test(AdapterInstanceId::from_raw(
@@ -845,19 +867,21 @@ fn tool_call(
     action_id: &ActionId,
     path: &WorkspacePath,
 ) -> Result<ToolCall, LinuxReadError> {
-    #[derive(Serialize)]
-    struct Arguments<'path> {
-        workspace_id: &'path str,
-        components: Vec<&'path str>,
-    }
     let definition = workspace_file_read_definition();
-    let bytes = serde_json::to_vec(&Arguments {
-        workspace_id: path.workspace_id().as_str(),
-        components: path
-            .components()
-            .iter()
-            .map(|component| component.as_str())
-            .collect(),
+    let bytes = serde_json::to_vec(&ReadOnlyRequest {
+        schema_version: 1,
+        paths: vec![
+            path.components()
+                .iter()
+                .map(|component| component.as_str().to_owned())
+                .collect(),
+        ],
+        query: None,
+        byte_offset: None,
+        byte_count: None,
+        encoding: ReadOnlyEncoding::Utf8,
+        limits: ReadOnlyLimits::default(),
+        call_depth: 0,
     })
     .map_err(|_| LinuxReadError::AuthorityDenied)?;
     Ok(ToolCall {
