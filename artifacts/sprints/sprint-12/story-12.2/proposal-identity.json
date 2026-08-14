@@ -1,0 +1,116 @@
+{
+  "artifact_id": "task-12-2-1-2-proposal-identity",
+  "case_ids": [
+    "PIV-01",
+    "PIV-02",
+    "PIV-03",
+    "PIV-04",
+    "PIV-05",
+    "PIV-06"
+  ],
+  "claims": {
+    "authority_fields": 0,
+    "bound_identity_count": 11,
+    "competing_proposal_admissions": 0,
+    "external_network_used": false,
+    "focused_case_count": 6,
+    "identity_substitution_count": 8,
+    "manual_fuzzing_executed": false,
+    "maximum_admitted_proposals_per_turn": 1,
+    "model_executions": 0,
+    "parser_rejection_class_count": 5,
+    "platform_executions": 0,
+    "release_support": false,
+    "replay_admissions": 0,
+    "tool_executions": 0,
+    "turn_rejection_count": 2
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The proposal digest identifies separately validated closed bytes; the model codec and payload validator remain Sprint 13 work.",
+    "Durable proposal persistence and restart reconciliation remain later Story 12.2 tasks.",
+    "No model, tool, grant, worker, platform effect, private user data, or external network operation is used.",
+    "Cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "71c3eb7c507227489afa2f62a9570cc5ab4ff1b0",
+  "sources": [
+    {
+      "bytes": 2121,
+      "path": "docs/verification/task-12-2-1-2-proposal-identity-results.md",
+      "sha256": "9ff769d75bec462e4c19fcc60b343568e9f99fe64fa8fe07fc065c2ad158bc16"
+    },
+    {
+      "bytes": 1667,
+      "path": "kernel/contracts/src/agent_proposal.rs",
+      "sha256": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f"
+    },
+    {
+      "bytes": 4379,
+      "path": "kernel/contracts/src/ids.rs",
+      "sha256": "024972874e47b8b08d2b806495b8f31e77aa3af262266f6a3b520a9d0d3b2de7"
+    },
+    {
+      "bytes": 10457,
+      "path": "kernel/contracts/src/serialization.rs",
+      "sha256": "67e5928943a5ba2a625baab2df2b8d033ff2f7fd4066f8b983b42ff1a683ec9c"
+    },
+    {
+      "bytes": 14507,
+      "path": "kernel/engine/src/agent_proposal.rs",
+      "sha256": "2d1c0b60afb70475b4f952dde0982754d4bdc6a95eca330f2cb6ffe61a4a5637"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 3513,
+      "path": "scripts/proposal_identity_evidence.py",
+      "sha256": "7e83b3b8aaa6a07941d81d108252254e313088d6195b163bb352e45a7a1d4880"
+    },
+    {
+      "bytes": 3114,
+      "path": "tests/test_proposal_identity_evidence.py",
+      "sha256": "fa7ad2774a657c004c5457be8772263a86011c583eba6861014b88a4f09a4f99"
+    }
+  ],
+  "status": "pass-exact-proposal-identity-boundary",
+  "task_ids": [
+    "12.2.1.2"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "4e9c770d6e20746e80723d0b60163315a450a5095219a1985e2619ab3c6e2deb",
+      "exit_code": 0,
+      "expected_marker_sha256": "185e40a9a895202389a8bb1e89af8860eb9f4673342807624ad14c8e37256f89",
+      "status": "pass"
+    },
+    {
+      "command_id": "e8ddf556141a5fba8d62325a62a243127dda5957e663f8cb1a3d0d87523f7379",
+      "exit_code": 0,
+      "expected_marker_sha256": "af0787a02b02f14486b6f5da43bb87991232d77884d8af3d9cae5accde97b398",
+      "status": "pass"
+    },
+    {
+      "command_id": "013bdca4985c6839b8548fe5bc9b3b395327bd77ebc8ac527945a3070cd4c089",
+      "exit_code": 0,
+      "expected_marker_sha256": "b740eeb52a75007f79ac429ff580c85af4997181766f126f9ac1b265fed37f3a",
+      "status": "pass"
+    },
+    {
+      "command_id": "7bfbc479691b9012030f5b807dee590641e8f837bd682abc4e2291dbefbdc227",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
