@@ -10,7 +10,8 @@ use std::thread;
 
 use agentmage_kernel_contracts::{
     GrantOperation, GrantTarget, HeldWorkspaceObject, OperationOutcome, PathResolutionIntent,
-    StateChange, WorkspaceObjectKind, WorkspacePath,
+    SnapshotEntry, SnapshotEntryKind, StateChange, WorkspaceObjectKind, WorkspacePath,
+    WorkspaceSnapshot,
 };
 use agentmage_kernel_engine::authority_transaction::{
     EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
@@ -33,6 +34,9 @@ const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_DIRECTORY_ENTRIES: usize = 4_096;
 const MAX_DIRECTORY_PROJECTION_BYTES: usize = 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
+const MAX_READ_ONLY_HELD_OBJECTS: usize = 256;
+const MAX_READ_ONLY_REQUEST_BYTES: usize = 64 * 1024;
+const MAX_READ_ONLY_SNAPSHOT_BYTES: usize = 128 * 1024 * 1024;
 const WORKER_GUEST_ROOT: &str = "/app";
 const PATH_EXECUTOR: &str = "/usr/bin/env";
 const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
@@ -396,6 +400,94 @@ pub struct LinuxSandboxRunner {
     seccomp_bpf: Vec<u8>,
 }
 
+/// Opaque sealed request and workspace projection for one read-only tool worker.
+pub struct LinuxReadOnlyToolInput {
+    held: Vec<LinuxHeldObject>,
+    request: OwnedFd,
+    snapshot: OwnedFd,
+    tool_id: String,
+    tool_version: String,
+}
+
+impl LinuxReadOnlyToolInput {
+    /// Seals one already validated request and an ordered set of exact held objects.
+    pub fn seal(
+        tool_id: impl Into<String>,
+        tool_version: impl Into<String>,
+        request: &[u8],
+        held: Vec<LinuxHeldObject>,
+    ) -> Result<Self, LinuxSandboxError> {
+        let tool_id = tool_id.into();
+        let tool_version = tool_version.into();
+        if !valid_tool_identity(&tool_id)
+            || !valid_tool_version(&tool_version)
+            || request.is_empty()
+            || request.len() > MAX_READ_ONLY_REQUEST_BYTES
+            || held.is_empty()
+            || held.len() > MAX_READ_ONLY_HELD_OBJECTS
+        {
+            return Err(error(LinuxSandboxErrorKind::InvalidManifest));
+        }
+        let first = &held[0];
+        let mut paths = std::collections::BTreeSet::new();
+        let mut entries = Vec::with_capacity(held.len());
+        for object in &held {
+            if object.authorization_id() != first.authorization_id()
+                || object.adapter_instance_id() != first.adapter_instance_id()
+                || object.workspace_path().workspace_id() != first.workspace_path().workspace_id()
+                || !paths.insert(object.workspace_path().clone())
+            {
+                return Err(error(LinuxSandboxErrorKind::TargetMismatch));
+            }
+            object
+                .revalidate()
+                .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
+            let (kind, bytes) = match object.object_kind() {
+                WorkspaceObjectKind::RegularFile => (
+                    SnapshotEntryKind::RegularFile,
+                    descriptor_bytes(&file_projection(object)?, MAX_READ_ONLY_SNAPSHOT_BYTES)?,
+                ),
+                WorkspaceObjectKind::Directory => (SnapshotEntryKind::Directory, Vec::new()),
+            };
+            entries.push(SnapshotEntry {
+                path: object
+                    .workspace_path()
+                    .components()
+                    .iter()
+                    .map(|component| component.as_str().to_owned())
+                    .collect(),
+                kind,
+                bytes,
+                executable: object.object_snapshot.mode & 0o111 != 0,
+            });
+        }
+        entries.sort_by(|left, right| left.path.cmp(&right.path));
+        let snapshot_bytes = serde_json::to_vec(&WorkspaceSnapshot { entries })
+            .map_err(|_| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
+        if snapshot_bytes.is_empty() || snapshot_bytes.len() > MAX_READ_ONLY_SNAPSHOT_BYTES {
+            return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
+        }
+        Ok(Self {
+            held,
+            request: sealed_payload("agentmage-read-only-request", request)?,
+            snapshot: sealed_payload("agentmage-read-only-snapshot", &snapshot_bytes)?,
+            tool_id,
+            tool_version,
+        })
+    }
+}
+
+impl fmt::Debug for LinuxReadOnlyToolInput {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxReadOnlyToolInput")
+            .field("held_count", &self.held.len())
+            .field("tool_id", &self.tool_id)
+            .field("tool_version", &self.tool_version)
+            .finish_non_exhaustive()
+    }
+}
+
 impl LinuxSandboxRunner {
     /// Compiles the fixed seccomp policy and creates a fail-closed runner.
     pub fn new(
@@ -655,6 +747,33 @@ impl LinuxSandboxRunner {
         })
     }
 
+    fn run_read_only_tool(
+        &self,
+        input: &LinuxReadOnlyToolInput,
+    ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        for object in &input.held {
+            object
+                .revalidate()
+                .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
+        }
+        self.run_projection_arguments(
+            &[
+                ProjectionMount {
+                    descriptor: &input.request,
+                    guest_path: "/input/request",
+                },
+                ProjectionMount {
+                    descriptor: &input.snapshot,
+                    guest_path: "/input/snapshot",
+                },
+            ],
+            &[
+                OsString::from(&input.tool_id),
+                OsString::from(&input.tool_version),
+            ],
+        )
+    }
+
     /// Returns the fixed seccomp policy identity used by every worker.
     #[must_use]
     pub const fn seccomp_policy_id(&self) -> &'static str {
@@ -767,6 +886,90 @@ impl EffectDriver for LinuxSandboxEffectDriver {
                 );
                 self.error = Some(error);
                 EffectLaunch::completed(effect_result)
+            }
+        }
+    }
+}
+
+/// Linux read-only tool worker callable only with one consumed exact grant.
+pub struct LinuxReadOnlyToolEffectDriver {
+    runner: LinuxSandboxRunner,
+    input: LinuxReadOnlyToolInput,
+    result: Option<LinuxSandboxResult>,
+    error: Option<LinuxSandboxError>,
+}
+
+impl LinuxReadOnlyToolEffectDriver {
+    /// Creates an inert driver over sealed input and continuously held objects.
+    #[must_use]
+    pub const fn new(runner: LinuxSandboxRunner, input: LinuxReadOnlyToolInput) -> Self {
+        Self {
+            runner,
+            input,
+            result: None,
+            error: None,
+        }
+    }
+
+    /// Takes the bounded worker result after the authority transaction closes.
+    pub fn take_result(&mut self) -> Option<LinuxSandboxResult> {
+        self.result.take()
+    }
+
+    /// Takes the redacted platform error after a failed mediated attempt.
+    pub fn take_error(&mut self) -> Option<LinuxSandboxError> {
+        self.error.take()
+    }
+
+    /// Returns the verified runner after this attempt closes.
+    #[must_use]
+    pub fn into_runner(self) -> LinuxSandboxRunner {
+        self.runner
+    }
+}
+
+impl fmt::Debug for LinuxReadOnlyToolEffectDriver {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxReadOnlyToolEffectDriver")
+            .field("input", &self.input)
+            .field("has_result", &self.result.is_some())
+            .field("has_error", &self.error.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl EffectDriver for LinuxReadOnlyToolEffectDriver {
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        if authorization.operation().operation() != GrantOperation::WorkspaceRead
+            || authorization.call().tool_id.as_str() != self.input.tool_id
+            || authorization.call().tool_version != self.input.tool_version
+            || !authorization.authorizes_held_objects(&self.input.held)
+        {
+            return EffectLaunch::failed();
+        }
+        match self.runner.run_read_only_tool(&self.input) {
+            Ok(result) => {
+                let effect = EffectResult::from_redacted_material(
+                    if result.success() {
+                        OperationOutcome::Succeeded
+                    } else {
+                        OperationOutcome::Failed
+                    },
+                    result.stdout_sha256(),
+                    StateChange::NotChanged,
+                );
+                self.result = Some(result);
+                EffectLaunch::completed(effect)
+            }
+            Err(error) => {
+                let effect = EffectResult::from_redacted_material(
+                    OperationOutcome::Failed,
+                    error.kind().code().as_bytes(),
+                    StateChange::NotChanged,
+                );
+                self.error = Some(error);
+                EffectLaunch::completed(effect)
             }
         }
     }
@@ -1128,6 +1331,53 @@ fn seal_projection(
     .map_err(|_| error(error_kind))
 }
 
+fn sealed_payload(name: &str, bytes: &[u8]) -> Result<OwnedFd, LinuxSandboxError> {
+    let descriptor = projection_descriptor(name, LinuxSandboxErrorKind::FileProjectionFailed)?;
+    write_all_projection(
+        &descriptor,
+        bytes,
+        LinuxSandboxErrorKind::FileProjectionFailed,
+    )?;
+    seal_projection(&descriptor, LinuxSandboxErrorKind::FileProjectionFailed)?;
+    Ok(descriptor)
+}
+
+fn descriptor_bytes(descriptor: &OwnedFd, maximum: usize) -> Result<Vec<u8>, LinuxSandboxError> {
+    let stat = fstat(descriptor).map_err(|_| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
+    let size = usize::try_from(stat.st_size)
+        .ok()
+        .filter(|size| *size <= maximum)
+        .ok_or_else(|| error(LinuxSandboxErrorKind::OutputLimitExceeded))?;
+    let mut bytes = vec![0_u8; size];
+    let mut offset = 0_usize;
+    while offset < size {
+        let count = pread(descriptor, &mut bytes[offset..], offset as u64)
+            .map_err(|_| error(LinuxSandboxErrorKind::FileProjectionFailed))?;
+        if count == 0 {
+            return Err(error(LinuxSandboxErrorKind::FileProjectionFailed));
+        }
+        offset += count;
+    }
+    Ok(bytes)
+}
+
+fn valid_tool_identity(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+}
+
+fn valid_tool_version(value: &str) -> bool {
+    let parts = value.split('.').collect::<Vec<_>>();
+    value.len() <= 64
+        && parts.len() == 3
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
 fn random_unit_name() -> Result<String, LinuxSandboxError> {
     let mut random = [0_u8; 12];
     getrandom(&mut random, GetRandomFlags::empty())
@@ -1163,15 +1413,16 @@ mod tests {
     use agentmage_kernel_contracts::{
         AdapterInstanceId, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
         PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
-        WorkspaceScopePath,
+        WorkspaceScopePath, WorkspaceSnapshot,
     };
     use rustix::fs::{Mode, OFlags, SealFlags, fcntl_get_seals, open};
     use rustix::io::{pread, write};
 
     use super::{
-        LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
-        LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
-        compile_seccomp_policy, directory_projection, file_projection, verified_worker_name,
+        LinuxReadOnlyToolInput, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
+        LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner,
+        LinuxWorkerRuntimeFile, MAX_READ_ONLY_REQUEST_BYTES, compile_seccomp_policy,
+        directory_projection, file_projection, verified_worker_name,
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
@@ -1400,6 +1651,119 @@ mod tests {
         );
         assert!(write(&projection, b"changed").is_err());
         fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn read_only_tool_input_seals_exact_deterministic_snapshot_and_request() {
+        let root = temp_directory("read-only-input");
+        fs::write(root.join("zeta.txt"), b"last").expect("zeta fixture");
+        fs::write(root.join("alpha.txt"), b"first").expect("alpha fixture");
+        fs::create_dir(root.join("folder")).expect("directory fixture");
+        let workspace = authorize(&root);
+        let request = br#"{"arguments":{"path":"alpha.txt"},"call_id":"call-1"}"#;
+        let input = LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            request,
+            vec![
+                hold(&workspace, "zeta.txt", PathResolutionIntent::ReadFile),
+                hold(&workspace, "folder", PathResolutionIntent::ReadDirectory),
+                hold(&workspace, "alpha.txt", PathResolutionIntent::ReadFile),
+            ],
+        )
+        .expect("sealed input");
+
+        assert_eq!(descriptor_bytes(&input.request), request);
+        let snapshot: WorkspaceSnapshot =
+            serde_json::from_slice(&descriptor_bytes(&input.snapshot)).expect("snapshot JSON");
+        assert_eq!(snapshot.entries.len(), 3);
+        assert_eq!(snapshot.entries[0].path, ["alpha.txt"]);
+        assert_eq!(snapshot.entries[0].bytes, b"first");
+        assert_eq!(snapshot.entries[1].path, ["folder"]);
+        assert!(snapshot.entries[1].bytes.is_empty());
+        assert_eq!(snapshot.entries[2].path, ["zeta.txt"]);
+        assert_eq!(snapshot.entries[2].bytes, b"last");
+        for descriptor in [&input.request, &input.snapshot] {
+            assert_eq!(
+                fcntl_get_seals(descriptor).expect("payload seals"),
+                SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE
+            );
+            assert!(write(descriptor, b"changed").is_err());
+        }
+        let debug = format!("{input:?}");
+        assert!(!debug.contains("alpha.txt"));
+        assert!(!debug.contains("first"));
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn read_only_tool_input_rejects_duplicate_mixed_stale_and_oversized_inputs() {
+        let root = temp_directory("read-only-rejections");
+        let other_root = temp_directory("read-only-foreign");
+        fs::write(root.join("allowed.txt"), b"approved").expect("fixture");
+        fs::write(other_root.join("foreign.txt"), b"foreign").expect("foreign fixture");
+        let workspace = authorize(&root);
+        let mut foreign_workspace = authorize(&other_root);
+        foreign_workspace.authorization_id =
+            WorkspaceAuthorizationId::from_raw("authorization-foreign");
+
+        let duplicate = LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            b"{}",
+            vec![
+                hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile),
+                hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile),
+            ],
+        )
+        .expect_err("duplicate path must fail");
+        assert_eq!(duplicate.kind(), LinuxSandboxErrorKind::TargetMismatch);
+
+        let mixed = LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            b"{}",
+            vec![
+                hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile),
+                hold(
+                    &foreign_workspace,
+                    "foreign.txt",
+                    PathResolutionIntent::ReadFile,
+                ),
+            ],
+        )
+        .expect_err("mixed authority must fail");
+        assert_eq!(mixed.kind(), LinuxSandboxErrorKind::TargetMismatch);
+
+        let stale = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        fs::write(root.join("allowed.txt"), b"changed").expect("mutated fixture");
+        let stale_error = LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            b"{}",
+            vec![stale],
+        )
+        .expect_err("stale held object must fail");
+        assert_eq!(stale_error.kind(), LinuxSandboxErrorKind::StaleObject);
+
+        let oversized = vec![b'x'; MAX_READ_ONLY_REQUEST_BYTES + 1];
+        let oversized_error = LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            &oversized,
+            vec![hold(
+                &workspace,
+                "allowed.txt",
+                PathResolutionIntent::ReadFile,
+            )],
+        )
+        .expect_err("oversized request must fail before projection");
+        assert_eq!(
+            oversized_error.kind(),
+            LinuxSandboxErrorKind::InvalidManifest
+        );
+        fs::remove_dir_all(root).expect("cleanup");
+        fs::remove_dir_all(other_root).expect("cleanup");
     }
 
     #[test]

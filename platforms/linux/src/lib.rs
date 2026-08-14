@@ -48,9 +48,9 @@ pub use platform::{
     open_test_linux_authority, resolve_test_linux_workspace_object, select_test_linux_workspace,
 };
 pub use sandbox::{
-    LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
-    LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner,
-    LinuxWorkerRuntimeFile,
+    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxEffectDriver,
+    LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
+    LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
 };
 pub use secret_service::{
     LinuxOperationalStoreKeyProvider, LinuxSecretEffectDriver, LinuxSecretEffectOutput,

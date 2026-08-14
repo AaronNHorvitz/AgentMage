@@ -16,6 +16,7 @@ agentmage-kernel-contracts.workspace = true
 agentmage-kernel-engine.workspace = true
 rustix.workspace = true
 seccompiler.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 zeroize.workspace = true
 
