@@ -95,7 +95,7 @@ pub fn decode_with_bounded_repair<C: ModelFamilyCodec>(
     }
 }
 
-fn plain_text_advisory(candidate: &[u8]) -> bool {
+pub(crate) fn plain_text_advisory(candidate: &[u8]) -> bool {
     if candidate.is_empty() || candidate.len() > MAX_ADVISORY_BYTES {
         return false;
     }

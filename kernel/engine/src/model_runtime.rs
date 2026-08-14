@@ -313,6 +313,22 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             .stream(request, &context, cancellation, &mut capture)
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
         capture.finish(&result)?;
+        if result.response_sha256 != sha256_hex(&capture.bytes) {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        if result.terminal_state == ModelRunTerminalState::Proposed {
+            let decoded = self
+                .codec
+                .decode_proposal(&self.admitted.profile, request, &capture.bytes)
+                .map_err(|_| ModelRuntimeGateError::ResultMismatch)?;
+            if result.proposal.as_ref() != Some(&decoded) {
+                return Err(ModelRuntimeGateError::ResultMismatch);
+            }
+        } else if result.terminal_state == ModelRunTerminalState::AdvisoryText
+            && !crate::model_response::plain_text_advisory(&capture.bytes)
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
         validate_result(&self.admitted.profile, request, &result)?;
         Ok(result)
     }
@@ -379,6 +395,7 @@ struct StreamCapture<'a> {
     next_sequence: u32,
     total_bytes: usize,
     terminal_seen: bool,
+    bytes: Vec<u8>,
 }
 
 impl<'a> StreamCapture<'a> {
@@ -389,6 +406,7 @@ impl<'a> StreamCapture<'a> {
             next_sequence: 0,
             total_bytes: 0,
             terminal_seen: false,
+            bytes: Vec::new(),
         }
     }
 
@@ -427,6 +445,7 @@ impl ModelStreamSink for StreamCapture<'_> {
         }
         self.next_sequence += 1;
         self.total_bytes += fragment.bytes.len();
+        self.bytes.extend_from_slice(&fragment.bytes);
         self.terminal_seen = fragment.terminal;
         Ok(())
     }
@@ -846,7 +865,24 @@ mod tests {
             if self.scenario == FakeScenario::Cancelled && cancellation.is_none() {
                 return Err(runtime_failure("fixture.cancellation-missing"));
             }
-            let bytes = b"fixture".to_vec();
+            let mut proposal = ClosedModelProposal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                proposal_id: ProposalId::from_raw("proposal-1"),
+                model_run_id: request.model_run_id.clone(),
+                context_packet_id: request.context_packet_id.clone(),
+                profile_id: request.profile_id.clone(),
+                codec_id: self.codec_id.clone(),
+                correlation_id: request.correlation_id.clone(),
+                kind: ModelProposalKind::CompletionCandidate,
+                payload: None,
+                tool_call: None,
+                proposal_sha256: "0".repeat(64),
+            };
+            proposal.proposal_sha256 =
+                crate::model_codec::proposal_digest(&proposal).expect("fixture digest");
+            let bytes = agentmage_kernel_contracts::to_canonical_json(&proposal)
+                .expect("fixture proposal bytes");
+            let response_sha256 = sha256_hex(&bytes);
             let stream_id = ModelStreamId::from_raw("stream-1");
             sink.accept(StreamedModelFragment {
                 schema_version: CONTRACT_SCHEMA_VERSION,
@@ -866,19 +902,6 @@ mod tests {
                 bytes,
                 terminal: true,
             })?;
-            let proposal = ClosedModelProposal {
-                schema_version: CONTRACT_SCHEMA_VERSION,
-                proposal_id: ProposalId::from_raw("proposal-1"),
-                model_run_id: request.model_run_id.clone(),
-                context_packet_id: request.context_packet_id.clone(),
-                profile_id: request.profile_id.clone(),
-                codec_id: self.codec_id.clone(),
-                correlation_id: request.correlation_id.clone(),
-                kind: ModelProposalKind::CompletionCandidate,
-                payload: None,
-                tool_call: None,
-                proposal_sha256: SHA.to_owned(),
-            };
             let (terminal_state, proposal, failure) = match self.scenario {
                 FakeScenario::Happy => (ModelRunTerminalState::Proposed, Some(proposal), None),
                 FakeScenario::FalseCompletion => (ModelRunTerminalState::Proposed, None, None),
@@ -908,7 +931,7 @@ mod tests {
                 correlation_id: request.correlation_id.clone(),
                 terminal_state,
                 fragment_count: 1,
-                response_sha256: SHA.to_owned(),
+                response_sha256,
                 proposal,
                 failure,
                 resources: ModelResourceReport {
