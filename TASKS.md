@@ -1999,25 +1999,25 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 24.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 24.1.1.1** (legacy `S-021-I06`): Build the local Codex handoff packet with objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions.
-  - [ ] **Sub-task 24.1.1.2** (legacy `S-021-I07`): Enforce zero Codex invocation, tab activation or population, clipboard write, endpoint call, packet transmission, or autonomous delivery.
+- [x] **Task 24.1.1 - Implement the bounded story**
+  - [x] **Sub-task 24.1.1.1** (legacy `S-021-I06`): Build the local Codex handoff packet with objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions.
+  - [x] **Sub-task 24.1.1.2** (legacy `S-021-I07`): Enforce zero Codex invocation, tab activation or population, clipboard write, endpoint call, packet transmission, or autonomous delivery.
 
-- [ ] **Task 24.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 24.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 24.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 24.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 24.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 24.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 24.1.3 - Verify and close the story**
-  - [ ] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 24.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review.
+  - [x] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; canonical production-session composition, an installed native workflow, and live handoff-specific zero-egress observation remain absent.
+  - [x] **Sub-task 24.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review. Partial local evidence: exact packet, disclosure, redaction, acknowledgement, prohibited-action, receipt, source-digest, command-digest, and blocker records are retained; live native evidence and independent boundary review remain absent.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 24.1.AC1:** Given the approved dependencies and source requirements for `S-021-I06`, and `S-021-I07`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 24.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 24.1.AC1:** Given the approved dependencies and source requirements for `S-021-I06`, and `S-021-I07`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Partial local evidence: deterministic kernel, host, socket, controller, static effect-boundary, and cancellation cases pass; installed-native and live zero-egress cases remain absent.
+- [x] **Story AC 24.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### [ ] Story 24.2 - Handoff Disclosure and Staleness Warnings
 
@@ -2025,31 +2025,31 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 24.2.1 - Implement handoff safety communication**
-  - [ ] **Sub-task 24.2.1.1:** Show a mandatory pre-handoff review with objective, exact included files/ranges/excerpts, citations/hashes, inferred content, exclusions, unresolved questions, sensitivity labels, redactions, destination class, and estimated size.
-  - [ ] **Sub-task 24.2.1.2:** State clearly that the packet remains local, AgentMage has not contacted Codex or any external service, and external handling begins only if the user manually transfers selected content.
-  - [ ] **Sub-task 24.2.1.3:** Revalidate workspace, source hashes, citations, policy, and redaction immediately before final rendering; mark changed evidence stale and require regeneration rather than silently carrying it forward.
-  - [ ] **Sub-task 24.2.1.4:** Require explicit acknowledgment when a packet contains any permitted non-public or user-provided content, while continuing to block credentials, keys, prohibited data, hidden files, and unrelated context.
+- [x] **Task 24.2.1 - Implement handoff safety communication**
+  - [x] **Sub-task 24.2.1.1:** Show a mandatory pre-handoff review with objective, exact included files/ranges/excerpts, citations/hashes, inferred content, exclusions, unresolved questions, sensitivity labels, redactions, destination class, and estimated size.
+  - [x] **Sub-task 24.2.1.2:** State clearly that the packet remains local, AgentMage has not contacted Codex or any external service, and external handling begins only if the user manually transfers selected content.
+  - [x] **Sub-task 24.2.1.3:** Revalidate workspace, source hashes, citations, policy, and redaction immediately before final rendering; mark changed evidence stale and require regeneration rather than silently carrying it forward.
+  - [x] **Sub-task 24.2.1.4:** Require explicit acknowledgment when a packet contains any permitted non-public or user-provided content, while continuing to block credentials, keys, prohibited data, hidden files, and unrelated context.
 
 - [ ] **Task 24.2.2 - Verify and close the story**
-  - [ ] **Sub-task 24.2.2.1:** Inject secret canaries, hidden files, stale citations, inferred claims, conflicting classifications, oversized excerpts, and prompt-injection requests to conceal disclosure; assert blocking or accurate visible treatment.
-  - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt.
-  - [ ] **Sub-task 24.2.2.3:** Compare disclosure preview, rendered packet, and packet manifest byte-for-byte for included content and hashes; assert no unpreviewed field or excerpt appears.
-  - [ ] **Sub-task 24.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-11`, and `RV-18`; map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-CIV-003`/`SR-CIV-004`/`SR-CIV-009`; retain previews, packet manifests, canary scans, staleness results, prohibited-action traces, and acknowledgments.
+  - [x] **Sub-task 24.2.2.1:** Inject secret canaries, hidden files, stale citations, inferred claims, conflicting classifications, oversized excerpts, and prompt-injection requests to conceal disclosure; assert blocking or accurate visible treatment.
+  - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt. Partial local evidence: every prohibited action produces one content-free local denial receipt and the extension exposes no matching effect method; installed-native and live-process attempts remain absent.
+  - [x] **Sub-task 24.2.2.3:** Compare disclosure preview, rendered packet, and packet manifest byte-for-byte for included content and hashes; assert no unpreviewed field or excerpt appears.
+  - [ ] **Sub-task 24.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-11`, and `RV-18`; map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-CIV-003`/`SR-CIV-004`/`SR-CIV-009`; retain previews, packet manifests, canary scans, staleness results, prohibited-action traces, and acknowledgments. Partial local evidence: source-bound previews, manifests, canary and injection matrices, drift tests, action receipts, acknowledgements, and explicit blockers are retained; native platform evidence and independent review remain absent.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 24.2.AC1:** Given a proposed handoff, when the review is rendered, then every included source, excerpt, inference, sensitivity label, redaction, exclusion, unresolved question, and destination implication is visible before the user acts.
-- [ ] **Story AC 24.2.AC2:** Given changed, prohibited, hidden, or unpreviewed content, when final rendering is attempted, then the handoff blocks or requires regeneration and no packet is transmitted, copied, or injected into another interface.
-- [ ] **Story AC 24.2.AC3:** Given an approved current preview, when the packet is rendered, then its content and manifest match exactly and AgentMage records only a local receipt, never an external-delivery claim.
+- [x] **Story AC 24.2.AC1:** Given a proposed handoff, when the review is rendered, then every included source, excerpt, inference, sensitivity label, redaction, exclusion, unresolved question, and destination implication is visible before the user acts.
+- [x] **Story AC 24.2.AC2:** Given changed, prohibited, hidden, or unpreviewed content, when final rendering is attempted, then the handoff blocks or requires regeneration and no packet is transmitted, copied, or injected into another interface.
+- [x] **Story AC 24.2.AC3:** Given an approved current preview, when the packet is rendered, then its content and manifest match exactly and AgentMage records only a local receipt, never an external-delivery claim.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 24.AC1:** Every numbered implementation sub-task in Stories 24.1 and 24.2 is complete and linked to its source requirement or issue identity.
+- [x] **Sprint AC 24.AC1:** Every numbered implementation sub-task in Stories 24.1 and 24.2 is complete and linked to its source requirement or issue identity.
 - [ ] **Sprint AC 24.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 24.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 24.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 24.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 24.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 24.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 24.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 24 is PASS only when Stories 24.1 and 24.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 25 - v0.1 Cross-Platform Release
