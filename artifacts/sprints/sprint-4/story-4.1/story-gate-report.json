@@ -6,20 +6,20 @@
       "dispatcher_denial_trace_count": 7,
       "positive_dispatch_path_available": false,
       "status": "pass-shared-linux",
-      "versioned_contract_count": 15
+      "versioned_contract_count": 33
     },
     {
       "criterion_id": "4.1.AC2",
       "generated_oversized_case_count": 1,
       "independent_client": "frozen-package-fixture-verifier",
-      "persisted_invalid_fixture_count": 7,
+      "persisted_invalid_fixture_count": 8,
       "status": "pass-shared-linux",
       "valid_fixture_count": 15
     }
   ],
   "architecture_acceptance": {
     "acceptance_test_id": "AT-ARCH-001",
-    "observed_product_edge_count": 7,
+    "observed_product_edge_count": 10,
     "product_wide_acceptance_claim": "none",
     "prohibited_observed_edge_count": 0,
     "runtime_boundary_trace_count": 5,
@@ -30,19 +30,19 @@
     "artifacts": [
       {
         "path": "architecture/dependency-rules.json",
-        "sha256": "4f31087c79be706d953ac033c4e461fa637e95bc9a3874fafcf2f5c391973de9"
+        "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
       },
       {
         "path": "docs/architecture/kernel-contract-reference.md",
-        "sha256": "5bc03c45d8855551679c93838bf232645b409ceb7a7fd7c95ca5ab8912921324"
+        "sha256": "c34ff06c26e266cbbd0ae895739fa4aca6d38daf5506a1ad556069592c6439c8"
       },
       {
         "path": "docs/architecture/kernel-dependency-report.md",
-        "sha256": "b95d95c2b1947fe5807831f51d7c017aa4bd18daabcdfa68edf538def054a01c"
+        "sha256": "536931d0e23545d5e4a974e9020b3e84d2ae2fe11fc31edfad5e2ff2ac7264fe"
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "bae6f7647d94c3cc738c44b175d237d6dcb3fc9274a31bd910e5da7e52c24f45"
+        "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
       },
       {
         "path": "kernel/engine/src/propagation.rs",
@@ -50,7 +50,7 @@
       },
       {
         "path": "kernel/engine/src/tooling.rs",
-        "sha256": "0469415d926107869b157b6cc074c9a582fef0b80a109a6fc4f42cded3f17386"
+        "sha256": "1aff3e7318bc2957da0f59838359b3c71c9697b1514496a1a098b2fecdcb9be8"
       },
       {
         "path": "kernel/engine/tests/boundary_workflow.rs",
@@ -58,7 +58,7 @@
       },
       {
         "path": "fixtures/contracts/fixture_verifier.rs",
-        "sha256": "d67587c6a638b2b56f705e8df0a6a90de7233fe03cc64f1f5ae99216d987f125"
+        "sha256": "f8297732dc9e5a7103a2d0ec457823af99e8b296c007765d29aa5368ecc3de84"
       },
       {
         "path": "fixtures/contracts/compatibility.json",
@@ -69,42 +69,142 @@
         "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
       },
       {
+        "path": "fixtures/contracts/compatibility-v2.json",
+        "sha256": "0a164d82193461dda96c1f7106e2767162c538fc17dfa503bccf16689e853d94"
+      },
+      {
+        "path": "fixtures/contracts/v2/manifest.json",
+        "sha256": "8dc709019bf16bfc83340e4594945d647748a5340bbe2960c9dd8741a0b2a09b"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/action.json",
+        "sha256": "9b4ae76722f2e00d1161a717340610c71ff29c12b7b1457014f5ba36509abb6d"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/approval_request.json",
+        "sha256": "8536a11f37672be464ae40bce9d80556180ed466e82238d922c9213e9ca04e83"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/boundary_failure.json",
+        "sha256": "1256e98beb31d06001519918d639e8a0304e8603d1208408a94afab414dd0a4b"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/cancellation_signal.json",
+        "sha256": "ce339f77cee7fc4671dbb692838f969f6fa5d072f051b59eed972b0768e7b5c0"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/capability_grant.json",
+        "sha256": "f536fbbdf98ad4a8371da9b72bf94398bd6879fa1e910f18ba16ddabcd720ab9"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/contract_error.json",
+        "sha256": "84381adc049ba51fb7ea081c7f26c0094da0ea891094ee893368ed9a32d2a759"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/evidence_reference.json",
+        "sha256": "9321eb3c443425708b34ef54be9b471dccbd56f1f30c79d88c63d57c907342de"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/plan.json",
+        "sha256": "9cd9bcd306c9bfd5032e27413080a49920a7a7327005f405bf53e2e891c7a6a9"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/prompt.json",
+        "sha256": "beb314613ce4af211ac79014da31502e433e18549ee805cc1f18a27011cb6271"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/receipt.json",
+        "sha256": "405647726497376e75022abeee97c249154a5ab3fd17646d841137014436268d"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/task.json",
+        "sha256": "6e647188ddee409985f2a1e94c3b5ed42b3fc0078d008aad5425cd007a9f6826"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/tool_call.json",
+        "sha256": "c54f6c55c365eea54c10574a1b2f679d403166ce3a759f303674f9a77b96859c"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/tool_definition.json",
+        "sha256": "e496db0b45d6750ae41280726de0064fc7fc3180ebabec309a4ce374c7fca72d"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/tool_result.json",
+        "sha256": "7ec986ab4d1425543e5b12c87ce297f80391b23788893d9ba1f9eb81f4c7cafc"
+      },
+      {
+        "path": "fixtures/contracts/v2/valid/work_packet.json",
+        "sha256": "cbbd6021cc9d19c8f000d0628bd18b714fdb72389bb6fac9b1e289363cc6f48e"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v0.unsupported.json",
+        "sha256": "51649163f16b321da8daa6e6c721c20ed6d7606219f45ab34aed8fcfe123d496"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v1.unsupported.json",
+        "sha256": "d1bc39b9357fc520a094ff982935ad2790cc82de7a58935ab8178c456f06fd10"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v2.duplicate-field.json",
+        "sha256": "86316c79982cc169fb4c3c7965b9349a765fa303630c8cb19e7afd1493fce98d"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v2.malformed.json",
+        "sha256": "8b19d5f9fca07f7ee779feacf6fdbc14edf3fc07be6610710df0ff58e8065aee"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v2.missing-field.json",
+        "sha256": "50b0314305aa170f894d3a2b22cafabd9976f785143871159d7ae5898b0b01a2"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v2.trailing-value.json",
+        "sha256": "94858152045d74ff648538ba2c0f448bcbdc5bcc6c53040349f0c04626198bb1"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v2.unknown-field.json",
+        "sha256": "9152eee9cd7654c94ff13b47eba7da75521293ea23f5296cfab3f4f594a7f80a"
+      },
+      {
+        "path": "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
+        "sha256": "b60107db2109729d75ba9a9094b7107279bad92dc997cd9e8613fceff44d287d"
+      },
+      {
         "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-        "sha256": "9809db151076b3bd1376286aa03fe9a9f80aa9281d8dc4e2baf71ac92d511458"
+        "sha256": "e82239e970873cbf3caeaf4dff076ed5fc68babdf24ed0b77d6391e7419c0cb5"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-        "sha256": "f1e0b0a7fffb5bba09ab4278982e5ab83434703ba4bc0e935f62813a4a527dff"
+        "sha256": "4a98bf3f206752b63347bd96a744732fa8c8d2903cacb018936dd8934462c0ae"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-        "sha256": "6ce5004d2c3d5a90b5d0b4c63e1bce5dd1b1e19b2e3d6f5e3d01aaaa0e9f1f39"
+        "sha256": "47ec0b4d74adb64276d16597566057115b934900e438b07b850d16817d2991a9"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-        "sha256": "d310f04c6da06c3cfd2379b488cbe336366d2ce87dc36c6ff3a5ee2204e0cc49"
+        "sha256": "95d888d65993a60e6870eab3c47def863be84467c2161c4087336230796bc2b8"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-        "sha256": "15f10951d849cce545506862d8f1beb9de35c2bada13d93e521f47c6767cd315"
+        "sha256": "c477f5962adb066969ac006b04ad19df2d3ae33c4a65a734ff0fe24f36852949"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-        "sha256": "9289eaf38bc40a1e7690c51d45e32c6de00c9d2ada55c1fd95fdb3002b651b4d"
+        "sha256": "574e07599780c404fa4f92eb66ed492677201422c5745ae8c9f54134e085c455"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-        "sha256": "be074c0cbb0970c74d0717cda798b8d050f2bbcfe17dc08bddbe6dd630b81dde"
+        "sha256": "2cf0e5be8678cc147ac513b375fdef13a10d356a4ffb78b85ca55bc040744cde"
       },
       {
         "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
-        "sha256": "37ff68761e6f79af32dd094fade3e78adc12917e30d9a5c8ed174d1c0a980a51"
+        "sha256": "75204bf62e1c2185a0bb9bd15b5f4b0c30f43680e7e0c6559507b927c7a931ea"
       }
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
-    "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
+    "reviewed_commit": "2c11868757e0e2cc533e5fccb86ee76061ac4f04",
+    "reviewed_tree": "de1b2dc1f6bda807b0c32ac5bff231c015573012",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -114,8 +214,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "941ccfc94777bd93e5bab2336d85437f19246725",
-  "reviewed_tree": "c1527b953cf95a8a34f30b10c6719abcf669360a",
+  "reviewed_commit": "2c11868757e0e2cc533e5fccb86ee76061ac4f04",
+  "reviewed_tree": "de1b2dc1f6bda807b0c32ac5bff231c015573012",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,
