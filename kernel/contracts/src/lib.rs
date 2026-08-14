@@ -16,6 +16,7 @@ mod display_link;
 mod evidence;
 mod grant;
 mod ids;
+mod model;
 mod network;
 mod operation;
 mod path;
@@ -69,10 +70,20 @@ pub use grant::{
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
-    ContextPacketId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelRunId,
+    ContextPacketId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelAdapterId,
+    ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId, ModelStreamId,
     OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
     ReceiptId, RepositorySnapshotId, SchemaId, SessionId, TaskId, ToolCallId, ToolCatalogId,
     ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
+};
+pub use model::{
+    ClosedModelProposal, ContextBudget, DecodingProfile, ExactModelProfile, FamilyCodecIdentity,
+    HardwareEnvelope, ModelArtifact, ModelCapability, ModelCapabilityState, ModelClientSchemas,
+    ModelContextPacket, ModelHealth, ModelHealthState, ModelLifecycleState, ModelMessage,
+    ModelMessageRole, ModelModality, ModelProposalKind, ModelResourceReport, ModelRole,
+    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelToolCallCandidate, ModelTransformation,
+    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 pub use network::{
     CloudSynchronizationMarker, LocalEndpointIdentity, LocalTransport, NetworkComponent,

@@ -6,7 +6,10 @@ use std::fmt;
 pub const PLATFORM_ADAPTER_API_VERSION: u16 = 1;
 
 /// Closed platform target selected by a release manifest.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum PlatformFamily {
     /// Deterministic adapter used only by contract and fault tests.
     DeterministicFake,
@@ -19,7 +22,8 @@ pub enum PlatformFamily {
 }
 
 /// Closed processor architecture selected by a release manifest.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum PlatformArchitecture {
     /// 64-bit x86 architecture.
     X86_64,

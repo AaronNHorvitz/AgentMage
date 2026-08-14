@@ -61,6 +61,30 @@ define_identifier!(
 );
 define_identifier!(ModelRunId, "Stable identity for one bounded model run.");
 define_identifier!(
+    ModelProfileId,
+    "Stable identity for one exact model profile tuple."
+);
+define_identifier!(
+    ModelManifestId,
+    "Stable identity for one exact model manifest."
+);
+define_identifier!(
+    ModelAdapterId,
+    "Stable identity for one model runtime adapter contract."
+);
+define_identifier!(
+    ModelCodecId,
+    "Stable identity for one closed model-family codec."
+);
+define_identifier!(
+    ModelMessageId,
+    "Stable identity for one bounded model message."
+);
+define_identifier!(
+    ModelStreamId,
+    "Stable identity for one bounded model response stream."
+);
+define_identifier!(
     ContextPacketId,
     "Stable identity for one bounded context packet."
 );
