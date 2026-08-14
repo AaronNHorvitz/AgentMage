@@ -5,19 +5,18 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
-    MAX_READ_ONLY_CALL_DEPTH, ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyOutcome,
-    ReadOnlyRequest, ReadOnlyResult, ReadOnlyToolKind, WORKSPACE_FILE_READ_TOOL_ID,
-    WORKSPACE_FILE_READ_TOOL_VERSION, read_only_tool_definition, read_only_tool_kind,
-    validate_read_only_request, workspace_file_read_definition,
+    MAX_READ_ONLY_CALL_DEPTH, READ_ONLY_TOOL_VERSION, ReadOnlyEncoding, ReadOnlyItem,
+    ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest, ReadOnlyResult, ReadOnlyToolKind,
+    read_only_tool_definition, read_only_tool_kind, validate_read_only_request,
 };
 use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
     ContractPayload, CorrelationId, DataSensitivity, DiagnosticComponent, DiagnosticObservation,
     DiagnosticState, DoctorReport, GrantId, GrantNonce, GrantOperation, GrantPreimage,
     GrantSideEffect, GrantTarget, HeldWorkspaceObject, OperationAttemptId, OperationBinding,
-    OperationOutcome, Receipt, SessionId, TaskId, ToolCall, ToolCallId, ToolDefinition, ToolId,
-    ValidationIssue, ValidationSeverity, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
-    WorkspaceScopePath,
+    OperationOutcome, PathResolutionIntent, Receipt, SessionId, TaskId, ToolCall, ToolCallId,
+    ToolDefinition, ToolId, ValidationIssue, ValidationSeverity, WorkspaceAuthorizationId,
+    WorkspaceId, WorkspacePath, WorkspaceScopePath,
 };
 use agentmage_kernel_engine::approval::{render_approval_request, verify_approval_request};
 use agentmage_kernel_engine::authority_transaction::AuthorityTransactionRequest;
@@ -39,8 +38,9 @@ use sha2::{Digest, Sha256};
 
 use crate::diagnostic_export::{DiagnosticExportError, DiagnosticExportWorkflow};
 use crate::protocol::{
-    HOST_PROTOCOL_VERSION, HostRequest, HostResponse, MAX_HOST_REQUEST_BYTES,
-    MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response, parse_request,
+    HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
+    MAX_HOST_REQUEST_BYTES, MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response,
+    parse_request,
 };
 
 #[cfg(test)]
@@ -211,6 +211,14 @@ struct PendingLinuxRead {
     display_uri: String,
 }
 
+struct PendingLinuxTool {
+    approval: ApprovalRequest,
+    parent_grant_id: GrantId,
+    held: Vec<LinuxHeldObject>,
+    operation_targets: Vec<GrantTarget>,
+    kind: ReadOnlyToolKind,
+}
+
 /// One verified Linux session capable only of the Phase 9 exact read workflow.
 pub struct LinuxReadWorkflow<'platform, I, C>
 where
@@ -226,6 +234,7 @@ where
     identities: I,
     clock: C,
     pending: BTreeMap<String, PendingLinuxRead>,
+    pending_tools: BTreeMap<String, PendingLinuxTool>,
     attempt_guard: ToolAttemptGuard,
     diagnostic_exports: DiagnosticExportWorkflow,
 }
@@ -256,6 +265,7 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            pending_tools: BTreeMap::new(),
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
@@ -300,6 +310,7 @@ where
             identities,
             clock,
             pending: BTreeMap::new(),
+            pending_tools: BTreeMap::new(),
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
             diagnostic_exports: DiagnosticExportWorkflow::new(),
@@ -341,6 +352,31 @@ where
             } => self.approve_read(&request_id, &preview_id, &confirmation_sha256),
             HostRequest::CancelRead { preview_id, .. } => {
                 self.cancel_read(&request_id, &preview_id)
+            }
+            HostRequest::PreviewTool {
+                workspace_id,
+                workspace_root,
+                tool_id,
+                tool_version,
+                arguments_json,
+                projection,
+                ..
+            } => self.preview_tool(
+                &request_id,
+                &workspace_id,
+                Path::new(&workspace_root),
+                &tool_id,
+                &tool_version,
+                arguments_json.as_bytes(),
+                projection,
+            ),
+            HostRequest::ApproveTool {
+                preview_id,
+                confirmation_sha256,
+                ..
+            } => self.approve_tool(&request_id, &preview_id, &confirmation_sha256),
+            HostRequest::CancelTool { preview_id, .. } => {
+                self.cancel_tool(&request_id, &preview_id)
             }
         };
         result.unwrap_or_else(|error| HostResponse::Denied {
@@ -846,6 +882,387 @@ where
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn preview_tool(
+        &mut self,
+        request_id: &str,
+        workspace_id: &str,
+        workspace_root: &Path,
+        tool_id: &str,
+        tool_version: &str,
+        arguments: &[u8],
+        projection: Vec<HostProjectionPath>,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        self.pending_tools
+            .retain(|_, candidate| candidate.approval.expires_at_epoch_ms > now.epoch_ms);
+        if self.pending.len() + self.pending_tools.len() >= MAX_PENDING_PREVIEWS {
+            return Err(LinuxReadError::ApprovalDenied);
+        }
+        let tool_id = ToolId::from_raw(tool_id);
+        let kind =
+            read_only_tool_kind(&tool_id, tool_version).ok_or(LinuxReadError::AuthorityDenied)?;
+        let validated = validate_read_only_request(kind, arguments)
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let mut unique_paths = BTreeSet::new();
+        if projection.iter().any(|item| {
+            !unique_paths.insert(item.components.clone())
+                || !validated
+                    .paths
+                    .iter()
+                    .any(|root| item.components.starts_with(root))
+        }) || validated
+            .paths
+            .iter()
+            .any(|path| !unique_paths.contains(path))
+        {
+            return Err(LinuxReadError::PathDenied);
+        }
+
+        let workspace_id = WorkspaceId::from_raw(workspace_id);
+        let authorization_id =
+            WorkspaceAuthorizationId::from_raw(self.identities.next("workspace-authorization")?);
+        let (held, scopes) = match &self.platform {
+            LinuxReadPlatform::Verified(platform) => {
+                let workspace = select_linux_workspace(
+                    platform,
+                    workspace_root,
+                    workspace_id.clone(),
+                    authorization_id,
+                )
+                .map_err(|_| LinuxReadError::PathDenied)?;
+                let mut held = Vec::with_capacity(projection.len());
+                let mut scopes = Vec::with_capacity(projection.len());
+                for item in &projection {
+                    let path = WorkspacePath::new(workspace_id.clone(), item.components.clone())
+                        .map_err(|_| LinuxReadError::PathDenied)?;
+                    let intent = projection_intent(item.object_kind);
+                    held.push(
+                        resolve_linux_workspace_object(platform, &workspace, &path, intent)
+                            .map_err(|_| LinuxReadError::PathDenied)?,
+                    );
+                    scopes.push(
+                        GrantTarget::workspace_scope(
+                            &workspace,
+                            WorkspaceScopePath::new(workspace_id.clone(), item.components.clone())
+                                .map_err(|_| LinuxReadError::PathDenied)?,
+                        )
+                        .map_err(|_| LinuxReadError::AuthorityDenied)?,
+                    );
+                }
+                (held, scopes)
+            }
+            #[cfg(test)]
+            LinuxReadPlatform::Test(adapter_instance_id) => {
+                let workspace = agentmage_platform_linux::select_test_linux_workspace(
+                    workspace_root,
+                    workspace_id.clone(),
+                    authorization_id,
+                    adapter_instance_id.clone(),
+                )
+                .map_err(|_| LinuxReadError::PathDenied)?;
+                let mut held = Vec::with_capacity(projection.len());
+                let mut scopes = Vec::with_capacity(projection.len());
+                for item in &projection {
+                    let path = WorkspacePath::new(workspace_id.clone(), item.components.clone())
+                        .map_err(|_| LinuxReadError::PathDenied)?;
+                    let intent = projection_intent(item.object_kind);
+                    held.push(
+                        agentmage_platform_linux::resolve_test_linux_workspace_object(
+                            &workspace,
+                            adapter_instance_id.clone(),
+                            &path,
+                            intent,
+                        )
+                        .map_err(|_| LinuxReadError::PathDenied)?,
+                    );
+                    scopes.push(
+                        GrantTarget::workspace_scope(
+                            &workspace,
+                            WorkspaceScopePath::new(workspace_id.clone(), item.components.clone())
+                                .map_err(|_| LinuxReadError::PathDenied)?,
+                        )
+                        .map_err(|_| LinuxReadError::AuthorityDenied)?,
+                    );
+                }
+                (held, scopes)
+            }
+        };
+        let operation_targets = held
+            .iter()
+            .map(GrantTarget::held_object)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let task_id = TaskId::from_raw(self.identities.next("task")?);
+        let action_id = ActionId::from_raw(self.identities.next("action")?);
+        let parent_grant_id = GrantId::from_raw(self.identities.next("grant-parent")?);
+        let operation_grant_id = GrantId::from_raw(self.identities.next("grant-operation")?);
+        let approval_id = ApprovalId::from_raw(self.identities.next("approval")?);
+        let preview_id = self.identities.next("preview")?;
+        let tool_call =
+            generic_tool_call(&mut self.identities, &action_id, kind, arguments.to_vec())?;
+        let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
+        let preimages = operation_targets
+            .iter()
+            .enumerate()
+            .filter_map(|(index, target)| {
+                u32::try_from(index)
+                    .ok()
+                    .and_then(|index| GrantPreimage::for_target(index, target))
+            })
+            .collect::<Vec<_>>();
+        let target_indexes = (0..operation_targets.len())
+            .map(|index| u32::try_from(index).map_err(|_| LinuxReadError::AuthorityDenied))
+            .collect::<Result<Vec<_>, _>>()?;
+        let side_effect = GrantSideEffect {
+            operation,
+            target_indexes,
+            details_sha256: digest_serialized(&operation_targets)?,
+        };
+        let policy = exact_tool_policy(
+            &self.actor_id,
+            &task_id,
+            &action_id,
+            kind,
+            &operation_targets,
+        )?;
+        let expires_at_epoch_ms = now
+            .epoch_ms
+            .checked_add(PREVIEW_LIFETIME_MS)
+            .ok_or(LinuxReadError::ClockUnavailable)?;
+        let parent_preview_sha256 = digest_serialized(&scopes)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let parent = self
+            .authority
+            .authority_mut()
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: parent_grant_id.clone(),
+                actor_id: self.actor_id.clone(),
+                session_id: self.session_id.clone(),
+                task_id: task_id.clone(),
+                targets: scopes,
+                excluded_targets: Vec::new(),
+                sensitivity: DataSensitivity::Ephemeral,
+                issued_at_epoch_ms: now.epoch_ms,
+                expires_at_epoch_ms,
+                nonce: GrantNonce::from_raw(self.identities.next("nonce-parent")?),
+                maximum_derived_operations: 1,
+                preview_sha256: parent_preview_sha256,
+                policy_sha256: policy.policy_sha256().to_owned(),
+            })
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let approval = render_approval_request(
+            &self.registry,
+            ApprovalRequest {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                approval_id,
+                proposed_grant_id: operation_grant_id,
+                parent_grant_id: parent_grant_id.clone(),
+                parent_grant_sha256: digest_serialized(&parent)?,
+                actor_id: self.actor_id.clone(),
+                session_id: self.session_id.clone(),
+                task_id,
+                action_kind: ActionKind::DeterministicTool,
+                operation,
+                tool_call,
+                targets: operation_targets.clone(),
+                excluded_targets: Vec::new(),
+                sensitivity: DataSensitivity::Ephemeral,
+                preimages,
+                expected_side_effects: vec![side_effect],
+                rollback_description: "No state change is permitted".to_owned(),
+                issued_at_epoch_ms: now.epoch_ms,
+                expires_at_epoch_ms,
+                policy_sha256: policy.policy_sha256().to_owned(),
+                confirmation_sha256: "0".repeat(64),
+            },
+        )
+        .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let target_set_sha256 = digest_serialized(&operation_targets)?;
+        let response = HostResponse::ToolPreview {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            preview_id: preview_id.clone(),
+            tool_id: kind.id().to_owned(),
+            tool_version: READ_ONLY_TOOL_VERSION.to_owned(),
+            projected_objects: u32::try_from(operation_targets.len())
+                .map_err(|_| LinuxReadError::AuthorityDenied)?,
+            target_set_sha256,
+            expires_at_epoch_ms,
+            confirmation_sha256: approval.confirmation_sha256.clone(),
+        };
+        self.pending_tools.insert(
+            preview_id,
+            PendingLinuxTool {
+                approval,
+                parent_grant_id,
+                held,
+                operation_targets,
+                kind,
+            },
+        );
+        Ok(response)
+    }
+
+    fn approve_tool(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+        confirmation_sha256: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        let Some(pending) = self.pending_tools.remove(preview_id) else {
+            return Ok(tool_replay_denial(
+                request_id,
+                self.receipt_for_preview(preview_id),
+            ));
+        };
+        if pending.approval.expires_at_epoch_ms <= now.epoch_ms
+            || pending.approval.confirmation_sha256 != confirmation_sha256
+            || verify_approval_request(&self.registry, &pending.approval).is_err()
+            || pending.held.iter().any(|held| held.revalidate().is_err())
+        {
+            return Err(LinuxReadError::ApprovalDenied);
+        }
+        let approval = pending.approval;
+        let validated =
+            validate_read_only_request(pending.kind, &approval.tool_call.arguments.bytes)
+                .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        self.attempt_guard
+            .record_attempt(&approval.tool_call, validated.call_depth)
+            .map_err(|_| LinuxReadError::ApprovalDenied)?;
+        let worker_input = LinuxReadOnlyToolInput::seal(
+            approval.tool_call.tool_id.as_str(),
+            approval.tool_call.tool_version.as_str(),
+            &approval.tool_call.arguments.bytes,
+            pending.held,
+        )
+        .map_err(|_| LinuxReadError::WorkerFailed)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let grant = self
+            .authority
+            .authority_mut()
+            .derive_operation(
+                &pending.parent_grant_id,
+                DerivedOperationGrantRequest {
+                    grant_id: approval.proposed_grant_id.clone(),
+                    approval_id: approval.approval_id.clone(),
+                    action_id: approval.tool_call.action_id.clone(),
+                    action_kind: approval.action_kind,
+                    operation: approval.operation,
+                    tool_id: approval.tool_call.tool_id.clone(),
+                    tool_version: approval.tool_call.tool_version.clone(),
+                    targets: approval.targets.clone(),
+                    argument_sha256: approval.tool_call.arguments.sha256.clone(),
+                    preimages: approval.preimages.clone(),
+                    expected_side_effects: approval.expected_side_effects.clone(),
+                    rollback_description: approval.rollback_description.clone(),
+                    issued_at_epoch_ms: now.epoch_ms,
+                    expires_at_epoch_ms: now
+                        .epoch_ms
+                        .checked_add(OPERATION_LIFETIME_MS)
+                        .map(|expiry| expiry.min(approval.expires_at_epoch_ms))
+                        .ok_or(LinuxReadError::ClockUnavailable)?,
+                    nonce: GrantNonce::from_raw(self.identities.next("nonce-operation")?),
+                    preview_sha256: approval.confirmation_sha256.clone(),
+                    policy_sha256: approval.policy_sha256.clone(),
+                },
+            )
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let policy = exact_tool_policy(
+            &approval.actor_id,
+            &approval.task_id,
+            &approval.tool_call.action_id,
+            pending.kind,
+            &pending.operation_targets,
+        )?;
+        let context = PolicyEvaluationContext {
+            actor_id: approval.actor_id.clone(),
+            session_id: approval.session_id.clone(),
+            task_id: approval.task_id.clone(),
+            action_id: approval.tool_call.action_id.clone(),
+            action_kind: approval.action_kind,
+            tool_id: approval.tool_call.tool_id.clone(),
+            tool_version: approval.tool_call.tool_version.clone(),
+            targets: grant.targets.clone(),
+            argument_sha256: grant.argument_sha256.clone(),
+            preimages: grant.preimages.clone(),
+            expected_side_effects: grant.expected_side_effects.clone(),
+            preview_sha256: grant.preview_sha256.clone(),
+            now_epoch_ms: now.epoch_ms,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
+        };
+        let suffix = preview_suffix(preview_id).ok_or(LinuxReadError::ApprovalDenied)?;
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw(format!("transaction-{suffix}")),
+            OperationAttemptId::from_raw(format!("attempt-{suffix}")),
+            approval.approval_id,
+            grant.grant_id,
+            approval.tool_call,
+            context,
+            now.epoch_ms,
+            now.occurred_at,
+        )
+        .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let runner = self.sandbox.take().ok_or(LinuxReadError::WorkerFailed)?;
+        let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
+        let receipt_result = self.authority.authority_mut().execute_effect(
+            &self.registry,
+            &policy,
+            request,
+            &mut driver,
+        );
+        let worker_result = driver.take_result();
+        self.sandbox = Some(driver.into_runner());
+        let receipt = receipt_result.map_err(|_| LinuxReadError::AuthorityDenied)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| LinuxReadError::AuthorityDenied)?;
+        let summary = receipt_summary(&receipt);
+        let worker_result = worker_result.ok_or(LinuxReadError::WorkerFailed)?;
+        if !worker_result.success() || receipt.outcome != OperationOutcome::Succeeded {
+            return Ok(HostResponse::Denied {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: request_id.to_owned(),
+                code: LinuxReadError::WorkerFailed.code().to_owned(),
+                receipt: Some(summary),
+            });
+        }
+        let result = serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout())
+            .ok()
+            .filter(|result| result.verify(pending.kind))
+            .ok_or(LinuxReadError::OutputDenied)?;
+        Ok(HostResponse::ToolCompleted {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            result,
+            receipt: summary,
+        })
+    }
+
+    fn cancel_tool(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        if self.pending_tools.remove(preview_id).is_some() {
+            return Ok(HostResponse::Cancelled {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: request_id.to_owned(),
+            });
+        }
+        Ok(tool_replay_denial(
+            request_id,
+            self.receipt_for_preview(preview_id),
+        ))
+    }
+
     fn cancel_read(
         &mut self,
         request_id: &str,
@@ -902,7 +1319,6 @@ fn tool_call(
     action_id: &ActionId,
     path: &WorkspacePath,
 ) -> Result<ToolCall, LinuxReadError> {
-    let definition = workspace_file_read_definition();
     let bytes = serde_json::to_vec(&ReadOnlyRequest {
         schema_version: 1,
         paths: vec![
@@ -919,13 +1335,23 @@ fn tool_call(
         call_depth: 0,
     })
     .map_err(|_| LinuxReadError::AuthorityDenied)?;
+    generic_tool_call(identities, action_id, ReadOnlyToolKind::ReadText, bytes)
+}
+
+fn generic_tool_call(
+    identities: &mut impl ReadIdentitySource,
+    action_id: &ActionId,
+    kind: ReadOnlyToolKind,
+    bytes: Vec<u8>,
+) -> Result<ToolCall, LinuxReadError> {
+    let definition = read_only_tool_definition(kind);
     Ok(ToolCall {
         schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
         tool_call_id: ToolCallId::from_raw(identities.next("tool-call")?),
         correlation_id: CorrelationId::from_raw(identities.next("correlation")?),
         action_id: action_id.clone(),
-        tool_id: ToolId::from_raw(WORKSPACE_FILE_READ_TOOL_ID),
-        tool_version: WORKSPACE_FILE_READ_TOOL_VERSION.to_owned(),
+        tool_id: ToolId::from_raw(kind.id()),
+        tool_version: READ_ONLY_TOOL_VERSION.to_owned(),
         arguments: ContractPayload {
             schema: definition.input_schema,
             media_type: "application/json".to_owned(),
@@ -941,18 +1367,41 @@ fn exact_read_policy(
     action_id: &ActionId,
     target: &GrantTarget,
 ) -> Result<PolicyEngine, LinuxReadError> {
+    exact_tool_policy(
+        actor_id,
+        task_id,
+        action_id,
+        ReadOnlyToolKind::ReadText,
+        std::slice::from_ref(target),
+    )
+}
+
+fn exact_tool_policy(
+    actor_id: &ActorId,
+    task_id: &TaskId,
+    action_id: &ActionId,
+    kind: ReadOnlyToolKind,
+    targets: &[GrantTarget],
+) -> Result<PolicyEngine, LinuxReadError> {
     PolicyEngine::strict_local_read_only(StrictLocalReadOnlyScope {
         revision: 1,
         actors: BTreeSet::from([actor_id.clone()]),
         tasks: BTreeSet::from([task_id.clone()]),
         actions: BTreeSet::from([action_id.clone()]),
         tools: BTreeSet::from([ToolPolicyBinding {
-            tool_id: ToolId::from_raw(WORKSPACE_FILE_READ_TOOL_ID),
-            tool_version: WORKSPACE_FILE_READ_TOOL_VERSION.to_owned(),
+            tool_id: ToolId::from_raw(kind.id()),
+            tool_version: READ_ONLY_TOOL_VERSION.to_owned(),
         }]),
-        targets: BTreeSet::from([target.clone()]),
+        targets: targets.iter().cloned().collect(),
     })
     .map_err(|_| LinuxReadError::AuthorityDenied)
+}
+
+const fn projection_intent(kind: HostProjectionKind) -> PathResolutionIntent {
+    match kind {
+        HostProjectionKind::RegularFile => PathResolutionIntent::ReadFile,
+        HostProjectionKind::Directory => PathResolutionIntent::ReadDirectory,
+    }
 }
 
 fn replay_denial(request_id: &str, receipt: Option<ReceiptSummary>) -> HostResponse {
@@ -963,6 +1412,20 @@ fn replay_denial(request_id: &str, receipt: Option<ReceiptSummary>) -> HostRespo
             "host.read.replay_denied"
         } else {
             "host.read.preview_missing"
+        }
+        .to_owned(),
+        receipt,
+    }
+}
+
+fn tool_replay_denial(request_id: &str, receipt: Option<ReceiptSummary>) -> HostResponse {
+    HostResponse::Denied {
+        schema_version: HOST_PROTOCOL_VERSION,
+        request_id: request_id.to_owned(),
+        code: if receipt.is_some() {
+            "host.tool.replay_denied"
+        } else {
+            "host.tool.preview_missing"
         }
         .to_owned(),
         receipt,
@@ -994,7 +1457,10 @@ fn request_id(request: &HostRequest) -> &str {
         | HostRequest::CancelDiagnosticExport { request_id, .. }
         | HostRequest::PreviewRead { request_id, .. }
         | HostRequest::ApproveRead { request_id, .. }
-        | HostRequest::CancelRead { request_id, .. } => request_id,
+        | HostRequest::CancelRead { request_id, .. }
+        | HostRequest::PreviewTool { request_id, .. }
+        | HostRequest::ApproveTool { request_id, .. }
+        | HostRequest::CancelTool { request_id, .. } => request_id,
     }
 }
 
@@ -1067,7 +1533,9 @@ mod tests {
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    use agentmage_capability_read_only::ReadOnlyToolKind;
+    use agentmage_capability_read_only::{
+        ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+    };
     use agentmage_kernel_contracts::{ActorId, SessionId};
     use agentmage_kernel_engine::operational_store::{
         OperationalStoreKeyError, OperationalStoreKeyProvider,
@@ -1078,8 +1546,9 @@ mod tests {
     };
 
     use super::{
-        HOST_PROTOCOL_VERSION, HostRequest, HostResponse, LinuxReadError, LinuxReadWorkflow,
-        ReadClock, ReadIdentitySource, ReadInstant, format_utc, preview_suffix, read_only_registry,
+        HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
+        LinuxReadError, LinuxReadWorkflow, ReadClock, ReadIdentitySource, ReadInstant, format_utc,
+        preview_suffix, read_only_registry,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1159,7 +1628,11 @@ mod tests {
     }
 
     fn sandbox() -> LinuxSandboxRunner {
-        let executable = fs::canonicalize("/usr/bin/cat").expect("canonical worker executable");
+        sandbox_for("/usr/bin/cat")
+    }
+
+    fn sandbox_for(executable: impl AsRef<Path>) -> LinuxSandboxRunner {
+        let executable = fs::canonicalize(executable).expect("canonical worker executable");
         let manifest = LinuxSandboxManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/bwrap",
@@ -1170,16 +1643,34 @@ mod tests {
         LinuxSandboxRunner::new(manifest, LinuxSandboxLimits::default()).expect("sandbox runner")
     }
 
+    fn read_only_worker_sandbox() -> LinuxSandboxRunner {
+        let worker = std::env::current_exe()
+            .expect("current test executable")
+            .parent()
+            .and_then(Path::parent)
+            .expect("target profile directory")
+            .join("agentmage-read-only-worker");
+        sandbox_for(worker)
+    }
+
     fn workflow(
         state_root: &Path,
         times: &[u64],
+    ) -> LinuxReadWorkflow<'static, TestIdentities, TestClock> {
+        workflow_with_sandbox(state_root, times, sandbox())
+    }
+
+    fn workflow_with_sandbox(
+        state_root: &Path,
+        times: &[u64],
+        sandbox: LinuxSandboxRunner,
     ) -> LinuxReadWorkflow<'static, TestIdentities, TestClock> {
         let mut key = TestKey([91; 32]);
         let authority =
             open_test_linux_authority(state_root, &mut key, 1).expect("test authority opens");
         LinuxReadWorkflow::new_test(
             authority,
-            sandbox(),
+            sandbox,
             ActorId::from_raw("actor-phase9-test"),
             SessionId::from_raw("session-phase9-test"),
             TestIdentities(0),
@@ -1206,6 +1697,43 @@ mod tests {
                 ..
             } => (preview_id, confirmation_sha256),
             _ => panic!("expected exact preview"),
+        }
+    }
+
+    fn generic_search_request(workspace: &Path, request_id: &str) -> HostRequest {
+        let arguments = serde_json::to_string(&ReadOnlyRequest {
+            schema_version: 1,
+            paths: vec![vec!["src".to_owned()]],
+            query: Some("needle".to_owned()),
+            byte_offset: None,
+            byte_count: None,
+            encoding: ReadOnlyEncoding::Utf8,
+            limits: ReadOnlyLimits::default(),
+            call_depth: 0,
+        })
+        .expect("request JSON");
+        HostRequest::PreviewTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            workspace_id: "workspace-tool-test".to_owned(),
+            workspace_root: workspace.to_str().expect("UTF-8 test root").to_owned(),
+            tool_id: ReadOnlyToolKind::SearchText.id().to_owned(),
+            tool_version: "1.0.0".to_owned(),
+            arguments_json: arguments,
+            projection: vec![
+                HostProjectionPath {
+                    components: vec!["src".to_owned()],
+                    object_kind: HostProjectionKind::Directory,
+                },
+                HostProjectionPath {
+                    components: vec!["src".to_owned(), "alpha.txt".to_owned()],
+                    object_kind: HostProjectionKind::RegularFile,
+                },
+                HostProjectionPath {
+                    components: vec!["src".to_owned(), "zeta.txt".to_owned()],
+                    object_kind: HostProjectionKind::RegularFile,
+                },
+            ],
         }
     }
 
@@ -1313,6 +1841,162 @@ mod tests {
                 && definition.declared_effects[0].operation()
                     == agentmage_kernel_contracts::GrantOperation::WorkspaceRead
         }));
+    }
+
+    #[test]
+    fn generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt() {
+        let root = temp_root("generic-preview");
+        let workspace = root.join("workspace");
+        let state = root.join("state");
+        fs::create_dir_all(workspace.join("src")).expect("workspace tree");
+        fs::create_dir(&state).expect("state");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        fs::write(workspace.join("src/alpha.txt"), b"needle first").expect("alpha");
+        fs::write(workspace.join("src/zeta.txt"), b"needle last").expect("zeta");
+        let mut workflow = workflow(&state, &[100]);
+
+        let preview = workflow.handle(generic_search_request(&workspace, "request-tool-preview"));
+        let (preview_id, confirmation_sha256) = match preview {
+            HostResponse::ToolPreview {
+                preview_id,
+                confirmation_sha256,
+                projected_objects,
+                tool_id,
+                target_set_sha256,
+                ..
+            } => {
+                assert_eq!(projected_objects, 3);
+                assert_eq!(tool_id, ReadOnlyToolKind::SearchText.id());
+                assert_eq!(target_set_sha256.len(), 64);
+                (preview_id, confirmation_sha256)
+            }
+            _ => panic!("expected generic tool preview"),
+        };
+        assert_eq!(confirmation_sha256.len(), 64);
+        let cancelled = workflow.handle(HostRequest::CancelTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-tool-cancel".to_owned(),
+            preview_id,
+        });
+        assert!(matches!(cancelled, HostResponse::Cancelled { .. }));
+        assert!(workflow.authority.authority().receipts().is_empty());
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections() {
+        let root = temp_root("generic-denials");
+        let workspace = root.join("workspace");
+        let state = root.join("state");
+        fs::create_dir_all(workspace.join("src")).expect("workspace tree");
+        fs::create_dir(&state).expect("state");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        fs::write(workspace.join("src/alpha.txt"), b"needle").expect("alpha");
+        fs::write(workspace.join("outside.txt"), b"outside").expect("outside");
+        let mut workflow = workflow(&state, &[100, 200, 300]);
+
+        let mut duplicate = generic_search_request(&workspace, "request-duplicate");
+        if let HostRequest::PreviewTool { projection, .. } = &mut duplicate {
+            projection.push(projection[1].clone());
+        }
+        assert!(matches!(
+            workflow.handle(duplicate),
+            HostResponse::Denied { ref code, .. } if code == LinuxReadError::PathDenied.code()
+        ));
+
+        let mut unscoped = generic_search_request(&workspace, "request-unscoped");
+        if let HostRequest::PreviewTool { projection, .. } = &mut unscoped {
+            projection.push(HostProjectionPath {
+                components: vec!["outside.txt".to_owned()],
+                object_kind: HostProjectionKind::RegularFile,
+            });
+        }
+        assert!(matches!(
+            workflow.handle(unscoped),
+            HostResponse::Denied { ref code, .. } if code == LinuxReadError::PathDenied.code()
+        ));
+
+        let mut wrong_kind = generic_search_request(&workspace, "request-wrong-kind");
+        if let HostRequest::PreviewTool { projection, .. } = &mut wrong_kind {
+            projection[1].object_kind = HostProjectionKind::Directory;
+        }
+        assert!(matches!(
+            workflow.handle(wrong_kind),
+            HostResponse::Denied { ref code, .. } if code == LinuxReadError::PathDenied.code()
+        ));
+        assert!(workflow.authority.authority().receipts().is_empty());
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires the Fedora or Ubuntu systemd user session, Bubblewrap, and built read-only worker"]
+    fn generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation() {
+        let root = temp_root("generic-live");
+        let workspace = root.join("workspace");
+        let state = root.join("state");
+        fs::create_dir_all(workspace.join("src")).expect("workspace tree");
+        fs::create_dir(&state).expect("state");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        fs::write(workspace.join("src/alpha.txt"), b"needle first\n").expect("alpha");
+        fs::write(workspace.join("src/zeta.txt"), b"needle last\n").expect("zeta");
+        let before_alpha = fs::read(workspace.join("src/alpha.txt")).expect("before alpha");
+        let before_zeta = fs::read(workspace.join("src/zeta.txt")).expect("before zeta");
+        let mut workflow = workflow_with_sandbox(&state, &[100, 200], read_only_worker_sandbox());
+
+        let preview = workflow.handle(generic_search_request(&workspace, "request-live-preview"));
+        let (preview_id, confirmation_sha256) = match preview {
+            HostResponse::ToolPreview {
+                preview_id,
+                confirmation_sha256,
+                ..
+            } => (preview_id, confirmation_sha256),
+            _ => panic!("expected generic preview"),
+        };
+        let completed = workflow.handle(HostRequest::ApproveTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-live-approve".to_owned(),
+            preview_id: preview_id.clone(),
+            confirmation_sha256: confirmation_sha256.clone(),
+        });
+        let receipt_sha256 = match completed {
+            HostResponse::ToolCompleted {
+                result, receipt, ..
+            } => {
+                assert_eq!(
+                    result.outcome,
+                    agentmage_capability_read_only::ReadOnlyOutcome::Succeeded
+                );
+                assert!(result.verify(ReadOnlyToolKind::SearchText));
+                assert_eq!(result.items.len(), 2);
+                assert_eq!(receipt.sequence, 1);
+                receipt.receipt_sha256
+            }
+            _ => panic!("expected completed generic tool"),
+        };
+        let replay = workflow.handle(HostRequest::ApproveTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-live-replay".to_owned(),
+            preview_id,
+            confirmation_sha256,
+        });
+        assert!(matches!(
+            replay,
+            HostResponse::Denied {
+                ref code,
+                receipt: Some(ref retained),
+                ..
+            } if code == "host.tool.replay_denied"
+                && retained.receipt_sha256 == receipt_sha256
+        ));
+        assert_eq!(
+            fs::read(workspace.join("src/alpha.txt")).expect("after alpha"),
+            before_alpha
+        );
+        assert_eq!(
+            fs::read(workspace.join("src/zeta.txt")).expect("after zeta"),
+            before_zeta
+        );
+        fs::remove_dir_all(root).expect("cleanup");
     }
 
     #[test]

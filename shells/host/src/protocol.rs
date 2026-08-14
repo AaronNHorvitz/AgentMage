@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use agentmage_capability_read_only::ReadOnlyResult;
 use agentmage_kernel_contracts::DoctorReport;
 
 /// Version of the Phase 9 host protocol.
@@ -11,11 +12,32 @@ pub const HOST_PROTOCOL_VERSION: u16 = 1;
 pub const MAX_HOST_REQUEST_BYTES: usize = 64 * 1024;
 
 /// Maximum encoded host response accepted by the shell.
-pub const MAX_HOST_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
+pub const MAX_HOST_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
 
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_COMPONENTS: usize = 256;
 const MAX_COMPONENT_BYTES: usize = 255;
+const MAX_TOOL_ARGUMENT_BYTES: usize = 64 * 1024;
+
+/// Exact object kind requested for one bounded worker projection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HostProjectionKind {
+    /// Resolve and continuously hold one regular file.
+    RegularFile,
+    /// Resolve and continuously hold one directory.
+    Directory,
+}
+
+/// One exact workspace-relative object exposed to an isolated tool worker.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct HostProjectionPath {
+    /// Canonical workspace-relative components.
+    pub components: Vec<String>,
+    /// Exact expected object kind.
+    pub object_kind: HostProjectionKind,
+}
 
 /// Stable content-free failure while parsing or encoding a host message.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -116,6 +138,45 @@ pub enum HostRequest {
         /// Exact pending preview identity.
         preview_id: String,
     },
+    /// Preview one exact closed-catalog tool call and its complete projection manifest.
+    PreviewTool {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Stable workspace identity selected by the shell.
+        workspace_id: String,
+        /// Absolute root supplied only from the selected local VS Code workspace.
+        workspace_root: String,
+        /// Exact closed-catalog tool identity.
+        tool_id: String,
+        /// Exact closed-catalog semantic version.
+        tool_version: String,
+        /// Exact JSON bytes represented as a string to retain duplicate-key detection.
+        arguments_json: String,
+        /// Complete bounded set of exact objects projected into the worker.
+        projection: Vec<HostProjectionPath>,
+    },
+    /// Confirm one exact generic tool preview.
+    ApproveTool {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+        /// Digest of the exact approval display confirmed by the user.
+        confirmation_sha256: String,
+    },
+    /// Cancel one pending generic tool preview without deriving authority.
+    CancelTool {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+    },
 }
 
 impl HostRequest {
@@ -189,6 +250,54 @@ impl HostRequest {
                 (*schema_version, request_id)
             }
             Self::CancelRead {
+                schema_version,
+                request_id,
+                preview_id,
+            } => {
+                if !valid_identifier(preview_id) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::PreviewTool {
+                schema_version,
+                request_id,
+                workspace_id,
+                workspace_root,
+                tool_id,
+                tool_version,
+                arguments_json,
+                projection,
+            } => {
+                if !valid_identifier(workspace_id)
+                    || workspace_root.is_empty()
+                    || workspace_root.len() > 4_096
+                    || !valid_identifier(tool_id)
+                    || !valid_semver(tool_version)
+                    || arguments_json.is_empty()
+                    || arguments_json.len() > MAX_TOOL_ARGUMENT_BYTES
+                    || projection.is_empty()
+                    || projection.len() > MAX_COMPONENTS
+                    || projection
+                        .iter()
+                        .any(|item| !valid_components(&item.components))
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::ApproveTool {
+                schema_version,
+                request_id,
+                preview_id,
+                confirmation_sha256,
+            } => {
+                if !valid_identifier(preview_id) || !valid_sha256(confirmation_sha256) {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::CancelTool {
                 schema_version,
                 request_id,
                 preview_id,
@@ -310,6 +419,38 @@ pub enum HostResponse {
         /// Durable content-free receipt fields.
         receipt: ReceiptSummary,
     },
+    /// One exact non-authoritative generic tool preview.
+    ToolPreview {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Opaque pending-preview identity.
+        preview_id: String,
+        /// Exact closed-catalog tool identity.
+        tool_id: String,
+        /// Exact closed-catalog tool version.
+        tool_version: String,
+        /// Count of exact continuously held projected objects.
+        projected_objects: u32,
+        /// Digest of the ordered exact authority targets.
+        target_set_sha256: String,
+        /// Expiration of this memory-only preview.
+        expires_at_epoch_ms: u64,
+        /// Digest of the complete approval display.
+        confirmation_sha256: String,
+    },
+    /// One verified typed tool result and its durable content-free receipt.
+    ToolCompleted {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Hash-verified result from the isolated worker.
+        result: ReadOnlyResult,
+        /// Durable content-free receipt fields.
+        receipt: ReceiptSummary,
+    },
     /// A pending preview was cancelled before execution.
     Cancelled {
         /// Protocol schema version.
@@ -366,13 +507,35 @@ fn valid_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+fn valid_components(components: &[String]) -> bool {
+    !components.is_empty()
+        && components.len() <= MAX_COMPONENTS
+        && components.iter().all(|component| {
+            !component.is_empty()
+                && component.len() <= MAX_COMPONENT_BYTES
+                && component != "."
+                && component != ".."
+                && !component.contains('/')
+                && !component.contains('\0')
+        })
+}
+
+fn valid_semver(value: &str) -> bool {
+    let parts = value.split('.').collect::<Vec<_>>();
+    value.len() <= 64
+        && parts.len() == 3
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
     use super::{
-        HOST_PROTOCOL_VERSION, HostProtocolError, HostRequest, HostResponse,
-        MAX_HOST_REQUEST_BYTES, encode_response, parse_request,
+        HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostProtocolError,
+        HostRequest, HostResponse, MAX_HOST_REQUEST_BYTES, encode_response, parse_request,
     };
 
     fn preview_request() -> serde_json::Value {
@@ -391,6 +554,41 @@ mod tests {
         let bytes = serde_json::to_vec(&preview_request()).expect("request JSON");
         let parsed = parse_request(&bytes).expect("exact request");
         assert!(matches!(parsed, HostRequest::PreviewRead { .. }));
+    }
+
+    #[test]
+    fn generic_tool_request_preserves_exact_argument_bytes_and_projection_kind() {
+        let request = HostRequest::PreviewTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-tool-0001".to_owned(),
+            workspace_id: "workspace-0001".to_owned(),
+            workspace_root: "/tmp/workspace".to_owned(),
+            tool_id: "agentmage.workspace.search-text".to_owned(),
+            tool_version: "1.0.0".to_owned(),
+            arguments_json: r#"{"schema_version":1}"#.to_owned(),
+            projection: vec![HostProjectionPath {
+                components: vec!["src".to_owned(), "lib.rs".to_owned()],
+                object_kind: HostProjectionKind::RegularFile,
+            }],
+        };
+        let bytes = serde_json::to_vec(&request).expect("request JSON");
+        let parsed = parse_request(&bytes).expect("generic request");
+        assert!(matches!(
+            parsed,
+            HostRequest::PreviewTool {
+                ref arguments_json,
+                ref projection,
+                ..
+            } if arguments_json == r#"{"schema_version":1}"#
+                && projection[0].object_kind == HostProjectionKind::RegularFile
+        ));
+
+        let mut invalid: serde_json::Value = serde_json::from_slice(&bytes).expect("value");
+        invalid["projection"][0]["components"] = json!([".."]);
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&invalid).expect("invalid JSON")),
+            Err(HostProtocolError::InvalidValue)
+        ));
     }
 
     #[test]
