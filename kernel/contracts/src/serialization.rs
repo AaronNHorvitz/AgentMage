@@ -62,6 +62,7 @@ impl_versioned_contract!(
     crate::SessionCheckpoint,
     crate::ConversationRecord,
     crate::ConversationTurn,
+    crate::ConversationCompactionRecord,
     crate::EncodedModelContext,
     crate::ExactModelProfile,
     crate::ModelPickerSnapshot,

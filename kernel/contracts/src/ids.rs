@@ -55,6 +55,10 @@ define_identifier!(
     ConversationTurnId,
     "Stable identity for one immutable persisted conversation turn."
 );
+define_identifier!(
+    ConversationCompactionId,
+    "Stable identity for one checked append-only conversation compaction."
+);
 define_identifier!(TaskId, "Stable identity for one user-directed task.");
 define_identifier!(
     WorkPacketId,

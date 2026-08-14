@@ -1,12 +1,13 @@
 //! Canonical encrypted conversation storage behind the kernel boundary.
 
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
-    ApprovalId, CONTRACT_SCHEMA_VERSION, ConversationId, ConversationRecord, ConversationRetention,
-    ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
-    DataSensitivity, SessionCheckpoint, SessionCheckpointId, WorkspaceId, from_json,
-    to_canonical_json,
+    ApprovalId, CONTRACT_SCHEMA_VERSION, ConversationCompactionId, ConversationCompactionRecord,
+    ConversationId, ConversationRecord, ConversationRetention, ConversationRetentionKind,
+    ConversationStatus, ConversationTurn, ConversationTurnId, DataSensitivity, SessionCheckpoint,
+    SessionCheckpointId, WorkspaceId, from_json, to_canonical_json,
 };
 use rusqlite::{OptionalExtension, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -150,6 +151,8 @@ pub struct ConversationHistory {
     pub conversation: ConversationRecord,
     /// Hash-verified turns in strict ordinal order.
     pub turns: Vec<ConversationTurn>,
+    /// Checked append-only compactions in creation order.
+    pub compactions: Vec<ConversationCompactionRecord>,
     /// Fixed marker showing this view cannot mutate canonical state.
     pub read_only: bool,
 }
@@ -225,6 +228,8 @@ pub struct ConversationDeletionPreview {
     pub expected_record_sha256: String,
     /// Number of immutable turns that would be deleted.
     pub turn_count: u64,
+    /// Number of append-only checked compactions that would be deleted.
+    pub compaction_count: u64,
     /// Number of attachment references that would be deleted.
     pub attachment_reference_count: u64,
     /// Number of grant, receipt, checkpoint, citation, and source references deleted.
@@ -263,6 +268,8 @@ pub struct ConversationDeletionReceipt {
     pub approval_id_sha256: String,
     /// Number of immutable turns deleted.
     pub deleted_turn_count: u64,
+    /// Number of checked compactions deleted.
+    pub deleted_compaction_count: u64,
     /// Fixed true marker after one atomic committed deletion.
     pub deleted: bool,
 }
@@ -297,6 +304,23 @@ pub struct ConversationBranchPreview {
     pub preview_sha256: String,
     /// Fixed false marker: constructing a branch preview performs no write.
     pub applied: bool,
+}
+
+/// Content-free result of storing one checked append-only compaction.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationCompactionReceipt {
+    /// Stable conversation identity.
+    pub conversation_id: ConversationId,
+    /// Stable compaction identity.
+    pub compaction_id: ConversationCompactionId,
+    /// Digest of the canonical compaction record.
+    pub record_sha256: String,
+    /// Digest of the unchanged source history prefix.
+    pub source_history_sha256: String,
+    /// Fixed true marker after atomic canonical storage.
+    pub stored: bool,
+    /// Fixed false marker: source turns are never rewritten by compaction.
+    pub source_turns_rewritten: bool,
 }
 
 impl OperationalStore {
@@ -551,6 +575,83 @@ impl OperationalStore {
         Ok(Some(turn))
     }
 
+    /// Loads and verifies one append-only checked compaction against original turns.
+    pub fn conversation_compaction(
+        &self,
+        compaction_id: &ConversationCompactionId,
+    ) -> Result<Option<ConversationCompactionRecord>, ConversationLibraryError> {
+        let row = self
+            .connection
+            .query_row(
+                "SELECT record_sha256, record_json FROM conversation_compactions
+                 WHERE compaction_id=?1",
+                [compaction_id.as_str()],
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, Vec<u8>>(1)?)),
+            )
+            .optional()
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        let Some((expected_sha256, bytes)) = row else {
+            return Ok(None);
+        };
+        if sha256(&bytes) != expected_sha256 {
+            return Err(ConversationLibraryError::IntegrityFailure);
+        }
+        let record: ConversationCompactionRecord =
+            from_json(&bytes).map_err(|_| ConversationLibraryError::IntegrityFailure)?;
+        if &record.compaction_id != compaction_id {
+            return Err(ConversationLibraryError::IntegrityFailure);
+        }
+        self.validate_compaction_against_source(&record)
+            .map_err(|_| ConversationLibraryError::IntegrityFailure)?;
+        Ok(Some(record))
+    }
+
+    /// Stores one checked compaction without replacing or deleting original turns.
+    pub fn append_conversation_compaction(
+        &mut self,
+        record: &ConversationCompactionRecord,
+    ) -> Result<ConversationCompactionReceipt, ConversationLibraryError> {
+        self.validate_compaction_against_source(record)?;
+        let record_json =
+            to_canonical_json(record).map_err(|_| ConversationLibraryError::InvalidInput)?;
+        let record_sha256 = sha256(&record_json);
+        let through_turn = self
+            .conversation_turn(&record.through_turn_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let source_history_sha256 =
+            self.source_history_sha256(&record.conversation_id, through_turn.ordinal)?;
+        let inserted = self
+            .connection
+            .execute(
+                "INSERT OR IGNORE INTO conversation_compactions(
+                    compaction_id, conversation_id, through_turn_id, summary_id,
+                    created_at_epoch_ms, source_hash_set_sha256, record_sha256, record_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    record.compaction_id.as_str(),
+                    record.conversation_id.as_str(),
+                    record.through_turn_id.as_str(),
+                    record.summary.summary_id.as_str(),
+                    as_sql_integer(record.created_at_epoch_ms)?,
+                    &record.source_hash_set_sha256,
+                    &record_sha256,
+                    &record_json,
+                ],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if inserted != 1 {
+            return Err(ConversationLibraryError::DuplicateIdentity);
+        }
+        Ok(ConversationCompactionReceipt {
+            conversation_id: record.conversation_id.clone(),
+            compaction_id: record.compaction_id.clone(),
+            record_sha256,
+            source_history_sha256,
+            stored: true,
+            source_turns_rewritten: false,
+        })
+    }
+
     /// Searches canonical local conversations using bounded exact filters and literal text.
     pub fn search_conversations(
         &self,
@@ -584,7 +685,9 @@ impl OperationalStore {
             }
             let history = self.conversation_history(&conversation_id)?;
             let matching_preview = match &normalized_text {
-                Some(text) => search_preview(&conversation, &history.turns, text),
+                Some(text) => {
+                    search_preview(&conversation, &history.turns, &history.compactions, text)
+                }
                 None => None,
             };
             if normalized_text.is_some() && matching_preview.is_none() {
@@ -638,9 +741,23 @@ impl OperationalStore {
         if conversation.current_turn_id != expected_head {
             return Err(ConversationLibraryError::IntegrityFailure);
         }
+        let compaction_ids = query_strings(
+            &self.connection,
+            "SELECT compaction_id FROM conversation_compactions
+             WHERE conversation_id=?1 ORDER BY created_at_epoch_ms, compaction_id",
+            conversation_id.as_str(),
+        )?;
+        let mut compactions = Vec::with_capacity(compaction_ids.len());
+        for compaction_id in compaction_ids {
+            compactions.push(
+                self.conversation_compaction(&ConversationCompactionId::from_raw(compaction_id))?
+                    .ok_or(ConversationLibraryError::IntegrityFailure)?,
+            );
+        }
         Ok(ConversationHistory {
             conversation,
             turns,
+            compactions,
             read_only: true,
         })
     }
@@ -938,6 +1055,11 @@ impl OperationalStore {
             "SELECT COUNT(*) FROM conversation_turns WHERE conversation_id=?1",
             conversation_id.as_str(),
         )?;
+        let compaction_count = count_rows(
+            &self.connection,
+            "SELECT COUNT(*) FROM conversation_compactions WHERE conversation_id=?1",
+            conversation_id.as_str(),
+        )?;
         let attachment_reference_count = count_joined_rows(
             &self.connection,
             "conversation_turn_attachments",
@@ -964,6 +1086,7 @@ impl OperationalStore {
             conversation_id,
             &expected_record_sha256,
             turn_count,
+            compaction_count,
             attachment_reference_count,
             evidence_reference_count,
             &relationships.child_conversation_ids,
@@ -972,6 +1095,7 @@ impl OperationalStore {
             conversation_id: conversation_id.clone(),
             expected_record_sha256,
             turn_count,
+            compaction_count,
             attachment_reference_count,
             evidence_reference_count,
             blocking_child_conversation_ids: relationships.child_conversation_ids,
@@ -999,6 +1123,15 @@ impl OperationalStore {
             .connection
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        let deleted_compactions = transaction
+            .execute(
+                "DELETE FROM conversation_compactions WHERE conversation_id=?1",
+                [preview.conversation_id.as_str()],
+            )
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if deleted_compactions as u64 != preview.compaction_count {
+            return Err(ConversationLibraryError::Conflict);
+        }
         transaction
             .execute(
                 "UPDATE conversations SET current_turn_id=NULL WHERE conversation_id=?1 AND record_sha256=?2",
@@ -1037,6 +1170,7 @@ impl OperationalStore {
             preview_sha256: preview.preview_sha256.clone(),
             approval_id_sha256: sha256(approval.approval_id.as_str().as_bytes()),
             deleted_turn_count: preview.turn_count,
+            deleted_compaction_count: preview.compaction_count,
             deleted: true,
         })
     }
@@ -1106,6 +1240,108 @@ impl OperationalStore {
             .expect("writing to a String cannot fail");
         }
         Ok(sha256(value.as_bytes()))
+    }
+
+    fn validate_compaction_against_source(
+        &self,
+        record: &ConversationCompactionRecord,
+    ) -> Result<(), ConversationLibraryError> {
+        if record.schema_version != CONTRACT_SCHEMA_VERSION
+            || !valid_prefixed_id(record.compaction_id.as_str(), "compaction-")
+            || !valid_prefixed_id(record.conversation_id.as_str(), "conversation-")
+            || !valid_prefixed_id(record.through_turn_id.as_str(), "turn-")
+            || record.source_turn_ids.is_empty()
+            || record.source_turn_ids.len() > MAX_REFERENCES
+            || record.source_turn_ids.last() != Some(&record.through_turn_id)
+            || record.source_turn_ids.iter().collect::<BTreeSet<_>>().len()
+                != record.source_turn_ids.len()
+            || record.source_sha256.len() > MAX_REFERENCES
+            || !strict_unique_text(&record.source_sha256, 64)
+            || !record.source_sha256.iter().all(|value| valid_sha256(value))
+            || source_hash_set_digest(&record.source_sha256) != record.source_hash_set_sha256
+            || record.summary.source_set_sha256 != record.source_hash_set_sha256
+            || crate::context_management::evaluate_checked_summary(&record.summary)
+                != Ok(crate::context_management::SummaryUseDecision::UseSummary)
+        {
+            return Err(ConversationLibraryError::InvalidInput);
+        }
+        let history = self.conversation_history_without_compactions(&record.conversation_id)?;
+        if record.source_turn_ids.len() > history.len()
+            || history
+                .iter()
+                .take(record.source_turn_ids.len())
+                .map(|turn| &turn.turn_id)
+                .ne(record.source_turn_ids.iter())
+        {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        let source_turns = &history[..record.source_turn_ids.len()];
+        let citations = source_turns
+            .iter()
+            .flat_map(|turn| turn.citation_ids.iter().cloned())
+            .collect::<BTreeSet<_>>();
+        let receipts = source_turns
+            .iter()
+            .flat_map(|turn| {
+                turn.receipt_ids
+                    .iter()
+                    .map(|value| value.as_str().to_owned())
+            })
+            .collect::<BTreeSet<_>>();
+        let sources = source_turns
+            .iter()
+            .flat_map(|turn| turn.source_sha256.iter().cloned())
+            .collect::<BTreeSet<_>>();
+        if citations
+            != record
+                .summary
+                .citation_ids
+                .iter()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+            || receipts
+                != record
+                    .summary
+                    .receipt_ids
+                    .iter()
+                    .map(|value| value.as_str().to_owned())
+                    .collect::<BTreeSet<_>>()
+            || sources
+                != record
+                    .source_sha256
+                    .iter()
+                    .cloned()
+                    .collect::<BTreeSet<_>>()
+        {
+            return Err(ConversationLibraryError::Conflict);
+        }
+        Ok(())
+    }
+
+    fn conversation_history_without_compactions(
+        &self,
+        conversation_id: &ConversationId,
+    ) -> Result<Vec<ConversationTurn>, ConversationLibraryError> {
+        if self.conversation(conversation_id)?.is_none() {
+            return Err(ConversationLibraryError::NotFound);
+        }
+        let turn_ids = query_strings(
+            &self.connection,
+            "SELECT turn_id FROM conversation_turns
+             WHERE conversation_id=?1 ORDER BY ordinal",
+            conversation_id.as_str(),
+        )?;
+        let mut turns = Vec::with_capacity(turn_ids.len());
+        for (index, turn_id) in turn_ids.into_iter().enumerate() {
+            let turn = self
+                .conversation_turn(&ConversationTurnId::from_raw(turn_id))?
+                .ok_or(ConversationLibraryError::IntegrityFailure)?;
+            if turn.ordinal != index as u64 + 1 {
+                return Err(ConversationLibraryError::IntegrityFailure);
+            }
+            turns.push(turn);
+        }
+        Ok(turns)
     }
 }
 
@@ -1259,15 +1495,17 @@ fn deletion_preview_digest(
     conversation_id: &ConversationId,
     expected_record_sha256: &str,
     turn_count: u64,
+    compaction_count: u64,
     attachment_reference_count: u64,
     evidence_reference_count: u64,
     children: &[ConversationId],
 ) -> String {
     let mut value = format!(
-        "conversation-delete-v1\n{}\n{}\n{}\n{}\n{}\n",
+        "conversation-delete-v1\n{}\n{}\n{}\n{}\n{}\n{}\n",
         conversation_id.as_str(),
         expected_record_sha256,
         turn_count,
+        compaction_count,
         attachment_reference_count,
         evidence_reference_count,
     );
@@ -1293,6 +1531,7 @@ fn validate_deletion_preview(
             &preview.conversation_id,
             &preview.expected_record_sha256,
             preview.turn_count,
+            preview.compaction_count,
             preview.attachment_reference_count,
             preview.evidence_reference_count,
             &preview.blocking_child_conversation_ids,
@@ -1447,6 +1686,7 @@ fn conversation_matches(conversation: &ConversationRecord, query: &ConversationQ
 fn search_preview(
     conversation: &ConversationRecord,
     turns: &[ConversationTurn],
+    compactions: &[ConversationCompactionRecord],
     normalized_query: &str,
 ) -> Option<String> {
     if conversation.title.to_lowercase().contains(normalized_query) {
@@ -1483,11 +1723,43 @@ fn search_preview(
             }
         }
     }
+    for compaction in compactions {
+        if compaction
+            .summary
+            .summary
+            .to_lowercase()
+            .contains(normalized_query)
+        {
+            return Some(bounded_preview(&compaction.summary.summary));
+        }
+        for value in compaction
+            .summary
+            .paths
+            .iter()
+            .chain(&compaction.summary.errors)
+            .chain(&compaction.summary.identifiers)
+            .chain(&compaction.summary.commands)
+            .chain(&compaction.summary.decisions)
+            .chain(&compaction.summary.unresolved_questions)
+        {
+            if value.to_lowercase().contains(normalized_query) {
+                return Some(bounded_preview(value));
+            }
+        }
+    }
     None
 }
 
 fn bounded_preview(value: &str) -> String {
     value.chars().take(MAX_RESULT_PREVIEW_CHARS).collect()
+}
+
+fn source_hash_set_digest(source_sha256: &[String]) -> String {
+    let mut value = String::from("conversation-source-hashes-v1\n");
+    for source in source_sha256 {
+        writeln!(&mut value, "{source}").expect("writing to a String cannot fail");
+    }
+    sha256(value.as_bytes())
 }
 
 fn insert_turn_references(
@@ -1981,18 +2253,20 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        ApprovalId, CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, CloudSynchronizationMarker,
-        ConversationAttachmentReference, ConversationId, ConversationRecord, ConversationRetention,
-        ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
-        ConversationTurnRole, DataSensitivity, EvidenceId, GrantId, ModelProfileId, PlanId,
-        PlanStepId, PolicyId, ReceiptId, RepositorySnapshotId, SessionCheckpoint,
-        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId, WorkspaceId, to_canonical_json,
+        ApprovalId, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
+        CheckpointFileIdentity, CloudSynchronizationMarker, ContextSummaryId,
+        ConversationAttachmentReference, ConversationCompactionId, ConversationCompactionRecord,
+        ConversationId, ConversationRecord, ConversationRetention, ConversationRetentionKind,
+        ConversationStatus, ConversationTurn, ConversationTurnId, ConversationTurnRole,
+        DataSensitivity, EvidenceId, GrantId, ModelProfileId, PlanId, PlanStepId, PolicyId,
+        ReceiptId, RepositorySnapshotId, SessionCheckpoint, SessionCheckpointId, SessionId,
+        StorageFilesystemClass, StrictLocalStorageObservation, TaskId, WorkspaceId,
+        to_canonical_json,
     };
 
     use super::{
         ConversationDeletionApproval, ConversationLibraryError, ConversationMetadataChange,
-        ConversationQuery, sha256,
+        ConversationQuery, sha256, source_hash_set_digest,
     };
     use crate::context_management::{ResumeDirective, ResumeObservation, finalize_checkpoint};
     use crate::operational_store::{
@@ -2175,6 +2449,37 @@ mod tests {
             permission_profile_sha256: checkpoint.permission_profile_sha256.clone(),
             policy_id: checkpoint.policy_id.as_str().to_owned(),
             policy_sha256: checkpoint.policy_sha256.clone(),
+        }
+    }
+
+    fn compaction(first: &ConversationTurn) -> ConversationCompactionRecord {
+        let source_sha256 = first.source_sha256.clone();
+        let source_hash_set_sha256 = source_hash_set_digest(&source_sha256);
+        ConversationCompactionRecord {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            compaction_id: ConversationCompactionId::from_raw("compaction-alpha-1"),
+            conversation_id: first.conversation_id.clone(),
+            through_turn_id: first.turn_id.clone(),
+            source_turn_ids: vec![first.turn_id.clone()],
+            summary: CheckedContextSummary {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                summary_id: ContextSummaryId::from_raw("summary-alpha-1"),
+                state: CheckedSummaryState::Current,
+                summary: "Checked Bayesian continuity summary".to_owned(),
+                paths: Vec::new(),
+                errors: Vec::new(),
+                identifiers: Vec::new(),
+                commands: Vec::new(),
+                decisions: Vec::new(),
+                unresolved_questions: Vec::new(),
+                evidence_ids: Vec::new(),
+                citation_ids: first.citation_ids.clone(),
+                receipt_ids: first.receipt_ids.clone(),
+                source_set_sha256: source_hash_set_sha256.clone(),
+            },
+            source_sha256,
+            source_hash_set_sha256,
+            created_at_epoch_ms: first.created_at_epoch_ms + 10,
         }
     }
 
@@ -2814,6 +3119,120 @@ mod tests {
             Err(ConversationLibraryError::IntegrityFailure)
         );
         assert_eq!(store.conversation(&branch.conversation_id), Ok(None));
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn checked_compaction_preserves_all_references_and_original_turns() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        let first = turn(1, Some("full original evidence remains"));
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let compaction = compaction(&first);
+        let receipt = store
+            .append_conversation_compaction(&compaction)
+            .expect("compaction appends");
+        assert!(receipt.stored);
+        assert!(!receipt.source_turns_rewritten);
+        assert_eq!(
+            store.conversation_turn(&first.turn_id),
+            Ok(Some(first.clone()))
+        );
+        let history = store
+            .conversation_history(&conversation.conversation_id)
+            .expect("history reads");
+        assert_eq!(history.turns, vec![first]);
+        assert_eq!(history.compactions, vec![compaction.clone()]);
+        let hits = store
+            .search_conversations(&ConversationQuery {
+                text: Some("continuity summary".to_owned()),
+                limit: 10,
+                ..ConversationQuery::default()
+            })
+            .expect("summary search");
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            store.append_conversation_compaction(&compaction),
+            Err(ConversationLibraryError::DuplicateIdentity)
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn compaction_missing_citation_receipt_or_source_hash_is_rejected_without_state_change() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        let first = turn(1, Some("source evidence"));
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        let mut missing_citation = compaction(&first);
+        missing_citation.summary.citation_ids.clear();
+        assert_eq!(
+            store.append_conversation_compaction(&missing_citation),
+            Err(ConversationLibraryError::Conflict)
+        );
+        let mut missing_receipt = compaction(&first);
+        missing_receipt.summary.receipt_ids.clear();
+        assert_eq!(
+            store.append_conversation_compaction(&missing_receipt),
+            Err(ConversationLibraryError::Conflict)
+        );
+        let mut missing_source = compaction(&first);
+        missing_source.source_sha256.clear();
+        missing_source.source_hash_set_sha256 = source_hash_set_digest(&[]);
+        missing_source.summary.source_set_sha256 = missing_source.source_hash_set_sha256.clone();
+        assert_eq!(
+            store.append_conversation_compaction(&missing_source),
+            Err(ConversationLibraryError::Conflict)
+        );
+        assert!(
+            store
+                .conversation_history(&conversation.conversation_id)
+                .expect("history reads")
+                .compactions
+                .is_empty()
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn deletion_preview_counts_and_atomically_removes_checked_compactions() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        let first = turn(1, Some("compacted deletion"));
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("turn appends");
+        store
+            .append_conversation_compaction(&compaction(&first))
+            .expect("compaction appends");
+        let preview = store
+            .preview_conversation_deletion(&conversation.conversation_id)
+            .expect("deletion previews");
+        assert_eq!(preview.compaction_count, 1);
+        let approval = ConversationDeletionApproval {
+            approval_id: ApprovalId::from_raw("approval-compacted-delete"),
+            approved_preview_sha256: preview.preview_sha256.clone(),
+            decision_sha256: "f".repeat(64),
+            approved_at_epoch_ms: first.created_at_epoch_ms + 100,
+            user_confirmed: true,
+        };
+        let receipt = store
+            .delete_conversation(&preview, &approval)
+            .expect("deletion commits");
+        assert_eq!(receipt.deleted_compaction_count, 1);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 }

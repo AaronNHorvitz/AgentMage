@@ -4094,6 +4094,7 @@ mod tests {
             [
                 "actions",
                 "checkpoints",
+                "conversation_compactions",
                 "conversation_tags",
                 "conversation_turn_attachments",
                 "conversation_turn_checkpoints",

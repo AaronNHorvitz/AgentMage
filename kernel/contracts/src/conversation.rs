@@ -1,8 +1,9 @@
 //! Canonical local conversation and immutable turn contracts.
 
 use crate::{
-    CONTRACT_SCHEMA_VERSION, ConversationId, ConversationTurnId, DataSensitivity, GrantId,
-    ModelProfileId, ReceiptId, SessionCheckpointId, WorkspaceId,
+    CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ConversationCompactionId, ConversationId,
+    ConversationTurnId, DataSensitivity, GrantId, ModelProfileId, ReceiptId, SessionCheckpointId,
+    WorkspaceId,
 };
 
 /// Closed lifecycle state for one local conversation.
@@ -161,4 +162,28 @@ pub struct ConversationTurn {
     pub citation_ids: Vec<String>,
     /// Content hashes for original source evidence referenced by this turn.
     pub source_sha256: Vec<String>,
+}
+
+/// Append-only checked summary that preserves exact source and evidence relationships.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConversationCompactionRecord {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable compaction identity.
+    pub compaction_id: ConversationCompactionId,
+    /// Owning conversation identity.
+    pub conversation_id: ConversationId,
+    /// Last immutable source turn represented by the summary.
+    pub through_turn_id: ConversationTurnId,
+    /// Exact source turns in ordinal order; source turns remain canonical and unchanged.
+    pub source_turn_ids: Vec<ConversationTurnId>,
+    /// Checked summary retaining citation, receipt, evidence, and source-set identities.
+    pub summary: CheckedContextSummary,
+    /// Exact sorted source content hashes represented by the summary.
+    pub source_sha256: Vec<String>,
+    /// Digest of the exact ordered source hash set.
+    pub source_hash_set_sha256: String,
+    /// Trusted creation time as Unix epoch milliseconds.
+    pub created_at_epoch_ms: u64,
 }

@@ -89,6 +89,19 @@ CREATE TABLE conversation_turn_sources (
     FOREIGN KEY(turn_id) REFERENCES conversation_turns(turn_id) ON DELETE CASCADE
 ) STRICT;
 
+CREATE TABLE conversation_compactions (
+    compaction_id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    through_turn_id TEXT NOT NULL,
+    summary_id TEXT NOT NULL UNIQUE,
+    created_at_epoch_ms INTEGER NOT NULL CHECK(created_at_epoch_ms >= 0),
+    source_hash_set_sha256 TEXT NOT NULL CHECK(length(source_hash_set_sha256) = 64),
+    record_sha256 TEXT NOT NULL CHECK(length(record_sha256) = 64),
+    record_json BLOB NOT NULL,
+    FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE,
+    FOREIGN KEY(through_turn_id) REFERENCES conversation_turns(turn_id)
+) STRICT;
+
 CREATE INDEX conversations_date_idx ON conversations(local_date, conversation_id);
 CREATE INDEX conversations_workspace_idx ON conversations(workspace_id, conversation_id);
 CREATE INDEX conversations_project_idx ON conversations(project_id, conversation_id);
@@ -96,3 +109,5 @@ CREATE INDEX conversations_model_idx ON conversations(model_profile_id, conversa
 CREATE INDEX conversations_status_idx ON conversations(status, conversation_id);
 CREATE INDEX conversations_parent_idx ON conversations(parent_conversation_id, conversation_id);
 CREATE INDEX conversation_turns_timeline_idx ON conversation_turns(conversation_id, ordinal);
+CREATE INDEX conversation_compactions_timeline_idx
+    ON conversation_compactions(conversation_id, created_at_epoch_ms, compaction_id);
