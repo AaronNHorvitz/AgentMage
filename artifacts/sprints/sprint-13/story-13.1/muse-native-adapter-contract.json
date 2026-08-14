@@ -1,0 +1,134 @@
+{
+  "blockers": [
+    "exact-model-artifact-not-present",
+    "live-model-load-not-executed",
+    "live-zero-egress-campaign-not-executed",
+    "quality-and-repeatability-not-measured"
+  ],
+  "checks": [
+    {
+      "code": "inference-tests-pass",
+      "id": "inference-tests",
+      "result": "PASS"
+    },
+    {
+      "code": "inference-clippy-pass",
+      "id": "inference-clippy",
+      "result": "PASS"
+    },
+    {
+      "code": "candidate-admission-pass",
+      "id": "candidate-admission",
+      "result": "PASS"
+    },
+    {
+      "code": "runtime-package-pass",
+      "id": "runtime-package",
+      "result": "PASS"
+    },
+    {
+      "code": "profile-catalog-pass",
+      "id": "profile-catalog",
+      "result": "PASS"
+    },
+    {
+      "code": "package-identity-pass",
+      "id": "package-identity",
+      "result": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "inference-tests",
+      "output_sha256": "00e0cad5f9620ef5660069b074aed8482f96145adffcd0e9a6b3db675917e9ee"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "inference-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/muse_candidate_admission.py"
+      ],
+      "exit_code": 0,
+      "id": "candidate-admission",
+      "output_sha256": "94784517ff5b1048e6daa8b60f1c5c78c7ec4d064630a407a54e49427fefe231"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/muse_llama_runtime.py",
+        "--verify-package",
+        "release-output/agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64.tar.gz"
+      ],
+      "exit_code": 0,
+      "id": "runtime-package",
+      "output_sha256": "b6fefa0fc98e97b4da2e24c3169e1da911e67f1078b5fa6ae1faf46ff439bcd0"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/model_profile_catalog.mjs"
+      ],
+      "exit_code": 0,
+      "id": "profile-catalog",
+      "output_sha256": "b76b38d525472f678e7a10e739d83033a867e710e7b99a0f21150161f6cfc2f3"
+    }
+  ],
+  "disposition": {
+    "activation": false,
+    "adapter_contract_implemented": true,
+    "adapter_live_proven": false,
+    "automatic_fallback": false,
+    "enabled_models": 0,
+    "model_loaded": false,
+    "network_isolation_live_proven": false,
+    "quality_evaluated": false,
+    "release_approval": false,
+    "status": "CONTRACT-PASS-LIVE-BLOCKED"
+  },
+  "limitations": [
+    "Synthetic contract and process-boundary tests are not a real model execution.",
+    "A verified runtime package does not admit or activate a model profile.",
+    "Linux evidence cannot be reused as macOS, Windows, Docker, quality, or release evidence."
+  ],
+  "package": {
+    "bytes": 25449031,
+    "path": "release-output/agentmage-llama-cpp-b10423-muse-vulkan-linux-x86_64.tar.gz",
+    "sha256": "83d08dd70d46d55c9f576368c0a7ad6861e74b9bc93fe510d1ad965bcf43d31c"
+  },
+  "record_type": "muse_native_adapter_contract_evidence",
+  "schema_version": 1,
+  "source_revision": "bb6b0642b726cae30056c95521dd854130c74a58",
+  "source_sha256": {
+    "kernel/contracts/src/model.rs": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json": "b89a5580b0d5eebc25b95b5bcdebefb3797101e10055729ed269d2c44a607d97",
+    "model-profiles/exact-profile-catalog.json": "6db7317eb06b4eb3257206fd90b4d85dd391ec052b7144babeb04f49a71cb896",
+    "model-profiles/runtimes/llama-cpp-b10423-muse-linux-x86_64.json": "3255d01ab010cf958da13874402018195beeeaf387c3c2a519dbb5c11fc09e39",
+    "platforms/linux-inference/src/llama_server_driver.rs": "7dbe6add20d36a44b75f4820e85146e840e7d4a5d5521655d4c7bbdb0eee215e",
+    "platforms/linux-inference/src/native_model_adapter.rs": "9d8c4daba38ba3ca1aad74b0207202251ce98005cb60f13201fb776d79d3e8a1",
+    "scripts/muse_native_adapter_evidence.py": "09b23fa936306c205e30b684767cb61f8112aa58051ec8b7c8d666edcfce33a9",
+    "tests/test_muse_native_adapter_evidence.py": "bf3e5593bb81d76d6123a015f9bcc78166d67807f04cb311383184dcfb0419e4"
+  }
+}
