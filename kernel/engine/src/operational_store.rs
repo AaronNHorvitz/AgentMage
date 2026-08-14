@@ -34,7 +34,7 @@ use crate::policy::PolicyEngine;
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
 
-const SCHEMA_VERSION: i64 = 4;
+const SCHEMA_VERSION: i64 = 5;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -107,6 +107,8 @@ const MIGRATION_3_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0003-retention-lifecycle.sql");
 const MIGRATION_4_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0004-session-checkpoints.sql");
+const MIGRATION_5_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0005-conversation-library.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -437,7 +439,7 @@ impl std::error::Error for OperationalStoreError {}
 
 /// One exclusive SQLCipher connection to canonical authority state.
 pub struct OperationalStore {
-    connection: Connection,
+    pub(crate) connection: Connection,
     path: PathBuf,
     generation: u64,
     poisoned: bool,
@@ -1646,6 +1648,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 4_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 4;
+    }
+    if version == 4 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_5_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (5, ?1)",
+                [sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -1670,6 +1693,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
             (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
             (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
+            (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -3185,11 +3209,11 @@ mod tests {
 
     use super::{
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL,
-        MIGRATION_4_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_4_SCHEMA_SQL, MIGRATION_5_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -3613,7 +3637,7 @@ mod tests {
         let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
-        assert_eq!(backup_receipt.schema_version, 4);
+        assert_eq!(backup_receipt.schema_version, 5);
         assert_eq!(backup_receipt.generation, 0);
         assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
         assert_eq!(
@@ -4047,7 +4071,7 @@ mod tests {
     }
 
     #[test]
-    fn version_four_schema_is_normalized_closed_and_relational() {
+    fn version_five_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -4070,6 +4094,15 @@ mod tests {
             [
                 "actions",
                 "checkpoints",
+                "conversation_tags",
+                "conversation_turn_attachments",
+                "conversation_turn_checkpoints",
+                "conversation_turn_citations",
+                "conversation_turn_grants",
+                "conversation_turn_receipts",
+                "conversation_turn_sources",
+                "conversation_turns",
+                "conversations",
                 "decisions",
                 "evidence",
                 "files",
@@ -4407,7 +4440,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_four_with_exact_history() {
+    fn version_one_upgrades_through_five_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -4434,6 +4467,7 @@ mod tests {
                 (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
                 (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
                 (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
+                (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -5101,7 +5135,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 4));
+                assert_eq!((version, history), (SCHEMA_VERSION, 5));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

@@ -13,6 +13,7 @@ mod claim;
 mod classification;
 mod common;
 mod context;
+mod conversation;
 mod diagnostics;
 mod display_link;
 mod evidence;
@@ -74,6 +75,10 @@ pub use context::{
     ContextOmissionReason, ContextSensitivity, ResumeDriftDecision, ResumeDriftDimension,
     SessionCheckpoint,
 };
+pub use conversation::{
+    ConversationAttachmentReference, ConversationRecord, ConversationStatus, ConversationTurn,
+    ConversationTurnRole,
+};
 pub use diagnostics::{
     DiagnosticComponent, DiagnosticItem, DiagnosticObservation, DiagnosticState, DoctorReport,
 };
@@ -92,12 +97,12 @@ pub use handoff::{
 };
 pub use ids::{
     ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
-    ContextPacketId, ContextSummaryId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce,
-    ModelAdapterId, ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId,
-    ModelStreamId, OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId,
-    ProposalId, ReceiptId, RepositorySnapshotId, SchemaId, SessionCheckpointId, SessionId, TaskId,
-    ToolCallId, ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId,
-    WorkspaceAuthorizationId, WorkspaceId,
+    ContextPacketId, ContextSummaryId, ConversationId, ConversationTurnId, CorrelationId, ErrorId,
+    EvidenceId, GrantId, GrantNonce, ModelAdapterId, ModelCodecId, ModelManifestId, ModelMessageId,
+    ModelProfileId, ModelRunId, ModelStreamId, OperationAttemptId, PlanId, PlanStepId, PolicyId,
+    PostconditionId, PromptId, ProposalId, ReceiptId, RepositorySnapshotId, SchemaId,
+    SessionCheckpointId, SessionId, TaskId, ToolCallId, ToolCatalogId, ToolId, VerifierId,
+    VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
