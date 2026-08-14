@@ -314,8 +314,17 @@ def _validate_documents(
 def _validate_models(
     records: dict[str, Any], root: Path, failures: list[str]
 ) -> None:
-    if set(records) != set(EXPECTED_MODEL_DISPOSITIONS):
-        failures.append("current model set must contain exactly the evaluated Gemma candidates")
+    missing_historical = sorted(set(EXPECTED_MODEL_DISPOSITIONS) - set(records))
+    if missing_historical:
+        failures.append(
+            "current model set must preserve evaluated historical candidates: "
+            + ", ".join(missing_historical)
+        )
+    for model_id, record in records.items():
+        if record.get("enabled") is not False:
+            failures.append(f"model {model_id} must remain disabled before admission")
+        if record.get("automatic_fallback") is not False:
+            failures.append(f"model {model_id} cannot become an automatic fallback")
     for model_id, (path, expected_disposition) in EXPECTED_MODEL_DISPOSITIONS.items():
         record = records.get(model_id, {})
         if record.get("enabled") is not False:

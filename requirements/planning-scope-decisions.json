@@ -1,0 +1,1539 @@
+{
+  "current_source_hashes": {
+    "architecture/status-model.json": "94f82dbe2f0db086e6793cdc675c925c86dd210dcbb437ef53d38a8bf68d489a",
+    "requirements/additions-only-baseline.json": "4bedc23ae998b2848e88d328be1b057da3f3f7c24eff22f08bc69d0c7bca82ae",
+    "requirements/normative-map.json": "3fe913ff6d5c40da65aea24f1363a157b053b6c135a7cb8a97d40fb2a11fac26",
+    "requirements/registry.json": "07a12c8b5708ffb5ce7630b0aec0e9b35b458e64c4aad1b1c54cf8b6e80fa678"
+  },
+  "decisions": [
+    {
+      "after_snapshot": "post-0027",
+      "appended_normative_hashes": [
+        "0269aa0998cf6b0c7c2774d13c2c483bb3b168ecb4331899d242f93f29f1f38e",
+        "06600245429344ea5701efcd597adcb436e2d32a0994e8e2b17ddad239805d81",
+        "187ba288f458f95b2dc17bc769115783f9375ebf04865b567e6363d13beb95d0",
+        "54a0ed995bc8fa76b4bd6ceb00026a9c6b4177d28a46f8ce9026270cee37df71",
+        "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11",
+        "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4",
+        "d86cd199f9c90f042b02c68342e5014cf8bb05c563251c6810c884f5d31bc3ba",
+        "ff587751874cc3dedd48b71ba1e1b1341514243d840299f4fee60105a820b8ef"
+      ],
+      "appended_requirement_ids": [
+        "AM-AGT-001",
+        "AM-MDL-004",
+        "AM-MDL-005",
+        "AM-MDL-006",
+        "AM-MDL-007",
+        "AM-VSC-003",
+        "AT-AGENT-001",
+        "AT-CLASS-001",
+        "AT-MODEL-003",
+        "AT-MODEL-004",
+        "AT-MODEL-005",
+        "AT-VSC-003"
+      ],
+      "approval_markers": [
+        "| Status | Accepted scope and architecture refinement |",
+        "On 2026-08-12, the user explicitly approved Decision 0027"
+      ],
+      "before_snapshot": "pre-0027",
+      "document": "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md",
+      "id": "ADR-0027",
+      "source_sha256": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+      "status": "accepted",
+      "superseded_normative_hashes": [
+        "32f0d8ef319bc3f2c6599a17facc8312842c1c042d977c0800e21b6b2b1551f6",
+        "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62",
+        "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7",
+        "d0c88d1751710766eada9e05e77fb3984ef390389bab084e28003859f5299f8e"
+      ]
+    },
+    {
+      "after_snapshot": "post-0040",
+      "appended_normative_hashes": [
+        "9849a80bf4f792ef1584222fb664c393adcdd940d9315c5e260efb88fd437fe5",
+        "dfef02a533bb5c2dfc8b96ed1b0bb449979c8eef312f41f5a032403a9dde11f9"
+      ],
+      "appended_requirement_ids": [],
+      "approval_markers": [
+        "Accepted execution-policy decision.",
+        "The execution venue must not change evidence truth."
+      ],
+      "before_snapshot": "post-0027",
+      "document": "docs/decisions/0040-local-platform-validation-and-manual-macos.md",
+      "id": "ADR-0040",
+      "source_sha256": "79c1b2158aaee51cd438e8d736416df3b37579f4f2a8370357700870bb107ae8",
+      "status": "accepted",
+      "superseded_normative_hashes": [
+        "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+      ]
+    }
+  ],
+  "historical_source_hashes": {
+    "post-0027/requirements/normative-map.json": "a8d34d1c7663fa83ed3a8d9b987ba86199a1ec37977abfb6ac4254f6eb9b7108",
+    "post-0027/requirements/registry.json": "b7ff0bcd8f8d51e552f8bb47719536f34675542c5f34ee4a4505996a53ce45f7",
+    "pre-0027/requirements/normative-map.json": "03ae0955e01f553ba1286001900c0cfad77a142f482c295cca578498e6d946ae",
+    "pre-0027/requirements/registry.json": "e502983636f6665a169a5bcf544fd4d74a08f74af59b8c27a57d0ee65796a78f"
+  },
+  "model_direction": {
+    "historical_document": "docs/decisions/0001-product-security-and-runtime-baseline.md",
+    "historical_markers": [
+      "Gemma 4 E4B remains the initial candidate.",
+      "Gemma 4 12B Unified is the named, disabled fallback candidate"
+    ],
+    "superseded_assumptions": [
+      "one approved Gemma 4 E4B profile is the runtime prerequisite",
+      "the model picker is hard-coded to E4B",
+      "first-GA success depends on a Gemma candidate passing"
+    ],
+    "supersession_markers": [
+      "Muse-first implementation focus",
+      "Candidate-neutral model boundary",
+      "No model is enabled, downloaded, supported, or released by this decision."
+    ]
+  },
+  "required_negative_controls": [
+    "mutated-preserved-requirement",
+    "deleted-preserved-requirement",
+    "duplicated-preserved-requirement",
+    "reordered-preserved-requirement",
+    "renumbered-preserved-requirement",
+    "unapproved-added-requirement",
+    "missing-decision-approval",
+    "corrupt-appended-id-set",
+    "corrupt-status-count",
+    "corrupt-supersession-boundary",
+    "corrupt-generated-registry-linkage"
+  ],
+  "schema_version": 1,
+  "snapshots": {
+    "post-0027": {
+      "counts": {
+        "normative_mappings": 30,
+        "stable_requirements": 241
+      },
+      "normative_mappings": [
+        {
+          "heading": "5. Product Architecture",
+          "requirement_ids": [
+            "AM-KRN-001"
+          ],
+          "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
+        },
+        {
+          "heading": "5.1 Kernel",
+          "requirement_ids": [
+            "AM-KRN-001",
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+        },
+        {
+          "heading": "6. Target v0.1 User Experience",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "d67b774f233f094277ea45c7f4e4f02c89fcb9c447ad074728b04eebfd430abc"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-PRV-001",
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-MDL-003"
+          ],
+          "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-004"
+          ],
+          "statement_sha256": "d86cd199f9c90f042b02c68342e5014cf8bb05c563251c6810c884f5d31bc3ba"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-004",
+            "AM-MDL-005",
+            "AM-MDL-006"
+          ],
+          "statement_sha256": "54a0ed995bc8fa76b4bd6ceb00026a9c6b4177d28a46f8ce9026270cee37df71"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-006"
+          ],
+          "statement_sha256": "0269aa0998cf6b0c7c2774d13c2c483bb3b168ecb4331899d242f93f29f1f38e"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-007"
+          ],
+          "statement_sha256": "06600245429344ea5701efcd597adcb436e2d32a0994e8e2b17ddad239805d81"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-002",
+            "AM-MDL-005"
+          ],
+          "statement_sha256": "ff587751874cc3dedd48b71ba1e1b1341514243d840299f4fee60105a820b8ef"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-002",
+            "AM-MDL-005"
+          ],
+          "statement_sha256": "187ba288f458f95b2dc17bc769115783f9375ebf04865b567e6363d13beb95d0"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-INS-001"
+          ],
+          "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-003",
+            "AM-MDL-004",
+            "AM-SEC-001",
+            "AM-SEC-002",
+            "AM-VSC-001",
+            "AM-VSC-003"
+          ],
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
+        },
+        {
+          "heading": "10. Capability Grants",
+          "requirement_ids": [
+            "AM-AUT-001"
+          ],
+          "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
+        },
+        {
+          "heading": "11. Path Contract",
+          "requirement_ids": [
+            "AM-PTH-001"
+          ],
+          "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-REP-001",
+            "AM-SES-001"
+          ],
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        },
+        {
+          "heading": "13. Privacy, Encryption, and Retention",
+          "requirement_ids": [
+            "AM-PRV-001"
+          ],
+          "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
+        },
+        {
+          "heading": "14. Offline and Network Contract",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-004",
+            "AM-NET-001"
+          ],
+          "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-AGT-001",
+            "AM-EVD-001",
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-EVD-001"
+          ],
+          "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-MDL-004",
+            "AM-MDL-006",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-MDL-005",
+            "AM-MDL-006",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-DOC-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "requirement_ids": [
+        "AM-ACC-001",
+        "AM-ACT-001",
+        "AM-ADP-001",
+        "AM-AGT-001",
+        "AM-ART-001",
+        "AM-ATC-001",
+        "AM-AUR-001",
+        "AM-AUT-001",
+        "AM-AUT-002",
+        "AM-AWS-001",
+        "AM-AZR-001",
+        "AM-BIL-001",
+        "AM-BKC-001",
+        "AM-BNK-001",
+        "AM-BUD-001",
+        "AM-CAT-001",
+        "AM-CBA-001",
+        "AM-CBK-001",
+        "AM-CCST-001",
+        "AM-CEN-001",
+        "AM-CFG-001",
+        "AM-CIC-001",
+        "AM-CKP-001",
+        "AM-CLI-002",
+        "AM-CLO-001",
+        "AM-COM-001",
+        "AM-COMW-001",
+        "AM-CRD-001",
+        "AM-DAT-001",
+        "AM-DEL-001",
+        "AM-DEP-001",
+        "AM-DIA-001",
+        "AM-DOC-001",
+        "AM-DREP-001",
+        "AM-EML-001",
+        "AM-EVD-001",
+        "AM-EVD-002",
+        "AM-FANL-001",
+        "AM-FDOC-001",
+        "AM-FIMPORT-001",
+        "AM-FIN-001",
+        "AM-FPRV-001",
+        "AM-GA-001",
+        "AM-GAD-001",
+        "AM-GAD-002",
+        "AM-GAD-003",
+        "AM-GAD-004",
+        "AM-GCP-001",
+        "AM-GHE-001",
+        "AM-GIT-001",
+        "AM-GML-001",
+        "AM-HOF-001",
+        "AM-IAC-001",
+        "AM-IDN-001",
+        "AM-INC-001",
+        "AM-INS-001",
+        "AM-KRN-001",
+        "AM-LMAIL-001",
+        "AM-M365-001",
+        "AM-MAIL-001",
+        "AM-MCAT-001",
+        "AM-MDL-001",
+        "AM-MDL-002",
+        "AM-MDL-003",
+        "AM-MDL-004",
+        "AM-MDL-005",
+        "AM-MDL-006",
+        "AM-MDL-007",
+        "AM-MGR-001",
+        "AM-MTH-001",
+        "AM-MUSE-001",
+        "AM-NET-001",
+        "AM-OBS-001",
+        "AM-PCAL-001",
+        "AM-PGR-001",
+        "AM-PIM-001",
+        "AM-PLT-001",
+        "AM-PRV-001",
+        "AM-PTH-001",
+        "AM-RCN-001",
+        "AM-REL-001",
+        "AM-REP-001",
+        "AM-ROA-001",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-SEC-003",
+        "AM-SEM-001",
+        "AM-SES-001",
+        "AM-SLK-001",
+        "AM-SRC-001",
+        "AM-STR-001",
+        "AM-SUP-014",
+        "AM-SYNC-001",
+        "AM-TMS-001",
+        "AM-TOL-001",
+        "AM-TRU-001",
+        "AM-TST-001",
+        "AM-TST-002",
+        "AM-UIN-001",
+        "AM-VSC-001",
+        "AM-VSC-002",
+        "AM-VSC-003",
+        "AM-WEB-001",
+        "AM-WFA-001",
+        "AM-WIN-001",
+        "AM-WRK-001",
+        "AM-XOP-001",
+        "AM-XPR-001",
+        "AM-XTE-001",
+        "AT-ACC-001",
+        "AT-ACT-001",
+        "AT-ADP-001",
+        "AT-AGENT-001",
+        "AT-ARCH-001",
+        "AT-ART-001",
+        "AT-AUR-001",
+        "AT-AUT-001",
+        "AT-AUT-002",
+        "AT-AUTH-001",
+        "AT-AWS-001",
+        "AT-AZR-001",
+        "AT-BIL-001",
+        "AT-BKC-001",
+        "AT-BNK-001",
+        "AT-BUD-001",
+        "AT-CAT-001",
+        "AT-CBA-001",
+        "AT-CBK-001",
+        "AT-CCST-001",
+        "AT-CEN-001",
+        "AT-CFG-001",
+        "AT-CIC-001",
+        "AT-CKP-001",
+        "AT-CLASS-001",
+        "AT-CLI-002",
+        "AT-CLO-001",
+        "AT-COM-001",
+        "AT-COMW-001",
+        "AT-CRASH-001",
+        "AT-CRD-001",
+        "AT-DATA-001",
+        "AT-DEL-001",
+        "AT-DEP-001",
+        "AT-DIA-001",
+        "AT-DOC-001",
+        "AT-DREP-001",
+        "AT-EML-001",
+        "AT-EVD-001",
+        "AT-EVD-002",
+        "AT-EVD-003",
+        "AT-FANL-001",
+        "AT-FDOC-001",
+        "AT-FIMPORT-001",
+        "AT-FIN-001",
+        "AT-FPRV-001",
+        "AT-GA-001",
+        "AT-GA-002",
+        "AT-GA-003",
+        "AT-GA-004",
+        "AT-GCP-001",
+        "AT-GHE-001",
+        "AT-GIT-001",
+        "AT-GML-001",
+        "AT-HOF-001",
+        "AT-IAC-001",
+        "AT-IDN-001",
+        "AT-INC-001",
+        "AT-INJ-001",
+        "AT-INS-001",
+        "AT-LMAIL-001",
+        "AT-M365-001",
+        "AT-MAIL-001",
+        "AT-MCAT-001",
+        "AT-MGR-001",
+        "AT-MODEL-001",
+        "AT-MODEL-002",
+        "AT-MODEL-003",
+        "AT-MODEL-004",
+        "AT-MODEL-005",
+        "AT-MTH-001",
+        "AT-MUSE-001",
+        "AT-NET-001",
+        "AT-NET-002",
+        "AT-OBS-001",
+        "AT-PATH-001",
+        "AT-PCAL-001",
+        "AT-PERF-001",
+        "AT-PGR-001",
+        "AT-PIM-001",
+        "AT-PLAT-001",
+        "AT-PRIV-001",
+        "AT-PRIV-002",
+        "AT-QUAL-001",
+        "AT-RCN-001",
+        "AT-REL-001",
+        "AT-REP-001",
+        "AT-RESUME-001",
+        "AT-ROA-001",
+        "AT-ROUTE-001",
+        "AT-SBX-001",
+        "AT-SEC-001",
+        "AT-SEC-003",
+        "AT-SEM-001",
+        "AT-SLK-001",
+        "AT-SPEC-001",
+        "AT-SRC-001",
+        "AT-STR-001",
+        "AT-SUP-001",
+        "AT-SYNC-001",
+        "AT-TMS-001",
+        "AT-TOOL-001",
+        "AT-TRU-001",
+        "AT-UIN-001",
+        "AT-VSC-001",
+        "AT-VSC-002",
+        "AT-VSC-003",
+        "AT-WEB-001",
+        "AT-WFA-001",
+        "AT-WIN-001",
+        "AT-WRK-001",
+        "AT-XOP-001",
+        "AT-XPR-001",
+        "AT-XTE-001",
+        "CR-P0-DIA",
+        "CR-P0-EVAL",
+        "CR-P0-EVD",
+        "CR-P0-MDL",
+        "CR-P0-REP",
+        "CR-P0-TRUST",
+        "CR-P1-RET",
+        "CR-P1-ROL",
+        "CR-P1-SES",
+        "CR-P1-SKL",
+        "CR-P1-VAL",
+        "CR-P1-WKT",
+        "CR-P1-WRT",
+        "CR-P2-CLI",
+        "CR-P2-CON",
+        "CR-P2-JOB",
+        "CR-P2-MAG",
+        "CR-P2-MCP"
+      ],
+      "source_revision": "4a180115f697e4ccf6a1816f9b4bd6f275358324"
+    },
+    "post-0040": {
+      "counts": {
+        "normative_mappings": 31,
+        "stable_requirements": 241
+      },
+      "normative_mappings": [
+        {
+          "heading": "5. Product Architecture",
+          "requirement_ids": [
+            "AM-KRN-001"
+          ],
+          "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
+        },
+        {
+          "heading": "5.1 Kernel",
+          "requirement_ids": [
+            "AM-KRN-001",
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+        },
+        {
+          "heading": "6. Target v0.1 User Experience",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "d67b774f233f094277ea45c7f4e4f02c89fcb9c447ad074728b04eebfd430abc"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
+        },
+        {
+          "heading": "7.1 macOS Reference Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "9849a80bf4f792ef1584222fb664c393adcdd940d9315c5e260efb88fd437fe5"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-PRV-001",
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-MDL-003"
+          ],
+          "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-004"
+          ],
+          "statement_sha256": "d86cd199f9c90f042b02c68342e5014cf8bb05c563251c6810c884f5d31bc3ba"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-004",
+            "AM-MDL-005",
+            "AM-MDL-006"
+          ],
+          "statement_sha256": "54a0ed995bc8fa76b4bd6ceb00026a9c6b4177d28a46f8ce9026270cee37df71"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-006"
+          ],
+          "statement_sha256": "0269aa0998cf6b0c7c2774d13c2c483bb3b168ecb4331899d242f93f29f1f38e"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-007"
+          ],
+          "statement_sha256": "06600245429344ea5701efcd597adcb436e2d32a0994e8e2b17ddad239805d81"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-002",
+            "AM-MDL-005"
+          ],
+          "statement_sha256": "ff587751874cc3dedd48b71ba1e1b1341514243d840299f4fee60105a820b8ef"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-002",
+            "AM-MDL-005"
+          ],
+          "statement_sha256": "187ba288f458f95b2dc17bc769115783f9375ebf04865b567e6363d13beb95d0"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-INS-001"
+          ],
+          "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-003",
+            "AM-MDL-004",
+            "AM-SEC-001",
+            "AM-SEC-002",
+            "AM-VSC-001",
+            "AM-VSC-003"
+          ],
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
+        },
+        {
+          "heading": "10. Capability Grants",
+          "requirement_ids": [
+            "AM-AUT-001"
+          ],
+          "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
+        },
+        {
+          "heading": "11. Path Contract",
+          "requirement_ids": [
+            "AM-PTH-001"
+          ],
+          "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-REP-001",
+            "AM-SES-001"
+          ],
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        },
+        {
+          "heading": "13. Privacy, Encryption, and Retention",
+          "requirement_ids": [
+            "AM-PRV-001"
+          ],
+          "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
+        },
+        {
+          "heading": "14. Offline and Network Contract",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-004",
+            "AM-NET-001"
+          ],
+          "statement_sha256": "dfef02a533bb5c2dfc8b96ed1b0bb449979c8eef312f41f5a032403a9dde11f9"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-AGT-001",
+            "AM-EVD-001",
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-EVD-001"
+          ],
+          "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-MDL-004",
+            "AM-MDL-006",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-MDL-005",
+            "AM-MDL-006",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-DOC-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "requirement_ids": [
+        "AM-ACC-001",
+        "AM-ACT-001",
+        "AM-ADP-001",
+        "AM-AGT-001",
+        "AM-ART-001",
+        "AM-ATC-001",
+        "AM-AUR-001",
+        "AM-AUT-001",
+        "AM-AUT-002",
+        "AM-AWS-001",
+        "AM-AZR-001",
+        "AM-BIL-001",
+        "AM-BKC-001",
+        "AM-BNK-001",
+        "AM-BUD-001",
+        "AM-CAT-001",
+        "AM-CBA-001",
+        "AM-CBK-001",
+        "AM-CCST-001",
+        "AM-CEN-001",
+        "AM-CFG-001",
+        "AM-CIC-001",
+        "AM-CKP-001",
+        "AM-CLI-002",
+        "AM-CLO-001",
+        "AM-COM-001",
+        "AM-COMW-001",
+        "AM-CRD-001",
+        "AM-DAT-001",
+        "AM-DEL-001",
+        "AM-DEP-001",
+        "AM-DIA-001",
+        "AM-DOC-001",
+        "AM-DREP-001",
+        "AM-EML-001",
+        "AM-EVD-001",
+        "AM-EVD-002",
+        "AM-FANL-001",
+        "AM-FDOC-001",
+        "AM-FIMPORT-001",
+        "AM-FIN-001",
+        "AM-FPRV-001",
+        "AM-GA-001",
+        "AM-GAD-001",
+        "AM-GAD-002",
+        "AM-GAD-003",
+        "AM-GAD-004",
+        "AM-GCP-001",
+        "AM-GHE-001",
+        "AM-GIT-001",
+        "AM-GML-001",
+        "AM-HOF-001",
+        "AM-IAC-001",
+        "AM-IDN-001",
+        "AM-INC-001",
+        "AM-INS-001",
+        "AM-KRN-001",
+        "AM-LMAIL-001",
+        "AM-M365-001",
+        "AM-MAIL-001",
+        "AM-MCAT-001",
+        "AM-MDL-001",
+        "AM-MDL-002",
+        "AM-MDL-003",
+        "AM-MDL-004",
+        "AM-MDL-005",
+        "AM-MDL-006",
+        "AM-MDL-007",
+        "AM-MGR-001",
+        "AM-MTH-001",
+        "AM-MUSE-001",
+        "AM-NET-001",
+        "AM-OBS-001",
+        "AM-PCAL-001",
+        "AM-PGR-001",
+        "AM-PIM-001",
+        "AM-PLT-001",
+        "AM-PRV-001",
+        "AM-PTH-001",
+        "AM-RCN-001",
+        "AM-REL-001",
+        "AM-REP-001",
+        "AM-ROA-001",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-SEC-003",
+        "AM-SEM-001",
+        "AM-SES-001",
+        "AM-SLK-001",
+        "AM-SRC-001",
+        "AM-STR-001",
+        "AM-SUP-014",
+        "AM-SYNC-001",
+        "AM-TMS-001",
+        "AM-TOL-001",
+        "AM-TRU-001",
+        "AM-TST-001",
+        "AM-TST-002",
+        "AM-UIN-001",
+        "AM-VSC-001",
+        "AM-VSC-002",
+        "AM-VSC-003",
+        "AM-WEB-001",
+        "AM-WFA-001",
+        "AM-WIN-001",
+        "AM-WRK-001",
+        "AM-XOP-001",
+        "AM-XPR-001",
+        "AM-XTE-001",
+        "AT-ACC-001",
+        "AT-ACT-001",
+        "AT-ADP-001",
+        "AT-AGENT-001",
+        "AT-ARCH-001",
+        "AT-ART-001",
+        "AT-AUR-001",
+        "AT-AUT-001",
+        "AT-AUT-002",
+        "AT-AUTH-001",
+        "AT-AWS-001",
+        "AT-AZR-001",
+        "AT-BIL-001",
+        "AT-BKC-001",
+        "AT-BNK-001",
+        "AT-BUD-001",
+        "AT-CAT-001",
+        "AT-CBA-001",
+        "AT-CBK-001",
+        "AT-CCST-001",
+        "AT-CEN-001",
+        "AT-CFG-001",
+        "AT-CIC-001",
+        "AT-CKP-001",
+        "AT-CLASS-001",
+        "AT-CLI-002",
+        "AT-CLO-001",
+        "AT-COM-001",
+        "AT-COMW-001",
+        "AT-CRASH-001",
+        "AT-CRD-001",
+        "AT-DATA-001",
+        "AT-DEL-001",
+        "AT-DEP-001",
+        "AT-DIA-001",
+        "AT-DOC-001",
+        "AT-DREP-001",
+        "AT-EML-001",
+        "AT-EVD-001",
+        "AT-EVD-002",
+        "AT-EVD-003",
+        "AT-FANL-001",
+        "AT-FDOC-001",
+        "AT-FIMPORT-001",
+        "AT-FIN-001",
+        "AT-FPRV-001",
+        "AT-GA-001",
+        "AT-GA-002",
+        "AT-GA-003",
+        "AT-GA-004",
+        "AT-GCP-001",
+        "AT-GHE-001",
+        "AT-GIT-001",
+        "AT-GML-001",
+        "AT-HOF-001",
+        "AT-IAC-001",
+        "AT-IDN-001",
+        "AT-INC-001",
+        "AT-INJ-001",
+        "AT-INS-001",
+        "AT-LMAIL-001",
+        "AT-M365-001",
+        "AT-MAIL-001",
+        "AT-MCAT-001",
+        "AT-MGR-001",
+        "AT-MODEL-001",
+        "AT-MODEL-002",
+        "AT-MODEL-003",
+        "AT-MODEL-004",
+        "AT-MODEL-005",
+        "AT-MTH-001",
+        "AT-MUSE-001",
+        "AT-NET-001",
+        "AT-NET-002",
+        "AT-OBS-001",
+        "AT-PATH-001",
+        "AT-PCAL-001",
+        "AT-PERF-001",
+        "AT-PGR-001",
+        "AT-PIM-001",
+        "AT-PLAT-001",
+        "AT-PRIV-001",
+        "AT-PRIV-002",
+        "AT-QUAL-001",
+        "AT-RCN-001",
+        "AT-REL-001",
+        "AT-REP-001",
+        "AT-RESUME-001",
+        "AT-ROA-001",
+        "AT-ROUTE-001",
+        "AT-SBX-001",
+        "AT-SEC-001",
+        "AT-SEC-003",
+        "AT-SEM-001",
+        "AT-SLK-001",
+        "AT-SPEC-001",
+        "AT-SRC-001",
+        "AT-STR-001",
+        "AT-SUP-001",
+        "AT-SYNC-001",
+        "AT-TMS-001",
+        "AT-TOOL-001",
+        "AT-TRU-001",
+        "AT-UIN-001",
+        "AT-VSC-001",
+        "AT-VSC-002",
+        "AT-VSC-003",
+        "AT-WEB-001",
+        "AT-WFA-001",
+        "AT-WIN-001",
+        "AT-WRK-001",
+        "AT-XOP-001",
+        "AT-XPR-001",
+        "AT-XTE-001",
+        "CR-P0-DIA",
+        "CR-P0-EVAL",
+        "CR-P0-EVD",
+        "CR-P0-MDL",
+        "CR-P0-REP",
+        "CR-P0-TRUST",
+        "CR-P1-RET",
+        "CR-P1-ROL",
+        "CR-P1-SES",
+        "CR-P1-SKL",
+        "CR-P1-VAL",
+        "CR-P1-WKT",
+        "CR-P1-WRT",
+        "CR-P2-CLI",
+        "CR-P2-CON",
+        "CR-P2-JOB",
+        "CR-P2-MAG",
+        "CR-P2-MCP"
+      ],
+      "source_revision": "d0ab2ca9842a5ebd13d489c5595abd832110eea1"
+    },
+    "pre-0027": {
+      "counts": {
+        "normative_mappings": 26,
+        "stable_requirements": 229
+      },
+      "normative_mappings": [
+        {
+          "heading": "5. Product Architecture",
+          "requirement_ids": [
+            "AM-KRN-001"
+          ],
+          "statement_sha256": "f66e681a353f4bd01487c7fee2ab9f2405b6cf6163f548bef2a5ed5e42e00a0c"
+        },
+        {
+          "heading": "5.1 Kernel",
+          "requirement_ids": [
+            "AM-KRN-001",
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "04a0e63bea8139515310a821e930aebbfcd48c96834ceea42db828283c2b2823"
+        },
+        {
+          "heading": "6. Target v0.1 User Experience",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "62595649a864734f68331f79cf424e4507e907a46b361d71d202c2f92a393503"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001"
+          ],
+          "statement_sha256": "d67b774f233f094277ea45c7f4e4f02c89fcb9c447ad074728b04eebfd430abc"
+        },
+        {
+          "heading": "7. Platform and Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "d15fb03191a2a4482eafb257312988e67e5996e0c6e92865fbff27dd98aa8f1b"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-PLT-001",
+            "AM-PRV-001",
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "0b290dbbc0282fd56f58f69138d9382f5d941d3340a6958310b4eeaf9b8173f7"
+        },
+        {
+          "heading": "7.2 Fedora and Ubuntu Runtime",
+          "requirement_ids": [
+            "AM-MDL-003"
+          ],
+          "statement_sha256": "3ac541758adf8ac1e746f395015222efce0758b6ebd52219bdffb0fed10d7859"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-003"
+          ],
+          "statement_sha256": "d0c88d1751710766eada9e05e77fb3984ef390389bab084e28003859f5299f8e"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-001"
+          ],
+          "statement_sha256": "32f0d8ef319bc3f2c6599a17facc8312842c1c042d977c0800e21b6b2b1551f6"
+        },
+        {
+          "heading": "8. Model Policy and Routing",
+          "requirement_ids": [
+            "AM-MDL-002"
+          ],
+          "statement_sha256": "a1331106e8b0702e4c9d2d5ea0db4a15f62c5ce5880795eade5387397b5f06e7"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-INS-001"
+          ],
+          "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-MDL-003",
+            "AM-SEC-001",
+            "AM-SEC-002",
+            "AM-VSC-001"
+          ],
+          "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
+        },
+        {
+          "heading": "9. Threat Model and Process Boundaries",
+          "requirement_ids": [
+            "AM-SEC-001"
+          ],
+          "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
+        },
+        {
+          "heading": "10. Capability Grants",
+          "requirement_ids": [
+            "AM-AUT-001"
+          ],
+          "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
+        },
+        {
+          "heading": "11. Path Contract",
+          "requirement_ids": [
+            "AM-PTH-001"
+          ],
+          "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001"
+          ],
+          "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
+        },
+        {
+          "heading": "12. Canonical Data and Storage",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-REP-001",
+            "AM-SES-001"
+          ],
+          "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
+        },
+        {
+          "heading": "13. Privacy, Encryption, and Retention",
+          "requirement_ids": [
+            "AM-PRV-001"
+          ],
+          "statement_sha256": "9eb9a798f5e5dea5fa0199dbb9b9edb112c042c2ff5fee7b9dd73c276593e84b"
+        },
+        {
+          "heading": "14. Offline and Network Contract",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-NET-001"
+          ],
+          "statement_sha256": "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
+        },
+        {
+          "heading": "15. Codex Handoff Boundary",
+          "requirement_ids": [
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-EVD-001",
+            "AM-HOF-001"
+          ],
+          "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
+        },
+        {
+          "heading": "16. Evidence and Completion",
+          "requirement_ids": [
+            "AM-DAT-001",
+            "AM-EVD-001"
+          ],
+          "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-MDL-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "3f4f297bbc6e1981ce92b2bcac5810aed27d9dca4046fed0fa28ac08443f7d62"
+        },
+        {
+          "heading": "17. Release Acceptance",
+          "requirement_ids": [
+            "AM-DOC-001",
+            "AM-TST-001",
+            "AM-TST-002"
+          ],
+          "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
+        }
+      ],
+      "requirement_ids": [
+        "AM-ACC-001",
+        "AM-ACT-001",
+        "AM-ADP-001",
+        "AM-ART-001",
+        "AM-ATC-001",
+        "AM-AUR-001",
+        "AM-AUT-001",
+        "AM-AUT-002",
+        "AM-AWS-001",
+        "AM-AZR-001",
+        "AM-BIL-001",
+        "AM-BKC-001",
+        "AM-BNK-001",
+        "AM-BUD-001",
+        "AM-CAT-001",
+        "AM-CBA-001",
+        "AM-CBK-001",
+        "AM-CCST-001",
+        "AM-CEN-001",
+        "AM-CFG-001",
+        "AM-CIC-001",
+        "AM-CKP-001",
+        "AM-CLI-002",
+        "AM-CLO-001",
+        "AM-COM-001",
+        "AM-COMW-001",
+        "AM-CRD-001",
+        "AM-DAT-001",
+        "AM-DEL-001",
+        "AM-DEP-001",
+        "AM-DIA-001",
+        "AM-DOC-001",
+        "AM-DREP-001",
+        "AM-EML-001",
+        "AM-EVD-001",
+        "AM-EVD-002",
+        "AM-FANL-001",
+        "AM-FDOC-001",
+        "AM-FIMPORT-001",
+        "AM-FIN-001",
+        "AM-FPRV-001",
+        "AM-GA-001",
+        "AM-GAD-001",
+        "AM-GAD-002",
+        "AM-GAD-003",
+        "AM-GAD-004",
+        "AM-GCP-001",
+        "AM-GHE-001",
+        "AM-GIT-001",
+        "AM-GML-001",
+        "AM-HOF-001",
+        "AM-IAC-001",
+        "AM-IDN-001",
+        "AM-INC-001",
+        "AM-INS-001",
+        "AM-KRN-001",
+        "AM-LMAIL-001",
+        "AM-M365-001",
+        "AM-MAIL-001",
+        "AM-MCAT-001",
+        "AM-MDL-001",
+        "AM-MDL-002",
+        "AM-MDL-003",
+        "AM-MGR-001",
+        "AM-MTH-001",
+        "AM-MUSE-001",
+        "AM-NET-001",
+        "AM-OBS-001",
+        "AM-PCAL-001",
+        "AM-PGR-001",
+        "AM-PIM-001",
+        "AM-PLT-001",
+        "AM-PRV-001",
+        "AM-PTH-001",
+        "AM-RCN-001",
+        "AM-REL-001",
+        "AM-REP-001",
+        "AM-ROA-001",
+        "AM-SEC-001",
+        "AM-SEC-002",
+        "AM-SEC-003",
+        "AM-SEM-001",
+        "AM-SES-001",
+        "AM-SLK-001",
+        "AM-SRC-001",
+        "AM-STR-001",
+        "AM-SUP-014",
+        "AM-SYNC-001",
+        "AM-TMS-001",
+        "AM-TOL-001",
+        "AM-TRU-001",
+        "AM-TST-001",
+        "AM-TST-002",
+        "AM-UIN-001",
+        "AM-VSC-001",
+        "AM-VSC-002",
+        "AM-WEB-001",
+        "AM-WFA-001",
+        "AM-WIN-001",
+        "AM-WRK-001",
+        "AM-XOP-001",
+        "AM-XPR-001",
+        "AM-XTE-001",
+        "AT-ACC-001",
+        "AT-ACT-001",
+        "AT-ADP-001",
+        "AT-ARCH-001",
+        "AT-ART-001",
+        "AT-AUR-001",
+        "AT-AUT-001",
+        "AT-AUT-002",
+        "AT-AUTH-001",
+        "AT-AWS-001",
+        "AT-AZR-001",
+        "AT-BIL-001",
+        "AT-BKC-001",
+        "AT-BNK-001",
+        "AT-BUD-001",
+        "AT-CAT-001",
+        "AT-CBA-001",
+        "AT-CBK-001",
+        "AT-CCST-001",
+        "AT-CEN-001",
+        "AT-CFG-001",
+        "AT-CIC-001",
+        "AT-CKP-001",
+        "AT-CLI-002",
+        "AT-CLO-001",
+        "AT-COM-001",
+        "AT-COMW-001",
+        "AT-CRASH-001",
+        "AT-CRD-001",
+        "AT-DATA-001",
+        "AT-DEL-001",
+        "AT-DEP-001",
+        "AT-DIA-001",
+        "AT-DOC-001",
+        "AT-DREP-001",
+        "AT-EML-001",
+        "AT-EVD-001",
+        "AT-EVD-002",
+        "AT-EVD-003",
+        "AT-FANL-001",
+        "AT-FDOC-001",
+        "AT-FIMPORT-001",
+        "AT-FIN-001",
+        "AT-FPRV-001",
+        "AT-GA-001",
+        "AT-GA-002",
+        "AT-GA-003",
+        "AT-GA-004",
+        "AT-GCP-001",
+        "AT-GHE-001",
+        "AT-GIT-001",
+        "AT-GML-001",
+        "AT-HOF-001",
+        "AT-IAC-001",
+        "AT-IDN-001",
+        "AT-INC-001",
+        "AT-INJ-001",
+        "AT-INS-001",
+        "AT-LMAIL-001",
+        "AT-M365-001",
+        "AT-MAIL-001",
+        "AT-MCAT-001",
+        "AT-MGR-001",
+        "AT-MODEL-001",
+        "AT-MODEL-002",
+        "AT-MTH-001",
+        "AT-MUSE-001",
+        "AT-NET-001",
+        "AT-NET-002",
+        "AT-OBS-001",
+        "AT-PATH-001",
+        "AT-PCAL-001",
+        "AT-PERF-001",
+        "AT-PGR-001",
+        "AT-PIM-001",
+        "AT-PLAT-001",
+        "AT-PRIV-001",
+        "AT-PRIV-002",
+        "AT-QUAL-001",
+        "AT-RCN-001",
+        "AT-REL-001",
+        "AT-REP-001",
+        "AT-RESUME-001",
+        "AT-ROA-001",
+        "AT-ROUTE-001",
+        "AT-SBX-001",
+        "AT-SEC-001",
+        "AT-SEC-003",
+        "AT-SEM-001",
+        "AT-SLK-001",
+        "AT-SPEC-001",
+        "AT-SRC-001",
+        "AT-STR-001",
+        "AT-SUP-001",
+        "AT-SYNC-001",
+        "AT-TMS-001",
+        "AT-TOOL-001",
+        "AT-TRU-001",
+        "AT-UIN-001",
+        "AT-VSC-001",
+        "AT-VSC-002",
+        "AT-WEB-001",
+        "AT-WFA-001",
+        "AT-WIN-001",
+        "AT-WRK-001",
+        "AT-XOP-001",
+        "AT-XPR-001",
+        "AT-XTE-001",
+        "CR-P0-DIA",
+        "CR-P0-EVAL",
+        "CR-P0-EVD",
+        "CR-P0-MDL",
+        "CR-P0-REP",
+        "CR-P0-TRUST",
+        "CR-P1-RET",
+        "CR-P1-ROL",
+        "CR-P1-SES",
+        "CR-P1-SKL",
+        "CR-P1-VAL",
+        "CR-P1-WKT",
+        "CR-P1-WRT",
+        "CR-P2-CLI",
+        "CR-P2-CON",
+        "CR-P2-JOB",
+        "CR-P2-MAG",
+        "CR-P2-MCP"
+      ],
+      "source_revision": "99d5d93c9656c25cfd40f7586b38a6e5d8cfb6da"
+    }
+  }
+}

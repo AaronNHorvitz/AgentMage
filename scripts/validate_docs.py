@@ -9,8 +9,10 @@ from pathlib import Path
 from urllib.parse import unquote
 
 try:
+    from scripts.planning_scope import build_report as build_planning_scope_report
     from scripts.status_model import load_json, load_status_model, validate_status_model
 except ModuleNotFoundError:  # Direct execution adds scripts/, not the repository root.
+    from planning_scope import build_report as build_planning_scope_report
     from status_model import load_json, load_status_model, validate_status_model
 
 
@@ -645,6 +647,11 @@ def main() -> int:
         )
     except (OSError, ValueError) as error:
         failures.append(f"current status validation could not run: {error}")
+    try:
+        planning_failures, _ = build_planning_scope_report()
+        failures.extend(planning_failures)
+    except (OSError, ValueError) as error:
+        failures.append(f"decision-aware planning validation could not run: {error}")
 
     if failures:
         print("Documentation validation failed:", file=sys.stderr)
