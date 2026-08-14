@@ -50,16 +50,13 @@ fn sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn adapter(
-    profile: &ExactModelProfile,
-    socket_name: &str,
-) -> LinuxNativeModelAdapter<LlamaServerDriver> {
+fn adapter(profile: &ExactModelProfile) -> LinuxNativeModelAdapter<LlamaServerDriver> {
     let store = required_path("AGENTMAGE_MUSE_STORE");
     let driver = LlamaServerDriver::new(
         LlamaServerDriverConfig::new(
             required_path("AGENTMAGE_MUSE_RUNTIME_ROOT"),
             store.join(format!("{}.gguf", profile.artifact.sha256)),
-            required_path("AGENTMAGE_MUSE_SOCKET_ROOT").join(socket_name),
+            required_path("AGENTMAGE_MUSE_SOCKET_ROOT").join("llama-server.sock"),
             profile.runtime.clone(),
             Duration::from_secs(600),
         )
@@ -228,7 +225,7 @@ fn response_bytes(capture: &Capture) -> Vec<u8> {
 fn evaluate_quality() -> (Vec<CaseSummary>, u64, u64) {
     let profile = profile(QUALITY_PROFILE);
     let codec = MuseAtemFamilyCodec::new(profile.codec.clone()).expect("quality codec");
-    let mut runtime = adapter(&profile, "quality.sock");
+    let mut runtime = adapter(&profile);
     runtime.load(&profile).expect("quality load");
     let mut summaries = Vec::new();
     for case in CASES {
@@ -300,6 +297,11 @@ fn evaluate_quality() -> (Vec<CaseSummary>, u64, u64) {
             .expect("quality unload")
             .empty
     );
+    assert!(
+        !required_path("AGENTMAGE_MUSE_SOCKET_ROOT")
+            .join("llama-server.sock")
+            .exists()
+    );
     (
         summaries,
         resources.resident_memory_bytes,
@@ -310,7 +312,7 @@ fn evaluate_quality() -> (Vec<CaseSummary>, u64, u64) {
 fn evaluate_repeatability() -> Vec<String> {
     let profile = profile(REPEAT_PROFILE);
     let codec = MuseAtemFamilyCodec::new(profile.codec.clone()).expect("repeat codec");
-    let mut runtime = adapter(&profile, "repeat.sock");
+    let mut runtime = adapter(&profile);
     runtime.load(&profile).expect("repeat load");
     let case = &CASES[0];
     let packet = packet(&profile, case.id, case.prompt);
