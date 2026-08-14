@@ -22,7 +22,7 @@
     "macos_implementation_claim": "none",
     "shared_contracts": "verified-local"
   },
-  "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+  "reference_revision": "b7aae292cf9ffe05eb08bfacbc7ef190c0eb488e",
   "schema_version": 1,
   "sources": [
     {
@@ -67,7 +67,7 @@
     },
     {
       "path": "kernel/engine/tests/grant_review_fixtures.rs",
-      "sha256": "9ef43e8b54a75844126fb55b3a81a32b6ab74be92dd5b77556da8ebba3e8950a"
+      "sha256": "b4b3630dbe03c4856b5758611d5ec6ebc64748768afcb92cb9b72e3ab5cf2ded"
     },
     {
       "path": "scripts/grant_review_fixtures.py",
