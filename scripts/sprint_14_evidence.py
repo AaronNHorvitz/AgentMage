@@ -9,13 +9,17 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Final
 
-from scripts import model_candidate_inventory as candidate_inventory
-
-
 ROOT: Final = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts import model_candidate_inventory as candidate_inventory  # noqa: E402
+
+
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-14/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
