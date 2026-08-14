@@ -1,0 +1,99 @@
+{
+  "artifact_id": "task-12-1-2-3-runtime-transcripts",
+  "case_ids": [
+    "TSC-01",
+    "TSC-02",
+    "TSC-03",
+    "TSC-04",
+    "TSC-05"
+  ],
+  "claims": {
+    "accepted_interruption_case_count": 2,
+    "external_network_used": false,
+    "false_success_claim_count": 0,
+    "final_response_state_count": 6,
+    "focused_case_count": 5,
+    "manual_fuzzing_executed": false,
+    "model_executions": 0,
+    "platform_executions": 0,
+    "private_user_data_records": 0,
+    "refused_interruption_case_count": 3,
+    "release_support": false,
+    "status_case_count": 1,
+    "tool_executions": 0,
+    "transcript_case_count": 12
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The retained records are deterministic synthetic transcripts, not production session recordings.",
+    "Declared descendant propagation does not prove operating-system process termination or cleanup.",
+    "No live model, tool, shell, platform adapter, filesystem effect, or network request executes.",
+    "The artifact contains no private user data and retains only synthetic identities and content.",
+    "Persistence, restart recovery, UI integration, cross-platform execution, packaging, release acceptance, and manual fuzzing remain later gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "644081745b1e1c09c684da68c0a5557a50b606c6",
+  "sources": [
+    {
+      "bytes": 2594,
+      "path": "docs/verification/task-12-1-2-3-runtime-transcript-results.md",
+      "sha256": "47c0c1522b3a89c07988e8255cd3f02002f30e39dd93f7d7570985b6da224211"
+    },
+    {
+      "bytes": 14855,
+      "path": "fixtures/runtime/v1/session-transcripts.json",
+      "sha256": "052a698eeac37177125aa78d68748e0043a7fd5691b37b48a93c8d5593273a9e"
+    },
+    {
+      "bytes": 16285,
+      "path": "scripts/runtime_transcript_bundle.py",
+      "sha256": "5c663e056e08fdfee7bd9d7ce0da056b76a29b48f61a29823f73744bac5e6572"
+    },
+    {
+      "bytes": 2147,
+      "path": "tests/test_runtime_transcript_bundle.py",
+      "sha256": "c381f927aa1d6766838a5aa4dc1089b0ee8e5e6ffd8d810c3230c7bcb617056b"
+    },
+    {
+      "bytes": 10280,
+      "path": "scripts/runtime_transcript_evidence.py",
+      "sha256": "ee8b6bbc179b7527d472a451e3f1fb3dd98039fe19e4c87b7eb1b6c212d98fcb"
+    },
+    {
+      "bytes": 3313,
+      "path": "tests/test_runtime_transcript_evidence.py",
+      "sha256": "bfeaf443e7a92e893ee3834c354e6fcf2717bf55b80ece58a7a3acd9b8670d16"
+    }
+  ],
+  "status": "pass-runtime-transcripts",
+  "task_ids": [
+    "12.1.2.3"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "beafd722ff9094d1876c54f0f268023497f0647987aa1a604bfd09e8bfabf0ee",
+      "exit_code": 0,
+      "expected_marker_sha256": "d799279fcde9e83f766b5e72b5e20035abb2f2efe25f7b12590dca614abf499d",
+      "status": "pass"
+    },
+    {
+      "command_id": "a7949cbe61eb47e67eecbb59e80c6e5e00563e4e5a38c556d45bf2423b3c3126",
+      "exit_code": 0,
+      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "status": "pass"
+    },
+    {
+      "command_id": "afa1aa2d87608f17ee4f933bbbb60735ab8850253fb2476316afbfc4b1865a84",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    }
+  ]
+}
