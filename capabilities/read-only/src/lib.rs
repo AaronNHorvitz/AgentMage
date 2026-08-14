@@ -5,11 +5,18 @@
 use agentmage_kernel_contracts::ToolDefinition;
 
 mod catalog;
+mod protocol;
 
 pub use catalog::{
     READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_ID,
     READ_ONLY_OUTPUT_SCHEMA_JSON, READ_ONLY_TOOL_VERSION, ReadOnlyToolKind,
     read_only_tool_definition, read_only_tool_definitions, read_only_tool_kind,
+};
+pub use protocol::{
+    MAX_READ_ONLY_CALL_DEPTH, MAX_READ_ONLY_DEPTH, MAX_READ_ONLY_FILES, MAX_READ_ONLY_INPUT_BYTES,
+    MAX_READ_ONLY_MATCHES, MAX_READ_ONLY_OUTPUT_BYTES, NeverCancelled, ReadOnlyCancellation,
+    ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest,
+    ReadOnlyResult, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
 };
 
 /// Stable component identity used by diagnostics and build verification.
