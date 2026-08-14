@@ -4,7 +4,8 @@ use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ConversationId, ConversationRecord, ConversationStatus,
-    ConversationTurn, ConversationTurnId, DataSensitivity, from_json, to_canonical_json,
+    ConversationTurn, ConversationTurnId, DataSensitivity, WorkspaceId, from_json,
+    to_canonical_json,
 };
 use rusqlite::{OptionalExtension, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -21,6 +22,10 @@ const MAX_REFERENCES: usize = 512;
 const MAX_REFERENCE_ID_BYTES: usize = 256;
 const MAX_ATTACHMENT_NAME_BYTES: usize = 512;
 const MAX_MEDIA_TYPE_BYTES: usize = 256;
+const MAX_QUERY_BYTES: usize = 512;
+const MAX_QUERY_RESULTS: u32 = 1_000;
+const MAX_CONVERSATION_SCAN: usize = 100_000;
+const MAX_RESULT_PREVIEW_CHARS: usize = 256;
 
 /// Stable content-free conversation storage failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -80,6 +85,82 @@ pub struct ConversationMutationReceipt {
     pub turn_sha256: Option<String>,
     /// Fixed true marker: this API writes only through the encrypted canonical store.
     pub encrypted_canonical_store: bool,
+}
+
+/// Closed bounded local conversation query.
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+pub struct ConversationQuery {
+    /// Inclusive local start date in `YYYY-MM-DD` form.
+    pub from_local_date: Option<String>,
+    /// Inclusive local end date in `YYYY-MM-DD` form.
+    pub to_local_date: Option<String>,
+    /// Case-insensitive literal matched against title and retained turn metadata/content.
+    pub text: Option<String>,
+    /// Exact workspace identity.
+    pub workspace_id: Option<WorkspaceId>,
+    /// Exact project identity.
+    pub project_id: Option<String>,
+    /// Exact model profile identity.
+    pub model_profile_id: Option<agentmage_kernel_contracts::ModelProfileId>,
+    /// Exact lifecycle state.
+    pub status: Option<ConversationStatus>,
+    /// Exact tag.
+    pub tag: Option<String>,
+    /// Optional pinned-state filter.
+    pub pinned: Option<bool>,
+    /// Whether archived records may appear without an explicit archived status filter.
+    pub include_archived: bool,
+    /// Maximum result count.
+    pub limit: u32,
+}
+
+/// Bounded content-minimized conversation search result.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationSearchHit {
+    /// Stable conversation identity.
+    pub conversation_id: ConversationId,
+    /// Current title.
+    pub title: String,
+    /// Current local date.
+    pub local_date: String,
+    /// Exact workspace identity.
+    pub workspace_id: WorkspaceId,
+    /// Optional project identity.
+    pub project_id: Option<String>,
+    /// Exact model profile identity.
+    pub model_profile_id: agentmage_kernel_contracts::ModelProfileId,
+    /// Current lifecycle state.
+    pub status: ConversationStatus,
+    /// Current pinned state.
+    pub pinned: bool,
+    /// Number of immutable turns.
+    pub turn_count: u64,
+    /// Bounded matching preview, or none when no text filter was requested.
+    pub matching_preview: Option<String>,
+}
+
+/// Complete read-only immutable timeline for one conversation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationHistory {
+    /// Hash-verified canonical conversation metadata.
+    pub conversation: ConversationRecord,
+    /// Hash-verified turns in strict ordinal order.
+    pub turns: Vec<ConversationTurn>,
+    /// Fixed marker showing this view cannot mutate canonical state.
+    pub read_only: bool,
+}
+
+/// Local parent and child relationships without graph-database authority.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConversationRelationships {
+    /// Selected conversation identity.
+    pub conversation_id: ConversationId,
+    /// Original parent conversation, when selected record is a branch.
+    pub parent_conversation_id: Option<ConversationId>,
+    /// Exact parent turn, when selected record is a branch.
+    pub branch_from_turn_id: Option<ConversationTurnId>,
+    /// Direct child branches in stable identity order.
+    pub child_conversation_ids: Vec<ConversationId>,
 }
 
 impl OperationalStore {
@@ -326,6 +407,133 @@ impl OperationalStore {
         Ok(Some(turn))
     }
 
+    /// Searches canonical local conversations using bounded exact filters and literal text.
+    pub fn search_conversations(
+        &self,
+        query: &ConversationQuery,
+    ) -> Result<Vec<ConversationSearchHit>, ConversationLibraryError> {
+        validate_query(query)?;
+        let identities = self
+            .connection
+            .prepare(
+                "SELECT conversation_id FROM conversations
+                 ORDER BY pinned DESC, updated_at_epoch_ms DESC, conversation_id ASC",
+            )
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get::<_, String>(0))?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .map_err(|_| ConversationLibraryError::StorageFailed)?;
+        if identities.len() > MAX_CONVERSATION_SCAN {
+            return Err(ConversationLibraryError::IntegrityFailure);
+        }
+        let normalized_text = query.text.as_ref().map(|value| value.to_lowercase());
+        let mut results = Vec::new();
+        for identity in identities {
+            let conversation_id = ConversationId::from_raw(identity);
+            let conversation = self
+                .conversation(&conversation_id)?
+                .ok_or(ConversationLibraryError::IntegrityFailure)?;
+            if !conversation_matches(&conversation, query) {
+                continue;
+            }
+            let history = self.conversation_history(&conversation_id)?;
+            let matching_preview = match &normalized_text {
+                Some(text) => search_preview(&conversation, &history.turns, text),
+                None => None,
+            };
+            if normalized_text.is_some() && matching_preview.is_none() {
+                continue;
+            }
+            results.push(ConversationSearchHit {
+                conversation_id: conversation.conversation_id,
+                title: conversation.title,
+                local_date: conversation.local_date,
+                workspace_id: conversation.workspace_id,
+                project_id: conversation.project_id,
+                model_profile_id: conversation.model_profile_id,
+                status: conversation.status,
+                pinned: conversation.pinned,
+                turn_count: history.turns.len() as u64,
+                matching_preview,
+            });
+            if results.len() == query.limit as usize {
+                break;
+            }
+        }
+        Ok(results)
+    }
+
+    /// Loads one complete hash-verified conversation in read-only timeline order.
+    pub fn conversation_history(
+        &self,
+        conversation_id: &ConversationId,
+    ) -> Result<ConversationHistory, ConversationLibraryError> {
+        let conversation = self
+            .conversation(conversation_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let turn_ids = query_strings(
+            &self.connection,
+            "SELECT turn_id FROM conversation_turns
+             WHERE conversation_id=?1 ORDER BY ordinal",
+            conversation_id.as_str(),
+        )?;
+        let mut turns = Vec::with_capacity(turn_ids.len());
+        for (index, turn_id) in turn_ids.into_iter().enumerate() {
+            let turn_id = ConversationTurnId::from_raw(turn_id);
+            let turn = self
+                .conversation_turn(&turn_id)?
+                .ok_or(ConversationLibraryError::IntegrityFailure)?;
+            if turn.conversation_id != *conversation_id || turn.ordinal != index as u64 + 1 {
+                return Err(ConversationLibraryError::IntegrityFailure);
+            }
+            turns.push(turn);
+        }
+        let expected_head = turns.last().map(|turn| turn.turn_id.clone());
+        if conversation.current_turn_id != expected_head {
+            return Err(ConversationLibraryError::IntegrityFailure);
+        }
+        Ok(ConversationHistory {
+            conversation,
+            turns,
+            read_only: true,
+        })
+    }
+
+    /// Returns verified direct parent and child branch identities.
+    pub fn conversation_relationships(
+        &self,
+        conversation_id: &ConversationId,
+    ) -> Result<ConversationRelationships, ConversationLibraryError> {
+        let conversation = self
+            .conversation(conversation_id)?
+            .ok_or(ConversationLibraryError::NotFound)?;
+        let children = query_strings(
+            &self.connection,
+            "SELECT conversation_id FROM conversations
+             WHERE parent_conversation_id=?1 ORDER BY conversation_id",
+            conversation_id.as_str(),
+        )?
+        .into_iter()
+        .map(ConversationId::from_raw)
+        .collect::<Vec<_>>();
+        for child_id in &children {
+            let child = self
+                .conversation(child_id)?
+                .ok_or(ConversationLibraryError::IntegrityFailure)?;
+            if child.parent_conversation_id.as_ref() != Some(conversation_id) {
+                return Err(ConversationLibraryError::IntegrityFailure);
+            }
+        }
+        Ok(ConversationRelationships {
+            conversation_id: conversation.conversation_id,
+            parent_conversation_id: conversation.parent_conversation_id,
+            branch_from_turn_id: conversation.branch_from_turn_id,
+            child_conversation_ids: children,
+        })
+    }
+
     fn current_turn_ordinal(
         &self,
         conversation_id: &ConversationId,
@@ -340,6 +548,126 @@ impl OperationalStore {
             .map_err(|_| ConversationLibraryError::StorageFailed)?;
         u64::try_from(value).map_err(|_| ConversationLibraryError::IntegrityFailure)
     }
+}
+
+fn validate_query(query: &ConversationQuery) -> Result<(), ConversationLibraryError> {
+    if query.limit == 0
+        || query.limit > MAX_QUERY_RESULTS
+        || query
+            .from_local_date
+            .as_deref()
+            .is_some_and(|value| !valid_local_date(value))
+        || query
+            .to_local_date
+            .as_deref()
+            .is_some_and(|value| !valid_local_date(value))
+        || query.from_local_date > query.to_local_date && query.to_local_date.is_some()
+        || query
+            .text
+            .as_deref()
+            .is_some_and(|value| !valid_bounded_text(value, MAX_QUERY_BYTES))
+        || query
+            .workspace_id
+            .as_ref()
+            .is_some_and(|value| !valid_prefixed_id(value.as_str(), "workspace-"))
+        || query
+            .project_id
+            .as_deref()
+            .is_some_and(|value| !valid_bounded_text(value, MAX_PROJECT_BYTES))
+        || query
+            .model_profile_id
+            .as_ref()
+            .is_some_and(|value| !valid_prefixed_id(value.as_str(), "model-"))
+        || query
+            .tag
+            .as_deref()
+            .is_some_and(|value| !valid_bounded_text(value, MAX_TAG_BYTES))
+    {
+        return Err(ConversationLibraryError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn conversation_matches(conversation: &ConversationRecord, query: &ConversationQuery) -> bool {
+    query
+        .from_local_date
+        .as_ref()
+        .is_none_or(|value| &conversation.local_date >= value)
+        && query
+            .to_local_date
+            .as_ref()
+            .is_none_or(|value| &conversation.local_date <= value)
+        && query
+            .workspace_id
+            .as_ref()
+            .is_none_or(|value| &conversation.workspace_id == value)
+        && query
+            .project_id
+            .as_ref()
+            .is_none_or(|value| conversation.project_id.as_ref() == Some(value))
+        && query
+            .model_profile_id
+            .as_ref()
+            .is_none_or(|value| &conversation.model_profile_id == value)
+        && query
+            .status
+            .is_none_or(|value| conversation.status == value)
+        && query
+            .tag
+            .as_ref()
+            .is_none_or(|value| conversation.tags.contains(value))
+        && query
+            .pinned
+            .is_none_or(|value| conversation.pinned == value)
+        && (query.include_archived
+            || query.status == Some(ConversationStatus::Archived)
+            || conversation.status != ConversationStatus::Archived)
+}
+
+fn search_preview(
+    conversation: &ConversationRecord,
+    turns: &[ConversationTurn],
+    normalized_query: &str,
+) -> Option<String> {
+    if conversation.title.to_lowercase().contains(normalized_query) {
+        return Some(bounded_preview(&conversation.title));
+    }
+    for turn in turns {
+        if let Some(text) = &turn.text
+            && text.to_lowercase().contains(normalized_query)
+        {
+            return Some(bounded_preview(text));
+        }
+        for attachment in &turn.attachments {
+            if attachment
+                .display_name
+                .to_lowercase()
+                .contains(normalized_query)
+                || attachment
+                    .media_type
+                    .to_lowercase()
+                    .contains(normalized_query)
+            {
+                return Some(bounded_preview(&attachment.display_name));
+            }
+        }
+        for identity in turn
+            .citation_ids
+            .iter()
+            .map(String::as_str)
+            .chain(turn.grant_ids.iter().map(|value| value.as_str()))
+            .chain(turn.receipt_ids.iter().map(|value| value.as_str()))
+        {
+            if identity.to_lowercase().contains(normalized_query) {
+                return Some(bounded_preview(identity));
+            }
+        }
+    }
+    None
+}
+
+fn bounded_preview(value: &str) -> String {
+    value.chars().take(MAX_RESULT_PREVIEW_CHARS).collect()
 }
 
 fn insert_turn_references(
@@ -811,7 +1139,7 @@ mod tests {
         WorkspaceId,
     };
 
-    use super::{ConversationLibraryError, sha256};
+    use super::{ConversationLibraryError, ConversationQuery, sha256};
     use crate::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
@@ -1069,6 +1397,131 @@ mod tests {
         assert_eq!(
             store.conversation(&conversation.conversation_id),
             Err(ConversationLibraryError::IntegrityFailure)
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn bounded_search_combines_exact_filters_with_local_literal_content_matching() {
+        let (directory, _path, mut store) = store();
+        let alpha = conversation(true);
+        store.create_conversation(&alpha).expect("alpha creates");
+        store
+            .append_conversation_turn(&turn(1, Some("Review the Bayesian model")))
+            .expect("alpha turn");
+
+        let mut archived = conversation(true);
+        archived.conversation_id = ConversationId::from_raw("conversation-archived");
+        archived.title = "Archived Bayesian notes".to_owned();
+        archived.status = ConversationStatus::Archived;
+        archived.local_date = "2027-01-16".to_owned();
+        archived.created_at_epoch_ms += 10;
+        archived.updated_at_epoch_ms += 10;
+        store
+            .create_conversation(&archived)
+            .expect("archive creates");
+
+        let query = ConversationQuery {
+            from_local_date: Some("2027-01-15".to_owned()),
+            to_local_date: Some("2027-01-15".to_owned()),
+            text: Some("BAYESIAN".to_owned()),
+            workspace_id: Some(WorkspaceId::from_raw("workspace-alpha")),
+            project_id: Some("project-alpha".to_owned()),
+            model_profile_id: Some(ModelProfileId::from_raw("model-local-alpha")),
+            status: Some(ConversationStatus::Active),
+            tag: Some("audit".to_owned()),
+            pinned: Some(false),
+            include_archived: false,
+            limit: 10,
+        };
+        let hits = store.search_conversations(&query).expect("search succeeds");
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].conversation_id, alpha.conversation_id);
+        assert_eq!(hits[0].turn_count, 1);
+        assert_eq!(
+            hits[0].matching_preview.as_deref(),
+            Some("Review the Bayesian model")
+        );
+        let archived_hidden = store
+            .search_conversations(&ConversationQuery {
+                text: Some("Bayesian".to_owned()),
+                limit: 10,
+                ..ConversationQuery::default()
+            })
+            .expect("default excludes archived");
+        assert_eq!(archived_hidden.len(), 1);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn history_and_relationship_views_preserve_original_timeline() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        let first = turn(1, Some("original first turn"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&first)
+            .expect("original turn");
+        let mut branch = conversation(true);
+        branch.conversation_id = ConversationId::from_raw("conversation-branch");
+        branch.title = "Branch".to_owned();
+        branch.parent_conversation_id = Some(original.conversation_id.clone());
+        branch.branch_from_turn_id = Some(first.turn_id.clone());
+        store
+            .create_conversation(&branch)
+            .expect("valid branch creates");
+
+        let history = store
+            .conversation_history(&original.conversation_id)
+            .expect("history reads");
+        assert!(history.read_only);
+        assert_eq!(history.turns, vec![first.clone()]);
+        let original_relationships = store
+            .conversation_relationships(&original.conversation_id)
+            .expect("original relationships");
+        assert_eq!(
+            original_relationships.child_conversation_ids,
+            vec![branch.conversation_id.clone()]
+        );
+        let branch_relationships = store
+            .conversation_relationships(&branch.conversation_id)
+            .expect("branch relationships");
+        assert_eq!(
+            branch_relationships.parent_conversation_id,
+            Some(original.conversation_id)
+        );
+        assert_eq!(
+            branch_relationships.branch_from_turn_id,
+            Some(first.turn_id)
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn invalid_search_bounds_fail_without_read_or_mutation() {
+        let (directory, _path, mut store) = store();
+        let conversation = conversation(true);
+        store
+            .create_conversation(&conversation)
+            .expect("conversation creates");
+        let invalid = ConversationQuery {
+            from_local_date: Some("2027-02-01".to_owned()),
+            to_local_date: Some("2027-01-01".to_owned()),
+            limit: 1,
+            ..ConversationQuery::default()
+        };
+        assert_eq!(
+            store.search_conversations(&invalid),
+            Err(ConversationLibraryError::InvalidInput)
+        );
+        assert_eq!(
+            store
+                .conversation_history(&conversation.conversation_id)
+                .expect("history remains readable")
+                .turns,
+            Vec::new()
         );
         fs::remove_dir_all(directory).expect("cleanup");
     }
