@@ -1,0 +1,135 @@
+{
+  "artifact_id": "task-12-2-3-3-agent-failure-corpus",
+  "case_ids": [
+    "APF-001",
+    "APF-002",
+    "APF-003",
+    "APF-004",
+    "APF-005",
+    "APF-006"
+  ],
+  "claims": {
+    "category_count": 6,
+    "external_network_used": false,
+    "false_success_expectations": 0,
+    "focused_case_count": 6,
+    "manual_fuzzing_executed": false,
+    "release_support": false,
+    "retained_source_artifact_count": 4,
+    "unbound_cases": 0
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The corpus indexes focused deterministic unit evidence; it is not the full crash-before-and-after transition campaign required by Task 12.2.4.4.",
+    "The cases use no production worker, model, classifier, tool, provider, private user data, or external network operation.",
+    "Encrypted persistence integration, cross-platform execution, packaging, release acceptance, and manual fuzzing remain later tasks and gates."
+  ],
+  "private_user_data_used": false,
+  "schema_version": 1,
+  "source_revision": "3bf1d63d3a3ee0526ff0940c032d9b1cdaa9c323",
+  "sources": [
+    {
+      "bytes": 1547,
+      "path": "docs/verification/task-12-2-3-3-agent-failure-corpus-results.md",
+      "sha256": "fef6dcf4360c46c5e386822c7121539c5133225d90cfde32f5ecea682dbfaac3"
+    },
+    {
+      "bytes": 4912,
+      "path": "fixtures/agent-policy/v1/failure-corpus.json",
+      "sha256": "dc83407365d616670fa4454bffffda9c132c093ae9048a4195b82f7e35d017e9"
+    },
+    {
+      "bytes": 5867,
+      "path": "scripts/validate_agent_failure_corpus.py",
+      "sha256": "ae99082f753066fec37550beb5429b3542853c13209411f65775723f874dab8f"
+    },
+    {
+      "bytes": 1773,
+      "path": "tests/test_agent_failure_corpus.py",
+      "sha256": "005432f50de058c3e179a4d213e08735aa18c47bcace40f828b726d435b1a458"
+    },
+    {
+      "bytes": 4678,
+      "path": "artifacts/sprints/sprint-12/story-12.2/restart-reconciliation.json",
+      "sha256": "2a0504349e7674bc7e8e6a3257ca1963747fcfa010fe1b211855f51715c0a6d7"
+    },
+    {
+      "bytes": 4687,
+      "path": "artifacts/sprints/sprint-12/story-12.2/verifier-registry.json",
+      "sha256": "202d7160d1887305973cf3abfd4536fbc2db49894a37994f0092062d8cdc603a"
+    },
+    {
+      "bytes": 3800,
+      "path": "artifacts/sprints/sprint-12/story-12.2/classifier-failure.json",
+      "sha256": "788706de755e0e0c1faaf06b3fc7a6e9af60235500f63b48acdaa9f0c8351539"
+    },
+    {
+      "bytes": 3441,
+      "path": "artifacts/sprints/sprint-12/story-12.2/agent-ceilings.json",
+      "sha256": "f748a94bda390e93e032a8d88a47622ec0d4544be9b93b76a0e78eb4eea8c873"
+    },
+    {
+      "bytes": 8164,
+      "path": "scripts/revision_evidence.py",
+      "sha256": "1c2d4133013a7e400adc1e8d32a4c28c2dffebabb38753a4e9927efe46642645"
+    },
+    {
+      "bytes": 4066,
+      "path": "scripts/agent_failure_corpus_evidence.py",
+      "sha256": "d0318653468869bd48cc6b97bfbfc34d5aa32dc447d51294013a365c005e1bed"
+    },
+    {
+      "bytes": 3278,
+      "path": "tests/test_agent_failure_corpus_evidence.py",
+      "sha256": "cf888da21ae3c673fdb5ed244fcc1818c826bf38dbd6d31952313b83d45aaaef"
+    }
+  ],
+  "status": "pass-agent-failure-corpus",
+  "task_ids": [
+    "12.2.3.3"
+  ],
+  "verification_commands": [
+    {
+      "command_id": "fdb6e7c62777d9d4f03cc787ca26c6403bec274ae61fd2ed3ee9843299b5b245",
+      "exit_code": 0,
+      "expected_marker_sha256": "26fced2a0722eea8c90db6724eaa54e9b970b92df2a4ccd38f2fcfe01a5108e0",
+      "status": "pass"
+    },
+    {
+      "command_id": "1a5cbbd84dd902f20bc334f17d15c088cc8829fcd5057c3305a3d79e9691417d",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "996a5e0582ed73eaf6502a5031ee1577e5c0181225be5a7430a9b319395e14d0",
+      "exit_code": 0,
+      "expected_marker_sha256": "fe70446aba469149abdeb565c734a5f09a15654b4055b8a3c564800c4b0cea25",
+      "status": "pass"
+    },
+    {
+      "command_id": "a8e5b6be200c00a66aa88102a24a9a1f61d7cc3b014c7b734c5f27c68e7a7eec",
+      "exit_code": 0,
+      "expected_marker_sha256": "7b28bce4800f33c6a48f65a7a673e30e2cf29ad00e85ac7502fde44c18aa0e7f",
+      "status": "pass"
+    },
+    {
+      "command_id": "04a3bcd964015862c2cf59f26b624d541b68ac200bfd0a0176c514a67bbf9ff4",
+      "exit_code": 0,
+      "expected_marker_sha256": "4aaa5be7c39a550dc3456633dd26c00014f4c876fdbb73647b3272aa8b402827",
+      "status": "pass"
+    },
+    {
+      "command_id": "688c8393b6dcad057d987b1b1601f0d4f05b3e3a8f71e5c7d415d281a847a0d9",
+      "exit_code": 0,
+      "expected_marker_sha256": "a057e7d47605c6c2131f0005609e9f1009a2fa682b207ba51d242cb0858e7136",
+      "status": "pass"
+    },
+    {
+      "command_id": "b94b4f584443a3c30cfc18773707d75d424110788ec344b4f26349116cf09223",
+      "exit_code": 0,
+      "expected_marker_sha256": "9ea70fe7606c1c6c05d3a6cf9609301110ea8b06b51c0b7793bbca7664af9fcb",
+      "status": "pass"
+    }
+  ]
+}
