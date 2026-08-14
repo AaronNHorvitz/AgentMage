@@ -2,9 +2,14 @@
 #![forbid(unsafe_code)]
 //! Declarative contracts for bounded read-only workspace capabilities.
 
-use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
-    SchemaReference, ToolDefinition, ToolId, ToolRiskLevel,
+use agentmage_kernel_contracts::ToolDefinition;
+
+mod catalog;
+
+pub use catalog::{
+    READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_ID,
+    READ_ONLY_OUTPUT_SCHEMA_JSON, READ_ONLY_TOOL_VERSION, ReadOnlyToolKind,
+    read_only_tool_definition, read_only_tool_definitions, read_only_tool_kind,
 };
 
 /// Stable component identity used by diagnostics and build verification.
@@ -14,12 +19,7 @@ pub const COMPONENT_ID: &str = "capability-read-only";
 pub const WORKSPACE_FILE_READ_TOOL_ID: &str = "agentmage.workspace.read-file";
 
 /// Immutable version of the one-file workspace read contract.
-pub const WORKSPACE_FILE_READ_TOOL_VERSION: &str = "1.0.0";
-
-const INPUT_SCHEMA_SHA256: &str =
-    "a492b4044138d545ccb2c646de8841158d190875f3dd31c26d6c67e50fbe4ac3";
-const OUTPUT_SCHEMA_SHA256: &str =
-    "5525279aae7ba5d90dfea8880ecdcaf5d2d1615c37bd9a5e936a84259ba272a2";
+pub const WORKSPACE_FILE_READ_TOOL_VERSION: &str = READ_ONLY_TOOL_VERSION;
 
 /// Returns the identity of the contracts implemented by this capability pack.
 #[must_use]
@@ -34,32 +34,7 @@ pub const fn contract_component_id() -> &'static str {
 /// before the Linux effect driver can run.
 #[must_use]
 pub fn workspace_file_read_definition() -> ToolDefinition {
-    let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
-    ToolDefinition {
-        schema_version: CONTRACT_SCHEMA_VERSION,
-        tool_id: ToolId::from_raw(WORKSPACE_FILE_READ_TOOL_ID),
-        tool_version: WORKSPACE_FILE_READ_TOOL_VERSION.to_owned(),
-        display_name: "Read workspace file".to_owned(),
-        description: "Reads one exact approved workspace file as bounded UTF-8 text".to_owned(),
-        input_schema: SchemaReference {
-            schema_id: SchemaId::from_raw("agentmage.workspace.read-file.input"),
-            schema_version: 1,
-            schema_sha256: INPUT_SCHEMA_SHA256.to_owned(),
-        },
-        output_schema: SchemaReference {
-            schema_id: SchemaId::from_raw("agentmage.workspace.read-file.output"),
-            schema_version: 1,
-            schema_sha256: OUTPUT_SCHEMA_SHA256.to_owned(),
-        },
-        risk_level: ToolRiskLevel::Low,
-        declared_effects: vec![operation],
-        required_grant: RequiredGrantTemplate {
-            operation,
-            target_scope: "one-exact-held-workspace-file".to_owned(),
-            single_use: true,
-        },
-        timeout_ms: 15_000,
-    }
+    read_only_tool_definition(ReadOnlyToolKind::ReadText)
 }
 
 #[cfg(test)]
