@@ -294,6 +294,13 @@ def update_baseline(
     prior_requirement_ids = {
         str(record["id"]) for record in updated["requirements"]
     }
+    current_requirements = {
+        str(record["id"]): record for record in current["requirements"]
+    }
+    for record in updated["requirements"]:
+        active = current_requirements[str(record["id"])]
+        for field in SET_REQUIREMENT_FIELDS:
+            record[field] = deepcopy(active[field])
     prior_checklist_ids = {str(record["id"]) for record in updated["checklist"]}
     updated["requirements"].extend(
         record

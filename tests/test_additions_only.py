@@ -191,6 +191,22 @@ class AdditionsOnlyTests(unittest.TestCase):
 
         self.assertEqual(diagnostics, [])
 
+    def test_update_retains_approved_dependency_and_test_additions(self) -> None:
+        mutated = copy.deepcopy(self.registry)
+        product = self.protected_record(mutated)
+        product["dependencies"].append("AM-NEW-DEPENDENCY-001")
+        product["acceptance_tests"].append("AT-NEW-ACCEPTANCE-001")
+
+        updated = update_baseline(self.baseline, mutated, DEFAULT_INVENTORY)
+        retained = next(
+            record for record in updated["requirements"] if record["id"] == product["id"]
+        )
+
+        self.assertEqual(retained["dependencies"], product["dependencies"])
+        self.assertEqual(retained["acceptance_tests"], product["acceptance_tests"])
+        for field in ("kind", "title", "release", "disposition"):
+            self.assertEqual(retained[field], product[field])
+
     def test_removed_modified_moved_or_reclassified_checklist_entry_is_blocked(self) -> None:
         source = DEFAULT_INVENTORY.read_text(encoding="utf-8")
         original = "- [ ] `BUILD` a five-minute install/start guide."
