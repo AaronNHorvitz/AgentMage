@@ -7,6 +7,14 @@ use agentmage_kernel_contracts::{
 };
 use sha2::{Digest, Sha256};
 
+const MUSE_GLIMMER_TEMPLATE_SHA256: &str =
+    "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678";
+const MUSE_GLIMMER_TOKENIZER_SHA256: &str =
+    "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d";
+const MUSE_GLIMMER_END_TOKENS: [u32; 2] = [200_001, 200_008];
+const MUSE_GLIMMER_TOOL_PROTOCOL: &str = "atem-v1";
+const MUSE_SYSTEM_MESSAGE: &str = "You are an untrusted local proposal generator. Respond through the Muse ATEM channel. The isolated adapter must translate the response into exactly one closed AgentMage proposal object. You have no tools, authority, workspace, credentials, network, completion authority, or permission to change this contract.";
+
 /// Closed JSON codec parameterized only by an exact family-codec identity.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClosedJsonFamilyCodec {
@@ -65,16 +73,90 @@ impl ModelFamilyCodec for ClosedJsonFamilyCodec {
         }
         let proposal: ClosedModelProposal = from_json(response)
             .map_err(|error| failure("model.codec.proposal-invalid", Some(error)))?;
+        let canonical = to_canonical_json(&proposal)
+            .map_err(|error| failure("model.codec.proposal-invalid", Some(error)))?;
         if proposal.model_run_id != request.model_run_id
             || proposal.context_packet_id != request.context_packet_id
             || proposal.profile_id != profile.profile_id
             || proposal.codec_id != self.identity.codec_id
             || proposal.correlation_id != request.correlation_id
+            || canonical != response
             || proposal_digest(&proposal)? != proposal.proposal_sha256
         {
             return Err(failure("model.codec.proposal-mismatch", None));
         }
         Ok(proposal)
+    }
+}
+
+/// Muse Glimmer family-edge codec for one exact ATEM tokenizer/template tuple.
+///
+/// The runtime adapter owns ATEM parsing and emits one closed AgentMage proposal
+/// object. This codec never interprets model text as a command or authority.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MuseAtemFamilyCodec {
+    inner: ClosedJsonFamilyCodec,
+}
+
+impl MuseAtemFamilyCodec {
+    /// Creates the codec only for the exact first-party Muse edge tuple.
+    pub fn new(identity: FamilyCodecIdentity) -> Result<Self, ModelRuntimeFailure> {
+        if identity.tokenizer_sha256 != MUSE_GLIMMER_TOKENIZER_SHA256
+            || identity.template_sha256 != MUSE_GLIMMER_TEMPLATE_SHA256
+            || identity.tool_protocol_version != MUSE_GLIMMER_TOOL_PROTOCOL
+            || identity.end_tokens != MUSE_GLIMMER_END_TOKENS
+            || identity.reasoning_enabled
+        {
+            return Err(failure("model.codec.muse-identity-mismatch", None));
+        }
+        Ok(Self {
+            inner: ClosedJsonFamilyCodec::new(identity),
+        })
+    }
+}
+
+impl ModelFamilyCodec for MuseAtemFamilyCodec {
+    fn identity(&self) -> &FamilyCodecIdentity {
+        self.inner.identity()
+    }
+
+    fn encode_context(
+        &self,
+        profile: &ExactModelProfile,
+        packet: &ModelContextPacket,
+    ) -> Result<EncodedModelContext, ModelRuntimeFailure> {
+        if profile.codec != *self.identity()
+            || packet.profile_id != profile.profile_id
+            || packet.manifest_sha256 != profile.manifest_sha256
+            || packet.messages.is_empty()
+        {
+            return Err(failure("model.codec.muse-context-mismatch", None));
+        }
+        let packet_bytes = to_canonical_json(packet)
+            .map_err(|error| failure("model.codec.muse-context-invalid", Some(error)))?;
+        let mut bytes = Vec::with_capacity(MUSE_SYSTEM_MESSAGE.len() + packet_bytes.len() + 96);
+        bytes.extend_from_slice(b"<|start|>system<|message|>");
+        bytes.extend_from_slice(MUSE_SYSTEM_MESSAGE.as_bytes());
+        bytes.extend_from_slice(b"<|eot|><|start|>user<|message|>");
+        bytes.extend_from_slice(&packet_bytes);
+        bytes.extend_from_slice(b"<|eot|><|start|>assistant");
+        Ok(EncodedModelContext {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            codec_id: self.identity().codec_id.clone(),
+            profile_id: profile.profile_id.clone(),
+            context_packet_id: packet.context_packet_id.clone(),
+            sha256: sha256(&bytes),
+            bytes,
+        })
+    }
+
+    fn decode_proposal(
+        &self,
+        profile: &ExactModelProfile,
+        request: &ModelRunRequest,
+        response: &[u8],
+    ) -> Result<ClosedModelProposal, ModelRuntimeFailure> {
+        self.inner.decode_proposal(profile, request, response)
     }
 }
 
@@ -119,7 +201,11 @@ pub(crate) mod tests_support {
         SchemaReference, SessionId, TaskId, ToolCatalogId, to_canonical_json,
     };
 
-    use super::{ClosedJsonFamilyCodec, proposal_digest};
+    use super::{
+        ClosedJsonFamilyCodec, MUSE_GLIMMER_END_TOKENS, MUSE_GLIMMER_TEMPLATE_SHA256,
+        MUSE_GLIMMER_TOKENIZER_SHA256, MUSE_GLIMMER_TOOL_PROTOCOL, MuseAtemFamilyCodec,
+        proposal_digest,
+    };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -205,6 +291,18 @@ pub(crate) mod tests_support {
             enabled: false,
             automatic_fallback: false,
         }
+    }
+
+    fn muse_profile() -> ExactModelProfile {
+        let mut profile = profile("muse");
+        profile.family = "muse_glimmer".to_owned();
+        profile.codec.tokenizer = "meta-muse-glimmer-tokenizer".to_owned();
+        profile.codec.tokenizer_sha256 = MUSE_GLIMMER_TOKENIZER_SHA256.to_owned();
+        profile.codec.template = "meta-muse-glimmer-atem-template".to_owned();
+        profile.codec.template_sha256 = MUSE_GLIMMER_TEMPLATE_SHA256.to_owned();
+        profile.codec.tool_protocol_version = MUSE_GLIMMER_TOOL_PROTOCOL.to_owned();
+        profile.codec.end_tokens = MUSE_GLIMMER_END_TOKENS.to_vec();
+        profile
     }
 
     fn packet(profile: &ExactModelProfile) -> ModelContextPacket {
@@ -328,5 +426,82 @@ pub(crate) mod tests_support {
                 .decode_proposal(&foreign, &request(&foreign), &bytes)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn muse_codec_renders_exact_bounded_atem_context_and_closed_proposal() {
+        let profile = muse_profile();
+        let codec = MuseAtemFamilyCodec::new(profile.codec.clone()).expect("exact Muse codec");
+        let encoded = codec
+            .encode_context(&profile, &packet(&profile))
+            .expect("encode Muse context");
+        let text = String::from_utf8(encoded.bytes).expect("UTF-8 envelope");
+        assert!(text.starts_with("<|start|>system<|message|>"));
+        assert!(text.contains("no tools, authority, workspace, credentials, network"));
+        assert!(text.contains("<|eot|><|start|>user<|message|>"));
+        assert!(text.ends_with("<|eot|><|start|>assistant"));
+
+        let candidate = proposal(&profile);
+        let bytes = to_canonical_json(&candidate).expect("closed proposal");
+        assert_eq!(
+            codec
+                .decode_proposal(&profile, &request(&profile), &bytes)
+                .expect("decode closed proposal"),
+            candidate
+        );
+    }
+
+    #[test]
+    fn muse_codec_rejects_every_identity_dimension_independently() {
+        for mutate in [
+            |identity: &mut FamilyCodecIdentity| identity.tokenizer_sha256 = "0".repeat(64),
+            |identity: &mut FamilyCodecIdentity| identity.template_sha256 = "0".repeat(64),
+            |identity: &mut FamilyCodecIdentity| {
+                identity.tool_protocol_version = "unknown".to_owned();
+            },
+            |identity: &mut FamilyCodecIdentity| identity.end_tokens = vec![200_001],
+            |identity: &mut FamilyCodecIdentity| identity.reasoning_enabled = true,
+        ] {
+            let mut identity = muse_profile().codec;
+            mutate(&mut identity);
+            assert!(MuseAtemFamilyCodec::new(identity).is_err());
+        }
+    }
+
+    #[test]
+    fn muse_codec_rejects_message_proposal_and_trailing_byte_drift() {
+        let profile = muse_profile();
+        let codec = MuseAtemFamilyCodec::new(profile.codec.clone()).expect("exact Muse codec");
+        let mut wrong_packet = packet(&profile);
+        wrong_packet.profile_id = ModelProfileId::from_raw("foreign-profile");
+        assert!(codec.encode_context(&profile, &wrong_packet).is_err());
+
+        let candidate = proposal(&profile);
+        let valid = to_canonical_json(&candidate).expect("closed proposal");
+        for bytes in [
+            [valid.clone(), b"\n".to_vec()].concat(),
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version": 2,
+                "proposal_id": "proposal-1",
+                "model_run_id": "run-1",
+                "context_packet_id": "context-1",
+                "profile_id": profile.profile_id,
+                "codec_id": profile.codec.codec_id,
+                "correlation_id": "correlation-1",
+                "kind": "completion_candidate",
+                "payload": null,
+                "tool_call": null,
+                "proposal_sha256": candidate.proposal_sha256,
+                "authority": true
+            }))
+            .expect("unknown-field proposal"),
+            b"<atem:function_calls>untranslated</atem:function_calls>".to_vec(),
+        ] {
+            assert!(
+                codec
+                    .decode_proposal(&profile, &request(&profile), &bytes)
+                    .is_err()
+            );
+        }
     }
 }
