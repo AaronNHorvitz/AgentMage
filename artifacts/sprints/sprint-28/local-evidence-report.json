@@ -1,0 +1,191 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-27-BLOCKED",
+      "owner": "27.1"
+    },
+    {
+      "code": "OPERATING-SYSTEM-WATCHER-ADAPTER-ABSENT",
+      "owner": "28.1.1.4"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-28-REVIEW-ABSENT",
+      "owner": "28.1.3.5"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "b760a733ea8143cea36c7e4925380913cbb7b17bbc7dfab67fca48f4eddce74b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "id": "knowledge-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "5f0d5a7a279b01e9a44fc6102e7fcc6e51a27bfca8092559e7be7ac9d9f12bd6"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "6a74968cd8e884bfaaddee7fe7634db8f43e72c431653c0fedd48ea52a2c5853"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/module_inventory.py"
+      ],
+      "exit_code": 0,
+      "id": "module-inventory",
+      "output_sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_28_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "atomic_rebuild_and_transaction_rollback": true,
+    "content_free_access_receipts": true,
+    "current_historical_query_and_cycle_safe_traversal": true,
+    "disposable_seven_table_sqlite_projection": true,
+    "exact_watcher_event_reconciliation": true,
+    "obsidian_process_or_network_access": false,
+    "operating_system_filesystem_watcher": false,
+    "plain_folder_and_obsidian_store_conformance": true,
+    "raw_section_preserving_change_preview": true,
+    "secret_candidates_omitted_from_searchable_projection": true,
+    "source_ranged_obsidian_parser_generation_two": true,
+    "stale_detection_and_visible_conflicts": true,
+    "vault_write_authority": false,
+    "verified_attachment_embed_and_coverage_model": true
+  },
+  "record_type": "sprint_28_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-005",
+    "SR-DAT-002",
+    "SR-TST-002",
+    "SR-TST-004"
+  ],
+  "source_revision": "e97eedc140fcfbcf9c0e961e840869a7e5a24cd9",
+  "source_sha256": {
+    "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
+    "capabilities/knowledge/README.md": "dae5a9b324a1e36af377a5f5e7a9b184fd12fc94e783349dc84a6fc8d7680f9d",
+    "capabilities/knowledge/src/domain.rs": "39510ce3549cbedf72b923d14a66045d97cb70176c8dc293aeb4bdb33bfc65da",
+    "capabilities/knowledge/src/lib.rs": "11c12694f1b4da8dab7876d0e64aa03878038137fbef530ea3fa0213293bb4a8",
+    "capabilities/knowledge/src/obsidian.rs": "9c30374ba5d54debc7b160389b72dad03e1a23e942407a1e70cde4f35910a2ab",
+    "capabilities/knowledge/src/obsidian_index.rs": "18136f29bf5ce0f18cb8af42593e3723d52de8263118821d24e034d1ad2167ad",
+    "docs/architecture/obsidian-index-boundary.md": "b2d56106d7ba8b5ac5ead21a1ddb5886a434ad770c832491e23b93ab500d6258",
+    "docs/verification/sprint-28-local-results.md": "f35ab921f391698491d418012364803e92e1d099f01c373e6ff7d9fd1aeafde3",
+    "scripts/sprint_28_evidence.py": "3c9d825ee3e0b4c1c423e7e050c3dc0f720ce624ce4e2e06acc4fc649a513256",
+    "tests/test_sprint_28_evidence.py": "3bbe75c2f9bb9cd1c44671d86e6d01b813615db4cb99a20df377fe55d854a84f"
+  },
+  "summary": {
+    "local_index_contract_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "vault_write_enabled": false
+  },
+  "verification_evidence": {
+    "adapter_contract_conformance": true,
+    "complete_local_product_and_docs_gates": true,
+    "independent_review": false,
+    "index_transaction_and_interruption_traces": true,
+    "injection_secret_uri_and_no_obsidian_proof": true,
+    "operating_system_watcher_adapter": false,
+    "stale_update_and_source_invariance": true,
+    "synthetic_parser_and_link_corpus": true,
+    "upstream_sprint_27_gate": false
+  }
+}
