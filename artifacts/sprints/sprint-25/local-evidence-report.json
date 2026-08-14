@@ -1,0 +1,261 @@
+{
+  "blockers": [
+    {
+      "code": "OWNING-SPRINT-PRODUCTION-EVIDENCE-INCOMPLETE",
+      "owner": "25.1.1.1"
+    },
+    {
+      "code": "PRODUCTION-SIGNER-AND-TRUST-ROOT-ABSENT",
+      "owner": "25.1.2.1"
+    },
+    {
+      "code": "SIGNED-REFERENCE-PLATFORM-PACKAGES-ABSENT",
+      "owner": "25.1.2.1"
+    },
+    {
+      "code": "INSTALLED-NATIVE-VSCODE-WORKFLOW-INCOMPLETE",
+      "owner": "25.1.2.2"
+    },
+    {
+      "code": "RELEASE-ACCEPTANCE-BUNDLE-INCOMPLETE",
+      "owner": "25.1.2.3"
+    },
+    {
+      "code": "FINAL-PUBLISHED-RELEASE-NOTES-ABSENT",
+      "owner": "25.1.2.4"
+    },
+    {
+      "code": "FEDORA-THREE-RUN-CLEAN-LIFECYCLE-ABSENT",
+      "owner": "25.1.3.4"
+    },
+    {
+      "code": "UBUNTU-THREE-RUN-CLEAN-LIFECYCLE-ABSENT",
+      "owner": "25.1.3.4"
+    },
+    {
+      "code": "MACOS-M5-THREE-RUN-CLEAN-LIFECYCLE-ABSENT",
+      "owner": "25.1.3.4"
+    },
+    {
+      "code": "COMPLETE-RV-01-THROUGH-RV-22-EXECUTION-ABSENT",
+      "owner": "25.1.3.6"
+    },
+    {
+      "code": "INDEPENDENT-RV-21-TABLETOP-ABSENT",
+      "owner": "25.2.2.1"
+    },
+    {
+      "code": "PRODUCTION-RV-22-EXERCISE-ABSENT",
+      "owner": "25.2.2.2"
+    },
+    {
+      "code": "MANUAL-FUZZ-CAMPAIGN-DEFERRED",
+      "owner": "166.1.2.4"
+    },
+    {
+      "code": "INDEPENDENT-RELEASE-REVIEW-ABSENT",
+      "owner": "25.1.3.6"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "npm",
+        "run",
+        "product:check"
+      ],
+      "exit_code": 0,
+      "id": "product-gate",
+      "output_sha256": "eded4919aa51511358be3eae5f472c2e79cfafd109bf4309d9445801be465f11"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "7392d1ac68a9fa34f8942674c408dfda7f71fcc0d54ea47f3bbd8749762f0afa"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "phase11:check"
+      ],
+      "exit_code": 0,
+      "id": "package-lifecycle",
+      "output_sha256": "16ef7d43be49d1577142453fe33ab2bf20f034ad7c26ac379fcf10480cd8ad70"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "release-signing:test"
+      ],
+      "exit_code": 0,
+      "id": "release-signing-mechanics",
+      "output_sha256": "055a4675465840199473e4dad65f63a98c72acb061d56a318ae5273827543224"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/manual_patch_metadata.py"
+      ],
+      "exit_code": 0,
+      "id": "manual-patch-metadata",
+      "output_sha256": "6906418b6cf328d0bd3efe122e3715b18d36a23469153d48efb4686beeb7e9d6"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/manual_patch_verifier.py"
+      ],
+      "exit_code": 0,
+      "id": "manual-patch-verifier",
+      "output_sha256": "a813077728506b8fd72d84ae97309fefc15bd0125469de897bfac3f54c34350f"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/emergency_disable_policy.py"
+      ],
+      "exit_code": 0,
+      "id": "emergency-disable-policy",
+      "output_sha256": "9952669510e8ccb0380dc4c450399719ad5c86fee7a996f792145f9afa497657"
+    },
+    {
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_manual_patch_schema.mjs",
+        "tests/test_emergency_disable_schema.mjs"
+      ],
+      "exit_code": 0,
+      "id": "patch-schema-tests",
+      "output_sha256": "21146f737315a01aa0a90731f9274f8aeb97234cd50c59d18c7472106a5332b6"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_manual_patch_metadata",
+        "tests.test_manual_patch_verifier",
+        "tests.test_emergency_disable_policy"
+      ],
+      "exit_code": 0,
+      "id": "patch-behavior-tests",
+      "output_sha256": "c2f38f39b5983e93692ef2c3d17f8f167143e11f4d3ea0a8295d85580b585684"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_25_evidence"
+      ],
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_readiness": {
+    "capability_and_limitation_matrix": true,
+    "complete_seven_payload_linux_manifest_closure": true,
+    "detached_signature_mechanics": true,
+    "deterministic_unsigned_candidate": true,
+    "draft_release_notes": true,
+    "incident_and_support_runbooks": true,
+    "independent_incident_tabletop": false,
+    "native_cross_platform_acceptance": false,
+    "operator_and_maintainer_guides": true,
+    "production_manual_patch_exercise": false,
+    "production_signer_and_trust_root": false,
+    "signed_release_packages": false,
+    "supported_v0_1_release": false,
+    "synthetic_manual_patch_and_disable_fixtures": true
+  },
+  "record_type": "sprint_25_local_readiness_evidence",
+  "requirement_families": [
+    "SR-GOV-*",
+    "SR-PLT-*",
+    "SR-ACC-*",
+    "SR-DAT-*",
+    "SR-NET-*",
+    "SR-SUP-*",
+    "SR-AI-*",
+    "SR-OPS-*",
+    "SR-TST-*",
+    "SR-CIV-*"
+  ],
+  "schema_version": 1,
+  "source_revision": "98f154a21475ca1ec8c09f1663ab6fdebb8fba5e",
+  "source_sha256": {
+    "docs/release/README.md": "1c112b890726f62b4884653fe91224865a6856c6ec3cc8b1f59d11fba6df0de3",
+    "docs/release/capability-matrix.md": "3ab544855568ee31530c9067aee01677d8942d6bf80a455bd5162eb76f909211",
+    "docs/release/maintainer-guide.md": "2b3a5399bd3cbd110d9e1411f265ae96e39311dc2601f2bc4a13d2c5b662a389",
+    "docs/release/operator-guide.md": "1b51efad3e7dcdd3ec3f5945b55762c2fc03b5b382557aae4487bb72b6ae91a5",
+    "docs/release/release-notes-v0.1.0-draft.md": "b86801029a8ed9db5119d66fccc34c54a82d6efa21788e0d3cf55312525e7f51",
+    "docs/support/incident-response-v0.1.md": "e1a664440db4c0820a10bd357c9bce8583449206b2529c7005aa89e11fe05e75",
+    "docs/support/manual-patch-and-disable-v0.1.md": "f0b3ec71e0dfc9b0180514c135bddef1da39d942145062fb1ade8c07436fc1ae",
+    "docs/verification/sprint-25-local-results.md": "3f27ef47bca86e312dffc653f0db28d17bea8cb5f6ca8455131042b2639c26dc",
+    "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
+    "scripts/package_lifecycle.py": "c5c257192b0bea2a6671457725a757e6b7637fd178dce83e6f785a4aa84e4de8",
+    "scripts/package_release_lifecycle.py": "88962ea92149b1974eccb09b614f0d8c17f7ffed3eaa585e6a28a4c79c273328",
+    "scripts/sprint_25_evidence.py": "3c5982f1aa236b2181c6edfd28cb9d82d190aac762cf0f2401a0632e8f6ad46b",
+    "shells/host/src/linux_bootstrap.rs": "5c415293e5c412e717eee7f027420164eb5371a6e6c89491c33fd3dce31da9c6",
+    "shells/host/src/package_verify.rs": "1d6dbf97693d72b6ca45925cd26628e6443e780cf0d5a472a30d9bdc1c6423c4",
+    "tests/test_sprint_25_evidence.py": "f3a040c5576a0a966d8147d54ff261703a3f65ed016b138e8aba23f85a4764a6"
+  },
+  "summary": {
+    "local_readiness_checks_passed": true,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "supported_release": false
+  },
+  "verification_evidence": {
+    "complete_local_product_gate": true,
+    "complete_release_verification_protocols": false,
+    "deterministic_candidate_lifecycle": true,
+    "documentation_and_traceability_gate": true,
+    "independent_incident_tabletop": false,
+    "independent_release_review": false,
+    "native_cross_platform_workflow": false,
+    "production_manual_patch_exercise": false,
+    "production_signer_and_trust_root": false,
+    "signed_reference_platform_packages": false,
+    "strict_local_source_and_supply_chain_checks": true,
+    "synthetic_detached_signing_mechanics": true,
+    "synthetic_manual_patch_and_disable_controls": true
+  }
+}
