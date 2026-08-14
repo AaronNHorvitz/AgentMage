@@ -1,0 +1,88 @@
+{
+  "cases": [
+    {
+      "case_id": "CMP-01",
+      "claim_kind": "complete",
+      "evidence_revision": "fixture-v1",
+      "evidence_roles": [
+        "acceptance_verification"
+      ],
+      "expected": {
+        "code": "complete",
+        "verified": true
+      },
+      "expected_revision": "fixture-v1",
+      "prerequisites": [
+        {
+          "claim_id": "claim-read",
+          "verified": true
+        },
+        {
+          "claim_id": "claim-test",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "case_id": "CMP-02",
+      "claim_kind": "complete",
+      "evidence_revision": "fixture-v1",
+      "evidence_roles": [],
+      "expected": {
+        "code": "missing-evidence",
+        "verified": false
+      },
+      "expected_revision": "fixture-v1",
+      "prerequisites": []
+    },
+    {
+      "case_id": "CMP-03",
+      "claim_kind": "complete",
+      "evidence_revision": "fixture-v1",
+      "evidence_roles": [
+        "acceptance_verification"
+      ],
+      "expected": {
+        "code": "stale-evidence",
+        "verified": false
+      },
+      "expected_revision": "fixture-v2",
+      "prerequisites": []
+    },
+    {
+      "case_id": "CMP-04",
+      "claim_kind": "read",
+      "evidence_revision": "fixture-v1",
+      "evidence_roles": [],
+      "expected": {
+        "code": "unsupported-claim",
+        "verified": false
+      },
+      "expected_revision": "fixture-v1",
+      "prerequisites": []
+    },
+    {
+      "case_id": "CMP-05",
+      "claim_kind": "complete",
+      "evidence_revision": "fixture-v1",
+      "evidence_roles": [
+        "acceptance_verification"
+      ],
+      "expected": {
+        "code": "unverified-prerequisite",
+        "verified": false
+      },
+      "expected_revision": "fixture-v1",
+      "prerequisites": [
+        {
+          "claim_id": "claim-read",
+          "verified": false
+        }
+      ]
+    }
+  ],
+  "external_network_used": false,
+  "fixture_set_id": "agentmage-completion-evidence-v1",
+  "private_user_data_used": false,
+  "schema_version": 1
+}

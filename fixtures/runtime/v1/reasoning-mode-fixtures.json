@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "authority": "descriptive-only",
+      "case_id": "RMD-01",
+      "clarification_gate_required": true,
+      "contradiction_check_required": true,
+      "independent_verification_required": true,
+      "maximum_assumptions": 4,
+      "maximum_clarification_questions": 2,
+      "maximum_hypotheses": 4,
+      "mode": "concise",
+      "private_chain_of_thought_retained": false
+    },
+    {
+      "authority": "descriptive-only",
+      "case_id": "RMD-02",
+      "clarification_gate_required": true,
+      "contradiction_check_required": true,
+      "independent_verification_required": true,
+      "maximum_assumptions": 16,
+      "maximum_clarification_questions": 8,
+      "maximum_hypotheses": 16,
+      "mode": "deep",
+      "private_chain_of_thought_retained": false
+    }
+  ],
+  "external_network_used": false,
+  "fixture_set_id": "agentmage-reasoning-modes-v1",
+  "mode_changes_authority": false,
+  "mode_changes_evidence_standard": false,
+  "private_user_data_used": false,
+  "schema_version": 1
+}

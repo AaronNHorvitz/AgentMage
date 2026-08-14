@@ -1,0 +1,128 @@
+{
+  "cases": [
+    {
+      "case_id": "PLN-01",
+      "expected": {
+        "admitted": true,
+        "code": "valid"
+      },
+      "plan_state": "proposed",
+      "steps": [
+        {
+          "depends_on": [],
+          "expected_evidence": [
+            "observation"
+          ],
+          "ordinal": 0,
+          "plan_step_id": "plan-fixture:step:0",
+          "state": "proposed"
+        },
+        {
+          "depends_on": [
+            "plan-fixture:step:0"
+          ],
+          "expected_evidence": [
+            "validation"
+          ],
+          "ordinal": 1,
+          "plan_step_id": "plan-fixture:step:1",
+          "state": "proposed"
+        }
+      ]
+    },
+    {
+      "case_id": "PLN-02",
+      "expected": {
+        "admitted": true,
+        "code": "one-active-step"
+      },
+      "plan_state": "in_progress",
+      "steps": [
+        {
+          "depends_on": [],
+          "expected_evidence": [
+            "observation"
+          ],
+          "ordinal": 0,
+          "plan_step_id": "plan-fixture:step:0",
+          "state": "running"
+        },
+        {
+          "depends_on": [
+            "plan-fixture:step:0"
+          ],
+          "expected_evidence": [
+            "validation"
+          ],
+          "ordinal": 1,
+          "plan_step_id": "plan-fixture:step:1",
+          "state": "proposed"
+        }
+      ]
+    },
+    {
+      "case_id": "PLN-03",
+      "expected": {
+        "admitted": false,
+        "code": "competing-running-step"
+      },
+      "plan_state": "in_progress",
+      "steps": [
+        {
+          "depends_on": [],
+          "expected_evidence": [
+            "observation"
+          ],
+          "ordinal": 0,
+          "plan_step_id": "plan-fixture:step:0",
+          "state": "running"
+        },
+        {
+          "depends_on": [
+            "plan-fixture:step:0"
+          ],
+          "expected_evidence": [
+            "validation"
+          ],
+          "ordinal": 1,
+          "plan_step_id": "plan-fixture:step:1",
+          "state": "running"
+        }
+      ]
+    },
+    {
+      "case_id": "PLN-04",
+      "expected": {
+        "admitted": false,
+        "code": "dependency-incomplete"
+      },
+      "plan_state": "current",
+      "steps": [
+        {
+          "depends_on": [],
+          "expected_evidence": [
+            "observation"
+          ],
+          "ordinal": 0,
+          "plan_step_id": "plan-fixture:step:0",
+          "state": "proposed"
+        },
+        {
+          "depends_on": [
+            "plan-fixture:step:0"
+          ],
+          "expected_evidence": [
+            "validation"
+          ],
+          "ordinal": 1,
+          "plan_step_id": "plan-fixture:step:1",
+          "state": "ready"
+        }
+      ]
+    }
+  ],
+  "external_network_used": false,
+  "fixture_set_id": "agentmage-runtime-planning-v1",
+  "private_user_data_used": false,
+  "schema_version": 1
+}
