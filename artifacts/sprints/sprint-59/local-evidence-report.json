@@ -1,0 +1,331 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_59_local_evidence",
+  "source_revision": "00ed67a195c9a362049e3199c2d02073929f8dc4",
+  "source_sha256": {
+    "Cargo.toml": "21e218536e619b4daab61479535e71d07a8f45d097d6062b9f488725053749db",
+    "Cargo.lock": "87a6362a8e3bc06d7c6fdcec0c43db63343919b8c9004295bcdf98ff7b27ac99",
+    "capabilities/knowledge/Cargo.toml": "2ecdd3d3e7f6d24487e5d151017a364dc08bc1df10e6850c58d14ec7ae52d88e",
+    "capabilities/knowledge/src/word_ooxml.rs": "e52cbbf10b0b3fe1ed88ba31550dc6a962968537dda311c88ad37254cc8bebb8",
+    "capabilities/knowledge/src/word_generation.rs": "9e17a4c5b86e4e470e7f2de4cfc6e5f9c8e9defd437d0df5ca3a3a5f40d5d32b",
+    "capabilities/knowledge/src/word_rich_generation.rs": "c018eb34100855138f80eecdca43982696fe50b38a74e1fcb30c4e029fdf9d23",
+    "capabilities/knowledge/src/word_edit.rs": "2d09126f235cb213a5ab3b857aadbc1925b72e515a2b14240074246f89784375",
+    "capabilities/knowledge/src/word_visual.rs": "61268f6ba390a44d4ed319d6a27971e4f89c3ea86d53d9734c679dfe6050af4f",
+    "capabilities/knowledge/src/word_receipt.rs": "352aabc1e98166b343f97c6427c15979cdf04957c2a3f59466fdf9b8b9c6522d",
+    "capabilities/knowledge/src/lib.rs": "cc312a660dcf1664bb266a500e4b69863cb699b178480aacd6cb6633ee28f8ad",
+    "schemas/runtime/rich-word-package-proposal.schema.json": "94ffc0a5ccd66230147e2a9ab19fc0e52204ab14a41afce15286927e06a6c416",
+    "schemas/runtime/examples/rich-word-package-proposal.valid.json": "0de4565c4869a65e6b9131dff429113bb61e36ba3202fdd6770609ee4af822f4",
+    "schemas/runtime/word-package-edit-preview.schema.json": "aadd43c2f87c13f0147a57d6c9eaea7b68dbf4c74bc9f762ed82a1d549cb7b4a",
+    "schemas/runtime/examples/word-package-edit-preview.valid.json": "388cd93b7f86d6af001ed5934678aaf50eb9c6be0f3405eb2f84336e0f4d6f37",
+    "schemas/runtime/word-visual-comparison-report.schema.json": "844327d07f311058d48f3863efcad59052e0e219b3edec115a08332c9e544121",
+    "schemas/runtime/examples/word-visual-comparison-report.valid.json": "d52e9c5f1606de79ec30187f556e8b6089b307d1cbdf53a40eaf684c5ff49a83",
+    "schemas/runtime/word-artifact-receipt.schema.json": "b98c05db9d16041ae6282ea75a18da01df1b2b4599a72e0f04824c9332a19c5d",
+    "schemas/runtime/examples/word-artifact-receipt.valid.json": "7bd5428bb0c8b6b3adffee3f9240fb747b4f93187dbe304ec8efe40c627d98ef",
+    "scripts/validate_planning_schemas.mjs": "60eb16ff07bd6a5436d09d563d8b890fb16821d2b580a18e7d56b50dfefc6c1f",
+    "tests/test_planning_schemas.mjs": "48a068c9e04283e78f98d807b836e3460e4aeaf76d3c63b49bafc33c03d1ae67",
+    "docs/verification/sprint-59-word-review-corpus.json": "f329cff91697a2f32184f9267f90866d13a020d6bdaaa5569d9fd54a02528339",
+    "docs/verification/sprint-59-word-renderer-manifest.json": "0be12b252beb7366fdc378d2af9f7653a5a4687a49c4362aaadde9a03a47b780",
+    "scripts/word_visual_contract.py": "daa8bc51188bb63132d9773dea56d423e9d16a996065a4120b4345e1262a5ba7",
+    "tests/test_word_visual_contract.py": "d7b6660f2005afdb69557ebebf92d0f5f3baba89e4438c2a02ef067faadec7fd",
+    "docs/architecture/word-rich-edit-and-visual-evidence.md": "648fe8746ff9a3181485963a14d6db2b6594072c153490df8104cd99242b6e9f",
+    "docs/guides/word-edit-and-visual-review.md": "c830f6c2af11a99fe7a1a9db6b650fdf5abcf5687401db3c453ff03a88ffb3f8",
+    "docs/verification/sprint-59-local-results.md": "884ca47498db9716d976ef94211dcf7b646c4304155ca1947dd808e6cb533912",
+    "scripts/sprint_59_evidence.py": "221a28f2d01131d06d221b351cfc297093cc56bb3821d6ce78c3a499d2f30115",
+    "tests/test_sprint_59_evidence.py": "7bf0e4aafc5736f75e27f875f02f93a3784b86595ae2c2c190a84137b0f7e1c4"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "word-rich-generation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_rich_generation::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f5397df1c9b8e34d9ec10d452f36c69b81fe30ca683b9cd60207fd5c6f903e22",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-edit-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_edit::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7856cf2c3981a7c9c5d8c2b6b2550484c58d8d6fa625d200afd977258a16be8c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-hostile-package-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_ooxml::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9cab561651da41f636ff6140db419692fea815c785d89179efbdbff031c58a41",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-visual-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_visual::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d19b0afd8f8aa44cb343546c9ac0f82bc714a2f499c6bd093e3a2995aeaff3bf",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-receipt-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_receipt::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a7ea4365c18a13403907c55a74ca761b1b22fea806ad5a1416d671d1dc3783e1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "87697fb0a219b7ecbb2851ae46926e2644323449d16c0876b0570fbcd00d4f0e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_word_visual_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "cbe4b84d897ac017db0552ccb3a31855ff0fb172bc344c967c4c4c92eb19e624",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "66fa44b6ffbb9f3a9dd126f87167b9fe4526af3030f94e1a0cb0086852e1fa29",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_59_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4a160235c0add54f7a5997815d0e01a072210439de4899c702c94dd3cd814662",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-SUP-003",
+    "SR-SUP-006",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "rich_helper_capability_count": 19,
+    "edit_operation_kind_count": 3,
+    "render_platform_identity_count": 4,
+    "word_runtime_schema_count": 7,
+    "review_corpus_case_count": 117,
+    "package_finding_kind_count": 10,
+    "deterministic_rich_generation": true,
+    "exact_replacement_redline_comment_preview": true,
+    "preserved_part_digest_ledger": true,
+    "hostile_package_fail_closed_tests": true,
+    "bounded_rgba_visual_comparator": true,
+    "deterministic_artifact_receipts": true,
+    "synthetic_evidence_blocks_completion": true,
+    "required_platforms_retained_in_receipt": true,
+    "network_access_capability": false,
+    "execution_capability": false,
+    "filesystem_mutation_capability": false,
+    "renderer_capability": false,
+    "product_coordinator": false,
+    "controlled_writer_integration": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "native_cross_platform_render_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 117,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "renderer_admitted": false,
+    "native_render_platform_count": 0,
+    "product_coordinator": false,
+    "controlled_writer_integration": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-58-BLOCKED",
+      "owner": "59.1"
+    },
+    {
+      "code": "WORD-RENDERER-NOT-ADMITTED",
+      "owner": "59.1.1.3"
+    },
+    {
+      "code": "WORD-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "59.1.2.2"
+    },
+    {
+      "code": "CONTROLLED-WRITER-INTEGRATION-ABSENT",
+      "owner": "59.1.2.2"
+    },
+    {
+      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
+      "owner": "59.1.2.2"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "59.1.3.5"
+    },
+    {
+      "code": "FEDORA-NATIVE-RENDER-EVIDENCE-ABSENT",
+      "owner": "59.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-RENDER-EVIDENCE-ABSENT",
+      "owner": "59.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-RENDER-EVIDENCE-ABSENT",
+      "owner": "59.1.3.4"
+    },
+    {
+      "code": "MACOS-RETAINED-RENDER-EVIDENCE-ABSENT",
+      "owner": "59.1.3.4"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "59.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT",
+      "owner": "59.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_59_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_58_closed": false,
+    "word_workflow_integrated": false,
+    "external_effects_enabled": false,
+    "cross_platform_render_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
