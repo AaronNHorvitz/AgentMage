@@ -5,6 +5,9 @@
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
 
+/// Authority-free knowledge-preview composition into kernel filesystem drafts.
+pub mod knowledge_write;
+
 pub mod protocol;
 
 #[cfg(target_os = "linux")]

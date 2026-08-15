@@ -111,6 +111,7 @@
       "id": "shell-host",
       "layer": 3,
       "allowed_imports": [
+        "capability-knowledge",
         "capability-read-only",
         "kernel-contracts",
         "kernel-engine",
@@ -118,6 +119,7 @@
         "platform-macos"
       ],
       "declared_imports": [
+        "capability-knowledge",
         "capability-read-only",
         "kernel-contracts",
         "kernel-engine",
@@ -150,6 +152,7 @@
       "allowed_imports": [],
       "declared_imports": [],
       "assembly_inputs": [
+        "capability-knowledge",
         "capability-read-only",
         "capability-repository-map",
         "platform-linux",
@@ -164,6 +167,7 @@
       "allowed_imports": [],
       "declared_imports": [],
       "assembly_inputs": [
+        "capability-knowledge",
         "capability-read-only",
         "capability-repository-map",
         "platform-macos",

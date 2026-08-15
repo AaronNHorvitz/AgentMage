@@ -7,7 +7,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "e51aa80bcf9e2e2b57c2f5ace6aa3f9a3b2aac6feab2bc4354f7dedaeee1cae3"
+          "content": "6146e956c2e8ba7b77885091b08b6b85152f3750ccc21ba14597b2dab0814c79"
         }
       ],
       "integrity": null,
@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "338f4fd6d42bdef559f09655aef6973baff49acba9cd9061e60a38540c725bdf"
+          "content": "a6599f477c6529d636cff44229256ab4d4dedb0449884c1d8014fc4cdb029b93"
         }
       ],
       "integrity": null,
@@ -9042,6 +9042,7 @@
     {
       "component_id": "cargo:agentmage-host@0.0.0",
       "depends_on": [
+        "cargo:agentmage-capability-knowledge@0.0.0",
         "cargo:agentmage-capability-read-only@0.0.0",
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
@@ -11825,7 +11826,7 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "a25f324fbc5258356d5fb21d24346073fcdae891032869fd8d81c02ca745ecec",
+    "Cargo.lock": "a3a7e2dcb04d713028859f3283809983ff1ef98b37915069f016e2db4a5e96e9",
     "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",

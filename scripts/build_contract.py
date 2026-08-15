@@ -37,7 +37,14 @@ EXPECTED_MEMBERS = {
 EXPECTED_CARGO_PACKAGES = {
     "capabilities/knowledge": (
         "agentmage-capability-knowledge",
-        {"agentmage-kernel-contracts", "rusqlite", "serde", "serde_json", "sha2"},
+        {
+            "agentmage-kernel-contracts",
+            "rusqlite",
+            "serde",
+            "serde_json",
+            "sha2",
+            "unicode-normalization",
+        },
     ),
     "capabilities/repository-map": (
         "agentmage-capability-repository-map",
@@ -109,6 +116,7 @@ EXPECTED_CARGO_PACKAGES = {
     "shells/host": (
         "agentmage-host",
         {
+            "agentmage-capability-knowledge",
             "agentmage-capability-read-only",
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",

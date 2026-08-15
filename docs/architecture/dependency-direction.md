@@ -16,11 +16,13 @@ flowchart BT
     PL -->|"effect mediation only"| KE
     PM["platform-macos"] --> KC
     PM -->|"planned effect mediation"| KE
+    CK["capability-knowledge"] --> KC
     CR["capability-read-only"] --> KC
     SH["shell-host"] --> KC
     SH --> KE
     SH --> PL
     SH --> PM
+    SH --> CK
     SH --> CR
     SV["shell-vscode"] -->|"generated protocol only"| KC
 ```
@@ -51,11 +53,13 @@ flowchart LR
     PKL["Linux package"] --> SH["host shell"]
     PKL --> SV["VS Code shell"]
     PKL --> PL["Linux adapter"]
+    PKL --> CK["Knowledge capability"]
     PKL --> CR["read-only capability"]
 
     PKM["macOS package"] --> SH
     PKM --> SV
     PKM --> PM["macOS adapter"]
+    PKM --> CK
     PKM --> CR
 
     XT["release xtask"] -.-> PKL

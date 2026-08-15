@@ -40,6 +40,7 @@ pub use knowledge_write::{
     KnowledgeNoteCreatePreview, KnowledgeNoteCreateRequest, KnowledgeSectionDraft,
     KnowledgeStructuralActionKind, KnowledgeStructuralActionPreview, KnowledgeWriteWorkflow,
     decide_index_publication, preview_knowledge_note_create, preview_knowledge_structural_action,
+    verify_knowledge_note_create_preview,
 };
 pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
@@ -49,7 +50,7 @@ pub use lifecycle::{
 pub use markdown_write::{
     MarkdownDocument, MarkdownEdit, MarkdownElement, MarkdownElementKind, MarkdownFidelityWarning,
     MarkdownLineEnding, MarkdownSourceRange, MarkdownUpdatePreview, MarkdownUpdateRequest,
-    MarkdownWriteError, preview_markdown_update,
+    MarkdownWriteError, preview_markdown_update, verify_markdown_update_preview,
 };
 pub use memory::{
     MemoryCandidate, MemoryCandidateClass, MemoryCandidateDecision, MemoryError, MemoryId,

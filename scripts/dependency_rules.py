@@ -28,6 +28,7 @@ EXPECTED_IMPORTS = {
     "capability-knowledge": {"kernel-contracts"},
     "capability-repository-map": {"kernel-contracts"},
     "shell-host": {
+        "capability-knowledge",
         "capability-read-only",
         "kernel-contracts",
         "kernel-engine",
@@ -55,6 +56,7 @@ EXPECTED_ASSEMBLY_INPUTS = {
     "shell-vscode": set(),
     "fixture-corpus": set(),
     "packaging-linux": {
+        "capability-knowledge",
         "capability-read-only",
         "capability-repository-map",
         "platform-linux",
@@ -63,6 +65,7 @@ EXPECTED_ASSEMBLY_INPUTS = {
         "shell-vscode",
     },
     "packaging-macos": {
+        "capability-knowledge",
         "capability-read-only",
         "capability-repository-map",
         "platform-macos",

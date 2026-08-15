@@ -417,6 +417,25 @@ pub fn preview_markdown_update(
     Ok(preview)
 }
 
+/// Recomputes every update-preview binding before host composition.
+pub fn verify_markdown_update_preview(
+    preview: &MarkdownUpdatePreview,
+) -> Result<(), MarkdownWriteError> {
+    if !valid_sha256(&preview.expected_source_sha256)
+        || preview.proposed_source_sha256 != sha256(&preview.proposed_markdown)
+        || preview.preview_sha256 != preview_digest(preview)?
+    {
+        return Err(MarkdownWriteError::StaleSource);
+    }
+    let parsed = MarkdownDocument::parse(preview.path.clone(), preview.proposed_markdown.clone())?;
+    if parsed.stable_id() != Some(&preview.stable_id)
+        || parsed.fidelity_warnings() != preview.fidelity_warnings
+    {
+        return Err(MarkdownWriteError::StructuralDrift);
+    }
+    Ok(())
+}
+
 #[derive(Clone, Copy)]
 struct SourceLine<'source> {
     number: u32,
@@ -1235,6 +1254,13 @@ fn preview_digest(preview: &MarkdownUpdatePreview) -> Result<String, MarkdownWri
     Ok(sha256(&json))
 }
 
+fn valid_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
 fn sha256(value: &[u8]) -> String {
     let mut output = String::with_capacity(64);
     for byte in Sha256::digest(value) {
@@ -1515,6 +1541,28 @@ mod tests {
                 },
             ),
             Err(MarkdownWriteError::InvalidIdentity)
+        );
+    }
+
+    #[test]
+    fn update_preview_rejects_noncanonical_source_digest() {
+        let document = MarkdownDocument::parse(path(), source("\n")).expect("document");
+        let mut preview = preview_markdown_update(
+            &document,
+            request(
+                &document,
+                MarkdownEdit::ReplaceHeadingBody {
+                    heading: "Summary".to_owned(),
+                    level: 2,
+                    replacement: "Revised summary.".to_owned(),
+                },
+            ),
+        )
+        .expect("preview");
+        preview.expected_source_sha256 = "G".repeat(64);
+        assert_eq!(
+            verify_markdown_update_preview(&preview),
+            Err(MarkdownWriteError::StaleSource)
         );
     }
 

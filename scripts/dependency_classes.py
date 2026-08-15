@@ -13,6 +13,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CLASSES_PATH = ROOT / "architecture" / "dependency-classes.json"
 CARGO_MANIFESTS = (
+    "capabilities/knowledge/Cargo.toml",
     "capabilities/read-only/Cargo.toml",
     "kernel/contracts/Cargo.toml",
     "kernel/engine/Cargo.toml",
@@ -23,6 +24,7 @@ CARGO_MANIFESTS = (
     "shells/host/Cargo.toml",
 )
 EXPECTED_INTERNAL_CARGO = {
+    "agentmage-capability-knowledge",
     "agentmage-capability-read-only",
     "agentmage-kernel-contracts",
     "agentmage-kernel-engine",

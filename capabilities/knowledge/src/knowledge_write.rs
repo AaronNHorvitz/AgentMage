@@ -317,6 +317,26 @@ pub fn preview_knowledge_note_create(
     Ok(preview)
 }
 
+/// Recomputes every creation-preview binding before host composition.
+pub fn verify_knowledge_note_create_preview(
+    preview: &KnowledgeNoteCreatePreview,
+) -> Result<(), MarkdownWriteError> {
+    if preview.proposed_source_sha256 != sha256(&preview.proposed_markdown)
+        || !valid_sha256(&preview.expected_namespace_sha256)
+        || preview.preview_sha256 != create_preview_digest(preview)?
+    {
+        return Err(MarkdownWriteError::StaleSource);
+    }
+    let parsed = MarkdownDocument::parse(preview.path.clone(), preview.proposed_markdown.clone())?;
+    if parsed.stable_id() != Some(&preview.stable_id)
+        || wiki_links(&preview.proposed_markdown)? != preview.verified_wiki_links
+        || parsed.fidelity_warnings() != preview.fidelity_warnings
+    {
+        return Err(MarkdownWriteError::StructuralDrift);
+    }
+    Ok(())
+}
+
 /// Creates one non-bulk structural-action preview with mandatory extra confirmation.
 pub fn preview_knowledge_structural_action(
     document: &MarkdownDocument,
@@ -541,14 +561,10 @@ fn wiki_links(bytes: &[u8]) -> Result<Vec<String>, MarkdownWriteError> {
             .find("]]")
             .ok_or(MarkdownWriteError::MalformedMarkdown)?;
         let raw = &text[content_start..content_start + end];
-        let target = raw
-            .split_once('|')
-            .map_or(raw, |(target, _)| target)
+        let target_without_alias = raw.split_once('|').map_or(raw, |(target, _)| target);
+        let target = target_without_alias
             .split_once('#')
-            .map_or_else(
-                || raw.split_once('|').map_or(raw, |(target, _)| target),
-                |(target, _)| target,
-            )
+            .map_or(target_without_alias, |(target, _)| target)
             .trim();
         if prohibited_link(target) {
             return Err(MarkdownWriteError::AmbiguousTarget);
@@ -772,6 +788,19 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn create_verification_recomputes_declared_links_from_proposed_bytes() {
+        let mut preview =
+            preview_knowledge_note_create(request(KnowledgeWriteWorkflow::Decision), &namespace())
+                .expect("create preview");
+        preview.verified_wiki_links = vec!["Project Two".to_owned()];
+        preview.preview_sha256 = create_preview_digest(&preview).expect("digest");
+        assert_eq!(
+            verify_knowledge_note_create_preview(&preview),
+            Err(MarkdownWriteError::StructuralDrift)
+        );
     }
 
     #[test]

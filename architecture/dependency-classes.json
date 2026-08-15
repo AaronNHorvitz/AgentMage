@@ -4,6 +4,7 @@
   "status": "enforced",
   "production": {
     "cargo_internal_path_packages": [
+      "agentmage-capability-knowledge",
       "agentmage-capability-read-only",
       "agentmage-kernel-contracts",
       "agentmage-kernel-engine",
