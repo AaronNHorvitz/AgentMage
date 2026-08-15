@@ -2145,7 +2145,7 @@ mod tests {
     fn fast_forward_is_proven_and_compare_and_swap_only() {
         let plan = plan_branch_fast_forward(
             "transaction-ff",
-            "refs/heads/main",
+            "refs/heads/agentmage/tasks/review",
             &object('a'),
             &object('b'),
             true,
