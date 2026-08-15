@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_45_local_evidence",
+  "source_revision": "4c3c07ea5a068440190381a59ce6194276188a73",
+  "source_sha256": {
+    "capabilities/repository-map/src/structured_edit.rs": "4f433553b722d146d2485f30393968f64fa283704c6b975a52ba04ac6e7f83e6",
+    "capabilities/repository-map/src/language_service.rs": "2576a6c13cc205d5c20bce8e3198e81209a44a3f988a7e8b10435471a823e457",
+    "capabilities/repository-map/src/package_scaffold.rs": "fbd55dab025d8d1cdf4573608b714bfebcc0ae002efd6082bf81547c0f8cd7d5",
+    "capabilities/repository-map/src/test_generation.rs": "bd6276ddfb5aae47a664f942f617b10a89e020c7cac46619f304a8ad421592d2",
+    "capabilities/repository-map/src/lib.rs": "7e0bc8dc97eba201e8feb180bffabcb255f90f05ee0cb9e76cc38c1902aafbe1",
+    "capabilities/repository-map/tests/structured_coding_matrix.rs": "6efb49e74f904b1463bb9f0b50a2aa7c9fe7ce8887bb2b6c0684adff8e085643",
+    "capabilities/repository-map/README.md": "b3ef19c3cdfcc43a951f56a7fdaeb1eb867564bba485427f58a83f82f7ffe399",
+    "shells/host/src/code_change.rs": "1db27a2a99c3e3de1fcb59e7b8ed9d14296ed06e3bfc360651a85690ab1dd50f",
+    "shells/host/src/lib.rs": "cc7bc0b276c9139855482bcd987ed8829f6ca7674823ea60085a4cb7a2e084b9",
+    "shells/host/Cargo.toml": "b16b34ac2166f9d3cae6b5d1f579ce4a63ad7572280e546f6b85979ad0f25ec9",
+    "kernel/engine/src/write_approval.rs": "3aec5c24b53f5ab5e0476c03c13422a737a59d2932ba1649b15d2e50306e67e0",
+    "kernel/engine/src/write_transaction.rs": "964aa6bac3019b3d2da75ad38a2709de3ec1764149222170904187750818fe48",
+    "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
+    "kernel/engine/tests/write_recovery_matrix.rs": "5e1a223441698dfeab1775da6173f0c01728af40be67072635fe3448c9d2db6b",
+    "platforms/linux/src/write_transaction.rs": "c7dbcf243a686184ead569ca58fe6a0dd0d51bdf2aae00c50228dc1cca927e64",
+    "docs/architecture/structured-code-changes.md": "b5a09829aa31e51af3941a72e5f3a7a58c2a32fca5aa0d1fc848d55815f33c17",
+    "docs/guides/reviewing-structured-code-changes.md": "9c1f04d56434ad6b9e10f0d43e62a53bc25a291d7ef92bdd4d46c78a2f18ea6e",
+    "docs/security/sprint-45-ffi-unsafe-inventory.md": "5e3e66a5904e7799ce815b5ff623486cc67c844837d8bf02185fd20774e8ced3",
+    "docs/verification/sprint-45-language-service-confinement.md": "797a747ab093d81c9dff6710efd8af730bbaf0c9f2dfc09da5fd53e157ee0dfb",
+    "docs/verification/sprint-45-coding-corpus.json": "2854d0c7ab203de3314a79991d2b6c456235cb52a344f2352a2af7d4521342c8",
+    "docs/verification/sprint-45-local-results.md": "cf6a84833221230fb002659dbb6f7c574969bef30dcf478328aaddd713268841",
+    "scripts/sprint_45_evidence.py": "1d279a45534b58f2d13488d8aae64a74d82705de96f509c4df2b183306f23c21",
+    "tests/test_sprint_45_evidence.py": "d4b57f4b419ebf3f919274f650f0300ff6cd9e2e5694c2c8e6f4613525850a1b"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "git": "git version 2.55.0"
+  },
+  "commands": [
+    {
+      "id": "structured-edit-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "structured_edit::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8eef441f4802bdd8eb0c7a0fdaac7f9c0a7bd8143e664780ab10d4594883d5da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "language-service-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "language_service::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ad65905e49eaf24a301aba0ecbc7a45b20820512be6fea796261c96b66b6e618",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "package-scaffold-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "package_scaffold::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "152d6c3f18aab19ab8c2f7d3708d78fb998a1315e4564b392cf6b7d3dc52d379",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "test-generation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "test_generation::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1d51a4b83831f2c81074da5a6e52ad2de46ddf7207fb80afe828306c09cfaf51",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "fictional-coding-matrix",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--test",
+        "structured_coding_matrix",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2088e5c2c4ea6a35c071a47ceeb56a2904f2c09b80207b9089f9ac2252d8b4b5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "host-composition-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "code_change::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a637a1abbb7fa743d0cb7eb64c50a94aef211c6bd1a1111b9f6916af73e1434a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "write-approval-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_approval::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2767d927b6df12ec3c440f1caa5f30754a94332936a9764879c99c709d28a16a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "write-transaction-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_transaction::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d0d717bd3a5472647e7e3738abe0b0e808c71438d5d8fa8a2eeda4670065df09",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "write-recovery-matrix",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "write_recovery_matrix",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c5e8630c4ab1f22b40cb6de2ce2e95d1b9fccd772da4bb9d376a5c7b08d61387",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-write-transaction-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "write_transaction::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9c6a4a6a8df2222d4bd9dc1de71cf820d5c459c4ce53411e140b006d0f6e398f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "repository-map-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "host-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "05942bdaf96fb01bd45eb86897c04e04f2043a4668c26b8816afdabef3605358",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_45_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "80144f3bf12d071a1497821467ab02765712cb11da3f547a5e2b5cf79f938e9a",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "git",
+      "name": "git",
+      "size": 4945312,
+      "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+      "root_owned": true,
+      "group_or_world_writable": false
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-SUP-003",
+    "SR-SUP-009",
+    "SR-AI-005",
+    "SR-TST-002",
+    "SR-TST-005",
+    "SR-TST-011"
+  ],
+  "implemented_contracts": {
+    "six_artifact_classes": true,
+    "parser_backed_structured_edits": true,
+    "unique_exact_text_fallback": true,
+    "confined_language_service_contract": true,
+    "ordered_atomic_shadow_composition": true,
+    "seven_typed_review_hooks": true,
+    "repository_style_test_generation_plan": true,
+    "unrelated_byte_preservation_evidence": true,
+    "approved_package_scaffold_plans": true,
+    "production_chat_coding_coordinator": false,
+    "production_language_service_sandbox": false,
+    "controlled_package_scaffold_application": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "fictional_language_case_count": 7,
+    "language_service_capability_count": 5,
+    "forbidden_service_power_count": 7,
+    "approved_package_convention_count": 5,
+    "test_concern_count": 6,
+    "unauthorized_mutation_acceptance_count": 0,
+    "sprint_added_unsafe_or_ffi_file_count": 0,
+    "production_language_service_sandbox": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-44-BLOCKED",
+      "owner": "45.1"
+    },
+    {
+      "code": "PRODUCTION-CHAT-CODING-COORDINATOR-ABSENT",
+      "owner": "45.1.1"
+    },
+    {
+      "code": "PRODUCTION-LANGUAGE-SERVICE-SANDBOX-ABSENT",
+      "owner": "45.1.1.3"
+    },
+    {
+      "code": "CONTROLLED-PACKAGE-SCAFFOLD-APPLICATION-ABSENT",
+      "owner": "45.1.1.8"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PARENT-EXECUTION-ABSENT",
+      "owner": "45.1.3.4"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "45.1.3"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "45.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-CODING-BOUNDARY-REVIEW-ABSENT",
+      "owner": "45.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-002"
+    }
+  ],
+  "summary": {
+    "local_sprint_45_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_44_closed": false,
+    "production_chat_coding_coordinator_active": false,
+    "production_language_service_sandbox_active": false,
+    "controlled_package_scaffold_application_active": false,
+    "trusted_installed_parent_execution_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
