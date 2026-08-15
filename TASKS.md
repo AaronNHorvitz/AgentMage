@@ -3676,27 +3676,27 @@ verification task, Story 48.1, both story criteria, Sprint AC 48.AC1, and the sp
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 49.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 49.1.1.1** (legacy `S-042-I01`): Preserve Gemma 4 26B and Devstral Small 2 as named historical later candidates while verifying every proposed routing profile's exact identity, publisher, lineage, license, origin policy, artifact, tokenizer, template, codec, runtime, context, decoding, resources, role evidence, and platform support before configuration.
-  - [ ] **Sub-task 49.1.1.2** (legacy `S-042-I02`): Benchmark dialogue, tool selection, summarization, repository maps, embeddings, reranking, patch generation, citation verification, planning, coding, retrieval, and document roles independently.
-  - [ ] **Sub-task 49.1.1.3** (legacy `S-042-I03`): Implement role-to-profile allowlists and refuse unmeasured role assignments.
-  - [ ] **Sub-task 49.1.1.4** (legacy `S-042-I04`): Implement visible fast, standard, deep, and verify budgets with explicit model, context, tools, and review boundaries.
-  - [ ] **Sub-task 49.1.1.5** (legacy `S-042-I05`): Implement a measured local router that uses deterministic task class, separately computed action risk, admitted role capability, current resource fit, and published benchmark results rather than model self-confidence or an authority-bearing learned classifier.
-  - [ ] **Sub-task 49.1.1.6** (legacy `S-042-I06`): Preserve manual selection and expose every routing choice and disagreement.
-  - [ ] **Sub-task 49.1.1.7** (legacy `S-042-I07`): Add optional second-model verification only where it improves measured high-risk results.
-  - [ ] **Sub-task 49.1.1.8** (legacy `S-042-I08`): Keep invisible fallback, broad provider marketplace, automatic frontier routing, and unmeasured ensembles disabled.
+  - [ ] **Sub-task 49.1.1.1** (legacy `S-042-I01`): Preserve Gemma 4 26B and Devstral Small 2 as named historical later candidates while verifying every proposed routing profile's exact identity, publisher, lineage, license, origin policy, artifact, tokenizer, template, codec, runtime, context, decoding, resources, role evidence, and platform support before configuration. Local contribution: [`historical-later-candidates.json`](model-profiles/routing/historical-later-candidates.json) preserves both names with zero selection authority; Gemma binds its frozen Google source entry and remains `BLOCKED`, while Devstral remains `UNRESOLVED`. The Rust router requires every named exact field, but no approved later-profile manifest exists.
+  - [ ] **Sub-task 49.1.1.2** (legacy `S-042-I02`): Benchmark dialogue, tool selection, summarization, repository maps, embeddings, reranking, patch generation, citation verification, planning, coding, retrieval, and document roles independently. Local contribution: the closed 12-role corpus, exact tuple, thresholds, baseline, and metric requirements exist; no live later-profile role campaign exists.
+  - [x] **Sub-task 49.1.1.3** (legacy `S-042-I03`): Implement role-to-profile allowlists and refuse unmeasured role assignments. Evidence: commit `1aa127b` stores role evidence independently by a closed 12-role taxonomy and rejects missing, stale, under-trial, under-threshold, or cross-role evidence.
+  - [x] **Sub-task 49.1.1.4** (legacy `S-042-I04`): Implement visible fast, standard, deep, and verify budgets with explicit model, context, tools, and review boundaries. Evidence: all four fixed local-only budgets carry exact context, tool-proposal, and standard/enhanced/independent review ceilings in code and the machine-readable decision table.
+  - [x] **Sub-task 49.1.1.5** (legacy `S-042-I05`): Implement a measured local router that uses deterministic task class, separately computed action risk, admitted role capability, current resource fit, and published benchmark results rather than model self-confidence or an authority-bearing learned classifier. Evidence: `MeasuredRoutingRequest` accepts only typed task, risk, budget, platform, resource, policy, benchmark-generation, and optional manual-choice facts; the receipt explicitly records that model confidence and frontier transfer were unused.
+  - [x] **Sub-task 49.1.1.6** (legacy `S-042-I06`): Preserve manual selection and expose every routing choice and disagreement. Evidence: an eligible exact manual choice is preserved, an ineligible or missing choice blocks without fallback, deterministic equal-score selection is stable, and every tied profile remains in the receipt disagreement list.
+  - [x] **Sub-task 49.1.1.7** (legacy `S-042-I07`): Add optional second-model verification only where it improves measured high-risk results. Evidence: a distinct eligible verifier is considered only for high/critical-risk `verify` work with at least 150 basis points of current measured verification benefit; all other states retain the required review without an ensemble.
+  - [x] **Sub-task 49.1.1.8** (legacy `S-042-I08`): Keep invisible fallback, broad provider marketplace, automatic frontier routing, and unmeasured ensembles disabled. Evidence: these paths have no router API variant, every candidate must be local-only and fallback-disabled, and the decision table and 48-case corpus fail closed on every named attempt.
 
 - [ ] **Task 49.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 49.1.2.1:** Approved later-profile manifests.
-  - [ ] **Sub-task 49.1.2.2:** Role-specific capability matrix and benchmark corpus.
-  - [ ] **Sub-task 49.1.2.3:** Measured routing decision table.
-  - [ ] **Sub-task 49.1.2.4:** Routing and disagreement audit views.
+  - [ ] **Sub-task 49.1.2.1:** Approved later-profile manifests. Historical blocked/unresolved candidate records exist, but there is no approved later-profile manifest and zero profiles are enabled.
+  - [x] **Sub-task 49.1.2.2:** Role-specific capability matrix and benchmark corpus. Evidence: the retained Sprint 15 candidate-role matrix and [`role-benchmark-corpus-v1.json`](model-profiles/routing/role-benchmark-corpus-v1.json) enumerate all 12 roles, required suites, thresholds, baseline, and 19 exact tuple fields without borrowing results.
+  - [x] **Sub-task 49.1.2.3:** Measured routing decision table. Evidence: [`measured-routing-decision-table-v1.json`](model-profiles/routing/measured-routing-decision-table-v1.json) freezes 16 visible rules and four budgets; four mutation-test groups reject hidden or remote authority.
+  - [ ] **Sub-task 49.1.2.4:** Routing and disagreement audit views. Local contribution: the content-minimized `MeasuredRoutingReceipt` and architecture report define exact candidate, rationale, selected profile, verifier, disagreement, policy, benchmark, and digest projections; no integrated native audit view exists.
 
 - [ ] **Task 49.1.3 - Verify and close the story**
-  - [ ] **Sub-task 49.1.3.1:** `S-042-UT01` verifies each later profile's model/runtime/license/lineage/quantization/template/hash/resource/platform manifest; assert unapproved, Chinese, Chinese-derived, incompatible, or silently changed profiles cannot register.
-  - [ ] **Sub-task 49.1.3.2:** `S-042-UT02` evaluates deterministic-first and measured routing rules at every threshold, tie, degraded, stale, blocked-hardware, disagreement, classifier-failure, and no-profile state; assert stable chosen profile, visible rationale, and manual override within approved choices.
-  - [ ] **Sub-task 49.1.3.3:** `S-042-ST01` attempts model self-selection, profile escalation, cloud fallback, automatic install, authority transfer, and disagreement suppression; assert zero hidden switch or expanded capability.
-  - [ ] **Sub-task 49.1.3.4:** `S-042-AT01` runs role-specific quality, grounding, reliability, latency, memory, energy where measured, and failure benchmarks repeatedly; assert routing activates only for statistically supported declared benefit.
-  - [ ] **Sub-task 49.1.3.5 - Product security evidence:** Map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-001`/`SR-AI-006`/`SR-AI-010` through `SR-AI-014`, `SR-TST-006`; retain manifests, supplier decisions, benchmark code/raw results, routing traces, disagreement cases, and impact reviews.
+  - [ ] **Sub-task 49.1.3.1:** `S-042-UT01` verifies each later profile's model/runtime/license/lineage/quantization/template/hash/resource/platform manifest; assert unapproved, Chinese, Chinese-derived, incompatible, or silently changed profiles cannot register. Local contribution: exact synthetic profile tests and historical-candidate mutation tests deny every named boundary, including Chinese and Chinese-derived origin; real approved later-profile manifests remain absent.
+  - [x] **Sub-task 49.1.3.2:** `S-042-UT02` evaluates deterministic-first and measured routing rules at every threshold, tie, degraded, stale, blocked-hardware, disagreement, classifier-failure, and no-profile state; assert stable chosen profile, visible rationale, and manual override within approved choices. Evidence: eight focused Rust tests cover the exact 250-basis-point threshold, below-threshold denial, stable tie/disagreement, approved/degraded/nonapproved states, stale policy/benchmark/resources, hardware/platform/context/tools, manual choice, verifier eligibility, duplicates, invalid input, and empty profile inventory; degraded and unavailable deterministic-classification states block before selection.
+  - [x] **Sub-task 49.1.3.3:** `S-042-ST01` attempts model self-selection, profile escalation, cloud fallback, automatic install, authority transfer, and disagreement suppression; assert zero hidden switch or expanded capability. Evidence: the closed request contains none of those fields, artifact mutation tests reject every disabled path, and the 48-case corpus records zero accepted unauthorized or remote selection.
+  - [ ] **Sub-task 49.1.3.4:** `S-042-AT01` runs role-specific quality, grounding, reliability, latency, memory, energy where measured, and failure benchmarks repeatedly; assert routing activates only for statistically supported declared benefit. The corpus and deterministic threshold verifier exist, but no live later-profile benchmark run exists and routing remains disabled.
+  - [ ] **Sub-task 49.1.3.5 - Product security evidence:** Map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-001`/`SR-AI-006`/`SR-AI-010` through `SR-AI-014`, `SR-TST-006`; retain manifests, supplier decisions, benchmark code/raw results, routing traces, disagreement cases, and impact reviews. Partial local evidence: [`sprint-49-local-results.md`](docs/verification/sprint-49-local-results.md) maps all 11 controls and retains contract traces, corpus, source hashes, and blockers; approved manifests, supplier disposition, live raw benchmark results, integrated impact review, and independent review remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3706,12 +3706,25 @@ verification task, Story 48.1, both story criteria, Sprint AC 48.AC1, and the sp
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 49.AC1:** No profile or role is enabled without passing its license, lineage, origin, security, quality, hardware, and platform gates.
+- [x] **Sprint AC 49.AC1:** No profile or role is enabled without passing its license, lineage, origin, security, quality, hardware, and platform gates. Evidence: exact boundary and mutation tests pass, the zero-model activation gate remains green, and current enabled profile count is zero.
 - [ ] **Sprint AC 49.AC2:** Routing improves declared acceptance metrics over the best published manual-selection baseline for each promoted task class without weakening security, evidence, latency, resource, or user-intervention thresholds.
-- [ ] **Sprint AC 49.AC3:** Unmeasured, unavailable, degraded, or failing tiers are never selected.
-- [ ] **Sprint AC 49.AC4:** User selection and visible stop behavior remain available.
-- [ ] **Sprint AC 49.AC5:** No local routing decision can invoke or transfer content to a frontier service.
-- [ ] **Sprint AC 49.AC6:** Routing decisions preserve Decision 0027's separation of sensitivity, risk, capability, policy, and completion and remain reproducible from typed facts without model self-confidence.
+- [x] **Sprint AC 49.AC3:** Unmeasured, unavailable, degraded, or failing tiers are never selected. Evidence: focused tests deny unmeasured, unavailable, degraded, nonapproved, stale, and failing profiles even when another part of their exact tuple appears eligible.
+- [x] **Sprint AC 49.AC4:** User selection and visible stop behavior remain available. Evidence: exact manual choice is preserved, refused without fallback when ineligible, and every blocked decision has a stable visible result code and candidate rationale.
+- [x] **Sprint AC 49.AC5:** No local routing decision can invoke or transfer content to a frontier service. Evidence: only local platform identities exist, profiles must be local-only, the receipt fixes `frontier_transfer` to false, and remote paths are structurally absent and adversarially denied.
+- [x] **Sprint AC 49.AC6:** Routing decisions preserve Decision 0027's separation of sensitivity, risk, capability, policy, and completion and remain reproducible from typed facts without model self-confidence. Evidence: task class, action risk, role capability, policy, resource fit, benchmark generation, budget, selection, and downstream completion authority remain separate typed fields and boundaries.
+
+**Local evidence disposition:** commits `1aa127b` through `bc73047` implement and
+qualify the locally executable Sprint 49 routing contract. The immutable report at
+[`artifacts/sprints/sprint-49/local-evidence-report.json`](artifacts/sprints/sprint-49/local-evidence-report.json),
+SHA-256 `cc07352773e1e59847bdf16430a5117466eeb8efca8c0851b7db35f1e7f4e2d6`, is
+bound to source revision `925d7f1702b1c2cd300151d9891057fbc79485b4`. All 11 commands
+pass and all three focused suites report zero skipped tests. Sprint 49 remains
+**BLOCKED** because Sprint 48 is blocked and approved later-profile manifests, live
+role-specific benchmark campaigns, product router integration, native audit views,
+supported-platform acceptance, trusted installed-package execution, independent review,
+and deferred manual fuzzing remain absent. Product routing is disabled and enabled model
+count remains zero. Both implementation and artifact tasks, the verification task, Story
+49.1, all story criteria, Sprint AC 49.AC2, and the sprint remain open.
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 50 - Coding Skills, Documentation, and v0.4 Release

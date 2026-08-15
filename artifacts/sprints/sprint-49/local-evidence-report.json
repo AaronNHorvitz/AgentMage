@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_49_local_evidence",
+  "source_revision": "925d7f1702b1c2cd300151d9891057fbc79485b4",
+  "source_sha256": {
+    "kernel/engine/src/model_routing.rs": "9bc3564b574517cd7f57c26ec1dc961659a4aa58481869a3b2c3e4d79144856d",
+    "kernel/engine/src/model_selection.rs": "43a6c7e5ef8d87689bb6157e65eaf3ab7b4a7fdc3cabd5bb9c6614bc3bb4bb8c",
+    "kernel/engine/src/model_runtime.rs": "43d542b84e8a4a0ec0bd919afb2d623d104b3cfb3b653b82cd457129f53e8a9a",
+    "kernel/engine/src/lib.rs": "143b7516a21c03769d6ef53097a87676efadca13c23c2505652618063b56472b",
+    "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
+    "model-profiles/routing/historical-later-candidates.json": "093a22d9cbe91b66aa9e4c60949192f01b0398d62364471603614e39495968d4",
+    "model-profiles/routing/role-benchmark-corpus-v1.json": "5f8c86ab32446730a5fcb0cc009e5db261461750c02499e15e52e0f44da8755c",
+    "model-profiles/routing/measured-routing-decision-table-v1.json": "c7535b584fe6d78bd3cd7d709756c2b65a680c2905938dbe914b31fcb634bdfc",
+    "scripts/model_routing_contract.py": "aa61ec57a0e6b13d852fc27eafaad3529802930bb1bd90d4b9819c8d079d691c",
+    "tests/test_model_routing_contract.py": "b11610ead94e0394f614bba184c6a63401953139dd5e15952e44cacc96ee11dd",
+    "scripts/benchmark_contract.py": "f58631cfe90f7ed75aca1a2983c075c118fbfb74100597aac7431b05fea32889",
+    "tests/test_benchmark_contract.py": "9a2998f0dd3b5cb1d0df88acd6fba10759cfc53e21a0b6526d3450e7de46d1b4",
+    "scripts/model_activation.py": "bcde3e61ed1ccf9fce8b7168283cf46d08a0c047e9fdb84d1196196bab0f4399",
+    "tests/test_model_activation.py": "bb331612b2b286443b8880513df90632325ca84f59bcb1ce09b9ceaa8dc7ff68",
+    "docs/verification/sprint-49-routing-corpus.json": "40f0a247cfa3694fd32afd10142630ca0985e01648c07f04ee95bd34108b0715",
+    "tests/test_sprint_49_routing_corpus.py": "c55bc33d6dc0cc405735f48193fd1586bd01b21ac8c2b2333734e1563b6abd2b",
+    "docs/architecture/measured-local-model-routing.md": "c1bbe9df2f15968bffc43a11010280cb3658c00660a1412457c0a5d78147c5a0",
+    "docs/verification/sprint-49-local-results.md": "ce4fd89bc7cd2c372c3c7f89d5ea0794f956506981c18e364ee39e83fff3768d",
+    "README.md": "4a0425e340e3c2b507803a7c9797d1731bf2e05e74e580a1e9a18c25f65e00fc",
+    "scripts/sprint_49_evidence.py": "4941e977e577d3ae85215c2b42634b545f006b65e1b38112f563ad681513dd7a",
+    "tests/test_sprint_49_evidence.py": "b3d0e49fc2eed7d881856a831395440358697a61cda7780ed5987c2616e3b00e"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "measured-router-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "model_routing::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4d39d89413c5e7dc264c96bad5dac2819f07db7b033c4c42061e9236aa845b72",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "routing-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_model_routing_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d52cbb1058abf83e3acb402d1c2b8ee089749613d6075f5d973dd66c8ef09200",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "routing-security-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_49_routing_corpus"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "kernel-library",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e7d6a1c39649f9772c5b66d1c2d6c58ff6a4813f819c46e8e9a6aabd67b3eaf0",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "benchmark-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_benchmark_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "888a0c0ed615e57d32cf72be501b0c355f33b8613c81dfdaa99db33d7959487e",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "zero-model-activation",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_model_activation"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d9d734ee1c2de67b748aeef1c4126433aa438ad8375ca953916f12b1df11414d",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "kernel-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1a7a40ab8daa1a5a03e25ebec573adc8c6ca60cd0cee39557542adaa5c7daeca",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f3810506cd0832c1aa93e14d4a60f681743d324f7d33958743356dda8b997737",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_49_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-AI-001",
+    "SR-AI-006",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-AI-012",
+    "SR-AI-013",
+    "SR-AI-014",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "historical_gemma_4_26b_preserved": true,
+    "historical_devstral_small_2_preserved": true,
+    "exact_profile_boundary": true,
+    "twelve_independent_roles": true,
+    "role_to_profile_allowlists": true,
+    "four_visible_local_budgets": true,
+    "deterministic_measured_router": true,
+    "manual_selection_preserved": true,
+    "visible_disagreements": true,
+    "measured_high_risk_second_verifier": true,
+    "hidden_fallback_disabled": true,
+    "frontier_transfer_disabled": true,
+    "model_confidence_unused": true,
+    "enabled_product_profiles": false,
+    "live_role_benchmark_campaign": false,
+    "product_router_integration": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "historical_candidate_count": 2,
+    "enabled_profile_count": 0,
+    "independent_role_count": 12,
+    "visible_budget_count": 4,
+    "routing_rule_count": 16,
+    "adversarial_corpus_case_count": 48,
+    "unauthorized_or_remote_selection_count": 0,
+    "live_role_benchmark_campaign": false,
+    "product_router_integration": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-48-BLOCKED",
+      "owner": "49.1"
+    },
+    {
+      "code": "APPROVED-LATER-PROFILE-MANIFESTS-ABSENT",
+      "owner": "49.1.1.1"
+    },
+    {
+      "code": "LIVE-ROLE-BENCHMARK-CAMPAIGN-ABSENT",
+      "owner": "49.1.1.2"
+    },
+    {
+      "code": "PRODUCT-ROUTER-INTEGRATION-ABSENT",
+      "owner": "49.1.1.5"
+    },
+    {
+      "code": "INTEGRATED-ROUTING-AUDIT-VIEW-ABSENT",
+      "owner": "49.1.2.4"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "49.1.3.4"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "49.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-MODEL-ROUTING-REVIEW-ABSENT",
+      "owner": "49.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_49_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_48_closed": false,
+    "enabled_product_profile_count": 0,
+    "automatic_product_routing_enabled": false,
+    "live_role_benchmark_campaign_complete": false,
+    "product_router_integrated": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
