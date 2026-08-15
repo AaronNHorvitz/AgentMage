@@ -1124,6 +1124,9 @@ test("frontier return manifests reject authority stale references and operation 
     (record) => {
       record.artifacts[0].display_path = "../escape.diff";
     },
+    (record) => {
+      record.artifacts[0].display_path = ".hidden/payload";
+    },
   ];
   for (const mutate of mutations) {
     const changed = structuredClone(source);
