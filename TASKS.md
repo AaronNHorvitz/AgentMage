@@ -3746,26 +3746,37 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 50.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 50.1.1.1** (legacy `S-043-I01`): Implement declarative Repository Cartographer, Feature Trace, Change Impact, Debugging, Test and Verification, Repository Documentation, Bug Reproduction, Git History Analysis, and bounded review skills.
-  - [ ] **Sub-task 50.1.1.2** (legacy `S-043-I02`): Verify every skill against the declarative trust and no-authority contract.
+  - [x] **Sub-task 50.1.1.1** (legacy `S-043-I01`): Implement declarative Repository Cartographer, Feature Trace, Change Impact, Debugging, Test and Verification, Repository Documentation, Bug Reproduction, Git History Analysis, and bounded review skills. Evidence: [`coding_skills.rs`](capabilities/knowledge/src/coding_skills.rs) defines all nine exact skills, bounded purposes, supported or lexical-only languages, advisory evidence sources, mandatory validation, evidence-specific completion, path ceilings, permanent authority denial, and the complete automatic-operation exclusion set; each admitted definition compiles into the existing hash-bound data-only package contract.
+  - [x] **Sub-task 50.1.1.2** (legacy `S-043-I02`): Verify every skill against the declarative trust and no-authority contract. Evidence: five focused source tests and the 54-case definition-mutation matrix disable vague completion, hidden authority, unsupported tools or languages, missing validation, excessive scope, identity drift, and noncanonical closure; composed package receipts keep every authority field false.
   - [ ] **Sub-task 50.1.1.3** (legacy `S-043-I03`): Run fictional repository tasks for learning, diagnosis, bug fixing, feature work, tests, review, rollback, and recovery across supported languages.
-  - [ ] **Sub-task 50.1.1.4** (legacy `S-043-I04`): Run worktree collision, stale preimage, command injection, malicious project configuration, failed validation, and unrelated-change suites.
+  - [x] **Sub-task 50.1.1.4** (legacy `S-043-I04`): Run worktree collision, stale preimage, command injection, malicious project configuration, failed validation, and unrelated-change suites. Evidence: the immutable Sprint 50 recorder executes focused repository-safety, instruction-provenance, write-transaction, validation-result, review-packet, structured-edit, and thin-CLI suites with zero ignored tests; [`sprint-50-coding-corpus.json`](docs/verification/sprint-50-coding-corpus.json) binds all six required failure scenarios to their expected fail-closed outcome and owning contract suite.
   - [ ] **Sub-task 50.1.1.5** (legacy `S-043-I05`): Verify native Chat and CLI produce equivalent kernel decisions and receipts.
-  - [ ] **Sub-task 50.1.1.6** (legacy `S-043-I06`): Publish coding, repository comprehension, command approval, validation, worktree, review, commit, rollback, CLI, and troubleshooting guides.
-  - [ ] **Sub-task 50.1.1.7** (legacy `S-043-I07`): Prove automatic commit, push, pull-request publication, merge, release, deployment, dependency upgrade, broad refactor, and migration remain disabled.
+  - [x] **Sub-task 50.1.1.6** (legacy `S-043-I06`): Publish coding, repository comprehension, command approval, validation, worktree, review, commit, rollback, CLI, and troubleshooting guides. Evidence: [`bounded-coding-workflows.md`](docs/guides/bounded-coding-workflows.md) composes and links the existing exact change-plan, structured-change, trusted-validation, local-commit, recovery, and CLI guides with current-availability and stop conditions; the full documentation gate passes.
+  - [x] **Sub-task 50.1.1.7** (legacy `S-043-I07`): Prove automatic commit, push, pull-request publication, merge, release, deployment, dependency upgrade, broad refactor, and migration remain disabled. Evidence: every one of nine skills denies all thirteen closed autonomous-operation classes, for 117 executable matrix attempts with zero accepted operation; the machine-readable v0.4 manifest independently fixes product registration, network, automatic publication, gate closure, signing, and release to false.
+
+  Local source status: all seven languages and eight workflow classes are declared in the 56-case
+  fictional matrix, but no product coding coordinator or authenticated native Chat/CLI transport
+  exists, so 50.1.1.3 and 50.1.1.5 remain open. Contract-level equivalence does not establish an
+  integrated interface campaign.
 
 - [ ] **Task 50.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 50.1.2.1:** Coding skill pack and evaluation results.
-  - [ ] **Sub-task 50.1.2.2:** Cross-interface parity report.
-  - [ ] **Sub-task 50.1.2.3:** v0.4 coding acceptance and recovery bundle.
-  - [ ] **Sub-task 50.1.2.4:** v0.4 release notes and capability matrix.
+  - [x] **Sub-task 50.1.2.1:** Coding skill pack and evaluation results. Evidence: [`coding-skill-pack.json`](artifacts/sprints/sprint-50/coding-skill-pack.json) is regenerated from the Rust source and freezes all nine definitions, assessments, hash-bound manifests, and zero-authority release fields; its Python contract rejects authority, exclusion, assessment, cardinality, manifest, or currentness drift.
+  - [x] **Sub-task 50.1.2.2:** Cross-interface parity report. Evidence: [`sprint-50-local-results.md`](docs/verification/sprint-50-local-results.md) records the exact source-level parity contribution and explicitly reports both native Chat and CLI integrated paths as blocked; the release-readiness artifact forces every parity-completion field false.
+  - [x] **Sub-task 50.1.2.3:** v0.4 coding acceptance and recovery bundle. Evidence: [`v0.4-coding-acceptance-and-recovery-bundle.md`](docs/release/v0.4-coding-acceptance-and-recovery-bundle.md) defines clean acceptance, recovery, downgrade, removal, and release evidence without claiming any open campaign passed.
+  - [x] **Sub-task 50.1.2.4:** v0.4 release notes and capability matrix. Evidence: the draft [`release notes`](docs/release/release-notes-v0.4.0-draft.md) and [`capability matrix`](docs/release/v0.4-capability-matrix.md) distinguish implemented local contracts from blocked integration and release evidence; the documentation gate passes.
 
 - [ ] **Task 50.1.3 - Verify and close the story**
-  - [ ] **Sub-task 50.1.3.1:** `S-043-UT01` validates coding-skill definitions against vague completion, hidden authority, unsupported tools/languages, missing validation, and overbroad scope; assert disabled or corrected status.
+  - [x] **Sub-task 50.1.3.1:** `S-043-UT01` validates coding-skill definitions against vague completion, hidden authority, unsupported tools/languages, missing validation, and overbroad scope; assert disabled or corrected status. Evidence: five focused unit tests and 54 corpus-expanded mutations exercise every required class across every skill with `Disabled`, exact findings, and `authority_granted: false`.
   - [ ] **Sub-task 50.1.3.2:** `S-043-IT01` completes comprehension-to-plan-to-edit-to-test-to-review-to-local-commit workflows through Chat and CLI on the fictional corpus; assert interface parity and exact worktree isolation.
-  - [ ] **Sub-task 50.1.3.3:** `S-043-ST01` attempts autonomous commit, push, PR, review, merge, release, deploy, arbitrary shell, or frontier handoff through every coding path; assert tested exclusions remain absent/denied.
+  - [x] **Sub-task 50.1.3.3:** `S-043-ST01` attempts autonomous commit, push, PR, review, merge, release, deploy, arbitrary shell, or frontier handoff through every coding path; assert tested exclusions remain absent/denied. Evidence: the expanded corpus performs 117 prohibited-operation checks across all nine coding skills; every package retains the fixed false authority ceiling, and the v0.4 gate mutation suite rejects registration, network, publication, signing, or release activation.
   - [ ] **Sub-task 50.1.3.4:** `S-043-AT01` performs clean install/upgrade/offline/recovery/accessibility and forced-gate-failure runs on all reference platforms; assert no package or `G-V0.4` closure on failure.
   - [ ] **Sub-task 50.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-006` through `SR-CIV-009`; retain skill evaluations, full workflow packets, exclusion attempts, platform results, and signed gate decision.
+
+  Local verification status: the named security requirements, skill evaluations, exclusion attempts,
+  contract suites, source digests, command results, and blocked gate are retained. Full native
+  workflow packets, platform lifecycle and accessibility results, trusted installed-package
+  execution, a signed decision, independent review, and manual fuzzing remain absent, so 50.1.3.2,
+  50.1.3.4, and 50.1.3.5 remain open.
 
 ##### Story Acceptance Criteria
 
@@ -3775,10 +3786,23 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 50.AC1:** Every promoted language workflow passes exact change, validation, preservation, and rollback fixtures.
-- [ ] **Sprint AC 50.AC2:** Worktrees, pending changes, and path checks are never represented as the operating-system sandbox.
-- [ ] **Sprint AC 50.AC3:** CLI and other clients cannot bypass grants, storage, retention, receipts, or offline policy.
-- [ ] **Sprint AC 50.AC4:** Hosted mutation and automatic publication remain impossible.
-- [ ] **Sprint AC 50.AC5:** `G-V0.4` closes only after coding, shell, model, security, recovery, and documentation suites pass.
+- [x] **Sprint AC 50.AC2:** Worktrees, pending changes, and path checks are never represented as the operating-system sandbox. Evidence: repository-safety contracts retain worktree ownership and currentness as Git-state controls, while the coding architecture and guide require a separate platform sandbox for process execution and explicitly prohibit equivalence claims.
+- [x] **Sprint AC 50.AC3:** CLI and other clients cannot bypass grants, storage, retention, receipts, or offline policy. Evidence: focused thin-CLI tests retain interface-neutral command parsing and fail-closed transport, the Sprint 48 schemas and semantic checks bind headless grants and hash-chained receipts, and the v0.4 architecture leaves all authority in existing kernel transactions; no integrated transport or client-side authority exists.
+- [x] **Sprint AC 50.AC4:** Hosted mutation and automatic publication remain impossible. Evidence: nine skills deny thirteen autonomous-operation classes, the v0.4 manifest has no network or publication authority, and gate mutation tests fail every attempted activation.
+- [x] **Sprint AC 50.AC5:** `G-V0.4` closes only after coding, shell, model, security, recovery, and documentation suites pass. Evidence: [`v0.4-release-readiness.json`](artifacts/sprints/sprint-50/v0.4-release-readiness.json) fixes `gate_closed` and `release_allowed` false while upstream, coordinator, parity, model, platform, lifecycle, accessibility, signing, independent-review, and manual-fuzz blockers remain; every overclaim mutation fails.
+
+Retained local evidence: source revision `f5780c3d58b0b9187d81208aeae6099f39e0956f` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-50/local-evidence-report.json), SHA-256
+`e608c69195f2a332320c7880224517bdbb24bf2926e50d20b9ec2afb4a5350c8`. All sixteen recorded
+commands exit zero and all eleven focused suites report zero blocking skips. Nine coding skills,
+54 invalid-definition cases, 117 prohibited-operation attempts, six repository-failure scenarios,
+and the blocked v0.4 release boundary pass locally. Sprint 50 remains **BLOCKED** because Sprints
+41 through 49 are blocked and the coding product coordinator, authenticated native Chat/CLI
+workflow, cross-interface parity campaign, registered write/command/commit profiles, admitted live
+model, native cross-platform acceptance, complete lifecycle/accessibility/recovery campaign,
+trusted installed-package execution, independent review, and deferred manual fuzzing remain absent.
+The implementation and verification tasks, both story criteria, Story 50.1, Sprint AC 50.AC1, and
+the sprint therefore remain open.
 
 **Gate decision:** Sprint 50 is PASS only when Story 50.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

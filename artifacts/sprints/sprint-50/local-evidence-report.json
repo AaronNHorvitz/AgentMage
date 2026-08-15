@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_50_local_evidence",
+  "source_revision": "f5780c3d58b0b9187d81208aeae6099f39e0956f",
+  "source_sha256": {
+    "capabilities/knowledge/src/coding_skills.rs": "c79f19862fd17b0a7a7a4ffbf384d3d616a165a9e98148f72bee6d05fab7e529",
+    "capabilities/knowledge/src/lib.rs": "2ffda47ea060e8a2ddc981f087d8d139c1c7db22bccac46a539c2048a9ec586e",
+    "capabilities/knowledge/examples/coding_skill_pack.rs": "62e2149d360965b17de364891a7ae150faa99521e99d061c8bec573bd74f7be4",
+    "capabilities/knowledge/tests/sprint_50_coding_corpus.rs": "9231c4ec237d147fcc1273621b99581650646fe62c8d1f4701974ddff7410d8e",
+    "artifacts/sprints/sprint-50/coding-skill-pack.json": "a955298c904b478c3f798b87dcc727f81ff4fa83135edf32f59fa27a73ccd96b",
+    "docs/verification/sprint-50-coding-corpus.json": "baa15b135fffa252a5addaf52dddbb3a42853b6fb8bac38ba4feea6b81e669af",
+    "scripts/coding_skill_contract.py": "c93abb21f4e0a3c36cee42941f1c7c42cf020e84768a28ec8efdc40d2f2c76b3",
+    "tests/test_coding_skill_contract.py": "13e5bac9dfe5a9e0037e0441fe02797c920f674d2907222e26d3805efa251a68",
+    "docs/architecture/coding-skills-and-release-boundary.md": "d686634976669765beb407c7e5093200874d12c514c4826caffb765f7e2ae8a0",
+    "docs/guides/bounded-coding-workflows.md": "d050f03024565992171f570a63d7f851f09182f33dbfe9ac6235f956b1fa7002",
+    "docs/guides/skills.md": "b61969c8eacd608468df599f767f6f9d7e844ef850a31b9839c834ea6752077f",
+    "release/v0.4-coding-pack-manifest.json": "066a1d444d7f9bb00db504612b34ffa336bed01ae659a491d766c681079d0a85",
+    "scripts/v0_4_coding_release_gate.py": "da49c3dd87be8a66a56099e79de167739acc4eb2f999345515acdc451837b823",
+    "tests/test_v0_4_coding_release_gate.py": "7a0f0f931838e9de547c148deb0681980450ae461305c0e8e992d0d5e813069c",
+    "artifacts/sprints/sprint-50/v0.4-release-readiness.json": "26ca45d0347f30bf9fa904e393b6a77e5fef5dbe256757368d38311719bf9ff8",
+    "docs/release/v0.4-coding-acceptance-and-recovery-bundle.md": "8b123b061d2edcc9be222d18720512c4788d859c71e478ca39f1752c87d8d12b",
+    "docs/release/v0.4-capability-matrix.md": "ce4c293765b0311f56901a6b23b8bb5f4bb73fc70ec80c2770f3112067bef7f2",
+    "docs/release/release-notes-v0.4.0-draft.md": "ec7bc3ac41cfdb0b1aa9af98de0aafcd81364e54b9072f23f354c8c866f00c6e",
+    "docs/verification/sprint-50-local-results.md": "ee78393955b42c58dd728ef70d758ab81f31875f1db296bb78fb9db384005b80",
+    "scripts/sprint_50_evidence.py": "10a5bb07423417d829333594109ea8ed2aca49739891a83c1d681b33a76fb792",
+    "tests/test_sprint_50_evidence.py": "f22c4298d9cc020671277b778dcbe549d4b02c484c4c700fa24617a4c703e310"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "coding-skill-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "coding_skills::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "07869b7b78f17edb693918bdfbc5707770c7b2b1d52b4c28a3f49c5b42379774",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "coding-skill-corpus",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--test",
+        "sprint_50_coding_corpus",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6b58f7ce29ffad676dc2de4b7a8b33f25e1cb5078d3642a272d3e764e3b68d0a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "coding-skill-artifact",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_coding_skill_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b64db9b0c10c2c0a9c56ac5b1d70090fc35e117c2f7a55a50772be27d7f9b7a9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "repository-safety",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "repository_safety::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "816e1704bf4b24f2e74ee6cdc35edadf8a296484534d1bad78bb44b4ac719786",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "instruction-provenance",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "instruction_provenance::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ed3435c22d9c39ff07c031d28414f3022df8475618352d0ccb22fcfb245b856a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "write-recovery",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_transaction::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "848b380027f1b2dfc7f7282a37b457bb8749a8111e0e6a78492da2d0f532fac7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "trusted-validation",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "validation_result::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6fd0b0296f2bcb3828735a683d3f3bc77e389cae46fd8230b99fbed78d86c212",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "review-accounting",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "review_packet::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "557e087fc7a620ed8a97c28a682f906126aa79456e5894ab588d5f5739129e2b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "structured-edits",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "structured_edit::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "73a42a4eb684bde5ce78031dbebcc120c2cf86be465bc76f9c2960025639fd8f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "thin-cli",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "cli::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d8a4c517be76195e03069cd89c061523ae2b9e8b6778efe4cbc5ac0c788f1635",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "v0.4-release-gate",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v0_4_coding_release_gate"
+      ],
+      "exit_code": 0,
+      "output_sha256": "79897d011a1aaa76145e639592b1207fa563cb1187e00ac85c3ee31c86a0b15f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "coding-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "-p",
+        "agentmage-capability-repository-map",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-host",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0d7992e68c70280ff958eee166e6926b56594ecd4c2ba352e944f225916928c8",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_50_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-SUP-003",
+    "SR-SUP-009",
+    "SR-AI-005",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-OPS-006",
+    "SR-OPS-007",
+    "SR-OPS-008",
+    "SR-OPS-009",
+    "SR-OPS-010",
+    "SR-TST-002",
+    "SR-TST-005",
+    "SR-TST-006",
+    "SR-TST-011",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "declarative_coding_skill_count": 9,
+    "definition_attack_case_count": 54,
+    "prohibited_operation_attempt_count": 117,
+    "fictional_workflow_combination_count": 56,
+    "repository_failure_scenario_count": 6,
+    "data_only_skill_authority": false,
+    "coding_product_coordinator": false,
+    "authenticated_chat_cli_workflow": false,
+    "cross_interface_parity": false,
+    "automatic_publication": false,
+    "admitted_live_model": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "declarative_coding_skill_count": 9,
+    "expanded_corpus_case_count": 233,
+    "accepted_autonomous_operation_count": 0,
+    "integrated_fictional_workflow_campaign": false,
+    "native_chat_cli_parity": false,
+    "admitted_live_model": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "gate_v0_4_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-41-THROUGH-49-BLOCKED",
+      "owner": "50.1"
+    },
+    {
+      "code": "CODING-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "50.1.1.3"
+    },
+    {
+      "code": "AUTHENTICATED-CHAT-CLI-WORKFLOW-ABSENT",
+      "owner": "50.1.1.5"
+    },
+    {
+      "code": "NATIVE-CROSS-INTERFACE-PARITY-ABSENT",
+      "owner": "50.1.2.2"
+    },
+    {
+      "code": "WRITE-COMMAND-COMMIT-PROFILES-UNREGISTERED",
+      "owner": "50.1.3.2"
+    },
+    {
+      "code": "ADMITTED-LIVE-MODEL-PROFILE-ABSENT",
+      "owner": "50.1.3.2"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "50.1.3.4"
+    },
+    {
+      "code": "LIFECYCLE-ACCESSIBILITY-RECOVERY-CAMPAIGN-ABSENT",
+      "owner": "50.1.3.4"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "50.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-V0.4-REVIEW-ABSENT",
+      "owner": "50.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_50_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_41_through_49_closed": false,
+    "coding_product_coordinator_integrated": false,
+    "chat_cli_parity_complete": false,
+    "automatic_publication_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
