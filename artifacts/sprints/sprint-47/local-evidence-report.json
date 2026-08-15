@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_47_local_evidence",
+  "source_revision": "32731d8540ee54cfd4965e5a05324bc251b72fc7",
+  "source_sha256": {
+    "kernel/engine/src/review_packet.rs": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00",
+    "kernel/engine/src/local_commit.rs": "7d39cf16b543ead8e7bbd09e1219c01d15efd49fe3b7e34f7e90818bc1d5c1c6",
+    "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
+    "kernel/engine/src/lib.rs": "7c6300068a54009ef5ca4893e2d7642405c94c75bf7ad8df672183e00b9be548",
+    "platforms/linux/src/local_commit.rs": "1177bc052e5273f45d6e8ccadbd1efe298eacc661b7443919dc548561b5858f4",
+    "platforms/linux/src/repository_safety.rs": "7947cbac861dccdc2637b828b7c3308489f247b77b7a2ddb39a872297171de9d",
+    "platforms/linux/src/lib.rs": "2a8c74cfad517adb6696402b366d8f453132e6d09af7ab5f5f6951e4b31bf62b",
+    "schemas/runtime/local-review-packet.schema.json": "0d3f2b7e29b0617bde43c7e7e75863257283afe39418e7093f302d367d835b7a",
+    "schemas/runtime/examples/local-review-packet.valid.json": "fd97e69e4792bdefd676d8e4496c30f68535be3f2e3241e47e86e249c307d863",
+    "schemas/runtime/logical-commit-plan.schema.json": "be64d8dcb76c23e8705dd2b90b51f81be2a57bcd6b3c9dcb23e37cdeaecd0599",
+    "schemas/runtime/examples/logical-commit-plan.valid.json": "a344fceaa67ac3091bd43bdd1e4e0cac899a9a437a14df71d4b9b0b3d5220b88",
+    "schemas/runtime/pinned-commit-signer.schema.json": "cdb61e7fd53bc2fa309f1811a0bf2249477284fbd50a35eefaef552833ba4d72",
+    "schemas/runtime/examples/pinned-commit-signer.valid.json": "406ba4075dc3004149bf20f583ee2c90c486cd6ab3db298b91dd8764d06bd8c1",
+    "schemas/runtime/candidate-tree-plan.schema.json": "30f71884b20d0a7a56a2b18092a32ba743daafd44bc78a12256425cfb1dec472",
+    "schemas/runtime/examples/candidate-tree-plan.valid.json": "551dc21291c81dcb3fc29b0744e3df2ee2bdd03215a24160b275e3638705be18",
+    "schemas/runtime/candidate-tree-receipt.schema.json": "4ce5120278a7168d20306fe7598b12701af5640d8bcb019479a1019d74e8b7b3",
+    "schemas/runtime/examples/candidate-tree-receipt.valid.json": "a75e64b0f730574f9747b055d58b15c815257a9845df4acc7978e1cc3fa975fb",
+    "schemas/runtime/local-commit-plan.schema.json": "8806939bfb16dadbbfae82cd69d1280c9b508532d9357623aa8de8a8e19c7ba9",
+    "schemas/runtime/examples/local-commit-plan.valid.json": "135e0986ba3eb80634e6a1e0878107dadde511b8fb7aad5dd913d18d2b58baee",
+    "schemas/runtime/manual-commit-approval-receipt.schema.json": "231e3a7f67859b6cef897e5c7e09d64b673b9a768c8089bc14f2ab6b1e071de0",
+    "schemas/runtime/examples/manual-commit-approval-receipt.valid.json": "eeaa086b69898e6482d8f7f643c762bfb7c5a8cdcab6779e61db951f715649fb",
+    "schemas/runtime/local-commit-receipt.schema.json": "c3f98f647416c2af350b054f8f51e995cdaae00af24bed245fbb7c3836282f97",
+    "schemas/runtime/examples/local-commit-receipt.valid.json": "4057b1b00ff00b9bf9382b037435797344eba2aaa658a8bd999bc9fd44ecf1fe",
+    "scripts/validate_planning_schemas.mjs": "88d368ad6fd55d548d72217a51095d6651ff2a863bb3e93c28a366c9d7a81b5e",
+    "tests/test_planning_schemas.mjs": "2ac3b4ad055eba1168e417be84a8aada008af604ca0834a40152a204b52fab68",
+    "docs/verification/sprint-47-security-corpus.json": "2144053c0b8c9c8b37846d849765b01f39ca79fe580ec1b852882924f6c356c2",
+    "tests/test_sprint_47_security_corpus.py": "0b0b06243ff564781fb7ffdf6328762eac7973f6caec08dd90ac8403ae6faf84",
+    "scripts/effect_boundary.py": "b876a3843bea76ce4f13b97f1bc5252feb9321c8569b16a9e2467bf2cdd442eb",
+    "tests/test_effect_boundary.py": "f02f96cd10c2f3b339b53f02da424e6978c5f4660215d001b0875920bd98b650",
+    "docs/architecture/local-review-and-commit-boundary.md": "8e031c6cda33899b9e0bb9f746be4a8c40bd5aa1cd17d78af51d00fb1309d45f",
+    "docs/guides/reviewing-and-creating-local-commits.md": "a18c1c41ebdb84fb153009f6f47d4cb8c27a6725bdf889d0d35c334c87312911",
+    "docs/security/repository-safety.md": "5de6783ef3e84ca50732d99f4cd9bd3f06d5f72ce8f0f8c581e7b8f3922c4cb8",
+    "docs/verification/sprint-47-local-results.md": "8fb05a71211971986f6160f6756f186ea870bcd0239cf6f70a1657614948e871",
+    "README.md": "8c037e9b1404e44cf50b624dea6421df75290c724ce266309ed1bfb52b165d7e",
+    "scripts/sprint_47_evidence.py": "24ee244dd4db9c87579e92f31708ffc75d8de4b501a28acb73a2f1a502316e1a",
+    "tests/test_sprint_47_evidence.py": "1e4a1cc37e6dfe791ab28498c7e6228e7e2855fc11ff4ae379d5d9bec8d87211"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "git": "git version 2.55.0",
+    "gpg": "gpg (GnuPG) 2.4.9"
+  },
+  "commands": [
+    {
+      "id": "review-packet-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "review_packet::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d922a793fbad6b5bae72d7effe70768fcc35bd0ba6e0057a508a1815f6f5bb0c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "local-commit-kernel-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "local_commit::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bce2f53171c8763378c9882917ada5e0b966b235bec38dd2d4d5f79f011b29e1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "repository-safety-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "repository_safety::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6c97bd02068cc7095334851452d78bea0ba55c63e465f095e8abefa9945a885d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-local-commit-native",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "local_commit::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "06500e143a31142e0e043b2a2357b49a361d3607681f88285a3f0846bfbdce46",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "kernel-library",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "891c583872fedb8694a7231527ec1d43af3938cb5ae9d5b7853df82f6be7d812",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "linux-library",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b5a2fdf8baedb521a35e61b3a73abd62268de9c5a79494112cf93fbd387a6b2d",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "security-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_47_security_corpus"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6ed644fde389f1ab991ee4846778f0a64d7a8ec34e3217d037bfa40941a3a750",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "kernel-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c85c95fc007c29670e65074cd246e49100cfcb13592b1de8b9fd5dc088dfef8c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "linux-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7e68fbe529c920ab0e0c2c25ffae1d3f41685688bb9a297183cb5ed28874e4b2",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_47_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3b0dbb90387b342ccecc50446a0fb5e4385d86a3f467e5b97d63f8924fc08aff",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "trusted-git",
+      "name": "git",
+      "size": 4945312,
+      "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+      "owner_is_root": true,
+      "group_or_world_writable": false,
+      "executable": true
+    },
+    {
+      "id": "trusted-openpgp-signer",
+      "name": "gpg",
+      "size": 1199080,
+      "sha256": "d784f5bd16f1b116e7ac10e21a41e5cefd765062432c7e266518347776c9f18a",
+      "owner_is_root": true,
+      "group_or_world_writable": false,
+      "executable": true
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-005",
+    "SR-GOV-010",
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-SUP-002",
+    "SR-SUP-005",
+    "SR-TST-010",
+    "SR-TST-011",
+    "SR-GIT-001",
+    "SR-GIT-002",
+    "SR-GIT-003",
+    "SR-GIT-004",
+    "SR-GIT-007"
+  ],
+  "implemented_contracts": {
+    "complete_review_packet_contract": true,
+    "nine_review_modes": true,
+    "duplicate_and_low_confidence_evidence": true,
+    "six_logical_commit_purposes": true,
+    "unrelated_change_exclusion": true,
+    "external_pinned_signer_report": true,
+    "agent_owned_temporary_index_contract": true,
+    "exact_manual_commit_approval": true,
+    "one_shot_git_commit_mediation": true,
+    "native_linux_candidate_fixture": true,
+    "native_linux_openpgp_signed_commit_fixture": true,
+    "exact_commit_and_signature_verification": true,
+    "compare_and_swap_owned_task_branch": true,
+    "automatic_publication_and_destructive_git_denied": true,
+    "closed_runtime_records": true,
+    "production_review_commit_coordinator": false,
+    "production_approved_signer": false,
+    "protected_manual_approval_channel": false,
+    "native_signer_process_tree_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_mode_count": 9,
+    "commit_purpose_count": 6,
+    "runtime_record_count": 8,
+    "adversarial_corpus_case_count": 28,
+    "native_candidate_tree_fixture_passed": true,
+    "native_signed_commit_fixture_passed": true,
+    "unauthorized_effect_acceptance_count": 0,
+    "production_review_commit_coordinator": false,
+    "production_approved_signer": false,
+    "protected_manual_approval_channel": false,
+    "native_signer_process_tree_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-46-BLOCKED",
+      "owner": "47.1"
+    },
+    {
+      "code": "PRODUCT-REVIEW-COMMIT-COORDINATOR-ABSENT",
+      "owner": "47.1.1"
+    },
+    {
+      "code": "PRODUCTION-APPROVED-SIGNER-ABSENT",
+      "owner": "47.1.1.6"
+    },
+    {
+      "code": "PROTECTED-MANUAL-APPROVAL-CHANNEL-ABSENT",
+      "owner": "47.1.1.7"
+    },
+    {
+      "code": "NATIVE-SIGNER-PROCESS-TREE-CAMPAIGN-ABSENT",
+      "owner": "47.1.3.4"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "47.1.3.5"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "47.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-LOCAL-COMMIT-REVIEW-ABSENT",
+      "owner": "47.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-011"
+    }
+  ],
+  "summary": {
+    "local_sprint_47_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_46_closed": false,
+    "production_review_commit_coordinator_active": false,
+    "production_approved_signer_present": false,
+    "protected_manual_approval_channel_present": false,
+    "native_signer_process_tree_campaign_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

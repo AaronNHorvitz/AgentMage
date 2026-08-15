@@ -3527,28 +3527,42 @@ criteria, Story 46.1, Sprint AC 46.AC1, Sprint AC 46.AC4, and the sprint therefo
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 47.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 47.1.1.1** (legacy `S-040-I01`): Generate review packets with objective, behavior delta, changed files, full diff, tests, checks not run, risks, rollback, screenshots or outputs, and proposed commit groups.
-  - [ ] **Sub-task 47.1.1.2** (legacy `S-040-I02`): Implement code-review modes for correctness, simplicity, maintainability, security, data integrity, accessibility, performance, tests, and documentation.
-  - [ ] **Sub-task 47.1.1.3** (legacy `S-040-I03`): Suppress duplicate and low-confidence findings while preserving evidence and severity.
-  - [ ] **Sub-task 47.1.1.4** (legacy `S-040-I04`): Classify generated output, formatting, tests, docs, behavior, migrations, and unrelated user changes into logical commit plans.
-  - [ ] **Sub-task 47.1.1.5** (legacy `S-040-I05`): Draft commit messages only from the approved change set.
-  - [ ] **Sub-task 47.1.1.6** (legacy `S-040-I06`): Inspect an approved hardware-backed or OpenPGP signing identity outside repository configuration, pin the signer boundary, and verify signed commits without repository-selected programs or unsigned fallback.
-  - [ ] **Sub-task 47.1.1.7** (legacy `S-040-I07`): Build the candidate tree in a temporary AgentMage-owned index seeded from the exact parent, stage only approved path identities and bytes, require exact tree diff/message/identity/signer approval, and compare-and-swap only the owned task branch.
-  - [ ] **Sub-task 47.1.1.8** (legacy `S-040-I08`): Keep automatic commit, push, merge, release, reset, discard, and force operations prohibited.
+- [x] **Task 47.1.1 - Implement the bounded story**
+  - [x] **Sub-task 47.1.1.1** (legacy `S-040-I01`): Generate review packets with objective, behavior delta, changed files, full diff, tests, checks not run, risks, rollback, screenshots or outputs, and proposed commit groups.
+  - [x] **Sub-task 47.1.1.2** (legacy `S-040-I02`): Implement code-review modes for correctness, simplicity, maintainability, security, data integrity, accessibility, performance, tests, and documentation.
+  - [x] **Sub-task 47.1.1.3** (legacy `S-040-I03`): Suppress duplicate and low-confidence findings while preserving evidence and severity.
+  - [x] **Sub-task 47.1.1.4** (legacy `S-040-I04`): Classify generated output, formatting, tests, docs, behavior, migrations, and unrelated user changes into logical commit plans.
+  - [x] **Sub-task 47.1.1.5** (legacy `S-040-I05`): Draft commit messages only from the approved change set.
+  - [x] **Sub-task 47.1.1.6** (legacy `S-040-I06`): Inspect an approved hardware-backed or OpenPGP signing identity outside repository configuration, pin the signer boundary, and verify signed commits without repository-selected programs or unsigned fallback.
+  - [x] **Sub-task 47.1.1.7** (legacy `S-040-I07`): Build the candidate tree in a temporary AgentMage-owned index seeded from the exact parent, stage only approved path identities and bytes, require exact tree diff/message/identity/signer approval, and compare-and-swap only the owned task branch.
+  - [x] **Sub-task 47.1.1.8** (legacy `S-040-I08`): Keep automatic commit, push, merge, release, reset, discard, and force operations prohibited.
 
-- [ ] **Task 47.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 47.1.2.1:** Local review-packet format.
-  - [ ] **Sub-task 47.1.2.2:** Review-mode result schemas.
-  - [ ] **Sub-task 47.1.2.3:** Logical commit plan and signing report.
-  - [ ] **Sub-task 47.1.2.4:** Manual commit approval receipts.
+  Local source status: the complete review, logical grouping, candidate-tree, signer,
+  manual-approval, one-shot commit-authority, and terminal-reconciliation contracts are
+  implemented. Native Fedora fixtures prove an owned temporary index and a disposable approved
+  OpenPGP signing identity. Candidate construction remains deliberately unexported until an exact
+  product coordinator mediates it; no production signing identity or protected approval channel is
+  registered.
+
+- [x] **Task 47.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 47.1.2.1:** Local review-packet format.
+  - [x] **Sub-task 47.1.2.2:** Review-mode result schemas.
+  - [x] **Sub-task 47.1.2.3:** Logical commit plan and signing report.
+  - [x] **Sub-task 47.1.2.4:** Manual commit approval receipts.
 
 - [ ] **Task 47.1.3 - Verify and close the story**
-  - [ ] **Sub-task 47.1.3.1:** `S-040-UT01` builds review packets from exact base/head identities, diffs, tests, risks, receipts, unresolved issues, and rollback; assert stable hashes and rejection of missing/stale components.
-  - [ ] **Sub-task 47.1.3.2:** `S-040-UT02` exercises correctness/security/privacy/evidence/accessibility/performance review modes on labeled defects; assert expected findings, severity rationale, source anchors, and no invented defect.
-  - [ ] **Sub-task 47.1.3.3:** `S-040-ST01` changes temporary or user index, approved bytes, commit message, parent, author/committer identity, signer, signature configuration, attributes/filters, test evidence, or task branch after preview; assert approval invalidation, zero commit, and zero user-index change.
-  - [ ] **Sub-task 47.1.3.4:** `S-040-IT01` creates approved local signed commits from logical plans through the temporary index, verifies exact tree/parent/message/signature and compare-and-swap branch update, and snapshots remotes and unrelated Git state; assert no push, PR, review, merge, release, publication, hook/filter execution, or unrelated mutation.
+  - [x] **Sub-task 47.1.3.1:** `S-040-UT01` builds review packets from exact base/head identities, diffs, tests, risks, receipts, unresolved issues, and rollback; assert stable hashes and rejection of missing/stale components.
+  - [x] **Sub-task 47.1.3.2:** `S-040-UT02` exercises correctness/security/privacy/evidence/accessibility/performance review modes on labeled defects; assert expected findings, severity rationale, source anchors, and no invented defect.
+  - [x] **Sub-task 47.1.3.3:** `S-040-ST01` changes temporary or user index, approved bytes, commit message, parent, author/committer identity, signer, signature configuration, attributes/filters, test evidence, or task branch after preview; assert approval invalidation, zero commit, and zero user-index change.
+  - [x] **Sub-task 47.1.3.4:** `S-040-IT01` creates approved local signed commits from logical plans through the temporary index, verifies exact tree/parent/message/signature and compare-and-swap branch update, and snapshots remotes and unrelated Git state; assert no push, PR, review, merge, release, publication, hook/filter execution, or unrelated mutation.
   - [ ] **Sub-task 47.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-SUP-002`/`SR-SUP-005`, `SR-TST-010`/`SR-TST-011`, and `SR-GIT-001` through `SR-GIT-004` plus `SR-GIT-007`; execute the commit portion of `RV-49`; retain packet hashes, preservation manifests, temporary/user-index comparisons, signature verification, remote snapshots, and approval receipts.
+
+  The exact requirement map, packet hashes, preservation records, user-index comparisons,
+  disposable signature verification, remote snapshots, approval receipts, and 28-case fail-closed
+  corpus are retained. Product coordinator execution, a production-approved signer, protected
+  approval-channel evidence, complete signer descendant/interruption testing, installed-package
+  execution, supported-platform acceptance, independent review, and manual fuzzing remain absent,
+  so 47.1.3.5 and the verification task remain open.
 
 ##### Story Acceptance Criteria
 
@@ -3557,11 +3571,23 @@ criteria, Story 46.1, Sprint AC 46.AC1, Sprint AC 46.AC4, and the sprint therefo
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 47.AC1:** Review packets account for every changed file and every unrun check.
-- [ ] **Sprint AC 47.AC2:** Commit plans exclude unrelated user work.
-- [ ] **Sprint AC 47.AC3:** No commit occurs without an exact temporary-index tree, parent, message, identity, pinned signer, manual approval, and signature verification; the active user index remains unchanged.
-- [ ] **Sprint AC 47.AC4:** Commit failure or changed staged diff invalidates approval.
+- [x] **Sprint AC 47.AC1:** Review packets account for every changed file and every unrun check.
+- [x] **Sprint AC 47.AC2:** Commit plans exclude unrelated user work.
+- [x] **Sprint AC 47.AC3:** No commit occurs without an exact temporary-index tree, parent, message, identity, pinned signer, manual approval, and signature verification; the active user index remains unchanged.
+- [x] **Sprint AC 47.AC4:** Commit failure or changed staged diff invalidates approval.
 - [ ] **Sprint AC 47.AC5:** Push and every hosted mutation remain absent from v0.4, and the commit portion of `RV-49` proves hooks, filters, repository-selected signers, amend/history rewrite, and unrelated ref changes absent.
+
+Retained local evidence: source revision `32731d8540ee54cfd4965e5a05324bc251b72fc7` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-47/local-evidence-report.json), SHA-256
+`39ff3c747a3249f5b8fde1ff830b8ef81fb0bb1737ebea6eea4aedd2570a3912`. All fourteen recorded
+commands exit zero and all four focused suites report zero blocking skips. Nine review modes, six
+logical commit purposes, eight closed runtime records, 28 fail-closed corpus cases, and real native
+candidate-tree and signed-commit fixtures pass with zero accepted unauthorized effect. Sprint 47
+remains **BLOCKED** because Sprint 46 is blocked and the product review/commit coordinator,
+production-approved signer, protected manual-approval channel, complete signer process-tree
+campaign, native cross-platform acceptance, trusted installed-package execution, independent
+review, and deferred manual fuzzing remain absent. The product-security sub-task, both story
+criteria, verification task, Story 47.1, Sprint AC 47.AC5, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 47 is PASS only when Story 47.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 48 - Complete Local CLI and Headless Contracts
