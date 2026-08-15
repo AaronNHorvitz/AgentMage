@@ -58,6 +58,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "command-preview",
   "command-receipt",
   "validation-receipt",
+  "logical-commit-plan",
+  "local-review-packet",
   "repository-preservation-manifest",
   "repository-operation-plan",
   "repository-operation-receipt",
@@ -143,19 +145,13 @@ export function createConfigurationValidators() {
   const common = readJson("schemas/configuration/common.schema.json");
   ajv.addSchema(common);
   for (const recordType of CONFIGURATION_SECTION_TYPES) {
-    ajv.addSchema(
-      readJson(`schemas/configuration/${recordType}.schema.json`),
-    );
+    ajv.addSchema(readJson(`schemas/configuration/${recordType}.schema.json`));
   }
   ajv.addSchema(
-    readJson(
-      `schemas/configuration/${CONFIGURATION_BUNDLE_TYPE}.schema.json`,
-    ),
+    readJson(`schemas/configuration/${CONFIGURATION_BUNDLE_TYPE}.schema.json`),
   );
   for (const recordType of CONFIGURATION_REVIEW_TYPES) {
-    ajv.addSchema(
-      readJson(`schemas/configuration/${recordType}.schema.json`),
-    );
+    ajv.addSchema(readJson(`schemas/configuration/${recordType}.schema.json`));
   }
   ajv.addSchema(
     readJson(
@@ -163,9 +159,7 @@ export function createConfigurationValidators() {
     ),
   );
   ajv.addSchema(
-    readJson(
-      `schemas/configuration/${CONFIGURATION_RESULT_TYPE}.schema.json`,
-    ),
+    readJson(`schemas/configuration/${CONFIGURATION_RESULT_TYPE}.schema.json`),
   );
 
   return Object.fromEntries(
@@ -175,17 +169,14 @@ export function createConfigurationValidators() {
       CONFIGURATION_PROFILE_CATALOG_TYPE,
       CONFIGURATION_RESULT_TYPE,
       ...CONFIGURATION_REVIEW_TYPES,
-    ].map(
-      (recordType) => {
-        const schemaId =
-          `https://agentmage.dev/schemas/configuration/${recordType}.schema.json`;
-        const validator = ajv.getSchema(schemaId);
-        if (!validator) {
-          throw new Error(`configuration schema did not register: ${recordType}`);
-        }
-        return [recordType, validator];
-      },
-    ),
+    ].map((recordType) => {
+      const schemaId = `https://agentmage.dev/schemas/configuration/${recordType}.schema.json`;
+      const validator = ajv.getSchema(schemaId);
+      if (!validator) {
+        throw new Error(`configuration schema did not register: ${recordType}`);
+      }
+      return [recordType, validator];
+    }),
   );
 }
 
@@ -199,10 +190,17 @@ export function createRuntimeValidators() {
   });
   addFormats(ajv);
 
+  for (const recordType of RUNTIME_RECORD_TYPES) {
+    ajv.addSchema(readJson(`schemas/runtime/${recordType}.schema.json`));
+  }
   return Object.fromEntries(
     RUNTIME_RECORD_TYPES.map((recordType) => {
-      const schema = readJson(`schemas/runtime/${recordType}.schema.json`);
-      return [recordType, ajv.compile(schema)];
+      const schemaId = `https://agentmage.dev/schemas/runtime/${recordType}.schema.json`;
+      const validator = ajv.getSchema(schemaId);
+      if (!validator) {
+        throw new Error(`runtime schema did not register: ${recordType}`);
+      }
+      return [recordType, validator];
     }),
   );
 }
@@ -220,16 +218,362 @@ export function validateRuntimeRecord(recordType, data, validators) {
     schemaErrors: valid
       ? []
       : [
-        ...(validator.errors ?? []).map((error) =>
-          `${error.instancePath || "/"} ${error.message}`,
-        ),
-        ...semanticErrors,
-      ],
+          ...(validator.errors ?? []).map(
+            (error) => `${error.instancePath || "/"} ${error.message}`,
+          ),
+          ...semanticErrors,
+        ],
   };
 }
 
 function isStrictlySorted(values) {
-  return values.every((value, index) => index === 0 || values[index - 1] < value);
+  return values.every(
+    (value, index) => index === 0 || values[index - 1] < value,
+  );
+}
+
+function isStrictlySortedBy(values, key) {
+  return values.every(
+    (value, index) => index === 0 || key(values[index - 1]) < key(value),
+  );
+}
+
+const VALIDATION_KIND_ORDER = Object.freeze([
+  "unit",
+  "integration",
+  "end_to_end",
+  "lint",
+  "format",
+  "types",
+  "build",
+  "packaging",
+  "security",
+]);
+const REVIEW_MODE_ORDER = Object.freeze([
+  "correctness",
+  "simplicity",
+  "maintainability",
+  "security",
+  "data_integrity",
+  "accessibility",
+  "performance",
+  "tests",
+  "documentation",
+]);
+const REVIEW_HOOK_ORDER = Object.freeze([
+  "interface",
+  "dependency",
+  "migration",
+  "security",
+  "performance",
+  "accessibility",
+  "compatibility",
+]);
+const COMMIT_PURPOSE_ORDER = Object.freeze([
+  "behavior",
+  "formatting",
+  "tests",
+  "documentation",
+  "migration",
+  "generated_output",
+]);
+const FINDING_SEVERITY_ORDER = Object.freeze([
+  "info",
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
+
+function enumIndex(values, value) {
+  return values.indexOf(value);
+}
+
+function logicalCommitPlanSemanticErrors(data) {
+  const errors = [];
+  const groups = data.groups ?? [];
+  if (
+    !isStrictlySortedBy(groups, (group) =>
+      enumIndex(COMMIT_PURPOSE_ORDER, group.purpose),
+    )
+  ) {
+    errors.push("commit groups must be strictly purpose ordered");
+  }
+  const expectedMessage = {
+    behavior: "feat: apply approved behavior change",
+    formatting: "style: apply approved formatting",
+    tests: "test: update approved tests",
+    documentation: "docs: update approved documentation",
+    migration: "chore(migration): apply approved migration",
+    generated_output: "chore(generate): refresh approved output",
+  };
+  const operationIds = [];
+  for (const [index, group] of groups.entries()) {
+    const expectedGroupId = `commit-group-${String(index + 1).padStart(2, "0")}`;
+    if (group.group_id !== expectedGroupId) {
+      errors.push(
+        `commit group ${index + 1} must use identity ${expectedGroupId}`,
+      );
+    }
+    if (!isStrictlySorted(group.operation_ids ?? [])) {
+      errors.push(`${expectedGroupId} operation_ids must be strictly sorted`);
+    }
+    if (!isStrictlySorted(group.paths ?? [])) {
+      errors.push(`${expectedGroupId} paths must be strictly sorted`);
+    }
+    if ((group.operation_ids ?? []).length !== (group.paths ?? []).length) {
+      errors.push(`${expectedGroupId} operation and path counts must agree`);
+    }
+    const message = `${expectedMessage[group.purpose]}\n\nFiles: ${(group.paths ?? []).length}`;
+    if (group.proposed_message !== message) {
+      errors.push(
+        `${expectedGroupId} proposed message must match its exact approved group`,
+      );
+    }
+    operationIds.push(...(group.operation_ids ?? []));
+  }
+  if (new Set(operationIds).size !== operationIds.length) {
+    errors.push("an operation cannot appear in more than one commit group");
+  }
+  if (
+    !isStrictlySortedBy(
+      data.excluded_unrelated ?? [],
+      (item) =>
+        `${item.path_sha256}:${item.content_sha256}:${item.exclusion_code}`,
+    )
+  ) {
+    errors.push("excluded unrelated evidence must be strictly sorted");
+  }
+  return errors;
+}
+
+function localReviewPacketSemanticErrors(data) {
+  const errors = [];
+  const changeSet = data.change_set ?? {};
+  const files = changeSet.files ?? [];
+  if (
+    !isStrictlySortedBy(changeSet.review_hooks ?? [], (hook) =>
+      enumIndex(REVIEW_HOOK_ORDER, hook),
+    )
+  ) {
+    errors.push("review_hooks must be strictly ordered");
+  }
+  if (!isStrictlySortedBy(files, (file) => file.path)) {
+    errors.push("changed files must be strictly path ordered");
+  }
+  const operationIds = files.map((file) => file.operation_id);
+  if (new Set(operationIds).size !== operationIds.length) {
+    errors.push("changed operation identities must be unique");
+  }
+  if (
+    files.reduce(
+      (total, file) => total + (file.complete_diff?.length ?? 0),
+      0,
+    ) > 8388608
+  ) {
+    errors.push("complete diff bytes exceed the packet bound");
+  }
+  const purposeMatches = {
+    behavior: ["code", "configuration", false],
+    formatting: ["code", "configuration", false],
+    tests: ["test", false],
+    documentation: ["documentation", false],
+    migration: ["migration", false],
+    generated_output: ["generated_output", true],
+  };
+  for (const file of files) {
+    if (file.preimage_sha256 === file.postimage_sha256) {
+      errors.push(
+        `changed file ${file.operation_id} must have distinct images`,
+      );
+    }
+    const allowed = purposeMatches[file.purpose] ?? [];
+    const generated = allowed.at(-1);
+    const artifacts = allowed.slice(0, -1);
+    if (
+      !artifacts.includes(file.artifact_class) ||
+      file.generated !== generated
+    ) {
+      errors.push(
+        `changed file ${file.operation_id} purpose and artifact class disagree`,
+      );
+    }
+  }
+
+  const validations = data.validations ?? [];
+  if (
+    !isStrictlySortedBy(
+      validations,
+      (validation) =>
+        `${String(enumIndex(VALIDATION_KIND_ORDER, validation.kind)).padStart(2, "0")}:${validation.validation_id}`,
+    )
+  ) {
+    errors.push("validations must be strictly kind and identity ordered");
+  }
+  if (
+    !isStrictlySortedBy(data.checks_not_run ?? [], (kind) =>
+      enumIndex(VALIDATION_KIND_ORDER, kind),
+    )
+  ) {
+    errors.push("checks_not_run must be strictly kind ordered");
+  }
+  const executedKinds = new Set(
+    validations.map((validation) => validation.kind),
+  );
+  if ((data.checks_not_run ?? []).some((kind) => executedKinds.has(kind))) {
+    errors.push("an executed validation kind cannot also be marked not run");
+  }
+
+  const results = data.review_results ?? {};
+  if (
+    !isStrictlySortedBy(results.modes ?? [], (mode) =>
+      enumIndex(REVIEW_MODE_ORDER, mode),
+    )
+  ) {
+    errors.push("review modes must be strictly ordered");
+  }
+  const findingKey = (finding) =>
+    [
+      finding.path,
+      String(finding.line).padStart(10, "0"),
+      String(enumIndex(REVIEW_MODE_ORDER, finding.mode)).padStart(2, "0"),
+      finding.code,
+      finding.finding_id,
+    ].join(":");
+  if (!isStrictlySortedBy(results.findings ?? [], findingKey)) {
+    errors.push("visible findings must be strictly source ordered");
+  }
+  if (
+    !isStrictlySortedBy(results.suppressed ?? [], (entry) =>
+      findingKey(entry.finding),
+    )
+  ) {
+    errors.push("suppressed findings must be strictly source ordered");
+  }
+  const entries = [
+    ...(results.findings ?? []).map((finding) => ({ finding, visible: true })),
+    ...(results.suppressed ?? []).map((entry) => ({
+      ...entry,
+      visible: false,
+    })),
+  ];
+  if (entries.length > 2048) {
+    errors.push("total findings exceed the review bound");
+  }
+  const findingIds = entries.map((entry) => entry.finding.finding_id);
+  if (new Set(findingIds).size !== findingIds.length) {
+    errors.push(
+      "finding identities must be unique across visible and suppressed evidence",
+    );
+  }
+  const modes = new Set(results.modes ?? []);
+  if (entries.some((entry) => !modes.has(entry.finding.mode))) {
+    errors.push("every finding mode must have been requested");
+  }
+  const duplicateKey = (finding) =>
+    [finding.mode, finding.code, finding.path, finding.line].join(":");
+  const rank = (finding) => [
+    enumIndex(FINDING_SEVERITY_ORDER, finding.severity),
+    finding.confidence_bps,
+    finding.finding_id,
+  ];
+  const compareRank = (left, right) =>
+    left[0] - right[0] || left[1] - right[1] || left[2].localeCompare(right[2]);
+  const byDuplicateKey = new Map();
+  for (const entry of entries) {
+    const key = duplicateKey(entry.finding);
+    byDuplicateKey.set(key, [...(byDuplicateKey.get(key) ?? []), entry]);
+  }
+  for (const grouped of byDuplicateKey.values()) {
+    const winner = grouped.reduce((best, entry) =>
+      compareRank(rank(entry.finding), rank(best.finding)) > 0 ? entry : best,
+    );
+    for (const entry of grouped) {
+      if (entry === winner) {
+        if (entry.finding.confidence_bps >= 7000 && !entry.visible) {
+          errors.push(
+            `visible winner ${entry.finding.finding_id} was suppressed`,
+          );
+        } else if (
+          entry.finding.confidence_bps < 7000 &&
+          (entry.visible ||
+            entry.reason !== "low_confidence" ||
+            entry.superseded_by !== null)
+        ) {
+          errors.push(
+            `low-confidence winner ${entry.finding.finding_id} is not preserved canonically`,
+          );
+        }
+      } else if (
+        entry.visible ||
+        entry.reason !== "duplicate" ||
+        entry.superseded_by !== winner.finding.finding_id
+      ) {
+        errors.push(
+          `duplicate ${entry.finding.finding_id} does not name its canonical winner`,
+        );
+      }
+    }
+  }
+
+  if (
+    !isStrictlySortedBy(
+      data.evidence_artifacts ?? [],
+      (artifact) =>
+        `${artifact.artifact_id}:${artifact.kind}:${artifact.sha256}`,
+    )
+  ) {
+    errors.push("review evidence artifacts must be strictly ordered");
+  }
+  const blockingCount = (results.findings ?? []).filter((finding) =>
+    ["high", "critical"].includes(finding.severity),
+  ).length;
+  if (data.blocking_finding_count !== blockingCount) {
+    errors.push(
+      "blocking_finding_count must equal visible high and critical findings",
+    );
+  }
+  if (data.commit_plan?.change_set_sha256 !== changeSet.change_set_sha256) {
+    errors.push(
+      "logical commit plan must bind the exact reviewable change set",
+    );
+  }
+  const filesByPurpose = new Map();
+  for (const file of files) {
+    filesByPurpose.set(file.purpose, [
+      ...(filesByPurpose.get(file.purpose) ?? []),
+      file,
+    ]);
+  }
+  const expectedPurposes = COMMIT_PURPOSE_ORDER.filter((purpose) =>
+    filesByPurpose.has(purpose),
+  );
+  const groups = data.commit_plan?.groups ?? [];
+  if (groups.length !== expectedPurposes.length) {
+    errors.push(
+      "logical commit groups must account for every changed-file purpose",
+    );
+  } else {
+    for (const [index, purpose] of expectedPurposes.entries()) {
+      const group = groups[index];
+      const purposeFiles = filesByPurpose.get(purpose);
+      const expectedOperations = purposeFiles
+        .map((file) => file.operation_id)
+        .sort();
+      const expectedPaths = purposeFiles.map((file) => file.path).sort();
+      if (
+        group.purpose !== purpose ||
+        JSON.stringify(group.operation_ids) !==
+          JSON.stringify(expectedOperations) ||
+        JSON.stringify(group.paths) !== JSON.stringify(expectedPaths)
+      ) {
+        errors.push(
+          `logical commit group ${index + 1} does not match the exact approved files`,
+        );
+      }
+    }
+  }
+  return errors;
 }
 
 function runtimeSemanticErrors(recordType, data) {
@@ -242,7 +586,10 @@ function runtimeSemanticErrors(recordType, data) {
       "acceptance_checks",
       "exclusions",
     ]) {
-      if (Array.isArray(data.input?.[field]) && !isStrictlySorted(data.input[field])) {
+      if (
+        Array.isArray(data.input?.[field]) &&
+        !isStrictlySorted(data.input[field])
+      ) {
         errors.push(`${field} must be strictly sorted`);
       }
     }
@@ -257,19 +604,33 @@ function runtimeSemanticErrors(recordType, data) {
       }
     }
     const current = new Set(data.input?.current_behavior_fact_ids ?? []);
-    if (!(data.input?.target_fact_ids ?? []).some((identity) => current.has(identity))) {
+    if (
+      !(data.input?.target_fact_ids ?? []).some((identity) =>
+        current.has(identity),
+      )
+    ) {
       errors.push("target evidence must intersect current behavior evidence");
     }
     const material = (data.input?.clarifications ?? []).some(
       (clarification) => clarification.material === true,
     );
-    const expectedStatus = material ? "clarification_required" : "ready_for_planning";
+    const expectedStatus = material
+      ? "clarification_required"
+      : "ready_for_planning";
     if (data.status !== expectedStatus) {
       errors.push(`status must equal ${expectedStatus}`);
     }
-    const rejected = new Set(data.rejected_repository_instruction_fact_ids ?? []);
-    if ((data.input?.target_fact_ids ?? []).some((identity) => rejected.has(identity))) {
-      errors.push("rejected repository instructions cannot become change targets");
+    const rejected = new Set(
+      data.rejected_repository_instruction_fact_ids ?? [],
+    );
+    if (
+      (data.input?.target_fact_ids ?? []).some((identity) =>
+        rejected.has(identity),
+      )
+    ) {
+      errors.push(
+        "rejected repository instructions cannot become change targets",
+      );
     }
   } else if (recordType === "reproduction-record") {
     if (!isStrictlySorted(data.input?.log_sha256s ?? [])) {
@@ -277,7 +638,9 @@ function runtimeSemanticErrors(recordType, data) {
     }
     const steps = data.input?.steps ?? [];
     if (!steps.every((step, index) => step.sequence === index + 1)) {
-      errors.push("reproduction steps must have contiguous one-based sequence values");
+      errors.push(
+        "reproduction steps must have contiguous one-based sequence values",
+      );
     }
     const input = data.input ?? {};
     let expectedOutcome = "inconclusive";
@@ -295,10 +658,16 @@ function runtimeSemanticErrors(recordType, data) {
       expectedOutcome === "reproduced" &&
       input.observed_result_sha256 === input.expected_result_sha256
     ) {
-      errors.push("a reproduced failure must differ from the expected result identity");
+      errors.push(
+        "a reproduced failure must differ from the expected result identity",
+      );
     }
   } else if (recordType === "validation-receipt") {
-    for (const field of ["environment_names", "failed_names", "unverified_kinds"]) {
+    for (const field of [
+      "environment_names",
+      "failed_names",
+      "unverified_kinds",
+    ]) {
       if (!isStrictlySorted(data[field] ?? [])) {
         errors.push(`${field} must be strictly sorted`);
       }
@@ -309,8 +678,8 @@ function runtimeSemanticErrors(recordType, data) {
     if (!isStrictlySorted(artifactKeys)) {
       errors.push("artifacts must be strictly sorted by identity and path");
     }
-    const affectedKeys = (data.affected_files ?? []).map(
-      (file) => JSON.stringify(file.path),
+    const affectedKeys = (data.affected_files ?? []).map((file) =>
+      JSON.stringify(file.path),
     );
     if (!isStrictlySorted(affectedKeys)) {
       errors.push("affected_files must be strictly sorted by path");
@@ -322,13 +691,15 @@ function runtimeSemanticErrors(recordType, data) {
       data.reported_duration_ms !== null &&
       data.reported_duration_ms > data.duration_ms + 1000
     ) {
-      errors.push("reported duration exceeds the bounded process duration allowance");
+      errors.push(
+        "reported duration exceeds the bounded process duration allowance",
+      );
     }
     const secretClassified = [
       data.stdout_classification,
       data.stderr_classification,
     ].includes("secret_detected");
-    if ((data.secret_match_count > 0) !== secretClassified) {
+    if (data.secret_match_count > 0 !== secretClassified) {
       errors.push("secret count and output classification disagree");
     }
     if (
@@ -352,6 +723,11 @@ function runtimeSemanticErrors(recordType, data) {
         errors.push("affected file preimage and postimage must differ");
       }
     }
+  } else if (recordType === "logical-commit-plan") {
+    errors.push(...logicalCommitPlanSemanticErrors(data));
+  } else if (recordType === "local-review-packet") {
+    errors.push(...logicalCommitPlanSemanticErrors(data.commit_plan ?? {}));
+    errors.push(...localReviewPacketSemanticErrors(data));
   }
   return errors;
 }
@@ -376,7 +752,9 @@ export function planningSemanticErrors(recordType, data) {
       errors.push("decision record cannot supersede itself");
     }
   } else if (recordType === "risk-register") {
-    for (const riskId of duplicateValues((data.risks ?? []).map((risk) => risk.risk_id))) {
+    for (const riskId of duplicateValues(
+      (data.risks ?? []).map((risk) => risk.risk_id),
+    )) {
       errors.push(`duplicate risk identifier: ${riskId}`);
     }
     for (const risk of data.risks ?? []) {
@@ -440,9 +818,9 @@ export function validatePlanningRecord(recordType, data, validators) {
   const schemaValid = validator(data);
   const schemaErrors = schemaValid
     ? []
-    : (validator.errors ?? []).map((error) =>
-      `${error.instancePath || "/"} ${error.message}`,
-    );
+    : (validator.errors ?? []).map(
+        (error) => `${error.instancePath || "/"} ${error.message}`,
+      );
   const semanticErrors = schemaValid
     ? planningSemanticErrors(recordType, data)
     : [];
@@ -464,9 +842,9 @@ export function validateTestingRecord(recordType, data, validators) {
     valid,
     schemaErrors: valid
       ? []
-      : (validator.errors ?? []).map((error) =>
-        `${error.instancePath || "/"} ${error.message}`,
-      ),
+      : (validator.errors ?? []).map(
+          (error) => `${error.instancePath || "/"} ${error.message}`,
+        ),
   };
 }
 
@@ -511,14 +889,14 @@ export function configurationSemanticErrors(recordType, data) {
     }
   }
   if (
-    data.model?.decoding?.maximum_context_tokens
-      > data.budget?.maximum_context_tokens
+    data.model?.decoding?.maximum_context_tokens >
+    data.budget?.maximum_context_tokens
   ) {
     errors.push("model context exceeds the global context budget");
   }
   if (
-    data.model?.decoding?.maximum_output_tokens
-      > data.budget?.maximum_output_tokens
+    data.model?.decoding?.maximum_output_tokens >
+    data.budget?.maximum_output_tokens
   ) {
     errors.push("model output exceeds the global output-token budget");
   }
@@ -533,9 +911,9 @@ export function validateConfigurationRecord(recordType, data, validators) {
   const schemaValid = validator(data);
   const schemaErrors = schemaValid
     ? []
-    : (validator.errors ?? []).map((error) =>
-      `${error.instancePath || "/"} ${error.message}`,
-    );
+    : (validator.errors ?? []).map(
+        (error) => `${error.instancePath || "/"} ${error.message}`,
+      );
   const semanticErrors = schemaValid
     ? configurationSemanticErrors(recordType, data)
     : [];
@@ -629,9 +1007,8 @@ export function buildConfigurationSchemaReport() {
   ];
   const mutationResults = [];
   for (const recordType of recordTypes) {
-    const source = recordType === CONFIGURATION_BUNDLE_TYPE
-      ? bundle
-      : bundle[recordType];
+    const source =
+      recordType === CONFIGURATION_BUNDLE_TYPE ? bundle : bundle[recordType];
     const mutations = [];
 
     const missing = structuredClone(source);
@@ -669,8 +1046,7 @@ export function buildConfigurationSchemaReport() {
   const schemaPaths = [
     "schemas/configuration/common.schema.json",
     ...recordTypes.map(
-      (recordType) =>
-        `schemas/configuration/${recordType}.schema.json`,
+      (recordType) => `schemas/configuration/${recordType}.schema.json`,
     ),
   ];
   return {
@@ -707,7 +1083,8 @@ export function buildConfigurationSchemaReport() {
     canonical_validation_count: recordTypes.length,
     mutation_results: mutationResults,
     mutation_count: mutationResults.length,
-    rejected_mutation_count: mutationResults.filter((item) => item.rejected).length,
+    rejected_mutation_count: mutationResults.filter((item) => item.rejected)
+      .length,
     baseline_controls: {
       startup_failure_policy: "fail-closed",
       default_permission_effect: "deny",
@@ -753,11 +1130,7 @@ export function validateTestingFixtures() {
   const ledger = readJson("fixtures/corpus/v1/provenance-ledger.json");
   results.push({
     recordType: "fixture-provenance-ledger",
-    ...validateTestingRecord(
-      "fixture-provenance-ledger",
-      ledger,
-      validators,
-    ),
+    ...validateTestingRecord("fixture-provenance-ledger", ledger, validators),
   });
   const fuzzResult = readJson(
     "schemas/testing/examples/fuzz-result.valid.json",
@@ -822,8 +1195,7 @@ function main() {
   const testingResults = validateTestingFixtures();
   const configurationResults = validateConfigurationFixtures();
   const configurationProfileResults = validateConfigurationProfiles();
-  const configurationBoundResultResults =
-    validateConfigurationResultFixtures();
+  const configurationBoundResultResults = validateConfigurationResultFixtures();
   const configurationReviewResults = validateConfigurationReviewFixtures();
   const runtimeResults = validateRuntimeFixtures();
   const results = [
@@ -860,17 +1232,20 @@ function main() {
   }
 
   console.log(
-    `Validated ${planningResults.length} planning and `
-      + `${testingResults.length} testing and `
-      + `${configurationResults.length} configuration schema fixture(s), plus `
-      + `${configurationProfileResults.length} profile record(s) and `
-      + `${configurationBoundResultResults.length} configuration-bound result(s) and `
-      + `${configurationReviewResults.length} review record(s) and `
-      + `${runtimeResults.length} runtime record(s).`,
+    `Validated ${planningResults.length} planning and ` +
+      `${testingResults.length} testing and ` +
+      `${configurationResults.length} configuration schema fixture(s), plus ` +
+      `${configurationProfileResults.length} profile record(s) and ` +
+      `${configurationBoundResultResults.length} configuration-bound result(s) and ` +
+      `${configurationReviewResults.length} review record(s) and ` +
+      `${runtimeResults.length} runtime record(s).`,
   );
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   process.exitCode = main();
 }

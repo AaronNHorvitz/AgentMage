@@ -1,0 +1,407 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/local-review-packet.schema.json",
+  "title": "AgentMage Complete Local Review Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "packet_id",
+    "repository_sha256",
+    "base_object",
+    "candidate_snapshot_sha256",
+    "preservation_manifest_sha256",
+    "objective",
+    "behavior_delta",
+    "change_set",
+    "validations",
+    "checks_not_run",
+    "review_results",
+    "evidence_artifacts",
+    "commit_plan",
+    "rollback",
+    "blocking_finding_count",
+    "commit_authority",
+    "publication_authority",
+    "packet_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "packet_id": { "$ref": "#/$defs/identifier" },
+    "repository_sha256": { "$ref": "#/$defs/sha256" },
+    "base_object": { "$ref": "#/$defs/object" },
+    "candidate_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "preservation_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "objective": { "$ref": "#/$defs/narrative" },
+    "behavior_delta": { "$ref": "#/$defs/narrative" },
+    "change_set": { "$ref": "#/$defs/changeSet" },
+    "validations": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/validation" }
+    },
+    "checks_not_run": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/validationKind" }
+    },
+    "review_results": { "$ref": "#/$defs/reviewResults" },
+    "evidence_artifacts": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/evidenceArtifact" }
+    },
+    "commit_plan": {
+      "$ref": "https://agentmage.dev/schemas/runtime/logical-commit-plan.schema.json"
+    },
+    "rollback": { "$ref": "#/$defs/narrative" },
+    "blocking_finding_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2048
+    },
+    "commit_authority": { "const": false },
+    "publication_authority": { "const": false },
+    "packet_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "narrative": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384,
+      "not": { "pattern": "\\u0000" }
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\\\u0000-\\u001f\\u007f]+$"
+    },
+    "validationKind": {
+      "enum": [
+        "unit",
+        "integration",
+        "end_to_end",
+        "lint",
+        "format",
+        "types",
+        "build",
+        "packaging",
+        "security"
+      ]
+    },
+    "purpose": {
+      "enum": [
+        "behavior",
+        "formatting",
+        "tests",
+        "documentation",
+        "migration",
+        "generated_output"
+      ]
+    },
+    "changedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "path",
+        "preimage_sha256",
+        "postimage_sha256",
+        "artifact_class",
+        "purpose",
+        "generated",
+        "complete_diff",
+        "operation_sha256"
+      ],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "path": { "$ref": "#/$defs/path" },
+        "preimage_sha256": { "$ref": "#/$defs/sha256" },
+        "postimage_sha256": { "$ref": "#/$defs/sha256" },
+        "artifact_class": {
+          "enum": [
+            "code",
+            "configuration",
+            "test",
+            "documentation",
+            "migration",
+            "generated_output"
+          ]
+        },
+        "purpose": { "$ref": "#/$defs/purpose" },
+        "generated": { "type": "boolean" },
+        "complete_diff": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8388608,
+          "not": { "pattern": "\\u0000" }
+        },
+        "operation_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "changeSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change_set_id",
+        "change_set_sha256",
+        "intent_sha256",
+        "plan_sha256",
+        "write_approval_receipt_sha256",
+        "write_application_receipt_sha256",
+        "scope",
+        "review_hooks",
+        "files",
+        "files_sha256",
+        "write_authority"
+      ],
+      "properties": {
+        "change_set_id": { "$ref": "#/$defs/identifier" },
+        "change_set_sha256": { "$ref": "#/$defs/sha256" },
+        "intent_sha256": { "$ref": "#/$defs/sha256" },
+        "plan_sha256": { "$ref": "#/$defs/sha256" },
+        "write_approval_receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "write_application_receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "scope": {
+          "enum": ["minimal", "refactor", "dependency_upgrade", "migration"]
+        },
+        "review_hooks": {
+          "type": "array",
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "interface",
+              "dependency",
+              "migration",
+              "security",
+              "performance",
+              "accessibility",
+              "compatibility"
+            ]
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/changedFile" }
+        },
+        "files_sha256": { "$ref": "#/$defs/sha256" },
+        "write_authority": { "const": false }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validation_id",
+        "kind",
+        "status",
+        "coverage",
+        "receipt_sha256",
+        "full_pass"
+      ],
+      "properties": {
+        "validation_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "$ref": "#/$defs/validationKind" },
+        "status": {
+          "enum": [
+            "passed",
+            "assertion_failed",
+            "compile_failed",
+            "infrastructure_failed",
+            "timed_out",
+            "cancelled",
+            "crashed",
+            "flaky",
+            "skipped_only",
+            "malformed",
+            "truncated",
+            "zero_tests",
+            "unverified",
+            "sensitive_output"
+          ]
+        },
+        "coverage": { "enum": ["complete", "partial"] },
+        "receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "full_pass": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": { "const": "passed" },
+              "coverage": { "const": "complete" }
+            },
+            "required": ["status", "coverage"]
+          },
+          "then": { "properties": { "full_pass": { "const": true } } },
+          "else": { "properties": { "full_pass": { "const": false } } }
+        }
+      ]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "mode",
+        "code",
+        "path",
+        "line",
+        "severity",
+        "confidence_bps",
+        "evidence_sha256",
+        "rationale_code",
+        "finding_sha256"
+      ],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/identifier" },
+        "mode": {
+          "enum": [
+            "correctness",
+            "simplicity",
+            "maintainability",
+            "security",
+            "data_integrity",
+            "accessibility",
+            "performance",
+            "tests",
+            "documentation"
+          ]
+        },
+        "code": { "$ref": "#/$defs/identifier" },
+        "path": { "$ref": "#/$defs/path" },
+        "line": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+        "confidence_bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "evidence_sha256": { "$ref": "#/$defs/sha256" },
+        "rationale_code": { "$ref": "#/$defs/identifier" },
+        "finding_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "suppressedFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding", "reason", "superseded_by"],
+      "properties": {
+        "finding": { "$ref": "#/$defs/finding" },
+        "reason": { "enum": ["low_confidence", "duplicate"] },
+        "superseded_by": {
+          "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "reason": { "const": "low_confidence" } },
+            "required": ["reason"]
+          },
+          "then": {
+            "properties": {
+              "finding": {
+                "type": "object",
+                "properties": {
+                  "confidence_bps": { "type": "integer", "maximum": 6999 }
+                }
+              },
+              "superseded_by": { "type": "null" }
+            }
+          },
+          "else": {
+            "properties": { "superseded_by": { "$ref": "#/$defs/identifier" } }
+          }
+        }
+      ]
+    },
+    "reviewResults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modes",
+        "findings",
+        "suppressed",
+        "results_sha256",
+        "mutation_authority"
+      ],
+      "properties": {
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "correctness",
+              "simplicity",
+              "maintainability",
+              "security",
+              "data_integrity",
+              "accessibility",
+              "performance",
+              "tests",
+              "documentation"
+            ]
+          }
+        },
+        "findings": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {
+            "allOf": [
+              { "$ref": "#/$defs/finding" },
+              {
+                "type": "object",
+                "properties": {
+                  "confidence_bps": { "type": "integer", "minimum": 7000 }
+                }
+              }
+            ]
+          }
+        },
+        "suppressed": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": { "$ref": "#/$defs/suppressedFinding" }
+        },
+        "results_sha256": { "$ref": "#/$defs/sha256" },
+        "mutation_authority": { "const": false }
+      }
+    },
+    "evidenceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "kind",
+        "sha256",
+        "byte_length",
+        "sensitive_content_detected"
+      ],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["screenshot", "output", "data_comparison"] },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 18446744073709551615
+        },
+        "sensitive_content_detected": { "const": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/logical-commit-plan.schema.json",
+  "title": "AgentMage Authority-Free Logical Commit Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "change_set_sha256",
+    "groups",
+    "excluded_unrelated",
+    "automatic_commit",
+    "push_authority",
+    "merge_authority",
+    "release_authority",
+    "plan_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "change_set_sha256": { "$ref": "#/$defs/sha256" },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "excluded_unrelated": {
+      "type": "array",
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/unrelated" }
+    },
+    "automatic_commit": { "const": false },
+    "push_authority": { "const": false },
+    "merge_authority": { "const": false },
+    "release_authority": { "const": false },
+    "plan_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\\\u0000-\\u001f\\u007f]+$"
+    },
+    "purpose": {
+      "enum": [
+        "behavior",
+        "formatting",
+        "tests",
+        "documentation",
+        "migration",
+        "generated_output"
+      ]
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "purpose",
+        "operation_ids",
+        "paths",
+        "proposed_message",
+        "group_sha256"
+      ],
+      "properties": {
+        "group_id": { "$ref": "#/$defs/identifier" },
+        "purpose": { "$ref": "#/$defs/purpose" },
+        "operation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "proposed_message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^(?:feat: apply approved behavior change|style: apply approved formatting|test: update approved tests|docs: update approved documentation|chore\\(migration\\): apply approved migration|chore\\(generate\\): refresh approved output)\\n\\nFiles: [1-9][0-9]{0,2}$"
+        },
+        "group_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "unrelated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_sha256", "content_sha256", "exclusion_code"],
+      "properties": {
+        "path_sha256": { "$ref": "#/$defs/sha256" },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "exclusion_code": { "$ref": "#/$defs/identifier" }
+      }
+    }
+  }
+}

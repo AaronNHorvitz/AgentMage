@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "change_set_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "groups": [
+    {
+      "group_id": "commit-group-01",
+      "purpose": "behavior",
+      "operation_ids": ["operation-01"],
+      "paths": ["src/lib.rs"],
+      "proposed_message": "feat: apply approved behavior change\n\nFiles: 1",
+      "group_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "group_id": "commit-group-02",
+      "purpose": "tests",
+      "operation_ids": ["operation-02"],
+      "paths": ["tests/lib.rs"],
+      "proposed_message": "test: update approved tests\n\nFiles: 1",
+      "group_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ],
+  "excluded_unrelated": [
+    {
+      "path_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "content_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "exclusion_code": "review.unrelated.user-work"
+    }
+  ],
+  "automatic_commit": false,
+  "push_authority": false,
+  "merge_authority": false,
+  "release_authority": false,
+  "plan_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+}

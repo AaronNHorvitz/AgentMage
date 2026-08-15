@@ -16,6 +16,7 @@ use crate::write_approval::{
 };
 
 const REVIEW_PACKET_SCHEMA_VERSION: u16 = 1;
+const LOGICAL_COMMIT_PLAN_SCHEMA_VERSION: u16 = 1;
 const MAX_CHANGED_FILES: usize = 128;
 const MAX_UNRELATED_FILES: usize = 4_096;
 const MAX_FINDINGS: usize = 2_048;
@@ -583,6 +584,8 @@ pub struct LogicalCommitGroup {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LogicalCommitPlan {
+    /// Closed schema version.
+    pub schema_version: u16,
     /// Exact reviewable change-set digest.
     pub change_set_sha256: String,
     /// Stable purpose-ordered groups.
@@ -653,6 +656,7 @@ pub fn build_logical_commit_plan(
         return Err(ReviewPacketError::CommitPlanDenied);
     }
     let mut plan = LogicalCommitPlan {
+        schema_version: LOGICAL_COMMIT_PLAN_SCHEMA_VERSION,
         change_set_sha256: change_set.change_set_sha256.clone(),
         groups,
         excluded_unrelated: unrelated,
@@ -948,7 +952,8 @@ fn verify_review_results(results: &ReviewModeResults) -> bool {
 }
 
 fn verify_logical_commit_plan(change_set: &ReviewableChangeSet, plan: &LogicalCommitPlan) -> bool {
-    plan.change_set_sha256 == change_set.change_set_sha256
+    plan.schema_version == LOGICAL_COMMIT_PLAN_SCHEMA_VERSION
+        && plan.change_set_sha256 == change_set.change_set_sha256
         && !plan.automatic_commit
         && !plan.push_authority
         && !plan.merge_authority

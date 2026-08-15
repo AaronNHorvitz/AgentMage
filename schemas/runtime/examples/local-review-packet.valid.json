@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "packet_id": "review-packet-0001",
+  "repository_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "base_object": "2222222222222222222222222222222222222222",
+  "candidate_snapshot_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "preservation_manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "objective": "Apply the exact approved fixture behavior change.",
+  "behavior_delta": "The fixture returns the approved new value.",
+  "change_set": {
+    "change_set_id": "change-set-0001",
+    "change_set_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "intent_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "plan_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+    "write_approval_receipt_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+    "write_application_receipt_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "scope": "minimal",
+    "review_hooks": ["security"],
+    "files": [
+      {
+        "operation_id": "operation-01",
+        "path": "src/lib.rs",
+        "preimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "postimage_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "artifact_class": "code",
+        "purpose": "behavior",
+        "generated": false,
+        "complete_diff": "-old\n+new",
+        "operation_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ],
+    "files_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "write_authority": false
+  },
+  "validations": [
+    {
+      "validation_id": "validation-unit",
+      "kind": "unit",
+      "status": "passed",
+      "coverage": "complete",
+      "receipt_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "full_pass": true
+    }
+  ],
+  "checks_not_run": ["security"],
+  "review_results": {
+    "modes": [
+      "correctness",
+      "simplicity",
+      "maintainability",
+      "security",
+      "data_integrity",
+      "accessibility",
+      "performance",
+      "tests",
+      "documentation"
+    ],
+    "findings": [
+      {
+        "finding_id": "finding-high-0001",
+        "mode": "correctness",
+        "code": "review.correctness.boundary",
+        "path": "src/lib.rs",
+        "line": 7,
+        "severity": "high",
+        "confidence_bps": 9000,
+        "evidence_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "rationale_code": "review.impact.behavior",
+        "finding_sha256": "1010101010101010101010101010101010101010101010101010101010101010"
+      }
+    ],
+    "suppressed": [],
+    "results_sha256": "1212121212121212121212121212121212121212121212121212121212121212",
+    "mutation_authority": false
+  },
+  "evidence_artifacts": [
+    {
+      "artifact_id": "screenshot-0001",
+      "kind": "screenshot",
+      "sha256": "1313131313131313131313131313131313131313131313131313131313131313",
+      "byte_length": 100,
+      "sensitive_content_detected": false
+    }
+  ],
+  "commit_plan": {
+    "schema_version": 1,
+    "change_set_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "groups": [
+      {
+        "group_id": "commit-group-01",
+        "purpose": "behavior",
+        "operation_ids": ["operation-01"],
+        "paths": ["src/lib.rs"],
+        "proposed_message": "feat: apply approved behavior change\n\nFiles: 1",
+        "group_sha256": "1414141414141414141414141414141414141414141414141414141414141414"
+      }
+    ],
+    "excluded_unrelated": [],
+    "automatic_commit": false,
+    "push_authority": false,
+    "merge_authority": false,
+    "release_authority": false,
+    "plan_sha256": "1515151515151515151515151515151515151515151515151515151515151515"
+  },
+  "rollback": "Restore the exact approved preimage.",
+  "blocking_finding_count": 1,
+  "commit_authority": false,
+  "publication_authority": false,
+  "packet_sha256": "1616161616161616161616161616161616161616161616161616161616161616"
+}

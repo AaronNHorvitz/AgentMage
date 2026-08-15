@@ -90,11 +90,7 @@ function configurationResultFixture(resultKind) {
 }
 
 function validateConfiguration(recordType, data) {
-  return validateConfigurationRecord(
-    recordType,
-    data,
-    configurationValidators,
-  );
+  return validateConfigurationRecord(recordType, data, configurationValidators);
 }
 
 test("all canonical examples satisfy their schema and semantic contract", () => {
@@ -189,8 +185,12 @@ test("risk registers reject duplicate identities and incorrect calculated scores
   riskRegister.risks.push(duplicate);
   const result = validate("risk-register", riskRegister);
   assert.equal(result.valid, false);
-  assert.ok(result.semanticErrors.some((error) => error.includes("duplicate risk")));
-  assert.ok(result.semanticErrors.some((error) => error.includes("score must equal")));
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("duplicate risk")),
+  );
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("score must equal")),
+  );
 });
 
 test("accepted risks require a decision and evidence", () => {
@@ -209,8 +209,12 @@ test("change logs reject duplicate identities and decreasing timestamps", () => 
   changeLog.entries.push(duplicate);
   const result = validate("change-log", changeLog);
   assert.equal(result.valid, false);
-  assert.ok(result.semanticErrors.some((error) => error.includes("duplicate change")));
-  assert.ok(result.semanticErrors.some((error) => error.includes("timestamp precedes")));
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("duplicate change")),
+  );
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("timestamp precedes")),
+  );
 });
 
 test("release manifests bind release IDs and require unique component and profile identities", () => {
@@ -220,9 +224,15 @@ test("release manifests bind release IDs and require unique component and profil
   release.model_profiles.push(structuredClone(release.model_profiles[0]));
   const result = validate("release-manifest", release);
   assert.equal(result.valid, false);
-  assert.ok(result.semanticErrors.some((error) => error.includes("release_id")));
-  assert.ok(result.semanticErrors.some((error) => error.includes("component name")));
-  assert.ok(result.semanticErrors.some((error) => error.includes("model profile")));
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("release_id")),
+  );
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("component name")),
+  );
+  assert.ok(
+    result.semanticErrors.some((error) => error.includes("model profile")),
+  );
 });
 
 test("released manifests require a signer and release evidence", () => {
@@ -235,10 +245,7 @@ test("released manifests require a signer and release evidence", () => {
 test("release manifests require one exact configuration identity", () => {
   const missingConfiguration = fixture("release-manifest");
   delete missingConfiguration.configuration;
-  assert.equal(
-    validate("release-manifest", missingConfiguration).valid,
-    false,
-  );
+  assert.equal(validate("release-manifest", missingConfiguration).valid, false);
 
   const invalidHash = fixture("release-manifest");
   invalidHash.configuration.sha256 = "A".repeat(64);
@@ -251,7 +258,10 @@ test("accepted supersessions require approval and disjoint requirement sets", ()
   missingApproval.approved_by = [];
   missingApproval.approved_at = null;
   missingApproval.evidence = [];
-  assert.equal(validate("requirement-supersession", missingApproval).valid, false);
+  assert.equal(
+    validate("requirement-supersession", missingApproval).valid,
+    false,
+  );
 
   const overlap = fixture("requirement-supersession");
   overlap.replacement_requirement_ids = [...overlap.original_requirement_ids];
@@ -297,11 +307,8 @@ test("testing schemas reject weakened platform and provenance controls", () => {
   platformRecord.environment.hostname = "fixture-host";
   platformRecord.macos_support_claim = "supported";
   assert.equal(
-    validateTestingRecord(
-      "platform-result",
-      platformRecord,
-      testingValidators,
-    ).valid,
+    validateTestingRecord("platform-result", platformRecord, testingValidators)
+      .valid,
     false,
   );
 
@@ -354,6 +361,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "command-preview",
     "command-receipt",
     "validation-receipt",
+    "logical-commit-plan",
+    "local-review-packet",
     "repository-preservation-manifest",
     "repository-operation-plan",
     "repository-operation-receipt",
@@ -363,7 +372,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true, true, true, true, true, true, true, true, true, true],
+    Array(RUNTIME_RECORD_TYPES.length).fill(true),
   );
 });
 
@@ -377,43 +386,122 @@ test("validation receipts reject false pass, partial ambiguity, secrets, and uns
   const zeroTests = structuredClone(source);
   zeroTests.passed = 0;
   assert.equal(
-    validateRuntimeRecord("validation-receipt", zeroTests, runtimeValidators).valid,
+    validateRuntimeRecord("validation-receipt", zeroTests, runtimeValidators)
+      .valid,
     false,
   );
 
   const falsePartial = structuredClone(source);
   falsePartial.coverage = "partial";
   assert.equal(
-    validateRuntimeRecord("validation-receipt", falsePartial, runtimeValidators).valid,
+    validateRuntimeRecord("validation-receipt", falsePartial, runtimeValidators)
+      .valid,
     false,
   );
 
   const leakedSecret = structuredClone(source);
   leakedSecret.secret_match_count = 1;
   assert.equal(
-    validateRuntimeRecord("validation-receipt", leakedSecret, runtimeValidators).valid,
+    validateRuntimeRecord("validation-receipt", leakedSecret, runtimeValidators)
+      .valid,
     false,
   );
 
   const unsorted = structuredClone(source);
   unsorted.environment_names = ["TZ", "LANG"];
   assert.equal(
-    validateRuntimeRecord("validation-receipt", unsorted, runtimeValidators).valid,
+    validateRuntimeRecord("validation-receipt", unsorted, runtimeValidators)
+      .valid,
     false,
   );
 
   const rawOutput = structuredClone(source);
   rawOutput.stdout = "forged green output";
   assert.equal(
-    validateRuntimeRecord("validation-receipt", rawOutput, runtimeValidators).valid,
+    validateRuntimeRecord("validation-receipt", rawOutput, runtimeValidators)
+      .valid,
     false,
   );
+});
+
+test("logical commit plans reject authority, duplicate operations, and noncanonical groups", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/logical-commit-plan.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  for (const mutation of ["authority", "duplicate", "message", "order"]) {
+    const changed = structuredClone(source);
+    if (mutation === "authority") {
+      changed.automatic_commit = true;
+    } else if (mutation === "duplicate") {
+      changed.groups[1].operation_ids = ["operation-01"];
+    } else if (mutation === "message") {
+      changed.groups[0].proposed_message =
+        "feat: include unrelated work\n\nFiles: 1";
+    } else {
+      changed.groups.reverse();
+    }
+    assert.equal(
+      validateRuntimeRecord("logical-commit-plan", changed, runtimeValidators)
+        .valid,
+      false,
+    );
+  }
+});
+
+test("local review packets reject false review, validation, and change accounting", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/local-review-packet.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  for (const mutation of [
+    "authority",
+    "false-pass",
+    "unrun",
+    "blocking",
+    "change-set",
+    "same-image",
+  ]) {
+    const changed = structuredClone(source);
+    if (mutation === "authority") {
+      changed.commit_authority = true;
+    } else if (mutation === "false-pass") {
+      changed.validations[0].coverage = "partial";
+    } else if (mutation === "unrun") {
+      changed.checks_not_run = ["unit"];
+    } else if (mutation === "blocking") {
+      changed.blocking_finding_count = 0;
+    } else if (mutation === "change-set") {
+      changed.commit_plan.groups[0].paths = ["user/notes.md"];
+    } else {
+      changed.change_set.files[0].postimage_sha256 =
+        changed.change_set.files[0].preimage_sha256;
+    }
+    assert.equal(
+      validateRuntimeRecord("local-review-packet", changed, runtimeValidators)
+        .valid,
+      false,
+    );
+  }
 });
 
 test("change intent runtime schema rejects ambiguity and authority forgery", () => {
   const source = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/change-intent-record.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/change-intent-record.valid.json",
+      ),
       "utf8",
     ),
   );
@@ -426,7 +514,8 @@ test("change intent runtime schema rejects ambiguity and authority forgery", () 
     material: true,
   });
   assert.equal(
-    validateRuntimeRecord("change-intent-record", falseReady, runtimeValidators).valid,
+    validateRuntimeRecord("change-intent-record", falseReady, runtimeValidators)
+      .valid,
     false,
   );
 
@@ -434,7 +523,11 @@ test("change intent runtime schema rejects ambiguity and authority forgery", () 
   instructionTarget.input.target_fact_ids = ["5".repeat(64)];
   instructionTarget.input.current_behavior_fact_ids = ["5".repeat(64)];
   assert.equal(
-    validateRuntimeRecord("change-intent-record", instructionTarget, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "change-intent-record",
+      instructionTarget,
+      runtimeValidators,
+    ).valid,
     false,
   );
 });
@@ -442,28 +535,44 @@ test("change intent runtime schema rejects ambiguity and authority forgery", () 
 test("reproduction runtime schema rejects false outcomes and inherited authority", () => {
   const source = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/reproduction-record.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/reproduction-record.valid.json",
+      ),
       "utf8",
     ),
   );
   const falseOutcome = structuredClone(source);
   falseOutcome.input.failure_signature_observed = false;
   assert.equal(
-    validateRuntimeRecord("reproduction-record", falseOutcome, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "reproduction-record",
+      falseOutcome,
+      runtimeValidators,
+    ).valid,
     false,
   );
 
   const inheritedWrite = structuredClone(source);
   inheritedWrite.input.steps[0].write_authority = true;
   assert.equal(
-    validateRuntimeRecord("reproduction-record", inheritedWrite, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "reproduction-record",
+      inheritedWrite,
+      runtimeValidators,
+    ).valid,
     false,
   );
 
   const equalResults = structuredClone(source);
-  equalResults.input.observed_result_sha256 = equalResults.input.expected_result_sha256;
+  equalResults.input.observed_result_sha256 =
+    equalResults.input.expected_result_sha256;
   assert.equal(
-    validateRuntimeRecord("reproduction-record", equalResults, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "reproduction-record",
+      equalResults,
+      runtimeValidators,
+    ).valid,
     false,
   );
 });
@@ -471,45 +580,67 @@ test("reproduction runtime schema rejects false outcomes and inherited authority
 test("repository runtime schemas reject preservation and authority ambiguity", () => {
   const manifest = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/repository-preservation-manifest.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/repository-preservation-manifest.valid.json",
+      ),
       "utf8",
     ),
   );
   const unsafe = structuredClone(manifest);
   unsafe.safe_ownership = false;
   assert.equal(
-    validateRuntimeRecord("repository-preservation-manifest", unsafe, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "repository-preservation-manifest",
+      unsafe,
+      runtimeValidators,
+    ).valid,
     false,
   );
 
   const plan = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/repository-operation-plan.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/repository-operation-plan.valid.json",
+      ),
       "utf8",
     ),
   );
   const pull = structuredClone(plan);
   pull.invocations[0].arguments.push("pull");
   assert.equal(
-    validateRuntimeRecord("repository-operation-plan", pull, runtimeValidators).valid,
+    validateRuntimeRecord("repository-operation-plan", pull, runtimeValidators)
+      .valid,
     false,
   );
   const networkWorktree = structuredClone(plan);
   networkWorktree.invocations[0].network = true;
   assert.equal(
-    validateRuntimeRecord("repository-operation-plan", networkWorktree, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "repository-operation-plan",
+      networkWorktree,
+      runtimeValidators,
+    ).valid,
     false,
   );
 
   const receipt = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/repository-operation-receipt.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/repository-operation-receipt.valid.json",
+      ),
       "utf8",
     ),
   );
   receipt.cleanup_verified = false;
   assert.equal(
-    validateRuntimeRecord("repository-operation-receipt", receipt, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "repository-operation-receipt",
+      receipt,
+      runtimeValidators,
+    ).valid,
     false,
   );
 
@@ -521,7 +652,8 @@ test("repository runtime schemas reject preservation and authority ambiguity", (
   );
   ownership.live_process_count = 1;
   assert.equal(
-    validateRuntimeRecord("worktree-ownership", ownership, runtimeValidators).valid,
+    validateRuntimeRecord("worktree-ownership", ownership, runtimeValidators)
+      .valid,
     false,
   );
 });
@@ -536,7 +668,8 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
   const inherited = structuredClone(preview);
   inherited.inherit_environment = true;
   assert.equal(
-    validateRuntimeRecord("command-preview", inherited, runtimeValidators).valid,
+    validateRuntimeRecord("command-preview", inherited, runtimeValidators)
+      .valid,
     false,
   );
   const shell = structuredClone(preview);
@@ -555,7 +688,8 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
   const falseSuccess = structuredClone(receipt);
   falseSuccess.termination = "timed_out";
   assert.equal(
-    validateRuntimeRecord("command-receipt", falseSuccess, runtimeValidators).valid,
+    validateRuntimeRecord("command-receipt", falseSuccess, runtimeValidators)
+      .valid,
     false,
   );
   const missingCleanup = structuredClone(receipt);
@@ -564,13 +698,15 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
   missingCleanup.exit_code = null;
   missingCleanup.descendants_terminated = false;
   assert.equal(
-    validateRuntimeRecord("command-receipt", missingCleanup, runtimeValidators).valid,
+    validateRuntimeRecord("command-receipt", missingCleanup, runtimeValidators)
+      .valid,
     false,
   );
   const nonzeroSuccess = structuredClone(receipt);
   nonzeroSuccess.exit_code = 2;
   assert.equal(
-    validateRuntimeRecord("command-receipt", nonzeroSuccess, runtimeValidators).valid,
+    validateRuntimeRecord("command-receipt", nonzeroSuccess, runtimeValidators)
+      .valid,
     false,
   );
 });
@@ -578,20 +714,31 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
 test("write-aware checkpoint schema rejects ambiguous completion", () => {
   const source = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/runtime/examples/write-aware-checkpoint.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/write-aware-checkpoint.valid.json",
+      ),
       "utf8",
     ),
   );
   const incomplete = structuredClone(source);
   incomplete.receipt_chain_verified = false;
   assert.equal(
-    validateRuntimeRecord("write-aware-checkpoint", incomplete, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "write-aware-checkpoint",
+      incomplete,
+      runtimeValidators,
+    ).valid,
     false,
   );
   const replayable = structuredClone(source);
   replayable.consumed_grant_id = null;
   assert.equal(
-    validateRuntimeRecord("write-aware-checkpoint", replayable, runtimeValidators).valid,
+    validateRuntimeRecord(
+      "write-aware-checkpoint",
+      replayable,
+      runtimeValidators,
+    ).valid,
     false,
   );
 });
@@ -813,7 +960,10 @@ test("configuration diff and rollback review examples satisfy closed schemas", (
 test("configuration review schemas reject raw values and unsafe rollback claims", () => {
   const diff = JSON.parse(
     fs.readFileSync(
-      path.join(ROOT, "schemas/configuration/examples/configuration-diff.valid.json"),
+      path.join(
+        ROOT,
+        "schemas/configuration/examples/configuration-diff.valid.json",
+      ),
       "utf8",
     ),
   );
@@ -906,14 +1056,14 @@ test("configuration bundle rejects authority and resource relationships that bro
     capability,
   );
   assert.equal(capabilityResult.valid, false);
-  assert.match(capabilityResult.semanticErrors[0], /outside permission ceiling/);
+  assert.match(
+    capabilityResult.semanticErrors[0],
+    /outside permission ceiling/,
+  );
 
   const budget = configurationFixture();
   budget.model.decoding.maximum_output_tokens = 2048;
-  const budgetResult = validateConfiguration(
-    CONFIGURATION_BUNDLE_TYPE,
-    budget,
-  );
+  const budgetResult = validateConfiguration(CONFIGURATION_BUNDLE_TYPE, budget);
   assert.equal(budgetResult.valid, false);
   assert.match(budgetResult.semanticErrors[0], /exceeds the global/);
 });
@@ -936,7 +1086,12 @@ test("retained configuration report currentness remains an explicit legacy check
 
 test("unknown configuration record types fail explicitly", () => {
   assert.throws(
-    () => validateConfigurationRecord("unknown-record", {}, configurationValidators),
+    () =>
+      validateConfigurationRecord(
+        "unknown-record",
+        {},
+        configurationValidators,
+      ),
     /unknown configuration record type/,
   );
 });
@@ -966,10 +1121,7 @@ test("future profile catalog entries cannot claim registration, network, or macO
     const changed = structuredClone(catalog);
     changed.profiles.at(-1)[mutation[0]] = mutation[1];
     assert.equal(
-      validateConfiguration(
-        CONFIGURATION_PROFILE_CATALOG_TYPE,
-        changed,
-      ).valid,
+      validateConfiguration(CONFIGURATION_PROFILE_CATALOG_TYPE, changed).valid,
       false,
     );
   }
