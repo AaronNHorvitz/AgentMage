@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_56_local_evidence",
+  "source_revision": "5b90353a038f6743b579b57c6f771d9145d2fb70",
+  "source_sha256": {
+    "kernel/contracts/src/document_control.rs": "e06a3b3d2a3514ec6c9a0b8f88d1a6217b9d0859b75583ad3473fa1b171415e0",
+    "kernel/contracts/src/lib.rs": "ba916fa0b6efcef5a214c92eaeffccc4c31d07de52d5ff74e8b97fc02bba10a2",
+    "kernel/engine/src/document_control.rs": "145251b07a20dbb4c9a08e2d33150ea3db82c878cd1e36e43c66e13f5f685b6e",
+    "kernel/engine/src/lib.rs": "ced0cf01ee0d96a5bba0e15ca288c23b3b32e02a764b31176e8a6dceaa4aa45d",
+    "capabilities/knowledge/src/document_control_skills.rs": "b4d45f62dc07f1f89601802d2b26f45143f23e30ece4e09a5179f80b6a69b308",
+    "capabilities/knowledge/src/lib.rs": "4f26b2409828d10f281f26f8c0a272dd99c5da8f603c1fd5baa0c9072a538e20",
+    "capabilities/knowledge/examples/document_control_skill_pack.rs": "edf6789310f6f7f879361ec519bf513a2645d344e9570a6486eb2902bbc2ece5",
+    "schemas/runtime/document-register.schema.json": "550fd7444561f46bd3bcc6c3e66b878fc6243ab7f5163f3410111444722526cb",
+    "schemas/runtime/examples/document-register.valid.json": "48da990a2f9af1af702f2ff1224e3b097c4673d3e52af3480c0403ce9adbffb8",
+    "schemas/runtime/document-action-preview.schema.json": "a8c5dd547a3a58227fe62c5eab5bae3973f1f8b4d4167bc7d1c918a899b8dc13",
+    "schemas/runtime/examples/document-action-preview.valid.json": "8f78efd43a39f07a3cae9797c69d312c5a5bec060fcd935af42c9364fb9648c9",
+    "schemas/runtime/document-workflow-report.schema.json": "b273bebbb8a19893bbc2deea241724b706896906997637b9b4f758f76e7bf7a4",
+    "schemas/runtime/examples/document-workflow-report.valid.json": "ed745b7b49b4671df0493a18f277306715de5afe9dc892e55083e3e3572b5582",
+    "scripts/validate_planning_schemas.mjs": "1acc1eed76af7f7e500a3e0b8329bf72c233ba806cacd00d5f3b86df1df78e99",
+    "tests/test_planning_schemas.mjs": "477fea51fe931affe08eafd5811c0266c68e3006e7ceefb07180bf6118e647a6",
+    "docs/verification/sprint-56-document-control-corpus.json": "8ac1b2d22a56ae36ee78e9cab52dc078a89bddc24ddf7fb51e240e73b60fca4a",
+    "scripts/document_control_contract.py": "97cc49bf73b417308cf48ab68dee0b0d5d053c937a53004630698a8e031b200e",
+    "tests/test_document_control_contract.py": "1b7c9cc89c89fa389f8586cd0c61d0be24f93c2c2e9e7b8ceda308b7b973c1fe",
+    "scripts/document_control_skill_contract.py": "587a8efdbfe3d9ac5e8f037d0ae9d2498df5f9497f961c09644680d716495de3",
+    "tests/test_document_control_skill_contract.py": "f915dd32932f786a91943674be646308e72102c723ab95e4558a5e0a430fa903",
+    "artifacts/sprints/sprint-56/document-control-skill-pack.json": "6edb596dc59456dfa448d76a84356e2bb610e2522df96664f530dc7379e77532",
+    "docs/architecture/document-correspondence-and-filing-control.md": "ac09dd6fd6ecc1e3d9a41dfd158d0a36f2cf192763c7ac08bde1a209a280043d",
+    "docs/guides/document-control-local-workflows.md": "6d1c1dec34c1445b2fdb185259ba96ab831d805ffc08b3c612e4cbf0c3858bee",
+    "docs/verification/sprint-56-local-results.md": "d3d1068115b7d73718b80e1e4e700a1f990a33387b384fc626f503506cebe4be",
+    "scripts/sprint_56_evidence.py": "89bd2472fb4823d8ee9b2fd941064c09738e3a7661df4c9e09d75e649115a4a0",
+    "tests/test_sprint_56_evidence.py": "08982209888cc6c6351b444309ebbaadf09b97ddc75e3b85e3f9bed843db8155"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "document-control-kernel-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "document_control::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "83aee4d7cacc477ee702c9833154ca083b6e664f943cbacae8523c4aed279f88",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-skill-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "document_control_skills::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "635e13bbdfa1d784cd6af1630f822a9bc52df32803f8c0b7ba29363df13ce6d5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4dbd2a294052928b79f18151be35c4fa6ab07a9cc6d19db7cdb776e558e11637",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-acceptance-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_document_control_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-skill-contract",
+      "argv": [
+        "python3",
+        "scripts/document_control_skill_contract.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9d5ed1d17f3e32fb84758816a0c9e206b1465808d98cbb8d1ada86daca3ca92b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-contracts",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0a83ababb78e6d0329b6b5cb02af75c08f31ba3c463aed3e57d869fa574248ed",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d66c92ea84cf0297ef7faa4c3183956a97823698d44907a75c313af59127c7a2",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_56_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "statement_truth_class_count": 6,
+    "workflow_kind_count": 10,
+    "action_preview_kind_count": 4,
+    "runtime_schema_count": 3,
+    "declarative_skill_count": 8,
+    "acceptance_corpus_case_count": 68,
+    "sealed_versioned_registers": true,
+    "attachment_commitment_deadline_tracking": true,
+    "deterministic_quality_and_duplicate_review": true,
+    "exact_action_previews": true,
+    "exact_approval_review": true,
+    "records_owner_boundary": true,
+    "hostile_content_refusal": true,
+    "recipient_selection_capability": false,
+    "send_effect_capability": false,
+    "schedule_effect_capability": false,
+    "notification_effect_capability": false,
+    "filesystem_mutation_capability": false,
+    "records_disposition_capability": false,
+    "network_access_capability": false,
+    "product_coordinator": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_records_owner_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "acceptance_corpus_case_count": 68,
+    "accepted_external_effect_count": 0,
+    "invented_attribution_count": 0,
+    "unapproved_action_count": 0,
+    "records_disposition_count": 0,
+    "product_coordinator": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_records_owner_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-55-BLOCKED",
+      "owner": "56.1"
+    },
+    {
+      "code": "DOCUMENT-CONTROL-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "56.1.3.4"
+    },
+    {
+      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
+      "owner": "56.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "56.1.3.5"
+    },
+    {
+      "code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "56.1.3.5"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "56.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-RECORDS-OWNER-REVIEW-ABSENT",
+      "owner": "56.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_56_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_55_closed": false,
+    "document_control_workflow_integrated": false,
+    "external_effects_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
