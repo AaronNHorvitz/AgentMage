@@ -28,6 +28,8 @@ mod semantic_benchmark;
 mod skills;
 mod store;
 mod tasks;
+mod word_generation;
+mod word_ooxml;
 mod workflows;
 
 pub use authority::{
@@ -151,6 +153,17 @@ pub use tasks::{
     KnowledgeTask, KnowledgeTaskDuplicate, KnowledgeTaskPriority, KnowledgeTaskStatus,
     KnowledgeTaskTransitionPreview, KnowledgeTaskView, KnowledgeTaskViewKind, build_task_view,
     preview_task_transition,
+};
+pub use word_generation::{
+    GeneratedWordPackage, GeneratedWordPart, WordGenerationWarning, WordGenerationWarningKind,
+    generate_docx_from_markdown, word_generator_identity_sha256,
+};
+pub use word_ooxml::{
+    WordCompressionKind, WordConversionProfile, WordExtractionResult, WordFeatureCount,
+    WordFeatureKind, WordFidelityWarning, WordInspectionReport, WordOoxmlError, WordPackageFinding,
+    WordPackageFindingKind, WordPackagePart, WordPartKind, WordPartSourceRange, WordRevisionState,
+    WordSidecarCache, WordSidecarCacheOutcome, WordTextFragment, extract_docx_to_sidecar,
+    inspect_docx, word_conversion_identity_sha256,
 };
 pub use workflows::{
     KnowledgeRetrievalMode, KnowledgeWorkflow, KnowledgeWorkflowEvidence, KnowledgeWorkflowResult,
