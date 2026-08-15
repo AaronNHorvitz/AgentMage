@@ -2,6 +2,16 @@
 
 use crate::executive::{ExecutiveEvidenceState, ExecutivePrivacyClass, ExecutiveSourceReference};
 
+/// Explicit dependency and cancellation state checked before a meeting projection begins.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MeetingProjectionPrecondition {
+    /// True only after every declared local input dependency is available and verified.
+    pub dependencies_ready: bool,
+    /// Sticky cancellation state supplied by the owning coordinator.
+    pub cancellation_requested: bool,
+}
+
 /// Closed local draft type for meeting preparation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

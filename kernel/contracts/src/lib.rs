@@ -137,8 +137,9 @@ pub use meeting::{
     MeetingAttendanceState, MeetingAttendee, MeetingCloseout, MeetingContinuityItem,
     MeetingContinuityRecord, MeetingContinuityState, MeetingContinuityUpdate, MeetingDraftKind,
     MeetingFieldState, MeetingInvitationState, MeetingMinutes, MeetingMinutesItem,
-    MeetingMinutesItemKind, MeetingPlanDraft, MeetingPlanItem, MeetingTextSourceKind,
-    MeetingTranscriptCleanup, MeetingTranscriptSegment, MeetingUnclearMarker,
+    MeetingMinutesItemKind, MeetingPlanDraft, MeetingPlanItem, MeetingProjectionPrecondition,
+    MeetingTextSourceKind, MeetingTranscriptCleanup, MeetingTranscriptSegment,
+    MeetingUnclearMarker,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,

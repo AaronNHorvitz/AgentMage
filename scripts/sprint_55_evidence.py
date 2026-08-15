@@ -118,7 +118,7 @@ IMPLEMENTED: Final = {
     "attendance_state_count": 5,
     "runtime_schema_count": 4,
     "declarative_skill_count": 6,
-    "acceptance_corpus_case_count": 80,
+    "acceptance_corpus_case_count": 86,
     "source_bound_preparation_drafts": True,
     "independent_attendee_states": True,
     "verbatim_preserving_cleanup": True,
@@ -229,7 +229,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
     return {
         "focused_local_contracts": local_pass,
         "focused_blocking_skip_count": 0 if local_pass else None,
-        "acceptance_corpus_case_count": 80 if local_pass else None,
+        "acceptance_corpus_case_count": 86 if local_pass else None,
         "accepted_external_effect_count": 0 if local_pass else None,
         "inferred_attendee_state_count": 0 if local_pass else None,
         "invented_owner_or_date_count": 0 if local_pass else None,

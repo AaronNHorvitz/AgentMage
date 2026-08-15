@@ -40,6 +40,10 @@ All sealed records bind their canonical serialized representation to SHA-256. Ve
 the digest field, recomputes the digest, and rejects stale records. Identifiers, lists, timestamps,
 dates, source references, and text are bounded before a digest is accepted.
 
+The owning coordinator must present an explicit projection precondition before invoking this pure
+source layer. Sticky cancellation rejects the projection before dependency evaluation; otherwise
+every declared local dependency must be ready. Neither rejection creates a partial output.
+
 ## Truth Rules
 
 Invitation response and attendance are separate closed states. An observed invitation or

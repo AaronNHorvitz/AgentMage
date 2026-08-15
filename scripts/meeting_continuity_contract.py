@@ -160,6 +160,21 @@ def expected_cases() -> list[dict[str, str]]:
             f"deny {denied}",
             "S-048-ST01",
         ))
+    boundary_cases = [
+        "ready dependencies and no cancellation admit projection",
+        "missing dependency rejects projection before output",
+        "cancellation rejects projection before output",
+        "sticky cancellation takes precedence over dependency failure",
+        "stale sealed minutes reject dependent continuity",
+        "wrong recurring series rejects dependent continuity",
+    ]
+    for index, expected in enumerate(boundary_cases, 1):
+        cases.append(case(
+            f"meeting-boundary-{index:02d}",
+            "dependency_and_cancellation",
+            expected,
+            "S-048-IT01",
+        ))
     return cases
 
 

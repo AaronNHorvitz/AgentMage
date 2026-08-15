@@ -5,7 +5,7 @@
 The Sprint 55 local recorder covers sealed meeting-plan drafts, independent attendee states,
 verbatim-preserving note and transcript cleanup, evidence-state-aware minutes, explicit unknown
 owners and dates, content-free closeout, recurring continuity, local follow-up drafts, four runtime
-schemas, six authority-free skills, and the closed 80-case acceptance corpus.
+schemas, six authority-free skills, and the closed 86-case acceptance corpus.
 
 ## Local Campaigns
 
@@ -21,6 +21,8 @@ schemas, six authority-free skills, and the closed 80-case acceptance corpus.
   source-backed state updates, and never treats absence as completion.
 - The local follow-up remains a draft; invitation, assignment, notification, send, scheduling,
   inbox, network, calendar, and source-mutation effects remain false.
+- Missing dependencies and sticky cancellation fail before a projection is admitted and produce no
+  partial meeting record.
 
 ## Security Mapping
 

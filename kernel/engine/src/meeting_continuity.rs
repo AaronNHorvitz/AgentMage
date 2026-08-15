@@ -7,7 +7,8 @@ use agentmage_kernel_contracts::{
     MeetingAttendanceState, MeetingAttendee, MeetingCloseout, MeetingContinuityItem,
     MeetingContinuityRecord, MeetingContinuityState, MeetingContinuityUpdate, MeetingFieldState,
     MeetingInvitationState, MeetingMinutes, MeetingMinutesItem, MeetingMinutesItemKind,
-    MeetingPlanDraft, MeetingPlanItem, MeetingTranscriptCleanup, MeetingTranscriptSegment,
+    MeetingPlanDraft, MeetingPlanItem, MeetingProjectionPrecondition, MeetingTranscriptCleanup,
+    MeetingTranscriptSegment,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -27,6 +28,10 @@ pub enum MeetingContinuityError {
     IntegrityFailure,
     /// A supplied sealed record does not match its exact digest.
     StaleRecord,
+    /// A required local source, prior record, or validation dependency is unavailable.
+    DependencyUnavailable,
+    /// The owning coordinator requested cancellation before the projection began.
+    Cancelled,
 }
 
 impl MeetingContinuityError {
@@ -37,6 +42,8 @@ impl MeetingContinuityError {
             Self::InvalidInput => "meeting.input.invalid",
             Self::IntegrityFailure => "meeting.integrity.failed",
             Self::StaleRecord => "meeting.record.stale",
+            Self::DependencyUnavailable => "meeting.dependency.unavailable",
+            Self::Cancelled => "meeting.cancelled",
         }
     }
 }
@@ -48,6 +55,19 @@ impl std::fmt::Display for MeetingContinuityError {
 }
 
 impl std::error::Error for MeetingContinuityError {}
+
+/// Admits a meeting projection only when dependencies are ready and cancellation is absent.
+pub fn admit_meeting_projection(
+    precondition: MeetingProjectionPrecondition,
+) -> Result<(), MeetingContinuityError> {
+    if precondition.cancellation_requested {
+        return Err(MeetingContinuityError::Cancelled);
+    }
+    if !precondition.dependencies_ready {
+        return Err(MeetingContinuityError::DependencyUnavailable);
+    }
+    Ok(())
+}
 
 fn sha256(value: &[u8]) -> String {
     let mut output = String::with_capacity(64);
@@ -1061,5 +1081,38 @@ mod tests {
             verify_meeting_minutes(&sealed).expect_err("stale minutes"),
             MeetingContinuityError::StaleRecord
         );
+    }
+
+    #[test]
+    fn dependency_failure_and_cancellation_fail_before_projection() {
+        assert_eq!(
+            admit_meeting_projection(MeetingProjectionPrecondition {
+                dependencies_ready: false,
+                cancellation_requested: false,
+            })
+            .expect_err("missing dependency"),
+            MeetingContinuityError::DependencyUnavailable
+        );
+        assert_eq!(
+            admit_meeting_projection(MeetingProjectionPrecondition {
+                dependencies_ready: true,
+                cancellation_requested: true,
+            })
+            .expect_err("cancelled"),
+            MeetingContinuityError::Cancelled
+        );
+        assert_eq!(
+            admit_meeting_projection(MeetingProjectionPrecondition {
+                dependencies_ready: false,
+                cancellation_requested: true,
+            })
+            .expect_err("sticky cancellation wins"),
+            MeetingContinuityError::Cancelled
+        );
+        admit_meeting_projection(MeetingProjectionPrecondition {
+            dependencies_ready: true,
+            cancellation_requested: false,
+        })
+        .expect("admitted");
     }
 }

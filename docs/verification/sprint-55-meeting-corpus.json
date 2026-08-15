@@ -3,7 +3,7 @@
   "record_type": "sprint_55_meeting_acceptance_corpus",
   "story_id": "55.1",
   "legacy_story_id": "S-048",
-  "case_count": 80,
+  "case_count": 86,
   "cases": [
     {
       "case_id": "meeting-plan-01",
@@ -484,6 +484,42 @@
       "category": "prohibited_action",
       "expected": "deny broaden privacy or workspace scope",
       "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-boundary-01",
+      "category": "dependency_and_cancellation",
+      "expected": "ready dependencies and no cancellation admit projection",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "meeting-boundary-02",
+      "category": "dependency_and_cancellation",
+      "expected": "missing dependency rejects projection before output",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "meeting-boundary-03",
+      "category": "dependency_and_cancellation",
+      "expected": "cancellation rejects projection before output",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "meeting-boundary-04",
+      "category": "dependency_and_cancellation",
+      "expected": "sticky cancellation takes precedence over dependency failure",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "meeting-boundary-05",
+      "category": "dependency_and_cancellation",
+      "expected": "stale sealed minutes reject dependent continuity",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "meeting-boundary-06",
+      "category": "dependency_and_cancellation",
+      "expected": "wrong recurring series rejects dependent continuity",
+      "requirement": "S-048-IT01"
     }
   ],
   "authority_effects_enabled": false,

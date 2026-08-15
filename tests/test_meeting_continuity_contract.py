@@ -10,7 +10,7 @@ class MeetingContinuityContractTests(unittest.TestCase):
     def test_closed_corpus_covers_every_behavior_and_denial(self) -> None:
         value = contract.expected_document()
         self.assertEqual(contract.validate(value), [])
-        self.assertEqual(value["case_count"], 80)
+        self.assertEqual(value["case_count"], 86)
         self.assertFalse(value["authority_effects_enabled"])
         self.assertFalse(value["network_enabled"])
         self.assertFalse(value["source_mutation_enabled"])
@@ -25,6 +25,7 @@ class MeetingContinuityContractTests(unittest.TestCase):
                 "S-048-I05",
                 "S-048-I06",
                 "S-048-ST01",
+                "S-048-IT01",
             },
         )
 
