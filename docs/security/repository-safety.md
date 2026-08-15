@@ -8,8 +8,11 @@ state. It applies to GitHub.com, each approved GitHub Enterprise Server host,
 local repositories, isolated task worktrees, command transports, REST and
 GraphQL transports, and future source-control adapters that adopt this contract.
 
-This document records required future behavior. It does not claim that a Git or
-GitHub effect path is currently registered or usable.
+The Sprint 42 kernel planner, preservation manifest, ownership registry, receipt
+formats, and Fedora-local worktree/CAS adapter are implemented. No Git effect path
+is registered in a product profile. Credentialed clone/fetch, contained network Git,
+cross-platform acceptance, commit, push, and hosted GitHub operations remain blocked
+behind their owning roadmap gates.
 
 ## Trust Boundary
 

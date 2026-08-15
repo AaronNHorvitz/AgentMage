@@ -1023,31 +1023,37 @@ fn directory_has_active_hooks(path: &Path) -> Result<bool, LinuxRepositoryError>
 }
 
 fn hazardous_config(lower: &[u8]) -> bool {
-    contains_any(
-        lower,
-        &[
-            b"alias.",
-            b"url.",
-            b"credential.",
-            b"core.hookspath",
-            b"core.sshcommand",
-            b"core.askpass",
-            b"core.fsmonitor",
-            b"core.pager",
-            b"core.editor",
-            b"filter.",
-            b"diff.external",
-            b"diff.*.command",
-            b"diff.*.textconv",
-            b"merge.*.driver",
-            b"gpg.program",
-            b"gpg.ssh.program",
-            b"protocol.allow=always",
-            b"safe.directory=*",
-            b"remote.*.uploadpack",
-            b"remote.*.receivepack",
-        ],
-    )
+    lower.split(|byte| *byte == 0).any(|record| {
+        let (name, value) = record
+            .iter()
+            .position(|byte| *byte == b'\n')
+            .map_or((record, &[][..]), |index| {
+                (&record[..index], &record[index + 1..])
+            });
+        name.starts_with(b"alias.")
+            || name.starts_with(b"url.")
+            || name.starts_with(b"credential.")
+            || name.starts_with(b"filter.")
+            || matches!(
+                name,
+                b"core.hookspath"
+                    | b"core.sshcommand"
+                    | b"core.askpass"
+                    | b"core.fsmonitor"
+                    | b"core.pager"
+                    | b"core.editor"
+                    | b"diff.external"
+                    | b"gpg.program"
+                    | b"gpg.ssh.program"
+            )
+            || (name.starts_with(b"diff.")
+                && (name.ends_with(b".command") || name.ends_with(b".textconv")))
+            || (name.starts_with(b"merge.") && name.ends_with(b".driver"))
+            || (name.starts_with(b"remote.")
+                && (name.ends_with(b".uploadpack") || name.ends_with(b".receivepack")))
+            || (name.starts_with(b"protocol.") && name.ends_with(b".allow") && value == b"always")
+            || (name == b"safe.directory" && value == b"*")
+    })
 }
 
 fn hazardous_attributes(bytes: &[u8]) -> bool {
