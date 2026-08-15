@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "report_id": "report-1",
+  "kind": "filing_suggestion",
+  "register_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "findings": [
+    {
+      "finding_id": "finding:record-1:retention",
+      "kind": "filing_review_required",
+      "record_id": "record-1",
+      "field_code": "retention_schedule",
+      "reason_code": "record.retention.unconfirmed",
+      "source_ids": ["source-1"]
+    }
+  ],
+  "preview_sha256": ["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
+  "rendered_preview": "Exact local filing suggestion requiring records-owner review.",
+  "local_preview_only": true,
+  "communication_effect_performed": false,
+  "calendar_effect_performed": false,
+  "filesystem_effect_performed": false,
+  "records_disposition_performed": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "register_id": "register-1",
+  "entries": [
+    {
+      "record_id": "record-1",
+      "kind": "correspondence",
+      "title": "Controlled correspondence draft",
+      "record_category": null,
+      "version": "1.0",
+      "lifecycle_state": "draft",
+      "approval_id": null,
+      "attachments": [],
+      "commitments": [],
+      "deadlines": [
+        {
+          "statement_id": "deadline-1",
+          "class": "observed_fact",
+          "text": "A deadline was reported without an exact date.",
+          "evidence_state": "confirmed",
+          "owner": null,
+          "owner_state": "unknown",
+          "due_date": null,
+          "due_date_state": "unknown",
+          "source_ids": ["source-1"]
+        }
+      ],
+      "statements": [
+        {
+          "statement_id": "statement-1",
+          "class": "inferred_summary",
+          "text": "This remains an inferred summary.",
+          "evidence_state": "inferred",
+          "owner": null,
+          "owner_state": "unknown",
+          "due_date": null,
+          "due_date_state": "unknown",
+          "source_ids": ["source-1"]
+        }
+      ],
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_path": "records/record-1.md",
+      "retention_schedule_id": null,
+      "supersedes_record_id": null,
+      "superseded_by_record_id": null,
+      "sources": [
+        {
+          "source_id": "source-1",
+          "object_id": "object-1",
+          "fragment": "Draft",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "observed_revision": "revision-1",
+          "store": "plain_folder"
+        }
+      ]
+    }
+  ],
+  "register_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "proposal_only": true,
+  "external_effects_performed": false,
+  "records_disposition_performed": false
+}

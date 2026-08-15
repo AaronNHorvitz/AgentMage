@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/document-workflow-report.schema.json",
+  "title": "AgentMage Document Workflow Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "report_id", "kind", "register_sha256", "findings", "preview_sha256", "rendered_preview", "local_preview_only", "communication_effect_performed", "calendar_effect_performed", "filesystem_effect_performed", "records_disposition_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "report_id": { "$ref": "#/$defs/identifier" },
+    "kind": { "enum": ["naming", "duplicate", "superseded", "final_copy", "quality", "deadline", "routing_slip", "mail_merge_preview", "calendar_file_draft", "filing_suggestion"] },
+    "register_sha256": { "$ref": "#/$defs/sha256" },
+    "findings": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/finding" } },
+    "preview_sha256": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/sha256" } },
+    "rendered_preview": { "type": "string", "minLength": 1, "maxLength": 262144 },
+    "local_preview_only": { "const": true },
+    "communication_effect_performed": { "const": false },
+    "calendar_effect_performed": { "const": false },
+    "filesystem_effect_performed": { "const": false },
+    "records_disposition_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["finding_id", "kind", "record_id", "field_code", "reason_code", "source_ids"],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["missing_or_unknown", "conflicting_value", "naming_mismatch", "duplicate_content", "version_mismatch", "approval_missing", "attachment_issue", "deadline_issue", "filing_review_required", "quality_review_required", "untrusted_instruction", "recipient_or_disclosure_issue"] },
+        "record_id": { "$ref": "#/$defs/identifier" },
+        "field_code": { "$ref": "#/$defs/code" },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "source_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    }
+  }
+}

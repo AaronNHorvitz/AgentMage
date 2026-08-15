@@ -388,6 +388,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "meeting-transcript-cleanup",
     "meeting-minutes",
     "meeting-continuity-record",
+    "document-register",
+    "document-action-preview",
+    "document-workflow-report",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1214,6 +1217,37 @@ test("meeting runtime records reject inferred states guessed fields and hidden e
       false,
       recordType,
     );
+  }
+});
+
+test("document-control records reject truth approval preview and effect drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "document-register": load("document-register"),
+    "document-action-preview": load("document-action-preview"),
+    "document-workflow-report": load("document-workflow-report"),
+  };
+  const mutations = [
+    ["document-register", (record) => { record.external_effects_performed = true; }],
+    ["document-register", (record) => { record.records_disposition_performed = true; }],
+    ["document-register", (record) => { record.entries[0].statements[0].evidence_state = "confirmed"; }],
+    ["document-register", (record) => { record.entries[0].deadlines[0].due_date = "2026-08-15"; }],
+    ["document-action-preview", (record) => { record.approval_granted = true; }],
+    ["document-action-preview", (record) => { record.effect_performed = true; }],
+    ["document-action-preview", (record) => { record.retention_schedule_id = null; }],
+    ["document-workflow-report", (record) => { record.communication_effect_performed = true; }],
+    ["document-workflow-report", (record) => { record.filesystem_effect_performed = true; }],
+    ["document-workflow-report", (record) => { record.records_disposition_performed = true; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
   }
 });
 

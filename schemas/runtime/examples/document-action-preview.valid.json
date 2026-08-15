@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "preview_id": "preview-1",
+  "action": "file",
+  "record_id": "record-1",
+  "source_path": "records/record-1.md",
+  "destination_path": "filed/record-1.md",
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "proposed_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "metadata_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "content_preview": "Exact proposed content.",
+  "metadata_preview": "category: correspondence\nretention: schedule-1",
+  "record_category": "Correspondence",
+  "retention_schedule_id": "schedule-1",
+  "preview_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "approval_required": true,
+  "approval_granted": false,
+  "effect_performed": false
+}

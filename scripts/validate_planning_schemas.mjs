@@ -85,6 +85,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "meeting-transcript-cleanup",
   "meeting-minutes",
   "meeting-continuity-record",
+  "document-register",
+  "document-action-preview",
+  "document-workflow-report",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1235,6 +1238,66 @@ function runtimeSemanticErrors(recordType, data) {
         !isStrictlySorted(item.source_ids ?? [])
       ) {
         errors.push(`meeting continuity item is not canonical: ${item.continuity_item_id}`);
+      }
+    }
+  } else if (recordType === "document-register") {
+    if (!isStrictlySortedBy(data.entries ?? [], (item) => item.record_id)) {
+      errors.push("document register entries are not canonically ordered");
+    }
+    for (const entry of data.entries ?? []) {
+      const approved = ["approved", "final"].includes(entry.lifecycle_state);
+      if (
+        approved !== (entry.approval_id !== null) ||
+        (entry.lifecycle_state === "superseded") !== (entry.superseded_by_record_id !== null) ||
+        !isStrictlySortedBy(entry.attachments ?? [], (item) => item.attachment_id) ||
+        !isStrictlySortedBy(entry.commitments ?? [], (item) => item.statement_id) ||
+        !isStrictlySortedBy(entry.deadlines ?? [], (item) => item.statement_id) ||
+        !isStrictlySortedBy(entry.statements ?? [], (item) => item.statement_id)
+      ) {
+        errors.push(`document register lifecycle or ordering drifted: ${entry.record_id}`);
+      }
+      for (const attachment of entry.attachments ?? []) {
+        if ((attachment.review_state === "approved") !== (attachment.approval_id !== null)) {
+          errors.push(`document attachment approval drifted: ${attachment.attachment_id}`);
+        }
+      }
+      for (const statement of [
+        ...(entry.commitments ?? []),
+        ...(entry.deadlines ?? []),
+        ...(entry.statements ?? []),
+      ]) {
+        const confirmedRequired = ["verbatim_source", "observed_fact", "user_approved_final_language"].includes(statement.class);
+        if (
+          (statement.owner === null) !== (statement.owner_state === "unknown") ||
+          (statement.due_date === null) !== (statement.due_date_state === "unknown") ||
+          (confirmedRequired && statement.evidence_state !== "confirmed") ||
+          (statement.class === "inferred_summary" && statement.evidence_state === "confirmed") ||
+          (statement.class === "unresolved_conflict" && statement.evidence_state !== "disputed") ||
+          !isStrictlySorted(statement.source_ids ?? [])
+        ) {
+          errors.push(`document statement truth drifted: ${statement.statement_id}`);
+        }
+      }
+    }
+  } else if (recordType === "document-action-preview") {
+    const existingRequired = data.action !== "save_draft";
+    if (
+      existingRequired !== (data.source_path !== null) ||
+      existingRequired !== (data.source_sha256 !== null) ||
+      (data.action === "file" && (data.record_category === null || data.retention_schedule_id === null))
+    ) {
+      errors.push("document action preview lacks exact action-specific fields");
+    }
+  } else if (recordType === "document-workflow-report") {
+    if (
+      !isStrictlySortedBy(data.findings ?? [], (item) => item.finding_id) ||
+      !isStrictlySorted(data.preview_sha256 ?? [])
+    ) {
+      errors.push("document workflow report is not canonically ordered");
+    }
+    for (const finding of data.findings ?? []) {
+      if (!isStrictlySorted(finding.source_ids ?? [])) {
+        errors.push(`document finding sources are not canonical: ${finding.finding_id}`);
       }
     }
   }

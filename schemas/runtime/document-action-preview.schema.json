@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/document-action-preview.schema.json",
+  "title": "AgentMage Document Action Preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "preview_id", "action", "record_id", "source_path", "destination_path", "source_sha256", "proposed_sha256", "metadata_sha256", "content_preview", "metadata_preview", "record_category", "retention_schedule_id", "preview_sha256", "approval_required", "approval_granted", "effect_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "preview_id": { "$ref": "#/$defs/identifier" },
+    "action": { "enum": ["save_draft", "rename", "move", "file"] },
+    "record_id": { "$ref": "#/$defs/identifier" },
+    "source_path": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/path" }] },
+    "destination_path": { "$ref": "#/$defs/path" },
+    "source_sha256": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }] },
+    "proposed_sha256": { "$ref": "#/$defs/sha256" },
+    "metadata_sha256": { "$ref": "#/$defs/sha256" },
+    "content_preview": { "type": "string", "minLength": 1, "maxLength": 262144 },
+    "metadata_preview": { "type": "string", "minLength": 1, "maxLength": 262144 },
+    "record_category": { "type": ["string", "null"], "maxLength": 512 },
+    "retention_schedule_id": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+    "preview_sha256": { "$ref": "#/$defs/sha256" },
+    "approval_required": { "const": true },
+    "approval_granted": { "const": false },
+    "effect_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/|~)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$" }
+  }
+}
