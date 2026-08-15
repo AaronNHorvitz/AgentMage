@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_56_document_control_acceptance_corpus",
+  "story_id": "56.1",
+  "legacy_story_id": "S-048",
+  "case_count": 68,
+  "cases": [
+    {
+      "case_id": "records-register-01",
+      "category": "register",
+      "expected": "register preserves exact version",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-02",
+      "category": "register",
+      "expected": "register preserves exact approval",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-03",
+      "category": "register",
+      "expected": "register preserves exact attachments",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-04",
+      "category": "register",
+      "expected": "register preserves exact commitments",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-05",
+      "category": "register",
+      "expected": "register preserves exact deadlines",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-06",
+      "category": "register",
+      "expected": "register preserves exact content_hash",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-07",
+      "category": "register",
+      "expected": "register preserves exact source_path",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-08",
+      "category": "register",
+      "expected": "register preserves exact record_category",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-09",
+      "category": "register",
+      "expected": "register preserves exact retention_schedule",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-register-10",
+      "category": "register",
+      "expected": "register preserves exact supersession_links",
+      "requirement": "S-048-I07"
+    },
+    {
+      "case_id": "records-truth-01",
+      "category": "truth_class",
+      "expected": "statement remains verbatim_source with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-truth-02",
+      "category": "truth_class",
+      "expected": "statement remains observed_fact with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-truth-03",
+      "category": "truth_class",
+      "expected": "statement remains derived_action with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-truth-04",
+      "category": "truth_class",
+      "expected": "statement remains inferred_summary with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-truth-05",
+      "category": "truth_class",
+      "expected": "statement remains unresolved_conflict with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-truth-06",
+      "category": "truth_class",
+      "expected": "statement remains user_approved_final_language with its exact evidence state",
+      "requirement": "S-048-UT01"
+    },
+    {
+      "case_id": "records-workflow-01",
+      "category": "workflow",
+      "expected": "naming produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-02",
+      "category": "workflow",
+      "expected": "duplicate produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-03",
+      "category": "workflow",
+      "expected": "superseded produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-04",
+      "category": "workflow",
+      "expected": "final_copy produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-05",
+      "category": "workflow",
+      "expected": "quality produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-06",
+      "category": "workflow",
+      "expected": "deadline produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-07",
+      "category": "workflow",
+      "expected": "routing_slip produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-08",
+      "category": "workflow",
+      "expected": "mail_merge_preview produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-09",
+      "category": "workflow",
+      "expected": "calendar_file_draft produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-workflow-10",
+      "category": "workflow",
+      "expected": "filing_suggestion produces a local-only report",
+      "requirement": "S-048-I08"
+    },
+    {
+      "case_id": "records-validation-01",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting name remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-02",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting date remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-03",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting owner remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-04",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting quorum_or_status remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-05",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting attachment remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-06",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting version remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-07",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting record_category remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-08",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting filing_destination remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-validation-09",
+      "category": "field_validation",
+      "expected": "empty boundary and conflicting retention remains visible",
+      "requirement": "S-048-UT02"
+    },
+    {
+      "case_id": "records-action-01",
+      "category": "action_preview",
+      "expected": "save_draft requires an exact sealed preview and separate approval",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-action-02",
+      "category": "action_preview",
+      "expected": "rename requires an exact sealed preview and separate approval",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-action-03",
+      "category": "action_preview",
+      "expected": "move requires an exact sealed preview and separate approval",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-action-04",
+      "category": "action_preview",
+      "expected": "file requires an exact sealed preview and separate approval",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-01",
+      "category": "approval",
+      "expected": "approval binds and confirms exact destination",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-02",
+      "category": "approval",
+      "expected": "approval binds and confirms exact content",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-03",
+      "category": "approval",
+      "expected": "approval binds and confirms exact metadata",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-04",
+      "category": "approval",
+      "expected": "approval binds and confirms exact record_category",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-05",
+      "category": "approval",
+      "expected": "approval binds and confirms exact retention",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-approval-06",
+      "category": "approval",
+      "expected": "approval binds and confirms exact final_decision",
+      "requirement": "S-048-I09"
+    },
+    {
+      "case_id": "records-adversarial-01",
+      "category": "adversarial",
+      "expected": "unsupported identity claim remains unresolved",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-02",
+      "category": "adversarial",
+      "expected": "hidden recipient is rejected",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-03",
+      "category": "adversarial",
+      "expected": "malicious attachment remains untrusted data",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-04",
+      "category": "adversarial",
+      "expected": "embedded prompt instruction creates no authority",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-05",
+      "category": "adversarial",
+      "expected": "sensitive content cannot broaden disclosure",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-06",
+      "category": "adversarial",
+      "expected": "record-disposition request remains records-owner decision",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-adversarial-07",
+      "category": "adversarial",
+      "expected": "invented attribution is rejected",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-integration-01",
+      "category": "integration",
+      "expected": "draft retains exact source links",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "records-integration-02",
+      "category": "integration",
+      "expected": "review records corrections without source mutation",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "records-integration-03",
+      "category": "integration",
+      "expected": "corrected version receives a new digest",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "records-integration-04",
+      "category": "integration",
+      "expected": "final copy binds exact approval and final language",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "records-integration-05",
+      "category": "integration",
+      "expected": "filing remains an unexecuted preview",
+      "requirement": "S-048-IT01"
+    },
+    {
+      "case_id": "records-denial-01",
+      "category": "prohibited_effect",
+      "expected": "deny recipient selection",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-02",
+      "category": "prohibited_effect",
+      "expected": "deny sending",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-03",
+      "category": "prohibited_effect",
+      "expected": "deny scheduling",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-04",
+      "category": "prohibited_effect",
+      "expected": "deny notification",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-05",
+      "category": "prohibited_effect",
+      "expected": "deny saving",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-06",
+      "category": "prohibited_effect",
+      "expected": "deny renaming",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-07",
+      "category": "prohibited_effect",
+      "expected": "deny moving",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-08",
+      "category": "prohibited_effect",
+      "expected": "deny deleting",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-09",
+      "category": "prohibited_effect",
+      "expected": "deny filing",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-10",
+      "category": "prohibited_effect",
+      "expected": "deny records disposition",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "records-denial-11",
+      "category": "prohibited_effect",
+      "expected": "deny silent final-language change",
+      "requirement": "S-048-ST01"
+    }
+  ],
+  "external_effects_enabled": false,
+  "records_disposition_enabled": false,
+  "network_enabled": false,
+  "product_integration_claimed": false
+}

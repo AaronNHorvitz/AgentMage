@@ -28,3 +28,10 @@ They cover agenda and request drafts, attendee evidence, source-preserving trans
 minutes, closeout, and recurring continuity. See the
 [meeting workflow guide](./meeting-records-local-workflows.md) and
 [meeting architecture boundary](../architecture/meeting-records-and-continuity.md).
+
+Eight secretary and document-control skills cover registers, naming and version review, final-copy
+quality, deadlines, routing slips, merge/calendar previews, and filing previews. Their templates
+include agendas, minutes, letters, memoranda, logs, and routing slips without gaining write,
+delivery, scheduling, or records-disposition authority. See the
+[document-control guide](./document-control-local-workflows.md) and
+[architecture boundary](../architecture/document-correspondence-and-filing-control.md).
