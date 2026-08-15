@@ -4355,21 +4355,21 @@ deferred manual fuzzing.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 59.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 59.1.1.1** (legacy `S-050-I05`): Implement styles, page setup, headers, footers, metadata, warnings, tables, decision cards, hyperlinks, borders, margins, numbering, paragraph, cloning, and section-replacement helpers.
-  - [ ] **Sub-task 59.1.1.2** (legacy `S-050-I06`): Implement controlled edit, redline, comment, and exact change preview.
+  - [x] **Sub-task 59.1.1.1** (legacy `S-050-I05`): Implement styles, page setup, headers, footers, metadata, warnings, tables, decision cards, hyperlinks, borders, margins, numbering, paragraph, cloning, and section-replacement helpers.
+  - [x] **Sub-task 59.1.1.2** (legacy `S-050-I06`): Implement controlled edit, redline, comment, and exact change preview.
   - [ ] **Sub-task 59.1.1.3** (legacy `S-050-I07`): Render on every supported platform and compare page images for layout regressions.
-  - [ ] **Sub-task 59.1.1.4** (legacy `S-050-I08`): Emit artifact receipts with inputs, generator version, changes, checks, render outputs, and known fidelity limits.
+  - [x] **Sub-task 59.1.1.4** (legacy `S-050-I08`): Emit artifact receipts with inputs, generator version, changes, checks, render outputs, and known fidelity limits.
 
 - [ ] **Task 59.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 59.1.2.1:** Approved Word dependency manifest.
   - [ ] **Sub-task 59.1.2.2:** Word extraction, generation, edit, and render adapters.
-  - [ ] **Sub-task 59.1.2.3:** Complex Word fixture corpus.
+  - [x] **Sub-task 59.1.2.3:** Complex Word fixture corpus.
   - [ ] **Sub-task 59.1.2.4:** Round-trip and visual comparison reports.
 
 - [ ] **Task 59.1.3 - Verify and close the story**
-  - [ ] **Sub-task 59.1.3.1:** `S-050-UT01` extracts paragraphs, headings, lists, tables, headers/footers, notes, links, images, fields, comments, revisions, styles, properties, and unsupported constructs with exact part/range provenance.
-  - [ ] **Sub-task 59.1.3.2:** `S-050-UT02` generates and edits representative documents, then reopens package XML; assert valid relationships/content types, intended semantics/styles, no macros/external links, and preserved untouched parts.
-  - [ ] **Sub-task 59.1.3.3:** `S-050-ST01` supplies macro-enabled, encrypted, malformed, zip-bomb, path-traversal, external-template, active-link, hidden-content, and parser-crash fixtures; assert quarantine/bounded failure and no execution/network.
+  - [x] **Sub-task 59.1.3.1:** `S-050-UT01` extracts paragraphs, headings, lists, tables, headers/footers, notes, links, images, fields, comments, revisions, styles, properties, and unsupported constructs with exact part/range provenance.
+  - [x] **Sub-task 59.1.3.2:** `S-050-UT02` generates and edits representative documents, then reopens package XML; assert valid relationships/content types, intended semantics/styles, no macros/external links, and preserved untouched parts.
+  - [x] **Sub-task 59.1.3.3:** `S-050-ST01` supplies macro-enabled, encrypted, malformed, zip-bomb, path-traversal, external-template, active-link, hidden-content, and parser-crash fixtures; assert quarantine/bounded failure and no execution/network.
   - [ ] **Sub-task 59.1.3.4:** `S-050-IT01` renders before/after pages at pinned settings and runs structural plus visual comparison; assert declared thresholds for pagination, clipping, overlap, font fallback, tables, and images with human-review flags.
   - [ ] **Sub-task 59.1.3.5 - Product security evidence:** Map `SR-SUP-003`/`SR-SUP-006`/`SR-SUP-008`/`SR-SUP-009`, `SR-TST-002`/`SR-TST-004`, `SR-CIV-006` through `SR-CIV-009`; retain dependency manifest, package diffs, parser corpus, render comparisons, accessibility results, and independent native-boundary review.
 
@@ -4380,13 +4380,25 @@ deferred manual fuzzing.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 59.AC1:** Extraction never changes the original.
-- [ ] **Sprint AC 59.AC2:** Lossy or unsupported structures are reported before use as evidence.
+- [x] **Sprint AC 59.AC1:** Extraction never changes the original.
+- [x] **Sprint AC 59.AC2:** Lossy or unsupported structures are reported before use as evidence.
 - [ ] **Sprint AC 59.AC3:** Generated files pass structural inspection and visual review on every reference platform.
-- [ ] **Sprint AC 59.AC4:** Edits preserve unapproved sections, comments, links, numbering, and metadata where supported.
-- [ ] **Sprint AC 59.AC5:** Fidelity failures block completion and are never hidden by text-only success.
+- [x] **Sprint AC 59.AC4:** Edits preserve unapproved sections, comments, links, numbering, and metadata where supported.
+- [x] **Sprint AC 59.AC5:** Fidelity failures block completion and are never hidden by text-only success.
 
 **Gate decision:** Sprint 59 is PASS only when Story 59.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-59/local-evidence-report.json`
+binds 12 passing commands and the 117-case review corpus to source revision
+`00ed67a195c9a362049e3199c2d02073929f8dc4` (report SHA-256
+`c59aa595baf875bd610c24c5ba527b4facfc7d75d9a7ec8f89682c1891405fec`). Deterministic rich
+generation, exact replacement/redline/comment previews, preserved-part digests, executable hostile
+package checks, bounded synthetic RGBA comparisons, reproducible blocked/failed/local receipt
+states, seven closed Word runtime schemas, and zero-effect checks are complete. Story 59.1 and
+Sprint 59 remain **BLOCKED** by Sprint 58, the unadmitted renderer, absent product coordinator,
+controlled writer and native interface, missing native Fedora/Ubuntu/Windows and retained macOS
+render evidence, installed accessibility and trusted-package evidence, independent native-boundary
+review, and deferred manual fuzzing.
 ### [ ] Sprint 60 - PDF Extraction and Page Citations
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

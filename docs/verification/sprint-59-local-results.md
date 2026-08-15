@@ -43,3 +43,7 @@ native interface, installed accessibility, native Fedora, Ubuntu, Windows 11, an
 render evidence, trusted-package execution, independent native-boundary review, and manual fuzz
 campaign are absent. Sprint 59 therefore remains **BLOCKED** even when all locally executable rich
 generation, edit, hostile-package, comparator, receipt, schema, dependency, and corpus checks pass.
+
+The retained report binds 12 passing commands and zero focused skips to source revision
+`00ed67a195c9a362049e3199c2d02073929f8dc4`. Its SHA-256 is
+`c59aa595baf875bd610c24c5ba527b4facfc7d75d9a7ec8f89682c1891405fec`.
