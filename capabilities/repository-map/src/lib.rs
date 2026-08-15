@@ -12,6 +12,7 @@ mod grammar;
 mod invariance_tests;
 mod inventory;
 mod language_service;
+mod package_scaffold;
 mod parser;
 mod renderer;
 mod resolution;
@@ -67,6 +68,11 @@ pub use language_service::{
     LanguageServiceObservationStatus, LanguageServiceRequest, LanguageServiceRequestKind,
     LanguageServiceVisibleFile, seal_language_service_descriptor,
     seal_language_service_observation, verify_language_service_observation,
+};
+pub use package_scaffold::{
+    PackageLanguage, PackageScaffoldError, PackageScaffoldPlan, PackageScaffoldRequest,
+    ScaffoldCommand, ScaffoldCommandPurpose, ScaffoldFile, build_package_scaffold,
+    package_convention_sha256, verify_package_scaffold,
 };
 pub use parser::{
     ParseDisposition, RepositoryParseError, SourceRange, StructuralItem, StructuralItemKind,
