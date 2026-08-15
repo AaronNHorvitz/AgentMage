@@ -128,6 +128,8 @@ pub enum RepositoryFactKind {
     TypeSystem,
     /// Repository instruction document, treated as untrusted data.
     Instruction,
+    /// Documentation artifact.
+    Documentation,
     /// Application boundary.
     Application,
     /// Service or deployable boundary.
@@ -782,6 +784,8 @@ fn classify_path(
             RepositoryFactKind::Instruction,
             "untrusted-repository-instructions",
         ));
+    } else if base.ends_with(".md") || path.starts_with("docs/") || path.contains("/docs/") {
+        facts.push((RepositoryFactKind::Documentation, "documentation-artifact"));
     }
     if matches!(
         base,

@@ -3,6 +3,7 @@
 //! Deterministic bounded structural repository mapping without ambient authority.
 
 mod cache;
+mod change_intent;
 mod deep_analysis;
 mod deep_views;
 mod grammar;
@@ -14,6 +15,13 @@ mod renderer;
 mod resolution;
 
 pub use cache::{RepositoryMapCache, RepositoryMapCacheError, RepositoryMapCacheKey};
+pub use change_intent::{
+    ChangeClarification, ChangeImpactState, ChangeImpactSurface, ChangeImpactSurfaceKind,
+    ChangeIntentError, ChangeIntentInput, ChangeIntentRecord, ChangeIntentStatus, ChangeRiskDomain,
+    ChangeSurfaceExclusion, ChangeUnknownDimension, MinimalChangeImpactReport,
+    build_minimal_change_impact, normalize_change_intent, verify_change_intent,
+    verify_minimal_change_impact,
+};
 pub use deep_analysis::{
     DeepRepositoryIndex, RepositoryAdapterCapability, RepositoryAdapterFactInput,
     RepositoryAdapterKind, RepositoryAnalysisAdapter, RepositoryAnalysisFact, RepositoryBlindSpot,
