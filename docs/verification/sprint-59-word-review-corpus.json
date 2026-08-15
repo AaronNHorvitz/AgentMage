@@ -1,0 +1,717 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_59_word_review_corpus",
+  "story_id": "59.1",
+  "legacy_story_id": "S-050",
+  "case_count": 117,
+  "cases": [
+    {
+      "case_id": "word59-rich_generation-01",
+      "category": "rich_generation",
+      "expected": "style identities are closed unique and deterministic",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-02",
+      "category": "rich_generation",
+      "expected": "built-in styles cannot be replaced by caller input",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-03",
+      "category": "rich_generation",
+      "expected": "font family size bold and shading serialize semantically",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-04",
+      "category": "rich_generation",
+      "expected": "portrait and landscape page dimensions remain explicit",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-05",
+      "category": "rich_generation",
+      "expected": "page margins and columns remain bounded",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-06",
+      "category": "rich_generation",
+      "expected": "header text is emitted through an internal relationship",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-07",
+      "category": "rich_generation",
+      "expected": "footer text is emitted through an internal relationship",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-08",
+      "category": "rich_generation",
+      "expected": "core title subject creator and description remain visible metadata",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-09",
+      "category": "rich_generation",
+      "expected": "custom metadata is rendered into the declared metadata table",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-10",
+      "category": "rich_generation",
+      "expected": "warnings remain visible document text",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-11",
+      "category": "rich_generation",
+      "expected": "Markdown tables become semantic Word tables",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-12",
+      "category": "rich_generation",
+      "expected": "decision cards retain decision status rationale and owner fields",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-13",
+      "category": "rich_generation",
+      "expected": "external hyperlink targets reject",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-14",
+      "category": "rich_generation",
+      "expected": "internal hyperlink targets resolve to deterministic bookmarks",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-15",
+      "category": "rich_generation",
+      "expected": "unresolved internal anchors reject before package generation",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-16",
+      "category": "rich_generation",
+      "expected": "table width remains within declared page bounds",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-17",
+      "category": "rich_generation",
+      "expected": "table borders support none single double and dotted styles",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-18",
+      "category": "rich_generation",
+      "expected": "single-cell border coordinates remain bounded",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-19",
+      "category": "rich_generation",
+      "expected": "table and cell shading use exact RGB values",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-20",
+      "category": "rich_generation",
+      "expected": "cell margins remain bounded",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-21",
+      "category": "rich_generation",
+      "expected": "numbering definitions remain unique and canonical",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-22",
+      "category": "rich_generation",
+      "expected": "numbering can be applied only to an existing paragraph",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-23",
+      "category": "rich_generation",
+      "expected": "paragraph cloning preserves semantic properties",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-24",
+      "category": "rich_generation",
+      "expected": "paragraph removal cannot silently target a missing block",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-25",
+      "category": "rich_generation",
+      "expected": "section replacement uses exact existing start and end identities",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-rich_generation-26",
+      "category": "rich_generation",
+      "expected": "identical specifications produce identical package bytes",
+      "requirement": "S-050-I05"
+    },
+    {
+      "case_id": "word59-edit-01",
+      "category": "edit",
+      "expected": "source package digest must match immutable bytes",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-02",
+      "category": "edit",
+      "expected": "source and output workspace identities must differ",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-03",
+      "category": "edit",
+      "expected": "edit operation identities remain unique and canonical",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-04",
+      "category": "edit",
+      "expected": "exact fragment identity range and text must all match",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-05",
+      "category": "edit",
+      "expected": "plain replacement changes only the selected text range",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-06",
+      "category": "edit",
+      "expected": "replacement text is XML escaped and remains inert",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-07",
+      "category": "edit",
+      "expected": "redline replacement retains simple-run properties",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-08",
+      "category": "edit",
+      "expected": "redline deletion and insertion identities are explicit",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-09",
+      "category": "edit",
+      "expected": "revision identities cannot be reused",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-10",
+      "category": "edit",
+      "expected": "comment identities cannot be reused",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-11",
+      "category": "edit",
+      "expected": "comments attach only to supported main-document simple runs",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-12",
+      "category": "edit",
+      "expected": "comment author initials and body are encoded inertly",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-13",
+      "category": "edit",
+      "expected": "comment content type and relationship are explicit",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-14",
+      "category": "edit",
+      "expected": "comment relationship identity collisions reject",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-15",
+      "category": "edit",
+      "expected": "overlapping edit ranges reject",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-16",
+      "category": "edit",
+      "expected": "unsupported complex runs reject",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-17",
+      "category": "edit",
+      "expected": "untouched package-part bytes retain exact digests",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-18",
+      "category": "edit",
+      "expected": "changed and preserved part ledgers remain canonical",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-19",
+      "category": "edit",
+      "expected": "edited package reopens through bounded inspection",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-edit-20",
+      "category": "edit",
+      "expected": "preview verification recomputes exact package bytes",
+      "requirement": "S-050-I06"
+    },
+    {
+      "case_id": "word59-visual-01",
+      "category": "visual",
+      "expected": "render profile binds renderer version binary and font manifest",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-02",
+      "category": "visual",
+      "expected": "render profile thresholds use deterministic integers",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-03",
+      "category": "visual",
+      "expected": "decoded pages require exact consecutive one-based identities",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-04",
+      "category": "visual",
+      "expected": "decoded page byte count must equal width times height times four",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-05",
+      "category": "visual",
+      "expected": "decoded page digest must match exact RGBA bytes",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-06",
+      "category": "visual",
+      "expected": "page count and dimensions remain bounded",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-07",
+      "category": "visual",
+      "expected": "total comparison memory remains bounded",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-08",
+      "category": "visual",
+      "expected": "before and after platforms must match",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-09",
+      "category": "visual",
+      "expected": "before and after profile identities must match",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-10",
+      "category": "visual",
+      "expected": "before and after evidence classes must match",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-11",
+      "category": "visual",
+      "expected": "identical pixels produce an empty difference rectangle",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-12",
+      "category": "visual",
+      "expected": "changed pixels use exact integer parts-per-million ratios",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-13",
+      "category": "visual",
+      "expected": "maximum channel delta is exact",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-14",
+      "category": "visual",
+      "expected": "changed-pixel bounds are tight and deterministic",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-15",
+      "category": "visual",
+      "expected": "dimension changes fail page comparison",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-16",
+      "category": "visual",
+      "expected": "pagination changes fail the zero-delta profile",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-17",
+      "category": "visual",
+      "expected": "clipping overlap and font fallback observations are explicit",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-18",
+      "category": "visual",
+      "expected": "table and image regression observations are explicit",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-19",
+      "category": "visual",
+      "expected": "synthetic fixtures always require human review",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-visual-20",
+      "category": "visual",
+      "expected": "comparison performs no rendering filesystem network or execution effect",
+      "requirement": "S-050-I07"
+    },
+    {
+      "case_id": "word59-receipt-01",
+      "category": "receipt",
+      "expected": "receipt binds exact input paths and digests",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-02",
+      "category": "receipt",
+      "expected": "receipt binds generator converter and editor identities",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-03",
+      "category": "receipt",
+      "expected": "receipt binds exact changed part digests",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-04",
+      "category": "receipt",
+      "expected": "structural semantic visual accessibility malware and canary checks are closed",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-05",
+      "category": "receipt",
+      "expected": "passed and failed checks require retained evidence digests",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-06",
+      "category": "receipt",
+      "expected": "unavailable checks cannot claim evidence",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-07",
+      "category": "receipt",
+      "expected": "required platform inventory is retained in the receipt",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-08",
+      "category": "receipt",
+      "expected": "render report references retain exact report digests",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-09",
+      "category": "receipt",
+      "expected": "synthetic render evidence blocks completion",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-10",
+      "category": "receipt",
+      "expected": "missing required platform evidence blocks completion",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-11",
+      "category": "receipt",
+      "expected": "failed checks take precedence over blocked state",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-12",
+      "category": "receipt",
+      "expected": "failed render thresholds take precedence over blocked state",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-13",
+      "category": "receipt",
+      "expected": "blocking fidelity limits prevent local verification",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-14",
+      "category": "receipt",
+      "expected": "receipt disposition is deterministically recomputable",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-15",
+      "category": "receipt",
+      "expected": "receipt verification rejects any field mutation",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-receipt-16",
+      "category": "receipt",
+      "expected": "receipt creation performs no filesystem network or execution effect",
+      "requirement": "S-050-I08"
+    },
+    {
+      "case_id": "word59-hostile_fixture-01",
+      "category": "hostile_fixture",
+      "expected": "macro and active-content package parts quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-02",
+      "category": "hostile_fixture",
+      "expected": "encrypted package entries quarantine without decryption",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-03",
+      "category": "hostile_fixture",
+      "expected": "malformed ZIP containers fail closed",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-04",
+      "category": "hostile_fixture",
+      "expected": "deflate expansion bombs fail before extraction",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-05",
+      "category": "hostile_fixture",
+      "expected": "parent-traversal package paths quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-06",
+      "category": "hostile_fixture",
+      "expected": "duplicate central-directory names quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-07",
+      "category": "hostile_fixture",
+      "expected": "symbolic-link entries quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-08",
+      "category": "hostile_fixture",
+      "expected": "unadmitted compression methods quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-09",
+      "category": "hostile_fixture",
+      "expected": "external template relationships quarantine without resolution",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-10",
+      "category": "hostile_fixture",
+      "expected": "active HTTP HTTPS file and FTP relationships quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-11",
+      "category": "hostile_fixture",
+      "expected": "hidden and web-hidden WordprocessingML quarantine",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-12",
+      "category": "hostile_fixture",
+      "expected": "malformed relationship XML quarantines",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-13",
+      "category": "hostile_fixture",
+      "expected": "malformed document XML quarantines",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-14",
+      "category": "hostile_fixture",
+      "expected": "parser-crash bytes return a bounded error",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-hostile_fixture-15",
+      "category": "hostile_fixture",
+      "expected": "all hostile paths retain zero network and execution effects",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word59-runtime_record-01",
+      "category": "runtime_record",
+      "expected": "rich package proposal schema is closed and versioned",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-02",
+      "category": "runtime_record",
+      "expected": "edit preview schema is closed and versioned",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-03",
+      "category": "runtime_record",
+      "expected": "visual comparison schema is closed and versioned",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-04",
+      "category": "runtime_record",
+      "expected": "artifact receipt schema is closed and versioned",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-05",
+      "category": "runtime_record",
+      "expected": "package byte arrays bind exact SHA-256 identities",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-06",
+      "category": "runtime_record",
+      "expected": "reopened inspection binds proposed output identity",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-07",
+      "category": "runtime_record",
+      "expected": "all ledgers reject noncanonical order",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-08",
+      "category": "runtime_record",
+      "expected": "visual unchanged-page contradictions reject",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-09",
+      "category": "runtime_record",
+      "expected": "receipt false-completion claims reject",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-runtime_record-10",
+      "category": "runtime_record",
+      "expected": "unknown fields and hidden authority claims reject",
+      "requirement": "S-050-UT01/S-050-UT02"
+    },
+    {
+      "case_id": "word59-external_blocker-01",
+      "category": "external_blocker",
+      "expected": "no renderer is admitted without exact package license version and digest",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-02",
+      "category": "external_blocker",
+      "expected": "Fedora comparator tests are not Fedora renderer evidence",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-03",
+      "category": "external_blocker",
+      "expected": "Fedora evidence cannot substitute for Ubuntu rendering",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-04",
+      "category": "external_blocker",
+      "expected": "Linux evidence cannot substitute for Windows 11 rendering",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-05",
+      "category": "external_blocker",
+      "expected": "first-GA evidence cannot substitute for retained macOS evidence",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-06",
+      "category": "external_blocker",
+      "expected": "synthetic page fixtures cannot satisfy native rendering",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-07",
+      "category": "external_blocker",
+      "expected": "visual machine checks cannot substitute for required human review",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-08",
+      "category": "external_blocker",
+      "expected": "local unit tests cannot satisfy installed-product accessibility review",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-09",
+      "category": "external_blocker",
+      "expected": "manual fuzzing remains explicitly deferred",
+      "requirement": "S-050-IT01"
+    },
+    {
+      "case_id": "word59-external_blocker-10",
+      "category": "external_blocker",
+      "expected": "Sprint 59 remains blocked while required external evidence is absent",
+      "requirement": "S-050-IT01"
+    }
+  ],
+  "synthetic_visual_fixture_count": 2,
+  "native_render_fixture_count": 0,
+  "network_enabled": false,
+  "execution_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "product_integration_claimed": false
+}
