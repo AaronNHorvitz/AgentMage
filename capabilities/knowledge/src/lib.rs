@@ -31,7 +31,9 @@ mod tasks;
 mod word_edit;
 mod word_generation;
 mod word_ooxml;
+mod word_receipt;
 mod word_rich_generation;
+mod word_visual;
 mod workflows;
 
 pub use authority::{
@@ -173,11 +175,22 @@ pub use word_ooxml::{
     WordSidecarCache, WordSidecarCacheOutcome, WordTextFragment, extract_docx_to_sidecar,
     inspect_docx, word_conversion_identity_sha256,
 };
+pub use word_receipt::{
+    WordArtifactChangeReference, WordArtifactCheck, WordArtifactCheckKind, WordArtifactCheckStatus,
+    WordArtifactCompletionState, WordArtifactInput, WordArtifactReceipt, WordArtifactReceiptError,
+    WordArtifactReceiptRequest, WordFidelityLimit, WordRenderEvidenceReference,
+    build_word_artifact_receipt, verify_word_artifact_receipt,
+};
 pub use word_rich_generation::{
     RichWordPackageProposal, WordBorderStyle, WordDecisionCard, WordDocumentMetadata,
     WordHeaderFooterConfiguration, WordNumberingDefinition, WordPageConfiguration,
     WordRichDocumentBuilder, WordRichGenerationError, WordStyleConfiguration, WordStyleKind,
     WordTableLayout,
+};
+pub use word_visual::{
+    WordPageComparison, WordPageDifferenceBounds, WordPageImage, WordRenderEvidenceKind,
+    WordRenderOutput, WordRenderPlatform, WordRenderProfile, WordVisualComparisonError,
+    WordVisualComparisonReport, compare_word_page_images, word_render_profile_sha256,
 };
 pub use workflows::{
     KnowledgeRetrievalMode, KnowledgeWorkflow, KnowledgeWorkflowEvidence, KnowledgeWorkflowResult,
