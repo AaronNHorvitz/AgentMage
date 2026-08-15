@@ -495,21 +495,11 @@ pub fn build_deep_repository_index(
 /// Verifies an index by deterministic recomputation against the exact current map.
 #[must_use]
 pub fn verify_deep_repository_index(map: &RepositoryMap, index: &DeepRepositoryIndex) -> bool {
-    if index.schema_version != ANALYSIS_SCHEMA_VERSION
+    if !verify_deep_index_integrity(index)
+        || index.schema_version != ANALYSIS_SCHEMA_VERSION
         || index.map_sha256 != map.map_sha256
         || index.git != map_git_identity(map)
         || index.rule_set_sha256 != sha256_hex(RULE_SET_VERSION.as_bytes())
-        || index.index_sha256 != index_digest(index)
-        || index.coverage.whole_repository_claim_permitted
-        || index
-            .facts
-            .windows(2)
-            .any(|pair| pair[0].fact_id >= pair[1].fact_id)
-        || index
-            .blind_spots
-            .windows(2)
-            .any(|pair| pair[0].blind_spot_id >= pair[1].blind_spot_id)
-        || index.adapters.iter().any(|adapter| !adapter.verify())
         || index
             .facts
             .iter()
@@ -543,6 +533,80 @@ pub fn verify_deep_repository_index(map: &RepositoryMap, index: &DeepRepositoryI
         .collect::<Vec<_>>();
     build_deep_repository_index(map, index.adapters.clone(), inputs)
         .is_ok_and(|expected| expected == *index)
+}
+
+pub(crate) fn verify_deep_index_integrity(index: &DeepRepositoryIndex) -> bool {
+    let supported = index
+        .adapters
+        .iter()
+        .flat_map(|adapter| adapter.capabilities.iter().copied())
+        .collect::<BTreeSet<_>>();
+    let missing = all_adapter_capabilities()
+        .difference(&supported)
+        .copied()
+        .collect::<Vec<_>>();
+    let adapter_facts = index
+        .facts
+        .iter()
+        .filter(|fact| fact.adapter_sha256.is_some())
+        .count() as u64;
+    index.schema_version == ANALYSIS_SCHEMA_VERSION
+        && index.rule_set_sha256 == sha256_hex(RULE_SET_VERSION.as_bytes())
+        && index.index_sha256 == index_digest(index)
+        && !index.coverage.whole_repository_claim_permitted
+        && index.coverage.indexed_facts == index.facts.len() as u64
+        && index.coverage.adapter_facts == adapter_facts
+        && index.coverage.deterministic_facts + adapter_facts == index.facts.len() as u64
+        && index.coverage.blind_spots == index.blind_spots.len() as u64
+        && index.coverage.supported_adapter_capabilities
+            == supported.iter().copied().collect::<Vec<_>>()
+        && index.coverage.missing_adapter_capabilities == missing
+        && index.adapters.iter().all(RepositoryAnalysisAdapter::verify)
+        && index
+            .adapters
+            .windows(2)
+            .all(|pair| pair[0].adapter_id < pair[1].adapter_id)
+        && index
+            .facts
+            .windows(2)
+            .all(|pair| pair[0].fact_id < pair[1].fact_id)
+        && index
+            .blind_spots
+            .windows(2)
+            .all(|pair| pair[0].blind_spot_id < pair[1].blind_spot_id)
+        && index.facts.iter().all(|fact| {
+            valid_label(&fact.label)
+                && fact.untrusted_repository_data
+                && !fact.citations.is_empty()
+                && fact
+                    .citations
+                    .windows(2)
+                    .all(|pair| pair[0].citation_sha256 < pair[1].citation_sha256)
+                && fact.citations.iter().all(|citation| {
+                    citation.git == index.git
+                        && citation.citation_sha256 == citation_digest(citation)
+                })
+                && fact.adapter_sha256.as_ref().is_none_or(|identity| {
+                    index
+                        .adapters
+                        .iter()
+                        .any(|adapter| &adapter.adapter_sha256 == identity)
+                })
+                && fact.fact_id
+                    == sha256_json(&(
+                        fact.kind,
+                        &fact.label,
+                        fact.state,
+                        &fact.citations,
+                        &fact.adapter_sha256,
+                    ))
+                && fact.fact_sha256 == fact_digest(fact)
+        })
+        && index.blind_spots.iter().all(|spot| {
+            spot.state == RepositoryFactState::UnknownBlocked
+                && spot.blind_spot_id == sha256_json(&(spot.code, &spot.path, spot.capability))
+                && spot.blind_spot_sha256 == blind_spot_digest(spot)
+        })
 }
 
 /// Verifies one exact citation against the current map revision.

@@ -4,6 +4,7 @@
 
 mod cache;
 mod deep_analysis;
+mod deep_views;
 mod grammar;
 #[cfg(test)]
 mod invariance_tests;
@@ -19,6 +20,17 @@ pub use deep_analysis::{
     RepositoryBlindSpotCode, RepositoryDeepAnalysisError, RepositoryDeepCoverage,
     RepositoryFactCitation, RepositoryFactKind, RepositoryFactState, build_deep_repository_index,
     verify_deep_repository_index, verify_fact_citation,
+};
+pub use deep_views::{
+    RepositoryAnalysisSlice, RepositoryDeepViewError, RepositoryDocumentationDrift,
+    RepositoryDocumentationDriftState, RepositoryGlossaryTerm, RepositoryHistoryObservation,
+    RepositoryHistoryView, RepositoryLearningExport, RepositoryLearningGuide,
+    RepositoryLearningGuideKind, RepositoryPortfolioEntry, RepositoryPortfolioView,
+    RepositorySliceCoverage, RepositorySliceDimension, RepositorySliceRequest, RepositoryTrace,
+    RepositoryTraceKind, RepositoryTraceSet, build_repository_glossary,
+    build_repository_history_view, build_repository_learning_export, build_repository_portfolio,
+    build_repository_traces, seal_documentation_drift, slice_deep_repository_index,
+    verify_repository_slice, verify_repository_traces,
 };
 pub use grammar::{
     GrammarDescriptor, RepositoryLanguage, grammar_descriptor, grammar_set_sha256,
