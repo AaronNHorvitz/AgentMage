@@ -3609,27 +3609,27 @@ criteria, verification task, Story 47.1, Sprint AC 47.AC5, and the sprint theref
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 48.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 48.1.1.1** (legacy `S-041-I01`): Implement interactive chat through the same runtime, grants, tools, memory, conversations, and receipts as Visual Studio Code.
-  - [ ] **Sub-task 48.1.1.2** (legacy `S-041-I02`): Implement conversation list, search, show, open, resume, and exact-turn branch commands.
-  - [ ] **Sub-task 48.1.1.3** (legacy `S-041-I03`): Implement vault search, note show, links, backlinks, tasks, checkpoint, handoff, audit, memory inspect, memory correct, export, import, and diagnostics commands.
-  - [ ] **Sub-task 48.1.1.4** (legacy `S-041-I04`): Render active workspace, model, permission, conversation, plan, writable roots, offline state, previews, diffs, citations, errors, and receipts.
-  - [ ] **Sub-task 48.1.1.5** (legacy `S-041-I05`): Implement stable exit codes, versioned input and event schemas, bounded output, deterministic cancellation, and shell completion.
-  - [ ] **Sub-task 48.1.1.6** (legacy `S-041-I06`): Require predeclared bounded expiring grants for noninteractive operations and fail closed when approval is unavailable or stale.
-  - [ ] **Sub-task 48.1.1.7** (legacy `S-041-I07`): Implement JSON, software-development-kit, and Agent Client Protocol clients only as thin kernel clients with no direct storage, tool, model, connector, or secret access.
-  - [ ] **Sub-task 48.1.1.8** (legacy `S-041-I08`): Test malformed events, broken pipes, client termination, cancellation races, partial output, and policy-version changes.
+  - [ ] **Sub-task 48.1.1.1** (legacy `S-041-I01`): Implement interactive chat through the same runtime, grants, tools, memory, conversations, and receipts as Visual Studio Code. Local contract contribution: native Chat and interactive CLI share the same closed request, authority, transport, event, and terminal-result types; authenticated product transport and the canonical runtime/memory/conversation coordinators remain absent.
+  - [ ] **Sub-task 48.1.1.2** (legacy `S-041-I02`): Implement conversation list, search, show, open, resume, and exact-turn branch commands. Local contract contribution: every named command parses into a closed bounded command and exact grant operation; no production conversation coordinator is composed.
+  - [ ] **Sub-task 48.1.1.3** (legacy `S-041-I03`): Implement vault search, note show, links, backlinks, tasks, checkpoint, handoff, audit, memory inspect, memory correct, export, import, and diagnostics commands. Local contract contribution: every named command parses into a closed bounded command and exact grant operation; no production knowledge or operational coordinator is composed.
+  - [ ] **Sub-task 48.1.1.4** (legacy `S-041-I04`): Render active workspace, model, permission, conversation, plan, writable roots, offline state, previews, diffs, citations, errors, and receipts. Local contract contribution: all named status and event projections have bounded human and JSON renderers; authenticated product event transport remains absent.
+  - [x] **Sub-task 48.1.1.5** (legacy `S-041-I05`): Implement stable exit codes, versioned input and event schemas, bounded output, deterministic cancellation, and shell completion. Evidence: commits `8c4b336`, `35f5a61`, and `8cffd9d` implement and test nine stable exits, protocol version 1, closed request/event schemas, byte ceilings, cancellation signals, and deterministic Bash/Zsh/Fish completion.
+  - [x] **Sub-task 48.1.1.6** (legacy `S-041-I06`): Require predeclared bounded expiring grants for noninteractive operations and fail closed when approval is unavailable or stale. Evidence: commit `8c4b336` binds each headless grant to the exact command operation, policy, kernel-request digest, nonce digest, trusted lifetime, and single-use state and denies hidden interactive approval.
+  - [x] **Sub-task 48.1.1.7** (legacy `S-041-I07`): Implement JSON, software-development-kit, and Agent Client Protocol clients only as thin kernel clients with no direct storage, tool, model, connector, or secret access. Evidence: commits `8c4b336`, `35f5a61`, and `9d80732` define transport/display-only surfaces, enforce the shared kernel request, and document and statically verify the absence of direct authority and native-effect APIs.
+  - [ ] **Sub-task 48.1.1.8** (legacy `S-041-I08`): Test malformed events, broken pipes, client termination, cancellation races, partial output, and policy-version changes. Local contribution: malformed, oversized, reordered, partial, replayed, cancellation, policy-binding, and transport-unavailable cases pass; complete native client-termination, reconnect, event-phase cancellation, and descendant-cleanup campaigns remain absent.
 
-- [ ] **Task 48.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 48.1.2.1:** Interactive CLI package and command reference.
-  - [ ] **Sub-task 48.1.2.2:** Versioned JSON, event, exit-code, and cancellation contracts.
-  - [ ] **Sub-task 48.1.2.3:** Thin client adapters and authority-boundary report.
-  - [ ] **Sub-task 48.1.2.4:** Headless adversarial test results.
+- [x] **Task 48.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 48.1.2.1:** Interactive CLI package and command reference. Evidence: the `agent` source binary, host package, executable binary tests, and [`local-command-line-interface.md`](docs/guides/local-command-line-interface.md) cover every command, output mode, completion target, exit, and current fail-closed transport limitation.
+  - [x] **Sub-task 48.1.2.2:** Versioned JSON, event, exit-code, and cancellation contracts. Evidence: closed request/event schemas and canonical fixtures under [`schemas/runtime/`](schemas/runtime/), the Rust protocol in [`headless.rs`](shells/host/src/headless.rs), and schema mutation tests.
+  - [x] **Sub-task 48.1.2.3:** Thin client adapters and authority-boundary report. Evidence: the five-surface `ThinKernelClient` contract and [`thin-client-boundary.md`](docs/architecture/thin-client-boundary.md) define transport-only adapters, exact authority, event lifecycle, replay, resume, cancellation, and remaining product work.
+  - [x] **Sub-task 48.1.2.4:** Headless adversarial test results. Evidence: the 40-case [`sprint-48-headless-corpus.json`](docs/verification/sprint-48-headless-corpus.json), focused unit/binary/schema tests, and immutable local report at source revision `46a7d6b572548af4e9a6d35bfbbde9251c8dc338`.
 
 - [ ] **Task 48.1.3 - Verify and close the story**
-  - [ ] **Sub-task 48.1.3.1:** `S-041-UT01` validates CLI arguments, JSON requests/responses/events, protocol versions, exit codes, streaming order, cancellation, and bounded output with malformed/oversized/replayed inputs.
-  - [ ] **Sub-task 48.1.3.2:** `S-041-UT02` runs identical work packets through native Chat, interactive CLI, JSON, SDK, and ACP-compatible thin clients; assert equal policy decisions, grants, receipts, evidence, and final states.
-  - [ ] **Sub-task 48.1.3.3:** `S-041-ST01` attempts client-side tool dispatch, filesystem/model/key access, grant minting, hidden approval, policy override, prompt injection, and raw-host connection; assert clients remain display/transport only.
-  - [ ] **Sub-task 48.1.3.4:** `S-041-RT01` disconnects/reconnects clients and cancels during every event phase; assert one canonical kernel operation, no duplicate effect, resumable event position, and descendant cleanup.
-  - [ ] **Sub-task 48.1.3.5 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-001`/`SR-ACC-007`, `SR-OPS-001`, `SR-TST-001`/`SR-TST-004`; retain conformance vectors, cross-interface diff, adversarial traces, disconnect/cancellation results, and client boundary report.
+  - [x] **Sub-task 48.1.3.1:** `S-041-UT01` validates CLI arguments, JSON requests/responses/events, protocol versions, exit codes, streaming order, cancellation, and bounded output with malformed/oversized/replayed inputs. Evidence: five focused headless tests, four parser/render tests, four executable binary tests, 50 runtime-schema tests, and three corpus-integrity tests pass at the retained source revision.
+  - [ ] **Sub-task 48.1.3.2:** `S-041-UT02` runs identical work packets through native Chat, interactive CLI, JSON, SDK, and ACP-compatible thin clients; assert equal policy decisions, grants, receipts, evidence, and final states. Local contribution: one deterministic fixture proves the same kernel-operation and final-state digests across all five surfaces; integrated native Chat, product policy, receipt, and evidence parity remain absent.
+  - [x] **Sub-task 48.1.3.3:** `S-041-ST01` attempts client-side tool dispatch, filesystem/model/key access, grant minting, hidden approval, policy override, prompt injection, and raw-host connection; assert clients remain display/transport only. Evidence: closed schemas reject direct-access and authority-override fields, headless grants fail closed, the effect-boundary checker rejects shell process launch, and the adversarial corpus covers all named client-side bypass classes with zero accepted unauthorized effect.
+  - [ ] **Sub-task 48.1.3.4:** `S-041-RT01` disconnects/reconnects clients and cancels during every event phase; assert one canonical kernel operation, no duplicate effect, resumable event position, and descendant cleanup. Local contribution: replay, forward-only resume, pre-dispatch cancellation, post-exchange cancellation, partial streams, and transport failure are bounded; native reconnect, every-phase cancellation, and descendant cleanup remain absent.
+  - [ ] **Sub-task 48.1.3.5 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-001`/`SR-ACC-007`, `SR-OPS-001`, `SR-TST-001`/`SR-TST-004`; retain conformance vectors, cross-interface diff, adversarial traces, disconnect/cancellation results, and client boundary report. Partial local evidence: [`sprint-48-local-results.md`](docs/verification/sprint-48-local-results.md) maps all seven controls; the immutable report SHA-256 is `29070122f28d534df9f14adfa411b1653440e1c60d2c057ca86f500bf78f26ba`. Integrated disconnect/cancellation, supported-platform package, and independent-review evidence remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3639,10 +3639,22 @@ criteria, verification task, Story 47.1, Sprint AC 47.AC5, and the sprint theref
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 48.AC1:** Every CLI operation produces the same policy, evidence, receipt, and state transition as native Chat.
-- [ ] **Sprint AC 48.AC2:** Missing, stale, ambiguous, or interactive-only authority fails closed without hidden prompting or fallback.
-- [ ] **Sprint AC 48.AC3:** No client reads or writes the canonical database directly.
-- [ ] **Sprint AC 48.AC4:** Network-disabled execution never launches a browser, Obsidian, cloud login, or unrelated application.
-- [ ] **Sprint AC 48.AC5:** Agent Client Protocol and JSON paths cannot bypass the kernel.
+- [x] **Sprint AC 48.AC2:** Missing, stale, ambiguous, or interactive-only authority fails closed without hidden prompting or fallback. Evidence: exact grant and executable CLI tests pass, and operational commands with no product transport return only stable unavailable errors.
+- [x] **Sprint AC 48.AC3:** No client reads or writes the canonical database directly. Evidence: the clients depend only on closed protocol types and `ThinClientTransport`; source and schema guards expose no database or storage interface.
+- [x] **Sprint AC 48.AC4:** Network-disabled execution never launches a browser, Obsidian, cloud login, or unrelated application. Evidence: the shell effect boundary rejects process-launch APIs, executable CLI tests observe only local output and stable failure, and four explicit native-launch adversarial cases are denied.
+- [x] **Sprint AC 48.AC5:** Agent Client Protocol and JSON paths cannot bypass the kernel. Evidence: all five surfaces produce one surface-independent kernel-operation digest and JSON/ACP surfaces require exact predeclared authority through `ThinKernelClient`.
+
+**Local evidence disposition:** commits `8c4b336` through `46a7d6b` implement the
+locally executable Sprint 48 contract and evidence. The immutable report at
+[`artifacts/sprints/sprint-48/local-evidence-report.json`](artifacts/sprints/sprint-48/local-evidence-report.json),
+SHA-256 `29070122f28d534df9f14adfa411b1653440e1c60d2c057ca86f500bf78f26ba`, is
+bound to source revision `46a7d6b572548af4e9a6d35bfbbde9251c8dc338`. All 13 recorded
+commands pass and both focused Rust suites report zero ignored tests. Sprint 48 remains
+**BLOCKED** because Sprint 47 is blocked and authenticated product transport, canonical
+conversation/knowledge/operational coordinators, complete native disconnect and descendant
+cleanup campaigns, supported-platform acceptance, trusted installed-package execution,
+independent review, and deferred manual fuzzing remain absent. The implementation task,
+verification task, Story 48.1, both story criteria, Sprint AC 48.AC1, and the sprint remain open.
 
 **Gate decision:** Sprint 48 is PASS only when Story 48.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 49 - Later Model Profiles and Measured Local Routing
