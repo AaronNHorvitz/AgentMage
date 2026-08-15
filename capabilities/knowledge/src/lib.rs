@@ -24,6 +24,7 @@ mod pdf_extraction;
 mod pdf_generation;
 mod pdf_inspection;
 mod pdf_redaction;
+mod pdf_visual;
 mod plain_folder;
 mod retrieval;
 mod schema;
@@ -137,6 +138,11 @@ pub use pdf_redaction::{
     PdfRedactionError, PdfRedactionLayer, PdfRedactionLayerCheck, PdfRedactionReceipt,
     PdfRedactionRequest, PdfRedactionTarget, RedactedPdfReport, pdf_redactor_identity_sha256,
     redact_generated_pdf_report,
+};
+pub use pdf_visual::{
+    PdfPageImage, PdfRenderEvidenceKind, PdfRenderOutput, PdfRenderPlatform, PdfRenderProfile,
+    PdfVisualComparisonError, PdfVisualComparisonReport, compare_pdf_page_images,
+    pdf_render_profile_sha256,
 };
 pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
