@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage-v0.3-write-pack-manifest",
+  "version": "0.3.0",
+  "status": "blocked-local-candidate",
+  "gate_id": "G-V0.3",
+  "gate_closed": false,
+  "product_registration": false,
+  "package_artifacts_published": false,
+  "signed_release": false,
+  "capability_delta": {
+    "baseline": [
+      "workspace.read"
+    ],
+    "planned_additions": [
+      "workspace.write.controlled"
+    ],
+    "effective_additions": [],
+    "effective_authority_broadening": false
+  },
+  "controlled_primitives": [
+    "create_new_file",
+    "exact_preimage_patch",
+    "copy_without_overwrite",
+    "move_without_collision",
+    "trash_first_delete",
+    "structured_markdown_update",
+    "knowledge_record_create"
+  ],
+  "required_transaction_stages": [
+    "observe_exact_preimage",
+    "build_shadow_change_set",
+    "validate",
+    "preview_complete_diff",
+    "approve_exact_change",
+    "consume_single_use_grant",
+    "revalidate_fresh_preimage",
+    "apply_atomically_where_supported",
+    "verify_postimage",
+    "publish_receipt",
+    "reconcile_or_restore"
+  ],
+  "excluded_capabilities": [
+    "connector_access",
+    "generic_shell",
+    "git_commit",
+    "git_push",
+    "network_publication",
+    "scheduled_execution",
+    "unattended_write",
+    "wildcard_approval"
+  ],
+  "source_files": [
+    {
+      "path": "capabilities/knowledge/src/knowledge_write.rs",
+      "sha256": "03b1e1db9de279355b72a6530d06f2e136fb4cf6d6b803479eb70b9c1176a37d"
+    },
+    {
+      "path": "capabilities/knowledge/src/markdown_write.rs",
+      "sha256": "8a4e0b81192cd4b2f830ea4a43d022f3880925949c02ec3168c7215f346093d0"
+    },
+    {
+      "path": "configuration/profiles/catalog.json",
+      "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
+    },
+    {
+      "path": "configuration/profiles/write.json",
+      "sha256": "498a821b45f2de3daa757d34b54f3846d833b59e5ce86a6a279dc8d648add379"
+    },
+    {
+      "path": "kernel/engine/src/filesystem_control.rs",
+      "sha256": "0c500c4e807f7d5a885f06bbd183f0315d5292fa05366b1fa7ce1c58043fcce2"
+    },
+    {
+      "path": "kernel/engine/src/write_approval.rs",
+      "sha256": "e3dca8673d1dac8168e1f7a303256b90e4565b49461b6fe754db41e556e90753"
+    },
+    {
+      "path": "kernel/engine/src/write_recovery.rs",
+      "sha256": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd"
+    },
+    {
+      "path": "kernel/engine/src/write_transaction.rs",
+      "sha256": "04dffceb1b66f49b8506bd53c5196045e3ff4834a0d6fdc86c35b4cec4177373"
+    },
+    {
+      "path": "platforms/linux/src/filesystem_control.rs",
+      "sha256": "aca1e70a576705d57014826f6bd67837e55842264d5fac38127da982b61ce270"
+    },
+    {
+      "path": "shells/host/src/knowledge_write.rs",
+      "sha256": "62edb9b1cccffa316ccce851a06300193290580993d9a2c50ac9b4e4e07b8423"
+    }
+  ],
+  "blockers": [
+    "upstream-sprints-35-through-39-blocked",
+    "write-profile-not-product-registered",
+    "native-cross-platform-write-acceptance-absent",
+    "complete-native-crash-race-evidence-absent",
+    "signed-v0.3-packages-absent",
+    "independent-release-decision-absent",
+    "manual-fuzzing-deferred"
+  ],
+  "network_access": false,
+  "release_claim": "none"
+}
