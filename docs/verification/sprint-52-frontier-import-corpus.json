@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-52-frontier-import-v1",
+  "manifest_failures": [
+    { "case_id": "missing-required-field", "expected": "reject_manifest" },
+    { "case_id": "unknown-field", "expected": "reject_manifest" },
+    { "case_id": "malformed-json", "expected": "reject_manifest" },
+    { "case_id": "oversized-manifest", "expected": "reject_manifest" },
+    { "case_id": "version-mismatch", "expected": "reject_manifest" },
+    { "case_id": "wrong-request-hash", "expected": "reject_manifest" },
+    { "case_id": "manifest-hash-drift", "expected": "reject_manifest" },
+    { "case_id": "unsorted-identities", "expected": "reject_manifest" },
+    { "case_id": "duplicate-identity", "expected": "reject_manifest" },
+    { "case_id": "unsupported-artifact-media", "expected": "reject_manifest" },
+    { "case_id": "authority-granted", "expected": "reject_manifest" },
+    { "case_id": "completion-credit", "expected": "reject_manifest" },
+    { "case_id": "outbound-network-required", "expected": "reject_manifest" },
+    { "case_id": "operation-authority-mismatch", "expected": "reject_manifest" }
+  ],
+  "artifact_attacks": [
+    { "case_id": "prompt-injection", "expected": "quarantined_nonexecuting" },
+    { "case_id": "malicious-command", "expected": "quarantined_nonexecuting" },
+    { "case_id": "path-escape", "expected": "rejected_before_review" },
+    { "case_id": "absolute-path", "expected": "rejected_before_review" },
+    { "case_id": "hidden-binary", "expected": "quarantined_nonexecuting" },
+    { "case_id": "secret-canary", "expected": "rejected_nonpersisting" },
+    {
+      "case_id": "fabricated-test-result",
+      "expected": "proposal_requires_trusted_validation"
+    },
+    { "case_id": "fabricated-citation", "expected": "unknown_blocked" },
+    {
+      "case_id": "overbroad-file-change",
+      "expected": "proposal_requires_exact_write_preview"
+    },
+    {
+      "case_id": "authority-request",
+      "expected": "proposal_requires_fresh_grant"
+    },
+    { "case_id": "external-link", "expected": "quarantined_nonexecuting" },
+    {
+      "case_id": "artifact-hash-mismatch",
+      "expected": "rejected_before_review"
+    }
+  ],
+  "state_change_cases": [
+    { "case_id": "request-packet-changed", "expected": "reject_manifest" },
+    {
+      "case_id": "workspace-state-changed",
+      "expected": "quarantine_all_steps"
+    },
+    { "case_id": "model-state-changed", "expected": "quarantine_all_steps" },
+    { "case_id": "policy-changed", "expected": "quarantine_all_steps" },
+    { "case_id": "permissions-unchecked", "expected": "quarantine_all_steps" },
+    {
+      "case_id": "citation-stale",
+      "expected": "unknown_blocked_with_disagreement"
+    },
+    {
+      "case_id": "citation-conflict",
+      "expected": "unknown_blocked_with_disagreement"
+    },
+    {
+      "case_id": "citation-missing",
+      "expected": "unknown_blocked_with_disagreement"
+    }
+  ],
+  "local_flow_cases": [
+    {
+      "case_id": "claim",
+      "required": ["evidence_assignment", "task_classification"]
+    },
+    {
+      "case_id": "file-proposal",
+      "required": [
+        "exact_write_preview",
+        "fresh_grant",
+        "task_classification",
+        "trusted_validation",
+        "user_approval"
+      ]
+    },
+    {
+      "case_id": "command-proposal",
+      "required": [
+        "fresh_grant",
+        "task_classification",
+        "trusted_validation",
+        "user_approval"
+      ]
+    },
+    {
+      "case_id": "tool-proposal",
+      "required": [
+        "fresh_grant",
+        "registered_tool_validation",
+        "task_classification",
+        "trusted_validation",
+        "user_approval"
+      ]
+    },
+    {
+      "case_id": "test-result",
+      "required": ["task_classification", "trusted_validation"]
+    },
+    { "case_id": "decision", "required": ["task_classification"] },
+    { "case_id": "link-reference", "required": ["task_classification"] }
+  ],
+  "round_trip_mutations": [
+    "report-hash",
+    "step-outcome",
+    "disagreement",
+    "re-escalation-reason",
+    "capability-feedback",
+    "applied-effect-count",
+    "duplicate-effect-count",
+    "outbound-network",
+    "receipt-hash"
+  ],
+  "expanded_case_counts": {
+    "manifest_failures": 14,
+    "artifact_attacks": 12,
+    "state_change_cases": 8,
+    "local_flow_cases": 7,
+    "round_trip_mutations": 9,
+    "total": 50
+  },
+  "authority_granted": false,
+  "effect_count": 0,
+  "outbound_network_used": false
+}

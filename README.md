@@ -356,6 +356,13 @@ AgentMage may prepare and display a local handoff packet containing the objectiv
 
 AgentMage cannot invoke Codex, activate or populate the Codex tab, write the packet to the clipboard, call a Codex or OpenAI endpoint, or transmit content. The preview warns that manual submission discloses the selected content to a separate product under that product's policies. The user manually switches to Codex, resolves or accepts each warning, chooses what to disclose, and submits it. This rule cannot be overridden by standing consent, routing, failure recovery, scheduling, or a model decision.
 
+A result manually returned by the user is parsed only as an untrusted proposal. AgentMage rechecks
+the request, workspace, model, policy, permissions, artifacts, citations, and every proposed step
+locally. Import cannot issue a grant, call a tool, write a file, change canonical state, award
+completion credit, use outbound networking, or recurse automatically. Proposal-eligible work must
+begin again through the normal local classification, approval, execution, validation, and evidence
+flows. The source-level import contracts exist; the native product workflow remains unregistered.
+
 ## Delivery Roadmap
 
 ```mermaid
