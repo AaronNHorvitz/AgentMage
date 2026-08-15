@@ -10,6 +10,7 @@ mod executive_skills;
 mod index;
 mod knowledge_write;
 mod lifecycle;
+mod markdown_artifacts;
 mod markdown_write;
 mod meeting_skills;
 mod memory;
@@ -57,6 +58,14 @@ pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
     preview_migration, preview_restore, verify_backup,
+};
+pub use markdown_artifacts::{
+    GeneratedMarkdownArtifact, MarkdownArtifactCitation, MarkdownArtifactError,
+    MarkdownArtifactKind, MarkdownArtifactRequest, MarkdownArtifactSection,
+    MarkdownArtifactStatement, MarkdownQualityFinding, MarkdownQualityFindingKind,
+    MarkdownQualityProfile, MarkdownQualityReport, MarkdownRenderedBlock, MarkdownRoundTripResult,
+    generate_markdown_artifact, map_markdown_parse_error, review_markdown_quality,
+    verify_markdown_round_trip,
 };
 pub use markdown_write::{
     MarkdownDocument, MarkdownEdit, MarkdownElement, MarkdownElementKind, MarkdownFidelityWarning,
