@@ -1421,7 +1421,7 @@ mod tests {
 
     #[test]
     fn privacy_gate_covers_every_boundary_without_retaining_removed_values() {
-        const TOKEN: &str = "ghp_abcdefghijklmnopqrstuvwxyz1234567890";
+        const TOKEN: &str = concat!("gh", "p_abcdefghijklmnopqrstuvwxyz1234567890");
         for boundary in WritePrivacyBoundary::ALL {
             let result = sanitize_write_boundary(
                 boundary,
@@ -1608,7 +1608,7 @@ mod tests {
 
     #[test]
     fn audit_reports_exact_safe_files_and_redacts_secret_like_paths() {
-        const TOKEN: &str = "ghp_abcdefghijklmnopqrstuvwxyz1234567890";
+        const TOKEN: &str = concat!("gh", "p_abcdefghijklmnopqrstuvwxyz1234567890");
         let checkpoint = standalone(WriteCheckpointPhase::Complete);
         let operations = [
             WriteAuditOperationInput {

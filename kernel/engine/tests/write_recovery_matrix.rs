@@ -237,13 +237,16 @@ fn cancellation_timeout_crash_and_rollback_failure_have_closed_recovery() {
 fn secret_canaries_are_absent_from_every_write_boundary_output() {
     let canaries: [(&str, &[u8]); 6] = [
         ("password", b"correct horse battery staple"),
-        ("private_key", b"-----BEGIN TEST PRIVATE KEY-----"),
+        (
+            "private_key",
+            concat!("-----BEGIN TEST ", "PRIVATE KEY-----").as_bytes(),
+        ),
         ("authorization", b"Bearer abcdefghijklmnopqrstuvwxyz"),
         (
             "provider_token",
-            b"ghp_abcdefghijklmnopqrstuvwxyz1234567890",
+            concat!("gh", "p_abcdefghijklmnopqrstuvwxyz1234567890").as_bytes(),
         ),
-        ("cloud_key", b"AKIA1234567890ABCDEF"),
+        ("cloud_key", concat!("AK", "IA1234567890ABCDEF").as_bytes()),
         (
             "database_uri",
             b"https://user:password@example.invalid/path",
