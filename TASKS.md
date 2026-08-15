@@ -3446,27 +3446,41 @@ open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 46.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 46.1.1.1** (legacy `S-039-I01`): Discover candidate test, lint, format, type, build, package, and security commands only from trusted project configuration or user input.
-  - [ ] **Sub-task 46.1.1.2** (legacy `S-039-I02`): Require separate approval for each command template and effective execution scope.
+  - [x] **Sub-task 46.1.1.1** (legacy `S-039-I01`): Discover candidate test, lint, format, type, build, package, and security commands only from trusted project configuration or user input.
+  - [x] **Sub-task 46.1.1.2** (legacy `S-039-I02`): Require separate approval for each command template and effective execution scope.
   - [ ] **Sub-task 46.1.1.3** (legacy `S-039-I03`): Implement focused-test selection, fail-fast behavior, failed-test rerun, bounded waiting, cancellation, and cleanup.
-  - [ ] **Sub-task 46.1.1.4** (legacy `S-039-I04`): Parse passed, failed, skipped, duration, failed names, artifacts, and affected files from process evidence.
-  - [ ] **Sub-task 46.1.1.5** (legacy `S-039-I05`): Separate unit, integration, end-to-end, lint, types, build, packaging, and security results.
-  - [ ] **Sub-task 46.1.1.6** (legacy `S-039-I06`): Capture exact command, arguments, working directory, bounded environment classification, process status, exit code, output, and artifacts in validation receipts.
-  - [ ] **Sub-task 46.1.1.7** (legacy `S-039-I07`): Mark partial validation distinctly and every unrun check as unverified.
-  - [ ] **Sub-task 46.1.1.8** (legacy `S-039-I08`): Classify failures as change-caused, baseline, flaky, dependency, environment, permission, or unrelated.
+  - [x] **Sub-task 46.1.1.4** (legacy `S-039-I04`): Parse passed, failed, skipped, duration, failed names, artifacts, and affected files from process evidence.
+  - [x] **Sub-task 46.1.1.5** (legacy `S-039-I05`): Separate unit, integration, end-to-end, lint, types, build, packaging, and security results.
+  - [x] **Sub-task 46.1.1.6** (legacy `S-039-I06`): Capture exact command, arguments, working directory, bounded environment classification, process status, exit code, output, and artifacts in validation receipts.
+  - [x] **Sub-task 46.1.1.7** (legacy `S-039-I07`): Mark partial validation distinctly and every unrun check as unverified.
+  - [x] **Sub-task 46.1.1.8** (legacy `S-039-I08`): Classify failures as change-caused, baseline, flaky, dependency, environment, permission, or unrelated.
 
-- [ ] **Task 46.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 46.1.2.1:** Trusted command-template registry.
-  - [ ] **Sub-task 46.1.2.2:** Validation runner and result parsers.
-  - [ ] **Sub-task 46.1.2.3:** Detailed validation receipt schema.
-  - [ ] **Sub-task 46.1.2.4:** Failure-classification corpus.
+  Local source status: focused selection, fail-fast intent, exact separately approved rerun
+  planning, command deadlines, cancellation states, and cleanup requirements are implemented as
+  closed contracts. No production coordinator or native validation-worker process-tree campaign is
+  connected, so 46.1.1.3 and the implementation task remain open.
+
+- [x] **Task 46.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 46.1.2.1:** Trusted command-template registry.
+  - [x] **Sub-task 46.1.2.2:** Validation runner and result parsers.
+  - [x] **Sub-task 46.1.2.3:** Detailed validation receipt schema.
+  - [x] **Sub-task 46.1.2.4:** Failure-classification corpus.
 
 - [ ] **Task 46.1.3 - Verify and close the story**
-  - [ ] **Sub-task 46.1.3.1:** `S-039-UT01` validates trusted test templates, executable hashes, argv, environment, directory, timeout, resource, parser, and expected-output fields; assert substitutions and unknown flags are rejected.
-  - [ ] **Sub-task 46.1.3.2:** `S-039-UT02` parses pass, assertion failure, compile failure, infrastructure failure, timeout, cancellation, crash, flaky, skipped, malformed, truncated, and zero-tests-run outputs; assert exact non-conflated states.
+  - [x] **Sub-task 46.1.3.1:** `S-039-UT01` validates trusted test templates, executable hashes, argv, environment, directory, timeout, resource, parser, and expected-output fields; assert substitutions and unknown flags are rejected.
+  - [x] **Sub-task 46.1.3.2:** `S-039-UT02` parses pass, assertion failure, compile failure, infrastructure failure, timeout, cancellation, crash, flaky, skipped, malformed, truncated, and zero-tests-run outputs; assert exact non-conflated states.
   - [ ] **Sub-task 46.1.3.3:** `S-039-ST01` uses forged green text, ANSI/control sequences, injected result files, test hooks/plugins, network fetches, secret output, and parser bombs; assert no false pass, execution escape, or leakage.
   - [ ] **Sub-task 46.1.3.4:** `S-039-RT01` kills process trees and runner/parser/storage at every stage; assert bounded cleanup, preserved raw output, uncertain state when warranted, and no automatic retry of non-idempotent setup.
   - [ ] **Sub-task 46.1.3.5 - Product security evidence:** Map `SR-SUP-003`, `SR-TST-001` through `SR-TST-006`, `SR-TST-010`, `SR-OPS-003`; retain template manifests, parser corpus, raw/normalized comparisons, injection results, resource traces, and cleanup evidence.
+
+  Contract-level tests reject forged green text, ANSI/control sequences, injected artifacts,
+  secret output, parser bombs, plugin/configuration argument widening, network-enabled templates,
+  and unsafe automatic reruns. Sub-task 46.1.3.3 remains open until those attacks run through the
+  production native worker. Existing command receipts require descendant cleanup for cancellation
+  and timeout, but no native process-tree/storage interruption campaign exists, so 46.1.3.4 remains
+  open. The exact security map and local content-free records are retained; protected raw-log,
+  native resource/process, cross-platform, trusted-package, independent-review, and deferred
+  manual-fuzz evidence remain absent, so 46.1.3.5 remains open.
 
 ##### Story Acceptance Criteria
 
@@ -3476,10 +3490,23 @@ open.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 46.AC1:** No repository command runs from untrusted text or model narration.
-- [ ] **Sprint AC 46.AC2:** A passed status requires matching process and artifact evidence.
-- [ ] **Sprint AC 46.AC3:** Partial, cancelled, timed-out, malformed, and unrun checks are never reported as a full pass.
+- [x] **Sprint AC 46.AC2:** A passed status requires matching process and artifact evidence.
+- [x] **Sprint AC 46.AC3:** Partial, cancelled, timed-out, malformed, and unrun checks are never reported as a full pass.
 - [ ] **Sprint AC 46.AC4:** Cancellation terminates descendants and leaves the worktree inspectable.
-- [ ] **Sprint AC 46.AC5:** Validation receipts reproduce the exact execution boundary without leaking secrets.
+- [x] **Sprint AC 46.AC5:** Validation receipts reproduce the exact execution boundary without leaking secrets.
+
+Retained local evidence: source revision `f087861a676d726b3fbc605e5b6c075360f78a46` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-46/local-evidence-report.json), SHA-256
+`84ac8bcaae654a9ffdb13b85e25e6a58f3dcb0255a3e1523b16d0e3a510f90f1`. All eleven recorded
+commands exit zero and all three focused suites report zero blocking skips. Nine validation kinds,
+fourteen normalized result states, eight failure classifications, strict receipt schemas, and the
+content-free adversarial corpus pass with zero accepted unauthorized command and zero process-stream
+value fields in receipts. Sprint 46 remains **BLOCKED** because Sprint 45 is blocked and the
+production validation coordinator, trusted installed-parent execution, native validation-worker
+and process-tree campaign, protected raw-log integration, native cross-platform acceptance,
+trusted-package execution, independent review, and deferred manual fuzzing remain absent. The
+implementation task, hostile native test, recovery test, product-security sub-task, both story
+criteria, Story 46.1, Sprint AC 46.AC1, Sprint AC 46.AC4, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 46 is PASS only when Story 46.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 47 - Review Packets, Commit Planning, and Local Source Control
