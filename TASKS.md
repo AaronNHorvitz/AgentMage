@@ -3974,23 +3974,23 @@ Task 52.1.3, both story criteria, Story 52.1, and the sprint therefore remain op
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 53.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 53.1.1.1** (legacy `S-046-I01`): Run recommendation, packet, disclosure, redaction, import, revalidation, and round-trip fixtures.
+  - [x] **Sub-task 53.1.1.1** (legacy `S-046-I01`): Run recommendation, packet, disclosure, redaction, import, revalidation, and round-trip fixtures.
   - [ ] **Sub-task 53.1.1.2** (legacy `S-046-I02`): Re-run Codex delivery attacks through Chat, CLI, model tools, skills, schedules, injected content, clipboard APIs, Visual Studio Code commands, and network paths.
-  - [ ] **Sub-task 53.1.1.3** (legacy `S-046-I03`): Verify packet export is a user-initiated local file operation under the controlled write contract.
-  - [ ] **Sub-task 53.1.1.4** (legacy `S-046-I04`): Publish frontier recommendation, disclosure review, manual transfer, import, validation, privacy, and limitation guides.
-  - [ ] **Sub-task 53.1.1.5** (legacy `S-046-I05`): Publish capability-matrix rules for local task tiers and frontier recommendations.
+  - [x] **Sub-task 53.1.1.3** (legacy `S-046-I03`): Verify packet export is a user-initiated local file operation under the controlled write contract.
+  - [x] **Sub-task 53.1.1.4** (legacy `S-046-I04`): Publish frontier recommendation, disclosure review, manual transfer, import, validation, privacy, and limitation guides.
+  - [x] **Sub-task 53.1.1.5** (legacy `S-046-I05`): Publish capability-matrix rules for local task tiers and frontier recommendations.
 
-- [ ] **Task 53.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 53.1.2.1:** v0.5 acceptance bundle.
-  - [ ] **Sub-task 53.1.2.2:** Frontier threat-model and boundary report.
-  - [ ] **Sub-task 53.1.2.3:** User-controlled consultation guides.
-  - [ ] **Sub-task 53.1.2.4:** v0.5 release notes and capability matrix.
+- [x] **Task 53.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 53.1.2.1:** v0.5 acceptance bundle.
+  - [x] **Sub-task 53.1.2.2:** Frontier threat-model and boundary report.
+  - [x] **Sub-task 53.1.2.3:** User-controlled consultation guides.
+  - [x] **Sub-task 53.1.2.4:** v0.5 release notes and capability matrix.
 
 - [ ] **Task 53.1.3 - Verify and close the story**
   - [ ] **Sub-task 53.1.3.1:** `S-046-IT01` performs measured recommendation, packet preview/export, user-mediated external consultation simulation, import, local revalidation, and optional controlled application; assert complete round-trip receipts.
   - [ ] **Sub-task 53.1.3.2:** `S-046-ST01` probes every interface/process for autonomous cloud client, credential access, delivery, browser automation, direct Codex handoff, hidden telemetry, and imported-authority paths; assert zero capability.
   - [ ] **Sub-task 53.1.3.3:** `S-046-RT01` cancels or corrupts every round-trip phase and repeats import/export; assert idempotent local artifacts, no duplicate application, bounded retention, and safe cleanup.
-  - [ ] **Sub-task 53.1.3.4:** `S-046-AT01` forces redaction, disclosure, freshness, local validation, network-exclusion, and privacy thresholds to fail; assert no release or gate closure.
+  - [x] **Sub-task 53.1.3.4:** `S-046-AT01` forces redaction, disclosure, freshness, local validation, network-exclusion, and privacy thresholds to fail; assert no release or gate closure.
   - [ ] **Sub-task 53.1.3.5 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-003` through `SR-AI-005`, `SR-AI-008` through `SR-AI-011`, `SR-TST-004`; retain threat model, end-to-end bundle, prohibited-capability scan, failure injection, guides, and signed gate decision.
 
 ##### Story Acceptance Criteria
@@ -4001,10 +4001,24 @@ Task 52.1.3, both story criteria, Story 52.1, and the sprint therefore remain op
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 53.AC1:** Zero autonomous or unattended external-model delivery paths exist.
-- [ ] **Sprint AC 53.AC2:** Every export requires an exact local disclosure preview and user-initiated write.
-- [ ] **Sprint AC 53.AC3:** Every import remains untrusted until locally revalidated.
+- [x] **Sprint AC 53.AC2:** Every export requires an exact local disclosure preview and user-initiated write.
+- [x] **Sprint AC 53.AC3:** Every import remains untrusted until locally revalidated.
 - [ ] **Sprint AC 53.AC4:** Strict-local mode remains fully usable with no external account or service.
-- [ ] **Sprint AC 53.AC5:** `G-V0.5` closes only after boundary, privacy, evidence, import, and documentation gates pass.
+- [x] **Sprint AC 53.AC5:** `G-V0.5` closes only after boundary, privacy, evidence, import, and documentation gates pass.
+
+**Local evidence (2026-08-15):** The immutable source revision
+`20d67004af424c8a0593ca5d9b791b0840a6cf37` is covered by
+[`local-evidence-report.json`](artifacts/sprints/sprint-53/local-evidence-report.json), SHA-256
+`702d35e67e73a951f1fb03858dae74098ce3f3bd2ac467fa74066839570442b6`. All fourteen recorded
+commands exit zero and all eight focused suites report zero blocking skips. The release gate binds
+nine prohibited delivery surfaces, twelve forced gate failures, and eight recovery specifications;
+it records zero accepted autonomous deliveries, imported authorities, or outbound network attempts.
+The generated v0.5 manifest and readiness report remain explicitly blocked. Sprint 53 remains
+**BLOCKED** because Sprints 50 through 52 are blocked and the product coordinator, native end-to-end
+round trip, normal-flow integration, live-model campaign, durable recovery, installed
+cross-platform acceptance, trusted signed packages, independent release decision, and deferred
+manual fuzzing remain absent. Sub-tasks 53.1.1.2, 53.1.3.1 through 53.1.3.3, and 53.1.3.5; both
+story criteria; Sprint AC 53.AC1 and 53.AC4; Story 53.1; and the sprint therefore remain open.
 
 **Gate decision:** Sprint 53 is PASS only when Story 53.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
