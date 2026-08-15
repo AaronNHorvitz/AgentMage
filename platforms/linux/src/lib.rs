@@ -48,9 +48,7 @@ pub use lifecycle::{
     rotate_linux_operational_key,
 };
 pub use local_commit::{
-    LinuxApprovedPostimage, LinuxCandidateTreeBuilder, LinuxLocalCommitError,
-    LinuxLocalCommitErrorKind, LinuxLocalCommitExecutor, LinuxOpenPgpSigner,
-    linux_candidate_index_path_sha256,
+    LinuxLocalCommitError, LinuxLocalCommitErrorKind, LinuxLocalCommitExecutor, LinuxOpenPgpSigner,
 };
 pub use platform::{
     LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,

@@ -25,7 +25,12 @@ use crate::repository_safety::{LinuxGitArtifact, LinuxRepositoryCollector, Linux
 
 const MAX_CAPTURE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_POSTIMAGE_BYTES: usize = 64 * 1024 * 1024;
+#[allow(
+    dead_code,
+    reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+)]
 const MAX_TOTAL_POSTIMAGE_BYTES: usize = 256 * 1024 * 1024;
+const MAX_TRUSTED_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 
@@ -81,6 +86,10 @@ impl fmt::Display for LinuxLocalCommitError {
 impl std::error::Error for LinuxLocalCommitError {}
 
 /// Exact approved postimage held only for one candidate-tree attempt.
+#[allow(
+    dead_code,
+    reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+)]
 pub struct LinuxApprovedPostimage {
     operation_id: String,
     bytes: Vec<u8>,
@@ -88,6 +97,10 @@ pub struct LinuxApprovedPostimage {
 
 impl LinuxApprovedPostimage {
     /// Holds one exact postimage without logging or serializing its bytes.
+    #[allow(
+        dead_code,
+        reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+    )]
     pub fn new(
         operation_id: impl Into<String>,
         bytes: Vec<u8>,
@@ -120,6 +133,10 @@ impl fmt::Debug for LinuxApprovedPostimage {
 }
 
 /// Computes the exact future temporary-index path identity for a candidate build.
+#[allow(
+    dead_code,
+    reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+)]
 pub fn linux_candidate_index_path_sha256(
     scope: &LinuxRepositoryScope,
     candidate_build_id: &str,
@@ -141,6 +158,10 @@ pub fn linux_candidate_index_path_sha256(
 
 /// Linux candidate-tree builder using only an AgentMage-owned temporary index.
 #[derive(Debug)]
+#[allow(
+    dead_code,
+    reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+)]
 pub struct LinuxCandidateTreeBuilder {
     collector: LinuxRepositoryCollector,
     scope: LinuxRepositoryScope,
@@ -149,11 +170,19 @@ pub struct LinuxCandidateTreeBuilder {
 impl LinuxCandidateTreeBuilder {
     /// Creates an inert candidate-tree builder.
     #[must_use]
+    #[allow(
+        dead_code,
+        reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+    )]
     pub const fn new(collector: LinuxRepositoryCollector, scope: LinuxRepositoryScope) -> Self {
         Self { collector, scope }
     }
 
     /// Builds one exact tree without changing the user index or any ref.
+    #[allow(
+        dead_code,
+        reason = "candidate construction remains dormant until an exact product coordinator mediates it"
+    )]
     pub fn build(
         &self,
         plan: &CandidateTreePlan,
@@ -650,14 +679,18 @@ fn wait_capture(
     let deadline = Instant::now() + PROCESS_TIMEOUT;
     let status = loop {
         match child.try_wait() {
-            Ok(Some(status)) => break status,
+            Ok(Some(status)) => break Some(status),
             Ok(None) if cancellation.is_cancelled() || Instant::now() >= deadline => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
+                break None;
             }
             Ok(None) => thread::sleep(POLL_INTERVAL),
-            Err(_) => return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed)),
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                break None;
+            }
         }
     };
     let stdout = stdout_reader
@@ -670,6 +703,7 @@ fn wait_capture(
         .ok()
         .and_then(Result::ok)
         .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
+    let status = status.ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
     Ok(CapturedProcess {
         status,
         stdout,
@@ -834,12 +868,32 @@ fn verify_root_executable(path: &Path) -> Result<(PathBuf, String), LinuxLocalCo
         || metadata.mode() & 0o022 != 0
         || metadata.mode() & 0o111 == 0
         || metadata.len() == 0
+        || metadata.len() > MAX_TRUSTED_EXECUTABLE_BYTES
     {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
-    let bytes =
-        fs::read(&canonical).map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
-    Ok((canonical, hash(&bytes)))
+    let mut executable =
+        fs::File::open(&canonical).map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    let mut total = 0_u64;
+    loop {
+        let count = executable
+            .read(&mut buffer)
+            .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
+        if count == 0 {
+            break;
+        }
+        total = total
+            .checked_add(count as u64)
+            .filter(|value| *value <= MAX_TRUSTED_EXECUTABLE_BYTES)
+            .ok_or_else(|| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
+        digest.update(&buffer[..count]);
+    }
+    if total != metadata.len() {
+        return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
+    }
+    Ok((canonical, hex_digest(digest.finalize())))
 }
 
 fn verify_private_keyring(path: &Path) -> Result<PathBuf, LinuxLocalCommitError> {
@@ -893,8 +947,13 @@ fn failed_commit_result(
 }
 
 fn hash(bytes: &[u8]) -> String {
-    let mut output = String::with_capacity(64);
-    for byte in Sha256::digest(bytes) {
+    hex_digest(Sha256::digest(bytes))
+}
+
+fn hex_digest(bytes: impl AsRef<[u8]>) -> String {
+    let bytes = bytes.as_ref();
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
         use std::fmt::Write as _;
         write!(&mut output, "{byte:02x}").expect("writing to String cannot fail");
     }
