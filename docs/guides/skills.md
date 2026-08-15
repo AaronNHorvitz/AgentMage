@@ -35,3 +35,10 @@ include agendas, minutes, letters, memoranda, logs, and routing slips without ga
 delivery, scheduling, or records-disposition authority. See the
 [document-control guide](./document-control-local-workflows.md) and
 [architecture boundary](../architecture/document-correspondence-and-filing-control.md).
+
+Seven Markdown artifact skills cover meeting cleanup, status reports, standup scripts, task
+documents, handoffs, decision records, and evidence reports. They preserve exact source structure,
+require evidence-state-aware citations, mark unknown acronyms without expansion, and add no file,
+network, renderer, or execution authority. See the
+[Markdown artifact guide](./markdown-artifact-local-workflows.md) and
+[round-trip architecture](../architecture/markdown-artifacts-and-round-trip.md).

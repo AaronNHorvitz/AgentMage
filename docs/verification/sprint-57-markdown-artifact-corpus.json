@@ -1,0 +1,422 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_57_markdown_artifact_acceptance_corpus",
+  "story_id": "57.1",
+  "legacy_story_id": "S-049",
+  "case_count": 68,
+  "cases": [
+    {
+      "case_id": "markdown-syntax-01",
+      "category": "syntax",
+      "expected": "unchanged heading retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-02",
+      "category": "syntax",
+      "expected": "unchanged paragraph retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-03",
+      "category": "syntax",
+      "expected": "unchanged ordered_list retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-04",
+      "category": "syntax",
+      "expected": "unchanged unordered_list retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-05",
+      "category": "syntax",
+      "expected": "unchanged task_list retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-06",
+      "category": "syntax",
+      "expected": "unchanged table retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-07",
+      "category": "syntax",
+      "expected": "unchanged code_fence retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-08",
+      "category": "syntax",
+      "expected": "unchanged fence_content retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-09",
+      "category": "syntax",
+      "expected": "unchanged link retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-10",
+      "category": "syntax",
+      "expected": "unchanged frontmatter retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-11",
+      "category": "syntax",
+      "expected": "unchanged comment retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-12",
+      "category": "syntax",
+      "expected": "unchanged lf retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-syntax-13",
+      "category": "syntax",
+      "expected": "unchanged crlf retains exact bytes and source ranges",
+      "requirement": "S-049-UT01"
+    },
+    {
+      "case_id": "markdown-quality-01",
+      "category": "quality",
+      "expected": "CommonMark spacing is visible",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-02",
+      "category": "quality",
+      "expected": "broken local link is visible without resolution",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-03",
+      "category": "quality",
+      "expected": "duplicate heading is visible",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-04",
+      "category": "quality",
+      "expected": "malformed table is visible",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-05",
+      "category": "quality",
+      "expected": "unsupported structure is preserved with a limitation",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-06",
+      "category": "quality",
+      "expected": "long sentence or paragraph is marked without rewriting",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-quality-07",
+      "category": "quality",
+      "expected": "unknown acronym is marked without guessed expansion",
+      "requirement": "S-049-I02/S-049-I03"
+    },
+    {
+      "case_id": "markdown-scoped-01",
+      "category": "scoped_edit",
+      "expected": "heading replacement changes only the exact previewed range",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-02",
+      "category": "scoped_edit",
+      "expected": "paragraph replacement preserves surrounding blank lines",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-03",
+      "category": "scoped_edit",
+      "expected": "list replacement preserves unrelated items",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-04",
+      "category": "scoped_edit",
+      "expected": "table replacement preserves unrelated rows and blocks",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-05",
+      "category": "scoped_edit",
+      "expected": "code-fence content remains protected",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-06",
+      "category": "scoped_edit",
+      "expected": "raw-note region remains protected",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-07",
+      "category": "scoped_edit",
+      "expected": "mixed-format source preserves unsupported bytes",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-scoped-08",
+      "category": "scoped_edit",
+      "expected": "long-word and narrow-width review records a visible limitation",
+      "requirement": "S-049-UT02"
+    },
+    {
+      "case_id": "markdown-artifact-01",
+      "category": "artifact",
+      "expected": "meeting cleanup renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-02",
+      "category": "artifact",
+      "expected": "status report renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-03",
+      "category": "artifact",
+      "expected": "standup script renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-04",
+      "category": "artifact",
+      "expected": "task document renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-05",
+      "category": "artifact",
+      "expected": "handoff renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-06",
+      "category": "artifact",
+      "expected": "decision record renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-artifact-07",
+      "category": "artifact",
+      "expected": "evidence report renders headings, evidence states, and exact citation identities",
+      "requirement": "S-049-I04"
+    },
+    {
+      "case_id": "markdown-adversarial-01",
+      "category": "adversarial",
+      "expected": "executable HTML remains inert and blocks generation",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-02",
+      "category": "adversarial",
+      "expected": "script-like attributes remain inert and block generation",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-03",
+      "category": "adversarial",
+      "expected": "remote assets are not fetched",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-04",
+      "category": "adversarial",
+      "expected": "dangerous URI schemes remain inert and block generation",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-05",
+      "category": "adversarial",
+      "expected": "hidden text and comments remain inert source",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-06",
+      "category": "adversarial",
+      "expected": "secret canary remains visible as a blocking finding without disclosure output",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-adversarial-07",
+      "category": "adversarial",
+      "expected": "instruction-like source remains inert and creates no authority",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-roundtrip-01",
+      "category": "round_trip",
+      "expected": "identical reopen passes exact byte identity",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-02",
+      "category": "round_trip",
+      "expected": "identical reopen passes supported semantic identity",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-03",
+      "category": "round_trip",
+      "expected": "identical local render signatures pass rendered identity",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-04",
+      "category": "round_trip",
+      "expected": "changed bytes produce a named limitation",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-05",
+      "category": "round_trip",
+      "expected": "changed supported structure produces a named limitation",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-06",
+      "category": "round_trip",
+      "expected": "changed rendered blocks produce a named limitation",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-roundtrip-07",
+      "category": "round_trip",
+      "expected": "any failed dimension prevents local completion",
+      "requirement": "S-049-I07/S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-01",
+      "category": "citation",
+      "expected": "confirmed statement requires an exact citation",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-02",
+      "category": "citation",
+      "expected": "inferred statement requires an exact citation",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-03",
+      "category": "citation",
+      "expected": "historical statement requires an exact citation",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-04",
+      "category": "citation",
+      "expected": "disputed statement requires an exact citation",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-05",
+      "category": "citation",
+      "expected": "unknown statement may remain explicitly uncited",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-citation-06",
+      "category": "citation",
+      "expected": "unknown citation identity rejects the artifact",
+      "requirement": "S-049-IT01"
+    },
+    {
+      "case_id": "markdown-display-01",
+      "category": "display_link",
+      "expected": "validated workspace path produces a display-only file URI",
+      "requirement": "S-049-I06"
+    },
+    {
+      "case_id": "markdown-display-02",
+      "category": "display_link",
+      "expected": "one-based line anchor is retained",
+      "requirement": "S-049-I06"
+    },
+    {
+      "case_id": "markdown-display-03",
+      "category": "display_link",
+      "expected": "absolute path is rejected",
+      "requirement": "S-049-I06"
+    },
+    {
+      "case_id": "markdown-display-04",
+      "category": "display_link",
+      "expected": "parent traversal is rejected",
+      "requirement": "S-049-I06"
+    },
+    {
+      "case_id": "markdown-display-05",
+      "category": "display_link",
+      "expected": "display link grants no read write or command authority",
+      "requirement": "S-049-I06"
+    },
+    {
+      "case_id": "markdown-denial-01",
+      "category": "prohibited_effect",
+      "expected": "deny network access",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-02",
+      "category": "prohibited_effect",
+      "expected": "deny remote asset fetch",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-03",
+      "category": "prohibited_effect",
+      "expected": "deny HTML execution",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-04",
+      "category": "prohibited_effect",
+      "expected": "deny script execution",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-05",
+      "category": "prohibited_effect",
+      "expected": "deny source-instruction execution",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-06",
+      "category": "prohibited_effect",
+      "expected": "deny unpreviewed source mutation",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-07",
+      "category": "prohibited_effect",
+      "expected": "deny citation invention",
+      "requirement": "S-049-ST01"
+    },
+    {
+      "case_id": "markdown-denial-08",
+      "category": "prohibited_effect",
+      "expected": "deny acronym expansion invention",
+      "requirement": "S-049-ST01"
+    }
+  ],
+  "network_enabled": false,
+  "execution_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "citation_invention_enabled": false,
+  "product_integration_claimed": false
+}
