@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/markdown-quality-report.schema.json",
+  "title": "AgentMage Markdown Quality Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_sha256", "profile_id", "findings", "unknown_acronym_count", "network_access_performed", "execution_performed", "source_mutation_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "profile_id": { "$ref": "#/$defs/identifier" },
+    "findings": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/finding" } },
+    "unknown_acronym_count": { "type": "integer", "minimum": 0, "maximum": 4096 },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false },
+    "source_mutation_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "kind", "line", "reason_code", "preserved_inert", "blocks_generation"],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["common_mark_spacing", "broken_local_link", "duplicate_heading", "malformed_table", "structure", "plain_language", "unknown_acronym", "dangerous_uri", "executable_html_inert", "remote_asset_inert", "hidden_text_inert", "secret_canary", "instruction_content_inert", "unsupported_syntax"] },
+        "line": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "preserved_inert": { "const": true },
+        "blocks_generation": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/generated-markdown-artifact.schema.json",
+  "title": "AgentMage Generated Markdown Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_id", "kind", "markdown", "markdown_sha256", "sections", "citations", "accessibility_structure_complete", "proposal_only", "filesystem_effect_performed", "network_access_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "kind": { "enum": ["meeting_cleanup", "status_report", "standup_script", "task_document", "handoff", "decision_record", "evidence_report"] },
+    "markdown": { "type": "array", "maxItems": 4194304, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "markdown_sha256": { "$ref": "#/$defs/sha256" },
+    "sections": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/section" } },
+    "citations": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/citation" } },
+    "accessibility_structure_complete": { "const": true },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } }
+      }
+    },
+    "citation_ids": { "type": "array", "uniqueItems": true, "maxItems": 4096, "items": { "$ref": "#/$defs/identifier" } },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citation_id", "source_path", "start_line", "end_line", "source_sha256"],
+      "properties": {
+        "citation_id": { "$ref": "#/$defs/identifier" },
+        "source_path": { "$ref": "#/$defs/workspace_path" },
+        "start_line": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "end_line": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "source_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement_id", "text", "evidence_state", "citation_ids"],
+      "properties": {
+        "statement_id": { "$ref": "#/$defs/identifier" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 262144 },
+        "evidence_state": { "enum": ["confirmed", "inferred", "historical", "disputed", "unknown"] },
+        "citation_ids": { "$ref": "#/$defs/citation_ids" }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "heading", "statements"],
+      "properties": {
+        "section_id": { "$ref": "#/$defs/identifier" },
+        "heading": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "statements": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/statement" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "source_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "reopened_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "byte_identical": true,
+  "semantic_structure_identical": true,
+  "rendered_structure_identical": true,
+  "limitations": [],
+  "network_access_performed": false,
+  "execution_performed": false,
+  "locally_complete": true
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profile_id": "plain-language-1",
+  "findings": [
+    {
+      "finding_id": "finding:00000003:markdown.acronym.unknown",
+      "kind": "unknown_acronym",
+      "line": 3,
+      "reason_code": "markdown.acronym.unknown",
+      "preserved_inert": true,
+      "blocks_generation": false
+    }
+  ],
+  "unknown_acronym_count": 1,
+  "network_access_performed": false,
+  "execution_performed": false,
+  "source_mutation_performed": false
+}

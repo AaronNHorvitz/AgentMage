@@ -391,6 +391,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "document-register",
     "document-action-preview",
     "document-workflow-report",
+    "markdown-quality-report",
+    "generated-markdown-artifact",
+    "markdown-round-trip-result",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1245,6 +1248,36 @@ test("document-control records reject truth approval preview and effect drift", 
     ["document-workflow-report", (record) => { record.communication_effect_performed = true; }],
     ["document-workflow-report", (record) => { record.filesystem_effect_performed = true; }],
     ["document-workflow-report", (record) => { record.records_disposition_performed = true; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("Markdown artifact records reject evidence ordering effect and round-trip drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "markdown-quality-report": load("markdown-quality-report"),
+    "generated-markdown-artifact": load("generated-markdown-artifact"),
+    "markdown-round-trip-result": load("markdown-round-trip-result"),
+  };
+  const mutations = [
+    ["markdown-quality-report", (record) => { record.unknown_acronym_count = 0; }],
+    ["markdown-quality-report", (record) => { record.network_access_performed = true; }],
+    ["markdown-quality-report", (record) => { record.findings[0].kind = "dangerous_uri"; }],
+    ["generated-markdown-artifact", (record) => { record.filesystem_effect_performed = true; }],
+    ["generated-markdown-artifact", (record) => { record.sections[0].statements[0].citation_ids = []; }],
+    ["generated-markdown-artifact", (record) => { record.citations[0].end_line = 0; }],
+    ["markdown-round-trip-result", (record) => { record.locally_complete = false; }],
+    ["markdown-round-trip-result", (record) => { record.byte_identical = false; }],
+    ["markdown-round-trip-result", (record) => { record.execution_performed = true; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);

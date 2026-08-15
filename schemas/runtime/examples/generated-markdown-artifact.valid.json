@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "artifact_id": "handoff-1",
+  "kind": "handoff",
+  "markdown": [35, 32, 72, 97, 110, 100, 111, 102, 102, 10],
+  "markdown_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "sections": [
+    {
+      "section_id": "section-1",
+      "heading": "Current State",
+      "statements": [
+        {
+          "statement_id": "statement-1",
+          "text": "The focused tests passed.",
+          "evidence_state": "confirmed",
+          "citation_ids": ["citation-1"]
+        }
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "citation_id": "citation-1",
+      "source_path": {
+        "workspace_id": "workspace-1",
+        "components": ["evidence", "result.json"]
+      },
+      "start_line": 1,
+      "end_line": 4,
+      "source_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "accessibility_structure_complete": true,
+  "proposal_only": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false
+}

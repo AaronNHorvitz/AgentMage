@@ -88,6 +88,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "document-register",
   "document-action-preview",
   "document-workflow-report",
+  "markdown-quality-report",
+  "generated-markdown-artifact",
+  "markdown-round-trip-result",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1311,6 +1314,69 @@ function runtimeSemanticErrors(recordType, data) {
       if (!isStrictlySorted(finding.source_ids ?? [])) {
         errors.push(`document finding sources are not canonical: ${finding.finding_id}`);
       }
+    }
+  } else if (recordType === "markdown-quality-report") {
+    const findings = data.findings ?? [];
+    if (!isStrictlySortedBy(findings, (item) => item.finding_id)) {
+      errors.push("Markdown quality findings are not canonically ordered");
+    }
+    if (
+      findings.filter((item) => item.kind === "unknown_acronym").length !==
+      data.unknown_acronym_count
+    ) {
+      errors.push("Markdown unknown acronym count disagrees with findings");
+    }
+    for (const finding of findings) {
+      const mustBlock = [
+        "dangerous_uri",
+        "executable_html_inert",
+        "secret_canary",
+      ].includes(finding.kind);
+      if (mustBlock && finding.blocks_generation !== true) {
+        errors.push(`Markdown dangerous finding does not block generation: ${finding.finding_id}`);
+      }
+    }
+  } else if (recordType === "generated-markdown-artifact") {
+    if (!isStrictlySortedBy(data.citations ?? [], (item) => item.citation_id)) {
+      errors.push("Markdown artifact citations are not canonically ordered");
+    }
+    const citationIds = new Set((data.citations ?? []).map((item) => item.citation_id));
+    const statementIds = new Set();
+    for (const citation of data.citations ?? []) {
+      if (citation.end_line < citation.start_line) {
+        errors.push(`Markdown citation range is reversed: ${citation.citation_id}`);
+      }
+    }
+    for (const section of data.sections ?? []) {
+      for (const statement of section.statements ?? []) {
+        if (statementIds.has(statement.statement_id)) {
+          errors.push(`Markdown statement identity is duplicated: ${statement.statement_id}`);
+        }
+        statementIds.add(statement.statement_id);
+        if (
+          !isStrictlySorted(statement.citation_ids ?? []) ||
+          (statement.citation_ids ?? []).some((id) => !citationIds.has(id)) ||
+          (statement.evidence_state !== "unknown" && (statement.citation_ids ?? []).length === 0)
+        ) {
+          errors.push(`Markdown statement evidence is incomplete: ${statement.statement_id}`);
+        }
+      }
+    }
+  } else if (recordType === "markdown-round-trip-result") {
+    const expectedComplete =
+      data.byte_identical === true &&
+      data.semantic_structure_identical === true &&
+      data.rendered_structure_identical === true;
+    const expectedLimitations = [];
+    if (!data.byte_identical) expectedLimitations.push("round-trip.bytes.changed");
+    if (!data.rendered_structure_identical) expectedLimitations.push("round-trip.rendered-structure.changed");
+    if (!data.semantic_structure_identical) expectedLimitations.push("round-trip.semantic-structure.changed");
+    expectedLimitations.sort();
+    if (
+      data.locally_complete !== expectedComplete ||
+      JSON.stringify(data.limitations ?? []) !== JSON.stringify(expectedLimitations)
+    ) {
+      errors.push("Markdown round-trip completion disagrees with exact checks");
     }
   }
   return errors;

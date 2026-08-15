@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/markdown-round-trip-result.schema.json",
+  "title": "AgentMage Markdown Round-Trip Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_sha256", "reopened_sha256", "byte_identical", "semantic_structure_identical", "rendered_structure_identical", "limitations", "network_access_performed", "execution_performed", "locally_complete"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "reopened_sha256": { "$ref": "#/$defs/sha256" },
+    "byte_identical": { "type": "boolean" },
+    "semantic_structure_identical": { "type": "boolean" },
+    "rendered_structure_identical": { "type": "boolean" },
+    "limitations": { "type": "array", "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false },
+    "locally_complete": { "type": "boolean" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "code": { "enum": ["round-trip.bytes.changed", "round-trip.rendered-structure.changed", "round-trip.semantic-structure.changed"] }
+  }
+}
