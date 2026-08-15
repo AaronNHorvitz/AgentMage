@@ -73,6 +73,8 @@ pub mod propagation;
 pub mod reasoning;
 /// Continuous content reclassification before successive trust boundaries.
 pub mod reclassification;
+/// Content-minimized repository state, exact Git plans, and owned-worktree lifecycle.
+pub mod repository_safety;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
 /// Bounded, configuration-bound session environment and provenance capture.
