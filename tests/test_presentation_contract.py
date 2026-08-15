@@ -14,7 +14,7 @@ class PresentationContractTests(unittest.TestCase):
         self.assertEqual(validate(), [])
 
     def test_corpus_size_is_explicit(self) -> None:
-        self.assertEqual(sum(EXPECTED_COUNTS.values()), 56)
+        self.assertEqual(sum(EXPECTED_COUNTS.values()), 57)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@
     "deterministic-text-and-bullets",
     "deterministic-comparison-table",
     "deterministic-integer-chart",
+    "deterministic-integer-xy-plot",
     "deterministic-node-edge-diagram",
     "fixed-document-metadata",
     "generated-package-direct-reopen",

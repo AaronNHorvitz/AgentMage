@@ -15,7 +15,7 @@ GROUPS: Final = (
     "positive_cases", "prohibited_cases", "invalid_cases", "boundary_cases", "evidence_limits",
 )
 EXPECTED_COUNTS: Final = {
-    "positive_cases": 13,
+    "positive_cases": 14,
     "prohibited_cases": 8,
     "invalid_cases": 17,
     "boundary_cases": 13,
@@ -63,7 +63,7 @@ def validate() -> list[str]:
     inspector = (ROOT / "capabilities/knowledge/src/presentation_ooxml.rs").read_text(encoding="utf-8")
     for fragment in (
         "pub fn generate_presentation(", "pub fn edit_generated_presentation(",
-        "native_render_required: true", "proposal_only: true",
+        "PresentationBlock::Plot", "fn plot_xml(", "native_render_required: true", "proposal_only: true",
         "network_access_performed: false", "execution_performed: false",
     ):
         if fragment not in generator:

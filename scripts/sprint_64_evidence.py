@@ -55,12 +55,12 @@ SECURITY_REQUIREMENTS: Final = (
 )
 IMPLEMENTED: Final = {
     "runtime_schema_count": 3, "presentation_rust_fixture_count": 7,
-    "review_corpus_case_count": 56, "bounded_direct_pptx_inspection": True,
+    "review_corpus_case_count": 57, "bounded_direct_pptx_inspection": True,
     "slide_object_and_note_provenance": True, "link_and_image_owner_provenance": True,
     "active_content_quarantine": True, "deterministic_pptx_generation": True,
     "fixed_metadata_and_package_golden": True, "generated_pptx_direct_reopen": True,
     "full_regeneration_slide_editing": True, "exact_structural_slide_previews": True,
-    "deterministic_table_chart_diagram_sources": True,
+    "deterministic_table_chart_plot_diagram_sources": True,
     "network_access_capability": False, "filesystem_mutation_capability": False,
     "content_execution_capability": False, "native_renderer_admitted": False,
     "pixel_golden_admitted": False, "cross_platform_acceptance": False,
@@ -80,7 +80,7 @@ BLOCKERS: Final = (
 )
 VERIFICATION: Final = {
     "focused_local_contracts": True, "focused_blocking_skip_count": 0,
-    "review_corpus_case_count": 56, "accepted_network_effect_count": 0,
+    "review_corpus_case_count": 57, "accepted_network_effect_count": 0,
     "accepted_execution_effect_count": 0, "accepted_filesystem_effect_count": 0,
     "package_golden_verified": True, "direct_reopen_verified": True,
     "relationship_owner_provenance_verified": True, "runtime_semantics_verified": True,

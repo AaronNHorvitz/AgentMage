@@ -53,6 +53,28 @@ pub struct PresentationChartSpec {
     pub data_source_sha256: String,
 }
 
+/// One exact point in a deterministic local XY plot.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PresentationPlotPoint {
+    /// Horizontal coordinate.
+    pub x: i64,
+    /// Vertical coordinate.
+    pub y: i64,
+}
+
+/// One deterministic XY plot backed by an exact data-source digest.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PresentationPlotSpec {
+    /// Plot title.
+    pub title: String,
+    /// Ordered points.
+    pub points: Vec<PresentationPlotPoint>,
+    /// SHA-256 of the canonical ordered points.
+    pub data_source_sha256: String,
+}
+
 /// One node in a deterministic local diagram.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -108,6 +130,11 @@ pub enum PresentationBlock {
     Chart {
         /// Exact chart specification.
         chart: PresentationChartSpec,
+    },
+    /// One local XY plot.
+    Plot {
+        /// Exact plot specification.
+        plot: PresentationPlotSpec,
     },
     /// One local node-edge diagram.
     Diagram {
@@ -409,6 +436,15 @@ fn validate_block(block: &PresentationBlock) -> Result<(), PresentationGeneratio
                 return Err(PresentationGenerationError::InvalidInput);
             }
         }
+        PresentationBlock::Plot { plot } => {
+            if !valid_text(&plot.title, false)
+                || plot.points.is_empty()
+                || plot.points.len() > MAX_CHART_POINTS
+                || plot.data_source_sha256 != data_digest(&plot.points)?
+            {
+                return Err(PresentationGenerationError::InvalidInput);
+            }
+        }
         PresentationBlock::Diagram { diagram } => {
             let nodes = diagram
                 .nodes
@@ -562,6 +598,26 @@ fn chart_xml(chart: &PresentationChartSpec) -> String {
     )
 }
 
+fn plot_xml(plot: &PresentationPlotSpec) -> String {
+    let x_values = plot
+        .points
+        .iter()
+        .enumerate()
+        .map(|(index, point)| format!("<c:pt idx=\"{index}\"><c:v>{}</c:v></c:pt>", point.x))
+        .collect::<String>();
+    let y_values = plot
+        .points
+        .iter()
+        .enumerate()
+        .map(|(index, point)| format!("<c:pt idx=\"{index}\"><c:v>{}</c:v></c:pt>", point.y))
+        .collect::<String>();
+    let count = plot.points.len();
+    format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>{}</a:t></a:r></a:p></c:rich></c:tx></c:title><c:plotArea><c:layout/><c:scatterChart><c:scatterStyle val=\"lineMarker\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:xVal><c:numLit><c:formatCode>General</c:formatCode><c:ptCount val=\"{count}\"/>{x_values}</c:numLit></c:xVal><c:yVal><c:numLit><c:formatCode>General</c:formatCode><c:ptCount val=\"{count}\"/>{y_values}</c:numLit></c:yVal></c:ser><c:axId val=\"1\"/><c:axId val=\"2\"/></c:scatterChart><c:valAx><c:axId val=\"1\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:axPos val=\"b\"/><c:crossAx val=\"2\"/></c:valAx><c:valAx><c:axId val=\"2\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:axPos val=\"l\"/><c:crossAx val=\"1\"/></c:valAx></c:plotArea><c:plotVisOnly val=\"1\"/></c:chart></c:chartSpace>",
+        xml_escape(&plot.title)
+    )
+}
+
 struct SlideBuild {
     xml: Vec<u8>,
     relationships: Vec<u8>,
@@ -596,6 +652,10 @@ fn preview_for_slide(
             PresentationBlock::Chart { chart } => (
                 PresentationObjectKind::Chart,
                 Some(chart.data_source_sha256.clone()),
+            ),
+            PresentationBlock::Plot { plot } => (
+                PresentationObjectKind::Chart,
+                Some(plot.data_source_sha256.clone()),
             ),
             PresentationBlock::Diagram { diagram } => (
                 PresentationObjectKind::Diagram,
@@ -683,6 +743,24 @@ fn build_slide(
                 charts.push((
                     format!("ppt/charts/chart{chart_number}.xml"),
                     chart_xml(chart).into_bytes(),
+                ));
+                chart_offset += 1;
+            }
+            PresentationBlock::Plot { plot } => {
+                let chart_number = first_chart + chart_offset;
+                let relationship_id = format!("rIdChart{chart_number}");
+                shapes.push_str(&chart_frame(
+                    object_id,
+                    &relationship_id,
+                    500_000,
+                    y,
+                    11_000_000,
+                    950_000,
+                ));
+                relationships.push(format!("<Relationship Id=\"{relationship_id}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart\" Target=\"../charts/chart{chart_number}.xml\"/>"));
+                charts.push((
+                    format!("ppt/charts/chart{chart_number}.xml"),
+                    plot_xml(plot).into_bytes(),
                 ));
                 chart_offset += 1;
             }
@@ -902,6 +980,18 @@ mod tests {
         }
     }
 
+    fn plot() -> PresentationPlotSpec {
+        let points = vec![
+            PresentationPlotPoint { x: 1, y: 3 },
+            PresentationPlotPoint { x: 2, y: 5 },
+        ];
+        PresentationPlotSpec {
+            title: "Trend".to_owned(),
+            data_source_sha256: data_digest(&points).expect("hash"),
+            points,
+        }
+    }
+
     fn diagram() -> PresentationDiagramSpec {
         let nodes = vec![
             PresentationDiagramNode {
@@ -946,6 +1036,7 @@ mod tests {
                     title: "Visuals".to_owned(),
                     blocks: vec![
                         PresentationBlock::Chart { chart: chart() },
+                        PresentationBlock::Plot { plot: plot() },
                         PresentationBlock::Diagram { diagram: diagram() },
                     ],
                     speaker_notes: Vec::new(),
@@ -955,12 +1046,12 @@ mod tests {
     }
 
     #[test]
-    fn generates_deterministic_deck_with_text_notes_table_chart_diagram_and_previews() {
+    fn generates_deterministic_deck_with_text_notes_table_chart_plot_diagram_and_previews() {
         let first = generate_presentation(&spec()).expect("generate");
         let second = generate_presentation(&spec()).expect("generate");
         assert_eq!(
             first.pptx_sha256,
-            "e548f8f90a7d84c7a98902dba9b6f76a116a3be2e9905095bfc6dfa6cfc94891"
+            "b09e763ac7f4e326803e3da4c5dfd99b5e0b2f6cb19fbdb2a332f084b8d0d98d"
         );
         assert_eq!(first.pptx, second.pptx);
         assert_eq!(first.inspection.slides.len(), 2);
@@ -991,6 +1082,11 @@ mod tests {
         let mut changed = spec();
         if let PresentationBlock::Chart { chart } = &mut changed.slides[1].blocks[0] {
             chart.values[0] = 99;
+        }
+        assert!(generate_presentation(&changed).is_err());
+        let mut changed = spec();
+        if let PresentationBlock::Plot { plot } = &mut changed.slides[1].blocks[1] {
+            plot.points[0].y = 99;
         }
         assert!(generate_presentation(&changed).is_err());
         let mut changed = spec();

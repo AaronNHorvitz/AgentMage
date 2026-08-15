@@ -359,6 +359,16 @@ function canonicalPresentationBlock(block) {
       },
     };
   }
+  if (block.kind === "plot") {
+    return {
+      kind: "plot",
+      plot: {
+        title: block.plot?.title,
+        points: (block.plot?.points ?? []).map((item) => ({ x: item.x, y: item.y })),
+        data_source_sha256: block.plot?.data_source_sha256,
+      },
+    };
+  }
   if (block.kind === "diagram") {
     return {
       kind: "diagram",
@@ -1942,10 +1952,12 @@ function runtimeSemanticErrors(recordType, data) {
         { kind: "shape", digest: sha256String(JSON.stringify(slide.title)), source: null },
         ...expectedBlocks.map((block) => {
           const nested = block[block.kind];
-          const source = ["table", "chart", "diagram"].includes(block.kind)
+          const source = ["table", "chart", "plot", "diagram"].includes(block.kind)
             ? nested?.data_source_sha256
             : null;
-          const kind = ["text", "bullets"].includes(block.kind) ? "shape" : block.kind;
+          const kind = ["text", "bullets"].includes(block.kind)
+            ? "shape"
+            : block.kind === "plot" ? "chart" : block.kind;
           return {
             kind,
             digest: sha256String(JSON.stringify(canonicalPresentationBlock(block))),
@@ -1976,6 +1988,10 @@ function runtimeSemanticErrors(recordType, data) {
             (nested.categories ?? []).length !== (nested.values ?? []).length ||
             nested.data_source_sha256 !== sha256String(JSON.stringify([nested.categories, nested.values]))
           ) errors.push(`presentation chart source binding drifted: ${index + 1}`);
+        } else if (block.kind === "plot") {
+          if (
+            nested.data_source_sha256 !== sha256String(JSON.stringify(nested.points))
+          ) errors.push(`presentation plot source binding drifted: ${index + 1}`);
         } else if (block.kind === "diagram") {
           const nodeIds = new Set((nested.nodes ?? []).map((item) => item.node_id));
           if (

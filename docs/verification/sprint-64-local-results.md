@@ -3,7 +3,7 @@
 ## Scope
 
 The Sprint 64 recorder covers bounded direct PowerPoint Open XML inspection, deterministic
-presentation creation, full-regeneration slide editing, data-bound tables/charts/diagrams, exact
+presentation creation, full-regeneration slide editing, data-bound tables/charts/plots/diagrams, exact
 structural previews, three closed runtime records, provenance mutation tests, and the hostile review
 corpus.
 

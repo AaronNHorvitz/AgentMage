@@ -29,9 +29,10 @@ resource-limit breach fails closed. Blocking content makes the inspection unsafe
 
 ## Generation
 
-The generated slide grammar contains inert text, bullet lists, tables, integer column charts, and
-small node-edge diagrams. Tables, charts, and diagrams carry SHA-256 identities recomputed from
-their exact ordered data. Callers provide a stable deck identity, workspace-relative `.pptx` path,
+The generated slide grammar contains inert text, bullet lists, tables, integer column charts,
+integer XY plots, and small node-edge diagrams. Tables, charts, plots, and diagrams carry SHA-256
+identities recomputed from their exact ordered data. Callers provide a stable deck identity,
+workspace-relative `.pptx` path,
 fixed UTC metadata timestamp, stable slide identities, and complete slide specifications.
 
 Generation uses fixed 16:9 geometry and deterministic ZIP metadata. The package contains a basic

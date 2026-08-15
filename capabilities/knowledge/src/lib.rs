@@ -170,9 +170,10 @@ pub use presentation_generation::{
     EditedPresentation, GeneratedPresentation, PresentationBlock, PresentationChartSpec,
     PresentationDeckSpec, PresentationDiagramEdge, PresentationDiagramNode,
     PresentationDiagramSpec, PresentationEditRequest, PresentationGenerationError,
-    PresentationObjectPreview, PresentationSlideChange, PresentationSlidePreview,
-    PresentationSlideReplacement, PresentationSlideSpec, PresentationTableSpec,
-    edit_generated_presentation, generate_presentation,
+    PresentationObjectPreview, PresentationPlotPoint, PresentationPlotSpec,
+    PresentationSlideChange, PresentationSlidePreview, PresentationSlideReplacement,
+    PresentationSlideSpec, PresentationTableSpec, edit_generated_presentation,
+    generate_presentation,
 };
 pub use presentation_ooxml::{
     PresentationError, PresentationFinding, PresentationFindingKind, PresentationImageReference,
