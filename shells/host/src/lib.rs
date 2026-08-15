@@ -16,6 +16,9 @@ pub mod protocol;
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
 
+/// Strict terminal argument parsing and bounded human or JSON rendering.
+pub mod cli;
+
 #[cfg(target_os = "linux")]
 pub mod linux_read;
 

@@ -71,6 +71,13 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn(f"{relative} contains direct process launch", failures)
 
+    def test_shell_process_exit_code_is_not_misclassified_as_process_launch(self) -> None:
+        relative = Path("shells/host/src/bin/agent.rs")
+        source = self.source(str(relative))
+        self.assertIn("std::process::ExitCode", source)
+        failures = validate_effect_boundary()
+        self.assertNotIn(f"{relative} contains direct process launch", failures)
+
     def test_early_test_attribute_cannot_hide_later_product_process_authority(self) -> None:
         relative = Path("shells/host/src/main.rs")
         source = self.source(str(relative)).replace(

@@ -301,6 +301,15 @@ impl ClientCommand {
         }
     }
 
+    /// Verifies that every command argument satisfies its closed semantic bounds.
+    pub fn verify(&self) -> Result<(), ThinClientError> {
+        if self.validate() {
+            Ok(())
+        } else {
+            Err(ThinClientError::InvalidValue)
+        }
+    }
+
     fn validate(&self) -> bool {
         match self {
             Self::Chat { message } => valid_text(message, MAX_TEXT_BYTES),

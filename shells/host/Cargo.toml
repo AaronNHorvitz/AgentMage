@@ -8,6 +8,10 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[[bin]]
+name = "agent"
+path = "src/bin/agent.rs"
+
 [dependencies]
 agentmage-capability-knowledge.workspace = true
 agentmage-capability-read-only.workspace = true

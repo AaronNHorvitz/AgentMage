@@ -192,7 +192,10 @@ def validate_effect_boundary(
             relative = path.relative_to(root)
             source = _production_source(_read(relative, root, replacements))
             for pattern, label in (
-                (r"\bstd::process\b|\bCommand::new\s*\(", "process launch"),
+                (
+                    r"\bstd::process::Command\b|\bCommand::new\s*\(",
+                    "process launch",
+                ),
                 (r"\b(?:TcpListener|TcpStream|UnixListener)::", "socket creation"),
                 (
                     r"\b(?:std::)?fs::(?:write|remove_file|remove_dir|remove_dir_all|rename|create_dir|create_dir_all)\s*\(",

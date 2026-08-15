@@ -1,0 +1,543 @@
+//! Strict local CLI parsing and display without storage, model, tool, or network access.
+
+use serde::{Deserialize, Serialize};
+
+use crate::headless::{
+    ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
+    OperationalClientCommand, ThinClientError, ThinClientEvent, ThinClientEventKind,
+    VaultClientCommand,
+};
+
+const MAX_ARGUMENT_COUNT: usize = 128;
+const MAX_ARGUMENT_BYTES: usize = 64 * 1024;
+
+/// Stable AgentMage CLI version, independent from model or protocol versions.
+pub const CLI_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Closed output format selected before command execution.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CliOutputFormat {
+    /// Readable terminal output.
+    Human,
+    /// One closed JSON object or event per line.
+    Json,
+}
+
+/// Supported local shell-completion targets.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CompletionShell {
+    /// Bourne Again Shell.
+    Bash,
+    /// Z shell.
+    Zsh,
+    /// Friendly Interactive Shell.
+    Fish,
+}
+
+/// Parsed CLI action before any transport or authority boundary.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CliInvocation {
+    /// Render complete local help.
+    Help,
+    /// Render the package version.
+    Version,
+    /// Render deterministic shell completion.
+    Completion(CompletionShell),
+    /// Submit one exact command through a selected thin-client surface.
+    Execute {
+        /// Exact thin-client surface.
+        surface: ClientSurface,
+        /// Exact output format.
+        output: CliOutputFormat,
+        /// Exact closed command.
+        command: ClientCommand,
+    },
+}
+
+/// Parses an already shell-tokenized argument vector without ambient discovery.
+pub fn parse_cli_arguments(arguments: &[String]) -> Result<CliInvocation, ThinClientError> {
+    if arguments.len() > MAX_ARGUMENT_COUNT
+        || arguments
+            .iter()
+            .try_fold(0_usize, |total, value| total.checked_add(value.len()))
+            .is_none_or(|total| total > MAX_ARGUMENT_BYTES)
+        || arguments.iter().any(|value| value.contains('\0'))
+    {
+        return Err(ThinClientError::SizeExceeded);
+    }
+    if arguments.is_empty() || matches!(arguments, [value] if value == "--help" || value == "-h") {
+        return Ok(CliInvocation::Help);
+    }
+    if matches!(arguments, [value] if value == "--version" || value == "-V") {
+        return Ok(CliInvocation::Version);
+    }
+    if let [command, shell] = arguments
+        && command == "completion"
+    {
+        let shell = match shell.as_str() {
+            "bash" => CompletionShell::Bash,
+            "zsh" => CompletionShell::Zsh,
+            "fish" => CompletionShell::Fish,
+            _ => return Err(ThinClientError::InvalidValue),
+        };
+        return Ok(CliInvocation::Completion(shell));
+    }
+
+    let mut cursor = 0;
+    let mut output = CliOutputFormat::Human;
+    let mut surface = ClientSurface::InteractiveCli;
+    let mut output_seen = false;
+    let mut surface_seen = false;
+    while let Some(argument) = arguments.get(cursor) {
+        match argument.as_str() {
+            "--json" if !output_seen => {
+                output = CliOutputFormat::Json;
+                output_seen = true;
+                cursor += 1;
+            }
+            "--surface" if !surface_seen => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                surface = match value.as_str() {
+                    "interactive-cli" => ClientSurface::InteractiveCli,
+                    "json" => ClientSurface::Json,
+                    "sdk" => ClientSurface::Sdk,
+                    "acp" => ClientSurface::Acp,
+                    _ => return Err(ThinClientError::InvalidValue),
+                };
+                surface_seen = true;
+                cursor += 2;
+            }
+            _ => break,
+        }
+    }
+    if surface != ClientSurface::InteractiveCli && output != CliOutputFormat::Json {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let command = parse_command(&arguments[cursor..])?;
+    command.verify()?;
+    Ok(CliInvocation::Execute {
+        surface,
+        output,
+        command,
+    })
+}
+
+fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let Some(first) = arguments.first().map(String::as_str) else {
+        return Err(ThinClientError::InvalidValue);
+    };
+    match first {
+        "chat" => Ok(ClientCommand::Chat {
+            message: joined(&arguments[1..])?,
+        }),
+        "conversations" => parse_conversations(&arguments[1..]),
+        "resume" => parse_exact_branch(&arguments[1..]),
+        "vault" => parse_vault(&arguments[1..]),
+        "checkpoint" if arguments.len() == 1 => operation(OperationalClientCommand::Checkpoint),
+        "handoff" if arguments.len() == 1 => operation(OperationalClientCommand::Handoff),
+        "audit" if arguments.len() == 1 => operation(OperationalClientCommand::Audit),
+        "memory" => parse_memory(&arguments[1..]),
+        "export" if arguments.len() == 2 => operation(OperationalClientCommand::Export {
+            profile: arguments[1].clone(),
+        }),
+        "import" if arguments.len() == 2 => operation(OperationalClientCommand::Import {
+            manifest_sha256: arguments[1].clone(),
+        }),
+        "doctor" | "diagnostics" if arguments.len() == 1 => {
+            operation(OperationalClientCommand::Diagnostics)
+        }
+        _ => Err(ThinClientError::InvalidValue),
+    }
+}
+
+fn parse_conversations(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let action = match arguments.first().map(String::as_str) {
+        Some("list") => {
+            let mut from = None;
+            let mut to = None;
+            let mut cursor = 1;
+            while cursor < arguments.len() {
+                let target = match arguments[cursor].as_str() {
+                    "--from" if from.is_none() => &mut from,
+                    "--to" if to.is_none() => &mut to,
+                    _ => return Err(ThinClientError::InvalidValue),
+                };
+                *target = Some(
+                    arguments
+                        .get(cursor + 1)
+                        .ok_or(ThinClientError::InvalidValue)?
+                        .clone(),
+                );
+                cursor += 2;
+            }
+            ConversationClientCommand::List { from, to }
+        }
+        Some("search") => ConversationClientCommand::Search {
+            query: joined(&arguments[1..])?,
+        },
+        Some("show") if arguments.len() == 2 => ConversationClientCommand::Show {
+            conversation_id: arguments[1].clone(),
+        },
+        Some("open") if arguments.len() == 2 => ConversationClientCommand::Open {
+            conversation_id: arguments[1].clone(),
+        },
+        Some("resume") if arguments.len() == 2 => ConversationClientCommand::Resume {
+            conversation_id: arguments[1].clone(),
+        },
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    Ok(ClientCommand::Conversations { action })
+}
+
+fn parse_exact_branch(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let [conversation_id, turn_option, turn_id] = arguments else {
+        return Err(ThinClientError::InvalidValue);
+    };
+    if turn_option != "--turn" {
+        return Err(ThinClientError::InvalidValue);
+    }
+    Ok(ClientCommand::Conversations {
+        action: ConversationClientCommand::Branch {
+            conversation_id: conversation_id.clone(),
+            turn_id: turn_id.clone(),
+        },
+    })
+}
+
+fn parse_vault(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let action = match arguments.first().map(String::as_str) {
+        Some("search") => VaultClientCommand::Search {
+            query: joined(&arguments[1..])?,
+        },
+        Some("note") if arguments.len() == 3 && arguments[1] == "show" => {
+            VaultClientCommand::NoteShow {
+                note_id: arguments[2].clone(),
+            }
+        }
+        Some("links") if arguments.len() == 2 => VaultClientCommand::Links {
+            note_id: arguments[1].clone(),
+        },
+        Some("backlinks") if arguments.len() == 2 => VaultClientCommand::Backlinks {
+            note_id: arguments[1].clone(),
+        },
+        Some("tasks") if arguments.len() == 1 => VaultClientCommand::Tasks,
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    Ok(ClientCommand::Vault { action })
+}
+
+fn parse_memory(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let action = match arguments.first().map(String::as_str) {
+        Some("inspect") if arguments.len() <= 2 => OperationalClientCommand::MemoryInspect {
+            memory_id: arguments.get(1).cloned(),
+        },
+        Some("correct") if arguments.len() >= 3 => OperationalClientCommand::MemoryCorrect {
+            memory_id: arguments[1].clone(),
+            replacement: joined(&arguments[2..])?,
+        },
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    operation(action)
+}
+
+fn operation(action: OperationalClientCommand) -> Result<ClientCommand, ThinClientError> {
+    Ok(ClientCommand::Operations { action })
+}
+
+fn joined(arguments: &[String]) -> Result<String, ThinClientError> {
+    if arguments.is_empty() {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let value = arguments.join(" ");
+    if value.trim().is_empty() || value.len() > MAX_ARGUMENT_BYTES {
+        return Err(ThinClientError::InvalidValue);
+    }
+    Ok(value)
+}
+
+/// Renders one verified event as bounded human-readable terminal text.
+pub fn render_human_event(event: &ThinClientEvent) -> Result<String, ThinClientError> {
+    if !event.verify() {
+        return Err(ThinClientError::Malformed);
+    }
+    let rendered = match &event.kind {
+        ThinClientEventKind::Started => format!("started {}", event.stream_id),
+        ThinClientEventKind::Status { status } => format!(
+            "workspace={} model={} permission={} conversation={} plan={} writable={} offline={}",
+            status.workspace_id,
+            status.model_profile_id.as_deref().unwrap_or("none"),
+            status.permission_profile_id,
+            status.conversation_id.as_deref().unwrap_or("none"),
+            status.plan_step_id.as_deref().unwrap_or("none"),
+            status.writable_roots.join(","),
+            status.offline,
+        ),
+        ThinClientEventKind::Content { channel, text, .. } => {
+            format!("{}: {text}", channel_label(*channel))
+        }
+        ThinClientEventKind::ApprovalRequired {
+            operation,
+            preview_sha256,
+            expires_at_epoch_ms,
+        } => format!(
+            "approval required operation={operation:?} preview={preview_sha256} expires={expires_at_epoch_ms}"
+        ),
+        ThinClientEventKind::Receipt {
+            receipt_id,
+            receipt_sha256,
+            outcome,
+        } => format!("receipt={receipt_id} outcome={outcome} sha256={receipt_sha256}"),
+        ThinClientEventKind::Completed { final_state_sha256 } => {
+            format!("completed state={final_state_sha256}")
+        }
+        ThinClientEventKind::Denied { code } => format!("denied code={code}"),
+        ThinClientEventKind::Cancelled { code } => format!("cancelled code={code}"),
+    };
+    if rendered.len() > MAX_ARGUMENT_BYTES {
+        return Err(ThinClientError::SizeExceeded);
+    }
+    Ok(rendered)
+}
+
+/// Renders one verified event as a closed JSON line.
+pub fn render_json_event(event: &ThinClientEvent) -> Result<String, ThinClientError> {
+    if !event.verify() {
+        return Err(ThinClientError::Malformed);
+    }
+    let rendered = serde_json::to_string(event).map_err(|_| ThinClientError::Malformed)?;
+    if rendered.len() > MAX_ARGUMENT_BYTES {
+        return Err(ThinClientError::SizeExceeded);
+    }
+    Ok(rendered)
+}
+
+const fn channel_label(channel: ClientContentChannel) -> &'static str {
+    match channel {
+        ClientContentChannel::Content => "content",
+        ClientContentChannel::Progress => "progress",
+        ClientContentChannel::Preview => "preview",
+        ClientContentChannel::Diff => "diff",
+        ClientContentChannel::Citation => "citation",
+        ClientContentChannel::Error => "error",
+    }
+}
+
+/// Returns the complete deterministic command reference.
+#[must_use]
+pub const fn command_help() -> &'static str {
+    "AgentMage local CLI\n\
+Usage: agent [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
+\n\
+Commands:\n\
+  chat MESSAGE\n\
+  conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
+  conversations search QUERY\n\
+  conversations show|open|resume ID\n\
+  resume ID --turn TURN_ID\n\
+  vault search QUERY\n\
+  vault note show ID\n\
+  vault links|backlinks ID\n\
+  vault tasks\n\
+  checkpoint | handoff | audit | doctor | diagnostics\n\
+  memory inspect [ID]\n\
+  memory correct ID REPLACEMENT\n\
+  export PROFILE\n\
+  import MANIFEST_SHA256\n\
+  completion bash|zsh|fish\n\
+\n\
+Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
+}
+
+/// Returns deterministic completion source without executing a shell or external program.
+#[must_use]
+pub const fn shell_completion(shell: CompletionShell) -> &'static str {
+    match shell {
+        CompletionShell::Bash => {
+            "complete -W 'chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion' agent\n"
+        }
+        CompletionShell::Zsh => {
+            "compdef '_arguments 1:command:(chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion)' agent\n"
+        }
+        CompletionShell::Fish => {
+            "complete -c agent -f -a 'chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+        }
+    }
+}
+
+/// Renders a content-free terminal failure in the selected format.
+pub fn render_cli_error(error: ThinClientError, format: CliOutputFormat) -> String {
+    match format {
+        CliOutputFormat::Human => error.code().to_owned(),
+        CliOutputFormat::Json => serde_json::json!({
+            "schema_version": 1,
+            "kind": "error",
+            "code": error.code(),
+            "exit_code": error.exit_code().process_code(),
+        })
+        .to_string(),
+    }
+}
+
+/// Returns the stable unavailable result used before authenticated transport composition.
+#[must_use]
+pub const fn unavailable_exit_code() -> ClientExitCode {
+    ClientExitCode::ServiceUnavailable
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::headless::{ClientStatusSnapshot, THIN_CLIENT_PROTOCOL_VERSION};
+
+    use super::*;
+
+    fn strings(values: &[&str]) -> Vec<String> {
+        values.iter().map(|value| (*value).to_owned()).collect()
+    }
+
+    #[test]
+    fn every_required_command_family_parses_to_one_closed_command() {
+        let cases = [
+            strings(&["chat", "hello", "world"]),
+            strings(&[
+                "conversations",
+                "list",
+                "--from",
+                "2026-01-01",
+                "--to",
+                "2026-12-31",
+            ]),
+            strings(&["conversations", "search", "exact", "query"]),
+            strings(&["conversations", "show", "conversation-01"]),
+            strings(&["conversations", "open", "conversation-01"]),
+            strings(&["conversations", "resume", "conversation-01"]),
+            strings(&["resume", "conversation-01", "--turn", "turn-01"]),
+            strings(&["vault", "search", "local", "notes"]),
+            strings(&["vault", "note", "show", "note-01"]),
+            strings(&["vault", "links", "note-01"]),
+            strings(&["vault", "backlinks", "note-01"]),
+            strings(&["vault", "tasks"]),
+            strings(&["checkpoint"]),
+            strings(&["handoff"]),
+            strings(&["audit"]),
+            strings(&["memory", "inspect"]),
+            strings(&["memory", "inspect", "memory-01"]),
+            strings(&["memory", "correct", "memory-01", "corrected", "text"]),
+            strings(&["export", "audit-jsonl"]),
+            strings(&["import", &"a".repeat(64)]),
+            strings(&["doctor"]),
+            strings(&["diagnostics"]),
+        ];
+        for arguments in cases {
+            assert!(
+                matches!(
+                    parse_cli_arguments(&arguments),
+                    Ok(CliInvocation::Execute { .. })
+                ),
+                "{arguments:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn global_surface_format_help_version_and_completion_are_stable() {
+        assert_eq!(parse_cli_arguments(&[]), Ok(CliInvocation::Help));
+        assert_eq!(
+            parse_cli_arguments(&strings(&["--version"])),
+            Ok(CliInvocation::Version)
+        );
+        assert_eq!(
+            parse_cli_arguments(&strings(&["completion", "bash"])),
+            Ok(CliInvocation::Completion(CompletionShell::Bash))
+        );
+        let parsed =
+            parse_cli_arguments(&strings(&["--json", "--surface", "acp", "vault", "tasks"]));
+        assert!(matches!(
+            parsed,
+            Ok(CliInvocation::Execute {
+                surface: ClientSurface::Acp,
+                output: CliOutputFormat::Json,
+                ..
+            })
+        ));
+        assert!(!command_help().contains("http"));
+        assert!(!shell_completion(CompletionShell::Fish).contains("exec"));
+    }
+
+    #[test]
+    fn malformed_missing_duplicate_oversized_and_unsafe_arguments_fail() {
+        let cases = [
+            strings(&["unknown"]),
+            strings(&["chat"]),
+            strings(&["conversations", "list", "--from"]),
+            strings(&[
+                "conversations",
+                "list",
+                "--from",
+                "2026-01-01",
+                "--from",
+                "2026-02-01",
+            ]),
+            strings(&["resume", "conversation-01", "--wrong", "turn-01"]),
+            strings(&["vault", "note", "note-01"]),
+            strings(&["memory", "correct", "memory-01"]),
+            strings(&["--surface", "acp", "vault", "tasks"]),
+            strings(&["completion", "powershell"]),
+            strings(&["conversations", "list", "--from", "2026-99-99"]),
+            strings(&["resume", "../conversation", "--turn", "turn-01"]),
+            strings(&["import", "not-a-digest"]),
+        ];
+        for arguments in cases {
+            assert!(parse_cli_arguments(&arguments).is_err(), "{arguments:?}");
+        }
+        assert_eq!(
+            parse_cli_arguments(&["x".repeat(MAX_ARGUMENT_BYTES + 1)]),
+            Err(ThinClientError::SizeExceeded)
+        );
+    }
+
+    #[test]
+    fn verified_events_render_status_content_receipts_errors_and_json() {
+        let status = ClientStatusSnapshot {
+            workspace_id: "workspace-01".to_owned(),
+            model_profile_id: Some("model-01".to_owned()),
+            permission_profile_id: "permission-01".to_owned(),
+            conversation_id: Some("conversation-01".to_owned()),
+            plan_step_id: Some("step-01".to_owned()),
+            writable_roots: vec!["workspace".to_owned()],
+            offline: true,
+            status_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("status");
+        let event = ThinClientEvent {
+            schema_version: THIN_CLIENT_PROTOCOL_VERSION,
+            request_id: "request-01".to_owned(),
+            stream_id: "stream-01".to_owned(),
+            sequence: 1,
+            kernel_request_sha256: "a".repeat(64),
+            policy_sha256: "b".repeat(64),
+            cumulative_output_bytes: 100,
+            kind: ThinClientEventKind::Status { status },
+            previous_event_sha256: "c".repeat(64),
+            event_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("event");
+        let human = render_human_event(&event).expect("human");
+        assert!(human.contains("workspace=workspace-01"));
+        assert!(human.contains("offline=true"));
+        let json = render_json_event(&event).expect("JSON");
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&json).expect("value")["schema_version"],
+            THIN_CLIENT_PROTOCOL_VERSION
+        );
+        let denied = render_cli_error(ThinClientError::AuthorityDenied, CliOutputFormat::Json);
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&denied).expect("error")["exit_code"],
+            ClientExitCode::AuthorityDenied.process_code()
+        );
+    }
+}
