@@ -4294,19 +4294,19 @@ independent content review, and deferred manual fuzzing.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 58.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 58.1.1.1** (legacy `S-050-I01`): Select and approve cross-platform Word extraction, generation, rendering, and inspection dependencies with pinned versions, hashes, licenses, and isolated environments.
-  - [ ] **Sub-task 58.1.1.2** (legacy `S-050-I02`): Implement deterministic source-to-sidecar text extraction with source hash and conversion identity caching.
-  - [ ] **Sub-task 58.1.1.3** (legacy `S-050-I03`): Preserve originals and report tables, comments, tracked changes, headers, footers, numbering, and layout that extraction may lose.
-  - [ ] **Sub-task 58.1.1.4** (legacy `S-050-I04`): Implement bounded document inspection and structured Markdown-to-Word generation.
+  - [ ] **Sub-task 58.1.1.1** (legacy `S-050-I01`): Select and approve cross-platform Word extraction, generation, rendering, and inspection dependencies with pinned versions, hashes, licenses, and isolated environments. Local contribution: exact `quick-xml` 0.41.0 and `zip` 8.6.0 pins, registry checksums, MIT licenses, disabled default features, one bounded deflate feature, locked transitive graph, dependency class, provenance, and software bill of materials are retained in `docs/verification/sprint-58-word-dependency-manifest.json`; no cross-platform renderer is admitted yet.
+  - [x] **Sub-task 58.1.1.2** (legacy `S-050-I02`): Implement deterministic source-to-sidecar text extraction with source hash and conversion identity caching.
+  - [x] **Sub-task 58.1.1.3** (legacy `S-050-I03`): Preserve originals and report tables, comments, tracked changes, headers, footers, numbering, and layout that extraction may lose.
+  - [x] **Sub-task 58.1.1.4** (legacy `S-050-I04`): Implement bounded document inspection and structured Markdown-to-Word generation.
 
-- [ ] **Task 58.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 58.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 58.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 58.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 58.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 58.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 58.1.3 - Verify and close the story**
-  - [ ] **Sub-task 58.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 58.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 58.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 58.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 58.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 58.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 58.1.3.4 - Product security evidence:** Map `SR-SUP-003`/`SR-SUP-006`/`SR-SUP-008`/`SR-SUP-009`, `SR-TST-002`/`SR-TST-004`, `SR-CIV-006` through `SR-CIV-009`; retain dependency manifest, package diffs, parser corpus, render comparisons, accessibility results, and independent native-boundary review.
 
 ##### Story Acceptance Criteria
@@ -4318,12 +4318,24 @@ independent content review, and deferred manual fuzzing.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 58.AC1:** Every numbered implementation sub-task in Story 58.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 58.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 58.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 58.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 58.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 58.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 58.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 58.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 58 is PASS only when Story 58.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
+binds 9 passing commands and the 73-case acceptance corpus to source revision
+`2afc95d11f1d9c6a1e3e4d11e90e034098fb27a4` (report SHA-256
+`ef0ef428962a2efddc346c62b79df3cd2fab680c169979a58accd50e8686f61c`). Exact dependency
+admission, bounded package inspection, raw duplicate-name detection, deterministic sidecar and cache
+identity, part/range provenance, structural fidelity warnings, structured Markdown-to-DOCX
+generation, reopened inspection, runtime schemas, and zero-effect checks are complete. Story 58.1
+and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted Word renderer, absent product
+coordinator, controlled writer and native interface, missing accessibility and installed
+cross-platform evidence, trusted-package execution, independent native-boundary review, and
+deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
