@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-46-validation-failure-classification-v1",
+  "content_policy": {
+    "synthetic_only": true,
+    "raw_process_bytes_retained": false,
+    "secret_values_retained": false,
+    "model_narration_used": false
+  },
+  "classification_precedence": [
+    "flaky",
+    "permission",
+    "dependency",
+    "environment",
+    "baseline",
+    "change_caused",
+    "unrelated",
+    "unclassified"
+  ],
+  "cases": [
+    {
+      "case_id": "case-01-change-caused",
+      "status": "assertion_failed",
+      "platform_code": "fixture.validation.exited",
+      "failure_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": true,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "change_caused",
+      "rationale_code": "validation.failure.changed-path-intersection"
+    },
+    {
+      "case_id": "case-02-baseline-precedes-change",
+      "status": "assertion_failed",
+      "platform_code": "fixture.validation.exited",
+      "failure_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "baseline_failure_match": true,
+      "affected_path_intersects_change": true,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "baseline",
+      "rationale_code": "validation.failure.exact-baseline-signature"
+    },
+    {
+      "case_id": "case-03-flaky",
+      "status": "flaky",
+      "platform_code": "fixture.validation.exited",
+      "failure_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": false,
+      "retry_count": 1,
+      "expected_classification": "flaky",
+      "rationale_code": "validation.failure.separate-approved-rerun-passed"
+    },
+    {
+      "case_id": "case-04-dependency",
+      "status": "infrastructure_failed",
+      "platform_code": "fixture.dependency-unavailable",
+      "failure_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "dependency",
+      "rationale_code": "validation.failure.dependency-platform-code"
+    },
+    {
+      "case_id": "case-05-environment",
+      "status": "timed_out",
+      "platform_code": "fixture.environment-timeout",
+      "failure_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "environment",
+      "rationale_code": "validation.failure.runner-environment"
+    },
+    {
+      "case_id": "case-06-permission",
+      "status": "infrastructure_failed",
+      "platform_code": "fixture.permission-denied",
+      "failure_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "permission",
+      "rationale_code": "validation.failure.permission-platform-code"
+    },
+    {
+      "case_id": "case-07-unrelated",
+      "status": "assertion_failed",
+      "platform_code": "fixture.validation.exited",
+      "failure_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": true,
+      "retry_count": 0,
+      "expected_classification": "unrelated",
+      "rationale_code": "validation.failure.clean-baseline-no-intersection"
+    },
+    {
+      "case_id": "case-08-unclassified",
+      "status": "malformed",
+      "platform_code": "fixture.validation.exited",
+      "failure_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "baseline_failure_match": false,
+      "affected_path_intersects_change": false,
+      "baseline_known_clean": false,
+      "retry_count": 0,
+      "expected_classification": "unclassified",
+      "rationale_code": "validation.failure.insufficient-attribution-evidence"
+    }
+  ]
+}
