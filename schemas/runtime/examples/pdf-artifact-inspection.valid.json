@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "source_path": { "workspace_id": "workspace-pdf", "components": ["reports", "report.pdf"] },
+  "source_sha256": "315d429b7714cedb6ad04ac31240145257692630457f3c88253c5beceac76027",
+  "profile": { "profile_id": "pdf-extraction-strict-v1", "maximum_source_bytes": 67108864, "maximum_objects": 250000, "maximum_pages": 10000, "maximum_decompressed_stream_bytes": 33554432, "maximum_page_text_bytes": 8388608, "maximum_total_text_bytes": 67108864, "minimum_text_characters": 1, "maximum_images_per_page": 4096 },
+  "pdf_version": "1.7",
+  "page_count": 1,
+  "encrypted": false,
+  "metadata": { "title": "Review Report", "author": "AgentMage", "subject": null, "keywords": null, "creator": "AgentMage", "producer": "AgentMage deterministic PDF report v1", "creation_date": "D:20260815000000Z", "modification_date": null, "custom_keys": [] },
+  "links": [],
+  "forms": [],
+  "images": [],
+  "findings": [],
+  "extraction": {
+    "schema_version": 2,
+    "source_path": { "workspace_id": "workspace-pdf", "components": ["reports", "report.pdf"] },
+    "source_sha256": "315d429b7714cedb6ad04ac31240145257692630457f3c88253c5beceac76027",
+    "extractor_identity_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "profile": { "profile_id": "pdf-extraction-strict-v1", "maximum_source_bytes": 67108864, "maximum_objects": 250000, "maximum_pages": 10000, "maximum_decompressed_stream_bytes": 33554432, "maximum_page_text_bytes": 8388608, "maximum_total_text_bytes": 67108864, "minimum_text_characters": 1, "maximum_images_per_page": 4096 },
+    "pdf_version": "1.7", "object_count": 6,
+    "pages": [{ "identity": { "source_sha256": "315d429b7714cedb6ad04ac31240145257692630457f3c88253c5beceac76027", "page_number": 1, "object_number": 5, "object_generation": 0, "page_id": "24f216fe98ee933288db50d46facd64f1bed416fe8660fc658a28002f67ff33f" }, "state": "text", "decoded_content_bytes": 42, "image_count": 0, "text": "OK\n", "text_sha256": "a12b7cb43c9d9134b5bb1b35e9096b66775d9e92e7611d1cc92b02edd6782a87", "extraction_method": "embedded_text", "confidence_basis_points": 10000, "citation": { "page": { "source_sha256": "315d429b7714cedb6ad04ac31240145257692630457f3c88253c5beceac76027", "page_number": 1, "object_number": 5, "object_generation": 0, "page_id": "24f216fe98ee933288db50d46facd64f1bed416fe8660fc658a28002f67ff33f" }, "fragment_id": "24f216fe98ee933288db50d46facd64f1bed416fe8660fc658a28002f67ff33f:fragment:1", "text_sha256": "a12b7cb43c9d9134b5bb1b35e9096b66775d9e92e7611d1cc92b02edd6782a87", "extraction_method": "embedded_text", "confidence_basis_points": 10000, "exact_page": true, "exact_region": false }, "limitation_ids": ["pdf-limit:0b86452f8b0711822bb7688746ecf4227d9e732e09683728e96a37dab2b40858"] }],
+    "total_text_bytes": 3,
+    "limitations": [{ "limitation_id": "pdf-limit:0b86452f8b0711822bb7688746ecf4227d9e732e09683728e96a37dab2b40858", "page_id": "24f216fe98ee933288db50d46facd64f1bed416fe8660fc658a28002f67ff33f", "reason_code": "pdf.citation.region-unavailable", "blocks_complete_extraction": false, "requires_ocr": false, "original_remains_authoritative": true }],
+    "extraction_complete": true, "ocr_required": false, "ocr_performed": false, "original_preserved": true, "filesystem_effect_performed": false, "network_access_performed": false, "execution_performed": false
+  },
+  "inspection_complete": true,
+  "safe_for_generation_input": true,
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

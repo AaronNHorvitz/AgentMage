@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/pdf-offline-diagram-projection.schema.json",
+  "title": "AgentMage PDF Offline Diagram Projection",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "observation_id", "source_sha256", "svg_sha256", "admission_sha256", "passive_svg_validated", "safe_for_local_embedding", "execution_performed", "network_access_performed", "filesystem_effect_performed"],
+  "properties": { "schema_version": { "const": 2 }, "observation_id": { "$ref": "#/$defs/identifier" }, "source_sha256": { "$ref": "#/$defs/sha256" }, "svg_sha256": { "$ref": "#/$defs/sha256" }, "admission_sha256": { "$ref": "#/$defs/sha256" }, "passive_svg_validated": { "const": true }, "safe_for_local_embedding": { "const": true }, "execution_performed": { "const": false }, "network_access_performed": { "const": false }, "filesystem_effect_performed": { "const": false } },
+  "$defs": { "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

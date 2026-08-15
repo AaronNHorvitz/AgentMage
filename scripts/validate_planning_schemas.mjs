@@ -100,6 +100,11 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "word-artifact-receipt",
   "pdf-extraction-result",
   "pdf-ocr-projection",
+  "pdf-artifact-inspection",
+  "generated-pdf-report",
+  "pdf-redaction-receipt",
+  "pdf-visual-comparison-report",
+  "pdf-offline-diagram-projection",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1493,6 +1498,110 @@ function runtimeSemanticErrors(recordType, data) {
       JSON.stringify(page.limitation_ids ?? []) !== JSON.stringify([expectedLimit])
     ) {
       errors.push("PDF OCR projection provenance or uncertainty drifted");
+    }
+  } else if (recordType === "pdf-artifact-inspection") {
+    if (
+      !isStrictlySorted(data.metadata?.custom_keys ?? []) ||
+      !isStrictlySortedBy(data.links ?? [], (item) => item.link_id) ||
+      !isStrictlySortedBy(data.forms ?? [], (item) => item.field_id) ||
+      !isStrictlySortedBy(data.images ?? [], (item) => `${item.page?.page_number}:${item.object_number}:${item.object_generation}`) ||
+      !isStrictlySortedBy(data.findings ?? [], (item) => item.finding_id)
+    ) {
+      errors.push("PDF inspection ledgers are not canonical");
+    }
+    for (const link of data.links ?? []) {
+      if (
+        (link.target === null) !== (link.target_sha256 === null) ||
+        (link.target !== null && sha256String(link.target) !== link.target_sha256)
+      ) {
+        errors.push(`PDF link target digest drifted: ${link.link_id}`);
+      }
+    }
+    for (const form of data.forms ?? []) {
+      if (
+        (form.field_name === null) !== (form.field_name_sha256 === null) ||
+        (form.field_name !== null && sha256String(form.field_name) !== form.field_name_sha256)
+      ) {
+        errors.push(`PDF form name digest drifted: ${form.field_id}`);
+      }
+    }
+    const extraction = data.extraction;
+    if (extraction !== null) {
+      errors.push(...runtimeSemanticErrors("pdf-extraction-result", extraction));
+    }
+    const extractionBound =
+      extraction === null ||
+      (extraction.source_sha256 === data.source_sha256 &&
+        JSON.stringify(extraction.source_path) === JSON.stringify(data.source_path) &&
+        extraction.pdf_version === data.pdf_version &&
+        extraction.pages.length === data.page_count);
+    const expectedSafe =
+      data.encrypted === false &&
+      data.inspection_complete === true &&
+      !(data.findings ?? []).some((item) => item.blocks_safe_reuse === true);
+    if (
+      !extractionBound ||
+      (data.encrypted && extraction !== null) ||
+      data.safe_for_generation_input !== expectedSafe
+    ) {
+      errors.push("PDF inspection aggregate state or extraction binding drifted");
+    }
+  } else if (recordType === "generated-pdf-report") {
+    errors.push(...runtimeSemanticErrors("pdf-artifact-inspection", data.inspection ?? {}));
+    if (
+      sha256Bytes(data.html ?? []) !== data.html_sha256 ||
+      sha256Bytes(data.pdf ?? []) !== data.pdf_sha256 ||
+      data.inspection?.source_sha256 !== data.pdf_sha256 ||
+      JSON.stringify(data.inspection?.source_path) !== JSON.stringify(data.output_path) ||
+      data.inspection?.extraction?.extractor_identity_sha256 !== data.extractor_identity_sha256 ||
+      data.inspection?.safe_for_generation_input !== true ||
+      !isStrictlySortedBy(data.fidelity_limits ?? [], (item) => item.limit_id)
+    ) {
+      errors.push("generated PDF bytes, inspection, or fidelity ledger drifted");
+    }
+  } else if (recordType === "pdf-redaction-receipt") {
+    const order = ["html_bytes", "pdf_bytes", "pdf_objects", "metadata", "forms", "extracted_text", "incremental_updates"];
+    const checks = data.layer_checks ?? [];
+    const allPassed =
+      checks.length === order.length &&
+      checks.every(
+        (item, index) =>
+          item.layer === order[index] &&
+          item.passed === (item.residue_count === 0),
+      );
+    if (
+      !isStrictlySorted(data.target_sha256 ?? []) ||
+      data.residue_scan_passed !== allPassed
+    ) {
+      errors.push("PDF redaction target order or residue decision drifted");
+    }
+  } else if (recordType === "pdf-visual-comparison-report") {
+    errors.push(...runtimeSemanticErrors("word-visual-comparison-report", data.visual ?? {}));
+    const failures = [
+      data.redaction_failure_count,
+      data.reading_order_failure_count,
+      data.missing_alt_text_count,
+      data.inaccessible_form_field_count,
+    ];
+    const expectedMachine =
+      data.visual?.machine_checks_passed === true &&
+      data.observation_complete === true &&
+      failures.every((value) => value === 0);
+    const expectedHuman =
+      data.visual?.evidence_kind === "synthetic_fixture" || !expectedMachine;
+    if (
+      data.visual?.comparison_id !== data.comparison_id ||
+      data.machine_checks_passed !== expectedMachine ||
+      data.human_review_required !== expectedHuman
+    ) {
+      errors.push("PDF visual completion or synthetic-evidence boundary drifted");
+    }
+  } else if (recordType === "pdf-offline-diagram-projection") {
+    if (
+      data.passive_svg_validated !== true ||
+      data.safe_for_local_embedding !== true
+    ) {
+      errors.push("PDF offline diagram validation state drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

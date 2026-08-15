@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/pdf-visual-comparison-report.schema.json",
+  "title": "AgentMage PDF Visual Comparison Report",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "comparison_id", "profile_sha256", "visual", "redaction_failure_count", "reading_order_failure_count", "missing_alt_text_count", "inaccessible_form_field_count", "observation_complete", "machine_checks_passed", "human_review_required", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 }, "comparison_id": { "$ref": "#/$defs/identifier" }, "profile_sha256": { "$ref": "#/$defs/sha256" }, "visual": { "$ref": "https://agentmage.dev/schemas/runtime/word-visual-comparison-report.schema.json" }, "redaction_failure_count": { "$ref": "#/$defs/count" }, "reading_order_failure_count": { "$ref": "#/$defs/count" }, "missing_alt_text_count": { "$ref": "#/$defs/count" }, "inaccessible_form_field_count": { "$ref": "#/$defs/count" }, "observation_complete": { "type": "boolean" }, "machine_checks_passed": { "type": "boolean" }, "human_review_required": { "type": "boolean" }, "filesystem_effect_performed": { "const": false }, "network_access_performed": { "const": false }, "execution_performed": { "const": false }
+  },
+  "$defs": { "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "count": { "type": "integer", "minimum": 0, "maximum": 4294967295 } }
+}

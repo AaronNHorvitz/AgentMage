@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "redaction_id": "redaction-001",
+  "source_pdf_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_pdf_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "redactor_identity_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "target_sha256": ["dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],
+  "layer_checks": [
+    { "layer": "html_bytes", "residue_count": 0, "passed": true },
+    { "layer": "pdf_bytes", "residue_count": 0, "passed": true },
+    { "layer": "pdf_objects", "residue_count": 0, "passed": true },
+    { "layer": "metadata", "residue_count": 0, "passed": true },
+    { "layer": "forms", "residue_count": 0, "passed": true },
+    { "layer": "extracted_text", "residue_count": 0, "passed": true },
+    { "layer": "incremental_updates", "residue_count": 0, "passed": true }
+  ],
+  "source_specification_reproduced": true,
+  "full_regeneration_performed": true,
+  "residue_scan_passed": true,
+  "human_visual_review_required": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "observation_id": "diagram-001",
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "svg_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "admission_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "passive_svg_validated": true,
+  "safe_for_local_embedding": true,
+  "execution_performed": false,
+  "network_access_performed": false,
+  "filesystem_effect_performed": false
+}

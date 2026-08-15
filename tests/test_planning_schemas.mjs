@@ -403,6 +403,11 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "word-artifact-receipt",
     "pdf-extraction-result",
     "pdf-ocr-projection",
+    "pdf-artifact-inspection",
+    "generated-pdf-report",
+    "pdf-redaction-receipt",
+    "pdf-visual-comparison-report",
+    "pdf-offline-diagram-projection",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1349,6 +1354,11 @@ test("PDF records reject page citation OCR and effect drift", () => {
   const fixtures = {
     "pdf-extraction-result": load("pdf-extraction-result"),
     "pdf-ocr-projection": load("pdf-ocr-projection"),
+    "pdf-artifact-inspection": load("pdf-artifact-inspection"),
+    "generated-pdf-report": load("generated-pdf-report"),
+    "pdf-redaction-receipt": load("pdf-redaction-receipt"),
+    "pdf-visual-comparison-report": load("pdf-visual-comparison-report"),
+    "pdf-offline-diagram-projection": load("pdf-offline-diagram-projection"),
   };
   const mutations = [
     ["pdf-extraction-result", (record) => { record.pages[0].identity.page_number = 2; }],
@@ -1359,6 +1369,15 @@ test("PDF records reject page citation OCR and effect drift", () => {
     ["pdf-ocr-projection", (record) => { record.page.extraction_method = "embedded_text"; }],
     ["pdf-ocr-projection", (record) => { record.page.confidence_basis_points = 10001; }],
     ["pdf-ocr-projection", (record) => { record.admission.admission_verified_by_caller = false; }],
+    ["pdf-artifact-inspection", (record) => { record.safe_for_generation_input = false; }],
+    ["pdf-artifact-inspection", (record) => { record.extraction.source_sha256 = "f".repeat(64); }],
+    ["generated-pdf-report", (record) => { record.pdf[0] = 0; }],
+    ["generated-pdf-report", (record) => { record.inspection.source_path.components[1] = "other.pdf"; }],
+    ["pdf-redaction-receipt", (record) => { record.layer_checks[0].residue_count = 1; }],
+    ["pdf-redaction-receipt", (record) => { record.target_sha256.push("a".repeat(64)); }],
+    ["pdf-visual-comparison-report", (record) => { record.redaction_failure_count = 1; }],
+    ["pdf-visual-comparison-report", (record) => { record.human_review_required = false; }],
+    ["pdf-offline-diagram-projection", (record) => { record.network_access_performed = true; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);

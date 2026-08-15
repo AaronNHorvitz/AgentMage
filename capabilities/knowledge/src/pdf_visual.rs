@@ -149,6 +149,13 @@ pub fn pdf_render_profile_sha256(
     profile: &PdfRenderProfile,
 ) -> Result<String, PdfVisualComparisonError> {
     word_render_profile_sha256(&profile.visual_profile).map_err(PdfVisualComparisonError::from)?;
+    if profile.max_redaction_failure_count != 0
+        || profile.max_reading_order_failure_count != 0
+        || profile.max_missing_alt_text_count != 0
+        || profile.max_inaccessible_form_field_count != 0
+    {
+        return Err(PdfVisualComparisonError::InvalidInput);
+    }
     let bytes = serde_json::to_vec(profile).map_err(|_| PdfVisualComparisonError::InvalidInput)?;
     Ok(word_sha256(&bytes))
 }
