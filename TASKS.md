@@ -4539,37 +4539,47 @@ fuzzing remain incomplete. No story, sprint, product, platform, or release gate 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 62.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 62.1.1.1** (legacy `S-052-I01`): Select approved isolated spreadsheet dependencies and retain a direct Open XML read path for deterministic inspection.
-  - [ ] **Sub-task 62.1.1.2** (legacy `S-052-I02`): Implement workbook, worksheet, cell, formula, displayed value, style, date, hyperlink, hidden row, hidden column, and source-hash records.
-  - [ ] **Sub-task 62.1.1.3** (legacy `S-052-I03`): Implement bounded read-only summaries, filtering, sorting, matching, duplicates, missing values, overlap, differing fields, and reason codes.
-  - [ ] **Sub-task 62.1.1.4** (legacy `S-052-I04`): Implement safe CSV parsing and writing with formula-injection prevention and stable normalization helpers.
+- [x] **Task 62.1.1 - Implement the bounded story**
+  - [x] **Sub-task 62.1.1.1** (legacy `S-052-I01`): Select approved isolated spreadsheet dependencies and retain a direct Open XML read path for deterministic inspection.
+  - [x] **Sub-task 62.1.1.2** (legacy `S-052-I02`): Implement workbook, worksheet, cell, formula, displayed value, style, date, hyperlink, hidden row, hidden column, and source-hash records.
+  - [x] **Sub-task 62.1.1.3** (legacy `S-052-I03`): Implement bounded read-only summaries, filtering, sorting, matching, duplicates, missing values, overlap, differing fields, and reason codes.
+  - [x] **Sub-task 62.1.1.4** (legacy `S-052-I04`): Implement safe CSV parsing and writing with formula-injection prevention and stable normalization helpers.
 
-- [ ] **Task 62.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 62.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 62.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 62.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 62.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 62.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 62.1.3 - Verify and close the story**
   - [ ] **Sub-task 62.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 62.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 62.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 62.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 62.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 62.1.3.4 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-003`, `SR-SUP-008`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`, `SR-CIV-008`; retain normalization goldens, reconciliation calculations, injection corpus, independent reopen/recalc output, and visual/accessibility checks.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 62.1.AC1:** Given the approved dependencies and source requirements for `S-052-I01`, `S-052-I02`, `S-052-I03`, and `S-052-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 62.1.AC1:** Given the approved dependencies and source requirements for `S-052-I01`, `S-052-I02`, `S-052-I03`, and `S-052-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [ ] **Story AC 62.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-052-I01`, `S-052-I02`, `S-052-I03`, and `S-052-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 62.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 62.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 62.AC1:** Every numbered implementation sub-task in Story 62.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 62.AC1:** Every numbered implementation sub-task in Story 62.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 62.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 62.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 62.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 62.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 62.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 62.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 62 is PASS only when Story 62.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The locally implementable direct Open XML inspection, strict
+delimited parsing, stable normalization, summary/filter/sort/comparison, formula-safe CSV,
+runtime-schema, fixture, and review-record subset passed 10 retained commands with zero focused
+skips at revision `5ea2656fca20cdf2de6331f9874238a1c4e77fbe`; see
+`artifacts/sprints/sprint-62/local-evidence-report.json` and
+`docs/verification/sprint-62-local-results.md`. Native office reopen/recalculation, legacy `.xls`,
+encrypted workbook handling, Fedora/Ubuntu/Windows 11 and retained macOS native evidence,
+installed visual/accessibility review, independent review, and deferred manual fuzzing remain
+incomplete. No story, sprint, product, platform, or release gate is closed.
 ### [ ] Sprint 63 - Reconciliation, Safe Output, and Verification
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

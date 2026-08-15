@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_62_local_evidence",
+  "source_revision": "5ea2656fca20cdf2de6331f9874238a1c4e77fbe",
+  "source_sha256": {
+    "Cargo.toml": "86a6057ca1cec714e92beb0165c57573d3f7e1caa8e5a50365b8af55f18491a8",
+    "Cargo.lock": "7faba679d341b448db12771297b6955b485713c7f609ecb91cce4ea66841d3e9",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
+    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "41acc8c3d9fe90c185f3c06205c60c56b967b352e51949e99b871227d0275b79",
+    "capabilities/knowledge/src/lib.rs": "07a4b3132be9d7b9da9a3b7a9cbdd5f252906ad01a4386b553573ccbeaf42179",
+    "schemas/runtime/tabular-document.schema.json": "7159105dc01f49a92835ef178e5e56dd3efd6e4c6b1f9783825c534f352b6088",
+    "schemas/runtime/tabular-comparison.schema.json": "5d0a2e823a4507d2b5d1c8a3e02492724c0e564a270c7b9db7eb3b55debaa639",
+    "schemas/runtime/safe-csv-proposal.schema.json": "0e981505dbd0f49b6589bba7f0c3fbc53a15af02a76bc3c631e5ec423a301215",
+    "schemas/runtime/spreadsheet-inspection.schema.json": "89f63d4eb8abbff7a4d20a3c0c3d54b72a1eaf9d1f3c0a775cf21130c2d6c55f",
+    "scripts/validate_planning_schemas.mjs": "a241551a97d66a9148f1a83763d15ff324e2082c178d1127e363e71b9238da60",
+    "tests/test_planning_schemas.mjs": "112bb90d079294e06868f247e9430b24becad33bf3716004819b6adf7c4bb3e0",
+    "supply-chain/dependency-hashes.sha256": "885ac757c29fd731514cd7918d41795e1e6c4729732496c67a1dfe41f31f2a76",
+    "supply-chain/dependency-provenance.json": "52acf92691f48df324f48d8ef941deeaf84cccf44562f9cce274e4c440c3894e",
+    "supply-chain/sbom.cdx.json": "9c5c8e32408747557c453203999570511c8df270456d90919e25c09c93a18eb4",
+    "docs/verification/sprint-62-tabular-corpus.json": "426a0cea6139f9e5a11e26934d9249a236f00419ad75035c597460b32b6e78a8",
+    "docs/verification/sprint-62-tabular-dependency-manifest.json": "daf9dff9820da99fc0f0dbce859dfa4d901d9c6daecc48552898f1c9a94fc9d0",
+    "scripts/spreadsheet_contract.py": "dbcb57bb474ac7ba621f42833e0da49ec1934b9f5fe63583a3898b7b4dc197d4",
+    "tests/test_spreadsheet_contract.py": "2d297505a7a0142ffdc4e967d198cf65490f6dab73f6e687e3d25d3cbc90ba09",
+    "docs/architecture/tabular-and-spreadsheet-inspection.md": "eadd87abfdef31c21d70ec2472460bc72d83263ed3287855d894745bf660155d",
+    "docs/guides/tabular-data-review.md": "e8afcd64baf4f29907232dffc3c4b540c5397040d7e59f624d2e2f0e3451d21b",
+    "docs/verification/sprint-62-local-results.md": "ec436ccc20e7853d07a623020b54775091da89bc3a6db8e448fce9c94efcb339",
+    "scripts/sprint_62_evidence.py": "c44bfd3e022f417380ce256ccc8afbf06361f63c0a11fcb8e338a387413f2094",
+    "tests/test_sprint_62_evidence.py": "3a2adb771de9776289b3f92495724d8598513faf839ec8434a0df9596a840631"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "tabular-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "tabular::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "581d6b0676f276acec7f6f1cd8b152353696d20415d2ca49bd286b9ee74b8c2f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "spreadsheet-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "spreadsheet_ooxml::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "194d27068c5639b7c42bedafd699c3fabe85667b564c8a171893b5abc5138b70",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "data-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d04ad50d45765f6d8aae72d28e94b9d32cc8c7442701ed9f3e931e3742e60a97",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "data-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_spreadsheet_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "feabb4add9e2ca3374e538560634d1ec97dc4f4ce89aab12f3d726e36ea9b2f6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "data-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "data-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "289593ff1d9f31776b1955ab0315ce8dbdaee6b5b460d0e932d2ab62b10ce2c9",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_62_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-TST-006",
+    "SR-CIV-008"
+  ],
+  "implemented_contracts": {
+    "direct_open_xml_dependency_count": 2,
+    "tabular_normalization_dependency_count": 1,
+    "runtime_schema_count": 4,
+    "tabular_rust_fixture_count": 5,
+    "spreadsheet_rust_fixture_count": 4,
+    "review_corpus_case_count": 85,
+    "bounded_csv_tsv_semicolon_parsing": true,
+    "stable_summary_filter_sort_compare": true,
+    "formula_safe_csv_proposal": true,
+    "bounded_direct_xlsx_inspection": true,
+    "formula_macro_dde_and_link_execution": false,
+    "network_access_capability": false,
+    "filesystem_mutation_capability": false,
+    "native_office_runtime_admitted": false,
+    "legacy_xls_parser_admitted": false,
+    "encrypted_workbook_support": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 85,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "deterministic_tabular_operations_verified": true,
+    "direct_open_xml_inspection_verified": true,
+    "formula_injection_prevention_verified": true,
+    "native_office_runtime_admitted": false,
+    "native_office_platform_count": 0,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_boundary_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-61-BLOCKED",
+      "owner": "62.1"
+    },
+    {
+      "code": "LEGACY-XLS-PARSER-NOT-ADMITTED",
+      "owner": "62.1.1.1"
+    },
+    {
+      "code": "ENCRYPTED-WORKBOOK-DECRYPTION-NOT-ADMITTED",
+      "owner": "62.1.3.1"
+    },
+    {
+      "code": "NATIVE-OFFICE-RUNTIME-NOT-ADMITTED",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "FEDORA-NATIVE-OFFICE-EVIDENCE-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-OFFICE-EVIDENCE-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-OFFICE-EVIDENCE-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "MACOS-NATIVE-OFFICE-EVIDENCE-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-BOUNDARY-REVIEW-ABSENT",
+      "owner": "62.1.3.4"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_62_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_61_closed": false,
+    "native_office_complete": false,
+    "legacy_xls_complete": false,
+    "encrypted_workbook_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "accessibility_acceptance_passed": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

@@ -29,8 +29,9 @@ No release or product-wide requirement is closed by this local contribution.
 
 ## Truthful Disposition
 
-The retained evidence revision and digest are populated only after all listed commands pass against
-a committed source tree. Until that record exists, no local verification campaign is claimed.
+The retained report binds 10 passing commands, zero focused skips, and 85 review cases to source
+revision `5ea2656fca20cdf2de6331f9874238a1c4e77fbe`. The report SHA-256 is
+`74d297d6f843cf5f1f55418f23efd6ae8eb9abeae27acacd54c6449c2eca5c64`.
 
 Sprint 61 remains blocked. Native office reopen and recalculation, first-GA and retained-platform
 evidence, visual and accessibility review, independent boundary review, legacy binary workbook
