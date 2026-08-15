@@ -541,6 +541,48 @@ pub struct CommandReceipt {
     pub receipt_sha256: String,
 }
 
+/// Verifies a terminal receipt against the exact prepared command and closed outcome rules.
+#[must_use]
+pub fn verify_command_receipt(prepared: &PreparedCommand, receipt: &CommandReceipt) -> bool {
+    let expected_outcome = match receipt.termination {
+        CommandTermination::Exited if receipt.exit_code == Some(0) => OperationOutcome::Succeeded,
+        CommandTermination::Exited
+        | CommandTermination::OutputLimit
+        | CommandTermination::LaunchFailed => OperationOutcome::Failed,
+        CommandTermination::Cancelled => OperationOutcome::Cancelled,
+        CommandTermination::TimedOut => OperationOutcome::TimedOut,
+    };
+    let mut canonical = receipt.clone();
+    canonical.receipt_sha256 = "0".repeat(64);
+    receipt.schema_version == COMMAND_SCHEMA_VERSION
+        && receipt.command_attempt_id == prepared.request.command_attempt_id
+        && receipt.template_id == prepared.command.template_id
+        && receipt.template_version == prepared.command.template_version
+        && receipt.spec_sha256 == prepared.command.spec_sha256
+        && receipt.request_sha256 == prepared.request_sha256
+        && receipt.preview_sha256 == prepared.preview.preview_sha256
+        && receipt.outcome == expected_outcome
+        && (receipt.termination == CommandTermination::Exited) == receipt.exit_code.is_some()
+        && receipt.stdout_retained_bytes <= receipt.stdout_total_bytes
+        && receipt.stderr_retained_bytes <= receipt.stderr_total_bytes
+        && receipt.stdout_retained_bytes <= prepared.command.bounds.stdout_bytes
+        && receipt.stderr_retained_bytes <= prepared.command.bounds.stderr_bytes
+        && receipt.stdout_truncated == (receipt.stdout_total_bytes > receipt.stdout_retained_bytes)
+        && receipt.stderr_truncated == (receipt.stderr_total_bytes > receipt.stderr_retained_bytes)
+        && receipt.elapsed_ms <= prepared.command.bounds.timeout_ms.saturating_add(10_000)
+        && (!matches!(
+            receipt.termination,
+            CommandTermination::Cancelled | CommandTermination::TimedOut
+        ) || receipt.descendants_terminated)
+        && valid_identifier(&receipt.authority_transaction_id)
+        && valid_identifier(&receipt.operation_attempt_id)
+        && valid_identifier(&receipt.platform_code)
+        && validate_digest(&receipt.stdout_sha256).is_ok()
+        && validate_digest(&receipt.stderr_sha256).is_ok()
+        && validate_digest(&receipt.receipt_sha256).is_ok()
+        && canonical_sha256(&canonical).as_ref() == Ok(&receipt.receipt_sha256)
+}
+
 /// Nonforgeable platform launch permit created only after exact authority validation.
 pub struct CommandLaunchPermit<'command> {
     command: &'command CommandSpec,
@@ -1312,6 +1354,24 @@ mod tests {
             super::sha256_hex(b"agentmage-ok")
         );
         assert!(command_receipt.descendants_terminated);
+        assert!(super::verify_command_receipt(
+            &driver.prepared,
+            &command_receipt
+        ));
+        for sequence in 0_u8..8 {
+            let mut changed = command_receipt.clone();
+            match sequence {
+                0 => changed.command_attempt_id.push('x'),
+                1 => changed.spec_sha256 = "9".repeat(64),
+                2 => changed.outcome = OperationOutcome::Failed,
+                3 => changed.exit_code = Some(1),
+                4 => changed.stdout_total_bytes = 1,
+                5 => changed.platform_code.clear(),
+                6 => changed.elapsed_ms = 1_000_000,
+                _ => changed.receipt_sha256 = "8".repeat(64),
+            }
+            assert!(!super::verify_command_receipt(&driver.prepared, &changed));
+        }
         assert_eq!(driver.into_executor().launches, 1);
     }
 
@@ -1363,6 +1423,10 @@ mod tests {
         let command_receipt = driver.take_receipt().expect("command receipt");
         assert_eq!(command_receipt.outcome, OperationOutcome::Cancelled);
         assert_eq!(command_receipt.termination, CommandTermination::Cancelled);
+        assert!(super::verify_command_receipt(
+            &driver.prepared,
+            &command_receipt
+        ));
         assert_eq!(driver.into_executor().launches, 0);
     }
 }
