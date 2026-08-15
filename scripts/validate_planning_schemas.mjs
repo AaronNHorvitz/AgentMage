@@ -61,6 +61,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "repository-operation-plan",
   "repository-operation-receipt",
   "worktree-ownership",
+  "change-intent-record",
+  "reproduction-record",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -209,15 +211,93 @@ export function validateRuntimeRecord(recordType, data, validators) {
   if (!validator) {
     throw new Error(`unknown runtime record type: ${recordType}`);
   }
-  const valid = validator(data);
+  const schemaValid = validator(data);
+  const semanticErrors = runtimeSemanticErrors(recordType, data);
+  const valid = schemaValid && semanticErrors.length === 0;
   return {
     valid,
     schemaErrors: valid
       ? []
-      : (validator.errors ?? []).map((error) =>
-        `${error.instancePath || "/"} ${error.message}`,
-      ),
+      : [
+        ...(validator.errors ?? []).map((error) =>
+          `${error.instancePath || "/"} ${error.message}`,
+        ),
+        ...semanticErrors,
+      ],
   };
+}
+
+function isStrictlySorted(values) {
+  return values.every((value, index) => index === 0 || values[index - 1] < value);
+}
+
+function runtimeSemanticErrors(recordType, data) {
+  const errors = [];
+  if (recordType === "change-intent-record") {
+    for (const field of [
+      "current_behavior_fact_ids",
+      "target_fact_ids",
+      "users",
+      "acceptance_checks",
+      "exclusions",
+    ]) {
+      if (Array.isArray(data.input?.[field]) && !isStrictlySorted(data.input[field])) {
+        errors.push(`${field} must be strictly sorted`);
+      }
+    }
+    for (const field of [
+      "current_behavior_citation_ids",
+      "target_citation_ids",
+      "rejected_repository_instruction_fact_ids",
+      "rejected_repository_instruction_citation_ids",
+    ]) {
+      if (Array.isArray(data[field]) && !isStrictlySorted(data[field])) {
+        errors.push(`${field} must be strictly sorted`);
+      }
+    }
+    const current = new Set(data.input?.current_behavior_fact_ids ?? []);
+    if (!(data.input?.target_fact_ids ?? []).some((identity) => current.has(identity))) {
+      errors.push("target evidence must intersect current behavior evidence");
+    }
+    const material = (data.input?.clarifications ?? []).some(
+      (clarification) => clarification.material === true,
+    );
+    const expectedStatus = material ? "clarification_required" : "ready_for_planning";
+    if (data.status !== expectedStatus) {
+      errors.push(`status must equal ${expectedStatus}`);
+    }
+    const rejected = new Set(data.rejected_repository_instruction_fact_ids ?? []);
+    if ((data.input?.target_fact_ids ?? []).some((identity) => rejected.has(identity))) {
+      errors.push("rejected repository instructions cannot become change targets");
+    }
+  } else if (recordType === "reproduction-record") {
+    if (!isStrictlySorted(data.input?.log_sha256s ?? [])) {
+      errors.push("log_sha256s must be strictly sorted");
+    }
+    const steps = data.input?.steps ?? [];
+    if (!steps.every((step, index) => step.sequence === index + 1)) {
+      errors.push("reproduction steps must have contiguous one-based sequence values");
+    }
+    const input = data.input ?? {};
+    let expectedOutcome = "inconclusive";
+    if (input.unsafe_reason !== null && input.unsafe_reason !== undefined) {
+      expectedOutcome = "unsafe_to_reproduce";
+    } else if (input.execution_status === "completed") {
+      expectedOutcome = input.failure_signature_observed
+        ? "reproduced"
+        : "not_reproduced";
+    }
+    if (data.outcome !== expectedOutcome) {
+      errors.push(`outcome must equal ${expectedOutcome}`);
+    }
+    if (
+      expectedOutcome === "reproduced" &&
+      input.observed_result_sha256 === input.expected_result_sha256
+    ) {
+      errors.push("a reproduced failure must differ from the expected result identity");
+    }
+  }
+  return errors;
 }
 
 export function validateRuntimeFixtures() {

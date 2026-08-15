@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "index_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "input": {
+    "intent_id": "intent-calculate-0001",
+    "requested_behavior": "Return the accepted fixture value.",
+    "current_behavior": "The cited function returns the old fixture value.",
+    "current_behavior_fact_ids": [
+      "2222222222222222222222222222222222222222222222222222222222222222"
+    ],
+    "target_fact_ids": [
+      "2222222222222222222222222222222222222222222222222222222222222222"
+    ],
+    "users": ["library callers"],
+    "acceptance_checks": ["The exact regression fixture passes."],
+    "exclusions": ["No public interface change."],
+    "risks": ["reliability"],
+    "rollback": "Restore the exact preimage.",
+    "rollback_reversible": true,
+    "surface_exclusions": [
+      {
+        "surface": "callers",
+        "rationale": "The cited corpus establishes no caller change."
+      }
+    ],
+    "clarifications": []
+  },
+  "current_behavior_citation_ids": [
+    "3333333333333333333333333333333333333333333333333333333333333333"
+  ],
+  "target_citation_ids": [
+    "3333333333333333333333333333333333333333333333333333333333333333"
+  ],
+  "rejected_repository_instruction_fact_ids": [
+    "5555555555555555555555555555555555555555555555555555555555555555"
+  ],
+  "rejected_repository_instruction_citation_ids": [
+    "6666666666666666666666666666666666666666666666666666666666666666"
+  ],
+  "status": "ready_for_planning",
+  "mutation_authority": false,
+  "intent_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+}

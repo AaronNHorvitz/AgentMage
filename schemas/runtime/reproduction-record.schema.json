@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/reproduction-record.schema.json",
+  "title": "AgentMage Reproduction Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "index_sha256",
+    "input",
+    "outcome",
+    "root_cause_proven",
+    "mutation_authority",
+    "reproduction_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "index_sha256": { "$ref": "#/$defs/sha256" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reproduction_id",
+        "environment_sha256",
+        "inputs_sha256",
+        "steps",
+        "expected_result_sha256",
+        "observed_result_sha256",
+        "log_sha256s",
+        "failure_signature_observed",
+        "execution_status",
+        "unsafe_reason"
+      ],
+      "properties": {
+        "reproduction_id": { "$ref": "#/$defs/identifier" },
+        "environment_sha256": { "$ref": "#/$defs/sha256" },
+        "inputs_sha256": { "$ref": "#/$defs/sha256" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "description",
+              "evidence_fact_ids",
+              "separate_grant_required",
+              "write_authority"
+            ],
+            "properties": {
+              "sequence": { "type": "integer", "minimum": 1, "maximum": 256 },
+              "kind": {
+                "enum": [
+                  "inspect_input",
+                  "run_registered_test",
+                  "observe_result",
+                  "observe_log",
+                  "compare_result"
+                ]
+              },
+              "description": { "$ref": "#/$defs/text" },
+              "evidence_fact_ids": { "$ref": "#/$defs/sha256_array" },
+              "separate_grant_required": { "const": true },
+              "write_authority": { "const": false }
+            }
+          }
+        },
+        "expected_result_sha256": { "$ref": "#/$defs/sha256" },
+        "observed_result_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "log_sha256s": { "$ref": "#/$defs/sha256_array" },
+        "failure_signature_observed": { "type": "boolean" },
+        "execution_status": {
+          "enum": ["completed", "denied", "cancelled", "timed_out", "dependency_failed"]
+        },
+        "unsafe_reason": {
+          "oneOf": [
+            { "$ref": "#/$defs/text" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "outcome": {
+      "enum": ["reproduced", "not_reproduced", "inconclusive", "unsafe_to_reproduce"]
+    },
+    "root_cause_proven": { "const": false },
+    "mutation_authority": { "const": false },
+    "reproduction_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": { "unsafe_reason": { "type": "string" } },
+            "required": ["unsafe_reason"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "execution_status": { "const": "denied" },
+              "observed_result_sha256": { "type": "null" },
+              "failure_signature_observed": { "const": false }
+            }
+          },
+          "outcome": { "const": "unsafe_to_reproduce" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "sha256_array": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha256" }
+    }
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/change-intent-record.schema.json",
+  "title": "AgentMage Change Intent Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "index_sha256",
+    "input",
+    "current_behavior_citation_ids",
+    "target_citation_ids",
+    "rejected_repository_instruction_fact_ids",
+    "rejected_repository_instruction_citation_ids",
+    "status",
+    "mutation_authority",
+    "intent_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "index_sha256": { "$ref": "#/$defs/sha256" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent_id",
+        "requested_behavior",
+        "current_behavior",
+        "current_behavior_fact_ids",
+        "target_fact_ids",
+        "users",
+        "acceptance_checks",
+        "exclusions",
+        "risks",
+        "rollback",
+        "rollback_reversible",
+        "surface_exclusions",
+        "clarifications"
+      ],
+      "properties": {
+        "intent_id": { "$ref": "#/$defs/identifier" },
+        "requested_behavior": { "$ref": "#/$defs/text" },
+        "current_behavior": { "$ref": "#/$defs/text" },
+        "current_behavior_fact_ids": { "$ref": "#/$defs/nonempty_sha256_array" },
+        "target_fact_ids": { "$ref": "#/$defs/nonempty_sha256_array" },
+        "users": { "$ref": "#/$defs/nonempty_text_array" },
+        "acceptance_checks": { "$ref": "#/$defs/nonempty_text_array" },
+        "exclusions": { "$ref": "#/$defs/nonempty_text_array" },
+        "risks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "security",
+              "privacy",
+              "data",
+              "accessibility",
+              "performance",
+              "migration",
+              "reliability",
+              "dependency"
+            ]
+          }
+        },
+        "rollback": { "$ref": "#/$defs/text" },
+        "rollback_reversible": { "type": "boolean" },
+        "surface_exclusions": {
+          "type": "array",
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["surface", "rationale"],
+            "properties": {
+              "surface": {
+                "enum": [
+                  "callers",
+                  "data",
+                  "permissions",
+                  "tests",
+                  "documentation",
+                  "configuration",
+                  "migrations",
+                  "interfaces",
+                  "dependencies"
+                ]
+              },
+              "rationale": { "$ref": "#/$defs/text" }
+            }
+          }
+        },
+        "clarifications": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["question_id", "dimension", "question", "evidence_fact_ids", "material"],
+            "properties": {
+              "question_id": { "$ref": "#/$defs/identifier" },
+              "dimension": {
+                "enum": [
+                  "objective",
+                  "current_behavior",
+                  "base_identity",
+                  "scope",
+                  "data",
+                  "permission",
+                  "dependency",
+                  "migration",
+                  "rollback"
+                ]
+              },
+              "question": { "$ref": "#/$defs/text" },
+              "evidence_fact_ids": { "$ref": "#/$defs/sha256_array" },
+              "material": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "current_behavior_citation_ids": { "$ref": "#/$defs/nonempty_sha256_array" },
+    "target_citation_ids": { "$ref": "#/$defs/nonempty_sha256_array" },
+    "rejected_repository_instruction_fact_ids": { "$ref": "#/$defs/sha256_array" },
+    "rejected_repository_instruction_citation_ids": { "$ref": "#/$defs/sha256_array" },
+    "status": { "enum": ["ready_for_planning", "clarification_required"] },
+    "mutation_authority": { "const": false },
+    "intent_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "sha256_array": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha256" }
+    },
+    "nonempty_sha256_array": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha256" }
+    },
+    "nonempty_text_array": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/text" }
+    }
+  }
+}

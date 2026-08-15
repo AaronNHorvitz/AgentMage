@@ -357,10 +357,70 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "repository-operation-plan",
     "repository-operation-receipt",
     "worktree-ownership",
+    "change-intent-record",
+    "reproduction-record",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true, true, true, true, true, true],
+  );
+});
+
+test("change intent runtime schema rejects ambiguity and authority forgery", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/change-intent-record.valid.json"),
+      "utf8",
+    ),
+  );
+  const falseReady = structuredClone(source);
+  falseReady.input.clarifications.push({
+    question_id: "question-scope",
+    dimension: "scope",
+    question: "Should another package change?",
+    evidence_fact_ids: [],
+    material: true,
+  });
+  assert.equal(
+    validateRuntimeRecord("change-intent-record", falseReady, runtimeValidators).valid,
+    false,
+  );
+
+  const instructionTarget = structuredClone(source);
+  instructionTarget.input.target_fact_ids = ["5".repeat(64)];
+  instructionTarget.input.current_behavior_fact_ids = ["5".repeat(64)];
+  assert.equal(
+    validateRuntimeRecord("change-intent-record", instructionTarget, runtimeValidators).valid,
+    false,
+  );
+});
+
+test("reproduction runtime schema rejects false outcomes and inherited authority", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/reproduction-record.valid.json"),
+      "utf8",
+    ),
+  );
+  const falseOutcome = structuredClone(source);
+  falseOutcome.input.failure_signature_observed = false;
+  assert.equal(
+    validateRuntimeRecord("reproduction-record", falseOutcome, runtimeValidators).valid,
+    false,
+  );
+
+  const inheritedWrite = structuredClone(source);
+  inheritedWrite.input.steps[0].write_authority = true;
+  assert.equal(
+    validateRuntimeRecord("reproduction-record", inheritedWrite, runtimeValidators).valid,
+    false,
+  );
+
+  const equalResults = structuredClone(source);
+  equalResults.input.observed_result_sha256 = equalResults.input.expected_result_sha256;
+  assert.equal(
+    validateRuntimeRecord("reproduction-record", equalResults, runtimeValidators).valid,
+    false,
   );
 });
 

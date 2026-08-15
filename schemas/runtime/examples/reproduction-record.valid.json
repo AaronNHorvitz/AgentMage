@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "index_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "input": {
+    "reproduction_id": "reproduction-calculate-0001",
+    "environment_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "inputs_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "steps": [
+      {
+        "sequence": 1,
+        "kind": "run_registered_test",
+        "description": "Run the exact registered regression fixture.",
+        "evidence_fact_ids": [],
+        "separate_grant_required": true,
+        "write_authority": false
+      }
+    ],
+    "expected_result_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "observed_result_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "log_sha256s": [
+      "6666666666666666666666666666666666666666666666666666666666666666"
+    ],
+    "failure_signature_observed": true,
+    "execution_status": "completed",
+    "unsafe_reason": null
+  },
+  "outcome": "reproduced",
+  "root_cause_proven": false,
+  "mutation_authority": false,
+  "reproduction_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+}
