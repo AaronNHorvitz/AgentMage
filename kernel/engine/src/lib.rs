@@ -75,6 +75,8 @@ pub mod reasoning;
 pub mod reclassification;
 /// Content-minimized repository state, exact Git plans, and owned-worktree lifecycle.
 pub mod repository_safety;
+/// Integrity-protected review packets and authority-free logical commit plans.
+pub mod review_packet;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
 /// Bounded, configuration-bound session environment and provenance capture.
