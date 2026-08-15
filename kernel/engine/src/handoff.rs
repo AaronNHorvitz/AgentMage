@@ -799,6 +799,11 @@ mod tests {
             HandoffProhibitedAction::RawRuntimeDelivery,
             HandoffProhibitedAction::NetworkCall,
             HandoffProhibitedAction::AutomaticSubmission,
+            HandoffProhibitedAction::FileUpload,
+            HandoffProhibitedAction::BrowserControl,
+            HandoffProhibitedAction::ScheduledDelivery,
+            HandoffProhibitedAction::RoutedDelivery,
+            HandoffProhibitedAction::StandingConsentDelivery,
         ];
         for (index, action) in actions.into_iter().enumerate() {
             let receipt = deny_handoff_action(

@@ -174,6 +174,16 @@ pub enum HandoffProhibitedAction {
     NetworkCall,
     /// Submit the packet automatically.
     AutomaticSubmission,
+    /// Upload packet content to any service or destination.
+    FileUpload,
+    /// Control a browser to deliver or populate packet content.
+    BrowserControl,
+    /// Deliver later from a schedule or timer.
+    ScheduledDelivery,
+    /// Route delivery through another model, tool, connector, or workflow.
+    RoutedDelivery,
+    /// Reuse standing consent instead of exact current user review.
+    StandingConsentDelivery,
 }
 
 /// Local-only terminal outcome for a review or prohibited action attempt.

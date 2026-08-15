@@ -17,6 +17,7 @@ mod conversation;
 mod diagnostics;
 mod display_link;
 mod evidence;
+mod frontier;
 mod grant;
 mod handoff;
 mod ids;
@@ -87,6 +88,10 @@ pub use display_link::{
     DisplayFileLink, DisplayLinkError, DisplayLinkErrorKind, MAX_DISPLAY_FILE_URI_BYTES,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
+pub use frontier::{
+    FrontierAcceptanceState, FrontierClarificationClass, FrontierRecommendationReceipt,
+    FrontierRecommendationTrigger, FrontierTaskTier, FrontierTierDecision, FrontierTierEvidence,
+};
 pub use grant::{
     CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
     GrantTargetError,

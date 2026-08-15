@@ -43,6 +43,8 @@ pub mod evidence_reconciliation;
 pub mod evidence_state;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
+/// Measured frontier recommendation and local-only disclosure packet composition.
+pub mod frontier_recommendation;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.

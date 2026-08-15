@@ -12,7 +12,12 @@ export type HandoffProhibitedAction =
   | "local_runtime_delivery"
   | "raw_runtime_delivery"
   | "network_call"
-  | "automatic_submission";
+  | "automatic_submission"
+  | "file_upload"
+  | "browser_control"
+  | "scheduled_delivery"
+  | "routed_delivery"
+  | "standing_consent_delivery";
 
 export interface HandoffPacketManifest {
   readonly schema_version: 2;
@@ -69,6 +74,11 @@ const ACTIONS: readonly HandoffProhibitedAction[] = [
   "raw_runtime_delivery",
   "network_call",
   "automatic_submission",
+  "file_upload",
+  "browser_control",
+  "scheduled_delivery",
+  "routed_delivery",
+  "standing_consent_delivery",
 ];
 
 export function parseHandoffReview(candidate: unknown): HandoffReview {
