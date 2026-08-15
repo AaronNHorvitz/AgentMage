@@ -62,7 +62,7 @@
       "required": ["finding_id", "kind", "part_name", "reason_code", "blocks_extraction"],
       "properties": {
         "finding_id": { "$ref": "#/$defs/identifier" },
-        "kind": { "enum": ["missing_required_part", "unsafe_entry_path", "duplicate_entry", "encrypted_entry", "symbolic_link_entry", "unsupported_compression", "active_content", "external_relationship", "malformed_xml"] },
+        "kind": { "enum": ["missing_required_part", "unsafe_entry_path", "duplicate_entry", "encrypted_entry", "symbolic_link_entry", "unsupported_compression", "active_content", "hidden_content", "external_relationship", "malformed_xml"] },
         "part_name": { "oneOf": [{ "type": "string", "minLength": 1, "maxLength": 4096 }, { "type": "null" }] },
         "reason_code": { "$ref": "#/$defs/code" },
         "blocks_extraction": { "const": true }

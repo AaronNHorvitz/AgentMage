@@ -443,6 +443,12 @@ fn support_comments_part(
         .windows(b"relationships/comments".len())
         .any(|window| window == b"relationships/comments")
     {
+        if relationships
+            .windows(b"rIdAgentMageComments".len())
+            .any(|window| window == b"rIdAgentMageComments")
+        {
+            return Err(WordPackageEditorError::Conflict);
+        }
         insert_before_closing(
             relationships,
             b"</Relationships>",
@@ -909,6 +915,46 @@ mod tests {
         assert_eq!(
             verify_word_package_edit_preview(&base, &source, &profile, &changed),
             Err(WordPackageEditorError::PreviewMismatch)
+        );
+    }
+
+    #[test]
+    fn comment_relationship_identity_collision_fails_closed() {
+        let (source, _) = source();
+        let profile = WordConversionProfile::strict_default();
+        let (_, mut parts) =
+            admitted_docx_parts(&path("source.docx"), &source, &profile).expect("source parts");
+        let relationships = parts
+            .get_mut("word/_rels/document.xml.rels")
+            .expect("relationships");
+        insert_before_closing(
+            relationships,
+            b"</Relationships>",
+            b"<Relationship Id=\"rIdAgentMageComments\" Type=\"urn:unrelated\" Target=\"unrelated.xml\"/>",
+        )
+        .expect("insert collision");
+        let collided = zip_parts(&parts).expect("package");
+        let extraction =
+            extract_docx_to_sidecar(&path("source.docx"), &collided, &profile).expect("extract");
+        let request = WordEditRequest {
+            edit_id: "edit-comment-collision".to_owned(),
+            source_path: path("source.docx"),
+            source_sha256: word_sha256(&collided),
+            output_path: path("edited.docx"),
+            operations: vec![WordEditOperation::AddComment {
+                operation_id: "change-1".to_owned(),
+                target: target(&extraction.fragments[1]),
+                comment: WordCommentMetadata {
+                    comment_id: 1,
+                    author: "Reviewer".to_owned(),
+                    initials: "RV".to_owned(),
+                    comment_text: "Review".to_owned(),
+                },
+            }],
+        };
+        assert_eq!(
+            preview_word_package_edit(&request, &collided, &profile),
+            Err(WordPackageEditorError::Conflict)
         );
     }
 }

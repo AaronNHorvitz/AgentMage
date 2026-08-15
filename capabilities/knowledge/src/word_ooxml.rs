@@ -138,6 +138,8 @@ pub enum WordPackageFindingKind {
     UnsupportedCompression,
     /// Package contains macro, ActiveX, embedded executable, or similar active content.
     ActiveContent,
+    /// WordprocessingML requests hidden or web-hidden presentation.
+    HiddenContent,
     /// A relationship targets an external resource.
     ExternalRelationship,
     /// XML was malformed or could not be decoded under the closed parser.
@@ -562,6 +564,25 @@ fn external_relationship(content: &[u8]) -> Result<bool, WordOoxmlError> {
     }
 }
 
+fn hidden_content(content: &[u8]) -> Result<bool, WordOoxmlError> {
+    let mut reader = Reader::from_reader(content);
+    reader.config_mut().trim_text(false);
+    loop {
+        match reader
+            .read_event()
+            .map_err(|_| WordOoxmlError::MalformedXml)?
+        {
+            Event::Start(event) | Event::Empty(event)
+                if matches!(local_name(event.name().as_ref()), b"vanish" | b"webHidden") =>
+            {
+                return Ok(true);
+            }
+            Event::Eof => return Ok(false),
+            _ => {}
+        }
+    }
+}
+
 fn package_finding(
     findings: &mut Vec<WordPackageFinding>,
     kind: WordPackageFindingKind,
@@ -830,6 +851,14 @@ fn inspect_package(
                         "word.package.relationship-xml-malformed",
                     ),
                 }
+            }
+            if name.ends_with(".xml") && hidden_content(bytes).unwrap_or(false) {
+                package_finding(
+                    &mut findings,
+                    WordPackageFindingKind::HiddenContent,
+                    Some(&name),
+                    "word.package.hidden-content",
+                );
             }
             content.insert(name.clone(), bytes.clone());
         }
@@ -1129,6 +1158,40 @@ mod tests {
         cursor.into_inner()
     }
 
+    fn deflated_package(entries: &[(&str, &str)]) -> Vec<u8> {
+        let mut cursor = Cursor::new(Vec::new());
+        {
+            let mut writer = ZipWriter::new(&mut cursor);
+            let options = SimpleFileOptions::default()
+                .compression_method(CompressionMethod::Deflated)
+                .unix_permissions(0o644);
+            for (name, content) in entries {
+                writer.start_file(*name, options).expect("start");
+                writer.write_all(content.as_bytes()).expect("write");
+            }
+            writer.finish().expect("finish");
+        }
+        cursor.into_inner()
+    }
+
+    fn patch_first_entry(source: &mut [u8], encrypted: bool, compression: Option<u16>) {
+        assert_eq!(&source[0..4], b"PK\x03\x04");
+        let central = source
+            .windows(4)
+            .position(|window| window == b"PK\x01\x02")
+            .expect("central directory");
+        if encrypted {
+            let local_flags = u16::from_le_bytes([source[6], source[7]]) | 1;
+            source[6..8].copy_from_slice(&local_flags.to_le_bytes());
+            let central_flags = u16::from_le_bytes([source[central + 8], source[central + 9]]) | 1;
+            source[central + 8..central + 10].copy_from_slice(&central_flags.to_le_bytes());
+        }
+        if let Some(method) = compression {
+            source[8..10].copy_from_slice(&method.to_le_bytes());
+            source[central + 10..central + 12].copy_from_slice(&method.to_le_bytes());
+        }
+    }
+
     fn base_entries(document: &str) -> Vec<(&'static str, String)> {
         vec![
             (
@@ -1345,6 +1408,92 @@ mod tests {
         assert_eq!(
             inspect_docx(&path(), &source, &profile).expect_err("bounded"),
             WordOoxmlError::InvalidInput
+        );
+    }
+
+    #[test]
+    fn hostile_path_hidden_xml_encryption_and_compression_fail_closed() {
+        let mut entries = base_entries(
+            "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:rPr><w:vanish/></w:rPr><w:t>Hidden</w:t></w:r></w:p></w:body></w:document>",
+        );
+        entries.push(("../outside.xml", "<outside/>".to_owned()));
+        entries.push((
+            "word/_rels/document.xml.rels",
+            "<Relationships><Relationship".to_owned(),
+        ));
+        let report = inspect_docx(
+            &path(),
+            &build(entries),
+            &WordConversionProfile::strict_default(),
+        )
+        .expect("inspection");
+        for finding in [
+            WordPackageFindingKind::UnsafeEntryPath,
+            WordPackageFindingKind::HiddenContent,
+            WordPackageFindingKind::MalformedXml,
+        ] {
+            assert!(report.findings.iter().any(|item| item.kind == finding));
+        }
+        assert!(report.quarantined);
+        assert!(!report.network_access_performed);
+        assert!(!report.execution_performed);
+
+        let baseline = build(base_entries(
+            "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:t>Text</w:t></w:r></w:p></w:body></w:document>",
+        ));
+        let mut encrypted = baseline.clone();
+        patch_first_entry(&mut encrypted, true, None);
+        let encrypted_report = inspect_docx(
+            &path(),
+            &encrypted,
+            &WordConversionProfile::strict_default(),
+        )
+        .expect("encrypted inspection");
+        assert!(
+            encrypted_report
+                .findings
+                .iter()
+                .any(|item| item.kind == WordPackageFindingKind::EncryptedEntry)
+        );
+
+        let mut unsupported = baseline;
+        patch_first_entry(&mut unsupported, false, Some(12));
+        let unsupported_report = inspect_docx(
+            &path(),
+            &unsupported,
+            &WordConversionProfile::strict_default(),
+        )
+        .expect("unsupported inspection");
+        assert!(
+            unsupported_report
+                .findings
+                .iter()
+                .any(|item| item.kind == WordPackageFindingKind::UnsupportedCompression)
+        );
+    }
+
+    #[test]
+    fn expansion_bomb_and_parser_crash_inputs_are_bounded() {
+        let large = "A".repeat(200_000);
+        let entries = [
+            ("[Content_Types].xml", "<Types/>"),
+            ("_rels/.rels", "<Relationships/>"),
+            ("word/document.xml", large.as_str()),
+        ];
+        let mut profile = WordConversionProfile::strict_default();
+        profile.maximum_expansion_ratio = 2;
+        assert_eq!(
+            inspect_docx(&path(), &deflated_package(&entries), &profile).expect_err("bomb"),
+            WordOoxmlError::ResourceLimit
+        );
+        assert_eq!(
+            inspect_docx(
+                &path(),
+                b"not-a-zip",
+                &WordConversionProfile::strict_default()
+            )
+            .expect_err("malformed"),
+            WordOoxmlError::MalformedPackage
         );
     }
 }
