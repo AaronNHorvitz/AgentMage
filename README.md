@@ -164,6 +164,12 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
   composition into the existing atomic shadow-write boundary. This is isolated
   source-level evidence, not an enabled end-user workflow; see the
   [structured-code architecture](./docs/architecture/structured-code-changes.md).
+- Trusted validation contracts that admit commands only from exact project
+  configuration or explicit user input, require separate per-template approval,
+  verify bounded process receipts, parse non-conflated results, require independent
+  artifacts, expose partial and unrun checks, and produce secret-safe recomputable
+  receipts. This is not yet an enabled end-user workflow; see the
+  [trusted-validation architecture](./docs/architecture/trusted-validation-runner.md).
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
 - A removable connected layer: uninstalling every provider adapter restores the independently tested strict-local product.
