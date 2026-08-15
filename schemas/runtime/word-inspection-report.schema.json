@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/word-inspection-report.schema.json",
+  "title": "AgentMage Word Inspection Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_path", "source_sha256", "conversion_identity_sha256", "profile_id", "parts", "features", "findings", "quarantined", "inspection_complete", "original_preserved", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_path": { "$ref": "#/$defs/workspace_path" },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "conversion_identity_sha256": { "$ref": "#/$defs/sha256" },
+    "profile_id": { "$ref": "#/$defs/identifier" },
+    "parts": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/part" } },
+    "features": { "type": "array", "maxItems": 13, "items": { "$ref": "#/$defs/feature" } },
+    "findings": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/finding" } },
+    "quarantined": { "type": "boolean" },
+    "inspection_complete": { "type": "boolean" },
+    "original_preserved": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["part_name", "kind", "compression", "compressed_bytes", "uncompressed_bytes", "content_sha256"],
+      "properties": {
+        "part_name": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "kind": { "enum": ["main_document", "header", "footer", "comments", "numbering", "styles", "relationships", "properties", "media", "other_xml", "other_binary"] },
+        "compression": { "enum": ["stored", "deflate", "unsupported"] },
+        "compressed_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "uncompressed_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "content_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "count"],
+      "properties": {
+        "kind": { "enum": ["table", "comment", "tracked_insertion", "tracked_deletion", "header", "footer", "numbering", "section_layout", "hyperlink", "image", "field", "style", "unsupported_construct"] },
+        "count": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "kind", "part_name", "reason_code", "blocks_extraction"],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["missing_required_part", "unsafe_entry_path", "duplicate_entry", "encrypted_entry", "symbolic_link_entry", "unsupported_compression", "active_content", "external_relationship", "malformed_xml"] },
+        "part_name": { "oneOf": [{ "type": "string", "minLength": 1, "maxLength": 4096 }, { "type": "null" }] },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "blocks_extraction": { "const": true }
+      }
+    }
+  }
+}

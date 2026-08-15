@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "conversion_identity_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "cache_key_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "sidecar": [35, 10],
+  "sidecar_sha256": "32c4858e22cc2c967b42150fa550562a2c839c2cebcaab91cabdf6f4da020022",
+  "fragments": [
+    {
+      "fragment_id": "fragment-00000001",
+      "source_range": {
+        "part_name": "word/document.xml",
+        "start_byte": 1,
+        "end_byte": 2
+      },
+      "text": "x",
+      "revision_state": "current"
+    }
+  ],
+  "fidelity_warnings": [
+    {
+      "warning_id": "warning:section_layout",
+      "feature": "section_layout",
+      "observed_count": 1,
+      "reason_code": "word.fidelity.page-layout-not-in-text",
+      "original_remains_authoritative": true
+    }
+  ],
+  "inspection": {
+    "schema_version": 2,
+    "source_path": {
+      "workspace_id": "workspace-1",
+      "components": ["documents", "report.docx"]
+    },
+    "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "conversion_identity_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "profile_id": "word-ooxml-strict-v1",
+    "parts": [
+      { "part_name": "[Content_Types].xml", "kind": "other_xml", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111" },
+      { "part_name": "_rels/.rels", "kind": "relationships", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222" },
+      { "part_name": "word/document.xml", "kind": "main_document", "compression": "stored", "compressed_bytes": 64, "uncompressed_bytes": 64, "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333" }
+    ],
+    "features": [{ "kind": "section_layout", "count": 1 }],
+    "findings": [],
+    "quarantined": false,
+    "inspection_complete": true,
+    "original_preserved": true,
+    "filesystem_effect_performed": false,
+    "network_access_performed": false,
+    "execution_performed": false
+  },
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

@@ -394,6 +394,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "markdown-quality-report",
     "generated-markdown-artifact",
     "markdown-round-trip-result",
+    "word-inspection-report",
+    "word-extraction-result",
+    "generated-word-package",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1278,6 +1281,38 @@ test("Markdown artifact records reject evidence ordering effect and round-trip d
     ["markdown-round-trip-result", (record) => { record.locally_complete = false; }],
     ["markdown-round-trip-result", (record) => { record.byte_identical = false; }],
     ["markdown-round-trip-result", (record) => { record.execution_performed = true; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("Word artifact records reject identity ordering fidelity and authority drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "word-inspection-report": load("word-inspection-report"),
+    "word-extraction-result": load("word-extraction-result"),
+    "generated-word-package": load("generated-word-package"),
+  };
+  const mutations = [
+    ["word-inspection-report", (record) => { record.quarantined = true; }],
+    ["word-inspection-report", (record) => { record.parts.reverse(); }],
+    ["word-inspection-report", (record) => { record.network_access_performed = true; }],
+    ["word-extraction-result", (record) => { record.sidecar[0] = 36; }],
+    ["word-extraction-result", (record) => { record.source_sha256 = "b".repeat(64); }],
+    ["word-extraction-result", (record) => { record.fragments[0].source_range.end_byte = 1; }],
+    ["word-extraction-result", (record) => { record.fidelity_warnings[0].observed_count = 2; }],
+    ["generated-word-package", (record) => { record.package[0] = 81; }],
+    ["generated-word-package", (record) => { record.inspection.quarantined = true; }],
+    ["generated-word-package", (record) => { record.output_path.components[1] = "other.docx"; }],
+    ["generated-word-package", (record) => { record.execution_performed = true; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);

@@ -628,6 +628,50 @@ fn inspect_xml_features(
     }
 }
 
+fn central_directory_duplicates(
+    source: &[u8],
+    directory_start: u64,
+) -> Result<(usize, Vec<Option<String>>), WordOoxmlError> {
+    let mut offset =
+        usize::try_from(directory_start).map_err(|_| WordOoxmlError::MalformedPackage)?;
+    let mut names = BTreeSet::new();
+    let mut duplicates = Vec::new();
+    let mut count = 0_usize;
+    while source.get(offset..offset.saturating_add(4)) == Some(&[0x50, 0x4b, 0x01, 0x02]) {
+        let header = source
+            .get(offset..offset.saturating_add(46))
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        let filename_bytes = usize::from(u16::from_le_bytes([header[28], header[29]]));
+        let extra_bytes = usize::from(u16::from_le_bytes([header[30], header[31]]));
+        let comment_bytes = usize::from(u16::from_le_bytes([header[32], header[33]]));
+        let name_start = offset
+            .checked_add(46)
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        let name_end = name_start
+            .checked_add(filename_bytes)
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        let next = name_end
+            .checked_add(extra_bytes)
+            .and_then(|value| value.checked_add(comment_bytes))
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        let raw_name = source
+            .get(name_start..name_end)
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        source
+            .get(offset..next)
+            .ok_or(WordOoxmlError::MalformedPackage)?;
+        if !names.insert(raw_name.to_vec()) {
+            duplicates.push(std::str::from_utf8(raw_name).ok().map(str::to_owned));
+        }
+        count = count.checked_add(1).ok_or(WordOoxmlError::ResourceLimit)?;
+        offset = next;
+    }
+    if count == 0 {
+        return Err(WordOoxmlError::MalformedPackage);
+    }
+    Ok((count, duplicates))
+}
+
 fn inspect_package(
     source_path: &WorkspacePath,
     source: &[u8],
@@ -638,13 +682,23 @@ fn inspect_package(
     }
     let mut archive =
         ZipArchive::new(Cursor::new(source)).map_err(|_| WordOoxmlError::MalformedPackage)?;
-    if archive.is_empty() || archive.len() > profile.maximum_entries {
+    let (raw_entry_count, central_duplicates) =
+        central_directory_duplicates(source, archive.central_directory_start())?;
+    if archive.is_empty() || raw_entry_count > profile.maximum_entries {
         return Err(WordOoxmlError::ResourceLimit);
     }
     let mut names = BTreeSet::new();
     let mut content = BTreeMap::new();
     let mut parts = Vec::new();
     let mut findings = Vec::new();
+    for duplicate in central_duplicates {
+        package_finding(
+            &mut findings,
+            WordPackageFindingKind::DuplicateEntry,
+            duplicate.as_deref(),
+            "word.package.entry-duplicate",
+        );
+    }
     let mut total_uncompressed = 0_u64;
     for index in 0..archive.len() {
         let (
@@ -702,14 +756,7 @@ fn inspect_package(
                 "word.package.entry-path-unsafe",
             );
         }
-        if !names.insert(name.clone()) {
-            package_finding(
-                &mut findings,
-                WordPackageFindingKind::DuplicateEntry,
-                Some(&name),
-                "word.package.entry-duplicate",
-            );
-        }
+        let unique_name = names.insert(name.clone());
         if encrypted {
             package_finding(
                 &mut findings,
@@ -735,7 +782,7 @@ fn inspect_package(
             );
         }
         let readable = safe_part_name(&name)
-            && names.contains(&name)
+            && unique_name
             && !encrypted
             && !symlink
             && compression != WordCompressionKind::Unsupported;
@@ -1211,6 +1258,45 @@ mod tests {
         );
         assert!(!report.network_access_performed);
         assert!(!report.execution_performed);
+    }
+
+    #[test]
+    fn duplicate_package_entries_are_quarantined_and_never_extracted() {
+        let mut source = package(&[
+            ("[Content_Types].xml", "<Types/>"),
+            ("_rels/.rels", "<Relationships/>"),
+            (
+                "word/document.xml",
+                "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:t>first</w:t></w:r></w:p></w:body></w:document>",
+            ),
+            (
+                "word/documenx.xml",
+                "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:t>second</w:t></w:r></w:p></w:body></w:document>",
+            ),
+        ]);
+        let from = b"word/documenx.xml";
+        let to = b"word/document.xml";
+        let mut replacements = 0;
+        for index in 0..=source.len() - from.len() {
+            if &source[index..index + from.len()] == from {
+                source[index..index + to.len()].copy_from_slice(to);
+                replacements += 1;
+            }
+        }
+        assert_eq!(replacements, 2, "local and central ZIP names must change");
+        let profile = WordConversionProfile::strict_default();
+        let report = inspect_docx(&path(), &source, &profile).expect("inspection");
+        assert!(report.quarantined);
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|item| item.kind == WordPackageFindingKind::DuplicateEntry)
+        );
+        assert_eq!(
+            extract_docx_to_sidecar(&path(), &source, &profile).expect_err("quarantine"),
+            WordOoxmlError::QuarantinedPackage
+        );
     }
 
     #[test]

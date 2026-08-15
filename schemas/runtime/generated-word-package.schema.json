@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/generated-word-package.schema.json",
+  "title": "AgentMage Generated Word Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_id", "source_markdown_sha256", "output_path", "generator_identity_sha256", "package", "package_sha256", "parts", "warnings", "inspection", "accessibility_structure_complete", "proposal_only", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "source_markdown_sha256": { "$ref": "#/$defs/sha256" },
+    "output_path": { "$ref": "#/$defs/workspace_path" },
+    "generator_identity_sha256": { "$ref": "#/$defs/sha256" },
+    "package": { "type": "array", "maxItems": 67108864, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "package_sha256": { "$ref": "#/$defs/sha256" },
+    "parts": { "type": "array", "minItems": 1, "maxItems": 16384, "items": { "$ref": "#/$defs/part" } },
+    "warnings": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/warning" } },
+    "inspection": { "$ref": "https://agentmage.dev/schemas/runtime/word-inspection-report.schema.json" },
+    "accessibility_structure_complete": { "const": true },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["part_name", "content_sha256", "bytes"],
+      "properties": {
+        "part_name": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reason_code", "source_remains_authoritative"],
+      "properties": {
+        "kind": { "enum": ["frontmatter_not_rendered", "links_rendered_as_text", "raw_html_rendered_as_text", "reference_style_link_rendered_as_text", "setext_heading_rendered_as_text", "duplicate_heading_retained"] },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "source_remains_authoritative": { "const": true }
+      }
+    }
+  }
+}

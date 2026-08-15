@@ -91,6 +91,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "markdown-quality-report",
   "generated-markdown-artifact",
   "markdown-round-trip-result",
+  "word-inspection-report",
+  "word-extraction-result",
+  "generated-word-package",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -120,6 +123,10 @@ function sha256File(relativePath) {
 
 function sha256String(value) {
   return crypto.createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function sha256Bytes(value) {
+  return crypto.createHash("sha256").update(Buffer.from(value)).digest("hex");
 }
 
 export function createPlanningValidators() {
@@ -1377,6 +1384,83 @@ function runtimeSemanticErrors(recordType, data) {
       JSON.stringify(data.limitations ?? []) !== JSON.stringify(expectedLimitations)
     ) {
       errors.push("Markdown round-trip completion disagrees with exact checks");
+    }
+  } else if (recordType === "word-inspection-report") {
+    const parts = data.parts ?? [];
+    const features = data.features ?? [];
+    const findings = data.findings ?? [];
+    const featureOrder = [
+      "table", "comment", "tracked_insertion", "tracked_deletion", "header",
+      "footer", "numbering", "section_layout", "hyperlink", "image", "field",
+      "style", "unsupported_construct",
+    ];
+    const featureIndexes = features.map((item) => featureOrder.indexOf(item.kind));
+    if (
+      !isStrictlySortedBy(parts, (item) => item.part_name) ||
+      !isStrictlySorted(featureIndexes) ||
+      !isStrictlySortedBy(findings, (item) => item.finding_id)
+    ) {
+      errors.push("Word inspection ledgers are not canonically ordered");
+    }
+    if (data.quarantined !== (findings.length > 0)) {
+      errors.push("Word quarantine status disagrees with blocking findings");
+    }
+    if (
+      data.inspection_complete !==
+      parts.every((item) => item.content_sha256 !== null)
+    ) {
+      errors.push("Word inspection completeness disagrees with part digests");
+    }
+  } else if (recordType === "word-extraction-result") {
+    const inspection = data.inspection ?? {};
+    const partNames = new Set((inspection.parts ?? []).map((item) => item.part_name));
+    const featureCounts = new Map(
+      (inspection.features ?? []).map((item) => [item.kind, item.count]),
+    );
+    if (
+      data.source_sha256 !== inspection.source_sha256 ||
+      data.conversion_identity_sha256 !== inspection.conversion_identity_sha256
+    ) {
+      errors.push("Word extraction identity disagrees with inspection");
+    }
+    if (sha256Bytes(data.sidecar ?? []) !== data.sidecar_sha256) {
+      errors.push("Word extraction sidecar digest drifted");
+    }
+    if (
+      !isStrictlySortedBy(data.fragments ?? [], (item) => item.fragment_id) ||
+      !isStrictlySortedBy(data.fidelity_warnings ?? [], (item) => item.warning_id)
+    ) {
+      errors.push("Word extraction ledgers are not canonically ordered");
+    }
+    for (const fragment of data.fragments ?? []) {
+      if (
+        fragment.source_range.end_byte <= fragment.source_range.start_byte ||
+        !partNames.has(fragment.source_range.part_name)
+      ) {
+        errors.push(`Word extraction fragment provenance drifted: ${fragment.fragment_id}`);
+      }
+    }
+    for (const warning of data.fidelity_warnings ?? []) {
+      if (featureCounts.get(warning.feature) !== warning.observed_count) {
+        errors.push(`Word fidelity warning disagrees with inspection: ${warning.warning_id}`);
+      }
+    }
+  } else if (recordType === "generated-word-package") {
+    const inspection = data.inspection ?? {};
+    if (sha256Bytes(data.package ?? []) !== data.package_sha256) {
+      errors.push("Generated Word package digest drifted");
+    }
+    if (!isStrictlySortedBy(data.parts ?? [], (item) => item.part_name)) {
+      errors.push("Generated Word part ledger is not canonically ordered");
+    }
+    if (
+      JSON.stringify(data.output_path) !== JSON.stringify(inspection.source_path) ||
+      data.package_sha256 !== inspection.source_sha256
+    ) {
+      errors.push("Generated Word inspection is not bound to the proposed output");
+    }
+    if (inspection.quarantined || !inspection.inspection_complete) {
+      errors.push("Generated Word package did not pass bounded structural inspection");
     }
   }
   return errors;
