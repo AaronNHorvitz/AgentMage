@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/edited-presentation.schema.json",
+  "title": "AgentMage Edited Presentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_sha256", "generated", "changes", "unchanged_slide_count", "original_preserved", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "generated": { "$ref": "https://agentmage.dev/schemas/runtime/generated-presentation.schema.json" },
+    "changes": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/change" } },
+    "unchanged_slide_count": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "original_preserved": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "change": { "type": "object", "additionalProperties": false, "required": ["slide_number", "before_preview_sha256", "after_preview_sha256"], "properties": { "slide_number": { "type": "integer", "minimum": 1, "maximum": 256 }, "before_preview_sha256": { "$ref": "#/$defs/sha256" }, "after_preview_sha256": { "$ref": "#/$defs/sha256" } } }
+  }
+}

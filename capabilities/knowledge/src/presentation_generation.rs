@@ -14,6 +14,8 @@ use crate::word_ooxml::word_sha256;
 const MAX_SLIDES: usize = 256;
 const MAX_BLOCKS_PER_SLIDE: usize = 5;
 const MAX_TEXT_BYTES: usize = 16 * 1_024;
+const MAX_BULLET_ITEMS: usize = 64;
+const MAX_SPEAKER_NOTES: usize = 128;
 const MAX_TABLE_ROWS: usize = 12;
 const MAX_TABLE_COLUMNS: usize = 8;
 const MAX_CHART_POINTS: usize = 64;
@@ -375,7 +377,10 @@ fn validate_block(block: &PresentationBlock) -> Result<(), PresentationGeneratio
             }
         }
         PresentationBlock::Bullets { items } => {
-            if items.is_empty() || items.iter().any(|item| !valid_text(item, false)) {
+            if items.is_empty()
+                || items.len() > MAX_BULLET_ITEMS
+                || items.iter().any(|item| !valid_text(item, false))
+            {
                 return Err(PresentationGenerationError::InvalidInput);
             }
         }
@@ -445,6 +450,7 @@ fn validate_spec(spec: &PresentationDeckSpec) -> Result<(), PresentationGenerati
             || !ids.insert(slide.slide_id.as_str())
             || !valid_text(&slide.title, false)
             || slide.blocks.len() > MAX_BLOCKS_PER_SLIDE
+            || slide.speaker_notes.len() > MAX_SPEAKER_NOTES
             || slide
                 .speaker_notes
                 .iter()

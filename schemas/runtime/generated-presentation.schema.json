@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/generated-presentation.schema.json",
+  "title": "AgentMage Generated Presentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "specification", "pptx", "pptx_sha256", "inspection", "previews", "proposal_only", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "specification": { "$ref": "#/$defs/deck" },
+    "pptx": { "type": "array", "maxItems": 67108864, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "pptx_sha256": { "$ref": "#/$defs/sha256" },
+    "inspection": { "$ref": "https://agentmage.dev/schemas/runtime/presentation-inspection.schema.json" },
+    "previews": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/preview" } },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "workspace_path": { "type": "object", "additionalProperties": false, "required": ["workspace_id", "components"], "properties": { "workspace_id": { "$ref": "#/$defs/identifier" }, "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } } } },
+    "table": { "type": "object", "additionalProperties": false, "required": ["headers", "rows", "data_source_sha256"], "properties": { "headers": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/text" } }, "rows": { "type": "array", "maxItems": 12, "items": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string", "maxLength": 16384 } } }, "data_source_sha256": { "$ref": "#/$defs/sha256" } } },
+    "chart": { "type": "object", "additionalProperties": false, "required": ["title", "categories", "values", "data_source_sha256"], "properties": { "title": { "$ref": "#/$defs/text" }, "categories": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/text" } }, "values": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 } }, "data_source_sha256": { "$ref": "#/$defs/sha256" } } },
+    "diagram_node": { "type": "object", "additionalProperties": false, "required": ["node_id", "label"], "properties": { "node_id": { "$ref": "#/$defs/identifier" }, "label": { "$ref": "#/$defs/text" } } },
+    "diagram_edge": { "type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": { "from": { "$ref": "#/$defs/identifier" }, "to": { "$ref": "#/$defs/identifier" } } },
+    "diagram": { "type": "object", "additionalProperties": false, "required": ["nodes", "edges", "data_source_sha256"], "properties": { "nodes": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/$defs/diagram_node" } }, "edges": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/diagram_edge" } }, "data_source_sha256": { "$ref": "#/$defs/sha256" } } },
+    "block": { "oneOf": [
+      { "type": "object", "additionalProperties": false, "required": ["kind", "text"], "properties": { "kind": { "const": "text" }, "text": { "$ref": "#/$defs/text" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "items"], "properties": { "kind": { "const": "bullets" }, "items": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/text" } } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "table"], "properties": { "kind": { "const": "table" }, "table": { "$ref": "#/$defs/table" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "chart"], "properties": { "kind": { "const": "chart" }, "chart": { "$ref": "#/$defs/chart" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "diagram"], "properties": { "kind": { "const": "diagram" }, "diagram": { "$ref": "#/$defs/diagram" } } }
+    ] },
+    "slide": { "type": "object", "additionalProperties": false, "required": ["slide_id", "title", "blocks", "speaker_notes"], "properties": { "slide_id": { "$ref": "#/$defs/identifier" }, "title": { "$ref": "#/$defs/text" }, "blocks": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/block" } }, "speaker_notes": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/text" } } } },
+    "deck": { "type": "object", "additionalProperties": false, "required": ["deck_id", "output_path", "fixed_timestamp", "slides"], "properties": { "deck_id": { "$ref": "#/$defs/identifier" }, "output_path": { "$ref": "#/$defs/workspace_path" }, "fixed_timestamp": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" }, "slides": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/slide" } } } },
+    "object_preview": { "type": "object", "additionalProperties": false, "required": ["object_order", "kind", "content_sha256", "x", "y", "width", "height", "data_source_sha256"], "properties": { "object_order": { "type": "integer", "minimum": 1, "maximum": 6 }, "kind": { "enum": ["shape", "image", "chart", "table", "diagram", "unsupported"] }, "content_sha256": { "$ref": "#/$defs/sha256" }, "x": { "type": "integer", "minimum": 0, "maximum": 12192000 }, "y": { "type": "integer", "minimum": 0, "maximum": 6858000 }, "width": { "type": "integer", "minimum": 1, "maximum": 12192000 }, "height": { "type": "integer", "minimum": 1, "maximum": 6858000 }, "data_source_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] } } },
+    "preview": { "type": "object", "additionalProperties": false, "required": ["slide_number", "slide_id", "width", "height", "objects", "preview_sha256", "native_render_required"], "properties": { "slide_number": { "type": "integer", "minimum": 1, "maximum": 256 }, "slide_id": { "$ref": "#/$defs/identifier" }, "width": { "const": 12192000 }, "height": { "const": 6858000 }, "objects": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/$defs/object_preview" } }, "preview_sha256": { "$ref": "#/$defs/sha256" }, "native_render_required": { "const": true } } }
+  }
+}

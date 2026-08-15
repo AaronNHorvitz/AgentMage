@@ -417,6 +417,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "structured-json-comparison",
     "generated-reconciliation-workbook",
     "spreadsheet-verification-report",
+    "presentation-inspection",
+    "generated-presentation",
+    "edited-presentation",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1456,6 +1459,35 @@ test("JSON reconciliation and spreadsheet verification records reject semantic d
     ["generated-reconciliation-workbook", (record) => { record.worksheet_count = 1; }],
     ["spreadsheet-verification-report", (record) => { record.machine_checks_passed = true; }],
     ["spreadsheet-verification-report", (record) => { record.human_review_required = false; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("presentation records reject unsafe inspection, stale previews, and edit drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "presentation-inspection": load("presentation-inspection"),
+    "generated-presentation": load("generated-presentation"),
+    "edited-presentation": load("edited-presentation"),
+  };
+  const mutations = [
+    ["presentation-inspection", (record) => { record.slides[0].slide_number = 2; }],
+    ["presentation-inspection", (record) => { record.slides[0].objects[1].order = 1; }],
+    ["presentation-inspection", (record) => { record.findings.push({ finding_id: "finding-1", kind: "active_action", part_name: null, slide_number: 1, reason_code: "presentation.active-action-inert", blocks_safe_reuse: true }); }],
+    ["generated-presentation", (record) => { record.pptx[0] = 0; }],
+    ["generated-presentation", (record) => { record.previews[0].objects[1].content_sha256 = "a".repeat(64); }],
+    ["generated-presentation", (record) => { record.specification.slides[0].blocks[0].text = "drift"; }],
+    ["edited-presentation", (record) => { record.changes[0].after_preview_sha256 = "a".repeat(64); }],
+    ["edited-presentation", (record) => { record.unchanged_slide_count = 1; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);

@@ -114,6 +114,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "structured-json-comparison",
   "generated-reconciliation-workbook",
   "spreadsheet-verification-report",
+  "presentation-inspection",
+  "generated-presentation",
+  "edited-presentation",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -330,6 +333,71 @@ function canonicalJsonValue(value) {
     );
   }
   return value;
+}
+
+function canonicalPresentationBlock(block) {
+  if (block.kind === "text") return { kind: "text", text: block.text };
+  if (block.kind === "bullets") return { kind: "bullets", items: block.items };
+  if (block.kind === "table") {
+    return {
+      kind: "table",
+      table: {
+        headers: block.table?.headers,
+        rows: block.table?.rows,
+        data_source_sha256: block.table?.data_source_sha256,
+      },
+    };
+  }
+  if (block.kind === "chart") {
+    return {
+      kind: "chart",
+      chart: {
+        title: block.chart?.title,
+        categories: block.chart?.categories,
+        values: block.chart?.values,
+        data_source_sha256: block.chart?.data_source_sha256,
+      },
+    };
+  }
+  if (block.kind === "diagram") {
+    return {
+      kind: "diagram",
+      diagram: {
+        nodes: (block.diagram?.nodes ?? []).map((item) => ({
+          node_id: item.node_id,
+          label: item.label,
+        })),
+        edges: (block.diagram?.edges ?? []).map((item) => ({
+          from: item.from,
+          to: item.to,
+        })),
+        data_source_sha256: block.diagram?.data_source_sha256,
+      },
+    };
+  }
+  return block;
+}
+
+function presentationPreviewDigest(preview) {
+  const objects = (preview.objects ?? []).map((item) => ({
+    object_order: item.object_order,
+    kind: item.kind,
+    content_sha256: item.content_sha256,
+    x: item.x,
+    y: item.y,
+    width: item.width,
+    height: item.height,
+    data_source_sha256: item.data_source_sha256,
+  }));
+  return sha256String(
+    JSON.stringify([
+      preview.slide_number,
+      preview.slide_id,
+      preview.width,
+      preview.height,
+      objects,
+    ]),
+  );
 }
 
 const VALIDATION_KIND_ORDER = Object.freeze([
@@ -1817,6 +1885,126 @@ function runtimeSemanticErrors(recordType, data) {
       data.human_review_required !== expectedHuman
     ) {
       errors.push("spreadsheet verification evidence class or completion drifted");
+    }
+  } else if (recordType === "presentation-inspection") {
+    const slides = data.slides ?? [];
+    const findings = data.findings ?? [];
+    if (!isStrictlySortedBy(findings, (item) => item.finding_id)) {
+      errors.push("presentation findings are not canonically ordered");
+    }
+    if (data.safe_for_reuse !== !findings.some((item) => item.blocks_safe_reuse)) {
+      errors.push("presentation safe-reuse state disagrees with blocking findings");
+    }
+    for (const [index, slide] of slides.entries()) {
+      const objectIds = new Set((slide.objects ?? []).map((item) => item.object_id));
+      if (
+        slide.slide_number !== index + 1 ||
+        !isStrictlySortedBy(slide.objects ?? [], (item) => item.order) ||
+        objectIds.size !== (slide.objects ?? []).length ||
+        ((slide.layout_part_name === null) !== (slide.layout_sha256 === null))
+      ) {
+        errors.push(`presentation slide order or object identity drifted: ${index + 1}`);
+      }
+      for (const relation of [...(slide.links ?? []), ...(slide.images ?? [])]) {
+        if (!objectIds.has(relation.object_id)) {
+          errors.push(`presentation relation has unknown object: ${index + 1}`);
+        }
+      }
+    }
+  } else if (recordType === "generated-presentation") {
+    errors.push(...runtimeSemanticErrors("presentation-inspection", data.inspection ?? {}));
+    const specification = data.specification ?? {};
+    const slides = specification.slides ?? [];
+    const previews = data.previews ?? [];
+    if (
+      sha256Bytes(data.pptx ?? []) !== data.pptx_sha256 ||
+      data.inspection?.source_sha256 !== data.pptx_sha256 ||
+      JSON.stringify(data.inspection?.source_path) !== JSON.stringify(specification.output_path) ||
+      data.inspection?.safe_for_reuse !== true ||
+      slides.length !== previews.length ||
+      slides.length !== (data.inspection?.slides ?? []).length
+    ) {
+      errors.push("generated presentation bytes, source, or slide binding drifted");
+    }
+    for (const [index, slide] of slides.entries()) {
+      const preview = previews[index] ?? {};
+      const expectedBlocks = slide.blocks ?? [];
+      if (
+        preview.slide_number !== index + 1 ||
+        preview.slide_id !== slide.slide_id ||
+        (preview.objects ?? []).length !== expectedBlocks.length + 1 ||
+        presentationPreviewDigest(preview) !== preview.preview_sha256
+      ) {
+        errors.push(`generated presentation preview drifted: ${index + 1}`);
+        continue;
+      }
+      const expected = [
+        { kind: "shape", digest: sha256String(JSON.stringify(slide.title)), source: null },
+        ...expectedBlocks.map((block) => {
+          const nested = block[block.kind];
+          const source = ["table", "chart", "diagram"].includes(block.kind)
+            ? nested?.data_source_sha256
+            : null;
+          const kind = ["text", "bullets"].includes(block.kind) ? "shape" : block.kind;
+          return {
+            kind,
+            digest: sha256String(JSON.stringify(canonicalPresentationBlock(block))),
+            source,
+          };
+        }),
+      ];
+      for (const [objectIndex, object] of (preview.objects ?? []).entries()) {
+        const contract = expected[objectIndex];
+        if (
+          object.object_order !== objectIndex + 1 ||
+          object.kind !== contract.kind ||
+          object.content_sha256 !== contract.digest ||
+          object.data_source_sha256 !== contract.source
+        ) {
+          errors.push(`generated presentation object preview drifted: ${index + 1}.${objectIndex + 1}`);
+        }
+      }
+      for (const block of expectedBlocks) {
+        const nested = block[block.kind];
+        if (block.kind === "table") {
+          if (
+            (nested.rows ?? []).some((row) => row.length !== (nested.headers ?? []).length) ||
+            nested.data_source_sha256 !== sha256String(JSON.stringify([nested.headers, nested.rows]))
+          ) errors.push(`presentation table source binding drifted: ${index + 1}`);
+        } else if (block.kind === "chart") {
+          if (
+            (nested.categories ?? []).length !== (nested.values ?? []).length ||
+            nested.data_source_sha256 !== sha256String(JSON.stringify([nested.categories, nested.values]))
+          ) errors.push(`presentation chart source binding drifted: ${index + 1}`);
+        } else if (block.kind === "diagram") {
+          const nodeIds = new Set((nested.nodes ?? []).map((item) => item.node_id));
+          if (
+            nodeIds.size !== (nested.nodes ?? []).length ||
+            (nested.edges ?? []).some((edge) => !nodeIds.has(edge.from) || !nodeIds.has(edge.to)) ||
+            nested.data_source_sha256 !== sha256String(JSON.stringify([nested.nodes, nested.edges]))
+          ) errors.push(`presentation diagram source binding drifted: ${index + 1}`);
+        }
+      }
+    }
+  } else if (recordType === "edited-presentation") {
+    errors.push(...runtimeSemanticErrors("generated-presentation", data.generated ?? {}));
+    const changes = data.changes ?? [];
+    const previews = data.generated?.previews ?? [];
+    if (
+      !isStrictlySortedBy(changes, (item) => item.slide_number) ||
+      data.unchanged_slide_count !== previews.length - changes.length
+    ) {
+      errors.push("edited presentation change order or unchanged count drifted");
+    }
+    for (const change of changes) {
+      const preview = previews[change.slide_number - 1];
+      if (
+        !preview ||
+        change.before_preview_sha256 === change.after_preview_sha256 ||
+        change.after_preview_sha256 !== preview.preview_sha256
+      ) {
+        errors.push(`edited presentation preview binding drifted: ${change.slide_number}`);
+      }
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "generated": {
+    "schema_version": 2,
+    "specification": {
+      "deck_id": "deck-1",
+      "output_path": { "workspace_id": "workspace-1", "components": ["reports", "briefing.pptx"] },
+      "fixed_timestamp": "2026-08-15T00:00:00Z",
+      "slides": [{ "slide_id": "slide-1", "title": "Updated status", "blocks": [{ "kind": "text", "text": "Verified local summary" }], "speaker_notes": ["Review before delivery"] }]
+    },
+    "pptx": [80, 75],
+    "pptx_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+    "inspection": {
+      "schema_version": 2,
+      "source_path": { "workspace_id": "workspace-1", "components": ["reports", "briefing.pptx"] },
+      "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+      "profile": { "profile_id": "presentation-ooxml-strict-v1", "maximum_source_bytes": 67108864, "maximum_entries": 8192, "maximum_entry_bytes": 33554432, "maximum_total_uncompressed_bytes": 134217728, "maximum_slides": 4096, "maximum_objects": 250000, "maximum_text_bytes": 4194304 },
+      "slides": [{ "slide_number": 1, "part_name": "ppt/slides/slide1.xml", "part_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "layout_part_name": "ppt/slideLayouts/slideLayout1.xml", "layout_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "objects": [{ "object_id": 2, "order": 1, "name": "Title", "kind": "shape", "text": ["Updated status"], "alternative_text": null, "caption": null, "object_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" }, { "object_id": 3, "order": 2, "name": "Text", "kind": "shape", "text": ["Verified local summary"], "alternative_text": null, "caption": null, "object_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }], "speaker_notes": ["Review before delivery"], "links": [], "images": [] }],
+      "findings": [],
+      "inspection_complete": true,
+      "safe_for_reuse": true,
+      "original_preserved": true,
+      "filesystem_effect_performed": false,
+      "network_access_performed": false,
+      "execution_performed": false
+    },
+    "previews": [{ "slide_number": 1, "slide_id": "slide-1", "width": 12192000, "height": 6858000, "objects": [{ "object_order": 1, "kind": "shape", "content_sha256": "e26837058f8024c086f853e8e5f016875532342afdefd054a6b7342f0ffdc980", "x": 500000, "y": 300000, "width": 11000000, "height": 800000, "data_source_sha256": null }, { "object_order": 2, "kind": "shape", "content_sha256": "f782b05f449a550d15d333f99213b31bbf9becf20157ae5c94d715af9f325723", "x": 500000, "y": 1300000, "width": 11000000, "height": 950000, "data_source_sha256": null }], "preview_sha256": "61bcfd58d7fe7fccaa068da326732613d675b1ada9807fb9ee27a8ef1962d254", "native_render_required": true }],
+    "proposal_only": true,
+    "filesystem_effect_performed": false,
+    "network_access_performed": false,
+    "execution_performed": false
+  },
+  "changes": [{ "slide_number": 1, "before_preview_sha256": "cd164f9a66d6d942d4d9bad9110e62beb5b1fc249ed8950b9a93d2f89fe211ae", "after_preview_sha256": "61bcfd58d7fe7fccaa068da326732613d675b1ada9807fb9ee27a8ef1962d254" }],
+  "unchanged_slide_count": 0,
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

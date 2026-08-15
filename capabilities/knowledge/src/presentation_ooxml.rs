@@ -611,7 +611,13 @@ fn finding(
     });
 }
 
-type ParsedSlide = (Vec<PresentationObject>, Vec<String>, Vec<String>, bool);
+type OwnedRelationship = (u32, String);
+type ParsedSlide = (
+    Vec<PresentationObject>,
+    Vec<OwnedRelationship>,
+    Vec<OwnedRelationship>,
+    bool,
+);
 
 fn parse_slide_objects(
     content: &[u8],
@@ -746,8 +752,16 @@ fn parse_slide_objects(
                     caption: item.caption,
                     object_sha256: word_sha256(&canonical),
                 });
-                links.extend(item.link_ids);
-                images.extend(item.image_ids);
+                links.extend(
+                    item.link_ids
+                        .into_iter()
+                        .map(|relationship_id| (object_id, relationship_id)),
+                );
+                images.extend(
+                    item.image_ids
+                        .into_iter()
+                        .map(|relationship_id| (object_id, relationship_id)),
+                );
             }
             Event::DocType(_) => return Err(PresentationError::MalformedPackage),
             Event::Eof => {
@@ -822,6 +836,14 @@ pub fn inspect_pptx(
         let slide_number = u32::try_from(index + 1).unwrap_or(u32::MAX);
         let (objects, link_ids, image_ids, active_action) =
             parse_slide_objects(content, profile.maximum_text_bytes)?;
+        let object_id_count = objects
+            .iter()
+            .map(|item| item.object_id)
+            .collect::<std::collections::BTreeSet<_>>()
+            .len();
+        if object_id_count != objects.len() {
+            return Err(PresentationError::MalformedPackage);
+        }
         if objects.len() > remaining_objects {
             return Err(PresentationError::ResourceLimit);
         }
@@ -836,18 +858,13 @@ pub fn inspect_pptx(
                 true,
             );
         }
-        let object_by_image = objects
-            .iter()
-            .filter(|item| item.kind == PresentationObjectKind::Image)
-            .map(|item| item.object_id)
-            .collect::<Vec<_>>();
         let mut links = Vec::new();
-        for (link_index, id) in link_ids.iter().enumerate() {
+        for (object_id, id) in &link_ids {
             let relation = relationships
                 .get(id)
                 .ok_or(PresentationError::MalformedPackage)?;
             links.push(PresentationLink {
-                object_id: objects.get(link_index).map_or(0, |item| item.object_id),
+                object_id: *object_id,
                 target: relation.target.clone(),
                 target_sha256: word_sha256(relation.target.as_bytes()),
                 external: relation.external,
@@ -865,7 +882,7 @@ pub fn inspect_pptx(
             }
         }
         let mut images = Vec::new();
-        for (image_index, id) in image_ids.iter().enumerate() {
+        for (object_id, id) in &image_ids {
             let relation = relationships
                 .get(id)
                 .ok_or(PresentationError::MalformedPackage)?;
@@ -885,7 +902,7 @@ pub fn inspect_pptx(
                 .get(&image_part)
                 .ok_or(PresentationError::MalformedPackage)?;
             images.push(PresentationImageReference {
-                object_id: object_by_image.get(image_index).copied().unwrap_or(0),
+                object_id: *object_id,
                 part_name: image_part,
                 content_sha256: word_sha256(image),
                 content_bytes: u64::try_from(image.len()).unwrap_or(u64::MAX),
@@ -1015,7 +1032,9 @@ mod tests {
         );
         assert_eq!(slide.speaker_notes, ["Speaker note"]);
         assert!(slide.links[0].external && !slide.links[0].followed);
+        assert_eq!(slide.links[0].object_id, 2);
         assert_eq!(slide.images.len(), 1);
+        assert_eq!(slide.images[0].object_id, 3);
         assert!(slide.layout_sha256.is_some());
         assert!(!report.filesystem_effect_performed);
         assert!(!report.network_access_performed);

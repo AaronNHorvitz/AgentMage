@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "source_path": { "workspace_id": "workspace-1", "components": ["reports", "briefing.pptx"] },
+  "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+  "profile": { "profile_id": "presentation-ooxml-strict-v1", "maximum_source_bytes": 67108864, "maximum_entries": 8192, "maximum_entry_bytes": 33554432, "maximum_total_uncompressed_bytes": 134217728, "maximum_slides": 4096, "maximum_objects": 250000, "maximum_text_bytes": 4194304 },
+  "slides": [
+    {
+      "slide_number": 1,
+      "part_name": "ppt/slides/slide1.xml",
+      "part_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "layout_part_name": "ppt/slideLayouts/slideLayout1.xml",
+      "layout_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "objects": [
+        { "object_id": 2, "order": 1, "name": "Title", "kind": "shape", "text": ["Status"], "alternative_text": null, "caption": null, "object_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" },
+        { "object_id": 3, "order": 2, "name": "Text", "kind": "shape", "text": ["Verified local summary"], "alternative_text": null, "caption": null, "object_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
+      ],
+      "speaker_notes": ["Review before delivery"],
+      "links": [],
+      "images": []
+    }
+  ],
+  "findings": [],
+  "inspection_complete": true,
+  "safe_for_reuse": true,
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}
