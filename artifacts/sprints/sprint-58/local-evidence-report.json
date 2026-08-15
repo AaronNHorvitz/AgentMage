@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_58_local_evidence",
+  "source_revision": "2afc95d11f1d9c6a1e3e4d11e90e034098fb27a4",
+  "source_sha256": {
+    "Cargo.toml": "21e218536e619b4daab61479535e71d07a8f45d097d6062b9f488725053749db",
+    "Cargo.lock": "87a6362a8e3bc06d7c6fdcec0c43db63343919b8c9004295bcdf98ff7b27ac99",
+    "capabilities/knowledge/Cargo.toml": "2ecdd3d3e7f6d24487e5d151017a364dc08bc1df10e6850c58d14ec7ae52d88e",
+    "capabilities/knowledge/src/word_ooxml.rs": "f56e19a2fe7264eec0301428520833e4d77527fbc1ebcab65771ca88dd0adf58",
+    "capabilities/knowledge/src/word_generation.rs": "64d030f9f1085e5637c1928f6f72af11aa613396cf0c5164c3c3d5d8d60ed224",
+    "capabilities/knowledge/src/lib.rs": "4c4e8f992e8ac822b11c1945a178e08fefae785476e8dc60d8f6192aa287aa68",
+    "schemas/runtime/word-inspection-report.schema.json": "abc067b82ae1773c4d728fef6af08a9b53a5ed1b5383085456e0c0a3b3de7104",
+    "schemas/runtime/examples/word-inspection-report.valid.json": "164b890d2868d98305d99ac7891d1a0b577babaf62b72b70cb3e491553870958",
+    "schemas/runtime/word-extraction-result.schema.json": "179cc2545b0e7cbed8965ddcd7e331c352e7b5306c8158892e9aa8ebbe974ffc",
+    "schemas/runtime/examples/word-extraction-result.valid.json": "1bb4897795d5cc4f6711740048d6920f0fb0533f38faeb1d7b1a7567b00b6c9d",
+    "schemas/runtime/generated-word-package.schema.json": "4fe59bda563d9bda0bf4a396c48a3ba6fcacddeb890bc1b5aed81da5c1b3297e",
+    "schemas/runtime/examples/generated-word-package.valid.json": "a5750dd1d1fc5208a25210b4b9b4eecf944516b3b7a46327c8a1d8312e7a1f72",
+    "scripts/validate_planning_schemas.mjs": "29855d2218c05c6cd2e6e55c7e40ab3125c384c6ae4e004f06708c30f90fce34",
+    "tests/test_planning_schemas.mjs": "693d6b5c5c30922fb3f6efbb137e64b84053ed9847e319c49a129c30a6d93d21",
+    "docs/verification/sprint-58-word-artifact-corpus.json": "13e526c15b6ebf79126178080e92c033ef22eb0625f2ec7ff7cdb339bd4d8a3c",
+    "docs/verification/sprint-58-word-dependency-manifest.json": "c397c8980829fe882b6024c5ab64fde6f22ea80bf5d564ba9f6b91b545975ace",
+    "scripts/word_artifact_contract.py": "63e8217eb106753205130d7cab89caf141c2ccf4e2d9c36ca2e33d6317e1e0ac",
+    "tests/test_word_artifact_contract.py": "e4427e3b7de33f54fbeb218bd62e972a6186ca063b558823910ab7ee5d8be5d5",
+    "docs/architecture/word-ooxml-extraction-and-generation.md": "41aaa41b904b4ad0ed7c717544435a01bdf1c00c4ffd4fb808c2f297fc2e889a",
+    "docs/guides/word-artifact-local-workflows.md": "6f30ec012f774278e1eb6a7745ad212b8138dfca54295ccd55009d89cbf43aa0",
+    "docs/verification/sprint-58-local-results.md": "0554984860439fcf34cc8fa01c0d235338df47cfa25a1ea76ef4ac54032b8918",
+    "scripts/sprint_58_evidence.py": "75c4817dcde4f8db371769d63302883f2a96d5b9c947ef69e707d35905bc4a6e",
+    "tests/test_sprint_58_evidence.py": "76aa20e73fabe0f0f3eee82981cf7ced1bf94688407f2b62439e837a510bb972"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "word-inspection-extraction-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_ooxml::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0015c5b18e71cd58798615eb1bd9f5f8e3e90ecf3f426f91fbd29ad5ea1d4f54",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-generation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "word_generation::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c1d930330a04efda4552749cf6fcc8c3261d3585b863d010672d075760865fbc",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "69162a673633672a9b4cb383f56ed157575eeaf2ce0089a56a4f5ab03d64d52b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-acceptance-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_word_artifact_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6f283ee6225d2cef4c0127d95456a6f954c45141c92b97dd89016cb1c630e8f4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "word-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c7dcd8eb0588d10d8fcdaa95fcaff51c85ed587b241ea99e73171188d2c98078",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_58_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-SUP-003",
+    "SR-SUP-006",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "part_kind_count": 11,
+    "package_finding_kind_count": 9,
+    "fidelity_feature_kind_count": 13,
+    "revision_state_count": 3,
+    "generation_warning_kind_count": 6,
+    "runtime_schema_count": 3,
+    "acceptance_corpus_case_count": 73,
+    "exact_dependency_pin_count": 2,
+    "bounded_package_inspection": true,
+    "raw_central_directory_duplicate_detection": true,
+    "deterministic_sidecar_and_cache": true,
+    "exact_part_range_provenance": true,
+    "immutable_original_authority": true,
+    "explicit_structural_fidelity_warnings": true,
+    "structured_markdown_to_docx": true,
+    "reopened_generated_package_inspection": true,
+    "network_access_capability": false,
+    "execution_capability": false,
+    "filesystem_mutation_capability": false,
+    "renderer_capability": false,
+    "product_coordinator": false,
+    "controlled_writer_integration": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "acceptance_corpus_case_count": 73,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "renderer_admitted": false,
+    "product_coordinator": false,
+    "controlled_writer_integration": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-57-BLOCKED",
+      "owner": "58.1"
+    },
+    {
+      "code": "WORD-RENDERER-NOT-ADMITTED",
+      "owner": "58.1.1.1"
+    },
+    {
+      "code": "WORD-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "CONTROLLED-WRITER-INTEGRATION-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT",
+      "owner": "58.1.3.4"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_58_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_57_closed": false,
+    "word_workflow_integrated": false,
+    "external_effects_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
