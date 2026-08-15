@@ -3,9 +3,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use agentmage_kernel_contracts::{GrantOperation, OperationOutcome};
+use agentmage_kernel_contracts::{
+    GrantOperation, HeldWorkspaceObject, OperationOutcome, StateChange,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+
+use crate::authority_transaction::{EffectAuthorization, EffectDriver, EffectLaunch, EffectResult};
+use crate::propagation::CancellationToken;
 
 const SCHEMA_VERSION: u16 = 1;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1095,8 +1100,12 @@ pub struct RepositoryPlatformResult {
 pub struct RepositoryOperationReceipt {
     /// Closed receipt schema version.
     pub schema_version: u16,
-    /// Exact transaction identity.
-    pub transaction_id: String,
+    /// Exact repository transaction identity.
+    pub repository_transaction_id: String,
+    /// Exact authority transaction identity.
+    pub authority_transaction_id: String,
+    /// Exact non-replayable operation attempt identity.
+    pub operation_attempt_id: String,
     /// Exact operation.
     pub operation: RepositoryOperation,
     /// Exact plan digest.
@@ -1119,8 +1128,12 @@ pub struct RepositoryOperationReceipt {
 pub fn reconcile_operation(
     plan: &RepositoryOperationPlan,
     result: RepositoryPlatformResult,
+    authority_transaction_id: &str,
+    operation_attempt_id: &str,
 ) -> Result<RepositoryOperationReceipt, RepositorySafetyError> {
     plan.verify()?;
+    validate_identifier(authority_transaction_id)?;
+    validate_identifier(operation_attempt_id)?;
     result.before.verify()?;
     result.after.verify()?;
     if result.before.manifest_sha256 != plan.preservation_manifest_sha256
@@ -1154,7 +1167,9 @@ pub fn reconcile_operation(
     }
     let mut receipt = RepositoryOperationReceipt {
         schema_version: SCHEMA_VERSION,
-        transaction_id: plan.transaction_id.clone(),
+        repository_transaction_id: plan.transaction_id.clone(),
+        authority_transaction_id: authority_transaction_id.to_owned(),
+        operation_attempt_id: operation_attempt_id.to_owned(),
         operation: plan.operation,
         plan_sha256: plan.plan_sha256.clone(),
         before_manifest_sha256: result.before.manifest_sha256,
@@ -1166,6 +1181,214 @@ pub fn reconcile_operation(
     };
     receipt.receipt_sha256 = canonical_sha256(&receipt)?;
     Ok(receipt)
+}
+
+/// Authority-free prepared bytes for one exact repository operation plan.
+#[derive(Clone, Debug)]
+pub struct PreparedRepositoryOperation {
+    plan: RepositoryOperationPlan,
+    request_bytes: Vec<u8>,
+    request_sha256: String,
+}
+
+impl PreparedRepositoryOperation {
+    /// Validates and serializes one complete operation plan before approval.
+    pub fn new(plan: RepositoryOperationPlan) -> Result<Self, RepositorySafetyError> {
+        plan.verify()?;
+        let request_bytes =
+            serde_json::to_vec(&plan).map_err(|_| RepositorySafetyError::InvalidInput)?;
+        let request_sha256 = sha256_hex(&request_bytes);
+        Ok(Self {
+            plan,
+            request_bytes,
+            request_sha256,
+        })
+    }
+
+    /// Returns the complete deterministic preview and execution plan.
+    #[must_use]
+    pub const fn plan(&self) -> &RepositoryOperationPlan {
+        &self.plan
+    }
+
+    /// Returns exact canonical request bytes for grant and tool-call binding.
+    #[must_use]
+    pub fn request_bytes(&self) -> &[u8] {
+        &self.request_bytes
+    }
+
+    /// Returns the digest of exact canonical request bytes.
+    #[must_use]
+    pub fn request_sha256(&self) -> &str {
+        &self.request_sha256
+    }
+}
+
+/// Nonforgeable launch permit created only after exact repository authority validation.
+pub struct RepositoryLaunchPermit<'plan> {
+    plan: &'plan RepositoryOperationPlan,
+    before: &'plan RepositoryPreservationManifest,
+}
+
+impl RepositoryLaunchPermit<'_> {
+    /// Returns the exact approved repository plan.
+    #[must_use]
+    pub const fn plan(&self) -> &RepositoryOperationPlan {
+        self.plan
+    }
+
+    /// Returns the exact current pre-effect preservation manifest.
+    #[must_use]
+    pub const fn before(&self) -> &RepositoryPreservationManifest {
+        self.before
+    }
+}
+
+impl fmt::Debug for RepositoryLaunchPermit<'_> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("RepositoryLaunchPermit")
+            .field("transaction_id", &self.plan.transaction_id)
+            .field("operation", &self.plan.operation)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Trusted platform executor whose launch requires one kernel-created permit.
+pub trait BoundedRepositoryExecutor {
+    /// Executes one exact repository plan and returns manifest-bound postconditions.
+    fn execute(
+        &mut self,
+        permit: RepositoryLaunchPermit<'_>,
+        cancellation: &CancellationToken,
+    ) -> RepositoryPlatformResult;
+}
+
+/// Inert repository driver crossing the effect boundary only with consumed authority.
+pub struct RepositoryEffectDriver<E, H> {
+    executor: E,
+    held_repository_scope: H,
+    prepared: PreparedRepositoryOperation,
+    before: RepositoryPreservationManifest,
+    cancellation: CancellationToken,
+    receipt: Option<RepositoryOperationReceipt>,
+    error: Option<RepositorySafetyError>,
+}
+
+impl<E, H> RepositoryEffectDriver<E, H> {
+    /// Creates an inert driver after validating the pre-effect manifest binding.
+    pub fn new(
+        executor: E,
+        held_repository_scope: H,
+        prepared: PreparedRepositoryOperation,
+        before: RepositoryPreservationManifest,
+        cancellation: CancellationToken,
+    ) -> Result<Self, RepositorySafetyError> {
+        before.verify()?;
+        if before.manifest_sha256 != prepared.plan.preservation_manifest_sha256 {
+            return Err(RepositorySafetyError::ManifestDenied);
+        }
+        Ok(Self {
+            executor,
+            held_repository_scope,
+            prepared,
+            before,
+            cancellation,
+            receipt: None,
+            error: None,
+        })
+    }
+
+    /// Takes the repository-specific terminal receipt after mediated execution.
+    pub fn take_receipt(&mut self) -> Option<RepositoryOperationReceipt> {
+        self.receipt.take()
+    }
+
+    /// Takes a content-free repository-boundary error.
+    pub fn take_error(&mut self) -> Option<RepositorySafetyError> {
+        self.error.take()
+    }
+
+    /// Returns the executor after the attempt closes.
+    #[must_use]
+    pub fn into_executor(self) -> E {
+        self.executor
+    }
+}
+
+impl<E, H> fmt::Debug for RepositoryEffectDriver<E, H> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("RepositoryEffectDriver")
+            .field("transaction_id", &self.prepared.plan.transaction_id)
+            .field("operation", &self.prepared.plan.operation)
+            .field("has_receipt", &self.receipt.is_some())
+            .field("has_error", &self.error.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl<E, H> EffectDriver for RepositoryEffectDriver<E, H>
+where
+    E: BoundedRepositoryExecutor,
+    H: HeldWorkspaceObject,
+{
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        let call = authorization.call();
+        if authorization.operation().operation() != self.prepared.plan.operation.grant_operation()
+            || !authorization.authorizes_held_object(&self.held_repository_scope)
+            || call.arguments.sha256 != self.prepared.request_sha256
+            || call.arguments.bytes != self.prepared.request_bytes
+            || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
+        {
+            self.error = Some(RepositorySafetyError::InvalidInput);
+            return EffectLaunch::failed();
+        }
+
+        let platform = if self.cancellation.is_cancelled() {
+            RepositoryPlatformResult {
+                outcome: OperationOutcome::Cancelled,
+                before: self.before.clone(),
+                after: self.before.clone(),
+                cleanup_verified: true,
+                platform_code: "repository.cancelled.before_launch".to_owned(),
+            }
+        } else {
+            self.executor.execute(
+                RepositoryLaunchPermit {
+                    plan: &self.prepared.plan,
+                    before: &self.before,
+                },
+                &self.cancellation,
+            )
+        };
+
+        match reconcile_operation(
+            &self.prepared.plan,
+            platform,
+            authorization.transaction_id().as_str(),
+            authorization.attempt_id().as_str(),
+        ) {
+            Ok(receipt) => {
+                let state_change = if receipt.outcome == OperationOutcome::Succeeded {
+                    StateChange::Changed
+                } else {
+                    StateChange::NotChanged
+                };
+                let effect = EffectResult::from_redacted_material(
+                    receipt.outcome,
+                    receipt.receipt_sha256.as_bytes(),
+                    state_change,
+                );
+                self.receipt = Some(receipt);
+                EffectLaunch::completed(effect)
+            }
+            Err(error) => {
+                self.error = Some(error);
+                EffectLaunch::failed()
+            }
+        }
+    }
 }
 
 fn seal_plan(
@@ -2012,6 +2235,8 @@ mod tests {
                 cleanup_verified: true,
                 platform_code: "linux.git.failed".to_owned(),
             },
+            "authority-transaction-1",
+            "operation-attempt-1",
         )
         .expect("failed attempt receipts");
         assert_eq!(receipt.outcome, OperationOutcome::Failed);
