@@ -30,7 +30,7 @@
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
     "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
-    "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
+    "capabilities/knowledge/Cargo.toml": "f7fd813bd62ae53a0ea64ec6a5b6da5bf4dbd8190a3a6ccd0b6df6c990486bb4",
     "capabilities/read-only/Cargo.toml": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
@@ -39,7 +39,7 @@
     "platforms/linux/Cargo.toml": "1f72f4c8a1b4fd868a0b0fb26336d04826a50b21f1e99b24d4f7ebab4a8ac25b",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
-    "shells/host/Cargo.toml": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
+    "shells/host/Cargo.toml": "c111bb5e57d2709ed6bdccc9fdce46eec9a0f459288ebd08d4b4b2f3b88643fb"
   },
   "approved_cargo_packages": [
     "agentmage-capability-knowledge@0.0.0",

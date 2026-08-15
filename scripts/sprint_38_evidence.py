@@ -30,6 +30,7 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/obsidian.rs",
     "shells/host/src/knowledge_write.rs",
     "architecture/dependency-rules.json",
+    "security/strict-local-source-policy.json",
     "docs/architecture/controlled-markdown-knowledge-writes.md",
     "docs/verification/sprint-38-local-results.md",
     CORPUS_PATH,
