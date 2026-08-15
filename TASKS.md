@@ -4167,22 +4167,22 @@ records review, and deferred manual fuzzing.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 56.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 56.1.1.1** (legacy `S-048-I07`): Implement document and correspondence registers with version, approval, attachments, commitments, deadlines, hashes, and source paths.
-  - [ ] **Sub-task 56.1.1.2** (legacy `S-048-I08`): Implement naming, duplicate, superseded, final-copy, quality, deadline, routing-slip, mail-merge preview, calendar-file draft, and filing-suggestion workflows.
-  - [ ] **Sub-task 56.1.1.3** (legacy `S-048-I09`): Require exact preview and approval for every saved draft, rename, move, or filing action.
+- [x] **Task 56.1.1 - Implement the bounded story**
+  - [x] **Sub-task 56.1.1.1** (legacy `S-048-I07`): Implement document and correspondence registers with version, approval, attachments, commitments, deadlines, hashes, and source paths.
+  - [x] **Sub-task 56.1.1.2** (legacy `S-048-I08`): Implement naming, duplicate, superseded, final-copy, quality, deadline, routing-slip, mail-merge preview, calendar-file draft, and filing-suggestion workflows.
+  - [x] **Sub-task 56.1.1.3** (legacy `S-048-I09`): Require exact preview and approval for every saved draft, rename, move, or filing action.
 
-- [ ] **Task 56.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 56.1.2.1:** Meeting and secretary workflow schemas.
-  - [ ] **Sub-task 56.1.2.2:** Document and correspondence registers.
-  - [ ] **Sub-task 56.1.2.3:** Template pack for agendas, minutes, letters, memoranda, logs, and routing slips.
-  - [ ] **Sub-task 56.1.2.4:** Records quality and filing-preview reports.
+- [x] **Task 56.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 56.1.2.1:** Meeting and secretary workflow schemas.
+  - [x] **Sub-task 56.1.2.2:** Document and correspondence registers.
+  - [x] **Sub-task 56.1.2.3:** Template pack for agendas, minutes, letters, memoranda, logs, and routing slips.
+  - [x] **Sub-task 56.1.2.4:** Records quality and filing-preview reports.
 
 - [ ] **Task 56.1.3 - Verify and close the story**
-  - [ ] **Sub-task 56.1.3.1:** `S-048-UT01` converts labeled meeting/correspondence inputs into agendas, minutes, action items, decisions, deadlines, registers, and routing slips; assert exact attribution and unresolved ambiguity.
-  - [ ] **Sub-task 56.1.3.2:** `S-048-UT02` validates names, dates, owners, quorum/status, attachments, versions, record category, filing destination, and retention fields at empty/boundary/conflicting values.
-  - [ ] **Sub-task 56.1.3.3:** `S-048-ST01` seeds unsupported identity claims, hidden recipients, malicious attachments, prompt instructions, sensitive content, and record-disposition requests; assert no invented attribution, send, move, delete, or disposition.
-  - [ ] **Sub-task 56.1.3.4:** `S-048-IT01` performs draft/review/correct/version/finalize/file-preview workflows; assert source links, approvals, accessibility checks, naming rules, and no actual external filing.
+  - [x] **Sub-task 56.1.3.1:** `S-048-UT01` converts labeled meeting/correspondence inputs into agendas, minutes, action items, decisions, deadlines, registers, and routing slips; assert exact attribution and unresolved ambiguity.
+  - [x] **Sub-task 56.1.3.2:** `S-048-UT02` validates names, dates, owners, quorum/status, attachments, versions, record category, filing destination, and retention fields at empty/boundary/conflicting values.
+  - [x] **Sub-task 56.1.3.3:** `S-048-ST01` seeds unsupported identity claims, hidden recipients, malicious attachments, prompt instructions, sensitive content, and record-disposition requests; assert no invented attribution, send, move, delete, or disposition.
+  - [x] **Sub-task 56.1.3.4:** `S-048-IT01` performs draft/review/correct/version/finalize/file-preview workflows; assert source links, approvals, accessibility checks, naming rules, and no actual external filing.
   - [ ] **Sub-task 56.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-003`, `SR-AI-003`/`SR-AI-007`/`SR-AI-010`, `SR-CIV-003` through `SR-CIV-009`; retain labeled workflow results, attribution checks, disclosure/filing previews, accessibility output, and records-review fields.
 
 ##### Story Acceptance Criteria
@@ -4192,13 +4192,24 @@ records review, and deferred manual fuzzing.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 56.AC1:** Raw notes and approved prior minutes remain unchanged.
-- [ ] **Sprint AC 56.AC2:** Unknown owners, dates, attendance, and decisions remain explicitly unknown.
-- [ ] **Sprint AC 56.AC3:** Follow-up drafts quote and link the approved record accurately.
-- [ ] **Sprint AC 56.AC4:** Mail merge and calendar generation create local previews only.
-- [ ] **Sprint AC 56.AC5:** No automatic sending, scheduling, recipient selection, records disposition, or silent final-document change is possible.
+- [x] **Sprint AC 56.AC1:** Raw notes and approved prior minutes remain unchanged.
+- [x] **Sprint AC 56.AC2:** Unknown owners, dates, attendance, and decisions remain explicitly unknown.
+- [x] **Sprint AC 56.AC3:** Follow-up drafts quote and link the approved record accurately.
+- [x] **Sprint AC 56.AC4:** Mail merge and calendar generation create local previews only.
+- [x] **Sprint AC 56.AC5:** No automatic sending, scheduling, recipient selection, records disposition, or silent final-document change is possible.
 
 **Gate decision:** Sprint 56 is PASS only when Story 56.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-56/local-evidence-report.json`
+binds 10 passing commands and the 68-case acceptance corpus to source revision
+`954eea936d87546201a9d0172fbfed57869d8fd7` (report SHA-256
+`4dd461ffeb71a923d18ecd4cedc096b197721d987103592c5129df8a04cc76b8`). The bounded
+registers, ten local workflow reports, exact action previews and approval reviews, secretary skill
+pack, runtime schemas, attribution and unknown-field checks, accessibility tracking, hostile-content
+tests, version history, and local sprint criteria are complete. Story 56.1 and Sprint 56 remain
+**BLOCKED** by Sprint 55, the absent product coordinator and native interface, missing installed
+accessibility and cross-platform evidence, trusted-package execution, independent records-owner
+review, and deferred manual fuzzing.
 ### [ ] Sprint 57 - Markdown and Plain-Text Artifacts
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
