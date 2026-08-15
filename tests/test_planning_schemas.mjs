@@ -379,6 +379,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "thin-client-event",
     "frontier-tier-decision",
     "frontier-recommendation-receipt",
+    "frontier-return-manifest",
+    "frontier-round-trip-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1076,6 +1078,113 @@ test("frontier receipts reject delivery and implicit or sensitive destinations",
     assert.equal(
       validateRuntimeRecord(
         "frontier-recommendation-receipt",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("frontier return manifests reject authority stale references and operation drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/frontier-return-manifest.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.authority_granted = true;
+    },
+    (record) => {
+      record.completion_credit = true;
+    },
+    (record) => {
+      record.outbound_network_required = true;
+    },
+    (record) => {
+      record.steps[1].artifact_ids = ["artifact-missing"];
+    },
+    (record) => {
+      record.steps[0].citation_ids = ["citation-missing"];
+    },
+    (record) => {
+      record.steps[1].proposed_operation.authority_class = "admin";
+    },
+    (record) => {
+      record.steps[1].approval_requirements = [];
+    },
+    (record) => {
+      record.steps.reverse();
+    },
+    (record) => {
+      record.artifacts[0].display_path = "../escape.diff";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "frontier-return-manifest",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("frontier round-trip receipts reject trust effects and recursive authority", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/frontier-round-trip-receipt.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.applied_effect_count = 1;
+    },
+    (record) => {
+      record.duplicate_effect_count = 1;
+    },
+    (record) => {
+      record.outbound_network_used = true;
+    },
+    (record) => {
+      record.step_outcomes[0].grant_issued = true;
+    },
+    (record) => {
+      record.step_outcomes[1].file_written = true;
+    },
+    (record) => {
+      record.step_outcomes[0].completion_credited = true;
+    },
+    (record) => {
+      record.step_outcomes[0].local_requirements.fresh_task_classification_required = false;
+    },
+    (record) => {
+      record.step_outcomes.reverse();
+    },
+    (record) => {
+      record.step_outcomes[0].disposition = "quarantined";
+      record.step_outcomes[0].claim_state = "inferred";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "frontier-round-trip-receipt",
         changed,
         runtimeValidators,
       ).valid,

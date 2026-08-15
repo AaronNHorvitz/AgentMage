@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/frontier-return-manifest.schema.json",
+  "title": "AgentMage Frontier Return Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "import_id",
+    "request_packet_sha256",
+    "base_workspace_state_sha256",
+    "base_model_state_sha256",
+    "base_policy_sha256",
+    "tier",
+    "result_kind",
+    "rationale",
+    "inputs",
+    "artifacts",
+    "citations",
+    "steps",
+    "acceptance_checks",
+    "approval_requirements",
+    "remaining_steps",
+    "external_content_untrusted",
+    "authority_granted",
+    "completion_credit",
+    "outbound_network_required",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "import_id": { "$ref": "#/$defs/identifier" },
+    "request_packet_sha256": { "$ref": "#/$defs/sha256" },
+    "base_workspace_state_sha256": { "$ref": "#/$defs/sha256" },
+    "base_model_state_sha256": { "$ref": "#/$defs/sha256" },
+    "base_policy_sha256": { "$ref": "#/$defs/sha256" },
+    "tier": { "const": "frontier_recommended" },
+    "result_kind": { "enum": ["decision", "artifact"] },
+    "rationale": { "$ref": "#/$defs/text" },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "citations": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/citation" }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "acceptance_checks": { "$ref": "#/$defs/textList" },
+    "approval_requirements": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/operation" }
+    },
+    "remaining_steps": { "$ref": "#/$defs/optionalTextList" },
+    "external_content_untrusted": { "const": true },
+    "authority_granted": { "const": false },
+    "completion_credit": { "const": false },
+    "outbound_network_required": { "const": false },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "textList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/text" },
+      "uniqueItems": true
+    },
+    "optionalTextList": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/text" },
+      "uniqueItems": true
+    },
+    "identifierList": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/identifier" },
+      "uniqueItems": true
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_id", "input_sha256"],
+      "properties": {
+        "input_id": { "$ref": "#/$defs/identifier" },
+        "input_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "kind",
+        "media_type",
+        "display_path",
+        "byte_length",
+        "content_sha256"
+      ],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "kind": {
+          "enum": ["text", "patch", "file", "plan", "claim_set", "decision"]
+        },
+        "media_type": {
+          "enum": [
+            "application/json",
+            "text/markdown",
+            "text/plain",
+            "text/x-diff"
+          ]
+        },
+        "display_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)(?!.*:)[A-Za-z0-9_-][A-Za-z0-9._/-]*$"
+        },
+        "byte_length": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "content_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "citation_id",
+        "source_id",
+        "object_id",
+        "fragment",
+        "claimed_content_sha256"
+      ],
+      "properties": {
+        "citation_id": { "$ref": "#/$defs/identifier" },
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "object_id": { "$ref": "#/$defs/identifier" },
+        "fragment": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/text" }]
+        },
+        "claimed_content_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taxonomy_version", "operation", "authority_class"],
+      "properties": {
+        "taxonomy_version": { "const": 1 },
+        "operation": {
+          "enum": [
+            "workspace_read",
+            "workspace_write",
+            "workspace_delete",
+            "command_execute",
+            "network_access",
+            "git_clone",
+            "git_fetch",
+            "git_worktree_create",
+            "git_worktree_remove",
+            "git_branch_fast_forward",
+            "git_commit",
+            "git_push",
+            "publish",
+            "send",
+            "upload",
+            "deploy",
+            "database_read",
+            "database_write",
+            "credential_access",
+            "model_inference",
+            "draft_create",
+            "administration"
+          ]
+        },
+        "authority_class": {
+          "enum": [
+            "observe",
+            "draft",
+            "local-write",
+            "remote-write",
+            "execute",
+            "deploy",
+            "secrets",
+            "admin"
+          ]
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "kind",
+        "rationale",
+        "artifact_ids",
+        "citation_ids",
+        "acceptance_checks",
+        "proposed_operation",
+        "approval_requirements"
+      ],
+      "properties": {
+        "step_id": { "$ref": "#/$defs/identifier" },
+        "kind": {
+          "enum": [
+            "decision",
+            "claim",
+            "file_proposal",
+            "command_proposal",
+            "tool_proposal",
+            "link_reference",
+            "test_result"
+          ]
+        },
+        "rationale": { "$ref": "#/$defs/text" },
+        "artifact_ids": { "$ref": "#/$defs/identifierList" },
+        "citation_ids": { "$ref": "#/$defs/identifierList" },
+        "acceptance_checks": { "$ref": "#/$defs/optionalTextList" },
+        "proposed_operation": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/operation" }]
+        },
+        "approval_requirements": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/operation" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

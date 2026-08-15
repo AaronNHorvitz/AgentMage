@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/frontier-round-trip-receipt.schema.json",
+  "title": "AgentMage Frontier Round-Trip Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "request_packet_sha256",
+    "return_manifest_sha256",
+    "local_revalidation_sha256",
+    "step_outcomes",
+    "disagreements",
+    "re_escalation_reason",
+    "capability_feedback",
+    "applied_effect_count",
+    "duplicate_effect_count",
+    "outbound_network_used",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "receipt_id": { "$ref": "#/$defs/identifier" },
+    "request_packet_sha256": { "$ref": "#/$defs/sha256" },
+    "return_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "local_revalidation_sha256": { "$ref": "#/$defs/sha256" },
+    "step_outcomes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/stepOutcome" }
+    },
+    "disagreements": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/disagreement" }
+    },
+    "re_escalation_reason": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/code" }]
+    },
+    "capability_feedback": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/code" },
+      "uniqueItems": true
+    },
+    "applied_effect_count": { "const": 0 },
+    "duplicate_effect_count": { "const": 0 },
+    "outbound_network_used": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "codeList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/code" },
+      "uniqueItems": true
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fresh_task_classification_required",
+        "fresh_grant_required",
+        "registered_tool_validation_required",
+        "exact_write_preview_required",
+        "trusted_validation_required",
+        "evidence_assignment_required",
+        "user_approval_required"
+      ],
+      "properties": {
+        "fresh_task_classification_required": { "const": true },
+        "fresh_grant_required": { "type": "boolean" },
+        "registered_tool_validation_required": { "type": "boolean" },
+        "exact_write_preview_required": { "type": "boolean" },
+        "trusted_validation_required": { "type": "boolean" },
+        "evidence_assignment_required": { "type": "boolean" },
+        "user_approval_required": { "type": "boolean" }
+      }
+    },
+    "stepOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "disposition",
+        "claim_state",
+        "reason_codes",
+        "local_requirements",
+        "grant_issued",
+        "tool_called",
+        "file_written",
+        "completion_credited"
+      ],
+      "properties": {
+        "step_id": { "$ref": "#/$defs/identifier" },
+        "disposition": {
+          "enum": ["rejected", "quarantined", "proposal_eligible"]
+        },
+        "claim_state": {
+          "oneOf": [
+            { "type": "null" },
+            { "enum": ["inferred", "unknown_blocked"] }
+          ]
+        },
+        "reason_codes": { "$ref": "#/$defs/codeList" },
+        "local_requirements": { "$ref": "#/$defs/requirements" },
+        "grant_issued": { "const": false },
+        "tool_called": { "const": false },
+        "file_written": { "const": false },
+        "completion_credited": { "const": false }
+      }
+    },
+    "disagreement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disagreement_id",
+        "imported_sha256",
+        "local_evidence_sha256",
+        "reason_code",
+        "unresolved"
+      ],
+      "properties": {
+        "disagreement_id": { "$ref": "#/$defs/identifier" },
+        "imported_sha256": { "$ref": "#/$defs/sha256" },
+        "local_evidence_sha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "unresolved": { "const": true }
+      }
+    }
+  }
+}

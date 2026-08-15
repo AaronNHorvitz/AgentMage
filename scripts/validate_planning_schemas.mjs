@@ -76,6 +76,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "thin-client-event",
   "frontier-tier-decision",
   "frontier-recommendation-receipt",
+  "frontier-return-manifest",
+  "frontier-round-trip-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -896,6 +898,166 @@ function runtimeSemanticErrors(recordType, data) {
       destination.includes("authorization: bearer ")
     ) {
       errors.push("frontier destination label cannot contain secret-like data");
+    }
+  } else if (recordType === "frontier-return-manifest") {
+    const operations = [
+      "workspace_read",
+      "workspace_write",
+      "workspace_delete",
+      "command_execute",
+      "network_access",
+      "git_clone",
+      "git_fetch",
+      "git_worktree_create",
+      "git_worktree_remove",
+      "git_branch_fast_forward",
+      "git_commit",
+      "git_push",
+      "publish",
+      "send",
+      "upload",
+      "deploy",
+      "database_read",
+      "database_write",
+      "credential_access",
+      "model_inference",
+      "draft_create",
+      "administration",
+    ];
+    const authority = {
+      workspace_read: "observe",
+      database_read: "observe",
+      draft_create: "draft",
+      workspace_write: "local-write",
+      workspace_delete: "local-write",
+      git_clone: "local-write",
+      git_fetch: "local-write",
+      git_worktree_create: "local-write",
+      git_worktree_remove: "local-write",
+      git_branch_fast_forward: "local-write",
+      git_commit: "local-write",
+      git_push: "remote-write",
+      publish: "remote-write",
+      send: "remote-write",
+      upload: "remote-write",
+      database_write: "remote-write",
+      command_execute: "execute",
+      network_access: "execute",
+      model_inference: "execute",
+      deploy: "deploy",
+      credential_access: "secrets",
+      administration: "admin",
+    };
+    const operationKey = (item) => operations.indexOf(item.operation);
+    const validOperation = (item) =>
+      item?.taxonomy_version === 1 &&
+      authority[item.operation] === item.authority_class;
+    const strictOperations = (items) =>
+      (items ?? []).every(validOperation) &&
+      (items ?? []).every(
+        (item, index) =>
+          index === 0 || operationKey(items[index - 1]) < operationKey(item),
+      );
+    if (
+      !isStrictlySortedBy(data.inputs ?? [], (item) => item.input_id) ||
+      !isStrictlySortedBy(data.artifacts ?? [], (item) => item.artifact_id) ||
+      !isStrictlySortedBy(data.citations ?? [], (item) => item.citation_id) ||
+      !isStrictlySortedBy(data.steps ?? [], (item) => item.step_id) ||
+      !isStrictlySorted(data.acceptance_checks ?? []) ||
+      !isStrictlySorted(data.remaining_steps ?? []) ||
+      !strictOperations(data.approval_requirements)
+    ) {
+      errors.push(
+        "frontier return collections must be canonical and strictly ordered",
+      );
+    }
+    const artifactIds = new Set(
+      (data.artifacts ?? []).map((item) => item.artifact_id),
+    );
+    const citationIds = new Set(
+      (data.citations ?? []).map((item) => item.citation_id),
+    );
+    const globalApprovals = new Set(
+      (data.approval_requirements ?? []).map((item) => item.operation),
+    );
+    for (const step of data.steps ?? []) {
+      const operation = step.proposed_operation?.operation;
+      if (
+        !isStrictlySorted(step.artifact_ids ?? []) ||
+        !isStrictlySorted(step.citation_ids ?? []) ||
+        !isStrictlySorted(step.acceptance_checks ?? []) ||
+        !strictOperations(step.approval_requirements) ||
+        (step.artifact_ids ?? []).some((id) => !artifactIds.has(id)) ||
+        (step.citation_ids ?? []).some((id) => !citationIds.has(id)) ||
+        (step.approval_requirements ?? []).some(
+          (item) => !globalApprovals.has(item.operation),
+        ) ||
+        (step.proposed_operation !== null &&
+          !validOperation(step.proposed_operation)) ||
+        (operation !== undefined &&
+          !(step.approval_requirements ?? []).some(
+            (item) => item.operation === operation,
+          ))
+      ) {
+        errors.push(
+          `frontier return step is not locally bounded: ${step.step_id}`,
+        );
+      }
+      const operationKind = [
+        "file_proposal",
+        "command_proposal",
+        "tool_proposal",
+      ].includes(step.kind);
+      if (operationKind !== (step.proposed_operation !== null)) {
+        errors.push(
+          `frontier return operation shape disagrees with step kind: ${step.step_id}`,
+        );
+      }
+      if (
+        (step.kind === "file_proposal" &&
+          !["workspace_write", "workspace_delete"].includes(operation)) ||
+        (step.kind === "command_proposal" && operation !== "command_execute") ||
+        (step.kind === "claim" && (step.citation_ids ?? []).length === 0) ||
+        (step.kind === "file_proposal" &&
+          (step.artifact_ids ?? []).length === 0) ||
+        (step.kind === "test_result" &&
+          (step.acceptance_checks ?? []).length === 0) ||
+        (step.kind === "link_reference" &&
+          (step.citation_ids ?? []).length === 0)
+      ) {
+        errors.push(
+          `frontier return step lacks required evidence or operation: ${step.step_id}`,
+        );
+      }
+    }
+  } else if (recordType === "frontier-round-trip-receipt") {
+    if (
+      !isStrictlySortedBy(data.step_outcomes ?? [], (item) => item.step_id) ||
+      !isStrictlySortedBy(
+        data.disagreements ?? [],
+        (item) => item.disagreement_id,
+      ) ||
+      !isStrictlySorted(data.capability_feedback ?? [])
+    ) {
+      errors.push(
+        "frontier round-trip outcomes must be canonical and strictly ordered",
+      );
+    }
+    for (const outcome of data.step_outcomes ?? []) {
+      if (
+        outcome.local_requirements?.fresh_task_classification_required !==
+          true ||
+        outcome.grant_issued !== false ||
+        outcome.tool_called !== false ||
+        outcome.file_written !== false ||
+        outcome.completion_credited !== false ||
+        (outcome.claim_state === "inferred" &&
+          outcome.disposition !== "proposal_eligible")
+      ) {
+        errors.push(
+          `frontier outcome overclaims trust or effect: ${outcome.step_id}`,
+        );
+      }
     }
   }
   return errors;

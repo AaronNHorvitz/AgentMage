@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "receipt_id": "frontier-round-trip-0001",
+  "request_packet_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "return_manifest_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+  "local_revalidation_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+  "step_outcomes": [
+    {
+      "step_id": "step-claim-0001",
+      "disposition": "proposal_eligible",
+      "claim_state": "inferred",
+      "reason_codes": ["frontier.import.proposal-revalidated"],
+      "local_requirements": {
+        "fresh_task_classification_required": true,
+        "fresh_grant_required": false,
+        "registered_tool_validation_required": false,
+        "exact_write_preview_required": false,
+        "trusted_validation_required": true,
+        "evidence_assignment_required": true,
+        "user_approval_required": false
+      },
+      "grant_issued": false,
+      "tool_called": false,
+      "file_written": false,
+      "completion_credited": false
+    },
+    {
+      "step_id": "step-file-0001",
+      "disposition": "proposal_eligible",
+      "claim_state": null,
+      "reason_codes": ["frontier.import.proposal-revalidated"],
+      "local_requirements": {
+        "fresh_task_classification_required": true,
+        "fresh_grant_required": true,
+        "registered_tool_validation_required": false,
+        "exact_write_preview_required": true,
+        "trusted_validation_required": true,
+        "evidence_assignment_required": false,
+        "user_approval_required": true
+      },
+      "grant_issued": false,
+      "tool_called": false,
+      "file_written": false,
+      "completion_credited": false
+    }
+  ],
+  "disagreements": [],
+  "re_escalation_reason": null,
+  "capability_feedback": ["frontier.feedback.local-capability-gap"],
+  "applied_effect_count": 0,
+  "duplicate_effect_count": 0,
+  "outbound_network_used": false,
+  "receipt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
