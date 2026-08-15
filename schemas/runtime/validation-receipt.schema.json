@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/validation-receipt.schema.json",
+  "title": "AgentMage Trusted Validation Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "validation_attempt_id",
+    "validation_id",
+    "kind",
+    "validation_template_sha256",
+    "template_source_sha256",
+    "execution_scope_sha256",
+    "approval_sha256",
+    "authority_transaction_id",
+    "operation_attempt_id",
+    "command_attempt_id",
+    "command_template_id",
+    "command_template_version",
+    "command_spec_sha256",
+    "command_request_sha256",
+    "command_preview_sha256",
+    "command_receipt_sha256",
+    "executable",
+    "executable_sha256",
+    "arguments",
+    "working_directory",
+    "environment_names",
+    "environment_sha256",
+    "parser",
+    "parser_version",
+    "parser_sha256",
+    "termination",
+    "operation_outcome",
+    "exit_code",
+    "signal",
+    "platform_code",
+    "descendants_terminated",
+    "duration_ms",
+    "reported_duration_ms",
+    "stdout_sha256",
+    "stdout_total_bytes",
+    "stdout_truncated",
+    "stdout_classification",
+    "stderr_sha256",
+    "stderr_total_bytes",
+    "stderr_truncated",
+    "stderr_classification",
+    "secret_match_count",
+    "status",
+    "coverage",
+    "passed",
+    "failed",
+    "skipped",
+    "failed_names",
+    "artifacts",
+    "affected_files",
+    "unverified_kinds",
+    "failure_classification",
+    "failure_sha256",
+    "retry_count",
+    "initial_failure_sha256",
+    "execution_authority",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "validation_attempt_id": { "$ref": "#/$defs/identifier" },
+    "validation_id": { "$ref": "#/$defs/identifier" },
+    "kind": { "$ref": "#/$defs/validationKind" },
+    "validation_template_sha256": { "$ref": "#/$defs/sha256" },
+    "template_source_sha256": { "$ref": "#/$defs/sha256" },
+    "execution_scope_sha256": { "$ref": "#/$defs/sha256" },
+    "approval_sha256": { "$ref": "#/$defs/sha256" },
+    "authority_transaction_id": { "$ref": "#/$defs/identifier" },
+    "operation_attempt_id": { "$ref": "#/$defs/identifier" },
+    "command_attempt_id": { "$ref": "#/$defs/identifier" },
+    "command_template_id": { "$ref": "#/$defs/identifier" },
+    "command_template_version": { "$ref": "#/$defs/version" },
+    "command_spec_sha256": { "$ref": "#/$defs/sha256" },
+    "command_request_sha256": { "$ref": "#/$defs/sha256" },
+    "command_preview_sha256": { "$ref": "#/$defs/sha256" },
+    "command_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "executable": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "pattern": "^/(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "executable_sha256": { "$ref": "#/$defs/sha256" },
+    "arguments": {
+      "type": "array",
+      "maxItems": 128,
+      "items": { "type": "string", "minLength": 1, "maxLength": 4096 }
+    },
+    "working_directory": { "const": "empty_scratch" },
+    "environment_names": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["LANG", "LC_ALL", "NO_COLOR", "TZ"] }
+    },
+    "environment_sha256": { "$ref": "#/$defs/sha256" },
+    "parser": { "enum": ["agent_mage_json_v1", "process_exit_v1"] },
+    "parser_version": { "$ref": "#/$defs/version" },
+    "parser_sha256": { "$ref": "#/$defs/sha256" },
+    "termination": {
+      "enum": ["exited", "cancelled", "timed_out", "output_limit", "launch_failed"]
+    },
+    "operation_outcome": { "enum": ["succeeded", "failed", "cancelled", "timed_out"] },
+    "exit_code": {
+      "oneOf": [
+        { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        { "type": "null" }
+      ]
+    },
+    "signal": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "maximum": 255 },
+        { "type": "null" }
+      ]
+    },
+    "platform_code": { "$ref": "#/$defs/identifier" },
+    "descendants_terminated": { "type": "boolean" },
+    "duration_ms": { "type": "integer", "minimum": 0, "maximum": 310000 },
+    "reported_duration_ms": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0, "maximum": 311000 },
+        { "type": "null" }
+      ]
+    },
+    "stdout_sha256": { "$ref": "#/$defs/sha256" },
+    "stdout_total_bytes": { "$ref": "#/$defs/bytes" },
+    "stdout_truncated": { "type": "boolean" },
+    "stdout_classification": { "$ref": "#/$defs/outputClassification" },
+    "stderr_sha256": { "$ref": "#/$defs/sha256" },
+    "stderr_total_bytes": { "$ref": "#/$defs/bytes" },
+    "stderr_truncated": { "type": "boolean" },
+    "stderr_classification": { "$ref": "#/$defs/outputClassification" },
+    "secret_match_count": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "status": {
+      "enum": [
+        "passed",
+        "assertion_failed",
+        "compile_failed",
+        "infrastructure_failed",
+        "timed_out",
+        "cancelled",
+        "crashed",
+        "flaky",
+        "skipped_only",
+        "malformed",
+        "truncated",
+        "zero_tests",
+        "unverified",
+        "sensitive_output"
+      ]
+    },
+    "coverage": { "enum": ["complete", "partial"] },
+    "passed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "failed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "skipped": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "failed_names": {
+      "type": "array",
+      "maxItems": 2048,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "affected_files": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/affectedFile" }
+    },
+    "unverified_kinds": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/validationKind" }
+    },
+    "failure_classification": {
+      "oneOf": [
+        {
+          "enum": [
+            "change_caused",
+            "baseline",
+            "flaky",
+            "dependency",
+            "environment",
+            "permission",
+            "unrelated",
+            "unclassified"
+          ]
+        },
+        { "type": "null" }
+      ]
+    },
+    "failure_sha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "retry_count": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "initial_failure_sha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "execution_authority": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "termination": { "const": "exited" } }, "required": ["termination"] },
+      "then": { "properties": { "exit_code": { "type": "integer" } } },
+      "else": { "properties": { "exit_code": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "cancelled" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "operation_outcome": { "const": "cancelled" },
+          "descendants_terminated": { "const": true },
+          "status": { "const": "cancelled" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "timed_out" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "operation_outcome": { "const": "timed_out" },
+          "descendants_terminated": { "const": true },
+          "status": { "const": "timed_out" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "output_limit" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "operation_outcome": { "const": "failed" },
+          "status": { "const": "truncated" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "launch_failed" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "operation_outcome": { "const": "failed" },
+          "status": { "const": "infrastructure_failed" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "coverage": { "const": "complete" } }, "required": ["coverage"] },
+      "then": { "properties": { "unverified_kinds": { "type": "array", "maxItems": 0 } } },
+      "else": { "properties": { "unverified_kinds": { "type": "array", "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "passed" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "termination": { "const": "exited" },
+          "operation_outcome": { "const": "succeeded" },
+          "exit_code": { "const": 0 },
+          "stdout_truncated": { "const": false },
+          "stderr_truncated": { "const": false },
+          "secret_match_count": { "const": 0 },
+          "failure_classification": { "type": "null" },
+          "failure_sha256": { "type": "null" },
+          "retry_count": { "const": 0 },
+          "initial_failure_sha256": { "type": "null" }
+        }
+      },
+      "else": {
+        "properties": {
+          "failure_classification": { "type": "string" },
+          "failure_sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "flaky" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "retry_count": { "type": "integer", "minimum": 1 },
+          "initial_failure_sha256": { "$ref": "#/$defs/sha256" },
+          "failure_classification": { "const": "flaky" }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          { "properties": { "stdout_classification": { "const": "secret_detected" } }, "required": ["stdout_classification"] },
+          { "properties": { "stderr_classification": { "const": "secret_detected" } }, "required": ["stderr_classification"] }
+        ]
+      },
+      "then": {
+        "properties": {
+          "secret_match_count": { "type": "integer", "minimum": 1 },
+          "status": { "const": "sensitive_output" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "maxLength": 64 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bytes": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "validationKind": {
+      "enum": ["unit", "integration", "end_to_end", "lint", "format", "types", "build", "packaging", "security"]
+    },
+    "outputClassification": { "enum": ["public", "internal", "restricted", "secret_detected"] },
+    "pathComponent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^(?!\\.{1,2}$)(?!\\*{1,2}$)[^/\\\\:\\u0000-\\u001f\\u007f]+$"
+    },
+    "workspacePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/pathComponent" }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "path", "sha256", "byte_length", "observed_after_command"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "path": { "$ref": "#/$defs/workspacePath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length": { "$ref": "#/$defs/bytes" },
+        "observed_after_command": { "const": true }
+      }
+    },
+    "affectedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "preimage_sha256", "postimage_sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/workspacePath" },
+        "preimage_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "postimage_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      },
+      "not": {
+        "properties": {
+          "preimage_sha256": { "type": "null" },
+          "postimage_sha256": { "type": "null" }
+        }
+      }
+    }
+  }
+}

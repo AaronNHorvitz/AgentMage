@@ -353,6 +353,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "write-aware-checkpoint",
     "command-preview",
     "command-receipt",
+    "validation-receipt",
     "repository-preservation-manifest",
     "repository-operation-plan",
     "repository-operation-receipt",
@@ -362,7 +363,50 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true, true, true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true, true, true, true, true, true, true],
+  );
+});
+
+test("validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/validation-receipt.valid.json"),
+      "utf8",
+    ),
+  );
+  const zeroTests = structuredClone(source);
+  zeroTests.passed = 0;
+  assert.equal(
+    validateRuntimeRecord("validation-receipt", zeroTests, runtimeValidators).valid,
+    false,
+  );
+
+  const falsePartial = structuredClone(source);
+  falsePartial.coverage = "partial";
+  assert.equal(
+    validateRuntimeRecord("validation-receipt", falsePartial, runtimeValidators).valid,
+    false,
+  );
+
+  const leakedSecret = structuredClone(source);
+  leakedSecret.secret_match_count = 1;
+  assert.equal(
+    validateRuntimeRecord("validation-receipt", leakedSecret, runtimeValidators).valid,
+    false,
+  );
+
+  const unsorted = structuredClone(source);
+  unsorted.environment_names = ["TZ", "LANG"];
+  assert.equal(
+    validateRuntimeRecord("validation-receipt", unsorted, runtimeValidators).valid,
+    false,
+  );
+
+  const rawOutput = structuredClone(source);
+  rawOutput.stdout = "forged green output";
+  assert.equal(
+    validateRuntimeRecord("validation-receipt", rawOutput, runtimeValidators).valid,
+    false,
   );
 });
 

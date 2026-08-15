@@ -57,6 +57,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "write-aware-checkpoint",
   "command-preview",
   "command-receipt",
+  "validation-receipt",
   "repository-preservation-manifest",
   "repository-operation-plan",
   "repository-operation-receipt",
@@ -295,6 +296,61 @@ function runtimeSemanticErrors(recordType, data) {
       input.observed_result_sha256 === input.expected_result_sha256
     ) {
       errors.push("a reproduced failure must differ from the expected result identity");
+    }
+  } else if (recordType === "validation-receipt") {
+    for (const field of ["environment_names", "failed_names", "unverified_kinds"]) {
+      if (!isStrictlySorted(data[field] ?? [])) {
+        errors.push(`${field} must be strictly sorted`);
+      }
+    }
+    const artifactKeys = (data.artifacts ?? []).map(
+      (artifact) => `${artifact.artifact_id}:${JSON.stringify(artifact.path)}`,
+    );
+    if (!isStrictlySorted(artifactKeys)) {
+      errors.push("artifacts must be strictly sorted by identity and path");
+    }
+    const affectedKeys = (data.affected_files ?? []).map(
+      (file) => JSON.stringify(file.path),
+    );
+    if (!isStrictlySorted(affectedKeys)) {
+      errors.push("affected_files must be strictly sorted by path");
+    }
+    if ((data.unverified_kinds ?? []).includes(data.kind)) {
+      errors.push("the executed validation kind cannot be unverified");
+    }
+    if (
+      data.reported_duration_ms !== null &&
+      data.reported_duration_ms > data.duration_ms + 1000
+    ) {
+      errors.push("reported duration exceeds the bounded process duration allowance");
+    }
+    const secretClassified = [
+      data.stdout_classification,
+      data.stderr_classification,
+    ].includes("secret_detected");
+    if ((data.secret_match_count > 0) !== secretClassified) {
+      errors.push("secret count and output classification disagree");
+    }
+    if (
+      ["unit", "integration", "end_to_end"].includes(data.kind) &&
+      data.status === "passed" &&
+      data.passed < 1
+    ) {
+      errors.push("a passing test-kind receipt must report an executed test");
+    }
+    if (
+      data.status === "assertion_failed" &&
+      (data.failed < 1 || data.failed_names.length !== data.failed)
+    ) {
+      errors.push("assertion failure count and names must agree");
+    }
+    for (const file of data.affected_files ?? []) {
+      if (
+        file.preimage_sha256 !== null &&
+        file.preimage_sha256 === file.postimage_sha256
+      ) {
+        errors.push("affected file preimage and postimage must differ");
+      }
     }
   }
   return errors;
