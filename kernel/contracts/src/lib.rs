@@ -16,6 +16,7 @@ mod context;
 mod conversation;
 mod diagnostics;
 mod display_link;
+mod document_control;
 mod evidence;
 mod executive;
 mod frontier;
@@ -89,6 +90,13 @@ pub use diagnostics::{
 };
 pub use display_link::{
     DisplayFileLink, DisplayLinkError, DisplayLinkErrorKind, MAX_DISPLAY_FILE_URI_BYTES,
+};
+pub use document_control::{
+    DocumentActionApproval, DocumentActionKind, DocumentActionPreview, DocumentActionReview,
+    DocumentAttachmentReviewState, DocumentControlFinding, DocumentControlFindingKind,
+    DocumentLifecycleState, DocumentRegister, DocumentRegisterAttachment, DocumentRegisterEntry,
+    DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass, DocumentWorkflowKind,
+    DocumentWorkflowReport,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{

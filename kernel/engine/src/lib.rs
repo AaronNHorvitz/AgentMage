@@ -35,6 +35,8 @@ pub mod conversation_archive;
 pub mod conversation_library;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
+/// Deterministic document registers, records review, and exact local action previews.
+pub mod document_control;
 /// Exact-preview redacted evidence bundles derived from canonical conversation state.
 pub mod evidence_bundle;
 /// Fresh citation resolution, complete answer ledgers, and keyed receipt integrity.
