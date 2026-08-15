@@ -96,7 +96,7 @@ COMMANDS: Final = (
         "host-knowledge-tests",
         ("cargo", "test", "-p", "agentmage-host", "knowledge_write", "--locked"),
     ),
-    ("product-gate", ("npm", "run", "product:check")),
+    ("product-ci-contract", ("python3", "scripts/product_ci.py", "--check")),
     ("v0.3-release-gate", ("python3", "scripts/v0_3_write_release_gate.py")),
     ("documentation-gate", ("npm", "run", "docs:check")),
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
