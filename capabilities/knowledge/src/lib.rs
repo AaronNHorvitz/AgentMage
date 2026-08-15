@@ -28,6 +28,7 @@ mod pdf_inspection;
 mod pdf_redaction;
 mod pdf_visual;
 mod plain_folder;
+mod reconciliation_workbook;
 mod retrieval;
 mod schema;
 mod semantic;
@@ -162,6 +163,13 @@ pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
     PlainFolderKnowledgeStore, PlainFolderLayout, PlainFolderNoteInput, parse_canonical_markdown,
     render_canonical_markdown,
+};
+pub use reconciliation_workbook::{
+    GeneratedReconciliationWorkbook, ReconciliationFormula, ReconciliationWorkbookError,
+    ReconciliationWorkbookProfile, ReconciliationWorkbookRequest, SpreadsheetFormulaObservation,
+    SpreadsheetVerificationEvidenceKind, SpreadsheetVerificationObservation,
+    SpreadsheetVerificationPlatform, SpreadsheetVerificationProfile, SpreadsheetVerificationReport,
+    generate_reconciliation_workbook, verify_reconciliation_workbook,
 };
 pub use retrieval::{
     KnowledgeAnswerDraft, KnowledgeContextEntry, KnowledgeContextQuery, KnowledgeEvidenceState,

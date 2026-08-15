@@ -5,7 +5,7 @@ use std::io::{Cursor, Read};
 
 use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
 use quick_xml::escape::unescape;
-use quick_xml::events::{BytesStart, Event};
+use quick_xml::events::{BytesRef, BytesStart, Event};
 use quick_xml::{Reader, XmlVersion};
 use serde::{Deserialize, Serialize};
 use zip::{CompressionMethod, ZipArchive};
@@ -360,6 +360,30 @@ fn decoded_text(event: quick_xml::events::BytesText<'_>) -> Result<String, Sprea
         .map_err(|_| SpreadsheetError::MalformedPackage)
 }
 
+fn decoded_reference(event: BytesRef<'_>) -> Result<String, SpreadsheetError> {
+    let reference = event
+        .decode()
+        .map_err(|_| SpreadsheetError::MalformedPackage)?;
+    let character = match reference.as_ref() {
+        "amp" => '&',
+        "lt" => '<',
+        "gt" => '>',
+        "quot" => '"',
+        "apos" => '\'',
+        value if value.starts_with("#x") => u32::from_str_radix(&value[2..], 16)
+            .ok()
+            .and_then(char::from_u32)
+            .ok_or(SpreadsheetError::MalformedPackage)?,
+        value if value.starts_with('#') => value[1..]
+            .parse::<u32>()
+            .ok()
+            .and_then(char::from_u32)
+            .ok_or(SpreadsheetError::MalformedPackage)?,
+        _ => return Err(SpreadsheetError::MalformedPackage),
+    };
+    Ok(character.to_string())
+}
+
 fn package_parts(
     source: &[u8],
     profile: &SpreadsheetProfile,
@@ -544,6 +568,9 @@ fn parse_shared_strings(
                 in_text = true
             }
             Event::Text(event) if in_item && in_text => value.push_str(&decoded_text(event)?),
+            Event::GeneralRef(event) if in_item && in_text => {
+                value.push_str(&decoded_reference(event)?)
+            }
             Event::End(event) if local_name(event.name().as_ref()) == b"t" => in_text = false,
             Event::End(event) if local_name(event.name().as_ref()) == b"si" => {
                 values.push(value.clone());
@@ -843,6 +870,15 @@ fn parse_worksheet(
                 .get_or_insert_with(String::new)
                 .push_str(&decoded_text(event)?),
             Event::Text(event) if capture_inline => inline.push_str(&decoded_text(event)?),
+            Event::GeneralRef(event) if capture_formula => formula
+                .get_or_insert_with(String::new)
+                .push_str(&decoded_reference(event)?),
+            Event::GeneralRef(event) if capture_value => value
+                .get_or_insert_with(String::new)
+                .push_str(&decoded_reference(event)?),
+            Event::GeneralRef(event) if capture_inline => {
+                inline.push_str(&decoded_reference(event)?)
+            }
             Event::End(event) if local_name(event.name().as_ref()) == b"f" => {
                 capture_formula = false
             }
