@@ -401,6 +401,12 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
     validateRuntimeRecord("command-receipt", missingCleanup, runtimeValidators).valid,
     false,
   );
+  const nonzeroSuccess = structuredClone(receipt);
+  nonzeroSuccess.exit_code = 2;
+  assert.equal(
+    validateRuntimeRecord("command-receipt", nonzeroSuccess, runtimeValidators).valid,
+    false,
+  );
 });
 
 test("write-aware checkpoint schema rejects ambiguous completion", () => {

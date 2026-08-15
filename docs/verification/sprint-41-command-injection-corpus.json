@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-41-command-injection-v1",
+  "cases": [
+    {
+      "case_id": "literal-safe",
+      "executable": "/usr/bin/printf",
+      "arguments": ["agentmage-ok"],
+      "environment": { "LANG": "C", "TZ": "UTC" },
+      "accepted": true
+    },
+    {
+      "case_id": "substitution-dollar",
+      "executable": "/usr/bin/printf",
+      "arguments": ["$(id)"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "substitution-backtick",
+      "executable": "/usr/bin/printf",
+      "arguments": ["`id`"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "statement-separator",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe;touch"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "pipe",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe|cat"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "glob",
+      "executable": "/usr/bin/printf",
+      "arguments": ["*.rs"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "response-file",
+      "executable": "/usr/bin/printf",
+      "arguments": ["@arguments.txt"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "config-discovery",
+      "executable": "/usr/bin/git",
+      "arguments": ["--config=/tmp/hostile", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "alias-injection",
+      "executable": "/usr/bin/git",
+      "arguments": ["-c", "alias.status=!id", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "loader-eval",
+      "executable": "/usr/bin/node",
+      "arguments": ["--eval=process.exit()"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "shell-executable",
+      "executable": "/usr/bin/bash",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "environment-launcher",
+      "executable": "/usr/bin/env",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "path-substitution",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "PATH": "/tmp/hostile" },
+      "accepted": false
+    },
+    {
+      "case_id": "credential-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "AWS_SECRET_ACCESS_KEY": "synthetic-canary" },
+      "accepted": false
+    },
+    {
+      "case_id": "proxy-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "HTTPS_PROXY": "http://127.0.0.1" },
+      "accepted": false
+    },
+    {
+      "case_id": "relative-executable",
+      "executable": "printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "parent-executable",
+      "executable": "/usr/bin/../bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "interactive-terminal",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe\nsecond"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    }
+  ]
+}

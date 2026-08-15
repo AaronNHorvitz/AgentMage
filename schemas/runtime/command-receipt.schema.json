@@ -87,6 +87,16 @@
       "then": { "properties": { "outcome": { "const": "succeeded" } } }
     },
     {
+      "if": {
+        "properties": {
+          "termination": { "const": "exited" },
+          "exit_code": { "not": { "const": 0 } }
+        },
+        "required": ["termination", "exit_code"]
+      },
+      "then": { "properties": { "outcome": { "const": "failed" } } }
+    },
+    {
       "if": { "properties": { "termination": { "const": "cancelled" } }, "required": ["termination"] },
       "then": {
         "properties": {

@@ -44,6 +44,20 @@ const PROHIBITED_EXECUTABLE_NAMES: [&str; 18] = [
     "sh",
     "zsh",
 ];
+const PROHIBITED_ARGUMENT_PREFIXES: [&str; 12] = [
+    "--config",
+    "--editor",
+    "--eval",
+    "--exec-path",
+    "--pager",
+    "--plugin",
+    "--rc",
+    "--receive-pack",
+    "--require",
+    "--upload-pack",
+    "-c",
+    "-e",
+];
 
 /// Stable reason a command contract or attempt cannot advance.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -802,6 +816,9 @@ fn valid_argument(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= MAX_ARGUMENT_BYTES
         && !value.starts_with('@')
+        && !PROHIBITED_ARGUMENT_PREFIXES
+            .iter()
+            .any(|prefix| value == *prefix || value.starts_with(&format!("{prefix}=")))
         && !value.bytes().any(|byte| {
             byte.is_ascii_control()
                 || matches!(
@@ -910,7 +927,8 @@ mod tests {
     use crate::tooling::{Tool, ToolRegistry};
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId,
-        BoundaryKind, CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity,
+        BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+        CancellationSignal, CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity,
         FilePreimage, GrantId, GrantNonce, GrantOperation, GrantSideEffect, HeldWorkspaceObject,
         OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform, PathResolutionIntent,
         RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId,
@@ -1295,5 +1313,56 @@ mod tests {
         );
         assert!(command_receipt.descendants_terminated);
         assert_eq!(driver.into_executor().launches, 1);
+    }
+
+    #[test]
+    fn cancellation_before_launch_emits_one_receipt_and_never_calls_executor() {
+        let mut fixture = authority_fixture();
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            fixture.grant.task_id.clone(),
+            fixture.call.correlation_id.clone(),
+        );
+        cancellation
+            .cancel(CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-command-0001"),
+                correlation_id: fixture.call.correlation_id.clone(),
+                task_id: fixture.grant.task_id.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Tool,
+            })
+            .expect("cancel");
+        let executor = FakeExecutor {
+            launches: 0,
+            result: None,
+        };
+        let mut driver =
+            CommandEffectDriver::new(executor, fixture.held, fixture.prepared, cancellation);
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw("transaction-command-cancel-0001"),
+            OperationAttemptId::from_raw("attempt-command-cancel-0001"),
+            fixture.approval_id,
+            fixture.grant.grant_id,
+            fixture.call,
+            fixture.context,
+            4_000,
+            "1970-01-01T00:00:04Z",
+        )
+        .expect("transaction request");
+        let receipt = AuthorityTransactionCoordinator::new()
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                &mut driver,
+            )
+            .expect("cancelled command");
+        assert_eq!(receipt.outcome, OperationOutcome::Cancelled);
+        let command_receipt = driver.take_receipt().expect("command receipt");
+        assert_eq!(command_receipt.outcome, OperationOutcome::Cancelled);
+        assert_eq!(command_receipt.termination, CommandTermination::Cancelled);
+        assert_eq!(driver.into_executor().launches, 0);
     }
 }
