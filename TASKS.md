@@ -2877,41 +2877,59 @@ Task 37.1.3, its open verification sub-tasks, both story criteria, Sprint AC 37.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 38.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 38.1.1.1** (legacy `S-031-I01`): Implement a structure-preserving Markdown parser and writer for headings, lists, tables, code fences, links, frontmatter, raw notes, and line endings.
-  - [ ] **Sub-task 38.1.1.2** (legacy `S-031-I02`): Implement per-file knowledge create and update previews with stable identifiers and source hashes.
-  - [ ] **Sub-task 38.1.1.3** (legacy `S-031-I03`): Preserve unrelated sections and every meeting note's raw source section.
-  - [ ] **Sub-task 38.1.1.4** (legacy `S-031-I04`): Implement wiki-link and frontmatter-safe note creation without launching Obsidian or requiring a plugin.
-  - [ ] **Sub-task 38.1.1.5** (legacy `S-031-I05`): Update derived knowledge indexes only after canonical Markdown commits successfully.
-  - [ ] **Sub-task 38.1.1.6** (legacy `S-031-I06`): Implement note-write collision detection, stale-index invalidation, broken-link checks, and duplicate-record checks.
-  - [ ] **Sub-task 38.1.1.7** (legacy `S-031-I07`): Require explicit approval for moves, renames, reorganizations, supersession, and deletion.
-  - [ ] **Sub-task 38.1.1.8** (legacy `S-031-I08`): Add task, decision, commitment, correspondence, meeting, handoff, and memory write workflows through the same transaction.
+- [x] **Task 38.1.1 - Implement the bounded story**
+  - [x] **Sub-task 38.1.1.1** (legacy `S-031-I01`): Implement a structure-preserving Markdown parser and writer for headings, lists, tables, code fences, links, frontmatter, raw notes, and line endings.
+  - [x] **Sub-task 38.1.1.2** (legacy `S-031-I02`): Implement per-file knowledge create and update previews with stable identifiers and source hashes.
+  - [x] **Sub-task 38.1.1.3** (legacy `S-031-I03`): Preserve unrelated sections and every meeting note's raw source section.
+  - [x] **Sub-task 38.1.1.4** (legacy `S-031-I04`): Implement wiki-link and frontmatter-safe note creation without launching Obsidian or requiring a plugin.
+  - [x] **Sub-task 38.1.1.5** (legacy `S-031-I05`): Update derived knowledge indexes only after canonical Markdown commits successfully.
+  - [x] **Sub-task 38.1.1.6** (legacy `S-031-I06`): Implement note-write collision detection, stale-index invalidation, broken-link checks, and duplicate-record checks.
+  - [x] **Sub-task 38.1.1.7** (legacy `S-031-I07`): Require explicit approval for moves, renames, reorganizations, supersession, and deletion.
+  - [x] **Sub-task 38.1.1.8** (legacy `S-031-I08`): Add task, decision, commitment, correspondence, meeting, handoff, and memory write workflows through the same transaction.
 
-- [ ] **Task 38.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 38.1.2.1:** Controlled Markdown writer.
-  - [ ] **Sub-task 38.1.2.2:** Knowledge-record write adapters.
-  - [ ] **Sub-task 38.1.2.3:** Structure-preservation and raw-notes fixtures.
-  - [ ] **Sub-task 38.1.2.4:** Index consistency and collision reports.
+Implementation evidence: commits `4347752`, `0812e7f`, `dbecdc0`, and `4f9b9b4` add the
+byte-preserving parser/writer, canonical-first creation and index contracts, host-to-kernel
+composition, namespace compare-and-swap, high-risk single-file structural previews, all seven
+workflows, and explicit content-bound memory-promotion proof.
+
+- [x] **Task 38.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 38.1.2.1:** Controlled Markdown writer.
+  - [x] **Sub-task 38.1.2.2:** Knowledge-record write adapters.
+  - [x] **Sub-task 38.1.2.3:** Structure-preservation and raw-notes fixtures.
+  - [x] **Sub-task 38.1.2.4:** Index consistency and collision reports.
+
+Artifact evidence: commit `4f0587c`, updated by `4f9b9b4`, adds the controlled-write architecture,
+local-results boundary, 36-case public-synthetic corpus, source-bound recorder, and evidence
+mutation suite. Plain-folder and Obsidian stores share the same authority-free preview contract;
+the host adapter alone composes verified previews into Sprint 37 filesystem drafts.
 
 - [ ] **Task 38.1.3 - Verify and close the story**
-  - [ ] **Sub-task 38.1.3.1:** `S-031-UT01` updates frontmatter, heading, block, list, task, table, link, and bounded text regions across formatting variants; assert exact requested semantic change and byte preservation elsewhere.
-  - [ ] **Sub-task 38.1.3.2:** `S-031-UT02` processes malformed Markdown, duplicate headings/keys, aliases, comments, raw notes, line endings, encodings, case/Unicode collisions, and unsupported constructs; assert safe refusal or explicit fidelity warning.
-  - [ ] **Sub-task 38.1.3.3:** `S-031-ST01` attempts bulk reorganization, hidden metadata insertion, source erasure, link expansion outside scope, prompt-driven memory promotion, and automatic Obsidian action; assert denial or exact additional approval.
-  - [ ] **Sub-task 38.1.3.4:** `S-031-RT01` crashes during source write/index update and races external note edits; assert source remains canonical, conflicts are preserved, and indexes rebuild to current bytes.
-  - [ ] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence.
+  - [x] **Sub-task 38.1.3.1:** `S-031-UT01` updates frontmatter, heading, block, list, task, table, link, and bounded text regions across formatting variants; assert exact requested semantic change and byte preservation elsewhere.
+  - [x] **Sub-task 38.1.3.2:** `S-031-UT02` processes malformed Markdown, duplicate headings/keys, aliases, comments, raw notes, line endings, encodings, case/Unicode collisions, and unsupported constructs; assert safe refusal or explicit fidelity warning.
+  - [x] **Sub-task 38.1.3.3:** `S-031-ST01` attempts bulk reorganization, hidden metadata insertion, source erasure, link expansion outside scope, prompt-driven memory promotion, and automatic Obsidian action; assert denial or exact additional approval.
+  - [ ] **Sub-task 38.1.3.4:** `S-031-RT01` crashes during source write/index update and races external note edits; assert source remains canonical, conflicts are preserved, and indexes rebuild to current bytes. Partial local evidence: canonical commit, exact no-change, uncertainty, interrupted index rebuild, stale watcher input, and host stale-source refusal pass; exhaustive native source-write crash and external-edit schedules remain open.
+  - [ ] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence. Partial local evidence: all 12 identifiers map to passing retained local contracts; native end-to-end, complete crash/race, non-Fedora, trusted-launcher, independent-review, and manual-fuzzing evidence remain open.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 38.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a before/after structural and byte diff proves no unrelated note content, ordering, links, formatting, metadata, or raw-note material changed.
-- [ ] **Story AC 38.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every derived index and memory/task view either matches the committed canonical Markdown revision or is visibly stale and queued for deterministic rebuild.
+- [x] **Story AC 38.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a before/after structural and byte diff proves no unrelated note content, ordering, links, formatting, metadata, or raw-note material changed.
+- [x] **Story AC 38.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every derived index and memory/task view either matches the committed canonical Markdown revision or is visibly stale and queued for deterministic rebuild.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 38.AC1:** Approved changes alter only the previewed records and lines.
-- [ ] **Sprint AC 38.AC2:** Raw notes, code fences, links, frontmatter, identifiers, and unrelated formatting survive round trips.
-- [ ] **Sprint AC 38.AC3:** Failed canonical writes never update the derived index.
-- [ ] **Sprint AC 38.AC4:** Plain-folder and Obsidian adapters produce equivalent domain behavior.
-- [ ] **Sprint AC 38.AC5:** No agent-initiated bulk reorganization, silent supersession, or unapproved deletion is possible.
+- [x] **Sprint AC 38.AC1:** Approved changes alter only the previewed records and lines.
+- [x] **Sprint AC 38.AC2:** Raw notes, code fences, links, frontmatter, identifiers, and unrelated formatting survive round trips.
+- [x] **Sprint AC 38.AC3:** Failed canonical writes never update the derived index.
+- [x] **Sprint AC 38.AC4:** Plain-folder and Obsidian adapters produce equivalent domain behavior.
+- [x] **Sprint AC 38.AC5:** No agent-initiated bulk reorganization, silent supersession, or unapproved deletion is possible.
+
+Retained local evidence: source revision `421dd7a3f4ea82d1b620be5f7cce811c57b04d35` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-38/local-evidence-report.json), SHA-256
+`0d2f5a10bbbc1ced20388ef29d4c56464fee7da4cb927e792b5fe65d96604480`. All 12 recorded commands
+exit zero, both focused suites report zero blocking skips, and no network or release claim is made.
+Sprint 38 remains **BLOCKED** because Sprint 37 is blocked; native end-to-end, complete crash/race,
+trusted-package-launcher, non-Fedora, independent-review, and deferred manual-fuzzing evidence is
+absent. Task 38.1.3, its two open sub-tasks, the story, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 38 is PASS only when Story 38.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 39 - Write Privacy, Recovery, and Audit

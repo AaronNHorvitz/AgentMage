@@ -1,0 +1,268 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-37-BLOCKED",
+      "owner": "38.1"
+    },
+    {
+      "code": "SPRINT-38-NATIVE-KNOWLEDGE-TRANSACTION-ABSENT",
+      "owner": "38.1.3.4"
+    },
+    {
+      "code": "SPRINT-38-CRASH-RACE-MATRIX-INCOMPLETE",
+      "owner": "38.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT",
+      "owner": "38.1.3.5"
+    },
+    {
+      "code": "SPRINT-38-NON-FEDORA-EVIDENCE-ABSENT",
+      "owner": "38.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-38-REVIEW-ABSENT",
+      "owner": "38.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "knowledge-tests",
+      "output_sha256": "bd98b3693ac2da845228602e2bae4fb30ac9d4d7f4ba4565afb43fdacf9bba0b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "knowledge_write",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "host-knowledge-tests",
+      "output_sha256": "cca299bc8e4c4b210c8de1b65a922efb5c580a2d30397d798f87e4264febf91b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "host-library-tests",
+      "output_sha256": "78cf4eb574292b6891bac7f0e64eedc987aa8765084ee7ffc2c752b422ed5602"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "-p",
+        "agentmage-host",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "knowledge-host-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "374b5abfdd6831e491b747cd0a3628af0d48457fb755794a46acb1a2a19aaf80"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_classes.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "dependency-classes",
+      "output_sha256": "4eacf822d38f647f497a08deb5132c77d1d51650d23c9048e8543d9fd5807d31"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_38_evidence"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "27c4a39d34ece4cbc66cc59cb0870c7abe4cc0a5f009205bdd0ea06a93f8b3ac"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "bulk_reorganization_unrepresentable": true,
+    "byte_preserving_markdown_parser": true,
+    "canonical_first_index_publication": true,
+    "case_and_unicode_namespace_collision_denial": true,
+    "closed_structure_preserving_edits": true,
+    "complete_native_crash_and_race_matrix": false,
+    "exact_create_and_update_previews": true,
+    "external_delivery": false,
+    "generic_shell": false,
+    "host_to_kernel_draft_composition": true,
+    "independent_review": false,
+    "manual_fuzzing_complete": false,
+    "namespace_compare_and_swap": true,
+    "native_end_to_end_knowledge_transaction": false,
+    "network_access": false,
+    "non_fedora_native_evidence": false,
+    "plain_folder_obsidian_domain_parity": true,
+    "raw_notes_protected": true,
+    "seven_closed_creation_workflows": true,
+    "single_file_high_risk_structural_previews": true,
+    "stable_identity_and_source_hash_binding": true,
+    "trusted_package_launcher_test_environment": false,
+    "wiki_link_target_validation": true
+  },
+  "record_type": "sprint_38_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-TST-004",
+    "SR-TST-005"
+  ],
+  "source_revision": "421dd7a3f4ea82d1b620be5f7cce811c57b04d35",
+  "source_sha256": {
+    "architecture/dependency-rules.json": "685b2c706617bf34224f8e4ef286e4d0eed4671f36feabd1bd79e1128dfe83ec",
+    "capabilities/knowledge/src/knowledge_write.rs": "03b1e1db9de279355b72a6530d06f2e136fb4cf6d6b803479eb70b9c1176a37d",
+    "capabilities/knowledge/src/markdown_write.rs": "8a4e0b81192cd4b2f830ea4a43d022f3880925949c02ec3168c7215f346093d0",
+    "capabilities/knowledge/src/obsidian.rs": "9c30374ba5d54debc7b160389b72dad03e1a23e942407a1e70cde4f35910a2ab",
+    "capabilities/knowledge/src/obsidian_index.rs": "207ee7f1f3ccb0ae0d29bda3b98611d8b4bf0e6c78aaf230ae9a7b99004fd551",
+    "capabilities/knowledge/src/plain_folder.rs": "34df6fe363a79497a26397522ec535fbb1910ba1c38abfc0fb91540f09129b84",
+    "docs/architecture/controlled-markdown-knowledge-writes.md": "e2f4e083cad67d13233b8e3b4b8470c0c8eab69ae6bcab23570abd5ad7a385ed",
+    "docs/verification/sprint-38-local-results.md": "cb9c85effd9161ba96e37f96dfd5aa116951871510c95c561887565bd76daa4b",
+    "docs/verification/sprint-38-markdown-knowledge-corpus.json": "4dae8b2cb8630a94d09093de703d61d5eea221f4dbddcaeb2264dd2fe2cbd373",
+    "scripts/sprint_38_evidence.py": "c8d34c9aa8f227b93c83a1edb370871bc4f581634f99414d8d24427affe84485",
+    "security/strict-local-source-policy.json": "5efc2efcec5fd7e69f84f04c03712fb4be183fb14b84afb028ae1bda1a1a4a4d",
+    "shells/host/src/knowledge_write.rs": "62edb9b1cccffa316ccce851a06300193290580993d9a2c50ac9b4e4e07b8423",
+    "tests/test_sprint_38_evidence.py": "9b957c678d0fba4997104242f6e72fef69b930d0d1311f49b2e73c7240b55e29"
+  },
+  "summary": {
+    "crash_and_race_matrix_passed": false,
+    "cross_platform_evidence_passed": false,
+    "independent_review_passed": false,
+    "local_markdown_knowledge_contract_passed": true,
+    "manual_fuzzing_complete": false,
+    "native_end_to_end_passed": false,
+    "network_access_enabled": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "trusted_launcher_environment_passed": false,
+    "upstream_dependency_passed": false
+  },
+  "verification_evidence": {
+    "complete_native_crash_and_race_matrix": false,
+    "focused_blocking_skip_count": 0,
+    "focused_contracts": true,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "native_end_to_end_knowledge_transaction": false,
+    "non_fedora_native_evidence": false,
+    "trusted_package_launcher_test_environment": false,
+    "upstream_sprint_37_gate": false
+  }
+}
