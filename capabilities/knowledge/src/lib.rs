@@ -20,6 +20,7 @@ mod memory_working;
 mod obsidian;
 mod obsidian_index;
 mod operations;
+mod pdf_extraction;
 mod plain_folder;
 mod retrieval;
 mod schema;
@@ -113,6 +114,12 @@ pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
     KnowledgeImportReport, KnowledgeRelationship, build_dashboard, build_json_lines_export,
     validate_import,
+};
+pub use pdf_extraction::{
+    PdfExtractionError, PdfExtractionLimitation, PdfExtractionMethod, PdfExtractionProfile,
+    PdfExtractionResult, PdfOcrAdmission, PdfOcrObservation, PdfOcrProjection, PdfPageCitation,
+    PdfPageExtraction, PdfPageIdentity, PdfPageState, extract_pdf_to_pages,
+    pdf_extractor_identity_sha256, validate_pdf_ocr_observation,
 };
 pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
