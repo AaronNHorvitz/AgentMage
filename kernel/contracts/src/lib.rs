@@ -23,6 +23,7 @@ mod frontier_import;
 mod grant;
 mod handoff;
 mod ids;
+mod meeting;
 mod model;
 mod model_discovery;
 mod network;
@@ -131,6 +132,13 @@ pub use ids::{
     ReceiptId, RepositorySnapshotId, SchemaId, SessionCheckpointId, SessionId, TaskId, ToolCallId,
     ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId,
     WorkspaceId,
+};
+pub use meeting::{
+    MeetingAttendanceState, MeetingAttendee, MeetingCloseout, MeetingContinuityItem,
+    MeetingContinuityRecord, MeetingContinuityState, MeetingContinuityUpdate, MeetingDraftKind,
+    MeetingFieldState, MeetingInvitationState, MeetingMinutes, MeetingMinutesItem,
+    MeetingMinutesItemKind, MeetingPlanDraft, MeetingPlanItem, MeetingTextSourceKind,
+    MeetingTranscriptCleanup, MeetingTranscriptSegment, MeetingUnclearMarker,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
