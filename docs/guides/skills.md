@@ -22,3 +22,9 @@ explanations, evidence briefs, correspondence reviews, local message-export tria
 reviews, and privacy audits. See the
 [executive-assistant guide](./executive-assistant-local-workflows.md) and
 [architecture boundary](../architecture/executive-assistant-and-portfolio.md).
+
+Six meeting-record skills extend the v0.6 source candidate under the same zero-authority contract.
+They cover agenda and request drafts, attendee evidence, source-preserving transcript cleanup,
+minutes, closeout, and recurring continuity. See the
+[meeting workflow guide](./meeting-records-local-workflows.md) and
+[meeting architecture boundary](../architecture/meeting-records-and-continuity.md).

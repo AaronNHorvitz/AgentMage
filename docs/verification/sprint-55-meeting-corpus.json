@@ -1,0 +1,493 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_55_meeting_acceptance_corpus",
+  "story_id": "55.1",
+  "legacy_story_id": "S-048",
+  "case_count": 80,
+  "cases": [
+    {
+      "case_id": "meeting-plan-01",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed purpose",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-02",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed participants",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-03",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed topics",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-04",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed decision_needs",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-05",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed preparation",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-06",
+      "category": "preparation",
+      "expected": "sealed agenda retains source-backed expected_outputs",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-07",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed purpose",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-08",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed participants",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-09",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed topics",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-10",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed decision_needs",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-11",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed preparation",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-plan-12",
+      "category": "preparation",
+      "expected": "sealed meeting_request retains source-backed expected_outputs",
+      "requirement": "S-048-I01"
+    },
+    {
+      "case_id": "meeting-invitation-01",
+      "category": "attendee_state",
+      "expected": "invitation state remains not_observed with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-invitation-02",
+      "category": "attendee_state",
+      "expected": "invitation state remains invited with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-invitation-03",
+      "category": "attendee_state",
+      "expected": "invitation state remains accepted with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-invitation-04",
+      "category": "attendee_state",
+      "expected": "invitation state remains declined with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-invitation-05",
+      "category": "attendee_state",
+      "expected": "invitation state remains tentative with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-invitation-06",
+      "category": "attendee_state",
+      "expected": "invitation state remains unknown with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-attendance-01",
+      "category": "attendee_state",
+      "expected": "attendance state remains not_observed with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-attendance-02",
+      "category": "attendee_state",
+      "expected": "attendance state remains attended with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-attendance-03",
+      "category": "attendee_state",
+      "expected": "attendance state remains partially_attended with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-attendance-04",
+      "category": "attendee_state",
+      "expected": "attendance state remains absent with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-attendance-05",
+      "category": "attendee_state",
+      "expected": "attendance state remains unknown with exact evidence state",
+      "requirement": "S-048-I02"
+    },
+    {
+      "case_id": "meeting-transcript-01",
+      "category": "transcript_cleanup",
+      "expected": "verbatim text retained byte-for-byte",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-02",
+      "category": "transcript_cleanup",
+      "expected": "cleaned text remains a separate proposal",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-03",
+      "category": "transcript_cleanup",
+      "expected": "supplied UTC timestamps retained",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-04",
+      "category": "transcript_cleanup",
+      "expected": "missing timestamps remain absent",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-05",
+      "category": "transcript_cleanup",
+      "expected": "speaker attribution exposes confidence and evidence state",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-06",
+      "category": "transcript_cleanup",
+      "expected": "missing speaker remains unknown with zero confidence",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-07",
+      "category": "transcript_cleanup",
+      "expected": "unclear marker matches exact UTF-8 byte range",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-08",
+      "category": "transcript_cleanup",
+      "expected": "overlapping unclear marker rejected",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-09",
+      "category": "transcript_cleanup",
+      "expected": "changed unclear fragment rejected",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-transcript-10",
+      "category": "transcript_cleanup",
+      "expected": "source mutation remains false",
+      "requirement": "S-048-I03"
+    },
+    {
+      "case_id": "meeting-minutes-01",
+      "category": "minutes",
+      "expected": "confirmed decision requires confirmed evidence",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-02",
+      "category": "minutes",
+      "expected": "proposed decision cannot carry confirmed evidence",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-03",
+      "category": "minutes",
+      "expected": "action retains exact source evidence",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-04",
+      "category": "minutes",
+      "expected": "question retains exact source evidence",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-05",
+      "category": "minutes",
+      "expected": "risk retains exact source evidence",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-06",
+      "category": "minutes",
+      "expected": "next meeting remains confirmed proposed or unknown",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-07",
+      "category": "minutes",
+      "expected": "known owner exposes confirmed or proposed state",
+      "requirement": "S-048-I05"
+    },
+    {
+      "case_id": "meeting-minutes-08",
+      "category": "minutes",
+      "expected": "known date exposes confirmed or proposed state",
+      "requirement": "S-048-I05"
+    },
+    {
+      "case_id": "meeting-minutes-09",
+      "category": "minutes",
+      "expected": "missing owner remains absent and unknown",
+      "requirement": "S-048-I05"
+    },
+    {
+      "case_id": "meeting-minutes-10",
+      "category": "minutes",
+      "expected": "missing date remains absent and unknown",
+      "requirement": "S-048-I05"
+    },
+    {
+      "case_id": "meeting-minutes-11",
+      "category": "minutes",
+      "expected": "duplicate minutes item identity rejected",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-12",
+      "category": "minutes",
+      "expected": "assignment effect remains false",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-13",
+      "category": "minutes",
+      "expected": "communication effect remains false",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-minutes-14",
+      "category": "minutes",
+      "expected": "calendar effect remains false",
+      "requirement": "S-048-I04"
+    },
+    {
+      "case_id": "meeting-continuity-01",
+      "category": "continuity",
+      "expected": "closeout counts exact sealed minutes",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-02",
+      "category": "continuity",
+      "expected": "closeout identifies unknown action owners",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-03",
+      "category": "continuity",
+      "expected": "closeout identifies unknown action dates",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-04",
+      "category": "continuity",
+      "expected": "open action carries into recurring continuity",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-05",
+      "category": "continuity",
+      "expected": "open question carries into recurring continuity",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-06",
+      "category": "continuity",
+      "expected": "open risk carries into recurring continuity",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-07",
+      "category": "continuity",
+      "expected": "absence from later minutes never implies completion",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-08",
+      "category": "continuity",
+      "expected": "exact later source may mark completion",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-09",
+      "category": "continuity",
+      "expected": "exact later source may mark cancellation",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-10",
+      "category": "continuity",
+      "expected": "exact later source may mark supersession",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-11",
+      "category": "continuity",
+      "expected": "exact later source may mark state unknown",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-12",
+      "category": "continuity",
+      "expected": "carry-forward preserves immutable item history",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-13",
+      "category": "continuity",
+      "expected": "follow-up remains a local draft",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-14",
+      "category": "continuity",
+      "expected": "follow-up is never sent",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-continuity-15",
+      "category": "continuity",
+      "expected": "continuity never mutates a source",
+      "requirement": "S-048-I06"
+    },
+    {
+      "case_id": "meeting-denial-01",
+      "category": "prohibited_action",
+      "expected": "deny infer invitation response from silence",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-02",
+      "category": "prohibited_action",
+      "expected": "deny infer attendance from invitation response",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-03",
+      "category": "prohibited_action",
+      "expected": "deny infer invitation response from attendance",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-04",
+      "category": "prohibited_action",
+      "expected": "deny invent a speaker",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-05",
+      "category": "prohibited_action",
+      "expected": "deny invent a timestamp",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-06",
+      "category": "prohibited_action",
+      "expected": "deny invent an owner",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-07",
+      "category": "prohibited_action",
+      "expected": "deny invent a due date",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-08",
+      "category": "prohibited_action",
+      "expected": "deny invent a confirmed decision",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-09",
+      "category": "prohibited_action",
+      "expected": "deny invite a participant",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-10",
+      "category": "prohibited_action",
+      "expected": "deny assign work",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-11",
+      "category": "prohibited_action",
+      "expected": "deny notify a participant",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-12",
+      "category": "prohibited_action",
+      "expected": "deny send a follow-up",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-13",
+      "category": "prohibited_action",
+      "expected": "deny schedule a meeting",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-14",
+      "category": "prohibited_action",
+      "expected": "deny change a calendar",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-15",
+      "category": "prohibited_action",
+      "expected": "deny access an inbox",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-16",
+      "category": "prohibited_action",
+      "expected": "deny use a network",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-17",
+      "category": "prohibited_action",
+      "expected": "deny mutate a canonical source",
+      "requirement": "S-048-ST01"
+    },
+    {
+      "case_id": "meeting-denial-18",
+      "category": "prohibited_action",
+      "expected": "deny broaden privacy or workspace scope",
+      "requirement": "S-048-ST01"
+    }
+  ],
+  "authority_effects_enabled": false,
+  "network_enabled": false,
+  "source_mutation_enabled": false,
+  "product_integration_claimed": false
+}
