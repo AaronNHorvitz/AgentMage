@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_61_pdf_dependency_manifest",
+  "story_id": "61.1",
+  "admitted_production_dependencies": [
+    {
+      "capabilities": [
+        "bounded-extraction",
+        "deterministic-basic-generation",
+        "metadata-inspection",
+        "regeneration-redaction"
+      ],
+      "cargo_checksum_sha256": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68",
+      "default_features": false,
+      "license": "MIT",
+      "name": "lopdf",
+      "version": "0.44.0"
+    }
+  ],
+  "development_only_dependencies": [
+    {
+      "capability": "documentation-mermaid-validation",
+      "license": "MIT",
+      "name": "@mermaid-js/mermaid-cli",
+      "version": "11.16.0",
+      "product_runtime_admitted": false
+    }
+  ],
+  "unadmitted_product_components": [
+    {
+      "capability": "pdf-native-rendering",
+      "reason_code": "pdf.renderer.not-admitted",
+      "state": "blocked"
+    },
+    {
+      "capability": "mermaid-product-execution",
+      "reason_code": "pdf.mermaid.product-adapter-not-admitted",
+      "state": "blocked"
+    },
+    {
+      "capability": "pdf-ocr",
+      "reason_code": "pdf.ocr.package-model-not-admitted",
+      "state": "blocked"
+    }
+  ],
+  "required_first_ga_platforms": [
+    "fedora",
+    "ubuntu",
+    "windows11-x64"
+  ],
+  "retained_post_ga_platforms": [
+    "macos-apple-silicon"
+  ],
+  "executed_core_platforms": [
+    "fedora-x86_64"
+  ],
+  "executed_native_renderer_platforms": [],
+  "cross_platform_acceptance_complete": false,
+  "independent_native_review_complete": false
+}

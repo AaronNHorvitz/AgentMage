@@ -1,0 +1,623 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_61_pdf_generation_corpus",
+  "story_id": "61.1",
+  "legacy_story_id": "S-051",
+  "case_count": 101,
+  "cases": [
+    {
+      "case_id": "pdf61-inspection-01",
+      "category": "inspection",
+      "expected": "inspection accepts only caller-supplied bytes and a canonical path",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-02",
+      "category": "inspection",
+      "expected": "title author subject keywords creator producer and dates are bounded",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-03",
+      "category": "inspection",
+      "expected": "custom metadata retains key names without custom values",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-04",
+      "category": "inspection",
+      "expected": "page count binds reopened extraction when extraction is available",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-05",
+      "category": "inspection",
+      "expected": "internal destinations remain inert",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-06",
+      "category": "inspection",
+      "expected": "external URI targets remain inert",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-07",
+      "category": "inspection",
+      "expected": "remote-document launch JavaScript and submit actions block safe reuse",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-08",
+      "category": "inspection",
+      "expected": "form names and value-presence state are inventoried without values",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-09",
+      "category": "inspection",
+      "expected": "page images retain object identity dimensions filters and encoded digest",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-10",
+      "category": "inspection",
+      "expected": "embedded files and automatic actions block safe reuse",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-11",
+      "category": "inspection",
+      "expected": "encrypted input returns a blocked inventory without password handling",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-12",
+      "category": "inspection",
+      "expected": "malformed structures fail closed",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-13",
+      "category": "inspection",
+      "expected": "safe reuse is reproducible from completeness encryption and findings",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-inspection-14",
+      "category": "inspection",
+      "expected": "inspection performs no file network or process effect",
+      "requirement": "61.1.1.1"
+    },
+    {
+      "case_id": "pdf61-generation-01",
+      "category": "generation",
+      "expected": "report identity output path metadata geometry and blocks are closed",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-02",
+      "category": "generation",
+      "expected": "output proposals require a nonempty PDF filename",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-03",
+      "category": "generation",
+      "expected": "HTML content is escaped",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-04",
+      "category": "generation",
+      "expected": "HTML declares a deny-by-default content security policy",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-05",
+      "category": "generation",
+      "expected": "HTML admits only self or data images and self fonts",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-06",
+      "category": "generation",
+      "expected": "tables preserve cell order and header state",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-07",
+      "category": "generation",
+      "expected": "internal links resolve only to generated pages",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-08",
+      "category": "generation",
+      "expected": "text form fields require unique safe names",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-09",
+      "category": "generation",
+      "expected": "PDF bytes are deterministic for an exact request",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-10",
+      "category": "generation",
+      "expected": "PDF metadata uses caller-controlled fixed values without a clock",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-11",
+      "category": "generation",
+      "expected": "PDF output reopens through the bounded inspector",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-12",
+      "category": "generation",
+      "expected": "generated active content prevents return",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-13",
+      "category": "generation",
+      "expected": "the pinned base-font profile rejects unsupported characters",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-14",
+      "category": "generation",
+      "expected": "source Markdown digest remains exact when present",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-15",
+      "category": "generation",
+      "expected": "raw HTML from Markdown remains escaped inert text",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-16",
+      "category": "generation",
+      "expected": "Markdown fidelity limitations remain visible",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-17",
+      "category": "generation",
+      "expected": "generated bytes and serialized records are hash-bound",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-generation-18",
+      "category": "generation",
+      "expected": "generation performs no file network or child-process effect",
+      "requirement": "61.1.1.2"
+    },
+    {
+      "case_id": "pdf61-redaction-01",
+      "category": "redaction",
+      "expected": "redaction accepts only an exactly reproducible AgentMage report specification",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-02",
+      "category": "redaction",
+      "expected": "arbitrary in-place PDF redaction is not claimed",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-03",
+      "category": "redaction",
+      "expected": "source PDF and HTML hashes must reproduce before redaction",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-04",
+      "category": "redaction",
+      "expected": "targets are exact case-sensitive caller-authorized strings",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-05",
+      "category": "redaction",
+      "expected": "raw targets are omitted from the retained receipt",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-06",
+      "category": "redaction",
+      "expected": "metadata fields are regenerated without targets",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-07",
+      "category": "redaction",
+      "expected": "paragraph heading list table and link labels are regenerated without targets",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-08",
+      "category": "redaction",
+      "expected": "form names labels defaults and values are regenerated without targets",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-09",
+      "category": "redaction",
+      "expected": "the output is a full regeneration rather than an incremental update",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-10",
+      "category": "redaction",
+      "expected": "HTML bytes are scanned for every target",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-11",
+      "category": "redaction",
+      "expected": "raw PDF bytes are scanned for every target",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-12",
+      "category": "redaction",
+      "expected": "parsed PDF names strings dictionaries arrays and streams are scanned",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-13",
+      "category": "redaction",
+      "expected": "reopened metadata forms and extracted text are scanned",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-14",
+      "category": "redaction",
+      "expected": "cross-reference and EOF counts reject appended incremental updates",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-15",
+      "category": "redaction",
+      "expected": "any residue fails closed",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-16",
+      "category": "redaction",
+      "expected": "visual review remains required after machine residue checks",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-17",
+      "category": "redaction",
+      "expected": "source and output identities remain distinct",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-redaction-18",
+      "category": "redaction",
+      "expected": "redaction performs no file network or child-process effect",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-01",
+      "category": "visual",
+      "expected": "visual comparison consumes externally supplied decoded RGBA pages",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-02",
+      "category": "visual",
+      "expected": "renderer executable and font manifests are hash-bound in the profile",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-03",
+      "category": "visual",
+      "expected": "platform and renderer evidence class must match",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-04",
+      "category": "visual",
+      "expected": "page pixels bind exact SHA-256 values",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-05",
+      "category": "visual",
+      "expected": "page dimensions and total decoded bytes are bounded",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-06",
+      "category": "visual",
+      "expected": "pixel count channel delta and difference bounds are deterministic",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-07",
+      "category": "visual",
+      "expected": "pagination clipping overlap font table and image observations are explicit",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-08",
+      "category": "visual",
+      "expected": "redaction-mask failures are explicit",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-09",
+      "category": "visual",
+      "expected": "reading-order and accessibility observations are explicit",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-10",
+      "category": "visual",
+      "expected": "incomplete observations fail machine completion",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-11",
+      "category": "visual",
+      "expected": "synthetic fixtures can never satisfy release evidence",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-12",
+      "category": "visual",
+      "expected": "ambiguous differences require human review",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-13",
+      "category": "visual",
+      "expected": "native evidence is not inferred from synthetic evidence",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-14",
+      "category": "visual",
+      "expected": "the core comparator never launches a renderer",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-visual-15",
+      "category": "visual",
+      "expected": "comparison performs no file network or process effect",
+      "requirement": "61.1.1.4"
+    },
+    {
+      "case_id": "pdf61-diagram-01",
+      "category": "diagram",
+      "expected": "offline Mermaid observations bind exact source and SVG digests",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-02",
+      "category": "diagram",
+      "expected": "the package name version license executable and lock file are exact",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-03",
+      "category": "diagram",
+      "expected": "the external adapter must report network denial and no remote assets",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-04",
+      "category": "diagram",
+      "expected": "nonzero renderer exit status rejects",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-05",
+      "category": "diagram",
+      "expected": "SVG is parsed as XML under a byte and depth ceiling",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-06",
+      "category": "diagram",
+      "expected": "script foreign-object iframe object and embed elements reject",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-07",
+      "category": "diagram",
+      "expected": "event-handler attributes reject",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-08",
+      "category": "diagram",
+      "expected": "HTTP HTTPS FTP file JavaScript and protocol-relative references reject",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-09",
+      "category": "diagram",
+      "expected": "document types reject",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-10",
+      "category": "diagram",
+      "expected": "passive fragment references remain admissible",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-11",
+      "category": "diagram",
+      "expected": "validation launches no renderer",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-diagram-12",
+      "category": "diagram",
+      "expected": "the Mermaid package remains development-only and is not a product renderer",
+      "requirement": "61.1.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-01",
+      "category": "runtime_record",
+      "expected": "PDF inspection schema is closed and versioned",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-02",
+      "category": "runtime_record",
+      "expected": "generated PDF report schema is closed and versioned",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-03",
+      "category": "runtime_record",
+      "expected": "redaction receipt schema is closed and versioned",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-04",
+      "category": "runtime_record",
+      "expected": "visual comparison schema is closed and versioned",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-05",
+      "category": "runtime_record",
+      "expected": "offline diagram projection schema is closed and versioned",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-06",
+      "category": "runtime_record",
+      "expected": "byte hash drift rejects",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-07",
+      "category": "runtime_record",
+      "expected": "inspection path and source binding drift rejects",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-08",
+      "category": "runtime_record",
+      "expected": "residue count and completion drift rejects",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-09",
+      "category": "runtime_record",
+      "expected": "synthetic visual completion drift rejects",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-runtime_record-10",
+      "category": "runtime_record",
+      "expected": "unknown fields and effect broadening reject",
+      "requirement": "61.1.2/61.1.3"
+    },
+    {
+      "case_id": "pdf61-external_blocker-01",
+      "category": "external_blocker",
+      "expected": "Sprint 60 remains an upstream blocker",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-02",
+      "category": "external_blocker",
+      "expected": "no admitted product PDF rasterizer exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-03",
+      "category": "external_blocker",
+      "expected": "no admitted product Mermaid execution adapter exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-04",
+      "category": "external_blocker",
+      "expected": "no native Fedora rendering evidence exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-05",
+      "category": "external_blocker",
+      "expected": "no native Ubuntu rendering evidence exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-06",
+      "category": "external_blocker",
+      "expected": "no native Windows 11 rendering evidence exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-07",
+      "category": "external_blocker",
+      "expected": "no retained Apple Silicon macOS rendering evidence exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-08",
+      "category": "external_blocker",
+      "expected": "no installed-product accessibility evidence exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-09",
+      "category": "external_blocker",
+      "expected": "no independent native-boundary review exists",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-10",
+      "category": "external_blocker",
+      "expected": "merge and split workflows remain unimplemented",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-11",
+      "category": "external_blocker",
+      "expected": "arbitrary-PDF secure redaction remains unsupported",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-12",
+      "category": "external_blocker",
+      "expected": "approved OCR execution remains absent",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-13",
+      "category": "external_blocker",
+      "expected": "manual fuzzing remains explicitly deferred",
+      "requirement": "61.1"
+    },
+    {
+      "case_id": "pdf61-external_blocker-14",
+      "category": "external_blocker",
+      "expected": "Sprint 61 remains blocked while required evidence is absent",
+      "requirement": "61.1"
+    }
+  ],
+  "executable_sprint_61_rust_fixture_count": 15,
+  "executable_all_pdf_rust_fixture_count": 21,
+  "runtime_schema_count": 7,
+  "native_render_fixture_count": 0,
+  "network_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "product_renderer_execution_enabled": false,
+  "release_completion_claimed": false
+}
