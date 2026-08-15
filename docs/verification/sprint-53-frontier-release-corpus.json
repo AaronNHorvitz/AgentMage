@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-53-frontier-release-v1",
+  "delivery_surfaces": [
+    { "surface": "native_chat", "expected": "local_denial_only" },
+    { "surface": "cli", "expected": "local_denial_only" },
+    { "surface": "model_tools", "expected": "local_denial_only" },
+    { "surface": "skills", "expected": "local_denial_only" },
+    { "surface": "schedules", "expected": "local_denial_only" },
+    { "surface": "injected_content", "expected": "local_denial_only" },
+    { "surface": "clipboard_api", "expected": "local_denial_only" },
+    { "surface": "vscode_commands", "expected": "local_denial_only" },
+    { "surface": "network_paths", "expected": "local_denial_only" }
+  ],
+  "round_trip_failures": [
+    { "case_id": "recommendation-unmeasured", "expected": "gate_blocked" },
+    { "case_id": "disclosure-incomplete", "expected": "gate_blocked" },
+    { "case_id": "redaction-failed", "expected": "gate_blocked" },
+    { "case_id": "review-stale", "expected": "gate_blocked" },
+    { "case_id": "export-not-user-initiated", "expected": "gate_blocked" },
+    { "case_id": "export-packet-mutated", "expected": "gate_blocked" },
+    { "case_id": "import-malformed", "expected": "gate_blocked" },
+    { "case_id": "import-authority-claimed", "expected": "gate_blocked" },
+    { "case_id": "local-revalidation-stale", "expected": "gate_blocked" },
+    { "case_id": "outbound-network-present", "expected": "gate_blocked" },
+    { "case_id": "privacy-threshold-failed", "expected": "gate_blocked" },
+    { "case_id": "recovery-evidence-missing", "expected": "gate_blocked" }
+  ],
+  "recovery_cases": [
+    "recommendation-cancelled",
+    "preview-cancelled",
+    "export-cancelled",
+    "export-plan-repeated",
+    "import-cancelled",
+    "import-repeated",
+    "revalidation-corrupted",
+    "state-changed-mid-round-trip"
+  ],
+  "expanded_case_counts": {
+    "delivery_surfaces": 9,
+    "round_trip_failures": 12,
+    "recovery_cases": 8,
+    "total": 29
+  },
+  "external_client_present": false,
+  "credential_access_present": false,
+  "automatic_delivery_present": false,
+  "hidden_telemetry_present": false,
+  "imported_authority_present": false,
+  "gate_closed": false
+}

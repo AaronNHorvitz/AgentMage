@@ -20,6 +20,10 @@ pre-release validation milestone and cannot be used to imply supported GA status
   production paths, unverified behavior, and exclusions.
 - [`release-notes-v0.1.0-draft.md`](release-notes-v0.1.0-draft.md) is a non-published release-note
   template with required limitations and evidence fields.
+- [`v0.5-frontier-acceptance-bundle.md`](v0.5-frontier-acceptance-bundle.md),
+  [`v0.5-capability-matrix.md`](v0.5-capability-matrix.md), and
+  [`release-notes-v0.5.0-draft.md`](release-notes-v0.5.0-draft.md) describe the blocked manual
+  frontier-consultation candidate without claiming a client, package, or release.
 
 ## Truth Rule
 
