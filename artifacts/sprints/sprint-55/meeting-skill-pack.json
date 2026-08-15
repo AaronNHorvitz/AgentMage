@@ -1,0 +1,335 @@
+{
+  "assignment_access": false,
+  "authority": {
+    "approvals": false,
+    "code_execution": false,
+    "connectors": false,
+    "filesystem": false,
+    "grant_creation": false,
+    "memory_promotion": false,
+    "network": false,
+    "secrets": false,
+    "shell": false,
+    "tool_registration": false,
+    "workspace_expansion": false,
+    "writes": false
+  },
+  "calendar_mutation": false,
+  "inbox_access": false,
+  "invite_access": false,
+  "manifests": [
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 863,
+          "content_sha256": "1e36a7f0162134fe6489d055bd856514597ef06e52208a8baafc21e7a7939161",
+          "kind": "prompt",
+          "path": "prompts/meeting-agenda-and-request.prompt.md",
+          "semantic_key": "meeting-agenda-and-request-prompt"
+        },
+        {
+          "bytes": 144,
+          "content_sha256": "2c6446bcb49f6903d600cc8e1dd4a0fbc1c4d6665d25a4c6550e3cb72076d8d4",
+          "kind": "template",
+          "path": "templates/meeting-agenda-and-request.template.md",
+          "semantic_key": "meeting-agenda-and-request-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "9a014f68049dd7d5db94e2410f72b9a43792d95249f8d3b41bb89a1888b13c85",
+      "package_sha256": "f4df95a66f560b6bf03dbe4e6fe639d915c326e6c2f4a2cb92fe2f4d47986621",
+      "precedence": 100,
+      "purpose": "Draft a local agenda or meeting request with purpose, participants, topics, decision needs, preparation, and expected outputs",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-agenda-and-request"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-agenda-and-request",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 876,
+          "content_sha256": "297aa52d3a5d12ab9b5b5c3913927f19a06e92ddf367ded9b7f4819a77753d03",
+          "kind": "prompt",
+          "path": "prompts/meeting-attendee-ledger.prompt.md",
+          "semantic_key": "meeting-attendee-ledger-prompt"
+        },
+        {
+          "bytes": 153,
+          "content_sha256": "d59471463a924885768717d8d9154e48bc5a84d79b5b8c0105035d61d48c6386",
+          "kind": "template",
+          "path": "templates/meeting-attendee-ledger.template.md",
+          "semantic_key": "meeting-attendee-ledger-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "1a5869c5190e167d65ad7878a497e0aabe1c30ae5d9146c67776cd04559b5814",
+      "package_sha256": "bb7df740754402ff8b331d0d8ff375ab953b7051b4ee2d6441efe4ba9985a988",
+      "precedence": 100,
+      "purpose": "Show invitation response and attendance as independent source-backed states without inferring either state from silence or the other state",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-attendee-ledger"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-attendee-ledger",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 886,
+          "content_sha256": "36e4fa0d51a9c540e1a37f6d611bcd7b2ca763d99d9e0b11556b8c6c8bd0fb58",
+          "kind": "prompt",
+          "path": "prompts/meeting-transcript-cleanup.prompt.md",
+          "semantic_key": "meeting-transcript-cleanup-prompt"
+        },
+        {
+          "bytes": 136,
+          "content_sha256": "7e9d7f09319049b2e510e716d04ff986c3af9d9fcb95ff78f7207ec5d68d4678",
+          "kind": "template",
+          "path": "templates/meeting-transcript-cleanup.template.md",
+          "semantic_key": "meeting-transcript-cleanup-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "55dbeb842c175472675ea1e62ee9d947e666f9ebcd2cdb417b73db31e1714c13",
+      "package_sha256": "f7669a1467627d3bad8efb73ff7a70212888087be78310ea6d28841e8cca3396",
+      "precedence": 100,
+      "purpose": "Clean user-provided local notes or transcripts while retaining exact verbatim text, timestamps, attribution confidence, and unclear-language markers",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-transcript-cleanup"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-transcript-cleanup",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 875,
+          "content_sha256": "8f6267b8f4415b73dca6cdbf1e569c1c94ca37b82235d5920f1dccffe12ae8bb",
+          "kind": "prompt",
+          "path": "prompts/meeting-minutes-draft.prompt.md",
+          "semantic_key": "meeting-minutes-draft-prompt"
+        },
+        {
+          "bytes": 168,
+          "content_sha256": "38dbcfedce59c1d6abbaa546eeeb3042841e8ef8008e3c06c37aec233bc0361c",
+          "kind": "template",
+          "path": "templates/meeting-minutes-draft.template.md",
+          "semantic_key": "meeting-minutes-draft-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "3e993fc3e14ad48d68659364802fa37fd974127b99fff768173e7ac0846b1ea1",
+      "package_sha256": "b102bd3e0344232d8d28201f810906245b8370c0c62281d116bb5b69f07b40dc",
+      "precedence": 100,
+      "purpose": "Draft local minutes that distinguish confirmed and proposed decisions, actions, owners, dates, questions, risks, and next-meeting details",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-minutes-draft"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-minutes-draft",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 870,
+          "content_sha256": "d292be206af96da03700b1a9441c221dbae694df65015ad52354c67b518d06ae",
+          "kind": "prompt",
+          "path": "prompts/meeting-closeout.prompt.md",
+          "semantic_key": "meeting-closeout-prompt"
+        },
+        {
+          "bytes": 124,
+          "content_sha256": "d8446d74ff66ea243ec007ce77933284294fee14e44c4f9dd1fb559d82bcdd77",
+          "kind": "template",
+          "path": "templates/meeting-closeout.template.md",
+          "semantic_key": "meeting-closeout-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "1694c8e5abdf408652f21211795707b7549775f469293ef00c5bf4a50ac786cc",
+      "package_sha256": "d980f9eeeb94b2adbef7536fc4cccd079b13d0ba20f906bee987a4cc07d6fdfd",
+      "precedence": 100,
+      "purpose": "Review a sealed meeting record for confirmed decisions, proposals, actions, unknown owners, unknown dates, and open continuity items",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-closeout"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-closeout",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 858,
+          "content_sha256": "157039175ef4a58225c9e7bb3c7a0a305739c7590626a8d6797a89c65c1dc827",
+          "kind": "prompt",
+          "path": "prompts/meeting-recurring-continuity.prompt.md",
+          "semantic_key": "meeting-recurring-continuity-prompt"
+        },
+        {
+          "bytes": 140,
+          "content_sha256": "0ae0d5bb6d071b93146dcf3d491cf3fb65c605f8df5f27ff262cb9494f539581",
+          "kind": "template",
+          "path": "templates/meeting-recurring-continuity.template.md",
+          "semantic_key": "meeting-recurring-continuity-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "f33615f42cecd520f567bda29c00f86d0a4657ebc20d176b655c428687fd7344",
+      "package_sha256": "6d94309af525683caccadc1e53b3cbd7108a4050fdca726e3c50fb697e419a8b",
+      "precedence": 100,
+      "purpose": "Carry source-linked open items through a recurring series and draft a local follow-up while preserving immutable history",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "person",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "meeting-recurring-continuity"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-meeting-recurring-continuity",
+      "source_id": "agentmage-built-in-meeting-skills",
+      "source_sha256": "72e69ad45f494c2bdca6c72975363c547a5372f4219da4ddc01556691b4124a4",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    }
+  ],
+  "network_access": false,
+  "notification_access": false,
+  "product_registration": false,
+  "prompt_count": 6,
+  "record_type": "agentmage-meeting-skill-pack",
+  "schedule_access": false,
+  "schema_version": 1,
+  "send_access": false,
+  "skills": [
+    "agenda_and_request",
+    "attendee_ledger",
+    "transcript_cleanup",
+    "minutes_draft",
+    "meeting_closeout",
+    "recurring_continuity"
+  ],
+  "source_mutation": false,
+  "template_count": 6,
+  "version": "0.6.0"
+}

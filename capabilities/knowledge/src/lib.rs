@@ -10,6 +10,7 @@ mod index;
 mod knowledge_write;
 mod lifecycle;
 mod markdown_write;
+mod meeting_skills;
 mod memory;
 mod memory_lifecycle;
 mod memory_working;
@@ -60,6 +61,7 @@ pub use markdown_write::{
     MarkdownLineEnding, MarkdownSourceRange, MarkdownUpdatePreview, MarkdownUpdateRequest,
     MarkdownWriteError, preview_markdown_update, verify_markdown_update_preview,
 };
+pub use meeting_skills::{MeetingSkill, built_in_meeting_skill_pack};
 pub use memory::{
     MemoryCandidate, MemoryCandidateClass, MemoryCandidateDecision, MemoryError, MemoryId,
     MemoryItem, MemoryItemStatus, MemoryScope, MemoryType, UserMemoryDecision,
