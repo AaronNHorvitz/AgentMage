@@ -33,6 +33,7 @@ mod semantic;
 mod semantic_benchmark;
 mod skills;
 mod store;
+mod tabular;
 mod tasks;
 mod word_edit;
 mod word_generation;
@@ -187,6 +188,13 @@ pub use skills::{
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
+};
+pub use tabular::{
+    DelimitedDialect, SafeCsvProposal, TabularComparison, TabularDocument, TabularError,
+    TabularFilter, TabularMatch, TabularMatchReason, TabularProfile, TabularRowProjection,
+    TabularSort, TabularSortDirection, TabularSummary, build_safe_csv, clean_tabular_text,
+    compare_tabular, filter_sort_tabular, normalized_tabular_filename, normalized_tabular_id,
+    normalized_tabular_text, normalized_tabular_url, parse_delimited_table, summarize_tabular,
 };
 pub use tasks::{
     KnowledgeTask, KnowledgeTaskDuplicate, KnowledgeTaskPriority, KnowledgeTaskStatus,
