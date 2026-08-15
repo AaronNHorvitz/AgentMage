@@ -337,6 +337,14 @@ pub struct CommandPreview {
     pub environment: BTreeMap<String, String>,
     /// Review risk.
     pub risk: CommandRisk,
+    /// Whether one separately consumed exact grant is mandatory.
+    pub grant_required: bool,
+    /// Whether an interactive process is requested.
+    pub interactive: bool,
+    /// Whether network access is requested.
+    pub network: bool,
+    /// Whether ambient process environment inheritance is requested.
+    pub inherit_environment: bool,
     /// Exact process and output ceilings.
     pub bounds: CommandBounds,
     /// Canonical identity of this preview with this field zeroed.
@@ -401,6 +409,10 @@ pub fn prepare_command(
         working_directory: command.working_directory,
         environment: command.environment.clone(),
         risk: command.risk,
+        grant_required: command.grant_required,
+        interactive: command.interactive,
+        network: command.network,
+        inherit_environment: command.inherit_environment,
         bounds: command.bounds,
         preview_sha256: "0".repeat(64),
     };

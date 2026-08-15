@@ -351,10 +351,55 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "agent-progress-event",
     "session-environment-capture",
     "write-aware-checkpoint",
+    "command-preview",
+    "command-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true],
+    [true, true, true, true, true, true],
+  );
+});
+
+test("command runtime schemas reject authority and outcome ambiguity", () => {
+  const preview = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/command-preview.valid.json"),
+      "utf8",
+    ),
+  );
+  const inherited = structuredClone(preview);
+  inherited.inherit_environment = true;
+  assert.equal(
+    validateRuntimeRecord("command-preview", inherited, runtimeValidators).valid,
+    false,
+  );
+  const shell = structuredClone(preview);
+  shell.executable = "/usr/bin/bash";
+  assert.equal(
+    validateRuntimeRecord("command-preview", shell, runtimeValidators).valid,
+    false,
+  );
+
+  const receipt = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/command-receipt.valid.json"),
+      "utf8",
+    ),
+  );
+  const falseSuccess = structuredClone(receipt);
+  falseSuccess.termination = "timed_out";
+  assert.equal(
+    validateRuntimeRecord("command-receipt", falseSuccess, runtimeValidators).valid,
+    false,
+  );
+  const missingCleanup = structuredClone(receipt);
+  missingCleanup.termination = "cancelled";
+  missingCleanup.outcome = "cancelled";
+  missingCleanup.exit_code = null;
+  missingCleanup.descendants_terminated = false;
+  assert.equal(
+    validateRuntimeRecord("command-receipt", missingCleanup, runtimeValidators).valid,
+    false,
   );
 });
 

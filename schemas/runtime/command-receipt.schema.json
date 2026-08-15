@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/command-receipt.schema.json",
+  "title": "AgentMage Bounded Command Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authority_transaction_id",
+    "operation_attempt_id",
+    "command_attempt_id",
+    "template_id",
+    "template_version",
+    "spec_sha256",
+    "request_sha256",
+    "preview_sha256",
+    "termination",
+    "outcome",
+    "exit_code",
+    "signal",
+    "stdout_sha256",
+    "stdout_total_bytes",
+    "stdout_retained_bytes",
+    "stdout_truncated",
+    "stderr_sha256",
+    "stderr_total_bytes",
+    "stderr_retained_bytes",
+    "stderr_truncated",
+    "elapsed_ms",
+    "descendants_terminated",
+    "platform_code",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "authority_transaction_id": { "$ref": "#/$defs/identifier" },
+    "operation_attempt_id": { "$ref": "#/$defs/identifier" },
+    "command_attempt_id": { "$ref": "#/$defs/identifier" },
+    "template_id": { "$ref": "#/$defs/identifier" },
+    "template_version": { "$ref": "#/$defs/version" },
+    "spec_sha256": { "$ref": "#/$defs/sha256" },
+    "request_sha256": { "$ref": "#/$defs/sha256" },
+    "preview_sha256": { "$ref": "#/$defs/sha256" },
+    "termination": {
+      "enum": ["exited", "cancelled", "timed_out", "output_limit", "launch_failed"]
+    },
+    "outcome": { "enum": ["succeeded", "failed", "cancelled", "timed_out"] },
+    "exit_code": {
+      "oneOf": [
+        { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        { "type": "null" }
+      ]
+    },
+    "signal": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "maximum": 255 },
+        { "type": "null" }
+      ]
+    },
+    "stdout_sha256": { "$ref": "#/$defs/sha256" },
+    "stdout_total_bytes": { "$ref": "#/$defs/bytes" },
+    "stdout_retained_bytes": { "$ref": "#/$defs/bytes" },
+    "stdout_truncated": { "type": "boolean" },
+    "stderr_sha256": { "$ref": "#/$defs/sha256" },
+    "stderr_total_bytes": { "$ref": "#/$defs/bytes" },
+    "stderr_retained_bytes": { "$ref": "#/$defs/bytes" },
+    "stderr_truncated": { "type": "boolean" },
+    "elapsed_ms": { "type": "integer", "minimum": 0, "maximum": 310000 },
+    "descendants_terminated": { "type": "boolean" },
+    "platform_code": { "$ref": "#/$defs/identifier" },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "termination": { "const": "exited" } }, "required": ["termination"] },
+      "then": { "properties": { "exit_code": { "type": "integer" } } },
+      "else": { "properties": { "exit_code": { "type": "null" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "termination": { "const": "exited" },
+          "exit_code": { "const": 0 }
+        },
+        "required": ["termination", "exit_code"]
+      },
+      "then": { "properties": { "outcome": { "const": "succeeded" } } }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "cancelled" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "outcome": { "const": "cancelled" },
+          "descendants_terminated": { "const": true }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "termination": { "const": "timed_out" } }, "required": ["termination"] },
+      "then": {
+        "properties": {
+          "outcome": { "const": "timed_out" },
+          "descendants_terminated": { "const": true }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "termination": { "enum": ["output_limit", "launch_failed"] } },
+        "required": ["termination"]
+      },
+      "then": { "properties": { "outcome": { "const": "failed" } } }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "maxLength": 64
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    }
+  }
+}

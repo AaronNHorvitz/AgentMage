@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/command-preview.schema.json",
+  "title": "AgentMage Exact Command Preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command_attempt_id",
+    "template_id",
+    "template_version",
+    "executable",
+    "executable_sha256",
+    "arguments",
+    "working_directory",
+    "environment",
+    "risk",
+    "grant_required",
+    "interactive",
+    "network",
+    "inherit_environment",
+    "bounds",
+    "preview_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "command_attempt_id": { "$ref": "#/$defs/identifier" },
+    "template_id": { "$ref": "#/$defs/identifier" },
+    "template_version": { "$ref": "#/$defs/version" },
+    "executable": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9/_.+-]+$",
+      "not": {
+        "pattern": "/(?:bash|busybox|cmd|csh|dash|env|fish|ksh|node|perl|php|powershell|pwsh|python|python3|ruby|sh|zsh)$"
+      }
+    },
+    "executable_sha256": { "$ref": "#/$defs/sha256" },
+    "arguments": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "pattern": "^[^@$`;|&<>*?\\[\\]\\u0000-\\u001f]+$"
+      }
+    },
+    "working_directory": { "const": "empty_scratch" },
+    "environment": {
+      "type": "object",
+      "maxProperties": 8,
+      "propertyNames": { "enum": ["LANG", "LC_ALL", "NO_COLOR", "TZ"] },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[A-Za-z0-9_+./:-]+$"
+      }
+    },
+    "risk": { "enum": ["low", "moderate"] },
+    "grant_required": { "const": true },
+    "interactive": { "const": false },
+    "network": { "const": false },
+    "inherit_environment": { "const": false },
+    "bounds": { "$ref": "#/$defs/bounds" },
+    "preview_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "maxLength": 64
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeout_ms",
+        "stdout_bytes",
+        "stderr_bytes",
+        "memory_bytes",
+        "task_count",
+        "cpu_percent"
+      ],
+      "properties": {
+        "timeout_ms": { "type": "integer", "minimum": 1, "maximum": 300000 },
+        "stdout_bytes": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+        "stderr_bytes": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 16777216,
+          "maximum": 4294967296
+        },
+        "task_count": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "cpu_percent": { "type": "integer", "minimum": 1, "maximum": 400 }
+      }
+    }
+  }
+}

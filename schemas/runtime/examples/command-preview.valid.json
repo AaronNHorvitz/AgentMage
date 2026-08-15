@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "command_attempt_id": "command-attempt-0001",
+  "template_id": "fixture.printf",
+  "template_version": "1.0.0",
+  "executable": "/usr/bin/printf",
+  "executable_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "arguments": ["agentmage-ok"],
+  "working_directory": "empty_scratch",
+  "environment": {
+    "LANG": "C",
+    "TZ": "UTC"
+  },
+  "risk": "low",
+  "grant_required": true,
+  "interactive": false,
+  "network": false,
+  "inherit_environment": false,
+  "bounds": {
+    "timeout_ms": 1000,
+    "stdout_bytes": 1024,
+    "stderr_bytes": 1024,
+    "memory_bytes": 33554432,
+    "task_count": 4,
+    "cpu_percent": 100
+  },
+  "preview_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+}
