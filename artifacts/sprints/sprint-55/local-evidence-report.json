@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "record_type": "sprint_55_local_evidence",
-  "source_revision": "f960daa4d742258af20fd09aa1f342ac73e35e52",
+  "source_revision": "c21c399ba586a808dd1ec3f34dbfe049b03224c0",
   "source_sha256": {
-    "kernel/contracts/src/meeting.rs": "09edb5b413d0f0547945cd1dbf876ac1fe13950a81fe87a085947b3708f60214",
-    "kernel/contracts/src/lib.rs": "4b017b4c29a8ca2e2bec033598499d74532633b92535da439e32941ddaa6dbe8",
-    "kernel/engine/src/meeting_continuity.rs": "dd3bb2e545d6023f3ef42dec20e230059e436ec709508254e76af84370c9adcb",
+    "kernel/contracts/src/meeting.rs": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
+    "kernel/contracts/src/lib.rs": "0b0d27a314e825b4106ee62ede5b3bb592e3b1d2cb01e3fe7f5efae939b71413",
+    "kernel/engine/src/meeting_continuity.rs": "b33fc4bd629a9f622afaf125c453ae651e5be45efcace1c1aebf64a3f2fdf127",
     "kernel/engine/src/lib.rs": "80f34f158db0c0c427aef160b9909a4d1572cdce11f7ebe9d4bfea9ff2d52a90",
     "capabilities/knowledge/src/meeting_skills.rs": "fa3ad0fce72a0d96bc274342f59958abd70ea0915e68f5154342ffbce47f7076",
     "capabilities/knowledge/src/lib.rs": "dfd12352c927c488ea8fa5247a944b46e20bcaf435401eda912435b38a8044e4",
@@ -20,16 +20,16 @@
     "schemas/runtime/examples/meeting-continuity-record.valid.json": "5116e20aa0bb911b81c7673df5b710fef107099e0abc27b0d8fe41b8b3423780",
     "scripts/validate_planning_schemas.mjs": "e3c75f848e3661f5c12ac09f61f67ff5adbd838b2afc1475396f4e315ae4405a",
     "tests/test_planning_schemas.mjs": "b0a173b040bbc160f9c30bf02e7f0906733d5516ffe82fea56d94addf69d87da",
-    "docs/verification/sprint-55-meeting-corpus.json": "ad5123081a0f9f966c9bac77e4dde4978c42b0c346c1bde7e53b8f58590a1c73",
-    "scripts/meeting_continuity_contract.py": "440f0adb5dd21691c495d5f3cb756910aa716f098a0e497474672e1a623757b5",
-    "tests/test_meeting_continuity_contract.py": "a2f9367e4561dd30269ce34901855f75348a97572b87a628715c9e6b6d6651b4",
+    "docs/verification/sprint-55-meeting-corpus.json": "f69e7daffd8f376b98acfa2c83cda8c18a963e43581df568b98bba3969c332a4",
+    "scripts/meeting_continuity_contract.py": "1053ac42248718c52a0db02def8322e3592c00a725c873ac1f00fc7cc0b16095",
+    "tests/test_meeting_continuity_contract.py": "76c4bdc05fe57cc99514a7341110264299f8b7d6672699651f49fcd813ac1c87",
     "scripts/meeting_skill_contract.py": "c2af798b94048676abbce8c87ad6e3576b7beadb7b275f5092f806d5b88e34d1",
     "tests/test_meeting_skill_contract.py": "99ba7f62d95a21bef1359b99735135499d62d4666fd17a4e3b87b44a46f746c5",
     "artifacts/sprints/sprint-55/meeting-skill-pack.json": "726d1eafb4cddb83b5218cb5945e5d7e8ed5c1d88d4135411d48a11f38cb88a4",
-    "docs/architecture/meeting-records-and-continuity.md": "b7ec6e402018397edcb0be22a9fa5d9a6c80c24704faee3fc485b7e969a725ed",
+    "docs/architecture/meeting-records-and-continuity.md": "9d75dde07923f2d79f476b8cfddfef4e174cd02dac1061ec0f6e207771ef0f82",
     "docs/guides/meeting-records-local-workflows.md": "27acd0030d3dc84115e4acb8ef886abde1589f347ed32b2f08643875e680afaf",
-    "docs/verification/sprint-55-local-results.md": "c8b53317618b35f540b5790e412b043b25f21262abf15cf128fbd074077460e1",
-    "scripts/sprint_55_evidence.py": "bf1f5fb4aafeaba74f9914ce17f60f45659523b8e3e54e753541196b6f7be85d",
+    "docs/verification/sprint-55-local-results.md": "f50872a15e3478c0b21e7751dc7088bcc938366c1d8ef7832c32157a3038f16c",
+    "scripts/sprint_55_evidence.py": "2413abaed19e8f27400c4736f52d841dad60456c9125b3cc3f209195aad92802",
     "tests/test_sprint_55_evidence.py": "384f3aa7cf469939601794adbcf02e17d9e1e81215a405f8bf0c8466c0308ebb"
   },
   "environment": {
@@ -55,7 +55,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "148e5f4c9c1e55baa521fe38477fecff5b36ba7b7822cef896a328450c360fad",
+      "output_sha256": "a516d36f80fb0184612939f65f4dab9294dad86a86ecb9759e8968bdd92d3dd1",
       "blocking_skip_count": 0
     },
     {
@@ -70,7 +70,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "66c48ac91f8bdabde8e2f126ef1e31c08f9c1de89d2af9294d899f038aa84834",
+      "output_sha256": "0364e7bc664f3acd8da0a8e733c4ded5119b0988e96e3c6b51a43e9cae4ce12d",
       "blocking_skip_count": 0
     },
     {
@@ -81,7 +81,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "67b13374b628694010c0b22bb8a86c1f556d66b88f3fe01ac931e26b69813f8b",
+      "output_sha256": "4c263a12fe2e3442cc449f87f79652a9665a4ce40d8af63158414fe78009b88b",
       "blocking_skip_count": 0
     },
     {
@@ -124,7 +124,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "8eafc36b67ffe93ba70af47fc451c9b7bc712363ed12dbf66adb6135d3e2f80e",
+      "output_sha256": "7b345729c77b788e81cce8c47df1c023b8e55869950cfa9c9664beea5d122d41",
       "blocking_skip_count": null
     },
     {
@@ -135,7 +135,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "b5fe86d7b688d839d18dee73eefb0d570a0a2b32a26ea53649eb278a3d13edcf",
+      "output_sha256": "0c9593d2ec3f1c72f561987f08e0ba617c2918ddf58440c7720a94e46b7fa030",
       "blocking_skip_count": null
     },
     {
@@ -194,7 +194,7 @@
     "attendance_state_count": 5,
     "runtime_schema_count": 4,
     "declarative_skill_count": 6,
-    "acceptance_corpus_case_count": 80,
+    "acceptance_corpus_case_count": 86,
     "source_bound_preparation_drafts": true,
     "independent_attendee_states": true,
     "verbatim_preserving_cleanup": true,
@@ -224,7 +224,7 @@
   "verification_evidence": {
     "focused_local_contracts": true,
     "focused_blocking_skip_count": 0,
-    "acceptance_corpus_case_count": 80,
+    "acceptance_corpus_case_count": 86,
     "accepted_external_effect_count": 0,
     "inferred_attendee_state_count": 0,
     "invented_owner_or_date_count": 0,
