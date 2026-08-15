@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_53_local_evidence",
+  "source_revision": "20d67004af424c8a0593ca5d9b791b0840a6cf37",
+  "source_sha256": {
+    "kernel/contracts/src/frontier.rs": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
+    "kernel/contracts/src/frontier_import.rs": "22a0fa7ed303e2030753c962108af9e5a8a8c809588724fa6893c2ad31079bfd",
+    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
+    "kernel/engine/src/frontier_recommendation.rs": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c",
+    "kernel/engine/src/frontier_import.rs": "6926aa8fadbbf28ed3f3463252692e845f78572376988618270b56cd00a73348",
+    "kernel/engine/src/frontier_release.rs": "0bc38294d7140baea4588b0b437632e40b2bced75a7f62bdf41b170a4b2bd3a7",
+    "kernel/engine/src/handoff.rs": "2fd2f84d99cb3874d5de6c19d143f8aa83525d3df7fdf0263ab76d5a6358928c",
+    "schemas/runtime/frontier-tier-decision.schema.json": "7ea0fd64b24448d505f7add9b7f4649983365eaf93327e5b36c99150170d0002",
+    "schemas/runtime/frontier-recommendation-receipt.schema.json": "6744e3f1c5242542a6346fe6f832f89be838f098fe19dd8f5265441cd46a560f",
+    "schemas/runtime/frontier-return-manifest.schema.json": "48c08e7c3e4a4051e6c431379ae3ecc8a2e8593c13e0b7869b24e37e977eb03b",
+    "schemas/runtime/frontier-round-trip-receipt.schema.json": "2db8c23dab37599a2807edd1b8a40809b6816ab699a3e76466ce940e9075a937",
+    "docs/verification/sprint-51-frontier-corpus.json": "b031aea0204c44d2b777c4608eca3b97b3118da89847b7d2eae851db6bd1db8f",
+    "docs/verification/sprint-52-frontier-import-corpus.json": "bf5fd5d77371f1389e2ff544686401869c7d93820b32337e6d736c6269389622",
+    "docs/verification/sprint-53-frontier-release-corpus.json": "deb74da29fbb7d47208090396db5cbd9f3e5d73eb3532207d7f81dd27bf8d56a",
+    "docs/architecture/manual-frontier-recommendation.md": "56862570b2f4632a665f5b670dfdd06af95aaae29bc5d034024f04694942e7ae",
+    "docs/architecture/untrusted-frontier-result-import.md": "de58173134c9e7fc450c5731d2dd940f99b9642dd6d43403d7e88c2fec9b156e",
+    "docs/guides/manual-frontier-consultation.md": "584361271946d4eabd1309fa73a590670e3adacb8c39bfb2011ba5c4e6cb9a90",
+    "docs/guides/frontier-result-import-and-revalidation.md": "0252db8174fb77ae4449f731b753195e7f61069b868e125dba2a8de11d6658ce",
+    "docs/release/v0.5-frontier-acceptance-bundle.md": "fa6e40acbc6ed521ec4211775805a0afc1749d2a10c56c930c08371b0a38ec60",
+    "docs/release/v0.5-capability-matrix.md": "6914c3601f00470a9f459f74412c8d46b8e7a30b66470aaac34182f772acd622",
+    "docs/release/release-notes-v0.5.0-draft.md": "ddc53f690f9cf08b7c8ad6a3b0c98b08d11682bade628ebbe900dbb22c47f3c0",
+    "docs/security/frontier-threat-model-and-boundary-report.md": "4eb4f2eb98ecae7438fb7cdd46d8fb02c1bad48f026cffceab77fffe55ed1729",
+    "docs/verification/sprint-53-local-results.md": "6cc262d14cd6919a2a11d0a8d6c8537e3d43265d7fc299572ff02a57c0d965a3",
+    "release/v0.5-frontier-pack-manifest.json": "8a91c3b2c4cc2a1f46830eae3142381de916662a704d86f689b371f66c1a4f63",
+    "scripts/v0_5_frontier_release_gate.py": "9e7052711faf7a34173c6aa281faa43cc8cec536bf6de4604ef8c40f280e2d05",
+    "tests/test_v0_5_frontier_release_gate.py": "dfd0ef7ba5878cc17bdc82ce63e0317ec0db5e6ac68e58709b5dacf6acdf43df",
+    "scripts/sprint_53_evidence.py": "148676c51bea484f8d34796f0900bda22f052fe206b85b43d3807aa0258e9145",
+    "tests/test_sprint_53_evidence.py": "3ded0d949aefb723f34b5e72c7ff835226c3b14ce1eb573159fa9d08ac994af3"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "frontier-recommendation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "frontier_recommendation::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "cc29a255fbc1faa73dbf24d3ece739de4947ef3b078c585cd06b671ef09b4593",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-handoff-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "handoff::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a7cf839a629f0e0ed1e7cdcb890a41b29d7c4d3def0b5215251bab6c71da3346",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-import-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "frontier_import::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3a9e87bb5cb1436eb664f367fa3d946b165c76938614a6540fd676b6ea46754b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-export-plan-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "frontier_release::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "89db01826bec583a35d174d405a10429a74d8188f606f8aedd370c5925b4076a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "dd76524d236c46c2a913c0caa25f64f814ede796193897610875c75690015892",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-recommendation-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_frontier_recommendation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-import-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_frontier_import_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-release-gate-unit",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v0_5_frontier_release_gate"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d03ce458f2a6cd2b4f27522f3aacad03ce1872c028853507c3ad02ca621bdcad",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-contracts",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33b657874203fc6cbde3b92561be5178fef931b3351effdce58e340f5e1c3f75",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "v0.5-release-gate",
+      "argv": [
+        "python3",
+        "scripts/v0_5_frontier_release_gate.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5330d47428cdac9e0f7ed2411a83f327877bb2b204f46d400776105b40e3ac81",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_53_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4a160235c0add54f7a5997815d0e01a072210439de4899c702c94dd3cd814662",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-AI-008",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "delivery_surface_case_count": 9,
+    "forced_gate_failure_case_count": 12,
+    "recovery_case_count": 8,
+    "expanded_corpus_case_count": 29,
+    "measured_recommendation_contract": true,
+    "exact_disclosure_and_no_delivery_render": true,
+    "user_initiated_controlled_export_plan": true,
+    "untrusted_import_and_quarantine": true,
+    "fresh_local_revalidation": true,
+    "authority_free_round_trip_receipt": true,
+    "strict_local_without_external_account": true,
+    "outbound_network_capability": false,
+    "external_client_capability": false,
+    "credential_access_capability": false,
+    "automatic_delivery_capability": false,
+    "imported_authority_capability": false,
+    "frontier_product_coordinator": false,
+    "native_end_to_end_round_trip": false,
+    "normal_local_flow_integration": false,
+    "durable_round_trip_recovery": false,
+    "live_model_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_signed_packages": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "expanded_corpus_case_count": 29,
+    "accepted_autonomous_delivery_count": 0,
+    "accepted_import_authority_count": 0,
+    "outbound_network_attempt_count": 0,
+    "frontier_product_coordinator": false,
+    "native_end_to_end_round_trip": false,
+    "normal_local_flow_integration": false,
+    "durable_round_trip_recovery": false,
+    "live_model_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_signed_packages": false,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false,
+    "release_allowed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-50-THROUGH-52-BLOCKED",
+      "owner": "53.1"
+    },
+    {
+      "code": "FRONTIER-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "53.1.3.1"
+    },
+    {
+      "code": "NATIVE-END-TO-END-ROUND-TRIP-ABSENT",
+      "owner": "53.1.3.1"
+    },
+    {
+      "code": "NORMAL-LOCAL-FLOW-INTEGRATION-ABSENT",
+      "owner": "53.1.3.1"
+    },
+    {
+      "code": "LIVE-MODEL-CAMPAIGN-ABSENT",
+      "owner": "53.1.3.1"
+    },
+    {
+      "code": "DURABLE-ROUND-TRIP-RECOVERY-ABSENT",
+      "owner": "53.1.3.3"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "53.1.3.5"
+    },
+    {
+      "code": "TRUSTED-SIGNED-V0.5-PACKAGES-ABSENT",
+      "owner": "G-V0.5"
+    },
+    {
+      "code": "INDEPENDENT-RELEASE-DECISION-ABSENT",
+      "owner": "G-V0.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_53_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_50_through_52_closed": false,
+    "frontier_workflow_integrated": false,
+    "automatic_frontier_delivery_enabled": false,
+    "import_authority_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
