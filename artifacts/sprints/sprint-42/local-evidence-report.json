@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_42_local_evidence",
+  "source_revision": "4dbb2509a2117c0a48d4f76c329fd3a3955e3f6a",
+  "source_sha256": {
+    "kernel/engine/src/repository_safety.rs": "dfb93c22ee0ebee57341c85588192d889f488204ce95c12860837b1321a19d92",
+    "platforms/linux/src/repository_safety.rs": "a5e9aca69ad4fe9c49153ad98dca9883604bd49e735e5de53ba248b50bd83c7b",
+    "kernel/engine/tests/repository_safety_matrix.rs": "ce44de22d7623b99ba672921fbc7837bdfbd32aae91aca40a79855fa9d66ed32",
+    "schemas/runtime/repository-preservation-manifest.schema.json": "d975faf6408bcab834d560260c797b08a3f8e08432d43f8cf56e8b7bcdbe71dd",
+    "schemas/runtime/repository-operation-plan.schema.json": "e18be0f17720689a4af950f5fd5b51e09d02a00f0c9bb0350340070576c14751",
+    "schemas/runtime/repository-operation-receipt.schema.json": "1ac525f1211b419118e2c69d0dcccf264ac90ce050ddd8d922be52deff019c59",
+    "schemas/runtime/worktree-ownership.schema.json": "570e001df78f184e4c26be20adf2887a6d1b3e441275e667dfb9c8cb4a5438ec",
+    "docs/security/repository-safety.md": "885c59b59252f5a0a09945d964115c306af7de45be9a6cefc966a4715c7c12f7",
+    "docs/architecture/repository-worktree-boundary.md": "041de975ff0afa5d4dc40114c4a8cc004872682c4c321e568797b9b3a2723133",
+    "docs/operations/repository-worktree-recovery.md": "131dec01a2ea919f5d6f77baee5dc015272f3f1c117cedbce18fcba90be59db3",
+    "docs/verification/sprint-42-repository-mutation-corpus.json": "111ddb095467336fc9dd37cfdfcb705328b15401df4c0f252ede999e7a13a82a",
+    "docs/verification/sprint-42-local-results.md": "7841b6ece567e61a0d9a4826a5ae7411baa1cb13c753bd073ba597dfe902e94a",
+    "scripts/sprint_42_evidence.py": "4114e4462c1b2306e5972e56822dd2ef919107f30c0fb372cd10a51e3d15663e",
+    "tests/test_sprint_42_evidence.py": "f61b4af51f7a146a74ac09ebcf109764243f7b49e6d1fbb6ab60cea8441c0aa0"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "git": "git version 2.55.0"
+  },
+  "commands": [
+    {
+      "id": "kernel-repository-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "repository_safety::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f17f69aed948cbcded1c5fd59bac0e9de0010b3abf29527c9431b61bc943e8c1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "repository-mutation-matrix",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "repository_safety_matrix",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b91169dab3ad2655463816b986729476fd64be87dccdd3eb8e2d9ae6605cfb64",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-repository-integration",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "repository_safety::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4768561e180f252aaf708a092cf9bc52b741efc327dbaad056cb4b1514bdbee9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "schema-contract",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "68eeff8087c33158a4bb5149e61ecc969651d15731ca14ece86f32096b6376a1",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "373cae86aaa4ac60b0bacdb3d5402040ad7ce8389bf87aa59887403f9b177fe0",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "85c7e32f042f853c6dea42273a9d2f3f44a2b34b1ef02d44f71285cdfcd6f3bc",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_42_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3e636b97cb66a8c31be4a446156a7a1fc83c6075493df3ffe8bd21ff14fd8a54",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "git",
+      "name": "git",
+      "size": 4945312,
+      "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+      "root_owned": true,
+      "group_or_world_writable": false
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-NET-007",
+    "SR-OPS-001",
+    "SR-TST-004",
+    "SR-TST-005",
+    "SR-GIT-001",
+    "SR-GIT-002",
+    "SR-GIT-003",
+    "SR-GIT-004",
+    "SR-GIT-005",
+    "SR-GIT-006"
+  ],
+  "implemented_contracts": {
+    "canonical_host_bound_remote_identity": true,
+    "exact_namespaced_fetch_plan": true,
+    "dirty_untracked_stale_and_divergence_reports": true,
+    "owned_task_worktree_lifecycle": true,
+    "content_minimized_ownership_registry": true,
+    "stale_preimage_and_collision_denial": true,
+    "preservation_manifest_reconciliation": true,
+    "agentmage_branch_compare_and_swap": true,
+    "ambient_git_hardening": true,
+    "fedora_local_worktree_and_cas_execution": true,
+    "product_profile_registered": false,
+    "network_clone_or_fetch_execution": false,
+    "clone_success_reconciliation": false,
+    "complete_descendant_containment": false,
+    "peak_resource_accounting": false,
+    "native_cross_platform_acceptance": false,
+    "complete_hostile_interruption_campaign": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "fedora_local_worktree_lifecycle": true,
+    "fedora_local_agentmage_branch_cas": true,
+    "fixed_hostile_case_count": 44,
+    "protected_manifest_mutation_count": 10000,
+    "unauthorized_manifest_mutation_acceptance_count": 0,
+    "network_clone_or_fetch_execution": false,
+    "clone_success_reconciliation": false,
+    "complete_descendant_containment": false,
+    "peak_resource_accounting": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-41-BLOCKED",
+      "owner": "42.1"
+    },
+    {
+      "code": "REPOSITORY-PROFILE-NOT-REGISTERED",
+      "owner": "42.1.1"
+    },
+    {
+      "code": "AUTHENTICATED-NETWORK-GIT-DEFERRED",
+      "owner": "42.1.1.2"
+    },
+    {
+      "code": "CLONE-SUCCESS-RECONCILIATION-INCOMPLETE",
+      "owner": "42.1.1.2"
+    },
+    {
+      "code": "DESCENDANT-CONTAINMENT-INCOMPLETE",
+      "owner": "42.1.3.4"
+    },
+    {
+      "code": "PEAK-RESOURCE-ACCOUNTING-ABSENT",
+      "owner": "42.1.3.3"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-GIT-ACCEPTANCE-ABSENT",
+      "owner": "42.1.3.3"
+    },
+    {
+      "code": "COMPLETE-HOSTILE-INTERRUPTION-CAMPAIGN-ABSENT",
+      "owner": "42.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT",
+      "owner": "42.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-REPOSITORY-BOUNDARY-REVIEW-ABSENT",
+      "owner": "42.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_42_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_41_closed": false,
+    "repository_profile_active": false,
+    "network_git_enabled": false,
+    "clone_success_complete": false,
+    "active_checkout_preservation_locally_exercised": true,
+    "cross_platform_acceptance_passed": false,
+    "complete_descendant_containment": false,
+    "peak_resource_accounting_complete": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

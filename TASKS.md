@@ -3158,31 +3158,31 @@ the story, and the sprint therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 42.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 42.1.1.1** (legacy `S-035-I01`): Implement remote URL, default branch, upstream, fetch state, and local-versus-remote divergence discovery.
-  - [ ] **Sub-task 42.1.1.2** (legacy `S-035-I02`): Implement approval-gated no-checkout clone into an empty owned directory and exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`; disable prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph writes, and user-ref updates.
-  - [ ] **Sub-task 42.1.1.3** (legacy `S-035-I03`): Implement currentness reports for ahead, behind, diverged, stale, dirty, and untracked states.
-  - [ ] **Sub-task 42.1.1.4** (legacy `S-035-I04`): Implement temporary one-branch-per-task worktrees separate from the active checkout.
-  - [ ] **Sub-task 42.1.1.5** (legacy `S-035-I05`): Record task, source commit, branch, owner, grants, file ownership, processes, resource budgets, retention, cleanup, and disposition per worktree.
-  - [ ] **Sub-task 42.1.1.6** (legacy `S-035-I06`): Exclude ignored secrets and detect overlapping edits, renamed paths, changed preimages, and concurrent user changes before transfer.
-  - [ ] **Sub-task 42.1.1.7** (legacy `S-035-I07`): Implement snapshot, restoration, merge-back or patch-transfer preview, cleanup, and remote-operation receipts.
-  - [ ] **Sub-task 42.1.1.8** (legacy `S-035-I08`): Describe worktrees only as change and concurrency isolation, never as the operating-system security sandbox.
-  - [ ] **Sub-task 42.1.1.9:** Build and reconcile a content-minimized preservation manifest before preview, immediately before grant consumption, and after every outcome; cover active checkout, index, path dispositions, refs, notes, stash, reflogs, tags, configuration, hooks, filters, worktrees, submodules, Large File Storage, locks, and in-progress operations.
-  - [ ] **Sub-task 42.1.1.10:** Implement generic-pull absence and a separately previewed/granted `git_branch_fast_forward` compare-and-swap from one expected local object to one proven descendant; preserve every ref and checkout on stale or concurrent movement.
-  - [ ] **Sub-task 42.1.1.11:** Harden the pinned Git worker against ambient Git variables, aliases, broad `safe.directory`, URL rewrites, remote helpers, credential helpers, hooks, filters, drivers, pagers, editors, signers, alternates, replacement refs, unsupported protocols, and repository-triggered maintenance.
+  - [ ] **Sub-task 42.1.1.1** (legacy `S-035-I01`): Implement remote URL, default branch, upstream, fetch state, and local-versus-remote divergence discovery. Exact credential-free remote identities and deterministic currentness observations exist; live bounded discovery is not yet wired to an enabled repository profile.
+  - [ ] **Sub-task 42.1.1.2** (legacy `S-035-I02`): Implement approval-gated no-checkout clone into an empty owned directory and exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`; disable prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph writes, and user-ref updates. Exact plans and prohibited-operation tests exist, but authenticated network execution and clone-success reconciliation remain unavailable.
+  - [x] **Sub-task 42.1.1.3** (legacy `S-035-I03`): Implement currentness reports for ahead, behind, diverged, stale, dirty, and untracked states.
+  - [x] **Sub-task 42.1.1.4** (legacy `S-035-I04`): Implement temporary one-branch-per-task worktrees separate from the active checkout.
+  - [x] **Sub-task 42.1.1.5** (legacy `S-035-I05`): Record task, source commit, branch, owner, grants, file ownership, processes, resource budgets, retention, cleanup, and disposition per worktree.
+  - [x] **Sub-task 42.1.1.6** (legacy `S-035-I06`): Exclude ignored secrets and detect overlapping edits, renamed paths, changed preimages, and concurrent user changes before transfer.
+  - [ ] **Sub-task 42.1.1.7** (legacy `S-035-I07`): Implement snapshot, restoration, merge-back or patch-transfer preview, cleanup, and remote-operation receipts. Snapshot, cleanup, recovery, and typed receipt contracts exist; merge-back or patch-transfer preview and remote execution receipts remain absent.
+  - [x] **Sub-task 42.1.1.8** (legacy `S-035-I08`): Describe worktrees only as change and concurrency isolation, never as the operating-system security sandbox.
+  - [x] **Sub-task 42.1.1.9:** Build and reconcile a content-minimized preservation manifest before preview, immediately before grant consumption, and after every outcome; cover active checkout, index, path dispositions, refs, notes, stash, reflogs, tags, configuration, hooks, filters, worktrees, submodules, Large File Storage, locks, and in-progress operations.
+  - [x] **Sub-task 42.1.1.10:** Implement generic-pull absence and a separately previewed/granted `git_branch_fast_forward` compare-and-swap from one expected local object to one proven descendant; preserve every ref and checkout on stale or concurrent movement.
+  - [x] **Sub-task 42.1.1.11:** Harden the pinned Git worker against ambient Git variables, aliases, broad `safe.directory`, URL rewrites, remote helpers, credential helpers, hooks, filters, drivers, pagers, editors, signers, alternates, replacement refs, unsupported protocols, and repository-triggered maintenance.
 
 - [ ] **Task 42.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 42.1.2.1:** Worktree manager and ownership registry.
-  - [ ] **Sub-task 42.1.2.2:** Remote discovery, fetch, currentness, and operation receipts.
-  - [ ] **Sub-task 42.1.2.3:** Collision and active-checkout preservation fixtures.
-  - [ ] **Sub-task 42.1.2.4:** Worktree handoff and recovery format.
-  - [ ] **Sub-task 42.1.2.5:** Versioned repository preservation-manifest schema, hardened Git invocation profile, and prohibited-operation inventory.
+  - [x] **Sub-task 42.1.2.1:** Worktree manager and ownership registry.
+  - [ ] **Sub-task 42.1.2.2:** Remote discovery, fetch, currentness, and operation receipts. Currentness and receipt artifacts exist, while live remote discovery/fetch evidence remains blocked.
+  - [x] **Sub-task 42.1.2.3:** Collision and active-checkout preservation fixtures.
+  - [x] **Sub-task 42.1.2.4:** Worktree handoff and recovery format.
+  - [x] **Sub-task 42.1.2.5:** Versioned repository preservation-manifest schema, hardened Git invocation profile, and prohibited-operation inventory.
 
 - [ ] **Task 42.1.3 - Verify and close the story**
-  - [ ] **Sub-task 42.1.3.1:** `S-035-UT01` creates, identifies, lists, hands off, and removes owned worktrees across clean/dirty/detached/missing/renamed states; assert stable ownership and no active-checkout mutation.
-  - [ ] **Sub-task 42.1.3.2:** `S-035-ST01` seeds aliases, URL rewrites, hooks, executable filters, drivers, pagers, editors, signers, submodules, Large File Storage, alternates, replacement refs, malicious refs/objects, case/Unicode collisions, unsafe ownership, credential helpers, protocols, ambient Git variables, and hostile remote URLs; assert no execution, secret access, unapproved network, or unowned mutation.
+  - [ ] **Sub-task 42.1.3.1:** `S-035-UT01` creates, identifies, lists, hands off, and removes owned worktrees across clean/dirty/detached/missing/renamed states; assert stable ownership and no active-checkout mutation. Kernel ownership and Fedora create/remove fixtures pass; the complete dirty/detached/missing/renamed lifecycle matrix remains absent.
+  - [ ] **Sub-task 42.1.3.2:** `S-035-ST01` seeds aliases, URL rewrites, hooks, executable filters, drivers, pagers, editors, signers, submodules, Large File Storage, alternates, replacement refs, malicious refs/objects, case/Unicode collisions, unsafe ownership, credential helpers, protocols, ambient Git variables, and hostile remote URLs; assert no execution, secret access, unapproved network, or unowned mutation. Forty-four fixed hostile cases and 10,000 deterministic protected-manifest mutations pass with zero unauthorized acceptance; the complete live hostile-repository campaign remains absent.
   - [ ] **Sub-task 42.1.3.3:** `S-035-IT01` performs visible approved clone/fetch with exact host/repository/ref/object/byte budgets and verifies only the transaction namespace changed; assert no prune, tag, `FETCH_HEAD`, remote-tracking, branch, checkout, push, publication, maintenance, or implicit credential effect.
   - [ ] **Sub-task 42.1.3.4:** `S-035-RT01` interrupts fetch, worktree creation/removal, compare-and-swap branch movement, and cleanup while the user changes files, index, refs, notes, stash, tags, configuration, hooks, and the active checkout; assert all user state survives and recovery identifies every owned artifact.
-  - [ ] **Sub-task 42.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-NET-005` through `SR-NET-007` where enabled, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`, and `SR-GIT-001` through `SR-GIT-006`; execute the local portion of `RV-49`; retain manifests, before/after repository snapshots, ownership records, network traces, collision results, prohibited-operation enumeration, and recovery bundles.
+  - [ ] **Sub-task 42.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-NET-005` through `SR-NET-007` where enabled, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`, and `SR-GIT-001` through `SR-GIT-006`; execute the local portion of `RV-49`; retain manifests, before/after repository snapshots, ownership records, network traces, collision results, prohibited-operation enumeration, and recovery bundles. The exact requirement map and Fedora-local artifacts are retained; network traces, complete `RV-49`, trusted-package execution, cross-platform evidence, independent review, and deferred manual fuzzing remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3194,9 +3194,22 @@ the story, and the sprint therefore remain open.
 
 - [ ] **Sprint AC 42.AC1:** Creating, using, transferring, and deleting a task worktree leaves the active checkout's branch, index, untracked files, and unfinished changes intact.
 - [ ] **Sprint AC 42.AC2:** Clone/fetch and currentness operations use exact namespaced refs and do not prune, follow tags, write `FETCH_HEAD`, update user refs, merge, rebase, reset, stash, discard, recurse, transfer Large File Storage objects, maintain the repository, or execute repository configuration.
-- [ ] **Sprint AC 42.AC3:** Collision and stale-preimage conditions stop for review.
-- [ ] **Sprint AC 42.AC4:** Repository credentials never enter model context, configuration, memory, command output, or audit logs.
+- [x] **Sprint AC 42.AC3:** Collision and stale-preimage conditions stop for review.
+- [x] **Sprint AC 42.AC4:** Repository credentials never enter model context, configuration, memory, command output, or audit logs.
 - [ ] **Sprint AC 42.AC5:** Worktree operations remain inside the operating-system sandbox and exact grants, and the Sprint 42 portion of `RV-49` proves complete active-checkout and unrelated-Git-state preservation.
+
+Retained local evidence: source revision `4dbb2509a2117c0a48d4f76c329fd3a3955e3f6a` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-42/local-evidence-report.json), SHA-256
+`8587f4cc932dbd5ec7c6913a27fabdacdf106d30251f0319d54f391eae93c434`. All nine recorded commands
+exit zero, all three focused suites report zero blocking skips, and Fedora-local fixtures exercise
+owned worktree creation/removal plus task-branch compare-and-swap while the fixed hostile corpus and
+10,000 deterministic preservation-manifest mutations accept no unauthorized change. Sprint 42
+remains **BLOCKED** because Sprint 41 is blocked; no repository profile is registered; authenticated
+network Git, clone-success reconciliation, complete descendant containment and peak resource
+accounting, native cross-platform acceptance, the complete hostile interruption campaign,
+trusted-package-launcher execution, independent review, and deferred manual fuzzing remain absent.
+The open tasks/sub-tasks, all story criteria, Sprint AC 42.AC1/AC2/AC5, the story, and the sprint
+therefore remain open.
 
 **Gate decision:** Sprint 42 is PASS only when Story 42.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 43 - Deep Repository Comprehension
