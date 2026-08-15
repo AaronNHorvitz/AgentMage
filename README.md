@@ -71,6 +71,17 @@ complete, so the authenticated host closes without constructing product
 authority and the extension remains fail-closed. The read path is therefore
 source-level vertical-slice evidence, not a supported or integrated workflow.
 
+Sprint 48 now has an executable source-level thin-client protocol and strict
+local `agent` command parser shared conceptually by native Chat, interactive
+CLI, JSON, SDK, and ACP-compatible surfaces. Help, version, completion, parsing,
+closed request/event schemas, bounded rendering, replay denial, cancellation,
+and adversarial contract tests are implemented. Authenticated product transport
+and canonical conversation, knowledge, memory, transfer, and diagnostic
+coordinators are not composed, so operational commands fail closed with exit
+code `5`; this is not an integrated CLI claim. See the
+[thin-client architecture](./docs/architecture/thin-client-boundary.md) and
+[local CLI guide](./docs/guides/local-command-line-interface.md).
+
 Accepted Decision 0019 separates immutable historical evidence from current
 applicability, composes platform lanes independently, records exact review
 provenance, retains real fuzzing as a separately approved manual security task,
@@ -177,6 +188,13 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
   Automatic commit and every publication operation remain prohibited; the source
   candidate is not product-registered. See the
   [local review and commit architecture](./docs/architecture/local-review-and-commit-boundary.md).
+- A versioned thin-client protocol shared by native Chat, interactive CLI, JSON,
+  SDK, and ACP-compatible surfaces, with closed command families, bounded
+  hash-chained events, stable exit codes, exact predeclared headless grants,
+  deterministic cancellation and resume, and no client-side storage, tool,
+  model, connector, secret, or native-effect authority. The current source
+  candidate remains transport disconnected; see the
+  [thin-client architecture](./docs/architecture/thin-client-boundary.md).
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
 - A removable connected layer: uninstalling every provider adapter restores the independently tested strict-local product.
