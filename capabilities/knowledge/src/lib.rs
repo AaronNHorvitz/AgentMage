@@ -23,6 +23,7 @@ mod operations;
 mod pdf_extraction;
 mod pdf_generation;
 mod pdf_inspection;
+mod pdf_redaction;
 mod plain_folder;
 mod retrieval;
 mod schema;
@@ -131,6 +132,11 @@ pub use pdf_generation::{
 pub use pdf_inspection::{
     PdfArtifactFinding, PdfArtifactFindingKind, PdfArtifactInspection, PdfFormFieldObservation,
     PdfImageObservation, PdfLinkKind, PdfLinkObservation, PdfMetadataSummary, inspect_pdf_artifact,
+};
+pub use pdf_redaction::{
+    PdfRedactionError, PdfRedactionLayer, PdfRedactionLayerCheck, PdfRedactionReceipt,
+    PdfRedactionRequest, PdfRedactionTarget, RedactedPdfReport, pdf_redactor_identity_sha256,
+    redact_generated_pdf_report,
 };
 pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
