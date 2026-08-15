@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-54-executive-assistant-v1",
+  "ranking_dimensions": [
+    "consequence",
+    "dependencies",
+    "due_window",
+    "effort",
+    "evidence_state",
+    "importance",
+    "schedule",
+    "urgency",
+    "user_preference"
+  ],
+  "evidence_states": [
+    "confirmed",
+    "disputed",
+    "historical",
+    "inferred",
+    "unknown"
+  ],
+  "tracker_kinds": [
+    "approvals",
+    "commitments",
+    "deadlines",
+    "decisions",
+    "reminders",
+    "waiting"
+  ],
+  "view_kinds": [
+    "audit",
+    "briefing_pack",
+    "changes_since",
+    "closeout",
+    "decision_brief",
+    "forgotten_items",
+    "meeting_brief",
+    "organization_brief",
+    "person_brief",
+    "portfolio",
+    "recurring_review",
+    "start_of_cycle",
+    "status"
+  ],
+  "correspondence_checks": [
+    "accidental_commitment",
+    "missing_attachment",
+    "sensitive_content",
+    "uncertain_name",
+    "unclear_date",
+    "unanswered_question",
+    "unsupported_claim"
+  ],
+  "message_triage_classes": [
+    "action_required",
+    "decision_required",
+    "duplicate",
+    "reference_only",
+    "response_required",
+    "uncertain",
+    "waiting"
+  ],
+  "prohibited_actions": [
+    "automatic_assignment",
+    "automatic_file_mutation",
+    "automatic_notification",
+    "automatic_schedule_change",
+    "automatic_send",
+    "hidden_prioritization",
+    "inferred_sensitive_traits",
+    "unauthorized_memory"
+  ],
+  "reconciliation_events": [
+    "conflict",
+    "source_correction",
+    "supersession",
+    "task_completion"
+  ],
+  "storage_grammars": [
+    "obsidian",
+    "plain_folder"
+  ],
+  "privacy_operation_cases": [
+    "confidential:export",
+    "confidential:index",
+    "confidential:retain",
+    "confidential:retrieve",
+    "highly_restricted:export",
+    "highly_restricted:index",
+    "highly_restricted:retain",
+    "highly_restricted:retrieve",
+    "ordinary:export",
+    "ordinary:index",
+    "ordinary:retain",
+    "ordinary:retrieve",
+    "private:export",
+    "private:index",
+    "private:retain",
+    "private:retrieve"
+  ],
+  "expanded_case_counts": {
+    "correspondence_checks": 7,
+    "evidence_states": 5,
+    "message_triage_classes": 7,
+    "privacy_operation_cases": 16,
+    "prohibited_actions": 8,
+    "ranking_dimensions": 9,
+    "reconciliation_events": 4,
+    "storage_grammars": 2,
+    "total": 77,
+    "tracker_kinds": 6,
+    "view_kinds": 13
+  },
+  "inbox_access_present": false,
+  "network_access_present": false,
+  "notification_effect_present": false,
+  "send_effect_present": false,
+  "schedule_effect_present": false,
+  "source_mutation_present": false,
+  "authority_grant_present": false,
+  "sprint_gate_closed": false
+}
