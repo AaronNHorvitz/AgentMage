@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 //! Local host composition for the bounded AgentMage product surface.
 
+/// Authority-free composition of structured edits into kernel shadow changes.
+pub mod code_change;
+
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
 

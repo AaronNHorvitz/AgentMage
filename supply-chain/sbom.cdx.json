@@ -99,7 +99,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "fdc836e6605f177e745d54fb3f520aebd082e125bd038110223bd1d9f4f83cb1"
+          "content": "4e6b52dd538d23b544f721919031078415fdc951b8da9b8d933f472fe774e207"
         }
       ],
       "licenses": [
@@ -13879,6 +13879,7 @@
       "dependsOn": [
         "cargo:agentmage-capability-knowledge@0.0.0",
         "cargo:agentmage-capability-read-only@0.0.0",
+        "cargo:agentmage-capability-repository-map@0.0.0",
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
@@ -16681,7 +16682,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:d323efb3-55b3-5d3c-986c-ae291c14db86",
+  "serialNumber": "urn:uuid:6c91d290-3906-530b-aa66-fc658b5d3ff6",
   "specVersion": "1.6",
   "version": 1
 }

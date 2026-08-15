@@ -67,7 +67,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "fdc836e6605f177e745d54fb3f520aebd082e125bd038110223bd1d9f4f83cb1"
+          "content": "4e6b52dd538d23b544f721919031078415fdc951b8da9b8d933f472fe774e207"
         }
       ],
       "integrity": null,
@@ -9044,6 +9044,7 @@
       "depends_on": [
         "cargo:agentmage-capability-knowledge@0.0.0",
         "cargo:agentmage-capability-read-only@0.0.0",
+        "cargo:agentmage-capability-repository-map@0.0.0",
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
@@ -11826,7 +11827,7 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "a3a7e2dcb04d713028859f3283809983ff1ef98b37915069f016e2db4a5e96e9",
+    "Cargo.lock": "1ecf6ee07400c22ff6080f9c5dec06d48016c50eccf509de0367f5aec8ff5faa",
     "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
