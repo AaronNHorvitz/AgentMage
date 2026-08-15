@@ -270,6 +270,7 @@ mod tests {
                         body: "Synthetic evidence.".to_owned(),
                     },
                 ],
+                memory_promotion: None,
                 line_ending: MarkdownLineEnding::CrLf,
             },
             &KnowledgeNamespaceSnapshot {

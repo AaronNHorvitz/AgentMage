@@ -36,11 +36,11 @@ pub use domain::{
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
 pub use knowledge_write::{
     CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeFrontmatterProperty,
-    KnowledgeIndexPublication, KnowledgeIndexPublicationState, KnowledgeNamespaceSnapshot,
-    KnowledgeNoteCreatePreview, KnowledgeNoteCreateRequest, KnowledgeSectionDraft,
-    KnowledgeStructuralActionKind, KnowledgeStructuralActionPreview, KnowledgeWriteWorkflow,
-    decide_index_publication, preview_knowledge_note_create, preview_knowledge_structural_action,
-    verify_knowledge_note_create_preview,
+    KnowledgeIndexPublication, KnowledgeIndexPublicationState, KnowledgeMemoryPromotionApproval,
+    KnowledgeNamespaceSnapshot, KnowledgeNoteCreatePreview, KnowledgeNoteCreateRequest,
+    KnowledgeSectionDraft, KnowledgeStructuralActionKind, KnowledgeStructuralActionPreview,
+    KnowledgeWriteWorkflow, decide_index_publication, preview_knowledge_note_create,
+    preview_knowledge_structural_action, verify_knowledge_note_create_preview,
 };
 pub use lifecycle::{
     KnowledgeBackup, KnowledgeBackupEntry, KnowledgeMigrationEntry, KnowledgeMigrationPlan,

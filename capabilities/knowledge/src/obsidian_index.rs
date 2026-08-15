@@ -2010,6 +2010,7 @@ mod tests {
                     body: "Synthetic local fixture.".to_owned(),
                 },
             ],
+            memory_promotion: None,
             line_ending: MarkdownLineEnding::Lf,
         };
         let preview = preview_knowledge_note_create(

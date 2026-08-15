@@ -26,7 +26,8 @@
 - Duplicate identities, exact/case/Unicode path collisions, broken wiki links, and namespace revision
   drift are refused before a filesystem draft exists.
 - Task, decision, commitment, correspondence, meeting, handoff, and memory creation use one closed
-  renderer and one host composition boundary.
+  renderer and one host composition boundary. Memory creation additionally requires an already
+  approved durable item and binds its identity, candidate, decision, and exact content digests.
 - Move, rename, supersede, and trash-delete previews are single-file, high-risk actions requiring
   additional confirmation; bulk reorganization is not representable.
 - The host maps verified creates only to a closed create draft and verified updates only to an exact

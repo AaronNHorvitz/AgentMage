@@ -54,6 +54,13 @@ and memory workflows through one renderer. Each workflow has a closed section sc
 path-independent identifier, an allowlisted scalar frontmatter surface, and explicit LF or CRLF
 output. Meeting creation requires a `Raw Notes` section.
 
+Memory creation additionally requires a promotion binding derived from an already approved durable
+`MemoryItem`. The binding carries the memory identity, candidate digest, explicit decision digest,
+and approved-content digest. The `Memory` section must hash to that approved content, all four
+values are retained in canonical frontmatter, and the preview verifier recomputes the workflow
+shape and content binding. A missing, rejected, stale, mismatched, or non-memory promotion proof is
+refused before host composition.
+
 A create preview is compared against a complete bounded namespace snapshot. Exact, case-folded,
 and Unicode-normalized path collisions; duplicate identities; duplicate namespace entries; broken
 wiki targets; prohibited targets; malformed digests; and resource-limit overflow fail closed. The

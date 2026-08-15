@@ -10,7 +10,7 @@ use unicode_normalization::UnicodeNormalization;
 
 use crate::{
     KnowledgeRecordId, MarkdownDocument, MarkdownFidelityWarning, MarkdownLineEnding,
-    MarkdownUpdatePreview, MarkdownWriteError,
+    MarkdownUpdatePreview, MarkdownWriteError, MemoryItem, MemoryItemStatus, MemoryType,
 };
 
 const MAX_NAMESPACE_ITEMS: usize = 100_000;
@@ -58,6 +58,60 @@ pub struct KnowledgeSectionDraft {
     pub body: String,
 }
 
+/// Content-bound proof that one durable memory item already received explicit approval.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct KnowledgeMemoryPromotionApproval {
+    memory_id: String,
+    candidate_sha256: String,
+    decision_sha256: String,
+    approved_content_sha256: String,
+}
+
+impl KnowledgeMemoryPromotionApproval {
+    /// Derives a Markdown-write binding only from one explicitly approved durable item.
+    pub fn from_approved_item(item: &MemoryItem) -> Result<Self, MarkdownWriteError> {
+        let content = item
+            .content
+            .as_deref()
+            .filter(|content| !content.is_empty())
+            .ok_or(MarkdownWriteError::ProtectedSource)?;
+        if item.status != MemoryItemStatus::Approved
+            || item.memory_type == MemoryType::Working
+            || item.evidence.is_empty()
+            || item.sensitivity == agentmage_kernel_contracts::DataSensitivity::Restricted
+            || item.confidence_bps < 7_000
+            || item.decided_at.is_empty()
+            || item.last_verified_at.is_empty()
+            || item.superseded_by.is_some()
+            || content.len() > MAX_TEXT_BYTES
+            || invalid_text(content)
+            || !valid_sha256(&item.candidate_sha256)
+            || !valid_sha256(&item.decision_sha256)
+        {
+            return Err(MarkdownWriteError::ProtectedSource);
+        }
+        Ok(Self {
+            memory_id: item.memory_id.as_str().to_owned(),
+            candidate_sha256: item.candidate_sha256.clone(),
+            decision_sha256: item.decision_sha256.clone(),
+            approved_content_sha256: sha256(content.as_bytes()),
+        })
+    }
+
+    /// Returns the exact approved memory identity.
+    #[must_use]
+    pub fn memory_id(&self) -> &str {
+        &self.memory_id
+    }
+
+    /// Returns the digest of the explicit user decision evidence.
+    #[must_use]
+    pub fn decision_sha256(&self) -> &str {
+        &self.decision_sha256
+    }
+}
+
 /// Complete authority-free note-creation request.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KnowledgeNoteCreateRequest {
@@ -73,6 +127,8 @@ pub struct KnowledgeNoteCreateRequest {
     pub properties: Vec<KnowledgeFrontmatterProperty>,
     /// Exact workflow sections.
     pub sections: Vec<KnowledgeSectionDraft>,
+    /// Required explicit promotion proof for memory; prohibited for every other workflow.
+    pub memory_promotion: Option<KnowledgeMemoryPromotionApproval>,
     /// Exact output line-ending convention.
     pub line_ending: MarkdownLineEnding,
 }
@@ -112,6 +168,8 @@ pub struct KnowledgeNoteCreatePreview {
     pub verified_wiki_links: Vec<String>,
     /// Exact fidelity warnings from parsing the generated document.
     pub fidelity_warnings: Vec<MarkdownFidelityWarning>,
+    /// Exact explicit promotion proof for memory, otherwise none.
+    pub memory_promotion: Option<KnowledgeMemoryPromotionApproval>,
     /// Exact proposed Markdown bytes.
     #[serde(skip_serializing)]
     proposed_markdown: Vec<u8>,
@@ -310,6 +368,7 @@ pub fn preview_knowledge_note_create(
         expected_index_revision: namespace.derived_index_revision,
         verified_wiki_links: links,
         fidelity_warnings: document.fidelity_warnings().to_vec(),
+        memory_promotion: request.memory_promotion,
         proposed_markdown,
         preview_sha256: String::new(),
     };
@@ -331,6 +390,7 @@ pub fn verify_knowledge_note_create_preview(
     if parsed.stable_id() != Some(&preview.stable_id)
         || wiki_links(&preview.proposed_markdown)? != preview.verified_wiki_links
         || parsed.fidelity_warnings() != preview.fidelity_warnings
+        || !verify_rendered_workflow(preview)?
     {
         return Err(MarkdownWriteError::StructuralDrift);
     }
@@ -481,6 +541,24 @@ fn validate_create_request(request: &KnowledgeNoteCreateRequest) -> Result<(), M
     if headings != required {
         return Err(MarkdownWriteError::StructuralDrift);
     }
+    match (request.workflow, request.memory_promotion.as_ref()) {
+        (KnowledgeWriteWorkflow::Memory, Some(approval)) => {
+            let memory = request
+                .sections
+                .iter()
+                .find(|section| section.heading == "Memory")
+                .ok_or(MarkdownWriteError::ProtectedSource)?;
+            if !valid_memory_promotion(approval)
+                || sha256(memory.body.as_bytes()) != approval.approved_content_sha256
+            {
+                return Err(MarkdownWriteError::ProtectedSource);
+            }
+        }
+        (KnowledgeWriteWorkflow::Memory, None) | (_, Some(_)) => {
+            return Err(MarkdownWriteError::ProtectedSource);
+        }
+        (_, None) => {}
+    }
     Ok(())
 }
 
@@ -498,6 +576,26 @@ fn render_note(request: &KnowledgeNoteCreateRequest) -> Result<Vec<u8>, Markdown
         format!("type: {}", workflow_wire(request.workflow)).as_bytes(),
         ending,
     );
+    if let Some(approval) = &request.memory_promotion {
+        for (key, value) in [
+            ("memory_id", approval.memory_id.as_str()),
+            (
+                "memory_candidate_sha256",
+                approval.candidate_sha256.as_str(),
+            ),
+            ("memory_decision_sha256", approval.decision_sha256.as_str()),
+            (
+                "memory_content_sha256",
+                approval.approved_content_sha256.as_str(),
+            ),
+        ] {
+            append_line(
+                &mut output,
+                format!("{key}: {}", yaml_scalar(value)?).as_bytes(),
+                ending,
+            );
+        }
+    }
     let mut properties = request.properties.clone();
     properties.sort_by(|left, right| left.key.cmp(&right.key));
     for property in properties {
@@ -616,6 +714,81 @@ const fn workflow_wire(workflow: KnowledgeWriteWorkflow) -> &'static str {
     }
 }
 
+fn valid_memory_promotion(approval: &KnowledgeMemoryPromotionApproval) -> bool {
+    !approval.memory_id.is_empty()
+        && approval.memory_id.len() <= 128
+        && approval.memory_id.starts_with("memory-")
+        && approval
+            .memory_id
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        && valid_sha256(&approval.candidate_sha256)
+        && valid_sha256(&approval.decision_sha256)
+        && valid_sha256(&approval.approved_content_sha256)
+}
+
+fn verify_rendered_workflow(
+    preview: &KnowledgeNoteCreatePreview,
+) -> Result<bool, MarkdownWriteError> {
+    let text = std::str::from_utf8(&preview.proposed_markdown)
+        .map_err(|_| MarkdownWriteError::MalformedMarkdown)?;
+    let normalized = text.replace("\r\n", "\n");
+    let expected_type = format!("type: {}", workflow_wire(preview.workflow));
+    if normalized
+        .lines()
+        .filter(|line| *line == expected_type)
+        .count()
+        != 1
+    {
+        return Ok(false);
+    }
+    let headings = normalized
+        .lines()
+        .filter_map(|line| line.strip_prefix("## "))
+        .collect::<Vec<_>>();
+    if headings != required_section_order(preview.workflow) {
+        return Ok(false);
+    }
+    match (preview.workflow, preview.memory_promotion.as_ref()) {
+        (KnowledgeWriteWorkflow::Memory, Some(approval)) if valid_memory_promotion(approval) => {
+            for (key, value) in [
+                ("memory_id", approval.memory_id.as_str()),
+                (
+                    "memory_candidate_sha256",
+                    approval.candidate_sha256.as_str(),
+                ),
+                ("memory_decision_sha256", approval.decision_sha256.as_str()),
+                (
+                    "memory_content_sha256",
+                    approval.approved_content_sha256.as_str(),
+                ),
+            ] {
+                let expected = format!("{key}: {}", yaml_scalar(value)?);
+                if normalized.lines().filter(|line| *line == expected).count() != 1 {
+                    return Ok(false);
+                }
+            }
+            let marker = "## Memory\n";
+            let next = "\n## Sources\n";
+            if normalized.matches(marker).count() != 1 || normalized.matches(next).count() != 1 {
+                return Ok(false);
+            }
+            let Some(after_heading) = normalized.split_once(marker).map(|(_, body)| body) else {
+                return Ok(false);
+            };
+            let Some(body) = after_heading
+                .split_once(next)
+                .map(|(body, _)| body.strip_suffix('\n').unwrap_or(body))
+            else {
+                return Ok(false);
+            };
+            Ok(sha256(body.as_bytes()) == approval.approved_content_sha256)
+        }
+        (KnowledgeWriteWorkflow::Memory, _) | (_, Some(_)) => Ok(false),
+        (_, None) => Ok(!normalized.lines().any(|line| line.starts_with("memory_"))),
+    }
+}
+
 fn writable_property_key(value: &str) -> bool {
     matches!(
         value,
@@ -666,6 +839,7 @@ fn create_preview_digest(
         preview.expected_index_revision,
         &preview.verified_wiki_links,
         &preview.fidelity_warnings,
+        &preview.memory_promotion,
         sha256(&preview.proposed_markdown),
     ))
     .map_err(|_| MarkdownWriteError::StructuralDrift)?;
@@ -705,7 +879,14 @@ fn sha256(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
+    use agentmage_kernel_contracts::{
+        DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, WorkspaceId, WorkspacePath,
+    };
+
+    use crate::{
+        MemoryCandidate, MemoryScope, UserMemoryDecision, evaluate_memory_candidate,
+        resolve_memory_candidate,
+    };
 
     use super::*;
 
@@ -727,6 +908,52 @@ mod tests {
         }
     }
 
+    fn approved_memory_item() -> MemoryItem {
+        let candidate = MemoryCandidate {
+            memory_id: crate::MemoryId::parse("memory-approved-001").expect("memory identity"),
+            memory_type: MemoryType::Semantic,
+            scope: MemoryScope {
+                workspace_id: workspace(),
+                project_id: Some("project-one".to_owned()),
+                conversation_id: None,
+            },
+            content: "Approved durable memory.".to_owned(),
+            fact_key: Some("project.reviewed-fact".to_owned()),
+            tags: vec!["reviewed".to_owned()],
+            links: Vec::new(),
+            evidence: vec![EvidenceReference {
+                schema_version: 1,
+                evidence_id: EvidenceId::from_raw("evidence-memory-approval"),
+                kind: EvidenceKind::Document,
+                source_id: "fixture-source".to_owned(),
+                object_id: "fixture-object".to_owned(),
+                fragment: Some("section-memory".to_owned()),
+                content_sha256: "a".repeat(64),
+                observed_revision: Some("revision-1".to_owned()),
+            }],
+            sensitivity: DataSensitivity::Durable,
+            confidence_bps: 9_000,
+            created_at: "2026-08-14T12:00:00Z".to_owned(),
+            expires_at: None,
+            inferred_sensitive: false,
+            model_requested_promotion: true,
+        };
+        let policy = evaluate_memory_candidate(&candidate, &[]).expect("memory policy");
+        resolve_memory_candidate(
+            &candidate,
+            &policy,
+            UserMemoryDecision::Approve,
+            "c".repeat(64),
+            "2026-08-14T12:01:00Z".to_owned(),
+        )
+        .expect("explicit memory approval")
+    }
+
+    fn memory_approval() -> KnowledgeMemoryPromotionApproval {
+        KnowledgeMemoryPromotionApproval::from_approved_item(&approved_memory_item())
+            .expect("promotion binding")
+    }
+
     fn sections(workflow: KnowledgeWriteWorkflow) -> Vec<KnowledgeSectionDraft> {
         required_section_order(workflow)
             .iter()
@@ -734,6 +961,8 @@ mod tests {
                 heading: (*heading).to_owned(),
                 body: if *heading == "Raw Notes" {
                     "Verbatim source material.".to_owned()
+                } else if workflow == KnowledgeWriteWorkflow::Memory && *heading == "Memory" {
+                    "Approved durable memory.".to_owned()
                 } else {
                     "Reviewed content linked to [[Project One]].".to_owned()
                 },
@@ -756,6 +985,7 @@ mod tests {
                 value: "current".to_owned(),
             }],
             sections: sections(workflow),
+            memory_promotion: (workflow == KnowledgeWriteWorkflow::Memory).then(memory_approval),
             line_ending: MarkdownLineEnding::Lf,
         }
     }
@@ -788,6 +1018,49 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn memory_workflow_requires_explicit_content_bound_promotion() {
+        let mut rejected = approved_memory_item();
+        rejected.status = MemoryItemStatus::Rejected;
+        assert_eq!(
+            KnowledgeMemoryPromotionApproval::from_approved_item(&rejected),
+            Err(MarkdownWriteError::ProtectedSource)
+        );
+
+        let mut missing = request(KnowledgeWriteWorkflow::Memory);
+        missing.memory_promotion = None;
+        assert_eq!(
+            preview_knowledge_note_create(missing, &namespace()),
+            Err(MarkdownWriteError::ProtectedSource)
+        );
+
+        let preview =
+            preview_knowledge_note_create(request(KnowledgeWriteWorkflow::Memory), &namespace())
+                .expect("approved memory preview");
+        assert!(verify_knowledge_note_create_preview(&preview).is_ok());
+        let rendered = std::str::from_utf8(preview.proposed_markdown()).expect("utf8");
+        assert!(rendered.contains("memory_decision_sha256: \""));
+
+        let mut drifted = preview.clone();
+        drifted
+            .memory_promotion
+            .as_mut()
+            .expect("promotion")
+            .approved_content_sha256 = "d".repeat(64);
+        drifted.preview_sha256 = create_preview_digest(&drifted).expect("digest");
+        assert_eq!(
+            verify_knowledge_note_create_preview(&drifted),
+            Err(MarkdownWriteError::StructuralDrift)
+        );
+
+        let mut unrelated = request(KnowledgeWriteWorkflow::Decision);
+        unrelated.memory_promotion = Some(memory_approval());
+        assert_eq!(
+            preview_knowledge_note_create(unrelated, &namespace()),
+            Err(MarkdownWriteError::ProtectedSource)
+        );
     }
 
     #[test]

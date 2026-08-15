@@ -1579,7 +1579,7 @@ mod tests {
             assert!(MarkdownDocument::parse(path(), malformed).is_err());
         }
 
-        let visible = b"---\nid: knowledge-note-001\n---\n# Same\ntext\n# Same\n<html>\n[ref][id]\nTitle\n===\n".to_vec();
+        let visible = b"---\nid: knowledge-note-001\n---\n# Same\ntext\n# Same\n<html>\n<!-- retained comment -->\n[ref][id]\nTitle\n===\n".to_vec();
         let document = MarkdownDocument::parse(path(), visible).expect("visible warnings");
         assert_eq!(
             document.fidelity_warnings(),
@@ -1590,7 +1590,10 @@ mod tests {
                 MarkdownFidelityWarning::SetextHeading,
             ]
         );
-        assert_eq!(document.source_bytes(), b"---\nid: knowledge-note-001\n---\n# Same\ntext\n# Same\n<html>\n[ref][id]\nTitle\n===\n");
+        assert_eq!(
+            document.source_bytes(),
+            b"---\nid: knowledge-note-001\n---\n# Same\ntext\n# Same\n<html>\n<!-- retained comment -->\n[ref][id]\nTitle\n===\n"
+        );
     }
 
     #[test]
