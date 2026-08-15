@@ -1,0 +1,448 @@
+{
+  "authority": {
+    "approvals": false,
+    "code_execution": false,
+    "connectors": false,
+    "filesystem": false,
+    "grant_creation": false,
+    "memory_promotion": false,
+    "network": false,
+    "secrets": false,
+    "shell": false,
+    "tool_registration": false,
+    "workspace_expansion": false,
+    "writes": false
+  },
+  "inbox_access": false,
+  "manifests": [
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 642,
+          "content_sha256": "2a017c68ed0bfa8639629c2351b6f84472b3f8352a79f4b30ce886860dbfcf47",
+          "kind": "prompt",
+          "path": "prompts/executive-cycle-briefing.prompt.md",
+          "semantic_key": "executive-cycle-briefing-prompt"
+        },
+        {
+          "bytes": 115,
+          "content_sha256": "7c1c182ae8b981e8316cfbede04de0c73fd0ce1dd13846d05d26f76c6af4c526",
+          "kind": "template",
+          "path": "templates/executive-cycle-briefing.template.md",
+          "semantic_key": "executive-cycle-briefing-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "3e16ee543a80b56c2978c488cdf61b7fa620aaed604223b95db5dc514b19c6c9",
+      "package_sha256": "0e9fef30380f964292f906e6ac80ceb4278ea0c3395783aeba734c825c7c491b",
+      "precedence": 100,
+      "purpose": "Project approved local schedule, priority, deadline, waiting, preparation, completion, and handoff records into bounded cycle views",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-cycle-briefing"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-cycle-briefing",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 650,
+          "content_sha256": "43ab57b920006b3d3e92dd96cc130fb57b863066a79037b8f98c7622d517ae2b",
+          "kind": "prompt",
+          "path": "prompts/executive-trackers.prompt.md",
+          "semantic_key": "executive-trackers-prompt"
+        },
+        {
+          "bytes": 97,
+          "content_sha256": "306c793b713d796475a486656e0bdf516c4ea921fea116de9bbc1f3a0ae949ac",
+          "kind": "template",
+          "path": "templates/executive-trackers.template.md",
+          "semantic_key": "executive-trackers-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "23b2d1a3b1aa07e5a2bca2dda086afc75c82365b3a3fb6debe7904be9b905a4b",
+      "package_sha256": "11c6aec3b72c6eb38eef2367d1ef356c0ae46e57e37ccedc6dfcaa600ebf6f6b",
+      "precedence": 100,
+      "purpose": "Project exact local commitments, decisions, waiting items, approvals, deadlines, and reminders without notifying or changing another system",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-trackers"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-trackers",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 651,
+          "content_sha256": "89867f5dae26cad1ff95b8d2af3decbd99cf983101f05354a9f397aa651b9e78",
+          "kind": "prompt",
+          "path": "prompts/executive-priority-assistant.prompt.md",
+          "semantic_key": "executive-priority-assistant-prompt"
+        },
+        {
+          "bytes": 106,
+          "content_sha256": "9e6d29fe6d0f1d6f4667eb60a12d794d50de94e4cb63e0f4723ad8fea6386c7a",
+          "kind": "template",
+          "path": "templates/executive-priority-assistant.template.md",
+          "semantic_key": "executive-priority-assistant-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "ee293a416588aa5a4d1d8d489a9c93e10adb95d3a679116e3365b7f10ffd2c45",
+      "package_sha256": "7162ed9b92b08da83ea40bd6796d548bc446ea2717f348f77f0af28f32928013",
+      "precedence": 100,
+      "purpose": "Explain deterministic priority ranking from urgency, importance, dependencies, schedule, effort, preference, consequence, and evidence state",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-priority-assistant"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-priority-assistant",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 636,
+          "content_sha256": "68015808d2842ebbdd38804478138f3e7be7a692fb21737c8e7fb5832950e557",
+          "kind": "prompt",
+          "path": "prompts/executive-evidence-briefs.prompt.md",
+          "semantic_key": "executive-evidence-briefs-prompt"
+        },
+        {
+          "bytes": 150,
+          "content_sha256": "fb495d71255942f7edc464d06b12b650e8dd7182dcba7c31fc5da7c7d552a6b8",
+          "kind": "template",
+          "path": "templates/executive-evidence-briefs.template.md",
+          "semantic_key": "executive-evidence-briefs-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "11c212d90d4b5872a3929ca2b730df57b6740ea2c354bc7d4b08d7de3a72ddc0",
+      "package_sha256": "8c7894d9d1640f7bf5c716d5f787dfb7596ce8b650133bea95a2b4ae5cc5050f",
+      "precedence": 100,
+      "purpose": "Draft meeting, decision, person, organization, and briefing-pack views while preserving every evidence state and exact source",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-evidence-briefs"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-evidence-briefs",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 645,
+          "content_sha256": "f58287d8491bfa0814de57ae8f436336d9bbe2c74ea4a179c3cc24b358d8a764",
+          "kind": "prompt",
+          "path": "prompts/executive-correspondence-review.prompt.md",
+          "semantic_key": "executive-correspondence-review-prompt"
+        },
+        {
+          "bytes": 146,
+          "content_sha256": "82f29e3907c1f4b2816eef6410022566176911b65dcbe422857061a6cfc5fc94",
+          "kind": "template",
+          "path": "templates/executive-correspondence-review.template.md",
+          "semantic_key": "executive-correspondence-review-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "62562067cc9b22a0b226355906341843de47a63825d84a98d87f910504ca4916",
+      "package_sha256": "d765c717323d45af5f06182cb80eb50521555ac3005f5f9f0ab5b3822987ff84",
+      "precedence": 100,
+      "purpose": "Draft locally and check questions, commitments, dates, attachments, claims, privacy, and names without selecting recipients or sending",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-correspondence-review"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-correspondence-review",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 625,
+          "content_sha256": "5ddbff7a78ad435789bdd88c56bb736d863be8dd6e6ba08fb503ba8af1e7083f",
+          "kind": "prompt",
+          "path": "prompts/executive-local-message-triage.prompt.md",
+          "semantic_key": "executive-local-message-triage-prompt"
+        },
+        {
+          "bytes": 96,
+          "content_sha256": "338f96c90a4b766c4dbbc310a1f6f2821fd62bfec848022c5432124badcf7563",
+          "kind": "template",
+          "path": "templates/executive-local-message-triage.template.md",
+          "semantic_key": "executive-local-message-triage-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "ab8b068e0297a25ae4375ec12ab947d305848e610de3deba2c60a132a8df0308",
+      "package_sha256": "215d747da56d94f8eef69af2a0d0a68691a33a785a0171c3acb9a83e0bda741d",
+      "precedence": 100,
+      "purpose": "Classify user-provided local message exports without connecting to, reading, changing, or sending through an inbox",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-local-message-triage"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-local-message-triage",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 641,
+          "content_sha256": "63b00589836db7920a8e4ba2379bea2d455c8710677d79267ac81660b62eaaf2",
+          "kind": "prompt",
+          "path": "prompts/executive-portfolio-review.prompt.md",
+          "semantic_key": "executive-portfolio-review-prompt"
+        },
+        {
+          "bytes": 125,
+          "content_sha256": "c912db5c12e10e4054be22025131b1cf75d433e7ffb3b048b0168e990f0b7f60",
+          "kind": "template",
+          "path": "templates/executive-portfolio-review.template.md",
+          "semantic_key": "executive-portfolio-review-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "1be59e18fe4d64d6a25047e313b4a4ec8e347b8eb9419751fd1142c9bcbd4f47",
+      "package_sha256": "953ccafee4453f83e67474ea981e0674289467ccd796ebf04bcc0b6ebe2d6a92",
+      "precedence": 100,
+      "purpose": "Review portfolio status, workload conflicts, preparation, changes, stale records, and forgotten items from canonical local history",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-portfolio-review"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-portfolio-review",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 651,
+          "content_sha256": "3fa3883c7619fa787742b83c6fd4bf16205970f3eb4bd61b36f729c69e7f7bd3",
+          "kind": "prompt",
+          "path": "prompts/executive-privacy-audit.prompt.md",
+          "semantic_key": "executive-privacy-audit-prompt"
+        },
+        {
+          "bytes": 135,
+          "content_sha256": "fb7e06dcedab75a1c3412d8ad96caf3518ff3f44b5a191ddc405f4f500b529bb",
+          "kind": "template",
+          "path": "templates/executive-privacy-audit.template.md",
+          "semantic_key": "executive-privacy-audit-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "5b60c31057f4d03c07005f4100a3e6f017a2e2fce2a3bddc1ef160baf5c9ceda",
+      "package_sha256": "f37124d928c4779cca84edd85900d9324d48fe5b4956870f79413ef6e1c4ea6c",
+      "precedence": 100,
+      "purpose": "Show exact source influence and enforce ordinary, private, confidential, and highly restricted retrieval, index, retention, and export rules",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "organization",
+          "person",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "executive-privacy-audit"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-executive-privacy-audit",
+      "source_id": "agentmage-built-in-executive-skills",
+      "source_sha256": "0964603441fab726f8f8aadfc3b23e9fd3fe30107313354d9934f1138f81a171",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    }
+  ],
+  "network_access": false,
+  "notification_access": false,
+  "product_registration": false,
+  "prompt_count": 8,
+  "record_type": "agentmage-executive-skill-pack",
+  "schedule_access": false,
+  "schema_version": 1,
+  "send_access": false,
+  "skills": [
+    "cycle_briefing",
+    "trackers",
+    "priority_assistant",
+    "evidence_briefs",
+    "correspondence_review",
+    "local_message_triage",
+    "portfolio_review",
+    "privacy_audit"
+  ],
+  "source_mutation": false,
+  "template_count": 8,
+  "version": "0.6.0"
+}

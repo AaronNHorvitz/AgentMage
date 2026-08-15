@@ -5,6 +5,7 @@
 mod authority;
 mod coding_skills;
 mod domain;
+mod executive_skills;
 mod index;
 mod knowledge_write;
 mod lifecycle;
@@ -39,6 +40,7 @@ pub use domain::{
     KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention,
     KnowledgeRetentionKind, validate_record,
 };
+pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
 pub use knowledge_write::{
     CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeFrontmatterProperty,

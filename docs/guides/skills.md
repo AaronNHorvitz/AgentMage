@@ -15,3 +15,10 @@ name supported or lexical-only language coverage, mandatory validation, evidence
 completion, bounded path scope, and the complete prohibited-operation set. Invalid definitions are
 disabled. See the [coding-skill architecture](../architecture/coding-skills-and-release-boundary.md)
 and [bounded coding guide](./bounded-coding-workflows.md).
+
+The v0.6 source candidate also defines eight executive-assistant skills under the same permanent
+authority ceiling. They project approved local records into cycle views, trackers, priority
+explanations, evidence briefs, correspondence reviews, local message-export triage, portfolio
+reviews, and privacy audits. See the
+[executive-assistant guide](./executive-assistant-local-workflows.md) and
+[architecture boundary](../architecture/executive-assistant-and-portfolio.md).
