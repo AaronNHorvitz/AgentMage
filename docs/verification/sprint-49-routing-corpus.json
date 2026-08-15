@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_49_measured_routing_security_corpus",
+  "cases": [
+    {
+      "id": "profile-missing-identity",
+      "boundary": "exact_profile",
+      "mutation": "remove_profile_identity",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-missing-publisher",
+      "boundary": "exact_profile",
+      "mutation": "remove_publisher_identity",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-lineage-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_lineage_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-license-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_license_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-chinese-origin",
+      "boundary": "exact_profile",
+      "mutation": "set_prohibited_chinese_origin",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-chinese-derived",
+      "boundary": "exact_profile",
+      "mutation": "set_prohibited_chinese_derived",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-origin-unresolved",
+      "boundary": "exact_profile",
+      "mutation": "set_unresolved_origin",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-artifact-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_artifact_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-tokenizer-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_tokenizer_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-template-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_template_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-codec-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_codec_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-runtime-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_runtime_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-policy-drift",
+      "boundary": "exact_profile",
+      "mutation": "change_policy_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-nonapproved",
+      "boundary": "exact_profile",
+      "mutation": "change_lifecycle_to_candidate",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-fallback-enabled",
+      "boundary": "exact_profile",
+      "mutation": "enable_automatic_fallback",
+      "expected": "denied"
+    },
+    {
+      "id": "profile-remote-enabled",
+      "boundary": "exact_profile",
+      "mutation": "disable_local_only",
+      "expected": "denied"
+    },
+    {
+      "id": "role-missing",
+      "boundary": "role_evidence",
+      "mutation": "remove_required_role",
+      "expected": "denied"
+    },
+    {
+      "id": "role-cross-assignment",
+      "boundary": "role_evidence",
+      "mutation": "borrow_other_role_result",
+      "expected": "denied"
+    },
+    {
+      "id": "role-trials-insufficient",
+      "boundary": "role_evidence",
+      "mutation": "reduce_trial_count",
+      "expected": "denied"
+    },
+    {
+      "id": "role-improvement-insufficient",
+      "boundary": "role_evidence",
+      "mutation": "reduce_primary_improvement",
+      "expected": "denied"
+    },
+    {
+      "id": "role-support-absent",
+      "boundary": "role_evidence",
+      "mutation": "remove_statistical_support",
+      "expected": "denied"
+    },
+    {
+      "id": "role-evidence-stale",
+      "boundary": "role_evidence",
+      "mutation": "expire_role_evidence",
+      "expected": "denied"
+    },
+    {
+      "id": "role-generation-stale",
+      "boundary": "role_evidence",
+      "mutation": "change_benchmark_generation",
+      "expected": "denied"
+    },
+    {
+      "id": "role-corpus-drift",
+      "boundary": "role_evidence",
+      "mutation": "change_corpus_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-model-self-selection",
+      "boundary": "routing",
+      "mutation": "add_model_profile_choice",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-model-confidence",
+      "boundary": "routing",
+      "mutation": "add_model_confidence",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-task-class-missing",
+      "boundary": "routing",
+      "mutation": "remove_deterministic_task_class",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-risk-conflated",
+      "boundary": "routing",
+      "mutation": "derive_risk_from_capability",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-resource-stale",
+      "boundary": "routing",
+      "mutation": "expire_resource_observation",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-hardware-unfit",
+      "boundary": "routing",
+      "mutation": "reduce_available_memory",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-platform-unmeasured",
+      "boundary": "routing",
+      "mutation": "change_platform",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-context-exceeded",
+      "boundary": "routing",
+      "mutation": "exceed_context_budget",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-tools-exceeded",
+      "boundary": "routing",
+      "mutation": "exceed_tool_budget",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-tie-suppressed",
+      "boundary": "routing",
+      "mutation": "remove_equal_score_disagreement",
+      "expected": "denied"
+    },
+    {
+      "id": "routing-no-profile",
+      "boundary": "routing",
+      "mutation": "remove_all_eligible_profiles",
+      "expected": "denied"
+    },
+    {
+      "id": "manual-missing-fallback",
+      "boundary": "manual_selection",
+      "mutation": "replace_missing_manual_choice",
+      "expected": "denied"
+    },
+    {
+      "id": "manual-ineligible-fallback",
+      "boundary": "manual_selection",
+      "mutation": "replace_ineligible_manual_choice",
+      "expected": "denied"
+    },
+    {
+      "id": "manual-choice-hidden",
+      "boundary": "manual_selection",
+      "mutation": "suppress_manual_selection",
+      "expected": "denied"
+    },
+    {
+      "id": "verifier-low-risk",
+      "boundary": "second_verifier",
+      "mutation": "enable_for_low_risk",
+      "expected": "denied"
+    },
+    {
+      "id": "verifier-wrong-budget",
+      "boundary": "second_verifier",
+      "mutation": "enable_outside_verify_budget",
+      "expected": "denied"
+    },
+    {
+      "id": "verifier-benefit-unmeasured",
+      "boundary": "second_verifier",
+      "mutation": "enable_without_measured_benefit",
+      "expected": "denied"
+    },
+    {
+      "id": "verifier-same-profile",
+      "boundary": "second_verifier",
+      "mutation": "reuse_primary_as_verifier",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-cloud-fallback",
+      "boundary": "remote_path",
+      "mutation": "enable_cloud_fallback",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-frontier-routing",
+      "boundary": "remote_path",
+      "mutation": "enable_frontier_transfer",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-provider-marketplace",
+      "boundary": "remote_path",
+      "mutation": "enable_provider_marketplace",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-automatic-install",
+      "boundary": "remote_path",
+      "mutation": "enable_automatic_install",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-authority-transfer",
+      "boundary": "remote_path",
+      "mutation": "transfer_kernel_authority",
+      "expected": "denied"
+    },
+    {
+      "id": "remote-unmeasured-ensemble",
+      "boundary": "remote_path",
+      "mutation": "enable_unmeasured_ensemble",
+      "expected": "denied"
+    }
+  ]
+}
