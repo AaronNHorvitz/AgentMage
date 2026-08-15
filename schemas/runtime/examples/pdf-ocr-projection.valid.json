@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "admission": {
+    "package_name": "approved-ocr",
+    "package_version": "1.2.3",
+    "package_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "license_expression": "Apache-2.0",
+    "admission_receipt_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "admission_verified_by_caller": true
+  },
+  "observation_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "page": {
+    "identity": {
+      "source_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "page_number": 2,
+      "object_number": 7,
+      "object_generation": 0,
+      "page_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "state": "text",
+    "decoded_content_bytes": 12,
+    "image_count": 1,
+    "text": "OCR text",
+    "text_sha256": "791446ef274e28b97a19b74ce26339dc80a0b6a7aec2a4a10b7c3d058ca7dc4d",
+    "extraction_method": "local_ocr",
+    "confidence_basis_points": 8250,
+    "citation": {
+      "page": {
+        "source_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "page_number": 2,
+        "object_number": 7,
+        "object_generation": 0,
+        "page_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "fragment_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff:ocr-fragment:1",
+      "text_sha256": "791446ef274e28b97a19b74ce26339dc80a0b6a7aec2a4a10b7c3d058ca7dc4d",
+      "extraction_method": "local_ocr",
+      "confidence_basis_points": 8250,
+      "exact_page": true,
+      "exact_region": false
+    },
+    "limitation_ids": ["pdf-limit:8add6b20b924a14b63012721b887c139b09fd031c39833233d00c239f2448049"]
+  },
+  "uncertainty_reason_code": "pdf.ocr.probabilistic",
+  "execution_performed": false
+}

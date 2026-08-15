@@ -257,6 +257,8 @@ pub struct PdfOcrObservation {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PdfOcrProjection {
+    /// Kernel contract schema version.
+    pub schema_version: u16,
     /// Exact admitted package identity.
     pub admission: PdfOcrAdmission,
     /// Exact OCR observation identity.
@@ -320,7 +322,10 @@ fn valid_identifier(value: &str) -> bool {
 }
 
 fn valid_sha256(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 fn page_identity(source_sha256: &str, page_number: u32, object: (u32, u16)) -> PdfPageIdentity {
@@ -570,6 +575,10 @@ pub fn extract_pdf_to_pages(
         });
     }
 
+    for page in &mut pages {
+        page.limitation_ids.sort();
+    }
+    limitations.sort_by(|left, right| left.limitation_id.cmp(&right.limitation_id));
     let extraction_complete = limitations
         .iter()
         .all(|item| !item.blocks_complete_extraction);
@@ -663,6 +672,7 @@ pub fn validate_pdf_ocr_observation(
         limitation_ids: vec![uncertainty_id],
     };
     Ok(PdfOcrProjection {
+        schema_version: CONTRACT_SCHEMA_VERSION,
         admission: admission.clone(),
         observation_sha256: observation.observation_sha256.clone(),
         page,

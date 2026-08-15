@@ -98,6 +98,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "word-package-edit-preview",
   "word-visual-comparison-report",
   "word-artifact-receipt",
+  "pdf-extraction-result",
+  "pdf-ocr-projection",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1388,6 +1390,109 @@ function runtimeSemanticErrors(recordType, data) {
       JSON.stringify(data.limitations ?? []) !== JSON.stringify(expectedLimitations)
     ) {
       errors.push("Markdown round-trip completion disagrees with exact checks");
+    }
+  } else if (recordType === "pdf-extraction-result") {
+    const pages = data.pages ?? [];
+    const limitations = data.limitations ?? [];
+    const limitationById = new Map(
+      limitations.map((item) => [item.limitation_id, item]),
+    );
+    if (
+      !isStrictlySortedBy(limitations, (item) => item.limitation_id) ||
+      limitationById.size !== limitations.length
+    ) {
+      errors.push("PDF limitation ledger is not unique and canonically ordered");
+    }
+    let totalTextBytes = 0;
+    for (const [index, page] of pages.entries()) {
+      const identity = page.identity ?? {};
+      const expectedPageId = sha256String(
+        `pdf-page-v1\n${data.source_sha256}\n${index + 1}\n${identity.object_number}\n${identity.object_generation}`,
+      );
+      if (
+        identity.page_number !== index + 1 ||
+        identity.source_sha256 !== data.source_sha256 ||
+        identity.page_id !== expectedPageId
+      ) {
+        errors.push(`PDF page identity drifted: ${index + 1}`);
+      }
+      if (!isStrictlySorted(page.limitation_ids ?? [])) {
+        errors.push(`PDF page limitations are not canonically ordered: ${index + 1}`);
+      }
+      for (const limitationId of page.limitation_ids ?? []) {
+        const item = limitationById.get(limitationId);
+        if (!item || item.page_id !== identity.page_id) {
+          errors.push(`PDF page limitation binding drifted: ${index + 1}`);
+        }
+      }
+      const textSha256 = sha256String(page.text ?? "");
+      totalTextBytes += Buffer.byteLength(page.text ?? "", "utf8");
+      const hasText = (page.text ?? "").length > 0;
+      if (page.text_sha256 !== textSha256) {
+        errors.push(`PDF page text digest drifted: ${index + 1}`);
+      }
+      if (
+        hasText !== (page.state === "text") ||
+        hasText !== (page.extraction_method !== null) ||
+        hasText !== (page.confidence_basis_points !== null) ||
+        hasText !== (page.citation !== null)
+      ) {
+        errors.push(`PDF page text state drifted: ${index + 1}`);
+      }
+      if (
+        hasText &&
+        (page.extraction_method !== "embedded_text" ||
+          page.confidence_basis_points !== 10000 ||
+          JSON.stringify(page.citation.page) !== JSON.stringify(identity) ||
+          page.citation.fragment_id !== `${identity.page_id}:fragment:1` ||
+          page.citation.text_sha256 !== page.text_sha256 ||
+          page.citation.extraction_method !== page.extraction_method ||
+          page.citation.confidence_basis_points !== page.confidence_basis_points)
+      ) {
+        errors.push(`PDF exact-page citation drifted: ${index + 1}`);
+      }
+    }
+    for (const item of limitations) {
+      const expectedId = `pdf-limit:${sha256String(
+        `${item.page_id ?? "document"}\n${item.reason_code}`,
+      )}`;
+      if (item.limitation_id !== expectedId) {
+        errors.push(`PDF limitation identity drifted: ${item.limitation_id}`);
+      }
+    }
+    const expectedComplete = limitations.every(
+      (item) => !item.blocks_complete_extraction,
+    );
+    const expectedOcr = limitations.some((item) => item.requires_ocr);
+    if (
+      data.total_text_bytes !== totalTextBytes ||
+      data.extraction_complete !== expectedComplete ||
+      data.ocr_required !== expectedOcr ||
+      data.profile.maximum_page_text_bytes > data.profile.maximum_total_text_bytes ||
+      data.pages.length > data.profile.maximum_pages ||
+      data.object_count > data.profile.maximum_objects
+    ) {
+      errors.push("PDF aggregate extraction state is not reproducible");
+    }
+  } else if (recordType === "pdf-ocr-projection") {
+    const page = data.page ?? {};
+    const identity = page.identity ?? {};
+    const citation = page.citation ?? {};
+    const expectedLimit = `pdf-limit:${sha256String(
+      `${identity.page_id}\npdf.ocr.probabilistic`,
+    )}`;
+    if (
+      page.state !== "text" ||
+      page.extraction_method !== "local_ocr" ||
+      page.text_sha256 !== sha256String(page.text ?? "") ||
+      JSON.stringify(citation.page) !== JSON.stringify(identity) ||
+      citation.fragment_id !== `${identity.page_id}:ocr-fragment:1` ||
+      citation.text_sha256 !== page.text_sha256 ||
+      citation.extraction_method !== "local_ocr" ||
+      citation.confidence_basis_points !== page.confidence_basis_points ||
+      JSON.stringify(page.limitation_ids ?? []) !== JSON.stringify([expectedLimit])
+    ) {
+      errors.push("PDF OCR projection provenance or uncertainty drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

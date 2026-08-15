@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/pdf-ocr-projection.schema.json",
+  "title": "AgentMage PDF OCR Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "admission", "observation_sha256", "page", "uncertainty_reason_code", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package_name", "package_version", "package_sha256", "model_sha256", "license_expression", "admission_receipt_sha256", "admission_verified_by_caller"],
+      "properties": {
+        "package_name": { "$ref": "#/$defs/identifier" },
+        "package_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "package_sha256": { "$ref": "#/$defs/sha256" },
+        "model_sha256": { "$ref": "#/$defs/sha256" },
+        "license_expression": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "admission_receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "admission_verified_by_caller": { "const": true }
+      }
+    },
+    "observation_sha256": { "$ref": "#/$defs/sha256" },
+    "page": { "$ref": "https://agentmage.dev/schemas/runtime/pdf-extraction-result.schema.json#/$defs/page" },
+    "uncertainty_reason_code": { "const": "pdf.ocr.probabilistic" },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

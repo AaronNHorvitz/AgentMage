@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "source_path": { "workspace_id": "workspace-pdf", "components": ["docs", "report.pdf"] },
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "extractor_identity_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "profile": {
+    "profile_id": "pdf-extraction-strict-v1",
+    "maximum_source_bytes": 67108864,
+    "maximum_objects": 250000,
+    "maximum_pages": 10000,
+    "maximum_decompressed_stream_bytes": 33554432,
+    "maximum_page_text_bytes": 8388608,
+    "maximum_total_text_bytes": 67108864,
+    "minimum_text_characters": 1,
+    "maximum_images_per_page": 4096
+  },
+  "pdf_version": "1.7",
+  "object_count": 6,
+  "pages": [
+    {
+      "identity": {
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "page_number": 1,
+        "object_number": 5,
+        "object_generation": 0,
+        "page_id": "58b98456dcec13d948abc570c033abd325fc583cad9e119d88cfa2e25f523b63"
+      },
+      "state": "text",
+      "decoded_content_bytes": 42,
+      "image_count": 0,
+      "text": "Page one\n",
+      "text_sha256": "340d322540044466b11ff5d9e5cb387ede929499fb80d339940902825f67a1e2",
+      "extraction_method": "embedded_text",
+      "confidence_basis_points": 10000,
+      "citation": {
+        "page": {
+          "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "page_number": 1,
+          "object_number": 5,
+          "object_generation": 0,
+          "page_id": "58b98456dcec13d948abc570c033abd325fc583cad9e119d88cfa2e25f523b63"
+        },
+        "fragment_id": "58b98456dcec13d948abc570c033abd325fc583cad9e119d88cfa2e25f523b63:fragment:1",
+        "text_sha256": "340d322540044466b11ff5d9e5cb387ede929499fb80d339940902825f67a1e2",
+        "extraction_method": "embedded_text",
+        "confidence_basis_points": 10000,
+        "exact_page": true,
+        "exact_region": false
+      },
+      "limitation_ids": ["pdf-limit:329287c8d68d39e95ac0695b278b3d3ba994160c2dee3d16429335f28d831317"]
+    }
+  ],
+  "total_text_bytes": 9,
+  "limitations": [
+    {
+      "limitation_id": "pdf-limit:329287c8d68d39e95ac0695b278b3d3ba994160c2dee3d16429335f28d831317",
+      "page_id": "58b98456dcec13d948abc570c033abd325fc583cad9e119d88cfa2e25f523b63",
+      "reason_code": "pdf.citation.region-unavailable",
+      "blocks_complete_extraction": false,
+      "requires_ocr": false,
+      "original_remains_authoritative": true
+    }
+  ],
+  "extraction_complete": true,
+  "ocr_required": false,
+  "ocr_performed": false,
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

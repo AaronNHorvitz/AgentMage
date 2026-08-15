@@ -401,6 +401,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "word-package-edit-preview",
     "word-visual-comparison-report",
     "word-artifact-receipt",
+    "pdf-extraction-result",
+    "pdf-ocr-projection",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1329,6 +1331,34 @@ test("Word artifact records reject identity ordering fidelity and authority drif
     ["word-visual-comparison-report", (record) => { record.pages[0].changed_pixels = 1; }],
     ["word-artifact-receipt", (record) => { record.completion_state = "locally_verified"; }],
     ["word-artifact-receipt", (record) => { record.disposition_codes = []; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("PDF records reject page citation OCR and effect drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "pdf-extraction-result": load("pdf-extraction-result"),
+    "pdf-ocr-projection": load("pdf-ocr-projection"),
+  };
+  const mutations = [
+    ["pdf-extraction-result", (record) => { record.pages[0].identity.page_number = 2; }],
+    ["pdf-extraction-result", (record) => { record.pages[0].text = "changed"; }],
+    ["pdf-extraction-result", (record) => { record.total_text_bytes = 8; }],
+    ["pdf-extraction-result", (record) => { record.extraction_complete = false; }],
+    ["pdf-extraction-result", (record) => { record.execution_performed = true; }],
+    ["pdf-ocr-projection", (record) => { record.page.extraction_method = "embedded_text"; }],
+    ["pdf-ocr-projection", (record) => { record.page.confidence_basis_points = 10001; }],
+    ["pdf-ocr-projection", (record) => { record.admission.admission_verified_by_caller = false; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);
