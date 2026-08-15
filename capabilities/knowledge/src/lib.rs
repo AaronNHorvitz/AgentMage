@@ -21,6 +21,7 @@ mod obsidian;
 mod obsidian_index;
 mod operations;
 mod pdf_extraction;
+mod pdf_generation;
 mod pdf_inspection;
 mod plain_folder;
 mod retrieval;
@@ -121,6 +122,11 @@ pub use pdf_extraction::{
     PdfExtractionResult, PdfOcrAdmission, PdfOcrObservation, PdfOcrProjection, PdfPageCitation,
     PdfPageExtraction, PdfPageIdentity, PdfPageState, extract_pdf_to_pages,
     pdf_extractor_identity_sha256, validate_pdf_ocr_observation,
+};
+pub use pdf_generation::{
+    GeneratedPdfReport, PdfGenerationError, PdfGenerationLimit, PdfPageSettings, PdfReportBlock,
+    PdfReportFormField, PdfReportMetadata, PdfReportRequest, generate_pdf_report,
+    pdf_generator_identity_sha256, pdf_report_request_from_markdown,
 };
 pub use pdf_inspection::{
     PdfArtifactFinding, PdfArtifactFindingKind, PdfArtifactInspection, PdfFormFieldObservation,
