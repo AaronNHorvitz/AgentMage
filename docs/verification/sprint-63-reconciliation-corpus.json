@@ -1,0 +1,672 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_63_reconciliation_corpus",
+  "story_id": "63.1",
+  "legacy_story_id": "S-052",
+  "case_count": 109,
+  "cases": [
+    {
+      "case_id": "data63-json_parse-01",
+      "category": "json_parse",
+      "expected": "exact source path and bytes are hash-bound",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-02",
+      "category": "json_parse",
+      "expected": "empty JSON rejects",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-03",
+      "category": "json_parse",
+      "expected": "malformed JSON rejects",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-04",
+      "category": "json_parse",
+      "expected": "trailing input rejects",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-05",
+      "category": "json_parse",
+      "expected": "duplicate object keys reject at every depth",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-06",
+      "category": "json_parse",
+      "expected": "prototype-like keys reject",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-07",
+      "category": "json_parse",
+      "expected": "null boolean integer decimal string array and object types remain distinct",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-08",
+      "category": "json_parse",
+      "expected": "finite IEEE-754 round-trip number normalization is declared",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-09",
+      "category": "json_parse",
+      "expected": "non-finite numbers reject",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-10",
+      "category": "json_parse",
+      "expected": "source bytes depth nodes and strings are bounded",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-11",
+      "category": "json_parse",
+      "expected": "object keys serialize in stable lexical order",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-12",
+      "category": "json_parse",
+      "expected": "canonical bytes and digest are exact",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-13",
+      "category": "json_parse",
+      "expected": "closed schema any null boolean number and string rules validate",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-14",
+      "category": "json_parse",
+      "expected": "closed schema array length and item rules validate",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-15",
+      "category": "json_parse",
+      "expected": "closed schema object property and required rules validate",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-16",
+      "category": "json_parse",
+      "expected": "closed schema additional properties can fail",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-17",
+      "category": "json_parse",
+      "expected": "schema issues retain canonical pointers and reason codes",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-18",
+      "category": "json_parse",
+      "expected": "schema validity is recomputed from issues",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-19",
+      "category": "json_parse",
+      "expected": "schema failure does not mutate or guess source data",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_parse-20",
+      "category": "json_parse",
+      "expected": "parsing performs no file network or execution effect",
+      "requirement": "63.1.1.1"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-01",
+      "category": "json_redaction_compare",
+      "expected": "redaction policy identity is closed",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-02",
+      "category": "json_redaction_compare",
+      "expected": "redaction pointers are strict sorted and unique",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-03",
+      "category": "json_redaction_compare",
+      "expected": "redaction key names are strict sorted and unique",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-04",
+      "category": "json_redaction_compare",
+      "expected": "invalid pointer escapes reject",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-05",
+      "category": "json_redaction_compare",
+      "expected": "missing pointer targets reject",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-06",
+      "category": "json_redaction_compare",
+      "expected": "global key redaction traverses arrays and objects",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-07",
+      "category": "json_redaction_compare",
+      "expected": "removed values retain canonical hashes without raw values",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-08",
+      "category": "json_redaction_compare",
+      "expected": "redacted output is full regeneration",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-09",
+      "category": "json_redaction_compare",
+      "expected": "redacted canonical bytes and digest are exact",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-10",
+      "category": "json_redaction_compare",
+      "expected": "source canonical and source byte digests remain distinct",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-11",
+      "category": "json_redaction_compare",
+      "expected": "redaction performs no file network or execution effect",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-12",
+      "category": "json_redaction_compare",
+      "expected": "object comparison uses canonical key order",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-13",
+      "category": "json_redaction_compare",
+      "expected": "array comparison uses stable indexes",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-14",
+      "category": "json_redaction_compare",
+      "expected": "missing-left and missing-right reasons bind hash presence",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-15",
+      "category": "json_redaction_compare",
+      "expected": "type mismatch and value mismatch bind both hashes",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-16",
+      "category": "json_redaction_compare",
+      "expected": "equal subtrees produce no difference",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-17",
+      "category": "json_redaction_compare",
+      "expected": "differences are pointer ordered",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-18",
+      "category": "json_redaction_compare",
+      "expected": "exact-match state is recomputed from differences",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-19",
+      "category": "json_redaction_compare",
+      "expected": "comparison retains exact left and right source hashes",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-json_redaction_compare-20",
+      "category": "json_redaction_compare",
+      "expected": "comparison performs no file network or execution effect",
+      "requirement": "63.1.1.1/63.1.1.2"
+    },
+    {
+      "case_id": "data63-workbook_generation-01",
+      "category": "workbook_generation",
+      "expected": "generation accepts only a content-minimized comparison",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-02",
+      "category": "workbook_generation",
+      "expected": "output path must be a canonical XLSX path",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-03",
+      "category": "workbook_generation",
+      "expected": "workbook method and profile identities are closed",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-04",
+      "category": "workbook_generation",
+      "expected": "left and right source hashes remain exact",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-05",
+      "category": "workbook_generation",
+      "expected": "summary sheet records source and method identity",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-06",
+      "category": "workbook_generation",
+      "expected": "reconciliation sheet records key hashes and closed reasons",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-07",
+      "category": "workbook_generation",
+      "expected": "source row numbers and differing fields remain ordered",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-08",
+      "category": "workbook_generation",
+      "expected": "raw compared values are absent",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-09",
+      "category": "workbook_generation",
+      "expected": "caller title remains escaped inline text",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-10",
+      "category": "workbook_generation",
+      "expected": "caller text cannot become a formula",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-11",
+      "category": "workbook_generation",
+      "expected": "digest cells use text formatting",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-12",
+      "category": "workbook_generation",
+      "expected": "header and body styles are explicit",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-13",
+      "category": "workbook_generation",
+      "expected": "column widths are explicit",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-14",
+      "category": "workbook_generation",
+      "expected": "one structured table covers reconciliation output",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-15",
+      "category": "workbook_generation",
+      "expected": "one closed reason-list validation is present",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-16",
+      "category": "workbook_generation",
+      "expected": "one static reason-count chart is present",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-17",
+      "category": "workbook_generation",
+      "expected": "formula policy admits only generator-owned summary formulas",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-18",
+      "category": "workbook_generation",
+      "expected": "formula text is hash-bound",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-19",
+      "category": "workbook_generation",
+      "expected": "formula cached values derive deterministically from comparison",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-20",
+      "category": "workbook_generation",
+      "expected": "calculation mode is manual with no automatic execution",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-21",
+      "category": "workbook_generation",
+      "expected": "XLSX bytes are deterministic",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-22",
+      "category": "workbook_generation",
+      "expected": "generated bytes reopen through the bounded direct inspector",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-23",
+      "category": "workbook_generation",
+      "expected": "unsafe reopen findings fail generation",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-24",
+      "category": "workbook_generation",
+      "expected": "formula error cells fail scanning",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-25",
+      "category": "workbook_generation",
+      "expected": "source workbooks and tables remain unchanged",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-workbook_generation-26",
+      "category": "workbook_generation",
+      "expected": "generation returns a proposal without file network or execution effects",
+      "requirement": "63.1.1.3"
+    },
+    {
+      "case_id": "data63-native_verification-01",
+      "category": "native_verification",
+      "expected": "external observation binds exact workbook digest",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-02",
+      "category": "native_verification",
+      "expected": "application name and version are exact",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-03",
+      "category": "native_verification",
+      "expected": "executable package and font manifests are hash-bound",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-04",
+      "category": "native_verification",
+      "expected": "platform and evidence class are closed",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-05",
+      "category": "native_verification",
+      "expected": "formula observations are cell ordered",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-06",
+      "category": "native_verification",
+      "expected": "every expected formula identity must be observed",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-07",
+      "category": "native_verification",
+      "expected": "formula errors fail recalculation checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-08",
+      "category": "native_verification",
+      "expected": "structural failures fail presentation checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-09",
+      "category": "native_verification",
+      "expected": "visual failures fail presentation checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-10",
+      "category": "native_verification",
+      "expected": "accessibility failures fail presentation checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-11",
+      "category": "native_verification",
+      "expected": "incomplete observations fail presentation checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-12",
+      "category": "native_verification",
+      "expected": "synthetic fixtures never pass native machine checks",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-13",
+      "category": "native_verification",
+      "expected": "synthetic fixtures always require human review",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-14",
+      "category": "native_verification",
+      "expected": "failed native observations require human review",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-native_verification-15",
+      "category": "native_verification",
+      "expected": "the core validator performs no file network or execution effect",
+      "requirement": "63.1.1.4/63.1.3.4"
+    },
+    {
+      "case_id": "data63-runtime_records-01",
+      "category": "runtime_records",
+      "expected": "structured JSON document schema is closed and versioned",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-02",
+      "category": "runtime_records",
+      "expected": "structured JSON redaction schema is closed and versioned",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-03",
+      "category": "runtime_records",
+      "expected": "structured JSON comparison schema is closed and versioned",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-04",
+      "category": "runtime_records",
+      "expected": "generated reconciliation workbook schema is closed and versioned",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-05",
+      "category": "runtime_records",
+      "expected": "spreadsheet verification report schema is closed and versioned",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-06",
+      "category": "runtime_records",
+      "expected": "canonical JSON value drift rejects",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-07",
+      "category": "runtime_records",
+      "expected": "redaction byte and ledger drift rejects",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-08",
+      "category": "runtime_records",
+      "expected": "comparison reason and aggregate drift reject",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-09",
+      "category": "runtime_records",
+      "expected": "workbook byte path source and reopen drift reject",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-10",
+      "category": "runtime_records",
+      "expected": "synthetic native-completion drift rejects",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-runtime_records-11",
+      "category": "runtime_records",
+      "expected": "unknown fields and broadened effects reject",
+      "requirement": "63.1.2/63.1.3"
+    },
+    {
+      "case_id": "data63-external_blocker-01",
+      "category": "external_blocker",
+      "expected": "Sprint 62 remains blocked upstream",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-02",
+      "category": "external_blocker",
+      "expected": "numeric tolerance reconciliation is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-03",
+      "category": "external_blocker",
+      "expected": "financial rounding policy is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-04",
+      "category": "external_blocker",
+      "expected": "many-to-many allocation is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-05",
+      "category": "external_blocker",
+      "expected": "stale-data policy is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-06",
+      "category": "external_blocker",
+      "expected": "arbitrary-precision decimal reconciliation is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-07",
+      "category": "external_blocker",
+      "expected": "encrypted workbook handling is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-08",
+      "category": "external_blocker",
+      "expected": "legacy XLS handling is not implemented",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-09",
+      "category": "external_blocker",
+      "expected": "native office recalculation evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-10",
+      "category": "external_blocker",
+      "expected": "Fedora native visual evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-11",
+      "category": "external_blocker",
+      "expected": "Ubuntu native visual evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-12",
+      "category": "external_blocker",
+      "expected": "Windows native visual evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-13",
+      "category": "external_blocker",
+      "expected": "retained macOS native visual evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-14",
+      "category": "external_blocker",
+      "expected": "installed accessibility evidence is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-15",
+      "category": "external_blocker",
+      "expected": "independent review is absent",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-16",
+      "category": "external_blocker",
+      "expected": "manual fuzzing remains explicitly deferred",
+      "requirement": "63.1"
+    },
+    {
+      "case_id": "data63-external_blocker-17",
+      "category": "external_blocker",
+      "expected": "Sprint 63 remains blocked while required evidence is absent",
+      "requirement": "63.1"
+    }
+  ],
+  "json_rust_fixture_count": 5,
+  "workbook_rust_fixture_count": 4,
+  "runtime_schema_count": 5,
+  "implemented_method_count": 6,
+  "native_office_fixture_count": 0,
+  "network_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "formula_execution_enabled": false,
+  "release_completion_claimed": false
+}
