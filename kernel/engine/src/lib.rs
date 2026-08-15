@@ -85,6 +85,7 @@ pub mod strict_local;
 pub mod task_classification;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
+pub mod validation_result;
 /// Trusted validation-template provenance, exact registries, and focused selection.
 pub mod validation_template;
 /// Bounded work-packet validation, revision history, and plan adaptation.
