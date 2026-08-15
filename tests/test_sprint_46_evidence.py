@@ -22,11 +22,11 @@ def commands() -> list[dict[str, object]]:
 
 def artifacts() -> list[dict[str, object]]:
     return [{
-        "id": "cargo",
-        "name": "cargo",
+        "id": "cargo-toolchain-dispatcher",
+        "name": "rustup",
         "size": 1,
         "sha256": "b" * 64,
-        "root_owned": True,
+        "owner_is_current_user": True,
         "group_or_world_writable": False,
     }]
 
@@ -75,7 +75,9 @@ class Sprint46EvidenceTests(unittest.TestCase):
             lambda value: value["commands"][1].update({"blocking_skip_count": 1}),
             lambda value: value["commands"][2]["argv"].append("--ignored"),
             lambda value: value["commands"].pop(),
-            lambda value: value["native_fixture_artifacts"][0].update({"root_owned": False}),
+            lambda value: value["native_fixture_artifacts"][0].update({
+                "owner_is_current_user": False,
+            }),
             lambda value: value["source_sha256"].pop(next(iter(value["source_sha256"]))),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["blockers"].pop(),

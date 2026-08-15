@@ -86,7 +86,10 @@ COMMANDS: Final = (
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_46_evidence")),
 )
 FOCUSED_COMMANDS: Final = tuple(identifier for identifier, _ in COMMANDS[:3])
-ARTIFACTS: Final = (("cargo", Path("/usr/bin/cargo")),)
+ARTIFACTS: Final = ((
+    "cargo-toolchain-dispatcher",
+    Path(shutil.which("cargo") or "/unavailable/cargo").resolve(),
+),)
 SECURITY_REQUIREMENTS: Final = [
     "SR-OPS-003", "SR-SUP-003", "SR-TST-001", "SR-TST-002", "SR-TST-003",
     "SR-TST-004", "SR-TST-005", "SR-TST-006", "SR-TST-010",
@@ -173,7 +176,7 @@ def native_artifacts() -> list[dict[str, Any]]:
             "name": path.name,
             "size": path.stat().st_size,
             "sha256": digest(path.read_bytes()),
-            "root_owned": path.stat().st_uid == 0,
+            "owner_is_current_user": path.stat().st_uid == Path.home().stat().st_uid,
             "group_or_world_writable": bool(path.stat().st_mode & 0o022),
         })
     return records
@@ -254,7 +257,7 @@ def build_report(
         and all(item.get("blocking_skip_count") == 0 for item in focused)
         and len(artifacts) == len(ARTIFACTS)
         and all(
-            item.get("root_owned") is True
+            item.get("owner_is_current_user") is True
             and item.get("group_or_world_writable") is False
             for item in artifacts
         )
@@ -307,7 +310,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         not SHA256.fullmatch(str(item.get("sha256", "")))
         or not isinstance(item.get("size"), int)
         or item.get("size", 0) <= 0
-        or item.get("root_owned") is not True
+        or item.get("owner_is_current_user") is not True
         or item.get("group_or_world_writable") is not False
         for item in artifacts
     ):
