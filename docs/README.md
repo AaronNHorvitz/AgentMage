@@ -21,6 +21,11 @@ and process lifecycle candidate.
 Accepted Decision 0018 defines the Phase 9 exact Linux read-and-receipt source
 candidate and preserves the unavailable signed-package boundary for Phase 11.
 
+Current implementation references include the
+[structured-code change architecture](architecture/structured-code-changes.md), its
+[review guide](guides/reviewing-structured-code-changes.md), and the truthful
+[language-service confinement report](verification/sprint-45-language-service-confinement.md).
+
 Sprint 25 pre-release procedures and user-facing limitation disclosures are
 indexed in [`release/README.md`](release/README.md). These documents do not
 supersede Decision 0008: v0.1 is a validation milestone, while v1.0 GA remains
