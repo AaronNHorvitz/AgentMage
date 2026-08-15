@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-45-fictional-multilanguage-v1",
+  "cases": [
+    {
+      "case_id": "case-01-python-rename",
+      "path": "src/calculator.py",
+      "language": "python",
+      "artifact_class": "code",
+      "source": "def old_total(value):\n    return old_total(value - 1) if value else 0\n",
+      "operation": {"kind": "rename_identifier", "old": "old_total", "replacement": "new_total"},
+      "expected": "def new_total(value):\n    return new_total(value - 1) if value else 0\n"
+    },
+    {
+      "case_id": "case-02-typescript-rename",
+      "path": "src/calculator.ts",
+      "language": "type_script",
+      "artifact_class": "code",
+      "source": "export function oldTotal(value: number): number { return value; }\noldTotal(1);\n",
+      "operation": {"kind": "rename_identifier", "old": "oldTotal", "replacement": "newTotal"},
+      "expected": "export function newTotal(value: number): number { return value; }\nnewTotal(1);\n"
+    },
+    {
+      "case_id": "case-03-javascript-rename",
+      "path": "src/calculator.js",
+      "language": "java_script",
+      "artifact_class": "code",
+      "source": "export function oldTotal(value) { return value; }\noldTotal(1);\n",
+      "operation": {"kind": "rename_identifier", "old": "oldTotal", "replacement": "newTotal"},
+      "expected": "export function newTotal(value) { return value; }\nnewTotal(1);\n"
+    },
+    {
+      "case_id": "case-04-go-exact",
+      "path": "src/calculator.go",
+      "language": "go",
+      "artifact_class": "code",
+      "source": "package calculator\nconst OldTotal = 1\n",
+      "operation": {"kind": "replace_exact_text", "old": "OldTotal", "replacement": "NewTotal"},
+      "expected": "package calculator\nconst NewTotal = 1\n"
+    },
+    {
+      "case_id": "case-05-shell-exact",
+      "path": "scripts/check.sh",
+      "language": "shell",
+      "artifact_class": "configuration",
+      "source": "#!/bin/sh\nold_mode=1\nprintf '%s\\n' \"$old_mode\"\n",
+      "operation": {"kind": "replace_exact_text", "old": "old_mode=1", "replacement": "new_mode=1"},
+      "expected": "#!/bin/sh\nnew_mode=1\nprintf '%s\\n' \"$old_mode\"\n"
+    },
+    {
+      "case_id": "case-06-sql-exact",
+      "path": "queries/current_total.sql",
+      "language": "sql",
+      "artifact_class": "migration",
+      "source": "SELECT old_total FROM ledger;\n",
+      "operation": {"kind": "replace_exact_text", "old": "old_total", "replacement": "new_total"},
+      "expected": "SELECT new_total FROM ledger;\n"
+    },
+    {
+      "case_id": "case-07-python-test-generation",
+      "path": "tests/test_calculator.py",
+      "language": "python",
+      "artifact_class": "test",
+      "source": "def test_existing() -> None:\n    assert True\n",
+      "operation": {
+        "kind": "replace_module",
+        "replacement": "def test_existing() -> None:\n    assert True\n\n\ndef test_boundary() -> None:\n    assert True\n\n\ndef test_failure() -> None:\n    assert True\n"
+      },
+      "expected": "def test_existing() -> None:\n    assert True\n\n\ndef test_boundary() -> None:\n    assert True\n\n\ndef test_failure() -> None:\n    assert True\n"
+    }
+  ],
+  "required_test_concerns": [
+    "boundary",
+    "edge_case",
+    "failure",
+    "permission",
+    "data_change",
+    "rollback"
+  ]
+}
