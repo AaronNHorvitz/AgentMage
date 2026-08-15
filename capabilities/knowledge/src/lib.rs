@@ -28,6 +28,7 @@ mod semantic_benchmark;
 mod skills;
 mod store;
 mod tasks;
+mod word_edit;
 mod word_generation;
 mod word_ooxml;
 mod word_rich_generation;
@@ -154,6 +155,12 @@ pub use tasks::{
     KnowledgeTask, KnowledgeTaskDuplicate, KnowledgeTaskPriority, KnowledgeTaskStatus,
     KnowledgeTaskTransitionPreview, KnowledgeTaskView, KnowledgeTaskViewKind, build_task_view,
     preview_task_transition,
+};
+pub use word_edit::{
+    PreservedWordPart, WordCommentMetadata, WordEditChange, WordEditOperation,
+    WordEditOperationKind, WordEditRequest, WordEditTarget, WordPackageEditPreview,
+    WordPackageEditWarning, WordPackageEditWarningKind, WordPackageEditorError,
+    WordRedlineMetadata, preview_word_package_edit, verify_word_package_edit_preview,
 };
 pub use word_generation::{
     GeneratedWordPackage, GeneratedWordPart, WordGenerationWarning, WordGenerationWarningKind,

@@ -5,6 +5,7 @@ use std::fmt::Write as _;
 use std::io::{Cursor, Read};
 
 use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
+use quick_xml::escape::unescape;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::{Reader, XmlVersion};
 use serde::{Deserialize, Serialize};
@@ -902,6 +903,18 @@ pub fn inspect_docx(
     Ok(inspect_package(source_path, source, profile)?.report)
 }
 
+pub(crate) fn admitted_docx_parts(
+    source_path: &WorkspacePath,
+    source: &[u8],
+    profile: &WordConversionProfile,
+) -> Result<(WordInspectionReport, BTreeMap<String, Vec<u8>>), WordOoxmlError> {
+    let inspected = inspect_package(source_path, source, profile)?;
+    if inspected.report.quarantined || !inspected.report.inspection_complete {
+        return Err(WordOoxmlError::QuarantinedPackage);
+    }
+    Ok((inspected.report, inspected.content))
+}
+
 fn extract_fragments(
     part_name: &str,
     content: &[u8],
@@ -911,7 +924,7 @@ fn extract_fragments(
     reader.config_mut().trim_text(false);
     let mut fragments = Vec::new();
     let mut revision_stack = Vec::new();
-    let mut capture_text = false;
+    let mut capture_start = None;
     loop {
         let start = reader.buffer_position();
         let event = reader
@@ -922,39 +935,53 @@ fn extract_fragments(
             Event::Start(event) => match local_name(event.name().as_ref()) {
                 b"ins" => revision_stack.push(WordRevisionState::Inserted),
                 b"del" => revision_stack.push(WordRevisionState::Deleted),
-                b"t" | b"delText" | b"instrText" => capture_text = true,
+                b"t" | b"delText" | b"instrText" if capture_start.replace(end).is_some() => {
+                    return Err(WordOoxmlError::MalformedXml);
+                }
                 _ => {}
             },
             Event::End(event) => match local_name(event.name().as_ref()) {
                 b"ins" | b"del" => {
                     revision_stack.pop();
                 }
-                b"t" | b"delText" | b"instrText" => capture_text = false,
+                b"t" | b"delText" | b"instrText" => {
+                    let content_start = capture_start.take().ok_or(WordOoxmlError::MalformedXml)?;
+                    let content_start_usize =
+                        usize::try_from(content_start).map_err(|_| WordOoxmlError::MalformedXml)?;
+                    let content_end_usize =
+                        usize::try_from(start).map_err(|_| WordOoxmlError::MalformedXml)?;
+                    let encoded = std::str::from_utf8(
+                        content
+                            .get(content_start_usize..content_end_usize)
+                            .ok_or(WordOoxmlError::MalformedXml)?,
+                    )
+                    .map_err(|_| WordOoxmlError::MalformedXml)?;
+                    if encoded.contains('<') {
+                        return Err(WordOoxmlError::MalformedXml);
+                    }
+                    let decoded = unescape(encoded)
+                        .map_err(|_| WordOoxmlError::MalformedXml)?
+                        .into_owned();
+                    if !decoded.is_empty() {
+                        let revision_state = revision_stack
+                            .last()
+                            .copied()
+                            .unwrap_or(WordRevisionState::Current);
+                        fragments.push(WordTextFragment {
+                            fragment_id: format!("fragment-{next_fragment:08}"),
+                            source_range: WordPartSourceRange {
+                                part_name: part_name.to_owned(),
+                                start_byte: content_start,
+                                end_byte: start,
+                            },
+                            text: decoded,
+                            revision_state,
+                        });
+                        *next_fragment += 1;
+                    }
+                }
                 _ => {}
             },
-            Event::Text(text) if capture_text => {
-                let decoded = text
-                    .decode()
-                    .map_err(|_| WordOoxmlError::MalformedXml)?
-                    .into_owned();
-                if !decoded.is_empty() {
-                    let revision_state = revision_stack
-                        .last()
-                        .copied()
-                        .unwrap_or(WordRevisionState::Current);
-                    fragments.push(WordTextFragment {
-                        fragment_id: format!("fragment-{next_fragment:08}"),
-                        source_range: WordPartSourceRange {
-                            part_name: part_name.to_owned(),
-                            start_byte: start,
-                            end_byte: end,
-                        },
-                        text: decoded,
-                        revision_state,
-                    });
-                    *next_fragment += 1;
-                }
-            }
             Event::Eof => return Ok(fragments),
             _ => {}
         }
