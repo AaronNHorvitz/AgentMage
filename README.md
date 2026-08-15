@@ -170,6 +170,13 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
   artifacts, expose partial and unrun checks, and produce secret-safe recomputable
   receipts. This is not yet an enabled end-user workflow; see the
   [trusted-validation architecture](./docs/architecture/trusted-validation-runner.md).
+- Integrity-protected local review packets, nine evidence-backed review modes,
+  deterministic logical commit groups, temporary-index candidate trees, externally
+  pinned OpenPGP signing, exact expiring manual approval, independent signature
+  verification, and compare-and-swap updates limited to AgentMage task branches.
+  Automatic commit and every publication operation remain prohibited; the source
+  candidate is not product-registered. See the
+  [local review and commit architecture](./docs/architecture/local-review-and-commit-boundary.md).
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
 - A removable connected layer: uninstalling every provider adapter restores the independently tested strict-local product.

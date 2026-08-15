@@ -9,10 +9,15 @@ local repositories, isolated task worktrees, command transports, REST and
 GraphQL transports, and future source-control adapters that adopt this contract.
 
 The Sprint 42 kernel planner, preservation manifest, ownership registry, receipt
-formats, and Fedora-local worktree/CAS adapter are implemented. No Git effect path
-is registered in a product profile. Credentialed clone/fetch, contained network Git,
-cross-platform acceptance, commit, push, and hosted GitHub operations remain blocked
-behind their owning roadmap gates.
+formats, and Fedora-local worktree/CAS adapter are implemented. Sprint 47 also
+implements authority-free review and commit plans, temporary-index candidate-tree
+construction, external OpenPGP signer inspection, exact manual approval receipts,
+and a Fedora-local signed-commit/CAS source candidate with disposable native
+fixture evidence. No Git effect path is registered in a product profile.
+Credentialed clone/fetch, contained network Git, production signer and approval
+evidence, complete process-tree interruption evidence, cross-platform acceptance,
+push, and hosted GitHub operations remain blocked behind their owning roadmap
+gates.
 
 ## Trust Boundary
 
