@@ -94,6 +94,10 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "word-inspection-report",
   "word-extraction-result",
   "generated-word-package",
+  "rich-word-package-proposal",
+  "word-package-edit-preview",
+  "word-visual-comparison-report",
+  "word-artifact-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1461,6 +1465,194 @@ function runtimeSemanticErrors(recordType, data) {
     }
     if (inspection.quarantined || !inspection.inspection_complete) {
       errors.push("Generated Word package did not pass bounded structural inspection");
+    }
+  } else if (recordType === "rich-word-package-proposal") {
+    const inspection = data.inspection ?? {};
+    if (
+      sha256Bytes(data.package ?? []) !== data.package_sha256 ||
+      !isStrictlySortedBy(data.parts ?? [], (item) => item.part_name) ||
+      !isStrictlySorted(data.helper_capabilities ?? [])
+    ) {
+      errors.push("Rich Word package identity or canonical ordering drifted");
+    }
+    if (
+      JSON.stringify(data.output_path) !== JSON.stringify(inspection.source_path) ||
+      data.package_sha256 !== inspection.source_sha256 ||
+      inspection.quarantined ||
+      !inspection.inspection_complete
+    ) {
+      errors.push("Rich Word inspection is not bound to an admitted proposal");
+    }
+  } else if (recordType === "word-package-edit-preview") {
+    const inspection = data.inspection ?? {};
+    const partDigests = new Map(
+      (data.parts ?? []).map((item) => [item.part_name, item.content_sha256]),
+    );
+    const warningOrder = [
+      "package_container_rebuilt",
+      "simple_run_redline_only",
+      "main_document_comment_only",
+      "visual_verification_required",
+    ];
+    if (
+      sha256Bytes(data.package ?? []) !== data.package_sha256 ||
+      JSON.stringify(data.source_path) === JSON.stringify(data.output_path) ||
+      !isStrictlySortedBy(data.changes ?? [], (item) => item.change_id) ||
+      !isStrictlySortedBy(data.preserved_parts ?? [], (item) => item.part_name) ||
+      !isStrictlySortedBy(data.parts ?? [], (item) => item.part_name) ||
+      !isStrictlySorted((data.warnings ?? []).map((item) => warningOrder.indexOf(item.kind)))
+    ) {
+      errors.push("Word edit identity, path separation, or canonical ordering drifted");
+    }
+    for (const change of data.changes ?? []) {
+      if (
+        partDigests.get(change.part_name) !== change.after_sha256 ||
+        (change.operation_kind === null) !== (change.original_range === null) ||
+        (change.original_range !== null &&
+          (change.original_range.part_name !== change.part_name ||
+            change.original_range.end_byte <= change.original_range.start_byte))
+      ) {
+        errors.push(`Word edit change provenance drifted: ${change.change_id}`);
+      }
+    }
+    if (
+      JSON.stringify(data.output_path) !== JSON.stringify(inspection.source_path) ||
+      data.package_sha256 !== inspection.source_sha256 ||
+      inspection.quarantined ||
+      !inspection.inspection_complete
+    ) {
+      errors.push("Word edit inspection is not bound to an admitted proposal");
+    }
+  } else if (recordType === "word-visual-comparison-report") {
+    const pages = data.pages ?? [];
+    if (pages.some((page, index) => page.page_number !== index + 1)) {
+      errors.push("Word visual pages are not consecutive and canonically ordered");
+    }
+    for (const page of pages) {
+      const unchanged =
+        page.changed_pixels === 0 &&
+        page.changed_pixel_ratio_ppm === 0 &&
+        page.maximum_channel_delta === 0 &&
+        page.difference_bounds === null &&
+        page.before_rgba_sha256 === page.after_rgba_sha256;
+      if (
+        (page.changed_pixels === 0) !== unchanged ||
+        (page.before_rgba_sha256 === page.after_rgba_sha256) !== unchanged
+      ) {
+        errors.push(`Word visual unchanged-page semantics drifted: ${page.page_number}`);
+      }
+      if (
+        page.difference_bounds !== null &&
+        (page.difference_bounds.max_x < page.difference_bounds.min_x ||
+          page.difference_bounds.max_y < page.difference_bounds.min_y)
+      ) {
+        errors.push(`Word visual difference bounds drifted: ${page.page_number}`);
+      }
+    }
+    if (
+      data.machine_checks_passed &&
+      (pages.some((page) => !page.passed) || data.pagination_delta !== 0)
+    ) {
+      errors.push("Word visual machine-pass claim contradicts page or pagination results");
+    }
+    if (
+      data.human_review_required !==
+      (data.evidence_kind === "synthetic_fixture" || !data.machine_checks_passed)
+    ) {
+      errors.push("Word visual human-review state drifted");
+    }
+  } else if (recordType === "word-artifact-receipt") {
+    const platformOrder = ["fedora", "ubuntu", "windows11_x64", "macos_apple_silicon"];
+    if (
+      !isStrictlySortedBy(data.inputs ?? [], (item) => item.role) ||
+      !isStrictlySortedBy(data.changes ?? [], (item) => item.change_id) ||
+      !isStrictlySortedBy(data.checks ?? [], (item) => item.check_id) ||
+      !isStrictlySorted(
+        (data.render_outputs ?? []).map((item) => platformOrder.indexOf(item.platform)),
+      ) ||
+      !isStrictlySorted(
+        (data.required_platforms ?? []).map((platform) => platformOrder.indexOf(platform)),
+      ) ||
+      !isStrictlySortedBy(data.known_fidelity_limits ?? [], (item) => item.limit_code) ||
+      !isStrictlySorted(data.disposition_codes ?? [])
+    ) {
+      errors.push("Word artifact receipt ledgers are not canonically ordered");
+    }
+    const checkKinds = [
+      "structural",
+      "semantic",
+      "visual",
+      "accessibility",
+      "malware_policy",
+      "canary",
+    ];
+    const checks = new Map((data.checks ?? []).map((item) => [item.kind, item]));
+    if (checks.size !== (data.checks ?? []).length) {
+      errors.push("Word artifact receipt contains duplicate check kinds");
+    }
+    for (const check of data.checks ?? []) {
+      const evidenceRequired = check.status !== "unavailable";
+      if (evidenceRequired !== (check.evidence_sha256 !== null)) {
+        errors.push(`Word artifact check evidence drifted: ${check.check_id}`);
+      }
+    }
+    const dispositions = new Set();
+    const missingCheckNames = {
+      structural: "structural",
+      semantic: "semantic",
+      visual: "visual",
+      accessibility: "accessibility",
+      malware_policy: "malwarepolicy",
+      canary: "canary",
+    };
+    let failedCheck = false;
+    for (const kind of checkKinds) {
+      const check = checks.get(kind);
+      if (!check) {
+        dispositions.add(`word.receipt.check.${missingCheckNames[kind]}.missing`);
+      } else if (check.status !== "passed") {
+        dispositions.add(check.reason_code);
+        failedCheck ||= check.status === "failed";
+      }
+    }
+    const renders = new Map(
+      (data.render_outputs ?? []).map((item) => [item.platform, item]),
+    );
+    const renderNames = {
+      fedora: "fedora",
+      ubuntu: "ubuntu",
+      windows11_x64: "windows11x64",
+      macos_apple_silicon: "macosapplesilicon",
+    };
+    let failedRender = false;
+    for (const platform of data.required_platforms ?? []) {
+      const render = renders.get(platform);
+      if (!render) {
+        dispositions.add(`word.receipt.render.${renderNames[platform]}.missing`);
+      } else if (!render.machine_checks_passed) {
+        failedRender = true;
+        dispositions.add(`word.receipt.render.${renderNames[platform]}.failed`);
+      } else if (!render.native_renderer_evidence) {
+        dispositions.add(`word.receipt.render.${renderNames[platform]}.synthetic`);
+      } else if (render.human_review_required) {
+        dispositions.add(`word.receipt.render.${renderNames[platform]}.review-required`);
+      }
+    }
+    for (const limit of data.known_fidelity_limits ?? []) {
+      if (limit.blocks_completion) dispositions.add(limit.limit_code);
+    }
+    const expectedDispositions = [...dispositions].sort();
+    const expectedState =
+      failedCheck || failedRender
+        ? "failed"
+        : expectedDispositions.length === 0
+          ? "locally_verified"
+          : "blocked";
+    if (
+      data.completion_state !== expectedState ||
+      JSON.stringify(data.disposition_codes ?? []) !== JSON.stringify(expectedDispositions)
+    ) {
+      errors.push("Word artifact receipt disposition is not reproducible");
     }
   }
   return errors;

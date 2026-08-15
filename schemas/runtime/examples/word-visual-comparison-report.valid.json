@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "comparison_id": "word-visual-1",
+  "profile_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "before_render_id": "render-before-1",
+  "after_render_id": "render-after-1",
+  "platform": "fedora",
+  "before_package_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "after_package_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "evidence_kind": "synthetic_fixture",
+  "pagination_delta": 0,
+  "pages": [
+    {
+      "page_number": 1,
+      "before_rgba_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "after_rgba_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dimensions_match": true,
+      "changed_pixels": 0,
+      "changed_pixel_ratio_ppm": 0,
+      "maximum_channel_delta": 0,
+      "difference_bounds": null,
+      "passed": true
+    }
+  ],
+  "clipping_count": 0,
+  "overlap_count": 0,
+  "font_fallback_count": 0,
+  "table_regression_count": 0,
+  "image_regression_count": 0,
+  "human_review_required": true,
+  "machine_checks_passed": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

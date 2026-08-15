@@ -171,6 +171,8 @@ pub struct WordArtifactReceipt {
     pub checks: Vec<WordArtifactCheck>,
     /// Canonically ordered render evidence.
     pub render_outputs: Vec<WordRenderEvidenceReference>,
+    /// Canonically ordered platforms required by this receipt.
+    pub required_platforms: Vec<WordRenderPlatform>,
     /// Canonically ordered known fidelity limitations.
     pub known_fidelity_limits: Vec<WordFidelityLimit>,
     /// Exact truthful completion state.
@@ -408,6 +410,7 @@ pub fn build_word_artifact_receipt(
         changes: request.changes.clone(),
         checks: request.checks.clone(),
         render_outputs,
+        required_platforms: request.required_platforms.clone(),
         known_fidelity_limits: request.known_fidelity_limits.clone(),
         completion_state,
         disposition_codes: disposition_codes.into_iter().collect(),

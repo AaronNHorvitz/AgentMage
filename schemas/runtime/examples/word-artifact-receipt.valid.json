@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "artifact_id": "word-artifact-1",
+  "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "inputs": [
+    {
+      "role": "source",
+      "path": { "workspace_id": "workspace-1", "components": ["documents", "source.docx"] },
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "implementation_identities": {
+    "editor": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "generator": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "changes": [
+    {
+      "change_id": "change-1",
+      "operation_kind": "replace_text",
+      "part_name": "word/document.xml",
+      "before_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "after_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    }
+  ],
+  "checks": [
+    { "check_id": "accessibility", "kind": "accessibility", "status": "passed", "evidence_sha256": "1111111111111111111111111111111111111111111111111111111111111111", "reason_code": "word.check.accessibility.passed" },
+    { "check_id": "canary", "kind": "canary", "status": "passed", "evidence_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "reason_code": "word.check.canary.passed" },
+    { "check_id": "malware", "kind": "malware_policy", "status": "passed", "evidence_sha256": "3333333333333333333333333333333333333333333333333333333333333333", "reason_code": "word.check.malware.passed" },
+    { "check_id": "semantic", "kind": "semantic", "status": "passed", "evidence_sha256": "4444444444444444444444444444444444444444444444444444444444444444", "reason_code": "word.check.semantic.passed" },
+    { "check_id": "structural", "kind": "structural", "status": "passed", "evidence_sha256": "5555555555555555555555555555555555555555555555555555555555555555", "reason_code": "word.check.structural.passed" },
+    { "check_id": "visual", "kind": "visual", "status": "passed", "evidence_sha256": "6666666666666666666666666666666666666666666666666666666666666666", "reason_code": "word.check.visual.passed" }
+  ],
+  "render_outputs": [
+    {
+      "platform": "fedora",
+      "report_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "native_renderer_evidence": false,
+      "machine_checks_passed": true,
+      "human_review_required": true
+    }
+  ],
+  "required_platforms": ["fedora"],
+  "known_fidelity_limits": [],
+  "completion_state": "blocked",
+  "disposition_codes": ["word.receipt.render.fedora.synthetic"],
+  "original_preserved": true,
+  "proposal_only": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

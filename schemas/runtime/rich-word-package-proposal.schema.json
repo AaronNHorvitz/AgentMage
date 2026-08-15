@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/rich-word-package-proposal.schema.json",
+  "title": "AgentMage Rich Word Package Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_id", "specification_sha256", "output_path", "generator_identity_sha256", "package", "package_sha256", "parts", "helper_capabilities", "inspection", "proposal_only", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "specification_sha256": { "$ref": "#/$defs/sha256" },
+    "output_path": { "$ref": "#/$defs/workspace_path" },
+    "generator_identity_sha256": { "$ref": "#/$defs/sha256" },
+    "package": { "type": "array", "maxItems": 67108864, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "package_sha256": { "$ref": "#/$defs/sha256" },
+    "parts": { "type": "array", "minItems": 1, "maxItems": 16384, "items": { "$ref": "#/$defs/part" } },
+    "helper_capabilities": { "type": "array", "minItems": 18, "maxItems": 64, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
+    "inspection": { "$ref": "https://agentmage.dev/schemas/runtime/word-inspection-report.schema.json" },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["part_name", "content_sha256", "bytes"],
+      "properties": {
+        "part_name": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    }
+  }
+}

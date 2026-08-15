@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "artifact_id": "rich-report-1",
+  "specification_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_path": { "workspace_id": "workspace-1", "components": ["documents", "rich.docx"] },
+  "generator_identity_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "package": [80, 75],
+  "package_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+  "parts": [
+    { "part_name": "[Content_Types].xml", "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 32 },
+    { "part_name": "_rels/.rels", "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 32 },
+    { "part_name": "word/document.xml", "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 64 }
+  ],
+  "helper_capabilities": ["add_decision_cards", "add_hyperlink_internal", "add_metadata_table", "add_table_from_markdown", "add_warning", "apply_numbering", "build", "clone_paragraph", "configure_header_footer", "configure_page", "configure_styles", "create_paragraph", "remove_paragraph", "replace_section", "set_cell_margins", "set_cell_shading", "set_single_cell_border", "set_table_borders", "set_table_width"],
+  "inspection": {
+    "schema_version": 2,
+    "source_path": { "workspace_id": "workspace-1", "components": ["documents", "rich.docx"] },
+    "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+    "conversion_identity_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "profile_id": "word-ooxml-strict-v1",
+    "parts": [
+      { "part_name": "[Content_Types].xml", "kind": "other_xml", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111" },
+      { "part_name": "_rels/.rels", "kind": "relationships", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222" },
+      { "part_name": "word/document.xml", "kind": "main_document", "compression": "stored", "compressed_bytes": 64, "uncompressed_bytes": 64, "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333" }
+    ],
+    "features": [{ "kind": "section_layout", "count": 1 }, { "kind": "style", "count": 1 }],
+    "findings": [],
+    "quarantined": false,
+    "inspection_complete": true,
+    "original_preserved": true,
+    "filesystem_effect_performed": false,
+    "network_access_performed": false,
+    "execution_performed": false
+  },
+  "proposal_only": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

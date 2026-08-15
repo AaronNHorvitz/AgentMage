@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "edit_id": "edit-1",
+  "source_path": { "workspace_id": "workspace-1", "components": ["documents", "source.docx"] },
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_path": { "workspace_id": "workspace-1", "components": ["documents", "edited.docx"] },
+  "editor_identity_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changes": [
+    {
+      "change_id": "change-1",
+      "operation_kind": "replace_text",
+      "part_name": "word/document.xml",
+      "before_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "after_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "original_range": { "part_name": "word/document.xml", "start_byte": 20, "end_byte": 25 }
+    }
+  ],
+  "preserved_parts": [
+    { "part_name": "[Content_Types].xml", "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111" },
+    { "part_name": "_rels/.rels", "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222" }
+  ],
+  "package": [80, 75],
+  "package_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+  "parts": [
+    { "part_name": "[Content_Types].xml", "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 32 },
+    { "part_name": "_rels/.rels", "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 32 },
+    { "part_name": "word/document.xml", "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 64 }
+  ],
+  "warnings": [
+    { "kind": "package_container_rebuilt", "reason_code": "word.edit.package-container-rebuilt", "original_remains_authoritative": true },
+    { "kind": "visual_verification_required", "reason_code": "word.edit.visual-verification-required", "original_remains_authoritative": true }
+  ],
+  "inspection": {
+    "schema_version": 2,
+    "source_path": { "workspace_id": "workspace-1", "components": ["documents", "edited.docx"] },
+    "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+    "conversion_identity_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "profile_id": "word-ooxml-strict-v1",
+    "parts": [
+      { "part_name": "[Content_Types].xml", "kind": "other_xml", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111" },
+      { "part_name": "_rels/.rels", "kind": "relationships", "compression": "stored", "compressed_bytes": 32, "uncompressed_bytes": 32, "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222" },
+      { "part_name": "word/document.xml", "kind": "main_document", "compression": "stored", "compressed_bytes": 64, "uncompressed_bytes": 64, "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333" }
+    ],
+    "features": [],
+    "findings": [],
+    "quarantined": false,
+    "inspection_complete": true,
+    "original_preserved": true,
+    "filesystem_effect_performed": false,
+    "network_access_performed": false,
+    "execution_performed": false
+  },
+  "original_preserved": true,
+  "proposal_only": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

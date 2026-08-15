@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/word-artifact-receipt.schema.json",
+  "title": "AgentMage Word Artifact Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_id", "artifact_sha256", "inputs", "implementation_identities", "changes", "checks", "render_outputs", "required_platforms", "known_fidelity_limits", "completion_state", "disposition_codes", "original_preserved", "proposal_only", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" },
+    "inputs": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/input" } },
+    "implementation_identities": { "type": "object", "minProperties": 1, "maxProperties": 64, "propertyNames": { "$ref": "#/$defs/identifier" }, "additionalProperties": { "$ref": "#/$defs/sha256" } },
+    "changes": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/change" } },
+    "checks": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/$defs/check" } },
+    "render_outputs": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/render" } },
+    "required_platforms": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "$ref": "#/$defs/platform" } },
+    "known_fidelity_limits": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/limit" } },
+    "completion_state": { "enum": ["locally_verified", "blocked", "failed"] },
+    "disposition_codes": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
+    "original_preserved": { "const": true },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "code": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "platform": { "enum": ["fedora", "ubuntu", "windows11_x64", "macos_apple_silicon"] },
+    "workspace_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_id", "components"],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "sha256"],
+      "properties": {
+        "role": { "$ref": "#/$defs/identifier" },
+        "path": { "$ref": "#/$defs/workspace_path" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["change_id", "operation_kind", "part_name", "before_sha256", "after_sha256"],
+      "properties": {
+        "change_id": { "$ref": "#/$defs/identifier" },
+        "operation_kind": { "type": ["string", "null"], "enum": ["replace_text", "redline_replace", "add_comment", null] },
+        "part_name": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "before_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "after_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "kind", "status", "evidence_sha256", "reason_code"],
+      "properties": {
+        "check_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["structural", "semantic", "visual", "accessibility", "malware_policy", "canary"] },
+        "status": { "enum": ["passed", "failed", "unavailable"] },
+        "evidence_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "reason_code": { "$ref": "#/$defs/code" }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "report_sha256", "native_renderer_evidence", "machine_checks_passed", "human_review_required"],
+      "properties": {
+        "platform": { "$ref": "#/$defs/platform" },
+        "report_sha256": { "$ref": "#/$defs/sha256" },
+        "native_renderer_evidence": { "type": "boolean" },
+        "machine_checks_passed": { "type": "boolean" },
+        "human_review_required": { "type": "boolean" }
+      }
+    },
+    "limit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limit_code", "blocks_completion"],
+      "properties": {
+        "limit_code": { "$ref": "#/$defs/code" },
+        "blocks_completion": { "type": "boolean" }
+      }
+    }
+  }
+}

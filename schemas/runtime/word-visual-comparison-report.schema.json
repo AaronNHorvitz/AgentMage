@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/word-visual-comparison-report.schema.json",
+  "title": "AgentMage Word Visual Comparison Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "comparison_id", "profile_sha256", "before_render_id", "after_render_id", "platform", "before_package_sha256", "after_package_sha256", "evidence_kind", "pagination_delta", "pages", "clipping_count", "overlap_count", "font_fallback_count", "table_regression_count", "image_regression_count", "human_review_required", "machine_checks_passed", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "comparison_id": { "$ref": "#/$defs/identifier" },
+    "profile_sha256": { "$ref": "#/$defs/sha256" },
+    "before_render_id": { "$ref": "#/$defs/identifier" },
+    "after_render_id": { "$ref": "#/$defs/identifier" },
+    "platform": { "$ref": "#/$defs/platform" },
+    "before_package_sha256": { "$ref": "#/$defs/sha256" },
+    "after_package_sha256": { "$ref": "#/$defs/sha256" },
+    "evidence_kind": { "enum": ["native_renderer", "synthetic_fixture"] },
+    "pagination_delta": { "type": "integer", "minimum": -4096, "maximum": 4096 },
+    "pages": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/page" } },
+    "clipping_count": { "$ref": "#/$defs/count" },
+    "overlap_count": { "$ref": "#/$defs/count" },
+    "font_fallback_count": { "$ref": "#/$defs/count" },
+    "table_regression_count": { "$ref": "#/$defs/count" },
+    "image_regression_count": { "$ref": "#/$defs/count" },
+    "human_review_required": { "type": "boolean" },
+    "machine_checks_passed": { "type": "boolean" },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "platform": { "enum": ["fedora", "ubuntu", "windows11_x64", "macos_apple_silicon"] },
+    "count": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_x", "min_y", "max_x", "max_y"],
+      "properties": {
+        "min_x": { "$ref": "#/$defs/count" },
+        "min_y": { "$ref": "#/$defs/count" },
+        "max_x": { "$ref": "#/$defs/count" },
+        "max_y": { "$ref": "#/$defs/count" }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page_number", "before_rgba_sha256", "after_rgba_sha256", "dimensions_match", "changed_pixels", "changed_pixel_ratio_ppm", "maximum_channel_delta", "difference_bounds", "passed"],
+      "properties": {
+        "page_number": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "before_rgba_sha256": { "$ref": "#/$defs/sha256" },
+        "after_rgba_sha256": { "$ref": "#/$defs/sha256" },
+        "dimensions_match": { "type": "boolean" },
+        "changed_pixels": { "type": "integer", "minimum": 0, "maximum": 400000000 },
+        "changed_pixel_ratio_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "maximum_channel_delta": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "difference_bounds": { "anyOf": [{ "$ref": "#/$defs/bounds" }, { "type": "null" }] },
+        "passed": { "type": "boolean" }
+      }
+    }
+  }
+}

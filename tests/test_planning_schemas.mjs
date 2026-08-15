@@ -397,6 +397,10 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "word-inspection-report",
     "word-extraction-result",
     "generated-word-package",
+    "rich-word-package-proposal",
+    "word-package-edit-preview",
+    "word-visual-comparison-report",
+    "word-artifact-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1300,6 +1304,10 @@ test("Word artifact records reject identity ordering fidelity and authority drif
     "word-inspection-report": load("word-inspection-report"),
     "word-extraction-result": load("word-extraction-result"),
     "generated-word-package": load("generated-word-package"),
+    "rich-word-package-proposal": load("rich-word-package-proposal"),
+    "word-package-edit-preview": load("word-package-edit-preview"),
+    "word-visual-comparison-report": load("word-visual-comparison-report"),
+    "word-artifact-receipt": load("word-artifact-receipt"),
   };
   const mutations = [
     ["word-inspection-report", (record) => { record.quarantined = true; }],
@@ -1313,6 +1321,14 @@ test("Word artifact records reject identity ordering fidelity and authority drif
     ["generated-word-package", (record) => { record.inspection.quarantined = true; }],
     ["generated-word-package", (record) => { record.output_path.components[1] = "other.docx"; }],
     ["generated-word-package", (record) => { record.execution_performed = true; }],
+    ["rich-word-package-proposal", (record) => { record.helper_capabilities.reverse(); }],
+    ["rich-word-package-proposal", (record) => { record.output_path.components[1] = "other.docx"; }],
+    ["word-package-edit-preview", (record) => { record.source_path = structuredClone(record.output_path); }],
+    ["word-package-edit-preview", (record) => { record.changes[0].after_sha256 = "a".repeat(64); }],
+    ["word-visual-comparison-report", (record) => { record.human_review_required = false; }],
+    ["word-visual-comparison-report", (record) => { record.pages[0].changed_pixels = 1; }],
+    ["word-artifact-receipt", (record) => { record.completion_state = "locally_verified"; }],
+    ["word-artifact-receipt", (record) => { record.disposition_codes = []; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);
