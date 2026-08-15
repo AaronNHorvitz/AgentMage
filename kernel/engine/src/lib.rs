@@ -55,6 +55,8 @@ pub mod model_codec;
 /// Candidate-neutral native-picker projection and stale-selection refusal.
 pub mod model_discovery;
 pub mod model_response;
+/// Deterministic measured local routing over exact profile and role evidence.
+pub mod model_routing;
 /// Candidate-neutral exact-profile admission and local runtime orchestration.
 pub mod model_runtime;
 /// Explicit exact-profile selection, deterministic-first dispatch, and resource control.
