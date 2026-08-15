@@ -23,6 +23,8 @@ pub mod authority;
 pub mod authority_transaction;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
+/// Exact command templates, previews, execution permits, and terminal receipts.
+pub mod command_runner;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 /// Deterministic bounded context, checked summaries, checkpoints, and drift gates.

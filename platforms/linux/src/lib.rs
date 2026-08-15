@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod command_runner;
 mod configuration_store;
 mod filesystem_control;
 mod inventory;
@@ -14,6 +15,10 @@ mod security_controls;
 mod strict_local;
 mod write_transaction;
 
+pub use command_runner::{
+    LinuxBoundedCommandExecutor, LinuxCommandManifest, LinuxCommandRunnerError,
+    LinuxCommandRunnerErrorKind,
+};
 pub use configuration_store::{
     LinuxConfigurationEffectDriver, LinuxConfigurationEffectOutput,
     LinuxConfigurationEffectRequest, LinuxConfigurationError, LinuxConfigurationErrorKind,
