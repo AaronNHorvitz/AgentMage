@@ -18,6 +18,7 @@ mod diagnostics;
 mod display_link;
 mod evidence;
 mod frontier;
+mod frontier_import;
 mod grant;
 mod handoff;
 mod ids;
@@ -91,6 +92,13 @@ pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use frontier::{
     FrontierAcceptanceState, FrontierClarificationClass, FrontierRecommendationReceipt,
     FrontierRecommendationTrigger, FrontierTaskTier, FrontierTierDecision, FrontierTierEvidence,
+};
+pub use frontier_import::{
+    FrontierDisagreement, FrontierImportDisposition, FrontierImportedClaimState,
+    FrontierLocalFlowRequirements, FrontierReturnArtifactDeclaration, FrontierReturnArtifactKind,
+    FrontierReturnCitationClaim, FrontierReturnInput, FrontierReturnKind, FrontierReturnManifest,
+    FrontierReturnedStep, FrontierReturnedStepKind, FrontierReturnedStepOutcome,
+    FrontierRoundTripReceipt,
 };
 pub use grant::{
     CapabilityGrant, GrantClass, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
