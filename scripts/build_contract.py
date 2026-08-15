@@ -39,11 +39,13 @@ EXPECTED_CARGO_PACKAGES = {
         "agentmage-capability-knowledge",
         {
             "agentmage-kernel-contracts",
+            "quick-xml",
             "rusqlite",
             "serde",
             "serde_json",
             "sha2",
             "unicode-normalization",
+            "zip",
         },
     ),
     "capabilities/repository-map": (

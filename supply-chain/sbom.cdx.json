@@ -2,11 +2,40 @@
   "bomFormat": "CycloneDX",
   "components": [
     {
+      "bom-ref": "cargo:adler2@2.0.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "0BSD OR MIT OR Apache-2.0"
+        }
+      ],
+      "name": "adler2",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/adler2@2.0.1",
+      "scope": "required",
+      "type": "library",
+      "version": "2.0.1"
+    },
+    {
       "bom-ref": "cargo:agentmage-capability-knowledge@0.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3fcab5989fbfe4b6fc7cf7a313ddcd3d768d0282b68c8f592ac71b5392ffd0e6"
+          "content": "d0dcd88d19a574d7371e49cfba41f2ddb05d49842aec4b79c90584a70655c3c9"
         }
       ],
       "licenses": [
@@ -515,6 +544,35 @@
       "version": "0.3.0"
     },
     {
+      "bom-ref": "cargo:crc32fast@1.5.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "crc32fast",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/crc32fast@1.5.0",
+      "scope": "required",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
       "bom-ref": "cargo:crypto-common@0.2.2",
       "hashes": [
         {
@@ -867,6 +925,35 @@
       "version": "0.1.10"
     },
     {
+      "bom-ref": "cargo:flate2@1.1.9",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "flate2",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/flate2@1.1.9",
+      "scope": "required",
+      "type": "library",
+      "version": "1.1.9"
+    },
+    {
       "bom-ref": "cargo:hashbrown@0.17.1",
       "hashes": [
         {
@@ -1099,6 +1186,35 @@
       "version": "2.8.3"
     },
     {
+      "bom-ref": "cargo:miniz_oxide@0.8.9",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Zlib OR Apache-2.0"
+        }
+      ],
+      "name": "miniz_oxide",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/miniz_oxide@0.8.9",
+      "scope": "required",
+      "type": "library",
+      "version": "0.8.9"
+    },
+    {
       "bom-ref": "cargo:pkg-config@0.3.33",
       "hashes": [
         {
@@ -1155,6 +1271,37 @@
       "scope": "required",
       "type": "library",
       "version": "1.0.107"
+    },
+    {
+      "bom-ref": "cargo:quick-xml@0.41.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "quick-xml",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/quick-xml@0.41.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.41.0"
     },
     {
       "bom-ref": "cargo:quote@1.0.47",
@@ -1623,6 +1770,37 @@
       "version": "3.0.0"
     },
     {
+      "bom-ref": "cargo:simd-adler32@0.3.10",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "simd-adler32",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/simd-adler32@0.3.10",
+      "scope": "required",
+      "type": "library",
+      "version": "0.3.10"
+    },
+    {
       "bom-ref": "cargo:smallvec@1.15.2",
       "hashes": [
         {
@@ -2045,6 +2223,35 @@
       "version": "0.26.12"
     },
     {
+      "bom-ref": "cargo:typed-path@0.12.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "typed-path",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/typed-path@0.12.3",
+      "scope": "required",
+      "type": "library",
+      "version": "0.12.3"
+    },
+    {
       "bom-ref": "cargo:typenum@1.20.1",
       "hashes": [
         {
@@ -2246,6 +2453,68 @@
       "scope": "required",
       "type": "library",
       "version": "1.9.0"
+    },
+    {
+      "bom-ref": "cargo:zip@8.6.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "zip",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/zip@8.6.0",
+      "scope": "required",
+      "type": "library",
+      "version": "8.6.0"
+    },
+    {
+      "bom-ref": "cargo:zlib-rs@0.6.7",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "34b31d188d9d685a4f9c7b46d6e36631b07058d2cfe190267adce54dc230bf12"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Zlib"
+          }
+        }
+      ],
+      "name": "zlib-rs",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/zlib-rs@0.6.7",
+      "scope": "required",
+      "type": "library",
+      "version": "0.6.7"
     },
     {
       "bom-ref": "cargo:zmij@1.0.23",
@@ -13840,13 +14109,19 @@
   ],
   "dependencies": [
     {
+      "dependsOn": [],
+      "ref": "cargo:adler2@2.0.1"
+    },
+    {
       "dependsOn": [
         "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:quick-xml@0.41.0",
         "cargo:rusqlite@0.40.2",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0",
-        "cargo:unicode-normalization@0.1.25"
+        "cargo:unicode-normalization@0.1.25",
+        "cargo:zip@8.6.0"
       ],
       "ref": "cargo:agentmage-capability-knowledge@0.0.0"
     },
@@ -13990,6 +14265,12 @@
     },
     {
       "dependsOn": [
+        "cargo:cfg-if@1.0.4"
+      ],
+      "ref": "cargo:crc32fast@1.5.0"
+    },
+    {
+      "dependsOn": [
         "cargo:hybrid-array@0.4.14"
       ],
       "ref": "cargo:crypto-common@0.2.2"
@@ -14068,6 +14349,13 @@
       "ref": "cargo:find-msvc-tools@0.1.10"
     },
     {
+      "dependsOn": [
+        "cargo:miniz_oxide@0.8.9",
+        "cargo:zlib-rs@0.6.7"
+      ],
+      "ref": "cargo:flate2@1.1.9"
+    },
+    {
       "dependsOn": [],
       "ref": "cargo:hashbrown@0.17.1"
     },
@@ -14109,6 +14397,13 @@
       "ref": "cargo:memchr@2.8.3"
     },
     {
+      "dependsOn": [
+        "cargo:adler2@2.0.1",
+        "cargo:simd-adler32@0.3.10"
+      ],
+      "ref": "cargo:miniz_oxide@0.8.9"
+    },
+    {
       "dependsOn": [],
       "ref": "cargo:pkg-config@0.3.33"
     },
@@ -14117,6 +14412,12 @@
         "cargo:unicode-ident@1.0.24"
       ],
       "ref": "cargo:proc-macro2@1.0.107"
+    },
+    {
+      "dependsOn": [
+        "cargo:memchr@2.8.3"
+      ],
+      "ref": "cargo:quick-xml@0.41.0"
     },
     {
       "dependsOn": [
@@ -14233,6 +14534,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "cargo:simd-adler32@0.3.10"
+    },
+    {
+      "dependsOn": [],
       "ref": "cargo:smallvec@1.15.2"
     },
     {
@@ -14321,6 +14626,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "cargo:typed-path@0.12.3"
+    },
+    {
+      "dependsOn": [],
       "ref": "cargo:typenum@1.20.1"
     },
     {
@@ -14350,6 +14659,20 @@
     {
       "dependsOn": [],
       "ref": "cargo:zeroize@1.9.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:crc32fast@1.5.0",
+        "cargo:flate2@1.1.9",
+        "cargo:indexmap@2.14.0",
+        "cargo:memchr@2.8.3",
+        "cargo:typed-path@0.12.3"
+      ],
+      "ref": "cargo:zip@8.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:zlib-rs@0.6.7"
     },
     {
       "dependsOn": [],
@@ -16682,7 +17005,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:6c91d290-3906-530b-aa66-fc658b5d3ff6",
+  "serialNumber": "urn:uuid:9b6e6c3d-099e-5e5b-8a12-40aec600b143",
   "specVersion": "1.6",
   "version": 1
 }

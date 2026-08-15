@@ -13,6 +13,7 @@
     ],
     "cargo_external_packages": [
       "ed25519-dalek",
+      "quick-xml",
       "rusqlite",
       "rustix",
       "seccompiler",
@@ -27,7 +28,8 @@
       "tree-sitter-typescript",
       "unicode-normalization",
       "windows-sys",
-      "zeroize"
+      "zeroize",
+      "zip"
     ],
     "vscode_extension_packages": [],
     "swift_packages": []

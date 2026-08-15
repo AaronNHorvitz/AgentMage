@@ -2,12 +2,32 @@
   "components": [
     {
       "classification": "production",
+      "component_id": "cargo:adler2@2.0.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+        }
+      ],
+      "integrity": "sha256:320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa",
+      "license": "0BSD OR MIT OR Apache-2.0",
+      "name": "adler2",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/adler2/2.0.1"
+      },
+      "version": "2.0.1"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:agentmage-capability-knowledge@0.0.0",
       "ecosystem": "cargo",
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "3fcab5989fbfe4b6fc7cf7a313ddcd3d768d0282b68c8f592ac71b5392ffd0e6"
+          "content": "d0dcd88d19a574d7371e49cfba41f2ddb05d49842aec4b79c90584a70655c3c9"
         }
       ],
       "integrity": null,
@@ -342,6 +362,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:crc32fast@1.5.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+        }
+      ],
+      "integrity": "sha256:9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511",
+      "license": "MIT OR Apache-2.0",
+      "name": "crc32fast",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/crc32fast/1.5.0"
+      },
+      "version": "1.5.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:crypto-common@0.2.2",
       "ecosystem": "cargo",
       "hashes": [
@@ -582,6 +622,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:flate2@1.1.9",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+        }
+      ],
+      "integrity": "sha256:843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c",
+      "license": "MIT OR Apache-2.0",
+      "name": "flate2",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/flate2/1.1.9"
+      },
+      "version": "1.1.9"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:hashbrown@0.17.1",
       "ecosystem": "cargo",
       "hashes": [
@@ -742,6 +802,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:miniz_oxide@0.8.9",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
+        }
+      ],
+      "integrity": "sha256:1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316",
+      "license": "MIT OR Zlib OR Apache-2.0",
+      "name": "miniz_oxide",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/miniz_oxide/0.8.9"
+      },
+      "version": "0.8.9"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:pkg-config@0.3.33",
       "ecosystem": "cargo",
       "hashes": [
@@ -779,6 +859,26 @@
         "url": "https://crates.io/crates/proc-macro2/1.0.107"
       },
       "version": "1.0.107"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:quick-xml@0.41.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+        }
+      ],
+      "integrity": "sha256:e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1",
+      "license": "MIT",
+      "name": "quick-xml",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/quick-xml/0.41.0"
+      },
+      "version": "0.41.0"
     },
     {
       "classification": "production",
@@ -1102,6 +1202,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:simd-adler32@0.3.10",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
+        }
+      ],
+      "integrity": "sha256:3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea",
+      "license": "MIT",
+      "name": "simd-adler32",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/simd-adler32/0.3.10"
+      },
+      "version": "0.3.10"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:smallvec@1.15.2",
       "ecosystem": "cargo",
       "hashes": [
@@ -1382,6 +1502,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:typed-path@0.12.3",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
+        }
+      ],
+      "integrity": "sha256:8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e",
+      "license": "MIT OR Apache-2.0",
+      "name": "typed-path",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/typed-path/0.12.3"
+      },
+      "version": "0.12.3"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:typenum@1.20.1",
       "ecosystem": "cargo",
       "hashes": [
@@ -1519,6 +1659,46 @@
         "url": "https://crates.io/crates/zeroize/1.9.0"
       },
       "version": "1.9.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zip@8.6.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+        }
+      ],
+      "integrity": "sha256:2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b",
+      "license": "MIT",
+      "name": "zip",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zip/8.6.0"
+      },
+      "version": "8.6.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zlib-rs@0.6.7",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "34b31d188d9d685a4f9c7b46d6e36631b07058d2cfe190267adce54dc230bf12"
+        }
+      ],
+      "integrity": "sha256:34b31d188d9d685a4f9c7b46d6e36631b07058d2cfe190267adce54dc230bf12",
+      "license": "Zlib",
+      "name": "zlib-rs",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zlib-rs/0.6.7"
+      },
+      "version": "0.6.7"
     },
     {
       "classification": "production",
@@ -9004,14 +9184,20 @@
   ],
   "dependencies": [
     {
+      "component_id": "cargo:adler2@2.0.1",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:agentmage-capability-knowledge@0.0.0",
       "depends_on": [
         "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:quick-xml@0.41.0",
         "cargo:rusqlite@0.40.2",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0",
-        "cargo:unicode-normalization@0.1.25"
+        "cargo:unicode-normalization@0.1.25",
+        "cargo:zip@8.6.0"
       ]
     },
     {
@@ -9153,6 +9339,12 @@
       ]
     },
     {
+      "component_id": "cargo:crc32fast@1.5.0",
+      "depends_on": [
+        "cargo:cfg-if@1.0.4"
+      ]
+    },
+    {
       "component_id": "cargo:crypto-common@0.2.2",
       "depends_on": [
         "cargo:hybrid-array@0.4.14"
@@ -9232,6 +9424,13 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:flate2@1.1.9",
+      "depends_on": [
+        "cargo:miniz_oxide@0.8.9",
+        "cargo:zlib-rs@0.6.7"
+      ]
+    },
+    {
       "component_id": "cargo:hashbrown@0.17.1",
       "depends_on": []
     },
@@ -9273,6 +9472,13 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:miniz_oxide@0.8.9",
+      "depends_on": [
+        "cargo:adler2@2.0.1",
+        "cargo:simd-adler32@0.3.10"
+      ]
+    },
+    {
       "component_id": "cargo:pkg-config@0.3.33",
       "depends_on": []
     },
@@ -9280,6 +9486,12 @@
       "component_id": "cargo:proc-macro2@1.0.107",
       "depends_on": [
         "cargo:unicode-ident@1.0.24"
+      ]
+    },
+    {
+      "component_id": "cargo:quick-xml@0.41.0",
+      "depends_on": [
+        "cargo:memchr@2.8.3"
       ]
     },
     {
@@ -9396,6 +9608,10 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:simd-adler32@0.3.10",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:smallvec@1.15.2",
       "depends_on": []
     },
@@ -9484,6 +9700,10 @@
       ]
     },
     {
+      "component_id": "cargo:typed-path@0.12.3",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:typenum@1.20.1",
       "depends_on": []
     },
@@ -9513,6 +9733,20 @@
     },
     {
       "component_id": "cargo:zeroize@1.9.0",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:zip@8.6.0",
+      "depends_on": [
+        "cargo:crc32fast@1.5.0",
+        "cargo:flate2@1.1.9",
+        "cargo:indexmap@2.14.0",
+        "cargo:memchr@2.8.3",
+        "cargo:typed-path@0.12.3"
+      ]
+    },
+    {
+      "component_id": "cargo:zlib-rs@0.6.7",
       "depends_on": []
     },
     {
@@ -11827,15 +12061,15 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "1ecf6ee07400c22ff6080f9c5dec06d48016c50eccf509de0367f5aec8ff5faa",
-    "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
+    "Cargo.lock": "87a6362a8e3bc06d7c6fdcec0c43db63343919b8c9004295bcdf98ff7b27ac99",
+    "Cargo.toml": "21e218536e619b4daab61479535e71d07a8f45d097d6062b9f488725053749db",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16",
-    "supply-chain/cargo-external-catalog.json": "68fdc9a5995d8e2e24e50af7e5113e62c3c1b3618f54662083381946b82ee67c"
+    "supply-chain/cargo-external-catalog.json": "fef3902d6edbbd77a05b949d394153848326a0b44ae5302d17d32fccfd9f0c51"
   },
   "platform_status": {
     "macos": "blocked-macos",

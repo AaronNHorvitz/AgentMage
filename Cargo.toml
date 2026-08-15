@@ -31,6 +31,7 @@ agentmage-platform-linux-inference = { path = "platforms/linux-inference" }
 agentmage-platform-linux = { path = "platforms/linux" }
 agentmage-platform-windows = { path = "platforms/windows" }
 ed25519-dalek = { version = "=3.0.0", default-features = false, features = ["fast", "signature", "zeroize"] }
+quick-xml = { version = "=0.41.0", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
 rustix = { version = "=1.1.4", default-features = false, features = ["fs", "net", "process", "rand", "std", "thread"] }
@@ -45,6 +46,7 @@ tree-sitter-swift = "=0.7.3"
 tree-sitter-typescript = "=0.23.2"
 unicode-normalization = "=0.1.25"
 zeroize = "=1.9.0"
+zip = { version = "=8.6.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

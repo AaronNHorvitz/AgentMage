@@ -34,6 +34,7 @@ EXPECTED_INTERNAL_CARGO = {
 }
 EXPECTED_EXTERNAL_CARGO = {
     "ed25519-dalek",
+    "quick-xml",
     "rusqlite",
     "rustix",
     "seccompiler",
@@ -49,6 +50,7 @@ EXPECTED_EXTERNAL_CARGO = {
     "unicode-normalization",
     "windows-sys",
     "zeroize",
+    "zip",
 }
 EXPECTED_ROOT_NPM = {
     "@mermaid-js/mermaid-cli",
