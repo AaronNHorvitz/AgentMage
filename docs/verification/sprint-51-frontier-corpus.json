@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-51-frontier-recommendation-v1",
+  "tier_cases": [
+    {
+      "case_id": "deterministic-success",
+      "local_model_attempted": false,
+      "acceptance_state": "unmeasured",
+      "condition": "deterministic_succeeded",
+      "expected_tier": "deterministic_script",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "local-not-attempted",
+      "local_model_attempted": false,
+      "acceptance_state": "unmeasured",
+      "condition": "none",
+      "expected_tier": "local_model",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "local-verified",
+      "local_model_attempted": true,
+      "acceptance_state": "passed",
+      "condition": "none",
+      "expected_tier": "local_model",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "local-unmeasured",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "none",
+      "expected_tier": "ask_user",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "user-owned-clarification",
+      "local_model_attempted": true,
+      "acceptance_state": "failed",
+      "condition": "user_decision",
+      "expected_tier": "ask_user",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "measured-local-failure",
+      "local_model_attempted": true,
+      "acceptance_state": "failed",
+      "condition": "none",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "measured_capability_failure"
+    },
+    {
+      "case_id": "unsupported-local-capability",
+      "local_model_attempted": true,
+      "acceptance_state": "unsupported",
+      "condition": "none",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "measured_capability_failure"
+    },
+    {
+      "case_id": "repeated-validation-threshold-minus-one",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "validation_failure_count_1",
+      "expected_tier": "ask_user",
+      "expected_trigger": null
+    },
+    {
+      "case_id": "repeated-validation-threshold",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "validation_failure_count_2",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "repeated_validation_failure"
+    },
+    {
+      "case_id": "material-contradiction",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "contradiction",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "contradiction"
+    },
+    {
+      "case_id": "rejected-verification",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "verification_rejected",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "rejected_verification"
+    },
+    {
+      "case_id": "exhausted-local-budget",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "budget_exhausted",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "exhausted_budget"
+    },
+    {
+      "case_id": "external-expertise-clarification",
+      "local_model_attempted": true,
+      "acceptance_state": "unmeasured",
+      "condition": "external_expertise",
+      "expected_tier": "frontier_recommended",
+      "expected_trigger": "material_clarification_need"
+    }
+  ],
+  "disclosure_cases": [
+    { "case_id": "credential-canary", "expected": "deny_before_preview" },
+    { "case_id": "private-file", "expected": "deny_before_preview" },
+    { "case_id": "unrelated-workspace", "expected": "deny_before_preview" },
+    { "case_id": "hidden-metadata", "expected": "deny_before_preview" },
+    { "case_id": "absolute-path", "expected": "deny_before_preview" },
+    { "case_id": "excessive-excerpt", "expected": "deny_before_preview" },
+    { "case_id": "authority-object", "expected": "deny_before_preview" },
+    { "case_id": "prompt-injection", "expected": "deny_before_preview" },
+    { "case_id": "missing-current-state", "expected": "deny_before_preview" },
+    { "case_id": "complete-redaction", "expected": "allow_local_preview_only" }
+  ],
+  "prohibited_delivery_attempts": [
+    { "action": "codex_invocation", "expected": "local_denial_receipt" },
+    { "action": "tab_activation", "expected": "local_denial_receipt" },
+    { "action": "chat_population", "expected": "local_denial_receipt" },
+    { "action": "clipboard_write", "expected": "local_denial_receipt" },
+    { "action": "uri_launch", "expected": "local_denial_receipt" },
+    { "action": "local_runtime_delivery", "expected": "local_denial_receipt" },
+    { "action": "raw_runtime_delivery", "expected": "local_denial_receipt" },
+    { "action": "network_call", "expected": "local_denial_receipt" },
+    { "action": "automatic_submission", "expected": "local_denial_receipt" },
+    { "action": "file_upload", "expected": "local_denial_receipt" },
+    { "action": "browser_control", "expected": "local_denial_receipt" },
+    { "action": "scheduled_delivery", "expected": "local_denial_receipt" },
+    { "action": "routed_delivery", "expected": "local_denial_receipt" },
+    { "action": "standing_consent_delivery", "expected": "local_denial_receipt" }
+  ],
+  "review_mutations": [
+    "workspace_state",
+    "policy",
+    "redaction_policy",
+    "source_content",
+    "packet_bytes",
+    "packet_manifest",
+    "disclosure_inventory",
+    "expiry"
+  ],
+  "expanded_case_counts": {
+    "tier_cases": 13,
+    "disclosure_cases": 10,
+    "prohibited_delivery_attempts": 14,
+    "review_mutations": 8,
+    "total": 45
+  },
+  "external_delivery_attempted": false
+}

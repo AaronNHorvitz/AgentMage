@@ -100,6 +100,14 @@ cross-interface parity, and `G-V0.4` release evidence remain blocked; see the
 [coding-skill architecture](./docs/architecture/coding-skills-and-release-boundary.md)
 and [bounded coding guide](./docs/guides/bounded-coding-workflows.md).
 
+Sprint 51 now has source-level measured frontier-tier decisions and a
+deterministic local disclosure composer layered over the manual handoff
+boundary. It keeps user clarification separate, requires an attempted local
+path and an exact approved failure trigger, rejects secret, unrelated, hidden,
+authority-bearing, injected, or excessive disclosure, and exposes no delivery
+operation. No native product coordinator or external integration is enabled;
+see the [manual frontier architecture](./docs/architecture/manual-frontier-recommendation.md).
+
 Accepted Decision 0019 separates immutable historical evidence from current
 applicability, composes platform lanes independently, records exact review
 provenance, retains real fuzzing as a separately approved manual security task,
