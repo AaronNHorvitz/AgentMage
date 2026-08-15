@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_44_local_evidence",
+  "source_revision": "6c4ccd78ffe1995422eba543a6b11073bc116ce9",
+  "source_sha256": {
+    "capabilities/repository-map/src/change_intent.rs": "a692e859a0c0820438b01ef67e6ce3061f7d99a7aed06918f4ef317fd1e02b05",
+    "capabilities/repository-map/src/change_plan.rs": "5d4404007591c45faca8f9f7901630c008afdb86053fd5ac1d6c01d32ddb242b",
+    "capabilities/repository-map/src/lib.rs": "faa66bc424aaaaaebaf2dca1e8bb759c520d9d7f9142fd70d63838f8284f3395",
+    "capabilities/repository-map/tests/change_planning_matrix.rs": "351f8f24b1aacc26ba6fc7e3c4d112ff414b5103d100dcc582d72ff071c0461b",
+    "capabilities/repository-map/README.md": "28cee5088c47a7fb92ce785e4de831ff24866a8464efd675f833edb2e76c4498",
+    "schemas/runtime/change-intent-record.schema.json": "81ab1ff3aba9c48c459ca0d023956bba29efe2e13fe4be6d4f2eb3f8d3c27eb4",
+    "schemas/runtime/reproduction-record.schema.json": "14bca19b9887cbce205d919d37a13be712246185d0f12fcce0a9ff0e584d9d87",
+    "schemas/runtime/examples/change-intent-record.valid.json": "b29bbefebc49fc44378eba0e6a69311fc0db81b2de2b2cc7bc71a4ef053c3744",
+    "schemas/runtime/examples/reproduction-record.valid.json": "490798907529ff75ae5fb09dc0a5660f9f416256dbaef2844f100effd823ecd2",
+    "docs/architecture/change-intent-and-planning.md": "cbca35a0f7f3179c45fae24b070f2ad2fc0e9b504f3ab60e143c6cc3817c83bf",
+    "docs/guides/reviewing-change-plans.md": "fa1d0aa7056bce9dc3bdf6736aa16c63fe820961be49cb41931da8befe65f39f",
+    "docs/verification/sprint-44-planning-corpus.json": "25fdc97c16d812cac84c9f3d95f7b050bec73f649c34a6dbd03ff8b5132f9958",
+    "docs/verification/sprint-44-local-results.md": "f357577ed7f2b46dc231c7a365fada86e02bc9db932fd84b1af5c7cd0dc78911",
+    "scripts/validate_planning_schemas.mjs": "643d1c733df1f87693fa7f31bfea8bfd2014cdb9001ee454941aca54b16accfe",
+    "tests/test_planning_schemas.mjs": "1276ff66d6c613979e32f10e508938b309f5d53d58c0b916e1c072a96c9763b1",
+    "scripts/sprint_44_evidence.py": "23694d4e43adf8933710dbd6081c745d77ee18427f7506e697561d17e8405dc2",
+    "tests/test_sprint_44_evidence.py": "10c67edf2ee859df7a4373dd57ffca7cbfdb1bde8a51e283e6e75defa8990041"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "git": "git version 2.55.0"
+  },
+  "commands": [
+    {
+      "id": "change-intent-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "change_intent::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "df80f5f011ce32ac985e8e8c8d75dab51650d85edf26281a3a67f882fb9ddea6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "change-plan-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "change_plan::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3fe8d6e331f3b9839fe1e03ea8b55b98ac790c2903b4b384a1b9d150e8ce59c3",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "hostile-golden-planning-matrix",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--test",
+        "change_planning_matrix",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9fb4842700386a6439b5574dba342f5bdc82b4934da4bd63459e2aca4bb767ad",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contracts",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d48ae5f36eaaf00f5bf6db83cb5701f6770709af03f4378d13a2b45b68cd9f74",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "complete-repository-map-capability",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ce3fb0a4d0761de9d0a761b578b4bfca5426cfa8efc2c573e9c09b5c3df846bd",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "84324060a36178462e825b0bef1b0309f0e607558bf75314793c74716b597e16",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_44_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b6a161abed43b9a0dba9259cd451b39b20b10425ac13cc14786554c0e6fac7f1",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "git",
+      "name": "git",
+      "size": 4945312,
+      "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+      "root_owned": true,
+      "group_or_world_writable": false
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-005",
+    "SR-GOV-010",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-011",
+    "SR-TST-001"
+  ],
+  "implemented_contracts": {
+    "source_bound_change_intent": true,
+    "complete_impact_surface_assessment": true,
+    "truthful_reproduction_outcomes": true,
+    "competing_hypothesis_record": true,
+    "regression_test_gate": true,
+    "five_dimension_alternative_record": true,
+    "deterministic_review_selection": true,
+    "separately_grantable_validation_plan": true,
+    "closed_intent_and_reproduction_schemas": true,
+    "hostile_instruction_rejection": true,
+    "golden_minimal_scope_comparison": true,
+    "production_planning_coordinator": false,
+    "live_reproduction_and_validation_runner": false,
+    "production_scope_approval_ui": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "hostile_repository_instruction_case_count": 5,
+    "golden_plan_case_count": 1,
+    "change_plan_mutation_count": 10000,
+    "unauthorized_mutation_acceptance_count": 0,
+    "secret_canary_export_count": 0,
+    "production_planning_coordinator": false,
+    "live_reproduction_and_validation_runner": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-43-BLOCKED",
+      "owner": "44.1"
+    },
+    {
+      "code": "PRODUCTION-PLANNING-COORDINATOR-ABSENT",
+      "owner": "44.1.1.1"
+    },
+    {
+      "code": "LIVE-REPRODUCTION-VALIDATION-RUNNER-ABSENT",
+      "owner": "44.1.1.3"
+    },
+    {
+      "code": "PRODUCTION-SCOPE-APPROVAL-UI-ABSENT",
+      "owner": "44.1.2.2"
+    },
+    {
+      "code": "LIVE-SEMANTIC-ADAPTERS-ABSENT",
+      "owner": "44.1.3.4"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "44.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "44.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-PLANNING-REVIEW-ABSENT",
+      "owner": "44.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-001"
+    }
+  ],
+  "summary": {
+    "local_sprint_44_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_43_closed": false,
+    "production_planning_coordinator_active": false,
+    "live_reproduction_and_validation_active": false,
+    "production_scope_approval_ui_active": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

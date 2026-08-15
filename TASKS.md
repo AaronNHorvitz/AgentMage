@@ -3297,28 +3297,28 @@ story, and the sprint therefore remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 44.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 44.1.1.1** (legacy `S-037-I01`): Implement change-intent records with requested and current behavior, evidence, users, acceptance checks, exclusions, risks, and rollback.
-  - [ ] **Sub-task 44.1.1.2** (legacy `S-037-I02`): Identify minimal affected files, symbols, tests, configuration, migrations, documentation, interfaces, dependencies, and data.
-  - [ ] **Sub-task 44.1.1.3** (legacy `S-037-I03`): Implement reproducibility records for environment, inputs, steps, observed result, expected result, logs, and outcome.
-  - [ ] **Sub-task 44.1.1.4** (legacy `S-037-I04`): Implement competing hypotheses, discriminating checks, state tracing, log correlation, and rejected explanations.
-  - [ ] **Sub-task 44.1.1.5** (legacy `S-037-I05`): Require a failing regression test before a reproducible defect fix when safe and feasible.
-  - [ ] **Sub-task 44.1.1.6** (legacy `S-037-I06`): Generate alternatives for architecture, dependency, access, cost, and irreversible choices.
-  - [ ] **Sub-task 44.1.1.7** (legacy `S-037-I07`): Produce decision records and clarification stops for material unknowns.
-  - [ ] **Sub-task 44.1.1.8** (legacy `S-037-I08`): Select security, privacy, data, accessibility, performance, migration, and rollback reviews based on evidence.
+- [x] **Task 44.1.1 - Implement the bounded story**
+  - [x] **Sub-task 44.1.1.1** (legacy `S-037-I01`): Implement change-intent records with requested and current behavior, evidence, users, acceptance checks, exclusions, risks, and rollback.
+  - [x] **Sub-task 44.1.1.2** (legacy `S-037-I02`): Identify minimal affected files, symbols, tests, configuration, migrations, documentation, interfaces, dependencies, and data.
+  - [x] **Sub-task 44.1.1.3** (legacy `S-037-I03`): Implement reproducibility records for environment, inputs, steps, observed result, expected result, logs, and outcome.
+  - [x] **Sub-task 44.1.1.4** (legacy `S-037-I04`): Implement competing hypotheses, discriminating checks, state tracing, log correlation, and rejected explanations.
+  - [x] **Sub-task 44.1.1.5** (legacy `S-037-I05`): Require a failing regression test before a reproducible defect fix when safe and feasible.
+  - [x] **Sub-task 44.1.1.6** (legacy `S-037-I06`): Generate alternatives for architecture, dependency, access, cost, and irreversible choices.
+  - [x] **Sub-task 44.1.1.7** (legacy `S-037-I07`): Produce decision records and clarification stops for material unknowns.
+  - [x] **Sub-task 44.1.1.8** (legacy `S-037-I08`): Select security, privacy, data, accessibility, performance, migration, and rollback reviews based on evidence.
 
-- [ ] **Task 44.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 44.1.2.1:** Change-intent and reproduction schemas.
-  - [ ] **Sub-task 44.1.2.2:** Minimal-change and impact report.
-  - [ ] **Sub-task 44.1.2.3:** Hypothesis and decision records.
-  - [ ] **Sub-task 44.1.2.4:** Regression-test planning fixtures.
+- [x] **Task 44.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 44.1.2.1:** Change-intent and reproduction schemas.
+  - [x] **Sub-task 44.1.2.2:** Minimal-change and impact report.
+  - [x] **Sub-task 44.1.2.3:** Hypothesis and decision records.
+  - [x] **Sub-task 44.1.2.4:** Regression-test planning fixtures.
 
 - [ ] **Task 44.1.3 - Verify and close the story**
-  - [ ] **Sub-task 44.1.3.1:** `S-037-UT01` normalizes valid, ambiguous, contradictory, overbroad, and missing-context requests into intent/scope/exclusions/success fields; assert unresolved decisions block mutation.
-  - [ ] **Sub-task 44.1.3.2:** `S-037-UT02` reproduces labeled failures with pinned inputs and compares observed output to proposed hypotheses; assert evidence, non-reproduction, and uncertainty are recorded distinctly.
-  - [ ] **Sub-task 44.1.3.3:** `S-037-ST01` supplies repository instructions to broaden scope, suppress tests, expose secrets, edit unrelated files, or claim success; assert they remain untrusted evidence and appear as rejected risks.
-  - [ ] **Sub-task 44.1.3.4:** `S-037-IT01` generates minimal change/impact/regression plans for the fictional corpus and compares touched files/contracts/tests with goldens; assert no unexplained scope.
-  - [ ] **Sub-task 44.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-007`/`SR-ACC-008`, `SR-AI-003`/`SR-AI-007`/`SR-AI-011`, `SR-TST-001`; retain intent records, reproduction logs, hypothesis decisions, golden plan diffs, and scope approval.
+  - [x] **Sub-task 44.1.3.1:** `S-037-UT01` normalizes valid, ambiguous, contradictory, overbroad, and missing-context requests into intent/scope/exclusions/success fields; assert unresolved decisions block mutation.
+  - [x] **Sub-task 44.1.3.2:** `S-037-UT02` reproduces labeled failures with pinned inputs and compares observed output to proposed hypotheses; assert evidence, non-reproduction, and uncertainty are recorded distinctly.
+  - [x] **Sub-task 44.1.3.3:** `S-037-ST01` supplies repository instructions to broaden scope, suppress tests, expose secrets, edit unrelated files, or claim success; assert they remain untrusted evidence and appear as rejected risks.
+  - [x] **Sub-task 44.1.3.4:** `S-037-IT01` generates minimal change/impact/regression plans for the fictional corpus and compares touched files/contracts/tests with goldens; assert no unexplained scope.
+  - [ ] **Sub-task 44.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-007`/`SR-ACC-008`, `SR-AI-003`/`SR-AI-007`/`SR-AI-011`, `SR-TST-001`; retain intent records, reproduction logs, hypothesis decisions, golden plan diffs, and scope approval. The exact requirement map and local records are retained; production scope approval, native cross-platform, trusted-package, independent-review, and deferred manual-fuzz evidence remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3327,11 +3327,23 @@ story, and the sprint therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 44.AC1:** No change proposal proceeds without cited current behavior and explicit acceptance checks.
-- [ ] **Sprint AC 44.AC2:** Unreproduced or uncertain defects remain labeled and are not presented as proven root causes.
-- [ ] **Sprint AC 44.AC3:** Minimal-change reports include callers, data, permissions, tests, docs, and rollback where relevant.
-- [ ] **Sprint AC 44.AC4:** Material ambiguity stops for user clarification.
-- [ ] **Sprint AC 44.AC5:** Proposed validation is separately grantable and does not inherit write authority.
+- [x] **Sprint AC 44.AC1:** No change proposal proceeds without cited current behavior and explicit acceptance checks.
+- [x] **Sprint AC 44.AC2:** Unreproduced or uncertain defects remain labeled and are not presented as proven root causes.
+- [x] **Sprint AC 44.AC3:** Minimal-change reports include callers, data, permissions, tests, docs, and rollback where relevant.
+- [x] **Sprint AC 44.AC4:** Material ambiguity stops for user clarification.
+- [x] **Sprint AC 44.AC5:** Proposed validation is separately grantable and does not inherit write authority.
+
+Retained local evidence: source revision `6c4ccd78ffe1995422eba543a6b11073bc116ce9` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-44/local-evidence-report.json), SHA-256
+`4067e120b168ee8c01370b7c28b1f290f2996667c54d1083617eadbb3dc32272`. All ten recorded commands
+exit zero, all three focused suites report zero blocking skips, five hostile repository-instruction
+cases leak no source canary into intent/impact/plan records, the fictional two-file plan matches its
+golden, and 10,000 deterministic plan mutations have zero verified acceptance. Sprint 44 remains
+**BLOCKED** because Sprint 43 is blocked; production planning coordination, live reproduction and
+validation execution, production scope approval, live semantic adapters, native cross-platform
+acceptance, trusted-package execution, independent review, and deferred manual fuzzing remain
+absent. The product-security sub-task, both story criteria, the story, and the sprint therefore
+remain open.
 
 **Gate decision:** Sprint 44 is PASS only when Story 44.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 45 - Structured Code Changes and Language Services
