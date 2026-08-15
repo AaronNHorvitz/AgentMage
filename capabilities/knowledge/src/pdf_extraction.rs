@@ -52,7 +52,7 @@ impl PdfExtractionProfile {
         }
     }
 
-    fn valid(&self) -> bool {
+    pub(crate) fn valid(&self) -> bool {
         valid_identifier(&self.profile_id)
             && self.maximum_source_bytes > 0
             && self.maximum_source_bytes <= MAX_PROFILE_BYTES
@@ -365,7 +365,7 @@ fn limitation(
     }
 }
 
-fn parser_error(error: &lopdf::Error) -> PdfExtractionError {
+pub(crate) fn parser_error(error: &lopdf::Error) -> PdfExtractionError {
     match error {
         lopdf::Error::InvalidPassword
         | lopdf::Error::UnsupportedSecurityHandler(_)

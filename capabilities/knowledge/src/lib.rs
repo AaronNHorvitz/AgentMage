@@ -21,6 +21,7 @@ mod obsidian;
 mod obsidian_index;
 mod operations;
 mod pdf_extraction;
+mod pdf_inspection;
 mod plain_folder;
 mod retrieval;
 mod schema;
@@ -120,6 +121,10 @@ pub use pdf_extraction::{
     PdfExtractionResult, PdfOcrAdmission, PdfOcrObservation, PdfOcrProjection, PdfPageCitation,
     PdfPageExtraction, PdfPageIdentity, PdfPageState, extract_pdf_to_pages,
     pdf_extractor_identity_sha256, validate_pdf_ocr_observation,
+};
+pub use pdf_inspection::{
+    PdfArtifactFinding, PdfArtifactFindingKind, PdfArtifactInspection, PdfFormFieldObservation,
+    PdfImageObservation, PdfLinkKind, PdfLinkObservation, PdfMetadataSummary, inspect_pdf_artifact,
 };
 pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
