@@ -4228,42 +4228,53 @@ review, and deferred manual fuzzing.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 57.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 57.1.1.1** (legacy `S-049-I01`): Complete parsing and writing for headings, paragraphs, lists, tables, code fences, links, frontmatter, line endings, and source ranges.
-  - [ ] **Sub-task 57.1.1.2** (legacy `S-049-I02`): Implement CommonMark spacing, broken-link, duplicate-heading, malformed-table, and structure checks.
-  - [ ] **Sub-task 57.1.1.3** (legacy `S-049-I03`): Implement configurable plain-language review and acronym handling without guessing expansions.
-  - [ ] **Sub-task 57.1.1.4** (legacy `S-049-I04`): Implement meeting cleanup, status report, standup script, task document, handoff, decision, and evidence-report generation.
-  - [ ] **Sub-task 57.1.1.5** (legacy `S-049-I05`): Preserve unrelated content and apply only exact previewed changes.
-  - [ ] **Sub-task 57.1.1.6** (legacy `S-049-I06`): Generate non-authoritative local file-and-line display links from validated workspace paths.
-  - [ ] **Sub-task 57.1.1.7** (legacy `S-049-I07`): Implement deterministic round-trip and visual rendering checks where applicable.
+- [x] **Task 57.1.1 - Implement the bounded story**
+  - [x] **Sub-task 57.1.1.1** (legacy `S-049-I01`): Complete parsing and writing for headings, paragraphs, lists, tables, code fences, links, frontmatter, line endings, and source ranges.
+  - [x] **Sub-task 57.1.1.2** (legacy `S-049-I02`): Implement CommonMark spacing, broken-link, duplicate-heading, malformed-table, and structure checks.
+  - [x] **Sub-task 57.1.1.3** (legacy `S-049-I03`): Implement configurable plain-language review and acronym handling without guessing expansions.
+  - [x] **Sub-task 57.1.1.4** (legacy `S-049-I04`): Implement meeting cleanup, status report, standup script, task document, handoff, decision, and evidence-report generation.
+  - [x] **Sub-task 57.1.1.5** (legacy `S-049-I05`): Preserve unrelated content and apply only exact previewed changes.
+  - [x] **Sub-task 57.1.1.6** (legacy `S-049-I06`): Generate non-authoritative local file-and-line display links from validated workspace paths.
+  - [x] **Sub-task 57.1.1.7** (legacy `S-049-I07`): Implement deterministic round-trip and visual rendering checks where applicable.
 
-- [ ] **Task 57.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 57.1.2.1:** Plain-text and Markdown artifact pack.
-  - [ ] **Sub-task 57.1.2.2:** Structure-preservation and language-quality fixtures.
-  - [ ] **Sub-task 57.1.2.3:** Report and handoff templates.
-  - [ ] **Sub-task 57.1.2.4:** Round-trip result bundle.
+- [x] **Task 57.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 57.1.2.1:** Plain-text and Markdown artifact pack.
+  - [x] **Sub-task 57.1.2.2:** Structure-preservation and language-quality fixtures.
+  - [x] **Sub-task 57.1.2.3:** Report and handoff templates.
+  - [x] **Sub-task 57.1.2.4:** Round-trip result bundle.
 
 - [ ] **Task 57.1.3 - Verify and close the story**
-  - [ ] **Sub-task 57.1.3.1:** `S-049-UT01` parses/renders headings, lists, tables, links, code fences, frontmatter, comments, whitespace, encodings, and line endings; assert structural identity for unchanged content.
-  - [ ] **Sub-task 57.1.3.2:** `S-049-UT02` applies scoped edits and language-quality checks to malformed, mixed-format, long-word, narrow-width, and unsupported syntax fixtures; assert exact requested changes and visible limitations.
-  - [ ] **Sub-task 57.1.3.3:** `S-049-ST01` seeds executable HTML/script, remote assets, dangerous URI schemes, hidden text, secret canaries, and instruction content; assert inert treatment, redaction policy, and no network/execution.
-  - [ ] **Sub-task 57.1.3.4:** `S-049-IT01` generates reports/handoffs/templates, reopens them, resolves citations, and compares semantic/byte/rendered structure; assert accessibility and no unrelated source modification.
+  - [x] **Sub-task 57.1.3.1:** `S-049-UT01` parses/renders headings, lists, tables, links, code fences, frontmatter, comments, whitespace, encodings, and line endings; assert structural identity for unchanged content.
+  - [x] **Sub-task 57.1.3.2:** `S-049-UT02` applies scoped edits and language-quality checks to malformed, mixed-format, long-word, narrow-width, and unsupported syntax fixtures; assert exact requested changes and visible limitations.
+  - [x] **Sub-task 57.1.3.3:** `S-049-ST01` seeds executable HTML/script, remote assets, dangerous URI schemes, hidden text, secret canaries, and instruction content; assert inert treatment, redaction policy, and no network/execution.
+  - [x] **Sub-task 57.1.3.4:** `S-049-IT01` generates reports/handoffs/templates, reopens them, resolves citations, and compares semantic/byte/rendered structure; assert accessibility and no unrelated source modification.
   - [ ] **Sub-task 57.1.3.5 - Product security evidence:** Map `SR-DAT-002`/`SR-DAT-003`, `SR-AI-010`, `SR-TST-002`/`SR-TST-004`, `SR-CIV-006` through `SR-CIV-009`; retain round-trip goldens, scoped diffs, inert-content results, citation checks, and accessibility report.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 57.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then generated artifacts are valid, readable, accessible, source-grounded, and round-trip without silent loss of supported structure.
-- [ ] **Story AC 57.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then unsupported or potentially executable content is preserved inert or blocked with a precise limitation; it never executes or disappears silently.
+- [x] **Story AC 57.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then unsupported or potentially executable content is preserved inert or blocked with a precise limitation; it never executes or disappears silently.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 57.AC1:** Unchanged Markdown round-trips byte-identically where no normalization was approved.
-- [ ] **Sprint AC 57.AC2:** Edited documents change only previewed structures.
-- [ ] **Sprint AC 57.AC3:** Code fences and raw-note regions remain intact.
-- [ ] **Sprint AC 57.AC4:** Unknown acronyms remain marked rather than expanded incorrectly.
-- [ ] **Sprint AC 57.AC5:** Every generated factual statement carries its required evidence state and citation.
+- [x] **Sprint AC 57.AC1:** Unchanged Markdown round-trips byte-identically where no normalization was approved.
+- [x] **Sprint AC 57.AC2:** Edited documents change only previewed structures.
+- [x] **Sprint AC 57.AC3:** Code fences and raw-note regions remain intact.
+- [x] **Sprint AC 57.AC4:** Unknown acronyms remain marked rather than expanded incorrectly.
+- [x] **Sprint AC 57.AC5:** Every generated factual statement carries its required evidence state and citation.
 
 **Gate decision:** Sprint 57 is PASS only when Story 57.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-57/local-evidence-report.json`
+binds 12 passing commands and the 68-case acceptance corpus to source revision
+`f996c122b26cfb66156d11a3810a3bc260037351` (report SHA-256
+`7060b447413562c096de9c9407ebf573374428717a009d64a064eeea466fcc2c`). The byte-preserving
+parser and scoped previews, quality and acronym review, seven cited artifact and skill types,
+display-only links, runtime schemas, inert hostile-content checks, and byte/semantic/rendered local
+round-trip receipts are complete. Story 57.1 and Sprint 57 remain **BLOCKED** by Sprint 56, the
+absent product coordinator, controlled writer and local renderer integration, native interface and
+accessibility evidence, installed cross-platform acceptance, trusted-package execution,
+independent content review, and deferred manual fuzzing.
 ### [ ] Sprint 58 - Word Extraction and Structural Preservation
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
