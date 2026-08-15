@@ -956,6 +956,41 @@ mod tests {
     }
 
     #[test]
+    fn promotion_threshold_degraded_and_empty_states_are_stable() {
+        let below = route_measured_local(request(), vec![profile("profile-below", 62, 0)])
+            .expect("below-threshold routing");
+        assert_eq!(below.disposition, RoutingDisposition::Blocked);
+
+        let mut threshold = profile("profile-threshold", 63, 0);
+        let threshold_evidence = threshold
+            .roles
+            .get_mut(&RoutingRole::Coding)
+            .expect("threshold role");
+        threshold_evidence.trial_count = 200;
+        threshold_evidence.quality_pass_count = 125;
+        threshold_evidence.baseline_pass_count = 120;
+        threshold_evidence.grounding_pass_count = 125;
+        threshold_evidence.reliability_pass_count = 125;
+        threshold_evidence.improvement_bps = MIN_ROUTING_IMPROVEMENT_BPS;
+        let above = route_measured_local(request(), vec![threshold]).expect("threshold routing");
+        assert_eq!(above.disposition, RoutingDisposition::Selected);
+        assert_eq!(
+            above.selected_profile_id.as_deref(),
+            Some("profile-threshold")
+        );
+
+        let mut degraded = profile("profile-degraded", 70, 0);
+        degraded.state = RoutingProfileState::Degraded;
+        let degraded =
+            route_measured_local(request(), vec![degraded]).expect("exact degraded routing");
+        assert_eq!(degraded.disposition, RoutingDisposition::Selected);
+
+        let absent = route_measured_local(request(), Vec::new()).expect("empty routing");
+        assert_eq!(absent.disposition, RoutingDisposition::Blocked);
+        assert_eq!(absent.result_code, "model.routing.no-eligible-profile");
+    }
+
+    #[test]
     fn duplicate_profiles_and_invalid_requests_are_rejected() {
         let duplicate = profile("profile-alpha", 70, 0);
         assert_eq!(

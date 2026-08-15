@@ -39,7 +39,7 @@ supported-platform package acceptance, or manual or coverage-guided fuzzing.
 | `SR-SUP-006` through `SR-SUP-008` | Exact publisher, lineage, license, origin, artifact, runtime, policy, and platform fields; unresolved and prohibited sources fail closed | Complete approved later-profile manifests and independent supplier review |
 | `SR-AI-001`, `SR-AI-006` | Model output and confidence carry no routing authority; exact role allowlists, manual choice, and no fallback | Integrated product policy and native audit views |
 | `SR-AI-010` through `SR-AI-014` | Deterministic task/risk separation, current benchmark generation, visible budgets and disagreements, role-specific measurements, and verifier-only completion boundary | Live role campaigns and end-to-end product verification |
-| `SR-TST-006` | Seven router tests, four artifact tests, existing benchmark/activation tests, and 48 adversarial cases | Supported-platform performance and quality campaigns, independent review, and deferred manual fuzzing |
+| `SR-TST-006` | Eight router tests, four artifact tests, existing benchmark/activation tests, and 48 adversarial cases | Supported-platform performance and quality campaigns, independent review, and deferred manual fuzzing |
 
 No product-wide requirement is marked complete by this local contribution.
 
