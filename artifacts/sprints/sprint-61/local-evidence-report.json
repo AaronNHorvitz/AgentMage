@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_61_local_evidence",
+  "source_revision": "f6d000da1f50b0932f44d28685e2bd3f60db9fea",
+  "source_sha256": {
+    "Cargo.toml": "86a6057ca1cec714e92beb0165c57573d3f7e1caa8e5a50365b8af55f18491a8",
+    "Cargo.lock": "7faba679d341b448db12771297b6955b485713c7f609ecb91cce4ea66841d3e9",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/src/pdf_extraction.rs": "b955d61a22ece0602413a5b559b7ffa88befb0c887b7fb7aaa1eb1b67cc0dcfd",
+    "capabilities/knowledge/src/pdf_inspection.rs": "f93280ba3fc0199d659e7411d07199724155a8f39ae69271cf799de33c1bbcd0",
+    "capabilities/knowledge/src/pdf_generation.rs": "13a2996b362df4f8bb40ea5c31759bbdf504bc67412b0c8e2b6fec15fe60e97e",
+    "capabilities/knowledge/src/pdf_redaction.rs": "46a2855ae8aa98511ac387965e6beab9f467108c91423b7902a014a8003dd479",
+    "capabilities/knowledge/src/pdf_visual.rs": "a0c051bd3f221c80c5b77f086b7136276b1331ac5fc1ff0ee3d4c2d194730f77",
+    "capabilities/knowledge/src/pdf_diagram.rs": "3e501c1b864f515943cde2cf9eed73668be52c8ab3b248e006dd2f739067e677",
+    "capabilities/knowledge/src/lib.rs": "0fd42c79759d7e4c7eb64d32810412f226ea62abd78a35bde26fdf520b69af1c",
+    "schemas/runtime/pdf-artifact-inspection.schema.json": "8bdb0b2b64d6ca4eac2c161bd9eb57422fb54ef4bc51957be946a2d886489e3e",
+    "schemas/runtime/generated-pdf-report.schema.json": "9425e7c271ff0b2904d8dd6976b4b3aac04ba7ec840c1c8c893aa07a352b4390",
+    "schemas/runtime/pdf-redaction-receipt.schema.json": "cc7603b902611cb6a12854e5e89a790e175f6d67359d85a45dce6d67f67fd51d",
+    "schemas/runtime/pdf-visual-comparison-report.schema.json": "e436c7e7ebad7c3314ea02607ac54610dc069f10f8f7f99c1d3d55f8659f1b4c",
+    "schemas/runtime/pdf-offline-diagram-projection.schema.json": "fb2238f69b5009804916003afeb69c0d47603260dc56a4e167bc913b1ebecd65",
+    "scripts/validate_planning_schemas.mjs": "236e2036f1b3bfcce74ddf22e74ed9c64d7c3064b7fca57d48039ec1c9c22391",
+    "tests/test_planning_schemas.mjs": "ff4c05894b02060e4eaaad91089108a81d4bb0e7d6ed9b60a192aa80c48d5033",
+    "supply-chain/cargo-external-catalog.json": "ab970e6f624d82e0ef979e23f33a6eb7bd7ca84aa5f484580b93ea5082fbe2db",
+    "supply-chain/dependency-hashes.sha256": "20adaaccd33a179a28c7e810286df1f07b3f9fcdec23c314dc63d6762a470704",
+    "supply-chain/dependency-provenance.json": "4f64f44d797a8a708980f9bba0cac46863aab01854c1f47ef70c41d47720c3e6",
+    "supply-chain/sbom.cdx.json": "7b39b1a6f67b5239dd2f98186c93fc76d19fc0f312207511dd8ad8fbd255faa7",
+    "docs/verification/sprint-61-pdf-generation-corpus.json": "0df491b9d7f5bd8bc8ac7fabe5ddd0e4f9501d5cb982bee7ce609ad64f229eee",
+    "docs/verification/sprint-61-pdf-dependency-manifest.json": "ce8aac693d73c98cd98d59e863e3f331bb087099bf51fb2e2cf842120791cd60",
+    "scripts/pdf_generation_contract.py": "167f8885e24aa717a6ea3d3fcd3d351d1480f117f74470c88b21b7ac0f370099",
+    "tests/test_pdf_generation_contract.py": "20951445187834173beb8440663a693795b92c467980ff059221ef58c4dfd1a6",
+    "docs/architecture/pdf-generation-redaction-and-visual-evidence.md": "a938736e9b14dc6e1d91ff4ed9e3426ff0486d57feb73361e24c24413841bc65",
+    "docs/guides/pdf-generation-review.md": "403ea518f37e9cd2cd5066b3c05257d077a7f90f99f8573120a3eb13e96a0ba0",
+    "docs/verification/sprint-61-local-results.md": "dd208b75c6b27944889da1eb182a708d23a3f02e36bcfc2431b22db539988074",
+    "scripts/sprint_61_evidence.py": "57edd12f8b6046ab110aaa5ab64df5f71c155d87b7c5e6743109ff3b96d8de9e",
+    "tests/test_sprint_61_evidence.py": "f096e443476bcae6b037b7b71088553227d62b9c06adac2d22cb32d2c14538ca"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "pdf-all-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "pdf_",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8ef65412794d9a726ae1b005d7eeb7dda69028391bed9e511600a54124f0af46",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "685b6ba5e0466320cdc7bddd0560f23fd4a49d2eb614110f7ebb291b960d2b03",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_pdf_generation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "feabb4add9e2ca3374e538560634d1ec97dc4f4ce89aab12f3d726e36ea9b2f6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "pdf-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "776ee1541142272c779800fe1e9c2082602bf6545d17d1395e2de197345b75ae",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_61_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d52cbb1058abf83e3acb402d1c2b8ee089749613d6075f5d973dd66c8ef09200",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "admitted_pdf_parser_generator_count": 1,
+    "pdf_runtime_schema_count": 7,
+    "sprint_61_executable_rust_fixture_count": 15,
+    "all_pdf_executable_rust_fixture_count": 21,
+    "review_corpus_case_count": 101,
+    "metadata_link_form_image_active_structure_inspection": true,
+    "deterministic_escaped_html_and_basic_pdf_generation": true,
+    "generated_pdf_reopen_validation": true,
+    "fillable_text_form_and_internal_page_links": true,
+    "regeneration_redaction": true,
+    "multi_layer_redaction_residue_scan": true,
+    "passive_offline_diagram_observation_validation": true,
+    "effect_free_rgba_visual_comparison": true,
+    "synthetic_evidence_release_boundary": true,
+    "network_access_capability": false,
+    "filesystem_mutation_capability": false,
+    "renderer_execution_capability": false,
+    "product_mermaid_renderer_admitted": false,
+    "native_pdf_renderer_admitted": false,
+    "merge_split_implemented": false,
+    "arbitrary_pdf_redaction_supported": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 101,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "deterministic_generation_verified": true,
+    "regeneration_redaction_residue_scan_verified": true,
+    "synthetic_visual_comparator_verified": true,
+    "product_mermaid_renderer_admitted": false,
+    "native_pdf_renderer_admitted": false,
+    "native_render_platform_count": 0,
+    "merge_split_complete": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-60-BLOCKED",
+      "owner": "61.1"
+    },
+    {
+      "code": "PRODUCT-MERMAID-RENDERER-NOT-ADMITTED",
+      "owner": "61.1.1.3"
+    },
+    {
+      "code": "PDF-NATIVE-RENDERER-NOT-ADMITTED",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "PDF-MERGE-SPLIT-UNIMPLEMENTED",
+      "owner": "61.1.3.2"
+    },
+    {
+      "code": "ARBITRARY-PDF-REDACTION-UNSUPPORTED",
+      "owner": "61.1.3.2"
+    },
+    {
+      "code": "PDF-OCR-EXECUTION-NOT-ADMITTED",
+      "owner": "61.1.3.1"
+    },
+    {
+      "code": "FEDORA-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "MACOS-RETAINED-PDF-EVIDENCE-ABSENT",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "61.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT",
+      "owner": "61.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_61_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_60_closed": false,
+    "pdf_generation_product_integrated": false,
+    "native_render_complete": false,
+    "product_mermaid_render_complete": false,
+    "merge_split_complete": false,
+    "arbitrary_pdf_redaction_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "accessibility_acceptance_passed": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

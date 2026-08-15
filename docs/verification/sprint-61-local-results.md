@@ -31,7 +31,10 @@ No release or product-wide requirement is closed by this local contribution.
 
 ## Truthful Disposition
 
-The retained report will bind the named commands to the exact committed implementation revision.
+The retained report binds 9 passing commands, zero focused skips, and 101 review cases to source
+revision `f6d000da1f50b0932f44d28685e2bd3f60db9fea`. The report SHA-256 is
+`06529afed0f84c954900401d8255837f90c61736390d02728dc379c00c347e37`.
+
 Sprint 60 remains blocked. Product-local Mermaid execution, native PDF rendering on required and
 retained platforms, installed accessibility, independent review, merge/split workflows, approved
 OCR execution, arbitrary-PDF redaction, and deferred manual fuzzing remain absent. Sprint 61 is

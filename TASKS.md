@@ -4479,15 +4479,15 @@ deferred manual fuzzing.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 61.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 61.1.1.1** (legacy `S-051-I05`): Extract title, author, page count, creation metadata, links, forms, and encryption state.
-  - [ ] **Sub-task 61.1.1.2** (legacy `S-051-I06`): Implement Markdown-to-HTML and Portable Document Format report export with safe names, escaped content, tables, links, and local-only assets.
+  - [x] **Sub-task 61.1.1.1** (legacy `S-051-I05`): Extract title, author, page count, creation metadata, links, forms, and encryption state.
+  - [x] **Sub-task 61.1.1.2** (legacy `S-051-I06`): Implement Markdown-to-HTML and Portable Document Format report export with safe names, escaped content, tables, links, and local-only assets.
   - [ ] **Sub-task 61.1.1.3** (legacy `S-051-I07`): Replace remote Mermaid dependencies with an offline renderer.
-  - [ ] **Sub-task 61.1.1.4** (legacy `S-051-I08`): Implement creation, redaction, fillable-form, page-image, metadata, and visual verification workflows.
+  - [x] **Sub-task 61.1.1.4** (legacy `S-051-I08`): Implement creation, redaction, fillable-form, page-image, metadata, and visual verification workflows.
 
 - [ ] **Task 61.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 61.1.2.1:** Approved Portable Document Format dependency manifest.
+  - [x] **Sub-task 61.1.2.1:** Approved Portable Document Format dependency manifest.
   - [ ] **Sub-task 61.1.2.2:** Extractor, citation, renderer, exporter, and verifier adapters.
-  - [ ] **Sub-task 61.1.2.3:** Scanned, encrypted, malformed, form, link, and layout fixtures.
+  - [x] **Sub-task 61.1.2.3:** Scanned, encrypted, malformed, form, link, and layout fixtures.
   - [ ] **Sub-task 61.1.2.4:** Page-level evidence and round-trip reports.
 
 - [ ] **Task 61.1.3 - Verify and close the story**
@@ -4506,11 +4506,21 @@ deferred manual fuzzing.
 
 - [ ] **Sprint AC 61.AC1:** Every extracted claim resolves to an exact source page and file hash.
 - [ ] **Sprint AC 61.AC2:** Scanned and failed extraction remains Unknown/Blocked unless approved local optical recognition succeeds.
-- [ ] **Sprint AC 61.AC3:** Report export uses no content-delivery network, remote font, or web dependency.
+- [x] **Sprint AC 61.AC3:** Report export uses no content-delivery network, remote font, or web dependency.
 - [ ] **Sprint AC 61.AC4:** Redaction tests prove removed content is absent from text, metadata, objects, and rendered output.
 - [ ] **Sprint AC 61.AC5:** Structural and visual verification pass before an artifact is complete.
 
 **Gate decision:** Sprint 61 is PASS only when Story 61.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The locally implementable deterministic inspection, basic
+generation, AgentMage-specification regeneration redaction, passive diagram validation, synthetic
+visual-comparison, schema, fixture, and review-record subset passed 9 retained commands with zero
+focused skips at revision `f6d000da1f50b0932f44d28685e2bd3f60db9fea`; see
+`artifacts/sprints/sprint-61/local-evidence-report.json` and
+`docs/verification/sprint-61-local-results.md`. Product Mermaid and native PDF renderer adapters,
+merge/split, arbitrary-PDF redaction, approved OCR execution, native Fedora/Ubuntu/Windows 11 and
+retained macOS render evidence, installed accessibility, independent review, and deferred manual
+fuzzing remain incomplete. No story, sprint, product, platform, or release gate is closed.
 ### [ ] Sprint 62 - Spreadsheet, CSV, and JSON Parsing
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
