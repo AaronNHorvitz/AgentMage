@@ -93,6 +93,10 @@ COMMANDS: Final = (
         ("cargo", "test", "-p", "agentmage-capability-knowledge", "--locked"),
     ),
     (
+        "read-only-capability-tests",
+        ("cargo", "test", "-p", "agentmage-capability-read-only", "--locked"),
+    ),
+    (
         "host-knowledge-tests",
         ("cargo", "test", "-p", "agentmage-host", "knowledge_write", "--locked"),
     ),
@@ -109,6 +113,7 @@ FOCUSED_COMMANDS: Final = (
     "write-recovery-tests",
     "linux-filesystem-tests",
     "knowledge-write-tests",
+    "read-only-capability-tests",
     "host-knowledge-tests",
 )
 SECURITY_REQUIREMENTS: Final = [
