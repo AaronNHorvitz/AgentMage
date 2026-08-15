@@ -13,6 +13,9 @@ pub mod knowledge_write;
 
 pub mod protocol;
 
+/// Versioned thin-client contracts shared by terminal and headless interfaces.
+pub mod headless;
+
 #[cfg(target_os = "linux")]
 pub mod linux_read;
 
