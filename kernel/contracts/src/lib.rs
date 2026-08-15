@@ -17,6 +17,7 @@ mod conversation;
 mod diagnostics;
 mod display_link;
 mod evidence;
+mod executive;
 mod frontier;
 mod frontier_import;
 mod grant;
@@ -89,6 +90,18 @@ pub use display_link::{
     DisplayFileLink, DisplayLinkError, DisplayLinkErrorKind, MAX_DISPLAY_FILE_URI_BYTES,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
+pub use executive::{
+    ExecutiveCorrespondenceDraft, ExecutiveCorrespondenceIssue,
+    ExecutiveCorrespondenceIssueKind, ExecutiveCorrespondenceKind,
+    ExecutiveCorrespondenceReview, ExecutiveDraftClaim, ExecutiveDueWindow,
+    ExecutiveEvidenceState, ExecutiveField, ExecutiveLocalMessage, ExecutiveMessageTriageClass,
+    ExecutiveMessageTriageEntry, ExecutivePortfolioSnapshot, ExecutivePriorityComponent,
+    ExecutivePriorityComponentKind, ExecutivePriorityEntry, ExecutivePrivacyClass,
+    ExecutivePrivacyDecision, ExecutivePrivacyOperation, ExecutivePrivacyRequest, ExecutiveRecord,
+    ExecutiveRecordKind, ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore,
+    ExecutiveTracker, ExecutiveTrackerEntry, ExecutiveTrackerKind, ExecutiveView,
+    ExecutiveViewItem, ExecutiveViewKind,
+};
 pub use frontier::{
     FrontierAcceptanceState, FrontierClarificationClass, FrontierRecommendationReceipt,
     FrontierRecommendationTrigger, FrontierTaskTier, FrontierTierDecision, FrontierTierEvidence,
