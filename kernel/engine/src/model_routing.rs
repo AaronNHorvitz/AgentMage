@@ -361,10 +361,7 @@ impl RoutableProfile {
             .into_iter()
             .all(|value| valid_sha256(value))
             && self.origin == RoutingOriginDisposition::Allowed
-            && matches!(
-                self.state,
-                RoutingProfileState::Approved | RoutingProfileState::Degraded
-            )
+            && self.state == RoutingProfileState::Approved
             && self.enabled
             && self.local_only
             && !self.automatic_fallback
@@ -983,7 +980,7 @@ mod tests {
         degraded.state = RoutingProfileState::Degraded;
         let degraded =
             route_measured_local(request(), vec![degraded]).expect("exact degraded routing");
-        assert_eq!(degraded.disposition, RoutingDisposition::Selected);
+        assert_eq!(degraded.disposition, RoutingDisposition::Blocked);
 
         let absent = route_measured_local(request(), Vec::new()).expect("empty routing");
         assert_eq!(absent.disposition, RoutingDisposition::Blocked);

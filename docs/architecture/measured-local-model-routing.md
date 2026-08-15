@@ -42,13 +42,13 @@ A routable profile binds:
 - exact profile, first-party publisher, lineage, reviewed license, and origin;
 - exact model artifact, tokenizer, template, family codec, and local runtime;
 - exact context, decoding, resource, platform, policy, and benchmark generation;
-- approved or explicitly degraded lifecycle state;
+- approved lifecycle state for automatic measured routing;
 - current platform and resource fit; and
 - independent measured evidence for the requested role.
 
 Every identity-bearing artifact uses an exact digest. Family names and mutable
 registry tags are insufficient. Chinese, Chinese-derived, unresolved,
-unapproved, quarantined, rejected, retired, remote-only, fallback-enabled,
+unapproved, degraded, quarantined, rejected, retired, remote-only, fallback-enabled,
 platform-unmeasured, hardware-unfit, and stale profiles are ineligible.
 
 The [historical later-candidate record](../../model-profiles/routing/historical-later-candidates.json)

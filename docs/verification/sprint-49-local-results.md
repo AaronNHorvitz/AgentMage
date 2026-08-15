@@ -15,7 +15,7 @@ routing security corpus.
   task-class, action-risk, budget, platform, and resource evidence.
 - Threshold, tie, stale, unmeasured, prohibited-origin, nonapproved,
   fallback-enabled, remote-enabled, blocked-hardware, platform, context, tool,
-  manual-selection, no-profile, and second-verifier cases fail closed or select
+  degraded, manual-selection, no-profile, and second-verifier cases fail closed or select
   the one reproducible eligible local profile.
 - Artifact tests bind the exact frozen Gemma source entry, preserve unresolved
   Devstral status, enforce all 12 independent role suites, freeze all 19 exact
