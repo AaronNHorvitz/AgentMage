@@ -10,6 +10,9 @@
       "version": "1.0",
       "lifecycle_state": "draft",
       "approval_id": null,
+      "named_parties": [],
+      "quorum_or_status": null,
+      "quorum_or_status_evidence_state": "unknown",
       "attachments": [],
       "commitments": [],
       "deadlines": [
@@ -41,6 +44,7 @@
       "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "source_path": "records/record-1.md",
       "retention_schedule_id": null,
+      "accessibility_review_complete": false,
       "supersedes_record_id": null,
       "superseded_by_record_id": null,
       "sources": [

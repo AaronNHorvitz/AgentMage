@@ -1249,12 +1249,24 @@ function runtimeSemanticErrors(recordType, data) {
       if (
         approved !== (entry.approval_id !== null) ||
         (entry.lifecycle_state === "superseded") !== (entry.superseded_by_record_id !== null) ||
+        !isStrictlySortedBy(entry.named_parties ?? [], (item) => item.party_id) ||
         !isStrictlySortedBy(entry.attachments ?? [], (item) => item.attachment_id) ||
         !isStrictlySortedBy(entry.commitments ?? [], (item) => item.statement_id) ||
         !isStrictlySortedBy(entry.deadlines ?? [], (item) => item.statement_id) ||
         !isStrictlySortedBy(entry.statements ?? [], (item) => item.statement_id)
       ) {
         errors.push(`document register lifecycle or ordering drifted: ${entry.record_id}`);
+      }
+      if (
+        (entry.quorum_or_status === null) !==
+          (entry.quorum_or_status_evidence_state === "unknown") ||
+        (entry.named_parties ?? []).some(
+          (party) =>
+            party.evidence_state !== "confirmed" ||
+            !isStrictlySorted(party.source_ids ?? []),
+        )
+      ) {
+        errors.push(`document register named-party or status truth drifted: ${entry.record_id}`);
       }
       for (const attachment of entry.attachments ?? []) {
         if ((attachment.review_state === "approved") !== (attachment.approval_id !== null)) {

@@ -90,6 +90,8 @@ IMPLEMENTED: Final = {
     "acceptance_corpus_case_count": 68,
     "sealed_versioned_registers": True,
     "attachment_commitment_deadline_tracking": True,
+    "source_confirmed_names_and_status": True,
+    "accessibility_review_tracking": True,
     "deterministic_quality_and_duplicate_review": True,
     "exact_action_previews": True,
     "exact_approval_review": True,

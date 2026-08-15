@@ -10,7 +10,8 @@ skills, required templates, and the closed 68-case acceptance corpus.
 ## Local Campaigns
 
 - Register entries retain version, approval, attachments, commitments, deadlines, statements,
-  hashes, source paths, category, retention, supersession, and exact source references.
+  hashes, source paths, named parties, quorum/status, category, retention, accessibility review,
+  supersession, and exact source references.
 - Verbatim source, observed fact, derived action, inferred summary, unresolved conflict, and
   user-approved final language remain distinct and cannot be silently promoted.
 - Naming, duplicate, superseded, final-copy, quality, deadline, routing-slip, merge, calendar, and

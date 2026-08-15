@@ -94,9 +94,9 @@ pub use display_link::{
 pub use document_control::{
     DocumentActionApproval, DocumentActionKind, DocumentActionPreview, DocumentActionReview,
     DocumentAttachmentReviewState, DocumentControlFinding, DocumentControlFindingKind,
-    DocumentLifecycleState, DocumentRegister, DocumentRegisterAttachment, DocumentRegisterEntry,
-    DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass, DocumentWorkflowKind,
-    DocumentWorkflowReport,
+    DocumentLifecycleState, DocumentNamedParty, DocumentRegister, DocumentRegisterAttachment,
+    DocumentRegisterEntry, DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass,
+    DocumentWorkflowKind, DocumentWorkflowReport,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{

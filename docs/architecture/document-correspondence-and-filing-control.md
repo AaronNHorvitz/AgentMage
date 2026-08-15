@@ -27,8 +27,9 @@ workspace, preimage, grant, transaction, and postcondition checks before any fut
 ## Registers
 
 Each document or correspondence entry records its exact version, lifecycle state, approval,
-attachments, commitments, deadlines, statements, content digest, source path, optional category,
-optional retention schedule, supersession links, and exact source references.
+attachments, named parties, quorum or workflow status, commitments, deadlines, statements, content
+digest, source path, optional category, optional retention schedule, accessibility-review state,
+supersession links, and exact source references.
 
 Statements preserve six classes:
 

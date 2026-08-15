@@ -112,6 +112,22 @@ pub struct DocumentRegisterStatement {
     pub source_ids: Vec<String>,
 }
 
+/// One exact source-confirmed participant, correspondent, signer, owner, or reviewer name.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DocumentNamedParty {
+    /// Stable local party identity.
+    pub party_id: String,
+    /// Exact source-reported display name.
+    pub display_name: String,
+    /// Stable role code such as `participant`, `sender`, `recipient`, or `reviewer`.
+    pub role_code: String,
+    /// Truth state of the identity and role attribution.
+    pub evidence_state: ExecutiveEvidenceState,
+    /// Sorted exact source identities supporting the attribution.
+    pub source_ids: Vec<String>,
+}
+
 /// One immutable versioned entry in a document or correspondence register.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -130,6 +146,12 @@ pub struct DocumentRegisterEntry {
     pub lifecycle_state: DocumentLifecycleState,
     /// Exact approval identity for approved or final versions.
     pub approval_id: Option<String>,
+    /// Sorted exact source-confirmed named parties.
+    pub named_parties: Vec<DocumentNamedParty>,
+    /// Optional meeting quorum or workflow-status statement.
+    pub quorum_or_status: Option<String>,
+    /// Truth state of the quorum or status statement.
+    pub quorum_or_status_evidence_state: ExecutiveEvidenceState,
     /// Sorted exact attachment records.
     pub attachments: Vec<DocumentRegisterAttachment>,
     /// Sorted source-backed commitments.
@@ -144,6 +166,8 @@ pub struct DocumentRegisterEntry {
     pub source_path: String,
     /// Optional records-owner-supplied retention schedule identity.
     pub retention_schedule_id: Option<String>,
+    /// Whether the exact version completed its required local accessibility review.
+    pub accessibility_review_complete: bool,
     /// Earlier record version replaced by this entry, if any.
     pub supersedes_record_id: Option<String>,
     /// Later record version replacing this entry, if known.
