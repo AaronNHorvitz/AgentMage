@@ -13,6 +13,7 @@ from typing import Any, Final
 ROOT: Final = Path(__file__).resolve().parents[1]
 MANIFEST_PATH: Final = ROOT / "release/v0.5-frontier-pack-manifest.json"
 REPORT_PATH: Final = ROOT / "artifacts/sprints/sprint-53/v0.5-release-readiness.json"
+CORPUS_PATH: Final = ROOT / "docs/verification/sprint-53-frontier-release-corpus.json"
 SOURCE_PATHS: Final = sorted([
     "artifacts/sprints/sprint-51/local-evidence-report.json",
     "artifacts/sprints/sprint-52/local-evidence-report.json",
@@ -76,6 +77,41 @@ BLOCKERS: Final = [
     "independent-release-decision-absent",
     "manual-fuzzing-deferred",
 ]
+DELIVERY_SURFACES: Final = [
+    "native_chat",
+    "cli",
+    "model_tools",
+    "skills",
+    "schedules",
+    "injected_content",
+    "clipboard_api",
+    "vscode_commands",
+    "network_paths",
+]
+ROUND_TRIP_FAILURES: Final = [
+    "recommendation-unmeasured",
+    "disclosure-incomplete",
+    "redaction-failed",
+    "review-stale",
+    "export-not-user-initiated",
+    "export-packet-mutated",
+    "import-malformed",
+    "import-authority-claimed",
+    "local-revalidation-stale",
+    "outbound-network-present",
+    "privacy-threshold-failed",
+    "recovery-evidence-missing",
+]
+RECOVERY_CASES: Final = [
+    "recommendation-cancelled",
+    "preview-cancelled",
+    "export-cancelled",
+    "export-plan-repeated",
+    "import-cancelled",
+    "import-repeated",
+    "revalidation-corrupted",
+    "state-changed-mid-round-trip",
+]
 
 
 def sha256(path: Path) -> str:
@@ -137,15 +173,65 @@ def validate_manifest(manifest: Any) -> list[str]:
     return failures
 
 
-def build_report(manifest: Any | None = None) -> dict[str, Any]:
+def expected_corpus() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "corpus_id": "sprint-53-frontier-release-v1",
+        "delivery_surfaces": [
+            {"surface": surface, "expected": "local_denial_only"}
+            for surface in DELIVERY_SURFACES
+        ],
+        "round_trip_failures": [
+            {"case_id": case_id, "expected": "gate_blocked"}
+            for case_id in ROUND_TRIP_FAILURES
+        ],
+        "recovery_cases": RECOVERY_CASES,
+        "expanded_case_counts": {
+            "delivery_surfaces": 9,
+            "round_trip_failures": 12,
+            "recovery_cases": 8,
+            "total": 29,
+        },
+        "external_client_present": False,
+        "credential_access_present": False,
+        "automatic_delivery_present": False,
+        "hidden_telemetry_present": False,
+        "imported_authority_present": False,
+        "gate_closed": False,
+    }
+
+
+def validate_corpus(corpus: Any) -> list[str]:
+    failures = []
+    if corpus != expected_corpus():
+        failures.append("v0.5 frontier release corpus drifted")
+    for field in (
+        "external_client_present",
+        "credential_access_present",
+        "automatic_delivery_present",
+        "hidden_telemetry_present",
+        "imported_authority_present",
+        "gate_closed",
+    ):
+        if not isinstance(corpus, dict) or corpus.get(field) is not False:
+            failures.append(f"v0.5 frontier corpus overclaim: {field}")
+    return failures
+
+
+def build_report(
+    manifest: Any | None = None, corpus: Any | None = None
+) -> dict[str, Any]:
     if manifest is None:
         manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    failures = validate_manifest(manifest)
+    if corpus is None:
+        corpus = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
+    failures = validate_manifest(manifest) + validate_corpus(corpus)
     return {
         "schema_version": 1,
         "record_type": "agentmage-v0.5-frontier-release-readiness",
         "manifest_sha256": sha256(MANIFEST_PATH),
         "local_manifest_valid": not failures,
+        "frontier_release_corpus_valid": not validate_corpus(corpus),
         "recommendation_contracts_passed": True,
         "packet_disclosure_contracts_passed": True,
         "controlled_export_plan_contracts_passed": True,
@@ -219,8 +305,11 @@ def main() -> int:
         print("v0.5 frontier release gate failed: report absent")
         return 1
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    corpus = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
     report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
-    failures = validate_manifest(manifest) + validate_report(report)
+    failures = (
+        validate_manifest(manifest) + validate_corpus(corpus) + validate_report(report)
+    )
     if failures:
         print("v0.5 frontier release gate failed:")
         for failure in failures:

@@ -17,6 +17,7 @@
   "failures": [],
   "fedora_acceptance": false,
   "frontier_coordinator_integrated": false,
+  "frontier_release_corpus_valid": true,
   "gate_closed": false,
   "independent_review_complete": false,
   "lifecycle_accessibility_privacy_complete": false,

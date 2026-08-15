@@ -17,7 +17,38 @@ class V05FrontierReleaseGateTests(unittest.TestCase):
         with patch.object(gate, "sha256", return_value="b" * 64), patch.object(
             gate, "build_manifest", return_value=manifest
         ):
-            return gate.build_report(manifest)
+            return gate.build_report(manifest, gate.expected_corpus())
+
+    def test_release_corpus_is_exact_bounded_and_authority_free(self) -> None:
+        corpus = gate.expected_corpus()
+        self.assertEqual(gate.validate_corpus(corpus), [])
+        self.assertEqual(corpus["expanded_case_counts"]["total"], 29)
+        for field in (
+            "external_client_present",
+            "credential_access_present",
+            "automatic_delivery_present",
+            "hidden_telemetry_present",
+            "imported_authority_present",
+            "gate_closed",
+        ):
+            self.assertFalse(corpus[field])
+
+    def test_release_corpus_rejects_missing_and_broadened_cases(self) -> None:
+        expected = gate.expected_corpus()
+        mutations = (
+            lambda value: value["delivery_surfaces"].pop(),
+            lambda value: value["round_trip_failures"][0].update(
+                {"expected": "allowed"}
+            ),
+            lambda value: value["recovery_cases"].pop(),
+            lambda value: value.update({"external_client_present": True}),
+            lambda value: value.update({"imported_authority_present": True}),
+            lambda value: value.update({"gate_closed": True}),
+        )
+        for mutate in mutations:
+            changed = copy.deepcopy(expected)
+            mutate(changed)
+            self.assertTrue(gate.validate_corpus(changed))
 
     def test_manifest_is_manual_strict_local_and_fail_closed(self) -> None:
         manifest = self.manifest()
