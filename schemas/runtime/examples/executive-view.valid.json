@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "view_id": "view-0001",
+  "kind": "start_of_cycle",
+  "snapshot_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "items": [
+    {
+      "record_id": "task-0001",
+      "section": "priorities",
+      "text": "Prepare the current source-backed briefing.",
+      "evidence_state": "confirmed",
+      "source_ids": ["source-task-0001"],
+      "warnings": []
+    }
+  ],
+  "limitations": [],
+  "proposal_only": true,
+  "external_effect_allowed": false,
+  "view_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+}

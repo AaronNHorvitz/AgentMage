@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/executive-correspondence-review.schema.json",
+  "title": "AgentMage Executive Correspondence Review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "draft_sha256",
+    "issues",
+    "locally_complete",
+    "send_allowed",
+    "review_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "draft_sha256": { "$ref": "#/$defs/sha256" },
+    "issues": {
+      "type": "array",
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "locally_complete": { "type": "boolean" },
+    "send_allowed": { "const": false },
+    "review_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "locally_complete": { "const": true } }, "required": ["locally_complete"] },
+      "then": { "properties": { "issues": { "type": "array", "maxItems": 0 } } },
+      "else": { "properties": { "issues": { "type": "array", "minItems": 1 } } }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reason_code", "claim_id"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "unanswered_question",
+            "accidental_commitment",
+            "unclear_date",
+            "missing_attachment",
+            "unsupported_claim",
+            "sensitive_content",
+            "uncertain_name"
+          ]
+        },
+        "reason_code": { "$ref": "#/$defs/code" },
+        "claim_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/identifier" }
+          ]
+        }
+      }
+    }
+  }
+}

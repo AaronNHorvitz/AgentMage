@@ -266,6 +266,30 @@ pub struct ExecutivePriorityEntry {
     pub limitations: Vec<String>,
 }
 
+/// Complete deterministic priority ranking and disclosed method identity.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutivePriorityRanking {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable ranking identity.
+    pub ranking_id: String,
+    /// Immutable deterministic method identity.
+    pub method_id: String,
+    /// Immutable deterministic method version.
+    pub method_version: String,
+    /// Lowercase SHA-256 digest of the exact method specification.
+    pub method_sha256: String,
+    /// Complete deterministically ordered ranking.
+    pub entries: Vec<ExecutivePriorityEntry>,
+    /// Always true; ranking is a recommendation the user may edit or ignore.
+    pub proposal_only: bool,
+    /// Always false; ranking cannot assign, notify, schedule, or mutate.
+    pub external_effect_allowed: bool,
+    /// Digest of the complete canonical ranking.
+    pub ranking_sha256: String,
+}
+
 /// Closed tracker projection over canonical records.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/executive-priority-ranking.schema.json",
+  "title": "AgentMage Executive Priority Ranking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ranking_id",
+    "method_id",
+    "method_version",
+    "method_sha256",
+    "entries",
+    "proposal_only",
+    "external_effect_allowed",
+    "ranking_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "ranking_id": { "$ref": "#/$defs/identifier" },
+    "method_id": { "const": "executive-priority-fixed-v1" },
+    "method_version": { "const": "1" },
+    "method_sha256": { "$ref": "#/$defs/sha256" },
+    "entries": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/entry" }
+    },
+    "proposal_only": { "const": true },
+    "external_effect_allowed": { "const": false },
+    "ranking_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "points", "reason_code"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "urgency",
+            "importance",
+            "user_preference",
+            "consequence",
+            "due_window",
+            "schedule",
+            "dependencies",
+            "effort",
+            "evidence_state"
+          ]
+        },
+        "points": { "type": "integer", "minimum": -600000, "maximum": 600000 },
+        "reason_code": { "$ref": "#/$defs/code" }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "rank",
+        "score",
+        "components",
+        "source_ids",
+        "limitations"
+      ],
+      "properties": {
+        "record_id": { "$ref": "#/$defs/identifier" },
+        "rank": { "type": "integer", "minimum": 1, "maximum": 1024 },
+        "score": { "type": "integer", "minimum": -2000000, "maximum": 2000000 },
+        "components": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": { "$ref": "#/$defs/component" }
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/code" }
+        }
+      }
+    }
+  }
+}

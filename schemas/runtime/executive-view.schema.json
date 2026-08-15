@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/executive-view.schema.json",
+  "title": "AgentMage Executive View",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "view_id",
+    "kind",
+    "snapshot_sha256",
+    "items",
+    "limitations",
+    "proposal_only",
+    "external_effect_allowed",
+    "view_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "view_id": { "$ref": "#/$defs/identifier" },
+    "kind": {
+      "enum": [
+        "start_of_cycle",
+        "closeout",
+        "recurring_review",
+        "portfolio",
+        "status",
+        "meeting_brief",
+        "decision_brief",
+        "person_brief",
+        "organization_brief",
+        "briefing_pack",
+        "changes_since",
+        "forgotten_items",
+        "audit"
+      ]
+    },
+    "snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "items": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/code" }
+    },
+    "proposal_only": { "const": true },
+    "external_effect_allowed": { "const": false },
+    "view_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "section", "text", "evidence_state", "source_ids", "warnings"],
+      "properties": {
+        "record_id": { "$ref": "#/$defs/identifier" },
+        "section": { "$ref": "#/$defs/code" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 32768, "pattern": "^.*\\S.*$" },
+        "evidence_state": { "enum": ["confirmed", "inferred", "historical", "disputed", "unknown"] },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/code" }
+        }
+      }
+    }
+  }
+}

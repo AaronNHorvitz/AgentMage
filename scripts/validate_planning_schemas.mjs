@@ -78,6 +78,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "frontier-recommendation-receipt",
   "frontier-return-manifest",
   "frontier-round-trip-receipt",
+  "executive-priority-ranking",
+  "executive-view",
+  "executive-correspondence-review",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1058,6 +1061,87 @@ function runtimeSemanticErrors(recordType, data) {
           `frontier outcome overclaims trust or effect: ${outcome.step_id}`,
         );
       }
+    }
+  } else if (recordType === "executive-priority-ranking") {
+    const componentOrder = [
+      "urgency",
+      "importance",
+      "user_preference",
+      "consequence",
+      "due_window",
+      "schedule",
+      "dependencies",
+      "effort",
+      "evidence_state",
+    ];
+    const entries = data.entries ?? [];
+    for (const [index, entry] of entries.entries()) {
+      if (entry.rank !== index + 1) {
+        errors.push("executive priority ranks must be contiguous and one-based");
+      }
+      if (
+        JSON.stringify((entry.components ?? []).map((item) => item.kind)) !==
+        JSON.stringify(componentOrder)
+      ) {
+        errors.push(`executive priority components are incomplete: ${entry.record_id}`);
+      }
+      if (
+        (entry.components ?? []).reduce(
+          (total, component) => total + component.points,
+          0,
+        ) !== entry.score
+      ) {
+        errors.push(`executive priority score does not match components: ${entry.record_id}`);
+      }
+      if (
+        !isStrictlySorted(entry.source_ids ?? []) ||
+        !isStrictlySorted(entry.limitations ?? [])
+      ) {
+        errors.push(`executive priority evidence is not canonical: ${entry.record_id}`);
+      }
+      const previous = entries[index - 1];
+      if (
+        previous &&
+        (previous.score < entry.score ||
+          (previous.score === entry.score &&
+            previous.record_id >= entry.record_id))
+      ) {
+        errors.push("executive priority entries are not deterministically ranked");
+      }
+    }
+  } else if (recordType === "executive-view") {
+    const items = data.items ?? [];
+    if (
+      !isStrictlySortedBy(items, (item) => `${item.section}:${item.record_id}`) ||
+      !isStrictlySorted(data.limitations ?? [])
+    ) {
+      errors.push("executive view is not canonically ordered");
+    }
+    for (const item of items) {
+      if (
+        !isStrictlySorted(item.source_ids ?? []) ||
+        !isStrictlySorted(item.warnings ?? [])
+      ) {
+        errors.push(`executive view item evidence is not canonical: ${item.record_id}`);
+      }
+    }
+  } else if (recordType === "executive-correspondence-review") {
+    const issueOrder = [
+      "unanswered_question",
+      "accidental_commitment",
+      "unclear_date",
+      "missing_attachment",
+      "unsupported_claim",
+      "sensitive_content",
+      "uncertain_name",
+    ];
+    const issueKey = (issue) =>
+      `${String(issueOrder.indexOf(issue.kind)).padStart(2, "0")}:${issue.claim_id ?? ""}:${issue.reason_code}`;
+    if (!isStrictlySortedBy(data.issues ?? [], issueKey)) {
+      errors.push("executive correspondence issues are not canonically ordered");
+    }
+    if (data.locally_complete !== ((data.issues ?? []).length === 0)) {
+      errors.push("executive correspondence completion disagrees with findings");
     }
   }
   return errors;

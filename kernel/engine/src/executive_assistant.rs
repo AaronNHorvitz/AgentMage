@@ -7,11 +7,11 @@ use agentmage_kernel_contracts::{
     ExecutiveCorrespondenceIssueKind, ExecutiveCorrespondenceReview, ExecutiveDueWindow,
     ExecutiveEvidenceState, ExecutiveLocalMessage, ExecutiveMessageTriageClass,
     ExecutiveMessageTriageEntry, ExecutivePortfolioSnapshot, ExecutivePriorityComponent,
-    ExecutivePriorityComponentKind, ExecutivePriorityEntry, ExecutivePrivacyClass,
-    ExecutivePrivacyDecision, ExecutivePrivacyOperation, ExecutivePrivacyRequest, ExecutiveRecord,
-    ExecutiveRecordKind, ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore,
-    ExecutiveTracker, ExecutiveTrackerEntry, ExecutiveTrackerKind, ExecutiveView,
-    ExecutiveViewItem, ExecutiveViewKind,
+    ExecutivePriorityComponentKind, ExecutivePriorityEntry, ExecutivePriorityRanking,
+    ExecutivePrivacyClass, ExecutivePrivacyDecision, ExecutivePrivacyOperation,
+    ExecutivePrivacyRequest, ExecutiveRecord, ExecutiveRecordKind, ExecutiveRecordStatus,
+    ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTracker, ExecutiveTrackerEntry,
+    ExecutiveTrackerKind, ExecutiveView, ExecutiveViewItem, ExecutiveViewKind,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -26,6 +26,9 @@ const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_SHORT_TEXT_BYTES: usize = 512;
 const MAX_TEXT_BYTES: usize = 32 * 1_024;
 const MAX_DRAFT_BYTES: usize = 128 * 1_024;
+const PRIORITY_METHOD_ID: &str = "executive-priority-fixed-v1";
+const PRIORITY_METHOD_VERSION: &str = "1";
+const PRIORITY_METHOD_SPEC: &str = "urgency*30 + importance*30 + user-preference*10 + consequence*15 + closed-due-window + schedule-conflict - unresolved-dependencies + bounded-shorter-effort - evidence-uncertainty; ties by record-id";
 
 /// Stable fail-closed reason an executive-assistant projection was rejected.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -592,6 +595,7 @@ pub fn rank_priorities(
                 format!("priority.limit.evidence-{:?}", record.evidence_state).to_ascii_lowercase(),
             );
         }
+        limitations.sort();
         entries.push(ExecutivePriorityEntry {
             record_id: record.record_id.clone(),
             rank: 0,
@@ -611,6 +615,30 @@ pub fn rank_priorities(
         entry.rank = u32::try_from(index + 1).map_err(|_| ExecutiveAssistantError::InvalidInput)?;
     }
     Ok(entries)
+}
+
+/// Builds a hash-bound authority-free priority recommendation envelope.
+pub fn build_priority_ranking(
+    ranking_id: String,
+    records: &[ExecutiveRecord],
+    admitted_privacy_classes: &[ExecutivePrivacyClass],
+) -> Result<ExecutivePriorityRanking, ExecutiveAssistantError> {
+    if !valid_identifier(&ranking_id) {
+        return Err(ExecutiveAssistantError::InvalidInput);
+    }
+    let mut ranking = ExecutivePriorityRanking {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        ranking_id,
+        method_id: PRIORITY_METHOD_ID.to_owned(),
+        method_version: PRIORITY_METHOD_VERSION.to_owned(),
+        method_sha256: digest_bytes(PRIORITY_METHOD_SPEC.as_bytes()),
+        entries: rank_priorities(records, admitted_privacy_classes)?,
+        proposal_only: true,
+        external_effect_allowed: false,
+        ranking_sha256: String::new(),
+    };
+    ranking.ranking_sha256 = digest_record(&ranking)?;
+    Ok(ranking)
 }
 
 fn tracker_accepts(kind: ExecutiveTrackerKind, record: &ExecutiveRecord) -> bool {
@@ -1342,9 +1370,9 @@ mod tests {
 
     use super::{
         CorrespondenceReviewContext, ExecutiveAssistantError, ExecutiveViewRequest,
-        build_executive_view, build_portfolio_snapshot, build_tracker, evaluate_executive_privacy,
-        rank_priorities, reconcile_portfolio, review_correspondence, seal_correspondence_draft,
-        triage_local_messages,
+        build_executive_view, build_portfolio_snapshot, build_priority_ranking, build_tracker,
+        evaluate_executive_privacy, rank_priorities, reconcile_portfolio, review_correspondence,
+        seal_correspondence_draft, triage_local_messages,
     };
 
     fn source(record_id: &str, store: ExecutiveSourceStore) -> ExecutiveSourceReference {
@@ -1432,6 +1460,22 @@ mod tests {
                 .limitations
                 .contains(&"priority.limit.schedule-conflict".to_owned())
         );
+        let ranking = build_priority_ranking(
+            "ranking-a".to_owned(),
+            &[record(
+                "task-ranked",
+                ExecutiveRecordKind::Task,
+                ExecutiveRecordStatus::Active,
+                ExecutiveEvidenceState::Confirmed,
+                ExecutiveSourceStore::PlainFolder,
+            )],
+            &ordinary(),
+        )
+        .expect("ranking envelope");
+        assert_eq!(ranking.method_id, "executive-priority-fixed-v1");
+        assert!(!ranking.method_sha256.is_empty());
+        assert!(ranking.proposal_only);
+        assert!(!ranking.external_effect_allowed);
     }
 
     #[test]

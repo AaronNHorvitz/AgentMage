@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "ranking_id": "ranking-0001",
+  "method_id": "executive-priority-fixed-v1",
+  "method_version": "1",
+  "method_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "entries": [
+    {
+      "record_id": "task-0001",
+      "rank": 1,
+      "score": 554940,
+      "components": [
+        { "kind": "urgency", "points": 150000, "reason_code": "priority.urgency.weight-30" },
+        { "kind": "importance", "points": 150000, "reason_code": "priority.importance.weight-30" },
+        { "kind": "user_preference", "points": 50000, "reason_code": "priority.user-preference.weight-10" },
+        { "kind": "consequence", "points": 75000, "reason_code": "priority.consequence.weight-15" },
+        { "kind": "due_window", "points": 110000, "reason_code": "priority.due.within-seven-days" },
+        { "kind": "schedule", "points": 0, "reason_code": "priority.schedule.clear" },
+        { "kind": "dependencies", "points": 0, "reason_code": "priority.dependencies.unresolved-0" },
+        { "kind": "effort", "points": 19940, "reason_code": "priority.effort.known" },
+        { "kind": "evidence_state", "points": 0, "reason_code": "priority.evidence.confirmed" }
+      ],
+      "source_ids": ["source-task-0001"],
+      "limitations": []
+    }
+  ],
+  "proposal_only": true,
+  "external_effect_allowed": false,
+  "ranking_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+}

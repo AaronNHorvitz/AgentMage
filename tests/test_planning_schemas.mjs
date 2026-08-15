@@ -381,6 +381,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "frontier-recommendation-receipt",
     "frontier-return-manifest",
     "frontier-round-trip-receipt",
+    "executive-priority-ranking",
+    "executive-view",
+    "executive-correspondence-review",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1039,6 +1042,128 @@ test("frontier decisions reject trigger, authority, clarification, and evidence 
     assert.equal(
       validateRuntimeRecord(
         "frontier-tier-decision",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("executive rankings reject hidden effects score drift and unstable ordering", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/executive-priority-ranking.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.external_effect_allowed = true;
+    },
+    (record) => {
+      record.proposal_only = false;
+    },
+    (record) => {
+      record.entries[0].score += 1;
+    },
+    (record) => {
+      record.entries[0].rank = 2;
+    },
+    (record) => {
+      record.entries[0].components.reverse();
+    },
+    (record) => {
+      record.entries[0].source_ids = ["source-z", "source-a"];
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "executive-priority-ranking",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("executive views reject authority truth-state and evidence-order drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/executive-view.valid.json"),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.external_effect_allowed = true;
+    },
+    (record) => {
+      record.proposal_only = false;
+    },
+    (record) => {
+      record.items[0].evidence_state = "accepted";
+    },
+    (record) => {
+      record.items[0].source_ids = ["source-z", "source-a"];
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord("executive-view", changed, runtimeValidators).valid,
+      false,
+    );
+  }
+});
+
+test("executive correspondence reviews reject send completion and issue drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/executive-correspondence-review.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.send_allowed = true;
+    },
+    (record) => {
+      record.locally_complete = false;
+    },
+    (record) => {
+      record.issues = [
+        {
+          kind: "uncertain_name",
+          reason_code: "correspondence.name.unconfirmed",
+          claim_id: null,
+        },
+        {
+          kind: "unanswered_question",
+          reason_code: "correspondence.question.unanswered",
+          claim_id: "question-1",
+        },
+      ];
+      record.locally_complete = false;
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "executive-correspondence-review",
         changed,
         runtimeValidators,
       ).valid,
