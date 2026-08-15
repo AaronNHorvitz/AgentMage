@@ -4,10 +4,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fmt::Write as _;
 
-use agentmage_kernel_contracts::OperationOutcome;
+use agentmage_kernel_contracts::{
+    GrantOperation, HeldWorkspaceObject, OperationOutcome, StateChange,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::authority_transaction::{EffectAuthorization, EffectDriver, EffectLaunch, EffectResult};
+use crate::propagation::CancellationToken;
 use crate::repository_safety::{
     RepositoryOwnedDelta, RepositoryPreservationManifest, reconcile_preservation,
 };
@@ -985,6 +989,233 @@ pub fn reconcile_local_commit(
     Ok(receipt)
 }
 
+#[derive(Clone, Debug, Serialize)]
+#[serde(deny_unknown_fields)]
+struct CommitExecutionRequest<'a> {
+    plan: &'a LocalCommitPlan,
+    approval_receipt_sha256: &'a str,
+}
+
+/// Authority-free exact bytes used for one GitCommit grant and call binding.
+#[derive(Clone, Debug)]
+pub struct PreparedLocalCommit {
+    plan: LocalCommitPlan,
+    approval: ManualCommitApprovalReceipt,
+    request_bytes: Vec<u8>,
+    request_sha256: String,
+}
+
+impl PreparedLocalCommit {
+    /// Validates and serializes one exact current manual commit request.
+    pub fn new(
+        plan: LocalCommitPlan,
+        approval: ManualCommitApprovalReceipt,
+        now_epoch_ms: u64,
+    ) -> Result<Self, LocalCommitError> {
+        verify_manual_commit_approval(&plan, &approval, now_epoch_ms)?;
+        let request_bytes = serde_json::to_vec(&CommitExecutionRequest {
+            plan: &plan,
+            approval_receipt_sha256: &approval.receipt_sha256,
+        })
+        .map_err(|_| LocalCommitError::ReceiptFailure)?;
+        let request_sha256 = sha256_hex(&request_bytes);
+        Ok(Self {
+            plan,
+            approval,
+            request_bytes,
+            request_sha256,
+        })
+    }
+
+    /// Returns exact canonical request bytes for grant and tool-call binding.
+    #[must_use]
+    pub fn request_bytes(&self) -> &[u8] {
+        &self.request_bytes
+    }
+
+    /// Returns the digest of the exact request bytes.
+    #[must_use]
+    pub fn request_sha256(&self) -> &str {
+        &self.request_sha256
+    }
+
+    /// Returns the exact approval-ready plan.
+    #[must_use]
+    pub const fn plan(&self) -> &LocalCommitPlan {
+        &self.plan
+    }
+}
+
+/// Nonforgeable launch permit created only after exact GitCommit authority validation.
+pub struct LocalCommitLaunchPermit<'plan> {
+    plan: &'plan LocalCommitPlan,
+    before: &'plan RepositoryPreservationManifest,
+}
+
+impl LocalCommitLaunchPermit<'_> {
+    /// Returns the exact approved commit plan.
+    #[must_use]
+    pub const fn plan(&self) -> &LocalCommitPlan {
+        self.plan
+    }
+
+    /// Returns the exact current pre-effect preservation manifest.
+    #[must_use]
+    pub const fn before(&self) -> &RepositoryPreservationManifest {
+        self.before
+    }
+}
+
+impl fmt::Debug for LocalCommitLaunchPermit<'_> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LocalCommitLaunchPermit")
+            .field("transaction_id", &self.plan.commit_transaction_id)
+            .field("task_branch", &self.plan.task_branch)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Trusted platform executor whose launch requires one kernel-created permit.
+pub trait BoundedLocalCommitExecutor {
+    /// Executes one exact local signed commit plan without network access.
+    fn execute(
+        &mut self,
+        permit: LocalCommitLaunchPermit<'_>,
+        cancellation: &CancellationToken,
+    ) -> LocalCommitPlatformResult;
+}
+
+/// Inert local commit driver crossing the effect boundary only with consumed authority.
+pub struct LocalCommitEffectDriver<E, H> {
+    executor: E,
+    held_repository_scope: H,
+    prepared: PreparedLocalCommit,
+    before: RepositoryPreservationManifest,
+    cancellation: CancellationToken,
+    now_epoch_ms: u64,
+    receipt: Option<LocalCommitReceipt>,
+    error: Option<LocalCommitError>,
+}
+
+impl<E, H> LocalCommitEffectDriver<E, H> {
+    /// Creates an inert driver after exact approval and manifest validation.
+    pub fn new(
+        executor: E,
+        held_repository_scope: H,
+        prepared: PreparedLocalCommit,
+        before: RepositoryPreservationManifest,
+        cancellation: CancellationToken,
+        now_epoch_ms: u64,
+    ) -> Result<Self, LocalCommitError> {
+        before
+            .verify()
+            .map_err(|_| LocalCommitError::ResultDenied)?;
+        verify_manual_commit_approval(&prepared.plan, &prepared.approval, now_epoch_ms)?;
+        if before.manifest_sha256 != prepared.plan.preservation_manifest_sha256
+            || before.repository_sha256 != prepared.plan.repository_sha256
+            || before.index_sha256 != prepared.plan.user_index_sha256
+        {
+            return Err(LocalCommitError::ResultDenied);
+        }
+        Ok(Self {
+            executor,
+            held_repository_scope,
+            prepared,
+            before,
+            cancellation,
+            now_epoch_ms,
+            receipt: None,
+            error: None,
+        })
+    }
+
+    /// Takes the terminal local commit receipt after mediated execution.
+    pub fn take_receipt(&mut self) -> Option<LocalCommitReceipt> {
+        self.receipt.take()
+    }
+
+    /// Takes a content-free local commit boundary error.
+    pub fn take_error(&mut self) -> Option<LocalCommitError> {
+        self.error.take()
+    }
+
+    /// Returns the executor after the attempt closes.
+    #[must_use]
+    pub fn into_executor(self) -> E {
+        self.executor
+    }
+}
+
+impl<E, H> fmt::Debug for LocalCommitEffectDriver<E, H> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LocalCommitEffectDriver")
+            .field("transaction_id", &self.prepared.plan.commit_transaction_id)
+            .field("has_receipt", &self.receipt.is_some())
+            .field("has_error", &self.error.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl<E, H> EffectDriver for LocalCommitEffectDriver<E, H>
+where
+    E: BoundedLocalCommitExecutor,
+    H: HeldWorkspaceObject,
+{
+    fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        let call = authorization.call();
+        if authorization.operation().operation() != GrantOperation::GitCommit
+            || !authorization.authorizes_held_object(&self.held_repository_scope)
+            || call.arguments.sha256 != self.prepared.request_sha256
+            || call.arguments.bytes != self.prepared.request_bytes
+            || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
+            || verify_manual_commit_approval(
+                &self.prepared.plan,
+                &self.prepared.approval,
+                self.now_epoch_ms,
+            )
+            .is_err()
+        {
+            self.error = Some(LocalCommitError::ApprovalDenied);
+            return EffectLaunch::failed();
+        }
+        if self.cancellation.is_cancelled() {
+            self.error = Some(LocalCommitError::ResultDenied);
+            return EffectLaunch::failed();
+        }
+        let result = self.executor.execute(
+            LocalCommitLaunchPermit {
+                plan: &self.prepared.plan,
+                before: &self.before,
+            },
+            &self.cancellation,
+        );
+        match reconcile_local_commit(
+            &self.prepared.plan,
+            &self.prepared.approval,
+            result,
+            authorization.transaction_id().as_str(),
+            authorization.attempt_id().as_str(),
+            self.now_epoch_ms,
+        ) {
+            Ok(receipt) => {
+                let effect = EffectResult::from_redacted_material(
+                    receipt.outcome,
+                    receipt.receipt_sha256.as_bytes(),
+                    StateChange::Changed,
+                );
+                self.receipt = Some(receipt);
+                EffectLaunch::completed(effect)
+            }
+            Err(error) => {
+                self.error = Some(error);
+                EffectLaunch::failed()
+            }
+        }
+    }
+}
+
 fn verify_candidate_tree_receipt(receipt: &CandidateTreeReceipt) -> Result<(), LocalCommitError> {
     let mut canonical = receipt.clone();
     canonical.receipt_sha256 = ZERO_SHA256.to_owned();
@@ -1347,6 +1578,19 @@ mod tests {
         assert!(verify_local_commit_plan(&plan).is_ok());
         let approval = approval(&plan);
         assert!(verify_manual_commit_approval(&plan, &approval, 15_000).is_ok());
+        let prepared = PreparedLocalCommit::new(plan.clone(), approval.clone(), 15_000)
+            .expect("prepared commit");
+        assert_eq!(
+            sha256_hex(prepared.request_bytes()),
+            prepared.request_sha256()
+        );
+        assert_eq!(prepared.plan(), &plan);
+        assert_eq!(
+            PreparedLocalCommit::new(plan.clone(), approval.clone(), 20_000)
+                .expect_err("expired preparation")
+                .code(),
+            LocalCommitError::ApprovalDenied.code()
+        );
         assert_eq!(
             verify_manual_commit_approval(&plan, &approval, 20_000),
             Err(LocalCommitError::ApprovalDenied)
