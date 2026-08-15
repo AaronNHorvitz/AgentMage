@@ -1,7 +1,9 @@
 //! Authority-free executive-assistant records and deterministic local projections.
 
 /// Closed local knowledge-store class supplying an executive record.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveSourceStore {
     /// An ordinary user-owned folder of approved local files.
@@ -15,7 +17,9 @@ pub enum ExecutiveSourceStore {
 }
 
 /// Closed user-visible truth state for one executive record or field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveEvidenceState {
     /// The cited source directly confirms the represented fact.
@@ -31,7 +35,9 @@ pub enum ExecutiveEvidenceState {
 }
 
 /// Closed record class admitted to the executive-assistant projections.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveRecordKind {
     /// One bounded task or next action.
@@ -61,7 +67,9 @@ pub enum ExecutiveRecordKind {
 }
 
 /// Closed lifecycle state for a canonical executive record.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveRecordStatus {
     /// A proposal that has not become a confirmed decision or commitment.
@@ -83,7 +91,9 @@ pub enum ExecutiveRecordStatus {
 }
 
 /// Executive-record privacy class with distinct retrieval and export policy.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutivePrivacyClass {
     /// Ordinary approved local work information.
@@ -97,7 +107,9 @@ pub enum ExecutivePrivacyClass {
 }
 
 /// Closed due-date proximity supplied by deterministic date normalization.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveDueWindow {
     /// The confirmed due date has passed.
@@ -199,7 +211,9 @@ pub struct ExecutiveRecord {
 }
 
 /// Closed priority-score component disclosed to the user.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutivePriorityComponentKind {
     /// Urgency contribution.
@@ -253,7 +267,9 @@ pub struct ExecutivePriorityEntry {
 }
 
 /// Closed tracker projection over canonical records.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveTrackerKind {
     /// Confirmed and proposed commitments.
@@ -309,7 +325,9 @@ pub struct ExecutiveTracker {
 }
 
 /// Closed executive view class.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveViewKind {
     /// Start-of-cycle schedule, priority, deadline, waiting, and preparation view.
@@ -383,7 +401,9 @@ pub struct ExecutiveView {
 }
 
 /// Closed local correspondence format.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveCorrespondenceKind {
     /// Electronic mail draft.
@@ -451,7 +471,9 @@ pub struct ExecutiveCorrespondenceDraft {
 }
 
 /// Closed issue detected during deterministic correspondence review.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveCorrespondenceIssueKind {
     /// A source question is not answered by the draft.
@@ -529,7 +551,9 @@ pub struct ExecutiveLocalMessage {
 }
 
 /// Closed local-message triage class.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutiveMessageTriageClass {
     /// A confirmed requested action is present.
@@ -567,7 +591,9 @@ pub struct ExecutiveMessageTriageEntry {
 }
 
 /// Closed privacy-policy operation for executive records.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutivePrivacyOperation {
     /// Retrieve an exact record for one approved local purpose.
