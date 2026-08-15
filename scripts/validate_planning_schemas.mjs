@@ -57,6 +57,10 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "write-aware-checkpoint",
   "command-preview",
   "command-receipt",
+  "repository-preservation-manifest",
+  "repository-operation-plan",
+  "repository-operation-receipt",
+  "worktree-ownership",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";

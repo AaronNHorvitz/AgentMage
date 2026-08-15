@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "worktree_id": "worktree-0001",
+  "task_id": "task-0001",
+  "source_object": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "branch_ref": "refs/heads/agentmage/tasks/task-0001",
+  "worktree_path_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "grant_ids": ["grant-worktree-0001"],
+  "file_ownership_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "live_process_count": 0,
+  "resource_budget_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "retain_until_epoch_ms": 1786672800000,
+  "clean": true,
+  "recovery_retained": true,
+  "disposition": "cleanup_eligible",
+  "record_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/repository-operation-receipt.schema.json",
+  "title": "AgentMage Repository Operation Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "repository_transaction_id", "authority_transaction_id",
+    "operation_attempt_id", "operation", "plan_sha256", "before_manifest_sha256",
+    "after_manifest_sha256", "outcome", "cleanup_verified", "platform_code", "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repository_transaction_id": { "$ref": "#/$defs/identifier" },
+    "authority_transaction_id": { "$ref": "#/$defs/identifier" },
+    "operation_attempt_id": { "$ref": "#/$defs/identifier" },
+    "operation": { "enum": ["clone", "fetch", "worktree_create", "worktree_remove", "branch_fast_forward"] },
+    "plan_sha256": { "$ref": "#/$defs/sha256" },
+    "before_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "after_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "outcome": { "enum": ["succeeded", "denied", "failed", "cancelled", "timed_out"] },
+    "cleanup_verified": { "const": true },
+    "platform_code": { "$ref": "#/$defs/identifier" },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

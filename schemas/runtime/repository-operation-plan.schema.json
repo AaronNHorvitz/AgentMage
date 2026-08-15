@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/repository-operation-plan.schema.json",
+  "title": "AgentMage Repository Operation Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "transaction_id", "operation", "remote", "source_ref",
+    "transaction_ref", "branch_ref", "expected_old_object", "expected_new_object",
+    "repository_path_sha256", "worktree_path_sha256", "preservation_manifest_sha256",
+    "invocations", "plan_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "transaction_id": { "$ref": "#/$defs/identifier" },
+    "operation": { "enum": ["clone", "fetch", "worktree_create", "worktree_remove", "branch_fast_forward"] },
+    "remote": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["protocol", "host", "repository", "canonical_url", "identity_sha256"],
+          "properties": {
+            "protocol": { "enum": ["https", "ssh"] },
+            "host": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*(?::[0-9]{1,5})?$", "maxLength": 253 },
+            "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", "maxLength": 512 },
+            "canonical_url": { "type": "string", "pattern": "^(?:https://|ssh://git@)[^?#@]+(?:@[^?#]+)?/[^/?#]+/[^/?#]+\\.git$", "maxLength": 1024 },
+            "identity_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      ]
+    },
+    "source_ref": { "$ref": "#/$defs/nullable_ref" },
+    "transaction_ref": { "$ref": "#/$defs/nullable_ref" },
+    "branch_ref": { "$ref": "#/$defs/nullable_ref" },
+    "expected_old_object": { "$ref": "#/$defs/nullable_object" },
+    "expected_new_object": { "$ref": "#/$defs/nullable_object" },
+    "repository_path_sha256": { "$ref": "#/$defs/sha256" },
+    "worktree_path_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+    "preservation_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "invocations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "arguments", "environment", "network", "invocation_sha256"],
+        "properties": {
+          "kind": { "enum": ["initialize_owned_repository", "fetch_exact_ref", "worktree_create", "worktree_remove", "prove_ancestor", "update_ref_compare_and_swap"] },
+          "arguments": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 128,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "not": { "pattern": "^(?:pull|merge|rebase|reset|clean|checkout|restore|stash|tag|notes|remote|push|gc|maintenance|prune|submodule)$|^--force|^--mirror$|^--all$|^--tags$" }
+            }
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["GCM_INTERACTIVE", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "GIT_LFS_SKIP_SMUDGE", "GIT_OPTIONAL_LOCKS", "GIT_TERMINAL_PROMPT", "HOME", "LANG", "LC_ALL", "NO_COLOR", "XDG_CONFIG_HOME"],
+            "properties": {
+              "GCM_INTERACTIVE": { "const": "Never" },
+              "GIT_CONFIG_GLOBAL": { "const": "/dev/null" },
+              "GIT_CONFIG_NOSYSTEM": { "const": "1" },
+              "GIT_LFS_SKIP_SMUDGE": { "const": "1" },
+              "GIT_OPTIONAL_LOCKS": { "const": "0" },
+              "GIT_TERMINAL_PROMPT": { "const": "0" },
+              "HOME": { "const": "/nonexistent" },
+              "LANG": { "const": "C" },
+              "LC_ALL": { "const": "C" },
+              "NO_COLOR": { "const": "1" },
+              "XDG_CONFIG_HOME": { "const": "/nonexistent" }
+            }
+          },
+          "network": { "type": "boolean" },
+          "invocation_sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "plan_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "enum": ["worktree_create", "worktree_remove", "branch_fast_forward"] } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "remote": { "type": "null" },
+          "source_ref": { "type": "null" },
+          "transaction_ref": { "type": "null" },
+          "invocations": {
+            "type": "array",
+            "items": { "type": "object", "properties": { "network": { "const": false } } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "branch_fast_forward" } }, "required": ["operation"] },
+      "then": { "properties": { "branch_ref": { "type": "string", "pattern": "^refs/heads/agentmage/tasks/" } } }
+    }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "nullable_object": { "oneOf": [{ "$ref": "#/$defs/object" }, { "type": "null" }] },
+    "nullable_ref": { "oneOf": [{ "type": "string", "pattern": "^refs/[A-Za-z0-9][A-Za-z0-9._/-]{0,499}$" }, { "type": "null" }] }
+  }
+}

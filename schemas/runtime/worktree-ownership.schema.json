@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/worktree-ownership.schema.json",
+  "title": "AgentMage Worktree Ownership and Handoff Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "worktree_id", "task_id", "source_object", "branch_ref",
+    "worktree_path_sha256", "owner_sha256", "grant_ids", "file_ownership_sha256",
+    "live_process_count", "resource_budget_sha256", "retain_until_epoch_ms", "clean",
+    "recovery_retained", "disposition", "record_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "worktree_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "source_object": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "branch_ref": { "type": "string", "pattern": "^refs/heads/agentmage/tasks/[A-Za-z0-9][A-Za-z0-9._/-]{0,450}$" },
+    "worktree_path_sha256": { "$ref": "#/$defs/sha256" },
+    "owner_sha256": { "$ref": "#/$defs/sha256" },
+    "grant_ids": { "type": "array", "maxItems": 64, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "file_ownership_sha256": { "$ref": "#/$defs/sha256" },
+    "live_process_count": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "resource_budget_sha256": { "$ref": "#/$defs/sha256" },
+    "retain_until_epoch_ms": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "clean": { "type": "boolean" },
+    "recovery_retained": { "type": "boolean" },
+    "disposition": { "enum": ["active", "handed_off", "recovery_required", "cleanup_eligible", "removed"] },
+    "record_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "disposition": { "enum": ["cleanup_eligible", "removed"] } }, "required": ["disposition"] },
+      "then": {
+        "properties": {
+          "live_process_count": { "const": 0 },
+          "clean": { "const": true },
+          "recovery_retained": { "const": true }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

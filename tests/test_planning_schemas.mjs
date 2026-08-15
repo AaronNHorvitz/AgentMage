@@ -353,10 +353,72 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "write-aware-checkpoint",
     "command-preview",
     "command-receipt",
+    "repository-preservation-manifest",
+    "repository-operation-plan",
+    "repository-operation-receipt",
+    "worktree-ownership",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true, true, true, true],
+    [true, true, true, true, true, true, true, true, true, true],
+  );
+});
+
+test("repository runtime schemas reject preservation and authority ambiguity", () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/repository-preservation-manifest.valid.json"),
+      "utf8",
+    ),
+  );
+  const unsafe = structuredClone(manifest);
+  unsafe.safe_ownership = false;
+  assert.equal(
+    validateRuntimeRecord("repository-preservation-manifest", unsafe, runtimeValidators).valid,
+    false,
+  );
+
+  const plan = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/repository-operation-plan.valid.json"),
+      "utf8",
+    ),
+  );
+  const pull = structuredClone(plan);
+  pull.invocations[0].arguments.push("pull");
+  assert.equal(
+    validateRuntimeRecord("repository-operation-plan", pull, runtimeValidators).valid,
+    false,
+  );
+  const networkWorktree = structuredClone(plan);
+  networkWorktree.invocations[0].network = true;
+  assert.equal(
+    validateRuntimeRecord("repository-operation-plan", networkWorktree, runtimeValidators).valid,
+    false,
+  );
+
+  const receipt = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/repository-operation-receipt.valid.json"),
+      "utf8",
+    ),
+  );
+  receipt.cleanup_verified = false;
+  assert.equal(
+    validateRuntimeRecord("repository-operation-receipt", receipt, runtimeValidators).valid,
+    false,
+  );
+
+  const ownership = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/worktree-ownership.valid.json"),
+      "utf8",
+    ),
+  );
+  ownership.live_process_count = 1;
+  assert.equal(
+    validateRuntimeRecord("worktree-ownership", ownership, runtimeValidators).valid,
+    false,
   );
 });
 

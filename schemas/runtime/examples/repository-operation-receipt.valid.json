@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "repository_transaction_id": "transaction-worktree-0001",
+  "authority_transaction_id": "authority-worktree-0001",
+  "operation_attempt_id": "attempt-worktree-0001",
+  "operation": "worktree_create",
+  "plan_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "before_manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "after_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "outcome": "succeeded",
+  "cleanup_verified": true,
+  "platform_code": "linux.git.succeeded",
+  "receipt_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+}

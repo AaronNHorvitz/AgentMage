@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/repository-preservation-manifest.schema.json",
+  "title": "AgentMage Repository Preservation Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "repository_sha256", "common_directory_sha256", "object_format",
+    "safe_ownership", "head_object", "current_branch", "upstream", "detached",
+    "index_sha256", "path_dispositions_sha256", "untracked_count", "ignored_count",
+    "local_branches_sha256", "remote_tracking_refs_sha256", "tags_sha256", "notes_sha256",
+    "stash_sha256", "replacement_refs_sha256", "reflogs_sha256", "agentmage_refs_sha256",
+    "worktrees_sha256", "submodules_sha256", "lfs_sha256", "object_database_sha256",
+    "configuration_sha256", "hooks_sha256", "content_drivers_sha256", "remotes_sha256",
+    "operations_sha256", "shallow", "partial", "hazardous_configuration", "manifest_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repository_sha256": { "$ref": "#/$defs/sha256" },
+    "common_directory_sha256": { "$ref": "#/$defs/sha256" },
+    "object_format": { "enum": ["sha1", "sha256"] },
+    "safe_ownership": { "const": true },
+    "head_object": { "$ref": "#/$defs/nullable_object" },
+    "current_branch": { "$ref": "#/$defs/nullable_branch" },
+    "upstream": { "$ref": "#/$defs/nullable_remote_ref" },
+    "detached": { "type": "boolean" },
+    "index_sha256": { "$ref": "#/$defs/sha256" },
+    "path_dispositions_sha256": { "$ref": "#/$defs/sha256" },
+    "untracked_count": { "$ref": "#/$defs/count" },
+    "ignored_count": { "$ref": "#/$defs/count" },
+    "local_branches_sha256": { "$ref": "#/$defs/sha256" },
+    "remote_tracking_refs_sha256": { "$ref": "#/$defs/sha256" },
+    "tags_sha256": { "$ref": "#/$defs/sha256" },
+    "notes_sha256": { "$ref": "#/$defs/sha256" },
+    "stash_sha256": { "$ref": "#/$defs/sha256" },
+    "replacement_refs_sha256": { "$ref": "#/$defs/sha256" },
+    "reflogs_sha256": { "$ref": "#/$defs/sha256" },
+    "agentmage_refs_sha256": { "$ref": "#/$defs/sha256" },
+    "worktrees_sha256": { "$ref": "#/$defs/sha256" },
+    "submodules_sha256": { "$ref": "#/$defs/sha256" },
+    "lfs_sha256": { "$ref": "#/$defs/sha256" },
+    "object_database_sha256": { "$ref": "#/$defs/sha256" },
+    "configuration_sha256": { "$ref": "#/$defs/sha256" },
+    "hooks_sha256": { "$ref": "#/$defs/sha256" },
+    "content_drivers_sha256": { "$ref": "#/$defs/sha256" },
+    "remotes_sha256": { "$ref": "#/$defs/sha256" },
+    "operations_sha256": { "$ref": "#/$defs/sha256" },
+    "shallow": { "type": "boolean" },
+    "partial": { "type": "boolean" },
+    "hazardous_configuration": { "const": false },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "detached": { "const": true } }, "required": ["detached"] },
+      "then": { "properties": { "current_branch": { "type": "null" } } },
+      "else": { "properties": { "current_branch": { "$ref": "#/$defs/branch" } } }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "nullable_object": { "oneOf": [{ "$ref": "#/$defs/object" }, { "type": "null" }] },
+    "branch": { "type": "string", "pattern": "^refs/heads/[A-Za-z0-9][A-Za-z0-9._/-]{0,499}$" },
+    "nullable_branch": { "oneOf": [{ "$ref": "#/$defs/branch" }, { "type": "null" }] },
+    "nullable_remote_ref": {
+      "oneOf": [
+        { "type": "string", "pattern": "^refs/remotes/[A-Za-z0-9][A-Za-z0-9._/-]{0,495}$" },
+        { "type": "null" }
+      ]
+    },
+    "count": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+  }
+}

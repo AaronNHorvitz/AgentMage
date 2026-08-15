@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "transaction_id": "transaction-worktree-0001",
+  "operation": "worktree_create",
+  "remote": null,
+  "source_ref": null,
+  "transaction_ref": null,
+  "branch_ref": "refs/heads/agentmage/tasks/task-0001",
+  "expected_old_object": null,
+  "expected_new_object": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "repository_path_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "worktree_path_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "preservation_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "invocations": [
+    {
+      "kind": "worktree_create",
+      "arguments": [
+        "--no-pager", "-c", "core.hooksPath=/dev/null", "-c", "protocol.allow=never",
+        "--git-dir=/repo", "worktree", "add", "--no-track", "-b",
+        "agentmage/tasks/task-0001", "/owned/worktree", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "environment": {
+        "GCM_INTERACTIVE": "Never",
+        "GIT_CONFIG_GLOBAL": "/dev/null",
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "NO_COLOR": "1",
+        "XDG_CONFIG_HOME": "/nonexistent"
+      },
+      "network": false,
+      "invocation_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ],
+  "plan_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+}
