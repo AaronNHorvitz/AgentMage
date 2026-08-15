@@ -8,6 +8,7 @@ mod filesystem_control;
 mod inventory;
 mod ipc;
 mod lifecycle;
+mod local_commit;
 mod platform;
 mod repository_safety;
 mod sandbox;
@@ -45,6 +46,11 @@ pub use lifecycle::{
     LinuxOperationalKeyLifecycleError, LinuxOperationalKeyLifecycleErrorKind,
     LinuxOperationalKeyProvisionReceipt, provision_linux_operational_key,
     rotate_linux_operational_key,
+};
+pub use local_commit::{
+    LinuxApprovedPostimage, LinuxCandidateTreeBuilder, LinuxLocalCommitError,
+    LinuxLocalCommitErrorKind, LinuxLocalCommitExecutor, LinuxOpenPgpSigner,
+    linux_candidate_index_path_sha256,
 };
 pub use platform::{
     LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,

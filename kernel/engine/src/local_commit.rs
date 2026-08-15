@@ -120,8 +120,8 @@ pub struct CandidateTreePlan {
     pub hooks_enabled: bool,
     /// Candidate construction cannot run filters or content drivers.
     pub filters_enabled: bool,
-    /// Candidate construction cannot consume repository configuration.
-    pub repository_configuration_enabled: bool,
+    /// Repository configuration cannot select an executable program.
+    pub repository_program_selection_enabled: bool,
     /// Candidate construction cannot access a remote.
     pub network_authority: bool,
     /// Canonical plan digest.
@@ -191,7 +191,7 @@ pub fn plan_candidate_tree(
         files,
         hooks_enabled: false,
         filters_enabled: false,
-        repository_configuration_enabled: false,
+        repository_program_selection_enabled: false,
         network_authority: false,
         plan_sha256: ZERO_SHA256.to_owned(),
     })
@@ -248,7 +248,7 @@ fn validate_candidate_tree_plan(plan: &CandidateTreePlan) -> Result<(), LocalCom
         })
         || plan.hooks_enabled
         || plan.filters_enabled
-        || plan.repository_configuration_enabled
+        || plan.repository_program_selection_enabled
         || plan.network_authority
         || !is_sha256(&plan.plan_sha256)
     {
@@ -292,8 +292,8 @@ pub struct CandidateTreePlatformResult {
     pub hooks_executed: bool,
     /// Whether any content transform ran.
     pub filters_executed: bool,
-    /// Whether repository-selected configuration influenced the operation.
-    pub repository_configuration_used: bool,
+    /// Whether repository configuration selected an executable program.
+    pub repository_selected_program_used: bool,
     /// Whether any network connection was attempted.
     pub network_used: bool,
     /// Stable content-free platform code.
@@ -376,7 +376,7 @@ pub fn reconcile_candidate_tree(
         || !result.cleanup_verified
         || result.hooks_executed
         || result.filters_executed
-        || result.repository_configuration_used
+        || result.repository_selected_program_used
         || result.network_used
         || !valid_platform_code(&result.platform_code)
     {
@@ -449,8 +449,8 @@ pub struct PinnedCommitSigner {
     pub public_key_sha256: String,
     /// Exact external inspection evidence digest.
     pub inspection_evidence_sha256: String,
-    /// Repository configuration was not consulted.
-    pub repository_configuration_used: bool,
+    /// Repository configuration did not select the signer program.
+    pub repository_selected_program_used: bool,
     /// Unsigned fallback is never available.
     pub unsigned_fallback: bool,
     /// Canonical signer report digest.
@@ -487,7 +487,7 @@ fn validate_signer(signer: &PinnedCommitSigner) -> Result<(), LocalCommitError> 
         || !valid_fingerprint(&signer.key_fingerprint)
         || !is_sha256(&signer.public_key_sha256)
         || !is_sha256(&signer.inspection_evidence_sha256)
-        || signer.repository_configuration_used
+        || signer.repository_selected_program_used
         || signer.unsigned_fallback
         || !is_sha256(&signer.signer_sha256)
     {
@@ -856,8 +856,8 @@ pub struct LocalCommitPlatformResult {
     pub hooks_executed: bool,
     /// Whether a content transform ran.
     pub filters_executed: bool,
-    /// Whether repository-selected configuration was used.
-    pub repository_configuration_used: bool,
+    /// Whether repository configuration selected an executable program.
+    pub repository_selected_program_used: bool,
     /// Whether any network connection was attempted.
     pub network_used: bool,
     /// Every attributed process and temporary artifact was reconciled.
@@ -955,7 +955,7 @@ pub fn reconcile_local_commit(
         || result.remotes_after_sha256 != result.before.remotes_sha256
         || result.hooks_executed
         || result.filters_executed
-        || result.repository_configuration_used
+        || result.repository_selected_program_used
         || result.network_used
         || !result.cleanup_verified
         || !valid_platform_code(&result.platform_code)
@@ -1420,7 +1420,7 @@ mod tests {
             }],
             hooks_enabled: false,
             filters_enabled: false,
-            repository_configuration_enabled: false,
+            repository_program_selection_enabled: false,
             network_authority: false,
             plan_sha256: ZERO_SHA256.to_owned(),
         })
@@ -1449,7 +1449,7 @@ mod tests {
                 cleanup_verified: true,
                 hooks_executed: false,
                 filters_executed: false,
-                repository_configuration_used: false,
+                repository_selected_program_used: false,
                 network_used: false,
                 platform_code: "linux.git.candidate.succeeded".to_owned(),
             },
@@ -1468,7 +1468,7 @@ mod tests {
             key_fingerprint: "1234567890abcdef1234567890abcdef12345678".to_owned(),
             public_key_sha256: hash('9'),
             inspection_evidence_sha256: hash('a'),
-            repository_configuration_used: false,
+            repository_selected_program_used: false,
             unsigned_fallback: false,
             signer_sha256: String::new(),
         })
@@ -1565,7 +1565,7 @@ mod tests {
                 cleanup_verified: true,
                 hooks_executed: false,
                 filters_executed: false,
-                repository_configuration_used: false,
+                repository_selected_program_used: false,
                 network_used: false,
                 platform_code: "linux.git.candidate.succeeded".to_owned(),
             };
@@ -1573,7 +1573,7 @@ mod tests {
                 "index" => result.user_index_after_sha256 = hash('e'),
                 "hook" => result.hooks_executed = true,
                 "filter" => result.filters_executed = true,
-                "config" => result.repository_configuration_used = true,
+                "config" => result.repository_selected_program_used = true,
                 "network" => result.network_used = true,
                 "ref" => result.after = manifest('8', 'e'),
                 _ => unreachable!(),
@@ -1655,7 +1655,7 @@ mod tests {
             remotes_after_sha256: commit_before.remotes_sha256.clone(),
             hooks_executed: false,
             filters_executed: false,
-            repository_configuration_used: false,
+            repository_selected_program_used: false,
             network_used: false,
             cleanup_verified: true,
             platform_code: "linux.git.commit.succeeded".to_owned(),
@@ -1692,7 +1692,7 @@ mod tests {
                 "signature" => changed.signature_verified = false,
                 "hook" => changed.hooks_executed = true,
                 "filter" => changed.filters_executed = true,
-                "config" => changed.repository_configuration_used = true,
+                "config" => changed.repository_selected_program_used = true,
                 "branch" => changed.task_branch_before = Some(object('e')),
                 _ => unreachable!(),
             }
@@ -1713,7 +1713,7 @@ mod tests {
     #[test]
     fn signer_and_plan_never_admit_repository_selection_or_publication_authority() {
         let mut untrusted = signer();
-        untrusted.repository_configuration_used = true;
+        untrusted.repository_selected_program_used = true;
         untrusted.signer_sha256 = ZERO_SHA256.to_owned();
         untrusted.signer_sha256 = canonical_sha256(&untrusted).expect("signer digest");
         assert_eq!(untrusted.verify(), Err(LocalCommitError::SignerDenied));

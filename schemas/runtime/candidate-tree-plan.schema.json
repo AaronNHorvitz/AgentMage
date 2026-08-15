@@ -18,7 +18,7 @@
     "files",
     "hooks_enabled",
     "filters_enabled",
-    "repository_configuration_enabled",
+    "repository_program_selection_enabled",
     "network_authority",
     "plan_sha256"
   ],
@@ -41,7 +41,7 @@
     },
     "hooks_enabled": { "const": false },
     "filters_enabled": { "const": false },
-    "repository_configuration_enabled": { "const": false },
+    "repository_program_selection_enabled": { "const": false },
     "network_authority": { "const": false },
     "plan_sha256": { "$ref": "#/$defs/sha256" }
   },

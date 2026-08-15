@@ -14,7 +14,7 @@
     "key_fingerprint",
     "public_key_sha256",
     "inspection_evidence_sha256",
-    "repository_configuration_used",
+    "repository_selected_program_used",
     "unsigned_fallback",
     "signer_sha256"
   ],
@@ -28,7 +28,7 @@
     "key_fingerprint": { "$ref": "#/$defs/fingerprint" },
     "public_key_sha256": { "$ref": "#/$defs/sha256" },
     "inspection_evidence_sha256": { "$ref": "#/$defs/sha256" },
-    "repository_configuration_used": { "const": false },
+    "repository_selected_program_used": { "const": false },
     "unsigned_fallback": { "const": false },
     "signer_sha256": { "$ref": "#/$defs/sha256" }
   },

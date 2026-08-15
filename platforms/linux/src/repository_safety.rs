@@ -100,6 +100,11 @@ impl LinuxGitArtifact {
     pub fn sha256(&self) -> &str {
         &self.sha256
     }
+
+    /// Returns the held launch path for sibling platform adapters.
+    pub(crate) fn launch_path(&self) -> &Path {
+        &self.launch_path
+    }
 }
 
 impl fmt::Debug for LinuxGitArtifact {
@@ -157,6 +162,21 @@ impl LinuxRepositoryScope {
     fn worktree_path(&self) -> PathBuf {
         self.owned_root.join("worktree")
     }
+
+    /// Returns the verified checkout root for sibling platform adapters.
+    pub(crate) fn checkout_root(&self) -> &Path {
+        &self.checkout_root
+    }
+
+    /// Returns the verified Git directory for sibling platform adapters.
+    pub(crate) fn git_directory(&self) -> &Path {
+        &self.git_directory
+    }
+
+    /// Returns the AgentMage-owned management root for sibling platform adapters.
+    pub(crate) fn owned_root(&self) -> &Path {
+        &self.owned_root
+    }
 }
 
 /// Computes the Linux canonical identity used by repository operation plans.
@@ -177,6 +197,11 @@ impl LinuxRepositoryCollector {
     #[must_use]
     pub const fn new(git: LinuxGitArtifact) -> Self {
         Self { git }
+    }
+
+    /// Returns the held Git artifact for sibling platform adapters.
+    pub(crate) fn git(&self) -> &LinuxGitArtifact {
+        &self.git
     }
 
     /// Collects a bounded manifest without retaining path names, config values, or file content.

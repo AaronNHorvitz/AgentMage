@@ -513,7 +513,7 @@ test("local commit records reject signer, approval, index, publication, and sign
     [
       "pinned-commit-signer",
       (record) => {
-        record.repository_configuration_used = true;
+        record.repository_selected_program_used = true;
       },
     ],
     [
