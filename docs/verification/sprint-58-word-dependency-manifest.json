@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_58_word_dependency_manifest",
+  "story_id": "58.1",
+  "isolation": {
+    "resolver": "cargo-lock-v4",
+    "locked_build_required": true,
+    "default_features_disabled": true,
+    "ambient_process_execution": false,
+    "ambient_filesystem_access": false,
+    "ambient_network_access": false
+  },
+  "admitted_components": [
+    {
+      "name": "quick-xml",
+      "version": "0.41.0",
+      "cargo_checksum_sha256": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1",
+      "license": "MIT",
+      "enabled_features": [],
+      "purposes": [
+        "bounded-ooxml-xml-inspection",
+        "bounded-ooxml-text-extraction"
+      ]
+    },
+    {
+      "name": "zip",
+      "version": "8.6.0",
+      "cargo_checksum_sha256": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b",
+      "license": "MIT",
+      "enabled_features": [
+        "deflate-flate2-zlib-rs"
+      ],
+      "purposes": [
+        "bounded-ooxml-package-generation",
+        "bounded-ooxml-package-inspection"
+      ]
+    }
+  ],
+  "source_compatibility_targets": [
+    "fedora",
+    "macos",
+    "ubuntu"
+  ],
+  "executed_platform_evidence": [
+    "fedora-x86_64"
+  ],
+  "unadmitted_components": [
+    {
+      "capability": "word-renderer",
+      "state": "deferred-to-sprint-59",
+      "reason_code": "word.renderer.cross-platform-package-not-admitted"
+    }
+  ],
+  "cross_platform_acceptance_complete": false
+}

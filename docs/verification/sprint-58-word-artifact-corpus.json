@@ -1,0 +1,452 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_58_word_artifact_acceptance_corpus",
+  "story_id": "58.1",
+  "legacy_story_id": "S-050",
+  "case_count": 73,
+  "cases": [
+    {
+      "case_id": "word-dependency-01",
+      "category": "dependency",
+      "expected": "quick-xml is exactly pinned and hash bound",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-02",
+      "category": "dependency",
+      "expected": "zip is exactly pinned and hash bound",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-03",
+      "category": "dependency",
+      "expected": "both admitted crates have MIT license evidence",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-04",
+      "category": "dependency",
+      "expected": "default dependency features remain disabled",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-05",
+      "category": "dependency",
+      "expected": "only the bounded ZIP deflate feature is enabled",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-06",
+      "category": "dependency",
+      "expected": "Cargo.lock seals the complete transitive graph",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-07",
+      "category": "dependency",
+      "expected": "the production dependency class is explicit",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-08",
+      "category": "dependency",
+      "expected": "the supply-chain catalog and software bill of materials agree",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-09",
+      "category": "dependency",
+      "expected": "Fedora local evidence does not imply macOS or Ubuntu execution",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-dependency-10",
+      "category": "dependency",
+      "expected": "the unadmitted renderer remains a named blocker",
+      "requirement": "S-050-I01"
+    },
+    {
+      "case_id": "word-extraction-01",
+      "category": "extraction",
+      "expected": "identical source profile and converter produce identical sidecar bytes",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-02",
+      "category": "extraction",
+      "expected": "source digest binds every extraction",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-03",
+      "category": "extraction",
+      "expected": "converter identity binds every extraction",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-04",
+      "category": "extraction",
+      "expected": "profile identity contributes to the cache key",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-05",
+      "category": "extraction",
+      "expected": "changed source bytes miss the cache",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-06",
+      "category": "extraction",
+      "expected": "bounded cache reuses only exact sealed results",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-07",
+      "category": "extraction",
+      "expected": "UTF-8 text carries exact package-part byte provenance",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-08",
+      "category": "extraction",
+      "expected": "current text retains current revision state",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-09",
+      "category": "extraction",
+      "expected": "inserted text retains inserted revision state",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-10",
+      "category": "extraction",
+      "expected": "deleted text retains deleted revision state",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-11",
+      "category": "extraction",
+      "expected": "sidecar digest matches exact proposed bytes",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-extraction-12",
+      "category": "extraction",
+      "expected": "extraction performs no persistent cache write",
+      "requirement": "S-050-I02"
+    },
+    {
+      "case_id": "word-fidelity-01",
+      "category": "fidelity",
+      "expected": "table presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-02",
+      "category": "fidelity",
+      "expected": "comment presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-03",
+      "category": "fidelity",
+      "expected": "tracked insertion produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-04",
+      "category": "fidelity",
+      "expected": "tracked deletion produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-05",
+      "category": "fidelity",
+      "expected": "header presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-06",
+      "category": "fidelity",
+      "expected": "footer presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-07",
+      "category": "fidelity",
+      "expected": "numbering presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-08",
+      "category": "fidelity",
+      "expected": "section layout produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-09",
+      "category": "fidelity",
+      "expected": "hyperlink presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-10",
+      "category": "fidelity",
+      "expected": "image presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-11",
+      "category": "fidelity",
+      "expected": "field presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-12",
+      "category": "fidelity",
+      "expected": "style presence produces an explicit fidelity warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-fidelity-13",
+      "category": "fidelity",
+      "expected": "the immutable original remains authoritative for every warning",
+      "requirement": "S-050-I03"
+    },
+    {
+      "case_id": "word-inspection-01",
+      "category": "inspection",
+      "expected": "required OOXML parts are inventoried in canonical order",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-02",
+      "category": "inspection",
+      "expected": "every safely read part receives an exact content digest",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-03",
+      "category": "inspection",
+      "expected": "missing required parts quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-04",
+      "category": "inspection",
+      "expected": "duplicate central-directory names quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-05",
+      "category": "inspection",
+      "expected": "unsafe entry paths quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-06",
+      "category": "inspection",
+      "expected": "encrypted entries quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-07",
+      "category": "inspection",
+      "expected": "symbolic-link entries quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-08",
+      "category": "inspection",
+      "expected": "unsupported compression quarantines extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-09",
+      "category": "inspection",
+      "expected": "macro and active-content parts quarantine extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-10",
+      "category": "inspection",
+      "expected": "external relationships quarantine without resolution",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-11",
+      "category": "inspection",
+      "expected": "malformed relationship XML quarantines extraction",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-12",
+      "category": "inspection",
+      "expected": "source byte limit fails closed",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-13",
+      "category": "inspection",
+      "expected": "entry count limit counts raw central-directory records",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-14",
+      "category": "inspection",
+      "expected": "entry and aggregate expansion limits fail closed",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-inspection-15",
+      "category": "inspection",
+      "expected": "inspection performs no filesystem network or execution effect",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-01",
+      "category": "generation",
+      "expected": "identical Markdown and output identity produce identical DOCX bytes",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-02",
+      "category": "generation",
+      "expected": "headings become semantic Word heading styles",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-03",
+      "category": "generation",
+      "expected": "ordered and unordered lists use numbering definitions",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-04",
+      "category": "generation",
+      "expected": "Markdown tables become semantic Word tables",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-05",
+      "category": "generation",
+      "expected": "code lines remain visible text",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-06",
+      "category": "generation",
+      "expected": "raw HTML remains escaped visible text",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-07",
+      "category": "generation",
+      "expected": "external Markdown links create no external relationship",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-08",
+      "category": "generation",
+      "expected": "generated packages reopen through the same bounded inspector",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-09",
+      "category": "generation",
+      "expected": "source-path overwrite identity is rejected",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-generation-10",
+      "category": "generation",
+      "expected": "generation returns an unpersisted proposal only",
+      "requirement": "S-050-I04"
+    },
+    {
+      "case_id": "word-record_contract-01",
+      "category": "record_contract",
+      "expected": "inspection report schema is closed and versioned",
+      "requirement": "S-050-I02/S-050-I04"
+    },
+    {
+      "case_id": "word-record_contract-02",
+      "category": "record_contract",
+      "expected": "extraction result schema binds sidecar digest and inspection identities",
+      "requirement": "S-050-I02/S-050-I04"
+    },
+    {
+      "case_id": "word-record_contract-03",
+      "category": "record_contract",
+      "expected": "generated package schema binds package digest and reopened inspection",
+      "requirement": "S-050-I02/S-050-I04"
+    },
+    {
+      "case_id": "word-record_contract-04",
+      "category": "record_contract",
+      "expected": "noncanonical part feature finding fragment and warning ledgers reject",
+      "requirement": "S-050-I02/S-050-I04"
+    },
+    {
+      "case_id": "word-record_contract-05",
+      "category": "record_contract",
+      "expected": "any hidden filesystem network or execution effect rejects",
+      "requirement": "S-050-I02/S-050-I04"
+    },
+    {
+      "case_id": "word-prohibited_effect-01",
+      "category": "prohibited_effect",
+      "expected": "deny source overwrite",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-02",
+      "category": "prohibited_effect",
+      "expected": "deny sidecar persistence",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-03",
+      "category": "prohibited_effect",
+      "expected": "deny generated package persistence",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-04",
+      "category": "prohibited_effect",
+      "expected": "deny external relationship resolution",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-05",
+      "category": "prohibited_effect",
+      "expected": "deny active-content execution",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-06",
+      "category": "prohibited_effect",
+      "expected": "deny field evaluation",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-07",
+      "category": "prohibited_effect",
+      "expected": "deny renderer completion claims",
+      "requirement": "S-050-ST01"
+    },
+    {
+      "case_id": "word-prohibited_effect-08",
+      "category": "prohibited_effect",
+      "expected": "deny cross-platform completion claims from Fedora-only evidence",
+      "requirement": "S-050-ST01"
+    }
+  ],
+  "network_enabled": false,
+  "execution_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "renderer_admitted": false,
+  "product_integration_claimed": false
+}
