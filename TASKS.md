@@ -4042,27 +4042,27 @@ story criteria; Sprint AC 53.AC1 and 53.AC4; Story 53.1; and the sprint therefor
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 54.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 54.1.1.1** (legacy `S-047-I01`): Implement start-of-cycle briefing, closeout, recurring review, portfolio, and status views from approved local records.
-  - [ ] **Sub-task 54.1.1.2** (legacy `S-047-I02`): Implement commitment, decision, waiting, approval, deadline, and reminder trackers with exact source evidence.
-  - [ ] **Sub-task 54.1.1.3** (legacy `S-047-I03`): Implement priority ranking across urgency, importance, dependencies, schedule records, effort, user preference, and consequences with visible reasons.
-  - [ ] **Sub-task 54.1.1.4** (legacy `S-047-I04`): Implement meeting, decision, person, and organization briefs with confirmed, inferred, historical, disputed, and unknown distinctions.
-  - [ ] **Sub-task 54.1.1.5** (legacy `S-047-I05`): Implement correspondence drafts and response checks for unanswered questions, accidental commitments, unclear dates, missing attachments, unsupported claims, sensitive content, and uncertain names.
-  - [ ] **Sub-task 54.1.1.6** (legacy `S-047-I06`): Implement local message-export triage without connecting to or sending through an inbox.
-  - [ ] **Sub-task 54.1.1.7** (legacy `S-047-I07`): Implement workload conflict, preparation, briefing-pack, change-since, and forgotten-item reviews.
-  - [ ] **Sub-task 54.1.1.8** (legacy `S-047-I08`): Enforce ordinary, private, confidential, and highly restricted retrieval, retention, index, and export rules.
+- [x] **Task 54.1.1 - Implement the bounded story**
+  - [x] **Sub-task 54.1.1.1** (legacy `S-047-I01`): Implement start-of-cycle briefing, closeout, recurring review, portfolio, and status views from approved local records.
+  - [x] **Sub-task 54.1.1.2** (legacy `S-047-I02`): Implement commitment, decision, waiting, approval, deadline, and reminder trackers with exact source evidence.
+  - [x] **Sub-task 54.1.1.3** (legacy `S-047-I03`): Implement priority ranking across urgency, importance, dependencies, schedule records, effort, user preference, and consequences with visible reasons.
+  - [x] **Sub-task 54.1.1.4** (legacy `S-047-I04`): Implement meeting, decision, person, and organization briefs with confirmed, inferred, historical, disputed, and unknown distinctions.
+  - [x] **Sub-task 54.1.1.5** (legacy `S-047-I05`): Implement correspondence drafts and response checks for unanswered questions, accidental commitments, unclear dates, missing attachments, unsupported claims, sensitive content, and uncertain names.
+  - [x] **Sub-task 54.1.1.6** (legacy `S-047-I06`): Implement local message-export triage without connecting to or sending through an inbox.
+  - [x] **Sub-task 54.1.1.7** (legacy `S-047-I07`): Implement workload conflict, preparation, briefing-pack, change-since, and forgotten-item reviews.
+  - [x] **Sub-task 54.1.1.8** (legacy `S-047-I08`): Enforce ordinary, private, confidential, and highly restricted retrieval, retention, index, and export rules.
 
-- [ ] **Task 54.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 54.1.2.1:** Executive-assistant views and trackers.
-  - [ ] **Sub-task 54.1.2.2:** Ranking and recommendation explanation schemas.
-  - [ ] **Sub-task 54.1.2.3:** Evidence-backed briefing and correspondence templates.
-  - [ ] **Sub-task 54.1.2.4:** Executive-assistant skill pack and audit view.
+- [x] **Task 54.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 54.1.2.1:** Executive-assistant views and trackers.
+  - [x] **Sub-task 54.1.2.2:** Ranking and recommendation explanation schemas.
+  - [x] **Sub-task 54.1.2.3:** Evidence-backed briefing and correspondence templates.
+  - [x] **Sub-task 54.1.2.4:** Executive-assistant skill pack and audit view.
 
 - [ ] **Task 54.1.3 - Verify and close the story**
-  - [ ] **Sub-task 54.1.3.1:** `S-047-UT01` ranks labeled commitments/priorities across urgency, importance, dependency, owner, due date, confidence, conflict, stale evidence, and missing fields; assert deterministic explanation and tie handling.
-  - [ ] **Sub-task 54.1.3.2:** `S-047-UT02` generates briefings, decision logs, follow-ups, and correspondence drafts from fixed evidence; assert every material fact/citation/unknown and no invented commitment, recipient, date, or decision.
-  - [ ] **Sub-task 54.1.3.3:** `S-047-ST01` attempts hidden prioritization, inferred sensitive traits, unauthorized memory, automatic assignment, notification, send, schedule, or file mutation; assert proposal-only behavior and explicit approval boundaries.
-  - [ ] **Sub-task 54.1.3.4:** `S-047-IT01` updates the portfolio after source correction, supersession, task completion, and conflict; assert all views reconcile to canonical sources with preserved history.
+  - [x] **Sub-task 54.1.3.1:** `S-047-UT01` ranks labeled commitments/priorities across urgency, importance, dependency, owner, due date, confidence, conflict, stale evidence, and missing fields; assert deterministic explanation and tie handling.
+  - [x] **Sub-task 54.1.3.2:** `S-047-UT02` generates briefings, decision logs, follow-ups, and correspondence drafts from fixed evidence; assert every material fact/citation/unknown and no invented commitment, recipient, date, or decision.
+  - [x] **Sub-task 54.1.3.3:** `S-047-ST01` attempts hidden prioritization, inferred sensitive traits, unauthorized memory, automatic assignment, notification, send, schedule, or file mutation; assert proposal-only behavior and explicit approval boundaries.
+  - [x] **Sub-task 54.1.3.4:** `S-047-IT01` updates the portfolio after source correction, supersession, task completion, and conflict; assert all views reconcile to canonical sources with preserved history.
   - [ ] **Sub-task 54.1.3.5 - Product security evidence:** Map `SR-AI-003`/`SR-AI-004`/`SR-AI-007`/`SR-AI-010`, `SR-DAT-002`, `SR-CIV-001` through `SR-CIV-005`; retain ranking goldens, claim ledgers, prohibited-action traces, source reconciliation, and audit views.
 
 ##### Story Acceptance Criteria
@@ -4072,13 +4072,22 @@ story criteria; Sprint AC 53.AC1 and 53.AC4; Story 53.1; and the sprint therefor
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 54.AC1:** Every briefing, priority, reminder, and recommendation resolves to approved local sources.
-- [ ] **Sprint AC 54.AC2:** Proposals, assumptions, preferences, and reported statements are never rendered as confirmed decisions.
-- [ ] **Sprint AC 54.AC3:** Private classes remain isolated under their retrieval and export policies.
-- [ ] **Sprint AC 54.AC4:** No invitation, message, commitment, calendar change, or contact action occurs automatically.
-- [ ] **Sprint AC 54.AC5:** The same acceptance corpus passes against plain-folder and Obsidian knowledge stores.
+- [x] **Sprint AC 54.AC1:** Every briefing, priority, reminder, and recommendation resolves to approved local sources.
+- [x] **Sprint AC 54.AC2:** Proposals, assumptions, preferences, and reported statements are never rendered as confirmed decisions.
+- [x] **Sprint AC 54.AC3:** Private classes remain isolated under their retrieval and export policies.
+- [x] **Sprint AC 54.AC4:** No invitation, message, commitment, calendar change, or contact action occurs automatically.
+- [x] **Sprint AC 54.AC5:** The same acceptance corpus passes against plain-folder and Obsidian knowledge stores.
 
 **Gate decision:** Sprint 54 is PASS only when Story 54.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-54/local-evidence-report.json`
+binds 10 passing commands and the 77-case acceptance corpus to source revision
+`3128661a7e7670c8dd47520cfdfec90445498ea5` (report SHA-256
+`940d4a38fb299de3408318fd3e1c080515c53a2588ca9260f3b6a165f2348a58`). The bounded
+source contracts, artifacts, focused tests, privacy rules, source-store parity, and local sprint
+criteria are complete. Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53, the absent
+product coordinator and native interface integration, durable reminder lifecycle, installed
+cross-platform and trusted-package evidence, independent review, and deferred manual fuzzing.
 ### [ ] Sprint 55 - Meeting Records and Continuity
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
