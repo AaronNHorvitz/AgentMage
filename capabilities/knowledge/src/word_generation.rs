@@ -106,7 +106,7 @@ enum WordBlock {
     Table(Vec<Vec<String>>),
 }
 
-fn valid_identifier(value: &str) -> bool {
+pub(crate) fn valid_identifier(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 128
         && value.is_ascii()
@@ -223,7 +223,7 @@ fn markdown_blocks(document: &MarkdownDocument) -> Vec<WordBlock> {
     blocks
 }
 
-fn xml_escape(value: &str) -> String {
+pub(crate) fn xml_escape(value: &str) -> String {
     let mut escaped = String::with_capacity(value.len());
     for character in value.chars() {
         match character {
@@ -332,7 +332,7 @@ fn package_parts(blocks: &[WordBlock]) -> BTreeMap<String, Vec<u8>> {
     ])
 }
 
-fn zip_parts(parts: &BTreeMap<String, Vec<u8>>) -> Result<Vec<u8>, WordOoxmlError> {
+pub(crate) fn zip_parts(parts: &BTreeMap<String, Vec<u8>>) -> Result<Vec<u8>, WordOoxmlError> {
     let mut cursor = Cursor::new(Vec::new());
     {
         let mut writer = ZipWriter::new(&mut cursor);

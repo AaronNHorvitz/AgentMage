@@ -30,6 +30,7 @@ mod store;
 mod tasks;
 mod word_generation;
 mod word_ooxml;
+mod word_rich_generation;
 mod workflows;
 
 pub use authority::{
@@ -164,6 +165,12 @@ pub use word_ooxml::{
     WordPackageFindingKind, WordPackagePart, WordPartKind, WordPartSourceRange, WordRevisionState,
     WordSidecarCache, WordSidecarCacheOutcome, WordTextFragment, extract_docx_to_sidecar,
     inspect_docx, word_conversion_identity_sha256,
+};
+pub use word_rich_generation::{
+    RichWordPackageProposal, WordBorderStyle, WordDecisionCard, WordDocumentMetadata,
+    WordHeaderFooterConfiguration, WordNumberingDefinition, WordPageConfiguration,
+    WordRichDocumentBuilder, WordRichGenerationError, WordStyleConfiguration, WordStyleKind,
+    WordTableLayout,
 };
 pub use workflows::{
     KnowledgeRetrievalMode, KnowledgeWorkflow, KnowledgeWorkflowEvidence, KnowledgeWorkflowResult,
