@@ -89,6 +89,15 @@ class EffectBoundaryTests(unittest.TestCase):
             f"unregistered effect-authorization consumer: {relative}", failures
         )
 
+    def test_command_runner_is_a_registered_permit_consumer(self) -> None:
+        failures = validate_effect_boundary()
+
+        self.assertNotIn(
+            "unregistered effect-authorization consumer: "
+            "kernel/engine/src/command_runner.rs",
+            failures,
+        )
+
     def test_observation_module_cannot_convert_to_effect_authority(self) -> None:
         relative = Path("platforms/linux/src/inventory.rs")
         source = self.source(str(relative)) + "\n// EffectAuthorization\n"
