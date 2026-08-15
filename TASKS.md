@@ -3827,27 +3827,35 @@ the sprint therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 51.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 51.1.1.1** (legacy `S-044-I01`): Implement task tiers for deterministic script, local model, ask user, and frontier recommended.
-  - [ ] **Sub-task 51.1.1.2** (legacy `S-044-I02`): Trigger recommendations only from measured capability failure, repeated validation failure, contradiction, rejected verification, exhausted budget, or material clarification need.
-  - [ ] **Sub-task 51.1.1.3** (legacy `S-044-I03`): Keep human clarification separate from frontier recommendation.
-  - [ ] **Sub-task 51.1.1.4** (legacy `S-044-I04`): Build packets deterministically from objective, current state, citations, receipts, constraints, authority boundary, acceptance checks, disclosure list, unresolved questions, and required output contract.
-  - [ ] **Sub-task 51.1.1.5** (legacy `S-044-I05`): Minimize packet content, redact secrets, enforce workspace scope, and show exact included excerpts and metadata.
-  - [ ] **Sub-task 51.1.1.6** (legacy `S-044-I06`): Render the packet locally with a stable hash and user review controls.
-  - [ ] **Sub-task 51.1.1.7** (legacy `S-044-I07`): Prohibit Codex or external-model invocation, tab control, prompt population, clipboard writes, launch commands, endpoint calls, and transmission.
-  - [ ] **Sub-task 51.1.1.8** (legacy `S-044-I08`): Record recommendation reason, packet hash, redaction result, and later user-supplied destination only when the user chooses to record it.
+  - [x] **Sub-task 51.1.1.1** (legacy `S-044-I01`): Implement task tiers for deterministic script, local model, ask user, and frontier recommended. Evidence: [`frontier.rs`](kernel/contracts/src/frontier.rs) closes all four tier identities, and [`frontier_recommendation.rs`](kernel/engine/src/frontier_recommendation.rs) selects among them from typed local evidence without external effect.
+  - [x] **Sub-task 51.1.1.2** (legacy `S-044-I02`): Trigger recommendations only from measured capability failure, repeated validation failure, contradiction, rejected verification, exhausted budget, or material clarification need. Evidence: the engine admits exactly those six triggers, requires a local-model attempt and exact acceptance-check identity for every recommendation, and rejects trigger or reason drift.
+  - [x] **Sub-task 51.1.1.3** (legacy `S-044-I03`): Keep human clarification separate from frontier recommendation. Evidence: user-owned clarification always resolves to `AskUser`; the schema and semantic validator prohibit a frontier trigger on that path.
+  - [x] **Sub-task 51.1.1.4** (legacy `S-044-I04`): Build packets deterministically from objective, current state, citations, receipts, constraints, authority boundary, acceptance checks, disclosure list, unresolved questions, and required output contract. Evidence: the frontier request and builder require every named field, all three evidence roles, canonical order, and exact content hashes before creating a local review.
+  - [x] **Sub-task 51.1.1.5** (legacy `S-044-I05`): Minimize packet content, redact secrets, enforce workspace scope, and show exact included excerpts and metadata. Evidence: frontier-specific validation composes the existing sealed-handoff limits and denies secrets, private or unrelated files, hidden metadata, absolute paths, excessive excerpts, authority objects, prompt injection, missing evidence roles, and incomplete redaction before preview.
+  - [x] **Sub-task 51.1.1.6** (legacy `S-044-I06`): Render the packet locally with a stable hash and user review controls. Evidence: the builder emits exact packet, disclosure-result, and preview hashes into the existing local-only handoff review contract; native handoff parsing and rendering tests reject byte mutation and missing acknowledgment. Product frontier coordination remains absent.
+  - [x] **Sub-task 51.1.1.7** (legacy `S-044-I07`): Prohibit Codex or external-model invocation, tab control, prompt population, clipboard writes, launch commands, endpoint calls, and transmission. Evidence: Rust and TypeScript close fourteen denial actions, including every named operation plus upload, browser, schedule, route, and standing-consent variants; every preview and receipt fixes external delivery to false.
+  - [x] **Sub-task 51.1.1.8** (legacy `S-044-I08`): Record recommendation reason, packet hash, redaction result, and later user-supplied destination only when the user chooses to record it. Evidence: the recommendation receipt binds the decision reason, packet hash, disclosure result, explicit destination-recording choice, optional safe label, and false delivery marker; implicit or sensitive destination data fails validation.
 
-- [ ] **Task 51.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 51.1.2.1:** Tier decision and frontier-recommendation schema.
-  - [ ] **Sub-task 51.1.2.2:** Deterministic packet builder and disclosure preview.
-  - [ ] **Sub-task 51.1.2.3:** Redaction, scope, and prohibited-delivery fixtures.
-  - [ ] **Sub-task 51.1.2.4:** Frontier recommendation receipt format.
+  Local source status: the complete recommendation and packet contract is implemented, but no product
+  frontier coordinator or native end-to-end workflow invokes it. Task 51.1.1 therefore remains open.
+
+- [x] **Task 51.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 51.1.2.1:** Tier decision and frontier-recommendation schema. Evidence: closed runtime schemas and canonical examples validate exact tier decisions and recommendation receipts, including semantic trigger, clarification, destination, ordering, and no-effect rules.
+  - [x] **Sub-task 51.1.2.2:** Deterministic packet builder and disclosure preview. Evidence: the Rust builder creates the exact local handoff review, content-free disclosure inventory, and three stable hashes; repeated construction from the same request is byte-identical.
+  - [x] **Sub-task 51.1.2.3:** Redaction, scope, and prohibited-delivery fixtures. Evidence: [`sprint-51-frontier-corpus.json`](docs/verification/sprint-51-frontier-corpus.json) freezes 10 disclosure attacks, 14 prohibited delivery attempts, and 8 review mutations under a closed Python contract.
+  - [x] **Sub-task 51.1.2.4:** Frontier recommendation receipt format. Evidence: the typed Rust receipt, JSON Schema, valid example, digest verifier, and hostile schema mutations bind exact local recommendation bookkeeping without recording content or claiming delivery.
 
 - [ ] **Task 51.1.3 - Verify and close the story**
-  - [ ] **Sub-task 51.1.3.1:** `S-044-UT01` evaluates local-success, local-failure, uncertainty, unsupported-capability, and threshold-boundary cases; assert frontier consultation is recommended only by the approved measured rule.
-  - [ ] **Sub-task 51.1.3.2:** `S-044-UT02` builds identical packets twice from exact selected evidence; assert byte-stable manifest, hashes, bounded excerpts, exclusions, task, expected return schema, and disclosure inventory.
-  - [ ] **Sub-task 51.1.3.3:** `S-044-ST01` seeds credentials, private files, unrelated context, hidden metadata, absolute paths, excessive excerpts, authority objects, and prompt injections; assert redaction/blocking before packet approval.
-  - [ ] **Sub-task 51.1.3.4:** `S-044-IT01` attempts automatic send/upload/API/browser/clipboard/Codex transfer and post-approval packet mutation; assert zero delivery and invalidated disclosure approval.
+  - [x] **Sub-task 51.1.3.1:** `S-044-UT01` evaluates local-success, local-failure, uncertainty, unsupported-capability, and threshold-boundary cases; assert frontier consultation is recommended only by the approved measured rule. Evidence: seven focused engine tests and the 13-case tier matrix cover all named outcomes and both repeated-validation threshold sides; unattempted or untriggered work is never recommended.
+  - [x] **Sub-task 51.1.3.2:** `S-044-UT02` builds identical packets twice from exact selected evidence; assert byte-stable manifest, hashes, bounded excerpts, exclusions, task, expected return schema, and disclosure inventory. Evidence: focused unit tests compare complete repeated previews and fail decision, packet, manifest, inventory, source-state, policy, and expiry mutations.
+  - [x] **Sub-task 51.1.3.3:** `S-044-ST01` seeds credentials, private files, unrelated context, hidden metadata, absolute paths, excessive excerpts, authority objects, and prompt injections; assert redaction/blocking before packet approval. Evidence: all eight named classes plus missing role and incomplete-redaction variants fail before preview in Rust and the frozen disclosure corpus.
+  - [x] **Sub-task 51.1.3.4:** `S-044-IT01` attempts automatic send/upload/API/browser/clipboard/Codex transfer and post-approval packet mutation; assert zero delivery and invalidated disclosure approval. Evidence: 14 closed prohibited actions are denied across the kernel and native parser, while eight exact-review mutations invalidate approval; accepted delivery count is zero.
   - [ ] **Sub-task 51.1.3.5 - Product security evidence:** Map `SR-ACC-007`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-OPS-001`/`SR-OPS-003`; retain tier decisions, packet hashes, disclosure previews, canary scans, prohibited-delivery traces, and approval receipt.
+
+  Local verification status: the requirement mapping, tier and disclosure suites, packet hashes,
+  prohibited-delivery traces, source digests, and blocked disposition are retained. Native product
+  canary evidence, trusted installed-package execution, supported-platform acceptance, independent
+  review, and manual fuzzing remain absent, so 51.1.3.5 and Task 51.1.3 remain open.
 
 ##### Story Acceptance Criteria
 
@@ -3856,11 +3864,22 @@ the sprint therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 51.AC1:** Every recommendation cites a failed or unmeasured local acceptance check.
-- [ ] **Sprint AC 51.AC2:** Valid packets contain all required context and only previewed content.
-- [ ] **Sprint AC 51.AC3:** Secret, unrelated-workspace, restricted, hidden-prompt, and unapproved excerpts are absent.
-- [ ] **Sprint AC 51.AC4:** Direct, injected, scheduled, routed, and standing-consent delivery attempts all fail.
-- [ ] **Sprint AC 51.AC5:** Only the user can move the reviewed packet to another interface.
+- [x] **Sprint AC 51.AC1:** Every recommendation cites a failed or unmeasured local acceptance check. Evidence: every frontier decision requires an attempted local model, exact acceptance-check identity, ordered evidence hashes, and one of six approved measured or explicit unresolved triggers.
+- [x] **Sprint AC 51.AC2:** Valid packets contain all required context and only previewed content. Evidence: all packet fields and evidence roles are mandatory, the exact packet is content-addressed, and any content, metadata, policy, inventory, or expiry drift requires a new review.
+- [x] **Sprint AC 51.AC3:** Secret, unrelated-workspace, restricted, hidden-prompt, and unapproved excerpts are absent. Evidence: the 10-case disclosure matrix and focused handoff/frontier tests deny every listed class before a preview can be produced.
+- [x] **Sprint AC 51.AC4:** Direct, injected, scheduled, routed, and standing-consent delivery attempts all fail. Evidence: the closed 14-action matrix exercises all five categories across Rust and TypeScript with local denial receipts and zero delivery.
+- [x] **Sprint AC 51.AC5:** Only the user can move the reviewed packet to another interface. Evidence: the implementation exposes no delivery API, every modeled transfer mechanism is denied, destination recording is optional user bookkeeping only, and all external-effect markers are false.
+
+Retained local evidence: source revision `27d5bf30d3376e6dacb1aec461fef1ecaf77b3c6` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-51/local-evidence-report.json), SHA-256
+`d2fd7d7682e0e4be297dd230f3c6bdab297e1a1cfe3afc2fc7d97b8dacb45d9d`. All ten recorded
+commands exit zero and all five focused suites report zero blocking skips. Thirteen tier cases, ten
+disclosure attacks, fourteen prohibited-delivery attempts, and eight exact-review mutations pass
+locally with zero accepted delivery attempts. Sprint 51 remains **BLOCKED** because Sprint 50 is
+blocked and the frontier product coordinator, live local-model failure campaign, native end-to-end
+review workflow, supported-platform acceptance, trusted installed-package execution, independent
+review, and deferred manual fuzzing remain absent. Task 51.1.1, Task 51.1.3, both story criteria,
+Story 51.1, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 51 is PASS only when Story 51.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 52 - Frontier Result Import and Local Revalidation
