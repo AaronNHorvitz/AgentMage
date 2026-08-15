@@ -187,6 +187,10 @@ pub struct ChangeIntentRecord {
     pub current_behavior_citation_ids: Vec<String>,
     /// Target citations resolved from the index.
     pub target_citation_ids: Vec<String>,
+    /// Repository instruction facts rejected as planning or mutation authority.
+    pub rejected_repository_instruction_fact_ids: Vec<String>,
+    /// Exact citations for repository instructions rejected as authority.
+    pub rejected_repository_instruction_citation_ids: Vec<String>,
     /// Explicit readiness.
     pub status: ChangeIntentStatus,
     /// A descriptive record grants no mutation authority.
@@ -302,6 +306,32 @@ pub fn normalize_change_intent(
     }
     let current_behavior_citation_ids = citation_ids_for(&facts, &input.current_behavior_fact_ids)?;
     let target_citation_ids = citation_ids_for(&facts, &input.target_fact_ids)?;
+    if input.target_fact_ids.iter().any(|identity| {
+        facts
+            .get(identity.as_str())
+            .is_some_and(|fact| fact.kind == RepositoryFactKind::Instruction)
+    }) {
+        return Err(ChangeIntentError::EvidenceInvalid);
+    }
+    let mut rejected_repository_instruction_fact_ids = index
+        .facts
+        .iter()
+        .filter(|fact| fact.kind == RepositoryFactKind::Instruction)
+        .map(|fact| fact.fact_id.clone())
+        .collect::<Vec<_>>();
+    rejected_repository_instruction_fact_ids.sort();
+    let mut rejected_repository_instruction_citation_ids = index
+        .facts
+        .iter()
+        .filter(|fact| fact.kind == RepositoryFactKind::Instruction)
+        .flat_map(|fact| {
+            fact.citations
+                .iter()
+                .map(|citation| citation.citation_sha256.clone())
+        })
+        .collect::<Vec<_>>();
+    rejected_repository_instruction_citation_ids.sort();
+    rejected_repository_instruction_citation_ids.dedup();
     let status = if input
         .clarifications
         .iter()
@@ -317,6 +347,8 @@ pub fn normalize_change_intent(
         input,
         current_behavior_citation_ids,
         target_citation_ids,
+        rejected_repository_instruction_fact_ids,
+        rejected_repository_instruction_citation_ids,
         status,
         mutation_authority: false,
         intent_sha256: String::new(),

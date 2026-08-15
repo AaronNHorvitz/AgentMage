@@ -574,6 +574,15 @@ pub fn build_change_plan(
         return Err(ChangePlanError::ReproductionInvalid);
     }
     input.regression_test = seal_regression_test_plan(index, input.regression_test)?;
+    if input.regression_test.test_fact_ids.iter().any(|identity| {
+        intent
+            .input
+            .target_fact_ids
+            .binary_search(identity)
+            .is_err()
+    }) {
+        return Err(ChangePlanError::RegressionInvalid);
+    }
     input.hypotheses = seal_hypotheses(index, input.reproduction.as_ref(), input.hypotheses)?;
     validate_alternatives(index, &mut input.alternatives)?;
     validate_validations(intent, &input.validations)?;
