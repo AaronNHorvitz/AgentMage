@@ -1,0 +1,527 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_62_tabular_corpus",
+  "story_id": "62.1",
+  "legacy_story_id": "S-052",
+  "case_count": 85,
+  "cases": [
+    {
+      "case_id": "data62-delimited_input-01",
+      "category": "delimited_input",
+      "expected": "CSV TSV and semicolon dialects are explicit",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-02",
+      "category": "delimited_input",
+      "expected": "quoted fields retain delimiters",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-03",
+      "category": "delimited_input",
+      "expected": "quoted fields retain embedded CRLF data",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-04",
+      "category": "delimited_input",
+      "expected": "doubled quotes decode exactly",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-05",
+      "category": "delimited_input",
+      "expected": "invalid UTF-8 rejects",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-06",
+      "category": "delimited_input",
+      "expected": "unterminated quoted fields reject",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-07",
+      "category": "delimited_input",
+      "expected": "characters after a closing quote reject",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-08",
+      "category": "delimited_input",
+      "expected": "empty input rejects",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-09",
+      "category": "delimited_input",
+      "expected": "duplicate normalized headers reject",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-10",
+      "category": "delimited_input",
+      "expected": "empty normalized headers reject",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-11",
+      "category": "delimited_input",
+      "expected": "ragged records reject",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-12",
+      "category": "delimited_input",
+      "expected": "source bytes rows columns and fields are bounded",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-13",
+      "category": "delimited_input",
+      "expected": "source path and source digest remain exact",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-14",
+      "category": "delimited_input",
+      "expected": "original source remains authoritative",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-15",
+      "category": "delimited_input",
+      "expected": "parsing performs no file network or execution effect",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-16",
+      "category": "delimited_input",
+      "expected": "missing values use cleaned whitespace semantics",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-17",
+      "category": "delimited_input",
+      "expected": "duplicate rows use exact canonical row digests",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-18",
+      "category": "delimited_input",
+      "expected": "filters bind admitted normalized columns",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-19",
+      "category": "delimited_input",
+      "expected": "sorts use stable normalized lexical order",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-20",
+      "category": "delimited_input",
+      "expected": "source row projections retain exact row digests",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-21",
+      "category": "delimited_input",
+      "expected": "matching retains exact left and right source digests",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-22",
+      "category": "delimited_input",
+      "expected": "duplicate and missing keys have closed reason codes",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-23",
+      "category": "delimited_input",
+      "expected": "differing fields are canonically ordered",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-24",
+      "category": "delimited_input",
+      "expected": "normalization uses NFKC lowercase and collapsed whitespace",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-25",
+      "category": "delimited_input",
+      "expected": "filename helpers cannot introduce path separators",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-26",
+      "category": "delimited_input",
+      "expected": "URL normalization never resolves or fetches a target",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-27",
+      "category": "delimited_input",
+      "expected": "CSV output quotes delimiter quote and line-break values",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-28",
+      "category": "delimited_input",
+      "expected": "formula DDE and leading-control cells receive an inert prefix",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-29",
+      "category": "delimited_input",
+      "expected": "safe CSV bytes reopen as inert text",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-delimited_input-30",
+      "category": "delimited_input",
+      "expected": "safe CSV proposals perform no file network or execution effect",
+      "requirement": "62.1.1.3/62.1.1.4"
+    },
+    {
+      "case_id": "data62-open_xml-01",
+      "category": "open_xml",
+      "expected": "only caller-supplied XLSX bytes and a canonical path are accepted",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-02",
+      "category": "open_xml",
+      "expected": "ZIP entry paths are enclosed and traversal-free",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-03",
+      "category": "open_xml",
+      "expected": "duplicate package entries reject",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-04",
+      "category": "open_xml",
+      "expected": "encrypted entries reject without password handling",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-05",
+      "category": "open_xml",
+      "expected": "only stored and deflated entries are admitted",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-06",
+      "category": "open_xml",
+      "expected": "compressed source entry count entry bytes and total bytes are bounded",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-07",
+      "category": "open_xml",
+      "expected": "workbook relationships resolve only inside the package",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-08",
+      "category": "open_xml",
+      "expected": "external worksheet relationships reject",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-09",
+      "category": "open_xml",
+      "expected": "worksheet count cells and shared strings are bounded",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-10",
+      "category": "open_xml",
+      "expected": "workbook 1900 and 1904 date systems are explicit",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-11",
+      "category": "open_xml",
+      "expected": "Excel serial 60 retains the documented 1900 leap-day convention",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-12",
+      "category": "open_xml",
+      "expected": "worksheet identity name state part and digest are retained",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-13",
+      "category": "open_xml",
+      "expected": "visible hidden and very-hidden worksheets remain distinct",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-14",
+      "category": "open_xml",
+      "expected": "cell address row column type raw value and displayed value are retained",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-15",
+      "category": "open_xml",
+      "expected": "shared and inline strings are decoded without execution",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-16",
+      "category": "open_xml",
+      "expected": "formulas remain inert with cached values separated",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-17",
+      "category": "open_xml",
+      "expected": "formula cells never recalculate",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-18",
+      "category": "open_xml",
+      "expected": "styles and number formats are retained",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-19",
+      "category": "open_xml",
+      "expected": "admitted date styles produce bounded ISO dates",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-20",
+      "category": "open_xml",
+      "expected": "hidden row and column ledgers are canonical",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-21",
+      "category": "open_xml",
+      "expected": "merged ranges are canonical and deduplicated",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-22",
+      "category": "open_xml",
+      "expected": "hyperlinks retain exact target digests and followed false",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-23",
+      "category": "open_xml",
+      "expected": "external hyperlinks remain inert and nonblocking",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-24",
+      "category": "open_xml",
+      "expected": "external workbook formulas block analytical reuse",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-25",
+      "category": "open_xml",
+      "expected": "DDE-like formulas block analytical reuse",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-26",
+      "category": "open_xml",
+      "expected": "VBA and macro-enabled content blocks analytical reuse",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-27",
+      "category": "open_xml",
+      "expected": "malformed XML or missing required parts rejects",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-28",
+      "category": "open_xml",
+      "expected": "cells findings and links are canonically ordered",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-29",
+      "category": "open_xml",
+      "expected": "safe analysis is recomputed from blocking findings",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-open_xml-30",
+      "category": "open_xml",
+      "expected": "inspection performs no file network or execution effect",
+      "requirement": "62.1.1.1/62.1.1.2"
+    },
+    {
+      "case_id": "data62-runtime_records-01",
+      "category": "runtime_records",
+      "expected": "tabular document schema is closed and versioned",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-02",
+      "category": "runtime_records",
+      "expected": "tabular comparison schema is closed and versioned",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-03",
+      "category": "runtime_records",
+      "expected": "safe CSV proposal schema is closed and versioned",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-04",
+      "category": "runtime_records",
+      "expected": "spreadsheet inspection schema is closed and versioned",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-05",
+      "category": "runtime_records",
+      "expected": "normalized header drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-06",
+      "category": "runtime_records",
+      "expected": "row-shape drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-07",
+      "category": "runtime_records",
+      "expected": "comparison reason and overlap drift reject",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-08",
+      "category": "runtime_records",
+      "expected": "comparison row and field order drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-09",
+      "category": "runtime_records",
+      "expected": "safe CSV byte digest drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-10",
+      "category": "runtime_records",
+      "expected": "cell address coordinate drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-11",
+      "category": "runtime_records",
+      "expected": "hyperlink digest drift rejects",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-runtime_records-12",
+      "category": "runtime_records",
+      "expected": "safe-analysis and effect drift reject",
+      "requirement": "62.1.2/62.1.3"
+    },
+    {
+      "case_id": "data62-external_blocker-01",
+      "category": "external_blocker",
+      "expected": "Sprint 61 remains an upstream blocker",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-02",
+      "category": "external_blocker",
+      "expected": "legacy binary XLS parsing is not admitted",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-03",
+      "category": "external_blocker",
+      "expected": "encrypted workbook decryption is not admitted",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-04",
+      "category": "external_blocker",
+      "expected": "no native office-suite renderer is admitted",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-05",
+      "category": "external_blocker",
+      "expected": "no Fedora native office reopen evidence exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-06",
+      "category": "external_blocker",
+      "expected": "no Ubuntu native office reopen evidence exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-07",
+      "category": "external_blocker",
+      "expected": "no Windows native office reopen evidence exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-08",
+      "category": "external_blocker",
+      "expected": "no retained Apple Silicon macOS reopen evidence exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-09",
+      "category": "external_blocker",
+      "expected": "no installed-product accessibility evidence exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-10",
+      "category": "external_blocker",
+      "expected": "no independent spreadsheet-boundary review exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-11",
+      "category": "external_blocker",
+      "expected": "no independent visual review exists",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-12",
+      "category": "external_blocker",
+      "expected": "manual fuzzing remains explicitly deferred",
+      "requirement": "62.1"
+    },
+    {
+      "case_id": "data62-external_blocker-13",
+      "category": "external_blocker",
+      "expected": "Sprint 62 remains blocked while required evidence is absent",
+      "requirement": "62.1"
+    }
+  ],
+  "executable_tabular_rust_fixture_count": 5,
+  "executable_spreadsheet_rust_fixture_count": 4,
+  "runtime_schema_count": 4,
+  "native_office_fixture_count": 0,
+  "network_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "formula_execution_enabled": false,
+  "release_completion_claimed": false
+}
