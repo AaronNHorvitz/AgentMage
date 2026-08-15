@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_60_pdf_dependency_manifest",
+  "story_id": "60.1",
+  "admitted_dependencies": [
+    {
+      "capabilities": [
+        "bounded-extraction",
+        "basic-metadata",
+        "page-identity"
+      ],
+      "cargo_checksum_sha256": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68",
+      "default_features": false,
+      "license": "MIT",
+      "name": "lopdf",
+      "version": "0.44.0"
+    }
+  ],
+  "unadmitted_components": [
+    {
+      "capability": "pdf-generation",
+      "reason_code": "pdf.generator.package-license-version-digest-not-admitted",
+      "state": "blocked"
+    },
+    {
+      "capability": "pdf-ocr",
+      "reason_code": "pdf.ocr.package-model-license-version-digest-not-admitted",
+      "state": "blocked"
+    },
+    {
+      "capability": "pdf-rendering",
+      "reason_code": "pdf.renderer.package-license-version-digest-not-admitted",
+      "state": "blocked"
+    }
+  ],
+  "required_first_ga_platforms": [
+    "fedora",
+    "ubuntu",
+    "windows11-x64"
+  ],
+  "retained_post_ga_platforms": [
+    "macos-apple-silicon"
+  ],
+  "executed_parser_platforms": [
+    "fedora-x86_64"
+  ],
+  "executed_native_ocr_platforms": [],
+  "executed_native_renderer_platforms": [],
+  "cross_platform_extraction_acceptance_complete": false,
+  "independent_native_review_complete": false
+}

@@ -34,6 +34,7 @@ EXPECTED_INTERNAL_CARGO = {
 }
 EXPECTED_EXTERNAL_CARGO = {
     "ed25519-dalek",
+    "lopdf",
     "quick-xml",
     "rusqlite",
     "rustix",

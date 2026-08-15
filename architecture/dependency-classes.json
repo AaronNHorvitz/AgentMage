@@ -13,6 +13,7 @@
     ],
     "cargo_external_packages": [
       "ed25519-dalek",
+      "lopdf",
       "quick-xml",
       "rusqlite",
       "rustix",

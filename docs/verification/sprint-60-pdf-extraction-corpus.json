@@ -1,0 +1,508 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_60_pdf_extraction_corpus",
+  "story_id": "60.1",
+  "legacy_story_id": "S-051",
+  "case_count": 82,
+  "cases": [
+    {
+      "case_id": "pdf60-dependency-01",
+      "category": "dependency",
+      "expected": "lopdf is pinned to exact version 0.44.0",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-02",
+      "category": "dependency",
+      "expected": "lopdf default features are disabled",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-03",
+      "category": "dependency",
+      "expected": "the parser registry checksum is retained",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-04",
+      "category": "dependency",
+      "expected": "the parser MIT license is retained",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-05",
+      "category": "dependency",
+      "expected": "all parser transitives remain in the locked software bill of materials",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-06",
+      "category": "dependency",
+      "expected": "metadata uses the same admitted parser boundary",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-07",
+      "category": "dependency",
+      "expected": "no PDF renderer is implicitly admitted",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-08",
+      "category": "dependency",
+      "expected": "no PDF generator is implicitly admitted",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-09",
+      "category": "dependency",
+      "expected": "no OCR package or model is implicitly admitted",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-dependency-10",
+      "category": "dependency",
+      "expected": "unadmitted components cannot satisfy story completion",
+      "requirement": "S-051-I01"
+    },
+    {
+      "case_id": "pdf60-extraction-01",
+      "category": "extraction",
+      "expected": "source bytes are accepted only from caller memory",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-02",
+      "category": "extraction",
+      "expected": "source bytes bind an exact SHA-256 identity",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-03",
+      "category": "extraction",
+      "expected": "the parser operates in strict mode",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-04",
+      "category": "extraction",
+      "expected": "source object page stream and text ceilings are explicit",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-05",
+      "category": "extraction",
+      "expected": "logical pages are consecutive and one based",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-06",
+      "category": "extraction",
+      "expected": "each page binds source object number and generation",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-07",
+      "category": "extraction",
+      "expected": "page identity is deterministic from source page and object",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-08",
+      "category": "extraction",
+      "expected": "embedded text retains an exact UTF-8 digest",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-09",
+      "category": "extraction",
+      "expected": "total retained text bytes are recomputable",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-10",
+      "category": "extraction",
+      "expected": "citations bind exact source page identity",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-11",
+      "category": "extraction",
+      "expected": "citations bind exact extracted text digest",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-12",
+      "category": "extraction",
+      "expected": "embedded text confidence is exact",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-13",
+      "category": "extraction",
+      "expected": "region coordinates remain explicitly unavailable",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-14",
+      "category": "extraction",
+      "expected": "the original PDF remains authoritative",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-extraction-15",
+      "category": "extraction",
+      "expected": "extraction performs no filesystem network or process effect",
+      "requirement": "S-051-I02"
+    },
+    {
+      "case_id": "pdf60-detection-01",
+      "category": "detection",
+      "expected": "empty input rejects",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-02",
+      "category": "detection",
+      "expected": "non-PDF input rejects",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-03",
+      "category": "detection",
+      "expected": "truncated PDF syntax fails closed",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-04",
+      "category": "detection",
+      "expected": "malformed trailer or cross-reference structure fails closed",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-05",
+      "category": "detection",
+      "expected": "oversized source rejects before parsing",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-06",
+      "category": "detection",
+      "expected": "object-count overflow rejects",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-07",
+      "category": "detection",
+      "expected": "page-count overflow rejects",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-08",
+      "category": "detection",
+      "expected": "decompressed stream overflow remains visible",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-09",
+      "category": "detection",
+      "expected": "per-page text overflow retains no partial best-effort text",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-10",
+      "category": "detection",
+      "expected": "total-text overflow remains visible",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-11",
+      "category": "detection",
+      "expected": "image-count overflow remains visible",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-12",
+      "category": "detection",
+      "expected": "image inventory failure remains visible",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-13",
+      "category": "detection",
+      "expected": "image-only pages become scanned candidates",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-14",
+      "category": "detection",
+      "expected": "pages without text or images remain empty",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-15",
+      "category": "detection",
+      "expected": "text decoding failure becomes extraction limited",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-16",
+      "category": "detection",
+      "expected": "encrypted documents reject without password handling",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-17",
+      "category": "detection",
+      "expected": "empty-password encrypted documents still reject",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-detection-18",
+      "category": "detection",
+      "expected": "unsupported parser paths never broaden authority",
+      "requirement": "S-051-I03"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-01",
+      "category": "ocr_boundary",
+      "expected": "the extractor never launches OCR",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-02",
+      "category": "ocr_boundary",
+      "expected": "OCR requires an exact package name and version",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-03",
+      "category": "ocr_boundary",
+      "expected": "OCR requires exact package and model digests",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-04",
+      "category": "ocr_boundary",
+      "expected": "OCR requires a retained license expression",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-05",
+      "category": "ocr_boundary",
+      "expected": "OCR requires an exact admission receipt digest",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-06",
+      "category": "ocr_boundary",
+      "expected": "OCR admission verification is asserted by a trusted caller",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-07",
+      "category": "ocr_boundary",
+      "expected": "OCR source digest must match extraction source",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-08",
+      "category": "ocr_boundary",
+      "expected": "OCR page number and page identity must both match",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-09",
+      "category": "ocr_boundary",
+      "expected": "OCR is accepted only for a scanned candidate page",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-10",
+      "category": "ocr_boundary",
+      "expected": "OCR confidence remains explicit in basis points",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-11",
+      "category": "ocr_boundary",
+      "expected": "OCR text retains an exact digest",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-12",
+      "category": "ocr_boundary",
+      "expected": "OCR citations retain exact source page identity",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-13",
+      "category": "ocr_boundary",
+      "expected": "OCR output remains labeled probabilistic",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-14",
+      "category": "ocr_boundary",
+      "expected": "OCR validation itself launches no process",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-ocr_boundary-15",
+      "category": "ocr_boundary",
+      "expected": "no OCR package or model is presently admitted",
+      "requirement": "S-051-I04"
+    },
+    {
+      "case_id": "pdf60-runtime_record-01",
+      "category": "runtime_record",
+      "expected": "PDF extraction result schema is closed and versioned",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-02",
+      "category": "runtime_record",
+      "expected": "PDF OCR projection schema is closed and versioned",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-03",
+      "category": "runtime_record",
+      "expected": "unknown fields reject",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-04",
+      "category": "runtime_record",
+      "expected": "page identity drift rejects",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-05",
+      "category": "runtime_record",
+      "expected": "text digest drift rejects",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-06",
+      "category": "runtime_record",
+      "expected": "citation drift rejects",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-07",
+      "category": "runtime_record",
+      "expected": "aggregate byte-count drift rejects",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-08",
+      "category": "runtime_record",
+      "expected": "false completion claims reject",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-09",
+      "category": "runtime_record",
+      "expected": "false OCR admission claims reject",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-runtime_record-10",
+      "category": "runtime_record",
+      "expected": "effect-field broadening rejects",
+      "requirement": "60.1.2/60.1.3"
+    },
+    {
+      "case_id": "pdf60-external_blocker-01",
+      "category": "external_blocker",
+      "expected": "Sprint 59 remains an upstream blocker",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-02",
+      "category": "external_blocker",
+      "expected": "no approved local OCR package or model evidence exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-03",
+      "category": "external_blocker",
+      "expected": "no OCR dependency failure or cancellation campaign exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-04",
+      "category": "external_blocker",
+      "expected": "no PDF renderer is admitted",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-05",
+      "category": "external_blocker",
+      "expected": "no PDF generation dependency is admitted",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-06",
+      "category": "external_blocker",
+      "expected": "no redaction residue report exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-07",
+      "category": "external_blocker",
+      "expected": "no native Fedora PDF rendering evidence exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-08",
+      "category": "external_blocker",
+      "expected": "no native Ubuntu PDF rendering evidence exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-09",
+      "category": "external_blocker",
+      "expected": "no native Windows 11 PDF rendering evidence exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-10",
+      "category": "external_blocker",
+      "expected": "no retained macOS PDF rendering evidence exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-11",
+      "category": "external_blocker",
+      "expected": "no installed-product accessibility review exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-12",
+      "category": "external_blocker",
+      "expected": "no independent native-boundary review exists",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-13",
+      "category": "external_blocker",
+      "expected": "manual fuzzing remains explicitly deferred",
+      "requirement": "60.1"
+    },
+    {
+      "case_id": "pdf60-external_blocker-14",
+      "category": "external_blocker",
+      "expected": "Sprint 60 remains blocked while required evidence is absent",
+      "requirement": "60.1"
+    }
+  ],
+  "executable_rust_fixture_count": 6,
+  "native_ocr_fixture_count": 0,
+  "native_render_fixture_count": 0,
+  "network_enabled": false,
+  "execution_enabled": false,
+  "filesystem_mutation_enabled": false,
+  "product_integration_claimed": false
+}

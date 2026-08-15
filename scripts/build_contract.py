@@ -39,6 +39,7 @@ EXPECTED_CARGO_PACKAGES = {
         "agentmage-capability-knowledge",
         {
             "agentmage-kernel-contracts",
+            "lopdf",
             "quick-xml",
             "rusqlite",
             "serde",
