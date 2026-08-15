@@ -82,6 +82,15 @@ code `5`; this is not an integrated CLI claim. See the
 [thin-client architecture](./docs/architecture/thin-client-boundary.md) and
 [local CLI guide](./docs/guides/local-command-line-interface.md).
 
+Sprint 49 now has an isolated deterministic measured-local-routing kernel and
+closed review artifacts. It uses exact admitted profile evidence, independent
+role benchmarks, deterministic task class, separately computed action risk,
+visible budgets, current resource fit, and preserved manual selection. It has no
+model-confidence input, hidden fallback, automatic install, provider
+marketplace, or frontier-transfer path. Product routing remains disabled and no
+profile is enabled; see the
+[measured routing architecture](./docs/architecture/measured-local-model-routing.md).
+
 Accepted Decision 0019 separates immutable historical evidence from current
 applicability, composes platform lanes independently, records exact review
 provenance, retains real fuzzing as a separately approved manual security task,
@@ -195,6 +204,12 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
   model, connector, secret, or native-effect authority. The current source
   candidate remains transport disconnected; see the
   [thin-client architecture](./docs/architecture/thin-client-boundary.md).
+- Deterministic measured local routing over exact admitted profiles and
+  independent role evidence, with preserved manual selection, visible
+  fast/standard/deep/verify budgets, explicit disagreements, current resource
+  fit, and optional measured high-risk second-model verification. The current
+  source contract enables no profile or product routing; see the
+  [measured routing architecture](./docs/architecture/measured-local-model-routing.md).
 - Strict separation between `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` capability classes.
 - Exact previews, current remote preconditions, single-use grants, idempotency or reconciliation, verified postconditions, rollback or compensation plans, and immutable receipts for every external effect.
 - A removable connected layer: uninstalling every provider adapter restores the independently tested strict-local product.
