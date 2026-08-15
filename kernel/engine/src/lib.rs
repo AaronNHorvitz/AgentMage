@@ -49,6 +49,8 @@ pub mod grants;
 pub mod handoff;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
+/// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
+pub mod local_commit;
 pub mod model_codec;
 /// Candidate-neutral native-picker projection and stale-selection refusal.
 pub mod model_discovery;

@@ -405,6 +405,10 @@ pub enum RepositoryOwnedDelta {
     WorktreeRemove,
     /// A compare-and-swap fast-forward may change one local branch identity.
     BranchFastForward,
+    /// Candidate-tree construction may add exact objects without changing any ref.
+    CandidateTree,
+    /// A local signed commit may add exact objects and update one AgentMage task ref.
+    LocalCommit,
     /// An observation permits no state change.
     None,
 }
@@ -436,6 +440,13 @@ pub fn reconcile_preservation(
         }
         RepositoryOwnedDelta::BranchFastForward => {
             normalized.agentmage_refs_sha256 = before.agentmage_refs_sha256.clone();
+        }
+        RepositoryOwnedDelta::CandidateTree => {
+            normalized.object_database_sha256 = before.object_database_sha256.clone();
+        }
+        RepositoryOwnedDelta::LocalCommit => {
+            normalized.agentmage_refs_sha256 = before.agentmage_refs_sha256.clone();
+            normalized.object_database_sha256 = before.object_database_sha256.clone();
         }
         RepositoryOwnedDelta::None => {}
     }
