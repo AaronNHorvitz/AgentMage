@@ -31,6 +31,7 @@ agentmage-platform-linux-inference = { path = "platforms/linux-inference" }
 agentmage-platform-linux = { path = "platforms/linux" }
 agentmage-platform-windows = { path = "platforms/windows" }
 ed25519-dalek = { version = "=3.0.0", default-features = false, features = ["fast", "signature", "zeroize"] }
+lopdf = { version = "=0.44.0", default-features = false }
 quick-xml = { version = "=0.41.0", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
