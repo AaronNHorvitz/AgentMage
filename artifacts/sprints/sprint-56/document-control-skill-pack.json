@@ -1,0 +1,427 @@
+{
+  "authority": {
+    "approvals": false,
+    "code_execution": false,
+    "connectors": false,
+    "filesystem": false,
+    "grant_creation": false,
+    "memory_promotion": false,
+    "network": false,
+    "secrets": false,
+    "shell": false,
+    "tool_registration": false,
+    "workspace_expansion": false,
+    "writes": false
+  },
+  "filesystem_mutation": false,
+  "final_language_mutation": false,
+  "inbox_access": false,
+  "manifests": [
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 978,
+          "content_sha256": "5a5bdd60990644d7a869ec66f6ec95ebaa5bb6bceeff6cef20de25d4ba1ffdc3",
+          "kind": "prompt",
+          "path": "prompts/records-document-register.prompt.md",
+          "semantic_key": "records-document-register-prompt"
+        },
+        {
+          "bytes": 191,
+          "content_sha256": "a6b801463cbcb824d5d26d916d53a8acd4ca99ae57144166d99a856c40dfa8cf",
+          "kind": "template",
+          "path": "templates/records-document-register.template.md",
+          "semantic_key": "records-document-register-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "ed82ff019e4a9f5faf088cb492160d1703df20ae4cbd873d84414c3d7fa1ac3f",
+      "package_sha256": "0174e44ce03c03d4823f4c1542f869b0b3c26abc7cd4958353a9a2b5e54b7cbc",
+      "precedence": 100,
+      "purpose": "Project exact local document versions, approvals, attachments, statements, commitments, deadlines, hashes, paths, categories, and retention fields into a reviewable register",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-document-register"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-document-register",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 941,
+          "content_sha256": "7e905d41770b05a6dc506751ed398c49e15740ed4bb74642ecd14820f4c71ced",
+          "kind": "prompt",
+          "path": "prompts/records-correspondence-register.prompt.md",
+          "semantic_key": "records-correspondence-register-prompt"
+        },
+        {
+          "bytes": 205,
+          "content_sha256": "a01eb840b99b906692a3d35a00210ea34ecba2ffcbd712c7fcf2ff2a6f65bc31",
+          "kind": "template",
+          "path": "templates/records-correspondence-register.template.md",
+          "semantic_key": "records-correspondence-register-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "833361511958c95da4171a86ae6033618cfd1d5c49c0e139425ff60311a0eb58",
+      "package_sha256": "e3b83f6bd6aad299ac60354c28c3e1728878aa646b88a9e2d37afe2f58ee2a17",
+      "precedence": 100,
+      "purpose": "Project exact local inbound sources and outbound drafts into a versioned correspondence register without selecting recipients or sending",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-correspondence-register"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-correspondence-register",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 958,
+          "content_sha256": "fae1f5bfcb82c7b62a64b3d3525408dcb4cebc3787dfee21fc5a07d44b972e5e",
+          "kind": "prompt",
+          "path": "prompts/records-naming-version-review.prompt.md",
+          "semantic_key": "records-naming-version-review-prompt"
+        },
+        {
+          "bytes": 118,
+          "content_sha256": "0f23568f4e226184ea239948e496f1d81b9145db3b52d8efc3e14d191721a5cb",
+          "kind": "template",
+          "path": "templates/records-naming-version-review.template.md",
+          "semantic_key": "records-naming-version-review-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "80b6cb5890a84d1660eb00f087f940fa9d3cd064f7acab5f4b76a25ca83bfe87",
+      "package_sha256": "0ddeed906ca7cab860c8c24a2cca7b9d93bb9f498e61963d0b771ce85f5b264a",
+      "precedence": 100,
+      "purpose": "Review user-supplied naming rules, content-digest duplicates, supersession links, and version relationships without renaming, moving, deleting, or filing",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-naming-version-review"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-naming-version-review",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 955,
+          "content_sha256": "30423c40793fcb679a99acd635b7ace30d75f38e70fb9acce91b7d99dde405ec",
+          "kind": "prompt",
+          "path": "prompts/records-final-copy-quality.prompt.md",
+          "semantic_key": "records-final-copy-quality-prompt"
+        },
+        {
+          "bytes": 161,
+          "content_sha256": "542ee81b65c641e6076bc50618097b98f97cf3666ac3cbbda98a226b150e5743",
+          "kind": "template",
+          "path": "templates/records-final-copy-quality.template.md",
+          "semantic_key": "records-final-copy-quality-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "567120b47b4fc734b37185a1726b820b0dd77f304b95b5ed67b9ec5578bd5c03",
+      "package_sha256": "cceeb84a8cba09deb1cfc77f45f130705a2cad0e2494a99bc9dffda4c8f78bd4",
+      "precedence": 100,
+      "purpose": "Review exact final-copy approval, attachments, source attribution, accessibility fields, and quality findings without silently changing final language",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-final-copy-quality"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-final-copy-quality",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 925,
+          "content_sha256": "c776be5c77ee59cab2c9ef0144d7bd81ffd407e31b4c0325f50b9886eec95eb6",
+          "kind": "prompt",
+          "path": "prompts/records-deadline-review.prompt.md",
+          "semantic_key": "records-deadline-review-prompt"
+        },
+        {
+          "bytes": 131,
+          "content_sha256": "860ed6155deed85b37000571b5556faea0af33f8ac3f28699e3992511a70028e",
+          "kind": "template",
+          "path": "templates/records-deadline-review.template.md",
+          "semantic_key": "records-deadline-review-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "6a76c9339c5aba3377a12738bc71fe4e53c598a37a3314e88606bdb3d9e5a1f9",
+      "package_sha256": "c634d2b682525dc7198ebcb46ea57563a11317e312216f6c7a7e2442f0636bd2",
+      "precedence": 100,
+      "purpose": "Review exact commitments and deadline fields while leaving missing, disputed, or conflicting owners and dates unresolved",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-deadline-review"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-deadline-review",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 914,
+          "content_sha256": "cb402b2996354f0c4c9815270a93be4d9e764662206574f7b30831de68c8796b",
+          "kind": "prompt",
+          "path": "prompts/records-routing-slip.prompt.md",
+          "semantic_key": "records-routing-slip-prompt"
+        },
+        {
+          "bytes": 155,
+          "content_sha256": "8dd509a2647aeee5860c3843e51cc4dd35261ed6cb71b41d0e4b7e0fe6814ad4",
+          "kind": "template",
+          "path": "templates/records-routing-slip.template.md",
+          "semantic_key": "records-routing-slip-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "db059331020c042c4c792d81675f8dd49eff5ffcbf33a5ee0a4542962f833496",
+      "package_sha256": "fcc70dbea23060acc04ddada330762bfdbdacc86c02abe3f0f853719e946213b",
+      "precedence": 100,
+      "purpose": "Draft local routing slips, agendas, minutes, letters, memoranda, and control logs from exact approved records",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-routing-slip"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-routing-slip",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 920,
+          "content_sha256": "ea1958dc8b1cba8fe9b195334329ebfb1459607d50eeb2c791af20743250458f",
+          "kind": "prompt",
+          "path": "prompts/records-merge-calendar-preview.prompt.md",
+          "semantic_key": "records-merge-calendar-preview-prompt"
+        },
+        {
+          "bytes": 154,
+          "content_sha256": "0877d642bb5e905e8895e6ba5078955166cf2e7a28817777ab4f404448854906",
+          "kind": "template",
+          "path": "templates/records-merge-calendar-preview.template.md",
+          "semantic_key": "records-merge-calendar-preview-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "e2a12dd07450cfa7a96d296d438347a8be25121e9a602e26f710d7909bbebd86",
+      "package_sha256": "a145f98083eb696595f6a761a6fff56dd11c972b7abe4da29ebd1ee22fd48102",
+      "precedence": 100,
+      "purpose": "Render local mail-merge and calendar-file previews without hidden recipients, delivery, notification, or scheduling",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-merge-calendar-preview"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-merge-calendar-preview",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 959,
+          "content_sha256": "846940f98a1c61122ebbc24b46052b6a6939046318e9ba2aea05155cd25af31e",
+          "kind": "prompt",
+          "path": "prompts/records-filing-preview.prompt.md",
+          "semantic_key": "records-filing-preview-prompt"
+        },
+        {
+          "bytes": 176,
+          "content_sha256": "4f99f64f0fae4d238d4d73fef99fc377a3e31ef8a07a14c3602a25f7dcf22666",
+          "kind": "template",
+          "path": "templates/records-filing-preview.template.md",
+          "semantic_key": "records-filing-preview-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "699741ff5d686e351f326cc6abd340617d3b662606f4608d7852fa5daa733d00",
+      "package_sha256": "2f0c0ebe18d1774f6267e0367aa8d71282daaff9eae63925190c8af44f47c524",
+      "precedence": 100,
+      "purpose": "Suggest a local filing destination and show exact content, metadata, category, retention, and approval requirements without filing or deciding disposition",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "message",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "records-filing-preview"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-records-filing-preview",
+      "source_id": "agentmage-built-in-document-control-skills",
+      "source_sha256": "8da96c7ddffeddc05763ec4c50efbc8c0148079ea77fc3d6984366bfa5fde781",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    }
+  ],
+  "network_access": false,
+  "notification_access": false,
+  "product_registration": false,
+  "prompt_count": 8,
+  "recipient_selection": false,
+  "record_type": "agentmage-document-control-skill-pack",
+  "records_disposition": false,
+  "schedule_access": false,
+  "schema_version": 1,
+  "send_access": false,
+  "skills": [
+    "document_register",
+    "correspondence_register",
+    "naming_and_version_review",
+    "final_copy_quality",
+    "deadline_review",
+    "routing_slip",
+    "merge_and_calendar_preview",
+    "filing_preview"
+  ],
+  "template_count": 8,
+  "version": "0.6.0"
+}

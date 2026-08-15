@@ -4,6 +4,7 @@
 
 mod authority;
 mod coding_skills;
+mod document_control_skills;
 mod domain;
 mod executive_skills;
 mod index;
@@ -36,6 +37,7 @@ pub use coding_skills::{
     CodingSkillFinding, assess_coding_skill_definition, built_in_coding_skill_definitions,
     built_in_coding_skill_pack,
 };
+pub use document_control_skills::{DocumentControlSkill, built_in_document_control_skill_pack};
 pub use domain::{
     KnowledgeError, KnowledgeField, KnowledgeLink, KnowledgeLinkKind, KnowledgePrivacy,
     KnowledgeRecord, KnowledgeRecordId, KnowledgeRecordKind, KnowledgeRetention,
