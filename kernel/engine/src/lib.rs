@@ -47,6 +47,8 @@ pub mod filesystem_control;
 pub mod frontier_import;
 /// Measured frontier recommendation and local-only disclosure packet composition.
 pub mod frontier_recommendation;
+/// v0.5 manual-frontier release compositions and controlled local export.
+pub mod frontier_release;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.

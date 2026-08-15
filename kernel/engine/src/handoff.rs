@@ -189,6 +189,35 @@ pub fn render_reviewed_handoff(
     })
 }
 
+/// Verifies a locally rendered packet, manifest, and terminal no-delivery receipt.
+pub fn verify_rendered_handoff(rendered: &RenderedHandoff) -> Result<(), HandoffError> {
+    let receipt = &rendered.receipt;
+    if rendered.schema_version != CONTRACT_SCHEMA_VERSION
+        || rendered.packet_markdown.is_empty()
+        || rendered.packet_markdown.len() > MAX_PACKET_BYTES
+        || rendered.manifest.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_identifier(&rendered.manifest.handoff_id)
+        || rendered.manifest.packet_bytes != rendered.packet_markdown.len() as u64
+        || rendered.manifest.packet_sha256 != sha256_hex(rendered.packet_markdown.as_bytes())
+        || rendered.manifest.delivered
+        || !valid_sha256(&rendered.manifest.manifest_sha256)
+        || rendered.manifest.manifest_sha256 != manifest_digest(&rendered.manifest)?
+        || receipt.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_identifier(&receipt.attempt_id)
+        || receipt.handoff_id.as_deref() != Some(rendered.manifest.handoff_id.as_str())
+        || receipt.outcome != LocalHandoffOutcome::Rendered
+        || receipt.result_code != "handoff.local.rendered"
+        || receipt.prohibited_action.is_some()
+        || receipt.packet_sha256.as_deref() != Some(rendered.manifest.packet_sha256.as_str())
+        || receipt.external_delivery_attempted
+        || !valid_sha256(&receipt.receipt_sha256)
+        || receipt.receipt_sha256 != receipt_digest(receipt)?
+    {
+        return Err(HandoffError::InvalidInput);
+    }
+    Ok(())
+}
+
 /// Records a cancelled local review without producing packet content.
 pub fn cancel_handoff(
     attempt_id: String,
