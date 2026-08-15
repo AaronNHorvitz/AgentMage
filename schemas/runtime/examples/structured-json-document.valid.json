@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "source_path": { "workspace_id": "workspace-1", "components": ["data", "record.json"] },
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profile": { "profile_id": "structured-json-strict-v1", "maximum_source_bytes": 67108864, "maximum_depth": 128, "maximum_nodes": 1000000, "maximum_string_bytes": 4194304, "number_policy": "finite-ieee754-round-trip-v1" },
+  "schema_id": "person-v1",
+  "value": { "active": true, "id": "A-1" },
+  "canonical_json": [123, 34, 97, 99, 116, 105, 118, 101, 34, 58, 116, 114, 117, 101, 44, 34, 105, 100, 34, 58, 34, 65, 45, 49, 34, 125],
+  "canonical_sha256": "7ff42b162b117604775e97d1b99454f1f56ad14f44b55ed8ac9c5f2f9610e991",
+  "issues": [],
+  "schema_valid": true,
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

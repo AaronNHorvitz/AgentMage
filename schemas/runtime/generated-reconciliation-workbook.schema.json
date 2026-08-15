@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/generated-reconciliation-workbook.schema.json",
+  "title": "AgentMage Generated Reconciliation Workbook",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workbook_id", "output_path", "left_source_sha256", "right_source_sha256", "method_id", "method_version", "profile", "xlsx", "xlsx_sha256", "inspection", "formulas", "formula_error_count", "worksheet_count", "table_count", "chart_count", "data_validation_count", "originals_preserved", "proposal_only", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "workbook_id": { "$ref": "#/$defs/identifier" },
+    "output_path": { "$ref": "#/$defs/workspace_path" },
+    "left_source_sha256": { "$ref": "#/$defs/sha256" },
+    "right_source_sha256": { "$ref": "#/$defs/sha256" },
+    "method_id": { "$ref": "#/$defs/identifier" },
+    "method_version": { "$ref": "#/$defs/identifier" },
+    "profile": { "$ref": "#/$defs/profile" },
+    "xlsx": { "type": "array", "maxItems": 67108864, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "xlsx_sha256": { "$ref": "#/$defs/sha256" },
+    "inspection": { "$ref": "https://agentmage.dev/schemas/runtime/spreadsheet-inspection.schema.json" },
+    "formulas": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/formula" } },
+    "formula_error_count": { "const": 0 },
+    "worksheet_count": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "table_count": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "chart_count": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "data_validation_count": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "originals_preserved": { "const": true },
+    "proposal_only": { "const": true },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_path": { "type": "object", "additionalProperties": false, "required": ["workspace_id", "components"], "properties": { "workspace_id": { "$ref": "#/$defs/identifier" }, "components": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^(?!\\.{1,2}$)(?!.*[/\\\\]).+$" } } } },
+    "profile": { "type": "object", "additionalProperties": false, "required": ["profile_id", "maximum_rows", "formula_policy_id"], "properties": { "profile_id": { "$ref": "#/$defs/identifier" }, "maximum_rows": { "type": "integer", "minimum": 1, "maximum": 1000000 }, "formula_policy_id": { "const": "closed-summary-formulas-v1" } } },
+    "formula": { "type": "object", "additionalProperties": false, "required": ["cell_reference", "formula_sha256", "cached_value"], "properties": { "cell_reference": { "type": "string", "pattern": "^[A-Z]{1,3}[1-9][0-9]{0,6}$" }, "formula_sha256": { "$ref": "#/$defs/sha256" }, "cached_value": { "type": "string", "pattern": "^[0-9]+$", "maxLength": 16 } } }
+  }
+}

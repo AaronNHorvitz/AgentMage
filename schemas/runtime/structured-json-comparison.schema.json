@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/structured-json-comparison.schema.json",
+  "title": "AgentMage Structured JSON Comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "left_source_sha256", "right_source_sha256", "differences", "exact_match", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "left_source_sha256": { "$ref": "#/$defs/sha256" },
+    "right_source_sha256": { "$ref": "#/$defs/sha256" },
+    "differences": { "type": "array", "maxItems": 5000000, "items": { "$ref": "#/$defs/difference" } },
+    "exact_match": { "type": "boolean" },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nullable_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+    "difference": { "type": "object", "additionalProperties": false, "required": ["pointer", "reason", "left_value_sha256", "right_value_sha256"], "properties": { "pointer": { "type": "string", "maxLength": 16777216 }, "reason": { "enum": ["missing_left", "missing_right", "type_mismatch", "value_mismatch"] }, "left_value_sha256": { "$ref": "#/$defs/nullable_sha256" }, "right_value_sha256": { "$ref": "#/$defs/nullable_sha256" } } }
+  }
+}

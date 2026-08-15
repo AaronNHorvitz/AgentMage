@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/spreadsheet-verification-report.schema.json",
+  "title": "AgentMage Spreadsheet Verification Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_sha256", "profile", "recalculation_checks_passed", "presentation_checks_passed", "machine_checks_passed", "human_review_required", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "profile": { "$ref": "#/$defs/profile" },
+    "recalculation_checks_passed": { "type": "boolean" },
+    "presentation_checks_passed": { "type": "boolean" },
+    "machine_checks_passed": { "type": "boolean" },
+    "human_review_required": { "type": "boolean" },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "profile": { "type": "object", "additionalProperties": false, "required": ["profile_id", "evidence_kind", "platform", "application_name", "application_version", "executable_sha256", "package_manifest_sha256", "font_manifest_sha256"], "properties": { "profile_id": { "$ref": "#/$defs/identifier" }, "evidence_kind": { "enum": ["synthetic_fixture", "native_installed"] }, "platform": { "enum": ["fedora", "ubuntu", "windows11_x64", "macos_apple_silicon"] }, "application_name": { "type": "string", "minLength": 1, "maxLength": 4096 }, "application_version": { "type": "string", "minLength": 1, "maxLength": 4096 }, "executable_sha256": { "$ref": "#/$defs/sha256" }, "package_manifest_sha256": { "$ref": "#/$defs/sha256" }, "font_manifest_sha256": { "$ref": "#/$defs/sha256" } } }
+  }
+}

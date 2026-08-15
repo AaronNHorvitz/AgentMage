@@ -66,8 +66,8 @@ pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, Knowledg
 pub use json_data::{
     StructuredJsonComparison, StructuredJsonDifference, StructuredJsonDifferenceReason,
     StructuredJsonDocument, StructuredJsonError, StructuredJsonIssue, StructuredJsonProfile,
-    StructuredJsonRedaction, StructuredJsonRedactionPolicy, StructuredJsonSchema,
-    compare_structured_json, parse_structured_json, redact_structured_json,
+    StructuredJsonRedaction, StructuredJsonRedactionEntry, StructuredJsonRedactionPolicy,
+    StructuredJsonSchema, compare_structured_json, parse_structured_json, redact_structured_json,
 };
 pub use knowledge_write::{
     CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeFrontmatterProperty,

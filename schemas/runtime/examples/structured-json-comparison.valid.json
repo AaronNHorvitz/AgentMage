@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "left_source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "right_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "differences": [{ "pointer": "/new", "reason": "missing_left", "left_value_sha256": null, "right_value_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }],
+  "exact_match": false,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

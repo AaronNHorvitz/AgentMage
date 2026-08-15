@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+  "profile": { "profile_id": "synthetic-office-v1", "evidence_kind": "synthetic_fixture", "platform": "fedora", "application_name": "Synthetic fixture", "application_version": "1", "executable_sha256": "1111111111111111111111111111111111111111111111111111111111111111", "package_manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "font_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333" },
+  "recalculation_checks_passed": true,
+  "presentation_checks_passed": true,
+  "machine_checks_passed": false,
+  "human_review_required": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

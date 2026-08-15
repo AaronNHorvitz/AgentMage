@@ -109,6 +109,11 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "tabular-comparison",
   "safe-csv-proposal",
   "spreadsheet-inspection",
+  "structured-json-document",
+  "structured-json-redaction",
+  "structured-json-comparison",
+  "generated-reconciliation-workbook",
+  "spreadsheet-verification-report",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -311,6 +316,20 @@ function spreadsheetAddress(row, column) {
     value = Math.floor(value / 26);
   }
   return `${letters}${row}`;
+}
+
+function canonicalJsonValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(canonicalJsonValue);
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonicalJsonValue(value[key])]),
+    );
+  }
+  return value;
 }
 
 const VALIDATION_KIND_ORDER = Object.freeze([
@@ -1727,6 +1746,77 @@ function runtimeSemanticErrors(recordType, data) {
     }
     if (data.safe_for_analysis !== !findings.some((item) => item.blocks_safe_analysis)) {
       errors.push("spreadsheet safe-analysis state disagrees with findings");
+    }
+  } else if (recordType === "structured-json-document") {
+    let parsed = null;
+    try {
+      parsed = JSON.parse(Buffer.from(data.canonical_json ?? []).toString("utf8"));
+    } catch {
+      errors.push("structured JSON canonical bytes are not JSON");
+    }
+    const expected = Buffer.from(
+      JSON.stringify(canonicalJsonValue(data.value)),
+      "utf8",
+    );
+    if (
+      sha256Bytes(data.canonical_json ?? []) !== data.canonical_sha256 ||
+      !Buffer.from(data.canonical_json ?? []).equals(expected) ||
+      JSON.stringify(parsed) !== JSON.stringify(data.value) ||
+      !isStrictlySortedBy(data.issues ?? [], (item) => `${item.pointer}:${item.reason_code}`) ||
+      data.schema_valid !== ((data.issues ?? []).length === 0)
+    ) {
+      errors.push("structured JSON canonical value or schema state drifted");
+    }
+  } else if (recordType === "structured-json-redaction") {
+    if (
+      sha256Bytes(data.canonical_json ?? []) !== data.canonical_sha256 ||
+      !isStrictlySortedBy(data.redactions ?? [], (item) => item.pointer)
+    ) {
+      errors.push("structured JSON redaction bytes or ledger drifted");
+    }
+  } else if (recordType === "structured-json-comparison") {
+    const differences = data.differences ?? [];
+    if (
+      !isStrictlySortedBy(differences, (item) => item.pointer) ||
+      data.exact_match !== (differences.length === 0)
+    ) {
+      errors.push("structured JSON comparison order or aggregate state drifted");
+    }
+    for (const difference of differences) {
+      const left = difference.left_value_sha256 !== null;
+      const right = difference.right_value_sha256 !== null;
+      const validReason =
+        (difference.reason === "missing_left" && !left && right) ||
+        (difference.reason === "missing_right" && left && !right) ||
+        (["type_mismatch", "value_mismatch"].includes(difference.reason) && left && right);
+      if (!validReason) {
+        errors.push(`structured JSON difference reason drifted: ${difference.pointer}`);
+      }
+    }
+  } else if (recordType === "generated-reconciliation-workbook") {
+    errors.push(...runtimeSemanticErrors("spreadsheet-inspection", data.inspection ?? {}));
+    if (
+      sha256Bytes(data.xlsx ?? []) !== data.xlsx_sha256 ||
+      data.inspection?.source_sha256 !== data.xlsx_sha256 ||
+      JSON.stringify(data.inspection?.source_path) !== JSON.stringify(data.output_path) ||
+      data.inspection?.safe_for_analysis !== true ||
+      data.worksheet_count !== (data.inspection?.worksheets ?? []).length ||
+      !isStrictlySortedBy(data.formulas ?? [], (item) => item.cell_reference)
+    ) {
+      errors.push("generated reconciliation workbook bytes or reopen binding drifted");
+    }
+  } else if (recordType === "spreadsheet-verification-report") {
+    const expectedMachine =
+      data.profile?.evidence_kind === "native_installed" &&
+      data.recalculation_checks_passed === true &&
+      data.presentation_checks_passed === true;
+    const expectedHuman =
+      data.profile?.evidence_kind === "synthetic_fixture" || !expectedMachine;
+    if (
+      data.machine_checks_passed !== expectedMachine ||
+      data.human_review_required !== expectedHuman
+    ) {
+      errors.push("spreadsheet verification evidence class or completion drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

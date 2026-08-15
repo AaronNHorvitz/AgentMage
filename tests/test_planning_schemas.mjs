@@ -412,6 +412,11 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "tabular-comparison",
     "safe-csv-proposal",
     "spreadsheet-inspection",
+    "structured-json-document",
+    "structured-json-redaction",
+    "structured-json-comparison",
+    "generated-reconciliation-workbook",
+    "spreadsheet-verification-report",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1417,6 +1422,41 @@ test("tabular and spreadsheet records reject semantic and effect drift", () => {
     ["spreadsheet-inspection", (record) => { record.network_access_performed = true; }],
   ];
   const runtimeValidators = createRuntimeValidators();
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("JSON reconciliation and spreadsheet verification records reject semantic drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "structured-json-document": load("structured-json-document"),
+    "structured-json-redaction": load("structured-json-redaction"),
+    "structured-json-comparison": load("structured-json-comparison"),
+    "generated-reconciliation-workbook": load("generated-reconciliation-workbook"),
+    "spreadsheet-verification-report": load("spreadsheet-verification-report"),
+  };
+  const mutations = [
+    ["structured-json-document", (record) => { record.value.id = "changed"; }],
+    ["structured-json-document", (record) => { record.schema_valid = false; }],
+    ["structured-json-document", (record) => { record.canonical_json[0] = 0; }],
+    ["structured-json-redaction", (record) => { record.canonical_json[0] = 0; }],
+    ["structured-json-redaction", (record) => { record.redactions.push({ pointer: "/a", value_sha256: "d".repeat(64) }); }],
+    ["structured-json-comparison", (record) => { record.exact_match = true; }],
+    ["structured-json-comparison", (record) => { record.differences[0].reason = "missing_right"; }],
+    ["generated-reconciliation-workbook", (record) => { record.xlsx[0] = 0; }],
+    ["generated-reconciliation-workbook", (record) => { record.inspection.source_path.components[1] = "other.xlsx"; }],
+    ["generated-reconciliation-workbook", (record) => { record.worksheet_count = 1; }],
+    ["spreadsheet-verification-report", (record) => { record.machine_checks_passed = true; }],
+    ["spreadsheet-verification-report", (record) => { record.human_review_required = false; }],
+  ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);
     mutate(changed);

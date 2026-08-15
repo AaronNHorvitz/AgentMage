@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "workbook_id": "reconcile-1",
+  "output_path": { "workspace_id": "workspace-1", "components": ["reports", "reconciliation.xlsx"] },
+  "left_source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "right_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "method_id": "exact-key-v1",
+  "method_version": "1.0.0",
+  "profile": { "profile_id": "reconciliation-workbook-v1", "maximum_rows": 100000, "formula_policy_id": "closed-summary-formulas-v1" },
+  "xlsx": [80, 75],
+  "xlsx_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+  "inspection": {
+    "schema_version": 2,
+    "source_path": { "workspace_id": "workspace-1", "components": ["reports", "reconciliation.xlsx"] },
+    "source_sha256": "fcab7fcc2b4cffd9bb45003bfc2e468a04ef6f77ca8200a7341f027631584d25",
+    "profile": { "profile_id": "spreadsheet-ooxml-strict-v1", "maximum_source_bytes": 67108864, "maximum_entries": 8192, "maximum_entry_bytes": 33554432, "maximum_total_uncompressed_bytes": 134217728, "maximum_sheets": 1024, "maximum_cells": 1000000, "maximum_shared_strings": 1000000 },
+    "date_system": "excel1900",
+    "worksheets": [
+      { "sheet_id": 1, "name": "Summary", "state": "visible", "part_name": "xl/worksheets/sheet1.xml", "part_sha256": "1111111111111111111111111111111111111111111111111111111111111111", "dimension": "A1:B16", "cells": [], "hidden_rows": [], "hidden_columns": [], "merged_ranges": [], "hyperlinks": [] },
+      { "sheet_id": 2, "name": "Reconciliation", "state": "visible", "part_name": "xl/worksheets/sheet2.xml", "part_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "dimension": "A1:F1", "cells": [], "hidden_rows": [], "hidden_columns": [], "merged_ranges": [], "hyperlinks": [] }
+    ],
+    "findings": [],
+    "inspection_complete": true,
+    "safe_for_analysis": true,
+    "original_preserved": true,
+    "filesystem_effect_performed": false,
+    "network_access_performed": false,
+    "execution_performed": false
+  },
+  "formulas": [{ "cell_reference": "B7", "formula_sha256": "65fde9e5b7d2bb12632e7a1d6ef6c256ce2bcfa9964b5d970d7420a43e08d0d2", "cached_value": "1" }],
+  "formula_error_count": 0,
+  "worksheet_count": 2,
+  "table_count": 1,
+  "chart_count": 1,
+  "data_validation_count": 1,
+  "originals_preserved": true,
+  "proposal_only": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

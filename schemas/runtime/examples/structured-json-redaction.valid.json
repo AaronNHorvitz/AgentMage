@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_canonical_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "policy_id": "redact-v1",
+  "redactions": [{ "pointer": "/token", "value_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }],
+  "canonical_json": [123, 34, 116, 111, 107, 101, 110, 34, 58, 34, 91, 82, 69, 68, 65, 67, 84, 69, 68, 93, 34, 125],
+  "canonical_sha256": "892ea38b9d04f56458606a227d2f37d16795af81985f891799f9c1eca2eab250",
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}
