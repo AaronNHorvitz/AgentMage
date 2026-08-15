@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CLASSES_PATH = ROOT / "architecture" / "dependency-classes.json"
 CARGO_MANIFESTS = (
     "capabilities/knowledge/Cargo.toml",
+    "capabilities/repository-map/Cargo.toml",
     "capabilities/read-only/Cargo.toml",
     "kernel/contracts/Cargo.toml",
     "kernel/engine/Cargo.toml",
@@ -25,6 +26,7 @@ CARGO_MANIFESTS = (
 )
 EXPECTED_INTERNAL_CARGO = {
     "agentmage-capability-knowledge",
+    "agentmage-capability-repository-map",
     "agentmage-capability-read-only",
     "agentmage-kernel-contracts",
     "agentmage-kernel-engine",
@@ -38,6 +40,12 @@ EXPECTED_EXTERNAL_CARGO = {
     "serde",
     "serde_json",
     "sha2",
+    "tree-sitter",
+    "tree-sitter-javascript",
+    "tree-sitter-python",
+    "tree-sitter-rust",
+    "tree-sitter-swift",
+    "tree-sitter-typescript",
     "unicode-normalization",
     "windows-sys",
     "zeroize",

@@ -30,6 +30,7 @@ EXPECTED_IMPORTS = {
     "shell-host": {
         "capability-knowledge",
         "capability-read-only",
+        "capability-repository-map",
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",

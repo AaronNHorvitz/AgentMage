@@ -113,6 +113,7 @@
       "allowed_imports": [
         "capability-knowledge",
         "capability-read-only",
+        "capability-repository-map",
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",
@@ -121,6 +122,7 @@
       "declared_imports": [
         "capability-knowledge",
         "capability-read-only",
+        "capability-repository-map",
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",

@@ -38,4 +38,3 @@ or any proposal that claims a test or service ran without trusted process eviden
 
 Do not use a rollback grant to overwrite a later user edit. Preserve the conflict and
 create a new intent, plan, preview, and approval from the newly observed state.
-

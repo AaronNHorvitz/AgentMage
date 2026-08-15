@@ -98,6 +98,7 @@
     "rust-toolchain.toml",
     "rustfmt.toml",
     "shells/host/Cargo.toml",
+    "shells/host/src/code_change.rs",
     "shells/host/src/lib.rs",
     "shells/host/src/linux_read.rs",
     "shells/host/src/main.rs",

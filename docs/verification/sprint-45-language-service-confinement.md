@@ -48,4 +48,3 @@ The following remain blocking:
 
 Until those artifacts exist, language-service support is an implemented and locally
 contract-tested source boundary, not an enabled product capability.
-

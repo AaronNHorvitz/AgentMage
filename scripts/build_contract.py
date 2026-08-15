@@ -118,6 +118,7 @@ EXPECTED_CARGO_PACKAGES = {
         {
             "agentmage-capability-knowledge",
             "agentmage-capability-read-only",
+            "agentmage-capability-repository-map",
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",
             "agentmage-platform-linux",

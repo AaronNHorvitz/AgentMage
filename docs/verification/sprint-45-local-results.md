@@ -45,4 +45,3 @@ scaffold application, complete trusted installed-parent execution, required nati
 cross-platform evidence, independent review, or manual fuzzing exists. The current
 execution parent also causes the two package-bootstrap binary tests to fail closed as
 `ParentUntrusted`; this is retained as an environment blocker rather than bypassed.
-
